@@ -17,12 +17,12 @@ function SpeechBubble({ text, visible, accent }: { text: string; visible: boolea
   if (!visible) return null;
 
   return (
-    <Html position={[0, 1.12, 0]} center distanceFactor={5.8} style={{ pointerEvents: 'none' }}>
+    <Html position={[0, 3.3, 0]} center distanceFactor={7.6} style={{ pointerEvents: 'none' }}>
       <div
-        className="max-w-[180px] rounded-xl border bg-white/95 px-3 py-2 text-center shadow-lg backdrop-blur-sm animate-in fade-in duration-300"
+        className="min-w-[136px] max-w-[176px] rounded-2xl border bg-white/95 px-2 py-1.5 text-center shadow-lg backdrop-blur-sm animate-in fade-in duration-300"
         style={{ borderColor: `${accent}55` }}
       >
-        <p className="whitespace-pre-wrap text-xs leading-relaxed text-[#3A3A3A]">{text}</p>
+        <p className="whitespace-pre-line break-words text-[11px] leading-5 text-[#3A3A3A]">{text}</p>
         <div className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white/95" />
       </div>
     </Html>

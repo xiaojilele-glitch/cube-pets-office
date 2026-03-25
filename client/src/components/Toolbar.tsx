@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   BookOpen,
   Brain,
   HelpCircle,
   MessageCircle,
   Settings,
-  Sparkles,
   Target,
   Workflow,
   X,
@@ -24,25 +23,6 @@ type DockButton = {
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 };
 
-function StatusChip({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/60 bg-white/76 px-3 py-2 shadow-[0_10px_24px_rgba(70,52,32,0.08)] backdrop-blur-xl">
-      <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[#9B856F]">{label}</p>
-      <p className="mt-1 text-xs font-semibold" style={{ color: accent }}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
 export function Toolbar() {
   const {
     togglePdf,
@@ -53,27 +33,9 @@ export function Toolbar() {
     isChatOpen,
     selectedPet,
   } = useAppStore();
-  const {
-    isWorkflowPanelOpen,
-    toggleWorkflowPanel,
-    connected,
-    currentWorkflow,
-    agents,
-    agentStatuses,
-  } = useWorkflowStore();
+  const { isWorkflowPanelOpen, toggleWorkflowPanel } = useWorkflowStore();
 
   const [showInfo, setShowInfo] = useState(false);
-
-  const activeAgentCount = useMemo(
-    () => Object.values(agentStatuses).filter((status) => status && status !== 'idle').length,
-    [agentStatuses]
-  );
-
-  const workflowSummary = currentWorkflow?.current_stage
-    ? `${currentWorkflow.current_stage}`
-    : currentWorkflow?.status === 'completed'
-      ? 'completed'
-      : 'idle';
 
   const dockButtons: DockButton[] = [
     {
@@ -135,67 +97,6 @@ export function Toolbar() {
 
   return (
     <>
-      <div
-        className="fixed left-1/2 top-4 z-[60] -translate-x-1/2"
-        style={{ pointerEvents: 'none' }}
-      >
-        <div
-          className="min-w-[250px] rounded-[26px] border border-white/65 bg-white/78 px-5 py-3 shadow-[0_14px_36px_rgba(88,66,44,0.12)] backdrop-blur-2xl"
-          style={{ pointerEvents: 'auto' }}
-        >
-          <div className="flex items-center justify-center gap-2 text-[#7F674F]">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span className="text-[9px] font-semibold uppercase tracking-[0.28em]">Live Workspace</span>
-          </div>
-          <h1
-            className="mt-1 text-center text-[28px] font-bold leading-none text-[#3A2A1A]"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Cube Pets Office
-          </h1>
-          <p className="mt-1 text-center text-[10px] uppercase tracking-[0.28em] text-[#A08972]">
-            Multi-Agent 3D Command Floor
-          </p>
-        </div>
-      </div>
-
-      <div
-        className="fixed left-5 top-5 z-[60] hidden max-w-[340px] gap-2 xl:grid"
-        style={{ pointerEvents: 'auto' }}
-      >
-        <div className="rounded-[28px] border border-white/60 bg-[linear-gradient(135deg,rgba(255,250,245,0.86),rgba(248,240,231,0.72))] px-4 py-3 shadow-[0_12px_36px_rgba(70,52,32,0.12)] backdrop-blur-2xl">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A08972]">
-                Workspace Status
-              </p>
-              <p className="mt-1 text-sm font-semibold text-[#3A2A1A]">
-                {currentWorkflow?.directive?.slice(0, 28) || '等待新指令'}
-                {currentWorkflow?.directive && currentWorkflow.directive.length > 28 ? '...' : ''}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-white/70 px-2.5 py-1">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${connected ? 'bg-emerald-500' : 'bg-rose-400'}`}
-              />
-              <span className="text-[10px] font-semibold text-[#6A5642]">
-                {connected ? 'online' : 'offline'}
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <StatusChip label="Agents" value={`${activeAgentCount}/${agents.length || 18}`} accent="#2F6A54" />
-            <StatusChip label="Stage" value={workflowSummary} accent="#C06F46" />
-            <StatusChip
-              label="Focus"
-              value={selectedPet ? getAgentToolbarLabel(selectedPet).slice(0, 16) : 'CEO Gateway'}
-              accent="#7A5BC3"
-            />
-          </div>
-        </div>
-      </div>
-
       <div
         className="fixed bottom-6 left-5 z-[60] flex items-end gap-3"
         style={{ pointerEvents: 'auto' }}

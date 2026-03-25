@@ -266,6 +266,53 @@ function CorkBoard() {
   );
 }
 
+function WallBrandPlaque() {
+  return (
+    <group position={[0, 3.48, -4.72]}>
+      <mesh position={[0, 0, -0.015]}>
+        <boxGeometry args={[4.48, 0.88, 0.03]} />
+        <meshStandardMaterial color="#705742" roughness={0.96} />
+      </mesh>
+      <mesh>
+        <boxGeometry args={[4.16, 0.66, 0.06]} />
+        <meshStandardMaterial color="#E6D4BF" roughness={0.95} />
+      </mesh>
+      <mesh position={[0, 0.22, 0.03]}>
+        <boxGeometry args={[4.16, 0.08, 0.015]} />
+        <meshStandardMaterial color="#A6815C" roughness={0.76} />
+      </mesh>
+      {[-1.42, 1.42].map((x) => (
+        <mesh key={x} position={[x, 0.22, 0.045]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.024, 20]} />
+          <meshStandardMaterial color="#E8D9C7" metalness={0.06} roughness={0.46} />
+        </mesh>
+      ))}
+      <Html
+        center
+        transform
+        position={[0, -0.015, 0.045]}
+        distanceFactor={5.4}
+        style={{ pointerEvents: 'none' }}
+      >
+        <div className="w-[220px] text-center">
+          <div className="text-[8px] font-semibold uppercase tracking-[0.3em] text-[#8C6B4A]">
+            Live Workspace
+          </div>
+          <div
+            className="mt-1 text-[22px] font-bold leading-none text-[#4A3626]"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Cube Pets Office
+          </div>
+          <div className="mt-1.5 text-[8px] uppercase tracking-[0.24em] text-[#977C63]">
+            Multi-Agent 3D Command Floor
+          </div>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
 function ZoneBase({
   position,
   color,
@@ -654,6 +701,7 @@ export function OfficeRoom() {
       <Walls />
       <WindowStrip />
       <ArchitecturalAccents />
+      <WallBrandPlaque />
       <CorkBoard />
       <DepartmentDecor />
 

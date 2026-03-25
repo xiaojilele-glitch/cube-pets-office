@@ -1,7 +1,30 @@
 [
   {
+    "workflowId": "64942722-8f46-43d2-9cf9-d4c684c1d7f0",
+    "createdAt": "2026-03-25T17:21:56.662Z",
+    "directive": "分析竞品最新动态，并制定我们的应对策略。",
+    "status": "completed",
+    "role": "manager",
+    "stage": "evolution",
+    "summary": "角色：manager\n工作流状态：completed\n消息数：3\n相关任务数：0\n近期消息：ceo -> echo [direction] 从内容与社区维度，监控并分析竞品近期的营销动作、社区舆论风向及用户核心诉求变化。提炼其用户沟通与运营手段的亮点，制定我们在内容宣发、社区引导和舆情防御上的应对策；echo -> ceo [summary] CEO您好，我是生活部经理Echo。\n\n非常抱歉，本次竞品应对专项在任务下发环节出现了异常中断，导致部门未能产出任何执行结果。\n\n**一、本部门完成了什么**\n；ceo -> echo [feedback] {\n  \"analysis\": \"本次竞品应对专项呈现'两高一断'的态势：游戏部与AI部均高质量完成了拆解与防御方案设计，且都成功跳出了跟随陷阱，找到了符合自身",
+    "keywords": [
+      "echo",
+      "ai",
+      "ceo",
+      "direction",
+      "本次竞品应对专项",
+      "id",
+      "managerid",
+      "下一步",
+      "从内容与社区维度",
+      "监控并分析竞品近",
+      "期的营销动作",
+      "社区舆论风向及用"
+    ]
+  },
+  {
     "workflowId": "f585edbf-6149-462e-b420-557258598475",
-    "createdAt": "2026-03-25T16:56:39.844Z",
+    "createdAt": "2026-03-25T17:21:56.684Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略",
     "status": "completed",
     "role": "manager",
@@ -24,7 +47,7 @@
   },
   {
     "workflowId": "e728272b-c3a7-4072-ad3b-f9814519b44a",
-    "createdAt": "2026-03-25T16:56:39.873Z",
+    "createdAt": "2026-03-25T17:21:56.717Z",
     "directive": "分析竞品最新动态，制定应对策略",
     "status": "completed",
     "role": "manager",
@@ -47,7 +70,7 @@
   },
   {
     "workflowId": "4f2684be-1beb-4f54-b8d3-3b16032c1a96",
-    "createdAt": "2026-03-25T16:56:39.894Z",
+    "createdAt": "2026-03-25T17:21:56.743Z",
     "directive": "分析竞品最新动态，制定应对策略",
     "status": "failed",
     "role": "manager",
@@ -66,29 +89,6 @@
       "分析竞品最新动态",
       "制定应对策略",
       "角色"
-    ]
-  },
-  {
-    "workflowId": "64942722-8f46-43d2-9cf9-d4c684c1d7f0",
-    "createdAt": "2026-03-25T17:04:29.538Z",
-    "directive": "分析竞品最新动态，并制定我们的应对策略。",
-    "status": "completed",
-    "role": "manager",
-    "stage": "evolution",
-    "summary": "角色：manager\n工作流状态：completed\n消息数：3\n相关任务数：0\n近期消息：ceo -> echo [direction] 从内容与社区维度，监控并分析竞品近期的营销动作、社区舆论风向及用户核心诉求变化。提炼其用户沟通与运营手段的亮点，制定我们在内容宣发、社区引导和舆情防御上的应对策；echo -> ceo [summary] CEO您好，我是生活部经理Echo。\n\n非常抱歉，本次竞品应对专项在任务下发环节出现了异常中断，导致部门未能产出任何执行结果。\n\n**一、本部门完成了什么**\n；ceo -> echo [feedback] {\n  \"analysis\": \"本次竞品应对专项呈现'两高一断'的态势：游戏部与AI部均高质量完成了拆解与防御方案设计，且都成功跳出了跟随陷阱，找到了符合自身",
-    "keywords": [
-      "echo",
-      "ai",
-      "ceo",
-      "direction",
-      "本次竞品应对专项",
-      "id",
-      "managerid",
-      "下一步",
-      "从内容与社区维度",
-      "监控并分析竞品近",
-      "期的营销动作",
-      "社区舆论风向及用"
     ]
   }
 ]

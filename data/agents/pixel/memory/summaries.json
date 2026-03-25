@@ -1,7 +1,30 @@
 [
   {
+    "workflowId": "64942722-8f46-43d2-9cf9-d4c684c1d7f0",
+    "createdAt": "2026-03-25T17:21:56.655Z",
+    "directive": "分析竞品最新动态，并制定我们的应对策略。",
+    "status": "completed",
+    "role": "manager",
+    "stage": "evolution",
+    "summary": "角色：manager\n工作流状态：completed\n消息数：3\n相关任务数：0\n近期消息：ceo -> pixel [direction] 从游戏策划与体验维度，拆解竞品最新版本的核心玩法改动、商业化策略及留存手段。对比我们当前产品的优劣势，跳出'竞品做什么我们做什么'的跟随陷阱，输出针对性的功能迭；pixel -> ceo [summary] {\n  \"plan_summary\": \"针对竞品最新版本，从策划、体验与数据三个维度进行交叉拆解，明确拒绝跟随策略。通过Nova深挖玩法与商业化底层逻辑寻找错；ceo -> pixel [feedback] {\n  \"analysis\": \"本次竞品应对专项呈现'两高一断'的态势：游戏部与AI部均高质量完成了拆解与防御方案设计，且都成功跳出了跟随陷阱，找到了符合自身",
+    "keywords": [
+      "nova",
+      "ai",
+      "pixel",
+      "lyra",
+      "direction",
+      "volt",
+      "ceo",
+      "竞品做什么我们做",
+      "什么",
+      "的跟随陷阱",
+      "worker_id",
+      "description"
+    ]
+  },
+  {
     "workflowId": "f585edbf-6149-462e-b420-557258598475",
-    "createdAt": "2026-03-25T16:56:39.838Z",
+    "createdAt": "2026-03-25T17:21:56.678Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略",
     "status": "completed",
     "role": "manager",
@@ -24,7 +47,7 @@
   },
   {
     "workflowId": "e728272b-c3a7-4072-ad3b-f9814519b44a",
-    "createdAt": "2026-03-25T16:56:39.868Z",
+    "createdAt": "2026-03-25T17:21:56.711Z",
     "directive": "分析竞品最新动态，制定应对策略",
     "status": "completed",
     "role": "manager",
@@ -47,7 +70,7 @@
   },
   {
     "workflowId": "4f2684be-1beb-4f54-b8d3-3b16032c1a96",
-    "createdAt": "2026-03-25T16:56:39.891Z",
+    "createdAt": "2026-03-25T17:21:56.739Z",
     "directive": "分析竞品最新动态，制定应对策略",
     "status": "failed",
     "role": "manager",
@@ -66,29 +89,6 @@
       "状态",
       "assigned",
       "分数"
-    ]
-  },
-  {
-    "workflowId": "64942722-8f46-43d2-9cf9-d4c684c1d7f0",
-    "createdAt": "2026-03-25T17:04:29.533Z",
-    "directive": "分析竞品最新动态，并制定我们的应对策略。",
-    "status": "completed",
-    "role": "manager",
-    "stage": "evolution",
-    "summary": "角色：manager\n工作流状态：completed\n消息数：3\n相关任务数：0\n近期消息：ceo -> pixel [direction] 从游戏策划与体验维度，拆解竞品最新版本的核心玩法改动、商业化策略及留存手段。对比我们当前产品的优劣势，跳出'竞品做什么我们做什么'的跟随陷阱，输出针对性的功能迭；pixel -> ceo [summary] {\n  \"plan_summary\": \"针对竞品最新版本，从策划、体验与数据三个维度进行交叉拆解，明确拒绝跟随策略。通过Nova深挖玩法与商业化底层逻辑寻找错；ceo -> pixel [feedback] {\n  \"analysis\": \"本次竞品应对专项呈现'两高一断'的态势：游戏部与AI部均高质量完成了拆解与防御方案设计，且都成功跳出了跟随陷阱，找到了符合自身",
-    "keywords": [
-      "nova",
-      "ai",
-      "pixel",
-      "lyra",
-      "direction",
-      "volt",
-      "ceo",
-      "竞品做什么我们做",
-      "什么",
-      "的跟随陷阱",
-      "worker_id",
-      "description"
     ]
   }
 ]
