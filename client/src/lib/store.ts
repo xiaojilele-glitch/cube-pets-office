@@ -14,6 +14,8 @@ export interface AIConfig {
   wireApi: string;
 }
 
+export type RuntimeMode = 'frontend' | 'advanced';
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -29,6 +31,9 @@ interface AppState {
   togglePdf: () => void;
   openPdf: () => void;
   closePdf: () => void;
+
+  runtimeMode: RuntimeMode;
+  setRuntimeMode: (mode: RuntimeMode) => Promise<void>;
 
   aiConfig: AIConfig;
   isAIConfigLoading: boolean;
@@ -63,7 +68,31 @@ const DEFAULT_AI_CONFIG: AIConfig = {
   wireApi: 'chat_completions',
 };
 
-export const useAppStore = create<AppState>((set) => ({
+const RUNTIME_MODE_STORAGE_KEY = 'cube-pets-office-runtime-mode';
+
+const BROWSER_PREVIEW_AI_CONFIG: AIConfig = {
+  apiKey: 'Not required in frontend mode',
+  baseUrl: 'Browser-only preview',
+  model: 'Local demo responses',
+  modelReasoningEffort: 'instant',
+  maxContext: 32000,
+  providerName: 'Built-in browser preview',
+  wireApi: 'demo',
+};
+
+function getInitialRuntimeMode(): RuntimeMode {
+  if (typeof window === 'undefined') return 'frontend';
+
+  const stored = window.localStorage.getItem(RUNTIME_MODE_STORAGE_KEY);
+  return stored === 'advanced' ? 'advanced' : 'frontend';
+}
+
+function persistRuntimeMode(mode: RuntimeMode) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(RUNTIME_MODE_STORAGE_KEY, mode);
+}
+
+export const useAppStore = create<AppState>((set, get) => ({
   currentPage: 1,
   totalPages: 33,
   isPdfOpen: false,
@@ -72,9 +101,41 @@ export const useAppStore = create<AppState>((set) => ({
   openPdf: () => set({ isPdfOpen: true }),
   closePdf: () => set({ isPdfOpen: false }),
 
-  aiConfig: DEFAULT_AI_CONFIG,
+  runtimeMode: getInitialRuntimeMode(),
+  setRuntimeMode: async (mode) => {
+    persistRuntimeMode(mode);
+
+    if (mode === 'frontend') {
+      set({
+        runtimeMode: mode,
+        aiConfig: BROWSER_PREVIEW_AI_CONFIG,
+        isAIConfigLoading: false,
+      });
+      return;
+    }
+
+    set({ runtimeMode: mode });
+    try {
+      await get().hydrateAIConfig();
+    } catch (error) {
+      console.error('[Runtime Mode] Failed to hydrate advanced config:', error);
+    }
+  },
+
+  aiConfig:
+    getInitialRuntimeMode() === 'frontend'
+      ? BROWSER_PREVIEW_AI_CONFIG
+      : DEFAULT_AI_CONFIG,
   isAIConfigLoading: false,
   hydrateAIConfig: async () => {
+    if (get().runtimeMode === 'frontend') {
+      set({
+        aiConfig: BROWSER_PREVIEW_AI_CONFIG,
+        isAIConfigLoading: false,
+      });
+      return;
+    }
+
     set({ isAIConfigLoading: true });
 
     try {

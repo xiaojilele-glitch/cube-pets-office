@@ -4,6 +4,9 @@
 import { create } from "zustand";
 import { io, Socket } from "socket.io-client";
 
+import { AGENT_VISUAL_CONFIGS } from "@/lib/agent-config";
+import { useAppStore } from "@/lib/store";
+
 export interface AgentInfo {
   id: string;
   name: string;
@@ -149,6 +152,58 @@ export type PanelView =
   | "memory"
   | "reports";
 
+const DEMO_STAGE_LABELS: Record<string, string> = {
+  direction: "方向下发",
+  planning: "任务规划",
+  execution: "执行",
+  review: "评审",
+  meta_audit: "元审计",
+  revision: "修订",
+  verify: "验证",
+  summary: "汇总",
+  feedback: "反馈",
+  evolution: "进化",
+};
+
+const DEMO_STAGES: StageInfo[] = [
+  "direction",
+  "planning",
+  "execution",
+  "review",
+  "meta_audit",
+  "revision",
+  "verify",
+  "summary",
+  "feedback",
+  "evolution",
+].map((id, index) => ({
+  id,
+  order: index + 1,
+  label: DEMO_STAGE_LABELS[id] || id,
+}));
+
+const DEMO_AGENTS: AgentInfo[] = AGENT_VISUAL_CONFIGS.map((config) => ({
+  id: config.id,
+  name: config.name,
+  department: config.department,
+  role: config.role,
+  managerId:
+    config.role === "worker"
+      ? AGENT_VISUAL_CONFIGS.find(
+          candidate =>
+            candidate.role === "manager" &&
+            candidate.department === config.department
+        )?.id || null
+      : null,
+  model: "browser-preview",
+  isActive: true,
+  status: "idle",
+}));
+
+function isAdvancedMode() {
+  return useAppStore.getState().runtimeMode === "advanced";
+}
+
 function mergeHeartbeatStatus(
   items: HeartbeatStatusInfo[],
   next: HeartbeatStatusInfo
@@ -239,7 +294,7 @@ interface WorkflowState {
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   socket: null,
   connected: false,
-  agents: [],
+  agents: DEMO_AGENTS,
   agentStatuses: {},
   currentWorkflowId: null,
   workflows: [],
@@ -250,7 +305,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   agentMemorySearchResults: [],
   heartbeatStatuses: [],
   heartbeatReports: [],
-  stages: [],
+  stages: DEMO_STAGES,
   isWorkflowPanelOpen: false,
   activeView: "directive",
   isSubmitting: false,
@@ -264,6 +319,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   eventLog: [],
 
   initSocket: () => {
+    if (!isAdvancedMode()) {
+      const existingSocket = get().socket;
+      if (existingSocket) {
+        existingSocket.disconnect();
+      }
+
+      set({ socket: null, connected: false, eventLog: [] });
+      return;
+    }
+
     const existing = get().socket;
     if (existing?.connected) return;
 
@@ -439,6 +504,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   fetchAgents: async () => {
+    if (!isAdvancedMode()) {
+      set({
+        agents: DEMO_AGENTS.map(agent => ({
+          ...agent,
+          status:
+            (get().agentStatuses[agent.id] as AgentInfo["status"] | undefined) ||
+            "idle",
+        })),
+      });
+      return;
+    }
+
     try {
       const res = await fetch("/api/agents");
       const data = await res.json();
@@ -454,6 +531,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   fetchStages: async () => {
+    if (!isAdvancedMode()) {
+      set({ stages: DEMO_STAGES });
+      return;
+    }
+
     try {
       const res = await fetch("/api/config/stages");
       const data = await res.json();
@@ -464,6 +546,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   fetchWorkflows: async () => {
+    if (!isAdvancedMode()) {
+      set({ workflows: [] });
+      return;
+    }
+
     try {
       const res = await fetch("/api/workflows");
       const data = await res.json();
@@ -474,6 +561,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   fetchWorkflowDetail: async (id: string) => {
+    if (!isAdvancedMode()) {
+      set({
+        currentWorkflow: null,
+        tasks: [],
+        messages: [],
+        currentWorkflowId: id,
+      });
+      return;
+    }
+
     try {
       const res = await fetch(`/api/workflows/${id}`);
       const data = await res.json();
@@ -495,6 +592,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   ) => {
     if (!agentId) return;
     set({ isMemoryLoading: true });
+
+    if (!isAdvancedMode()) {
+      set({
+        agentMemoryRecent: [],
+        isMemoryLoading: false,
+      });
+      return;
+    }
 
     try {
       const params = new URLSearchParams();
@@ -525,6 +630,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     if (!agentId) return;
     set({ isMemoryLoading: true, memoryQuery: query });
 
+    if (!isAdvancedMode()) {
+      set({
+        agentMemorySearchResults: [],
+        isMemoryLoading: false,
+      });
+      return;
+    }
+
     try {
       const params = new URLSearchParams();
       params.set("query", query);
@@ -545,6 +658,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   },
 
   fetchHeartbeatStatuses: async () => {
+    if (!isAdvancedMode()) {
+      set({ heartbeatStatuses: [] });
+      return;
+    }
+
     try {
       const res = await fetch("/api/reports/heartbeat/status");
       const data = await res.json();
@@ -559,6 +677,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     limit: number = 12
   ) => {
     set({ isHeartbeatLoading: true });
+
+    if (!isAdvancedMode()) {
+      set({
+        heartbeatReports: [],
+        isHeartbeatLoading: false,
+      });
+      return;
+    }
 
     try {
       const params = new URLSearchParams();
@@ -582,6 +708,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   runHeartbeat: async (agentId: string) => {
     if (!agentId) return false;
     set({ runningHeartbeatAgentId: agentId });
+
+    if (!isAdvancedMode()) {
+      set({ runningHeartbeatAgentId: null });
+      return false;
+    }
 
     try {
       const res = await fetch(`/api/reports/heartbeat/${agentId}/run`, {
@@ -607,6 +738,15 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   submitDirective: async (directive: string) => {
     const normalizedDirective = normalizeDirective(directive);
     if (!normalizedDirective) return null;
+
+    if (!isAdvancedMode()) {
+      set({
+        isSubmitting: false,
+        lastSubmittedDirective: normalizedDirective,
+        lastSubmittedAt: Date.now(),
+      });
+      return null;
+    }
 
     const state = get();
     const now = Date.now();

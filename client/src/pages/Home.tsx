@@ -10,17 +10,26 @@ import { Toolbar } from '@/components/Toolbar';
 import { WorkflowPanel } from '@/components/WorkflowPanel';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useAppStore } from '@/lib/store';
+import { useWorkflowStore } from '@/lib/workflow-store';
 import { useEffect } from 'react';
 
 export default function Home() {
   const isSceneReady = useAppStore((state) => state.isSceneReady);
   const hydrateAIConfig = useAppStore((state) => state.hydrateAIConfig);
+  const runtimeMode = useAppStore((state) => state.runtimeMode);
+  const disconnectSocket = useWorkflowStore((state) => state.disconnectSocket);
 
   useEffect(() => {
     hydrateAIConfig().catch((error) => {
       console.error('[Home] Failed to load AI config:', error);
     });
   }, [hydrateAIConfig]);
+
+  useEffect(() => {
+    if (runtimeMode === 'frontend') {
+      disconnectSocket();
+    }
+  }, [disconnectSocket, runtimeMode]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#E2D6C7]">

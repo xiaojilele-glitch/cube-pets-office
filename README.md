@@ -78,17 +78,38 @@ data/     本地运行时状态和 Agent 工作空间产物
 scripts/  本地开发辅助脚本
 ```
 
+## 运行模式
+
+当前仓库默认采用“纯前端模式优先，高级模式可选”的产品化入口：
+
+- `纯前端模式`：默认启动路径，适合首次打开、分享演示、浏览 3D 场景、阅读论文和体验本地聊天；不要求服务端和 `.env`
+- `高级模式`：保留现有服务端实现，启用 `/api`、Socket.IO、真实工作流、heartbeat 报告和服务端模型调用
+
+现有服务端链路仍然保留，在确认纯前端链路稳定前不会删除。
+
 ## 快速开始
 
 ### 1. 安装依赖
 
 ```bash
-npm install
+corepack pnpm install
 ```
 
-### 2. 创建 `.env`
+### 2. 默认先启动纯前端模式
 
-复制 `.env.example` 为 `.env`，并填入你自己的模型服务配置。
+```bash
+corepack pnpm run dev:frontend
+```
+
+默认本地地址：
+
+- 前端：`http://localhost:3000`
+
+这一模式不要求 `.env`，适合先体验界面与组织结构。
+
+### 3. 需要真实工作流时再切到高级模式
+
+先复制 `.env.example` 为 `.env`，并填入你自己的模型服务配置。
 
 一个最小示例：
 
@@ -104,13 +125,13 @@ LLM_REASONING_EFFORT=high
 LLM_TIMEOUT_MS=45000
 ```
 
-### 3. 同时启动前后端
+然后启动完整链路：
 
 ```bash
-npm run dev:all
+corepack pnpm run dev:advanced
 ```
 
-默认本地地址：
+高级模式默认地址：
 
 - 前端：`http://localhost:3000`
 - 后端 API：`http://localhost:3001/api`
@@ -118,14 +139,14 @@ npm run dev:all
 也可以分别启动：
 
 ```bash
-npm run dev
-npm run dev:server
+corepack pnpm run dev:frontend
+corepack pnpm run dev:server
 ```
 
 ### 4. 类型检查
 
 ```bash
-npm run check
+corepack pnpm run check
 ```
 
 ## 运行时数据

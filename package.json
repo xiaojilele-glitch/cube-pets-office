@@ -5,8 +5,10 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
+    "dev:frontend": "vite --host",
     "dev:server": "tsx --watch server/index.ts",
     "dev:all": "node scripts/dev-all.mjs",
+    "dev:advanced": "node scripts/dev-all.mjs",
     "dev:stop": "node scripts/dev-stop.mjs",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",

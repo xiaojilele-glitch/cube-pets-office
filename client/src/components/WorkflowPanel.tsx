@@ -11,15 +11,18 @@ import {
   Download,
   History,
   Loader2,
+  Monitor,
   Network,
   Search,
   Send,
+  Server,
   Shield,
   Star,
   X,
   Zap,
 } from "lucide-react";
 
+import { useAppStore } from "@/lib/store";
 import {
   useWorkflowStore,
   type AgentMemoryEntry,
@@ -218,8 +221,11 @@ function StageProgressBar({
 
 function DirectiveView() {
   const { submitDirective, isSubmitting } = useWorkflowStore();
+  const runtimeMode = useAppStore((state) => state.runtimeMode);
+  const setRuntimeMode = useAppStore((state) => state.setRuntimeMode);
   const [directive, setDirective] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isFrontendMode = runtimeMode === "frontend";
 
   const examples = [
     "本周聚焦用户增长，请各部门制定具体行动方案。",
@@ -230,6 +236,13 @@ function DirectiveView() {
 
   const handleSubmit = async () => {
     if (!directive.trim() || isSubmitting) return;
+
+    if (isFrontendMode) {
+      await setRuntimeMode("advanced");
+      inputRef.current?.focus();
+      return;
+    }
+
     await submitDirective(directive.trim());
     setDirective("");
     inputRef.current?.focus();
@@ -248,6 +261,30 @@ function DirectiveView() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {isFrontendMode && (
+          <div className="mb-4 rounded-xl border border-[#E8DDD0] bg-gradient-to-br from-[#FFF7EC] to-[#F7EDE2] p-3">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-white/80 p-2 text-[#D4845A]">
+                <Monitor className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#3A2A1A]">纯前端模式说明</p>
+                <p className="mt-1 text-[10px] leading-5 text-[#6B5A4A]">
+                  当前默认入口优先浏览器本地体验，不会直接连服务端工作流。你可以先逛 3D
+                  场景、点选角色、体验本地聊天；当你准备执行真实指令时，再切到高级模式。
+                </p>
+                <button
+                  onClick={() => void setRuntimeMode("advanced")}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-[#D4845A] px-3 py-2 text-[10px] font-semibold text-white transition-colors hover:bg-[#C9774E]"
+                >
+                  <Server className="h-3.5 w-3.5" />
+                  切到高级模式后执行真实工作流
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           <p className="mb-2 text-[10px] font-medium text-[#8B7355]">
             示例指令
@@ -314,6 +351,11 @@ function DirectiveView() {
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               <span>正在启动工作流...</span>
+            </>
+          ) : isFrontendMode ? (
+            <>
+              <Server className="h-4 w-4" />
+              <span>切换到高级模式</span>
             </>
           ) : (
             <>
@@ -554,6 +596,13 @@ function WorkflowProgressView() {
                 {deptTasks.filter(task => task.status === "passed").length}/
                 {deptTasks.length} 完成
               </span>
+              {/*
+                {"Advanced mode only"}
+                  ? "纯前端模式"
+                  : connected
+                    ? "高级模式已连接"
+                    : "高级模式未连接"}
+              */}
             </div>
             <div className="space-y-1.5">
               {deptTasks.map(task => (
@@ -1401,6 +1450,7 @@ function HistoryView() {
 }
 
 export function WorkflowPanel() {
+  const runtimeMode = useAppStore((state) => state.runtimeMode);
   const {
     isWorkflowPanelOpen,
     toggleWorkflowPanel,
@@ -1414,6 +1464,7 @@ export function WorkflowPanel() {
     fetchHeartbeatReports,
     connected,
   } = useWorkflowStore();
+  const isFrontendMode = runtimeMode === "frontend";
 
   useEffect(() => {
     initSocket();
@@ -1429,6 +1480,7 @@ export function WorkflowPanel() {
     fetchWorkflows,
     fetchHeartbeatStatuses,
     fetchHeartbeatReports,
+    runtimeMode,
   ]);
 
   if (!isWorkflowPanelOpen) return null;
@@ -1458,7 +1510,11 @@ export function WorkflowPanel() {
             <div className="flex items-center gap-1.5">
               <div
                 className={`h-1.5 w-1.5 rounded-full ${
-                  connected ? "bg-emerald-500" : "bg-red-400"
+                  isFrontendMode
+                    ? "bg-amber-400"
+                    : connected
+                      ? "bg-emerald-500"
+                      : "bg-red-400"
                 }`}
               />
               <span className="text-[9px] text-[#8B7355]">
@@ -1492,6 +1548,15 @@ export function WorkflowPanel() {
           </button>
         ))}
       </div>
+
+      {isFrontendMode && (
+        <div className="border-b border-[#F0E8E0] bg-[#FFF7EC] px-4 py-2.5">
+          <p className="text-[10px] leading-5 text-[#6B5A4A]">
+            当前是默认纯前端入口：可浏览组织、查看示意阶段和体验本地聊天。
+            真实工作流、heartbeat 报告和服务端模型调用仍保留在高级模式里，现有服务端实现没有删除。
+          </p>
+        </div>
+      )}
 
       <div className="flex-1 overflow-hidden">
         {activeView === "directive" && <DirectiveView />}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { MessageCircle, Send, Trash2, X } from 'lucide-react';
+import { MessageCircle, Monitor, Send, Server, Trash2, X } from 'lucide-react';
 
 import {
   DEFAULT_AGENT_ID,
@@ -21,6 +21,34 @@ Core ideas:
 
 Reply naturally, stay concise, and keep a bit of character.`;
 
+function buildFrontendModeReply({
+  input,
+  agentName,
+  agentEmoji,
+  agentRole,
+}: {
+  input: string;
+  agentName: string;
+  agentEmoji: string;
+  agentRole: string;
+}) {
+  const normalized = input.toLowerCase();
+
+  if (/workflow|阶段|phase|流程|编排/.test(normalized)) {
+    return `${agentEmoji} ${agentName}：现在是纯前端模式，我先用本地演示给你讲链路。这个系统的主线是 CEO -> Manager -> Worker，再经过 review、meta-audit、revision、verify、summary、feedback 和 evolution。要真正跑这条链路，请切到“高级模式”。`;
+  }
+
+  if (/memory|记忆|soul|heartbeat|报告/.test(normalized)) {
+    return `${agentEmoji} ${agentName}：当前默认入口只保留浏览器内体验，所以我可以解释记忆层、SOUL、heartbeat 和报告结构，但不会真的去写入服务端数据。想看真实报告与历史记录，请切到“高级模式”。`;
+  }
+
+  if (/怎么用|如何|help|模式|mode/.test(normalized)) {
+    return `${agentEmoji} ${agentName}：先用纯前端模式逛场景、点选角色、读论文、做本地聊天；当你准备好 \`.env\` 和服务端后，再切到高级模式执行真实工作流。这一版保留了原有服务端实现，没有删。`;
+  }
+
+  return `${agentEmoji} ${agentName}：我现在在纯前端模式里值班，角色定位是“${agentRole}”。我可以先帮你理解组织结构、论文思路和界面分工；如果你想让我真正调用模型或发起多智能体工作流，切到“高级模式”就可以了。`;
+}
+
 export function ChatPanel() {
   const {
     chatMessages,
@@ -31,6 +59,7 @@ export function ChatPanel() {
     isLoading,
     setLoading,
     selectedPet,
+    runtimeMode,
   } = useAppStore();
 
   const [input, setInput] = useState('');
@@ -41,6 +70,7 @@ export function ChatPanel() {
   const agentName = getAgentLabel(agentId);
   const agentEmoji = getAgentEmoji(agentId);
   const agentRole = getAgentChatRole(agentId);
+  const isFrontendMode = runtimeMode === 'frontend';
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,6 +97,23 @@ export function ChatPanel() {
     setLoading(true);
 
     try {
+      if (isFrontendMode) {
+        await new Promise((resolve) => window.setTimeout(resolve, 280));
+
+        addMessage({
+          role: 'assistant',
+          content: buildFrontendModeReply({
+            input: currentInput,
+            agentName,
+            agentEmoji,
+            agentRole,
+          }),
+          petName: agentId,
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -113,7 +160,18 @@ export function ChatPanel() {
     } finally {
       setLoading(false);
     }
-  }, [addMessage, agentEmoji, agentId, agentName, agentRole, chatMessages, input, isLoading, setLoading]);
+  }, [
+    addMessage,
+    agentEmoji,
+    agentId,
+    agentName,
+    agentRole,
+    chatMessages,
+    input,
+    isFrontendMode,
+    isLoading,
+    setLoading,
+  ]);
 
   if (!isChatOpen) return null;
 
@@ -132,6 +190,20 @@ export function ChatPanel() {
             <p className="text-[10px] text-[#8B7355]">{agentRole}</p>
           </div>
           <span className="text-lg">{agentEmoji}</span>
+        </div>
+
+        <div className="rounded-full bg-[#F7F1EA] px-2 py-1 text-[9px] font-semibold text-[#6B5A4A]">
+          {isFrontendMode ? (
+            <span className="inline-flex items-center gap-1">
+              <Monitor className="h-3 w-3" />
+              纯前端本地聊天
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              <Server className="h-3 w-3" />
+              高级模式服务端聊天
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1">
@@ -159,9 +231,19 @@ export function ChatPanel() {
             </div>
             <p className="mb-1 text-sm font-semibold text-[#3A2A1A]">{agentName} is ready</p>
             <p className="text-xs leading-relaxed text-[#8B7355]">
-              Ask about the paper, the multi-agent system,
-              <br />
-              or how this 18-agent workflow is organized.
+              {isFrontendMode ? (
+                <>
+                  Ask about the paper, the multi-agent design,
+                  <br />
+                  or when to switch to Advanced Mode.
+                </>
+              ) : (
+                <>
+                  Ask about the paper, the multi-agent system,
+                  <br />
+                  or how this 18-agent workflow is organized.
+                </>
+              )}
             </p>
           </div>
         )}

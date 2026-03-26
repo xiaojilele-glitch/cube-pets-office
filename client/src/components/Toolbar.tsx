@@ -3,7 +3,9 @@ import {
   Brain,
   HelpCircle,
   MessageCircle,
+  Monitor,
   Settings,
+  Server,
   Target,
   Workflow,
   X,
@@ -30,6 +32,8 @@ export function Toolbar() {
     isConfigOpen,
     isChatOpen,
     selectedPet,
+    runtimeMode,
+    setRuntimeMode,
   } = useAppStore();
   const { isWorkflowPanelOpen, toggleWorkflowPanel } = useWorkflowStore();
 
@@ -92,6 +96,51 @@ export function Toolbar() {
         className="fixed bottom-7 left-1/2 z-[60] -translate-x-1/2"
         style={{ pointerEvents: 'auto' }}
       >
+        <div className="mb-3 rounded-[28px] border border-white/60 bg-white/86 px-4 py-3 shadow-[0_16px_44px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A08972]">
+                Run Mode
+              </p>
+              <h4
+                className="mt-1 text-sm font-bold text-[#3A2A1A]"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                默认先用纯前端体验，再按需切到高级模式
+              </h4>
+              <p className="mt-1 max-w-[360px] text-[11px] leading-relaxed text-[#6B5A4A]">
+                纯前端模式保留 3D 场景、论文浏览和本地演示聊天，不要求服务端或 `.env`。
+                高级模式会连接 `/api` 与 Socket.IO，启用真实工作流、报告和服务端模型调用。
+              </p>
+            </div>
+
+            <div className="flex shrink-0 gap-2">
+              <button
+                onClick={() => void setRuntimeMode('frontend')}
+                className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all ${
+                  runtimeMode === 'frontend'
+                    ? 'bg-[#2F6A54] text-white shadow-sm'
+                    : 'bg-[#F4EDE4] text-[#6B5A4A] hover:bg-[#ECE1D5]'
+                }`}
+              >
+                <Monitor className="h-3.5 w-3.5" />
+                纯前端模式
+              </button>
+              <button
+                onClick={() => void setRuntimeMode('advanced')}
+                className={`flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all ${
+                  runtimeMode === 'advanced'
+                    ? 'bg-[#D07A4F] text-white shadow-sm'
+                    : 'bg-[#F4EDE4] text-[#6B5A4A] hover:bg-[#ECE1D5]'
+                }`}
+              >
+                <Server className="h-3.5 w-3.5" />
+                高级模式
+              </button>
+            </div>
+          </div>
+        </div>
+
         {showInfo && (
           <div className="mb-3 w-[340px] rounded-[28px] border border-white/60 bg-white/88 p-5 shadow-[0_16px_44px_rgba(60,44,28,0.18)] backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="mb-4 flex items-center justify-between">

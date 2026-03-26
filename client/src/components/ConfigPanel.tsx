@@ -3,13 +3,22 @@
  * Design: Warm glass-morphism, left slide-in panel
  */
 import { useAppStore } from '@/lib/store';
-import { Settings, X, Eye, EyeOff, Server, Key, Brain, Database, Tag, RefreshCw } from 'lucide-react';
+import { Settings, X, Eye, EyeOff, Server, Key, Brain, Database, Tag, RefreshCw, Monitor } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 export function ConfigPanel() {
-  const { aiConfig, hydrateAIConfig, isAIConfigLoading, isConfigOpen, toggleConfig } = useAppStore();
+  const {
+    aiConfig,
+    hydrateAIConfig,
+    isAIConfigLoading,
+    isConfigOpen,
+    toggleConfig,
+    runtimeMode,
+    setRuntimeMode,
+  } = useAppStore();
   const [showKey, setShowKey] = useState(false);
+  const isFrontendMode = runtimeMode === 'frontend';
 
   useEffect(() => {
     if (!isConfigOpen) return;
@@ -22,6 +31,13 @@ export function ConfigPanel() {
   if (!isConfigOpen) return null;
 
   const handleRefresh = async () => {
+    if (isFrontendMode) {
+      toast.info('Frontend mode uses local preview values', {
+        description: 'Switch to Advanced Mode to reload real server config.',
+      });
+      return;
+    }
+
     try {
       await hydrateAIConfig();
       toast.success('Config reloaded', {
@@ -67,9 +83,54 @@ export function ConfigPanel() {
           <Server className="w-3.5 h-3.5 text-[#2D5F4A]" />
           <span className="text-xs font-bold text-[#3A2A1A]">Source</span>
         </div>
-        <p className="text-sm font-semibold text-[#2D5F4A]">`.env` only</p>
-        <p className="text-[10px] text-[#8B7355] mt-0.5">Chat panel and workflow always read the same server config.</p>
-        <p className="text-[10px] text-[#8B7355] mt-1">To change model or key, edit `.env` and restart the server.</p>
+        <p className="text-sm font-semibold text-[#2D5F4A]">
+          {isFrontendMode ? 'Browser-only preview' : '`.env` only'}
+        </p>
+        <p className="text-[10px] text-[#8B7355] mt-0.5">
+          {isFrontendMode
+            ? 'Current session stays in the browser and avoids any required backend setup.'
+            : 'Chat panel and workflow always read the same server config.'}
+        </p>
+        <p className="text-[10px] text-[#8B7355] mt-1">
+          {isFrontendMode
+            ? 'Switch to Advanced Mode when you want real workflow execution, reports, and server-backed model calls.'
+            : 'To change model or key, edit `.env` and restart the server.'}
+        </p>
+      </div>
+
+      <div className="mx-5 mt-4 p-3.5 rounded-xl bg-white/80 border border-[#E8DDD0] shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-[#3A2A1A]">Run Mode</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-[#8B7355]">
+              纯前端模式适合首次打开和本地演示；高级模式保留现有服务端实现，用于真实工作流和报告链路。
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => void setRuntimeMode('frontend')}
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
+                isFrontendMode
+                  ? 'bg-[#2D5F4A] text-white'
+                  : 'bg-[#F7F1EA] text-[#5A4A3A] hover:bg-[#F0E8E0]'
+              }`}
+            >
+              <Monitor className="w-3.5 h-3.5" />
+              纯前端
+            </button>
+            <button
+              onClick={() => void setRuntimeMode('advanced')}
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
+                isFrontendMode
+                  ? 'bg-[#F7F1EA] text-[#5A4A3A] hover:bg-[#F0E8E0]'
+                  : 'bg-[#D4845A] text-white'
+              }`}
+            >
+              <Server className="w-3.5 h-3.5" />
+              高级
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
@@ -173,7 +234,11 @@ export function ConfigPanel() {
             disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RefreshCw className={`w-4 h-4 ${isAIConfigLoading ? 'animate-spin' : ''}`} />
-          {isAIConfigLoading ? 'Reloading...' : 'Reload From Server'}
+          {isAIConfigLoading
+            ? 'Reloading...'
+            : isFrontendMode
+              ? 'Switch To Advanced Mode'
+              : 'Reload From Server'}
         </button>
       </div>
     </div>
