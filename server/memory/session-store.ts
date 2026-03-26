@@ -1,8 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-
 import db from '../db/index.js';
-import { ensureAgentWorkspace } from './workspace.js';
+import {
+  appendAgentWorkspaceFile,
+  readAgentWorkspaceFile,
+  writeAgentWorkspaceFile,
+} from '../core/access-guard.js';
+import { vectorStore } from './vector-store.js';
 
 export interface SessionEntry {
   timestamp: string;
@@ -26,6 +28,9 @@ export interface MemorySummary {
   stage: string | null;
   summary: string;
   keywords: string[];
+  keywordScore?: number;
+  vectorScore?: number;
+  retrievalMethod?: 'recent' | 'keyword' | 'vector' | 'hybrid';
 }
 
 function tokenize(text: string): string[] {
@@ -45,25 +50,33 @@ function buildKeywordList(text: string, limit: number = 12): string[] {
   }
 
   return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
+    .sort((left, right) => right[1] - left[1])
     .slice(0, limit)
     .map(([token]) => token);
 }
 
-function getSessionFile(agentId: string, workflowId?: string | null): string {
-  const { sessionsDir } = ensureAgentWorkspace(agentId);
-  return path.join(sessionsDir, `${workflowId || '_general'}.jsonl`);
+function getSessionFile(workflowId?: string | null): string {
+  return `${workflowId || '_general'}.jsonl`;
 }
 
-function getSummaryFile(agentId: string): string {
-  const { memoryDir } = ensureAgentWorkspace(agentId);
-  return path.join(memoryDir, 'summaries.json');
+function getSummaryFile(): string {
+  return 'summaries.json';
 }
 
-function readJsonLines(filePath: string): SessionEntry[] {
-  if (!fs.existsSync(filePath)) return [];
-  return fs
-    .readFileSync(filePath, 'utf-8')
+function safeParseJson<T>(value: string | null, fallback: T): T {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function readJsonLines(agentId: string, workflowId?: string | null): SessionEntry[] {
+  const content = readAgentWorkspaceFile(agentId, getSessionFile(workflowId), 'sessions');
+  if (!content) return [];
+
+  return content
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean)
@@ -71,18 +84,25 @@ function readJsonLines(filePath: string): SessionEntry[] {
 }
 
 function readSummaryIndex(agentId: string): MemorySummary[] {
-  const filePath = getSummaryFile(agentId);
-  if (!fs.existsSync(filePath)) return [];
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as MemorySummary[];
-  } catch {
-    return [];
-  }
+  return safeParseJson<MemorySummary[]>(readAgentWorkspaceFile(agentId, getSummaryFile(), 'memory'), []);
 }
 
 function writeSummaryIndex(agentId: string, summaries: MemorySummary[]): void {
-  const filePath = getSummaryFile(agentId);
-  fs.writeFileSync(filePath, JSON.stringify(summaries, null, 2), 'utf-8');
+  writeAgentWorkspaceFile(agentId, getSummaryFile(), JSON.stringify(summaries, null, 2), 'memory');
+}
+
+function compactText(text: string, limit: number = 1200): string {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.substring(0, limit)}...`;
+}
+
+function renderContextEntry(entry: SessionEntry): string {
+  const time = entry.timestamp;
+  const stage = entry.stage || 'general';
+  const direction = entry.direction ? ` ${entry.direction}` : '';
+  const relation = entry.otherAgentId ? ` ${entry.otherAgentId}` : '';
+  return `[${time}] [${stage}] [${entry.type}${direction}${relation}] ${entry.content}`;
 }
 
 class SessionStore {
@@ -92,8 +112,12 @@ class SessionStore {
       timestamp: entry.timestamp || new Date().toISOString(),
     };
 
-    const sessionFile = getSessionFile(agentId, row.workflowId);
-    fs.appendFileSync(sessionFile, `${JSON.stringify(row)}\n`, 'utf-8');
+    appendAgentWorkspaceFile(
+      agentId,
+      getSessionFile(row.workflowId),
+      `${JSON.stringify(row)}\n`,
+      'sessions'
+    );
   }
 
   appendMessageLog(
@@ -113,7 +137,7 @@ class SessionStore {
       type: 'message',
       direction: options.direction,
       otherAgentId: options.otherAgentId,
-      preview: options.content.substring(0, 160),
+      preview: compactText(options.content, 160),
       content: options.content,
       metadata: options.metadata || null,
     });
@@ -133,7 +157,7 @@ class SessionStore {
       workflowId: options.workflowId || null,
       stage: options.stage || null,
       type: 'llm_prompt',
-      preview: options.prompt.substring(0, 160),
+      preview: compactText(options.prompt, 160),
       content: options.prompt,
       metadata: options.metadata || null,
     });
@@ -142,60 +166,106 @@ class SessionStore {
       workflowId: options.workflowId || null,
       stage: options.stage || null,
       type: 'llm_response',
-      preview: options.response.substring(0, 160),
+      preview: compactText(options.response, 160),
       content: options.response,
       metadata: options.metadata || null,
     });
   }
 
+  getWorkflowEntries(agentId: string, workflowId: string): SessionEntry[] {
+    return readJsonLines(agentId, workflowId);
+  }
+
   getRecentEntries(agentId: string, workflowId?: string, limit: number = 8): SessionEntry[] {
-    const sessionFile = getSessionFile(agentId, workflowId || null);
-    const entries = readJsonLines(sessionFile);
+    const entries = workflowId ? this.getWorkflowEntries(agentId, workflowId) : readJsonLines(agentId, null);
     return entries.slice(-limit);
   }
 
   searchMemories(agentId: string, query: string, topK: number = 3): MemorySummary[] {
     const summaries = readSummaryIndex(agentId);
     const queryTokens = uniqueSorted(tokenize(query));
-    if (queryTokens.length === 0) {
-      return summaries.slice(-topK).reverse();
+    const keywordHits = new Map<string, MemorySummary>();
+
+    for (const summary of summaries) {
+      const haystack = `${summary.directive}\n${summary.summary}\n${summary.keywords.join(' ')}`.toLowerCase();
+      const keywordScore = queryTokens.reduce(
+        (total, token) => total + (haystack.includes(token) ? 1 : 0),
+        0
+      );
+
+      if (queryTokens.length === 0 || keywordScore > 0) {
+        keywordHits.set(summary.workflowId, {
+          ...summary,
+          keywordScore,
+          retrievalMethod: queryTokens.length === 0 ? 'recent' : 'keyword',
+        });
+      }
     }
 
-    return summaries
-      .map((summary) => {
-        const haystack = `${summary.directive}\n${summary.summary}\n${summary.keywords.join(' ')}`.toLowerCase();
-        const score = queryTokens.reduce((total, token) => total + (haystack.includes(token) ? 1 : 0), 0);
-        return { summary, score };
-      })
-      .filter((item) => item.score > 0)
-      .sort((a, b) => b.score - a.score || b.summary.createdAt.localeCompare(a.summary.createdAt))
-      .slice(0, topK)
-      .map((item) => item.summary);
+    const vectorHits = vectorStore.searchMemorySummaries(agentId, query, Math.max(topK * 2, 6));
+    for (const hit of vectorHits) {
+      const existing = keywordHits.get(hit.summary.workflowId);
+      keywordHits.set(hit.summary.workflowId, {
+        ...(existing || hit.summary),
+        ...hit.summary,
+        keywordScore: existing?.keywordScore || 0,
+        vectorScore: hit.score,
+        retrievalMethod: existing ? 'hybrid' : 'vector',
+      });
+    }
+
+    const ranked = Array.from(keywordHits.values()).sort((left, right) => {
+      const leftCombined = (left.keywordScore || 0) + (left.vectorScore || 0);
+      const rightCombined = (right.keywordScore || 0) + (right.vectorScore || 0);
+      return rightCombined - leftCombined || right.createdAt.localeCompare(left.createdAt);
+    });
+
+    if (queryTokens.length === 0 && query.trim() === '') {
+      return summaries
+        .slice()
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+        .slice(0, topK)
+        .map((summary) => ({ ...summary, retrievalMethod: 'recent' }));
+    }
+
+    return ranked.slice(0, topK);
   }
 
   buildPromptContext(agentId: string, query: string, workflowId?: string): string[] {
-    const recentEntries = this.getRecentEntries(agentId, workflowId, 6);
-    const relevantMemories = this.searchMemories(agentId, query, 3);
     const sections: string[] = [];
 
-    if (recentEntries.length > 0) {
-      const recentText = recentEntries
-        .map((entry) => {
-          const direction = entry.direction ? ` ${entry.direction}` : '';
-          return `- [${entry.type}${direction}] ${entry.preview}`;
-        })
-        .join('\n');
-      sections.push(`以下是你在当前工作流中的最近记忆，请保持连续性：\n${recentText}`);
+    if (workflowId) {
+      const workflowEntries = this.getWorkflowEntries(agentId, workflowId);
+      if (workflowEntries.length > 0) {
+        const transcript = workflowEntries.map((entry) => renderContextEntry(entry)).join('\n\n');
+        sections.push(`以下是你在当前 workflow 中的完整上下文记录，请延续已有判断、承诺和事实，不要丢失前文：\n${transcript}`);
+      }
+    } else {
+      const recentEntries = this.getRecentEntries(agentId, undefined, 8);
+      if (recentEntries.length > 0) {
+        const recentText = recentEntries
+          .map((entry) => `- [${entry.type}] ${entry.preview}`)
+          .join('\n');
+        sections.push(`以下是你最近的通用记忆片段，可帮助你保持连续性：\n${recentText}`);
+      }
     }
 
+    const relevantMemories = this.searchMemories(agentId, query, 3).filter(
+      (memory) => memory.workflowId !== workflowId
+    );
     if (relevantMemories.length > 0) {
       const memoryText = relevantMemories
-        .map(
-          (memory) =>
-            `- 工作流 ${memory.workflowId}（${memory.status}）\n  指令：${memory.directive}\n  摘要：${memory.summary}`
-        )
+        .map((memory) => {
+          const scores = [
+            typeof memory.keywordScore === 'number' ? `keyword=${memory.keywordScore}` : null,
+            typeof memory.vectorScore === 'number' ? `vector=${memory.vectorScore.toFixed(3)}` : null,
+          ]
+            .filter(Boolean)
+            .join(', ');
+          return `- 工作流 ${memory.workflowId}（${memory.status}）\n  指令：${memory.directive}\n  摘要：${memory.summary}\n  检索方式：${memory.retrievalMethod || 'unknown'}${scores ? `，${scores}` : ''}`;
+        })
         .join('\n');
-      sections.push(`以下是与你当前任务相关的历史经验，可作为参考但不要盲目照搬：\n${memoryText}`);
+      sections.push(`以下是与你当前任务相关的历史经验，可作为参考但不要机械复用：\n${memoryText}`);
     }
 
     return sections;
@@ -225,12 +295,14 @@ class SessionStore {
       const agentTasks = tasks.filter(
         (task) => task.worker_id === agentId || task.manager_id === agentId
       );
+      const workflowEntries = this.getWorkflowEntries(agentId, workflowId);
 
       const summaryParts: string[] = [
         `角色：${agent.role}`,
         `工作流状态：${workflow.status}`,
         `消息数：${agentMessages.length}`,
         `相关任务数：${agentTasks.length}`,
+        `完整上下文条目数：${workflowEntries.length}`,
       ];
 
       if (agentTasks.length > 0) {
@@ -245,12 +317,20 @@ class SessionStore {
 
       if (agentMessages.length > 0) {
         const latestMessages = agentMessages
-          .slice(-3)
+          .slice(-5)
           .map(
-            (message) => `${message.from_agent} -> ${message.to_agent} [${message.stage}] ${message.content.substring(0, 80)}`
+            (message) =>
+              `${message.from_agent} -> ${message.to_agent} [${message.stage}] ${compactText(message.content, 120)}`
           )
           .join('；');
         summaryParts.push(`近期消息：${latestMessages}`);
+      }
+
+      if (workflowEntries.length > 0) {
+        const fullContextSummary = workflowEntries
+          .map((entry) => compactText(renderContextEntry(entry), 240))
+          .join('\n');
+        summaryParts.push(`上下文回放：\n${fullContextSummary}`);
       }
 
       const summary = summaryParts.join('\n');
@@ -271,15 +351,17 @@ class SessionStore {
 
       const summaries = readSummaryIndex(agentId).filter((item) => item.workflowId !== workflowId);
       summaries.push(memory);
+      summaries.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
       writeSummaryIndex(agentId, summaries);
+      vectorStore.upsertMemorySummary(agentId, memory);
 
       this.appendEntry(agentId, {
         workflowId,
         stage: workflow.current_stage,
         type: 'workflow_summary',
-        preview: summary.substring(0, 160),
+        preview: compactText(summary, 160),
         content: summary,
-        metadata: { keywords },
+        metadata: { keywords, workflowEntryCount: workflowEntries.length },
       });
     }
   }

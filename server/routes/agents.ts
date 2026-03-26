@@ -5,6 +5,7 @@ import { Router } from 'express';
 
 import db from '../db/index.js';
 import { sessionStore } from '../memory/session-store.js';
+import { soulStore } from '../memory/soul-store.js';
 
 const router = Router();
 
@@ -57,7 +58,12 @@ router.get('/:id/soul', (req, res) => {
     return res.status(404).json({ error: 'Agent not found' });
   }
 
-  res.json({ soulMd: agent.soul_md });
+  const soul = soulStore.getSoul(agent.id, agent.soul_md || '');
+  res.json({
+    soulMd: soul.soulMd,
+    filePath: soul.filePath,
+    exists: soul.exists,
+  });
 });
 
 // GET /api/agents/:id/memory/recent

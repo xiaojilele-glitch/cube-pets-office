@@ -24,6 +24,8 @@ import {
   useWorkflowStore,
   type AgentMemoryEntry,
   type AgentMemorySummary,
+  type HeartbeatReportInfo,
+  type HeartbeatStatusInfo,
   type PanelView,
   type StageInfo,
   type TaskInfo,
@@ -46,6 +48,7 @@ const DEPARTMENT_ICONS: Record<string, string> = {
 const AGENT_STATUS_COLORS: Record<string, string> = {
   idle: 'bg-gray-300',
   thinking: 'bg-yellow-400 animate-pulse',
+  heartbeat: 'bg-cyan-500 animate-pulse',
   executing: 'bg-blue-500 animate-pulse',
   reviewing: 'bg-purple-500 animate-pulse',
   planning: 'bg-indigo-500 animate-pulse',
@@ -60,6 +63,7 @@ const AGENT_STATUS_COLORS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   idle: '空闲',
   thinking: '思考中',
+  heartbeat: '心跳中',
   executing: '执行中',
   reviewing: '评审中',
   planning: '规划中',
@@ -116,6 +120,30 @@ function getWorkflowStatusClass(status: string): string {
     case 'completed':
       return 'bg-emerald-100 text-emerald-700';
     case 'failed':
+      return 'bg-red-100 text-red-700';
+    default:
+      return 'bg-gray-100 text-gray-600';
+  }
+}
+
+function getHeartbeatStateLabel(state: HeartbeatStatusInfo['state']): string {
+  return (
+    {
+      idle: '空闲',
+      scheduled: '已计划',
+      running: '进行中',
+      error: '异常',
+    }[state] || state
+  );
+}
+
+function getHeartbeatStateClass(state: HeartbeatStatusInfo['state']): string {
+  switch (state) {
+    case 'running':
+      return 'bg-cyan-100 text-cyan-700';
+    case 'scheduled':
+      return 'bg-blue-100 text-blue-700';
+    case 'error':
       return 'bg-red-100 text-red-700';
     default:
       return 'bg-gray-100 text-gray-600';
@@ -957,6 +985,202 @@ function MemoryView() {
   );
 }
 
+function HeartbeatReportCard({ item }: { item: HeartbeatReportInfo }) {
+  return (
+    <div className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-[#3A2A1A]">{item.title}</p>
+          <p className="mt-0.5 text-[9px] text-[#8B7355]">
+            {item.agentName} · {item.department} · {formatTime(item.generatedAt)}
+          </p>
+        </div>
+        <span className="rounded-full bg-[#F0E8E0] px-2 py-0.5 text-[8px] font-medium text-[#6B5A4A]">
+          {item.trigger}
+        </span>
+      </div>
+
+      <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-[9px] leading-5 text-[#5D4C3B]">
+        {item.summaryPreview}
+      </p>
+
+      <div className="mt-2 flex flex-wrap gap-1">
+        {item.keywords.slice(0, 6).map((keyword) => (
+          <span
+            key={`${item.reportId}-${keyword}`}
+            className="rounded-full bg-cyan-50 px-2 py-0.5 text-[8px] text-cyan-700"
+          >
+            {keyword}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        <a
+          href={`/api/reports/heartbeat/${item.agentId}/${item.reportId}/download?format=json`}
+          className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837] transition-colors hover:bg-[#E8DDD0]"
+        >
+          <Download className="h-3 w-3" />
+          JSON
+        </a>
+        <a
+          href={`/api/reports/heartbeat/${item.agentId}/${item.reportId}/download?format=md`}
+          className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837] transition-colors hover:bg-[#E8DDD0]"
+        >
+          <Download className="h-3 w-3" />
+          MD
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function ReportsView() {
+  const {
+    heartbeatStatuses,
+    heartbeatReports,
+    fetchHeartbeatStatuses,
+    fetchHeartbeatReports,
+    runHeartbeat,
+    runningHeartbeatAgentId,
+    isHeartbeatLoading,
+  } = useWorkflowStore();
+
+  useEffect(() => {
+    void fetchHeartbeatStatuses();
+    void fetchHeartbeatReports(undefined, 12);
+  }, [fetchHeartbeatStatuses, fetchHeartbeatReports]);
+
+  const enabledCount = heartbeatStatuses.filter((item) => item.enabled).length;
+  const runningCount = heartbeatStatuses.filter((item) => item.state === 'running').length;
+  const latestReportAt = heartbeatReports[0]?.generatedAt || null;
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="border-b border-[#F0E8E0] px-4 py-3">
+        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
+          <Search className="h-4 w-4 text-cyan-500" />
+          心跳报告
+        </h3>
+        <p className="mt-0.5 text-[10px] text-[#8B7355]">
+          展示 agent 的定时 heartbeat 状态、最近一次自主总结，以及手动触发入口。
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="mb-3 grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2">
+            <p className="text-[9px] text-[#8B7355]">已启用</p>
+            <p className="mt-1 text-sm font-bold text-[#3A2A1A]">{enabledCount}</p>
+          </div>
+          <div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2">
+            <p className="text-[9px] text-[#8B7355]">运行中</p>
+            <p className="mt-1 text-sm font-bold text-[#3A2A1A]">{runningCount}</p>
+          </div>
+          <div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2">
+            <p className="text-[9px] text-[#8B7355]">最新报告</p>
+            <p className="mt-1 text-[10px] font-semibold text-[#3A2A1A]">
+              {latestReportAt ? formatTime(latestReportAt) : '--'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="mb-1.5 flex items-center justify-between">
+            <h4 className="text-[10px] font-bold text-[#8B7355]">Agent 心跳状态</h4>
+            {isHeartbeatLoading && (
+              <span className="flex items-center gap-1 text-[9px] text-[#B0A090]">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                加载中
+              </span>
+            )}
+          </div>
+
+          {heartbeatStatuses.length === 0 ? (
+            <div className="rounded-xl bg-[#F8F4F0] px-3 py-4 text-center text-[10px] text-[#8B7355]">
+              暂无 heartbeat 状态数据。
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {heartbeatStatuses.map((item) => (
+                <div
+                  key={item.agentId}
+                  className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[11px] font-semibold text-[#3A2A1A]">{item.agentName}</p>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${getHeartbeatStateClass(
+                            item.state
+                          )}`}
+                        >
+                          {getHeartbeatStateLabel(item.state)}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[9px] text-[#8B7355]">
+                        {item.department} · 每 {item.intervalMinutes} 分钟 · {item.reportCount} 份报告
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => void runHeartbeat(item.agentId)}
+                      disabled={!item.enabled || runningHeartbeatAgentId === item.agentId}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-cyan-100 px-2.5 py-1.5 text-[9px] font-medium text-cyan-700 transition-colors hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {runningHeartbeatAgentId === item.agentId ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          运行中
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-3 w-3" />
+                          立即触发
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="mt-2 rounded-lg bg-[#F8F4F0] px-2.5 py-2 text-[9px] text-[#6B5A4A]">
+                    <p>关注点：{item.focus}</p>
+                    <p className="mt-1">
+                      关键词：{item.keywords.length > 0 ? item.keywords.join(' / ') : '未配置'}
+                    </p>
+                    <p className="mt-1">
+                      上次成功：{item.lastSuccessAt ? formatTime(item.lastSuccessAt) : '--'}
+                    </p>
+                    <p className="mt-1">
+                      下次计划：{item.nextRunAt ? formatTime(item.nextRunAt) : '--'}
+                    </p>
+                    {item.lastReportTitle && <p className="mt-1">最近报告：{item.lastReportTitle}</p>}
+                    {item.lastError && <p className="mt-1 text-red-600">错误：{item.lastError}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h4 className="mb-1.5 text-[10px] font-bold text-[#8B7355]">最近报告</h4>
+          {heartbeatReports.length === 0 ? (
+            <div className="rounded-xl bg-[#F8F4F0] px-3 py-4 text-center text-[10px] text-[#8B7355]">
+              还没有生成 heartbeat 报告。
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {heartbeatReports.map((item) => (
+                <HeartbeatReportCard key={`${item.agentId}-${item.reportId}`} item={item} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HistoryView() {
   const { workflows, setCurrentWorkflow, setActiveView, fetchWorkflows } = useWorkflowStore();
 
@@ -1022,6 +1246,8 @@ export function WorkflowPanel() {
     fetchAgents,
     fetchStages,
     fetchWorkflows,
+    fetchHeartbeatStatuses,
+    fetchHeartbeatReports,
     connected,
   } = useWorkflowStore();
 
@@ -1030,7 +1256,16 @@ export function WorkflowPanel() {
     void fetchAgents();
     void fetchStages();
     void fetchWorkflows();
-  }, [initSocket, fetchAgents, fetchStages, fetchWorkflows]);
+    void fetchHeartbeatStatuses();
+    void fetchHeartbeatReports(undefined, 12);
+  }, [
+    initSocket,
+    fetchAgents,
+    fetchStages,
+    fetchWorkflows,
+    fetchHeartbeatStatuses,
+    fetchHeartbeatReports,
+  ]);
 
   if (!isWorkflowPanelOpen) return null;
 
@@ -1040,6 +1275,7 @@ export function WorkflowPanel() {
     { id: 'workflow', icon: BarChart3, label: '进度' },
     { id: 'review', icon: Star, label: '评审' },
     { id: 'memory', icon: BookOpenText, label: '记忆' },
+    { id: 'reports', icon: Search, label: '报告' },
     { id: 'history', icon: History, label: '历史' },
   ];
 
@@ -1097,6 +1333,7 @@ export function WorkflowPanel() {
         {activeView === 'workflow' && <WorkflowProgressView />}
         {activeView === 'review' && <ReviewView />}
         {activeView === 'memory' && <MemoryView />}
+        {activeView === 'reports' && <ReportsView />}
         {activeView === 'history' && <HistoryView />}
       </div>
     </div>

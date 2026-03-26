@@ -3,16 +3,14 @@
  * Each agent carries identity, prompt context, workspace helpers,
  * and a consistent LLM invocation interface.
  */
-import fs from 'fs';
-import path from 'path';
-
 import db from '../db/index.js';
 import { sessionStore } from '../memory/session-store.js';
+import { soulStore } from '../memory/soul-store.js';
+import { ensureAgentWorkspace, type AgentWorkspaceScope } from '../memory/workspace.js';
+import { readAgentWorkspaceFile, writeAgentWorkspaceFile } from './access-guard.js';
 import { callLLM, callLLMJson } from './llm-client.js';
 import { messageBus } from './message-bus.js';
 import { emitEvent } from './socket.js';
-
-const DATA_DIR = path.resolve(process.cwd(), 'data/agents');
 
 export interface AgentConfig {
   id: string;
@@ -50,7 +48,7 @@ export class Agent {
       role: row.role,
       managerId: row.manager_id,
       model: row.model,
-      soulMd: row.soul_md || '',
+      soulMd: soulStore.getSoulText(agentId, row.soul_md || ''),
     });
   }
 
@@ -121,10 +119,10 @@ export class Agent {
         role: 'system',
         content: `${this.buildSystemPrompt()}
 
-重要要求：
-- 你必须只返回合法 JSON
-- 不要输出 Markdown 代码块
-- 不要输出 JSON 以外的任何解释文字`,
+Important JSON requirements:
+- Return valid JSON only
+- Do not wrap the JSON in Markdown code fences
+- Do not include any explanation outside the JSON payload`,
       },
     ];
 
@@ -186,41 +184,39 @@ export class Agent {
    * Build the system prompt from SOUL.md plus runtime identity info.
    */
   private buildSystemPrompt(): string {
+    this.config.soulMd = soulStore.getSoulText(this.config.id, this.config.soulMd);
     return `${this.config.soulMd}
 
 ---
-当前身份：${this.config.name}
-角色：${this.config.role}
-部门：${this.config.department}`;
+Current identity: ${this.config.name}
+Role: ${this.config.role}
+Department: ${this.config.department}`;
   }
 
   /**
    * Ensure the agent workspace directory exists.
    */
   ensureWorkspace(): string {
-    const dir = path.join(DATA_DIR, this.config.id);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    return dir;
+    return ensureAgentWorkspace(this.config.id).rootDir;
   }
 
   /**
    * Save a file to the agent workspace.
    */
-  saveToWorkspace(filename: string, content: string): void {
-    const dir = this.ensureWorkspace();
-    fs.writeFileSync(path.join(dir, filename), content, 'utf-8');
+  saveToWorkspace(
+    filename: string,
+    content: string,
+    scope: AgentWorkspaceScope = 'root'
+  ): string {
+    this.ensureWorkspace();
+    return writeAgentWorkspaceFile(this.config.id, filename, content, scope);
   }
 
   /**
    * Read a file from the agent workspace.
    */
-  readFromWorkspace(filename: string): string | null {
-    const filepath = path.join(DATA_DIR, this.config.id, filename);
-    if (fs.existsSync(filepath)) {
-      return fs.readFileSync(filepath, 'utf-8');
-    }
-    return null;
+  readFromWorkspace(filename: string, scope: AgentWorkspaceScope = 'root'): string | null {
+    this.ensureWorkspace();
+    return readAgentWorkspaceFile(this.config.id, filename, scope);
   }
 }
