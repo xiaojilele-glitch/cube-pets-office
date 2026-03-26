@@ -15,6 +15,7 @@ export interface AgentInfo {
   status:
     | 'idle'
     | 'thinking'
+    | 'heartbeat'
     | 'executing'
     | 'reviewing'
     | 'planning'
@@ -100,7 +101,60 @@ export interface AgentMemorySummary {
   keywords: string[];
 }
 
-export type PanelView = 'directive' | 'org' | 'workflow' | 'review' | 'history' | 'memory';
+export interface HeartbeatStatusInfo {
+  agentId: string;
+  agentName: string;
+  department: string;
+  enabled: boolean;
+  state: 'idle' | 'scheduled' | 'running' | 'error';
+  intervalMinutes: number;
+  keywords: string[];
+  focus: string;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  lastSuccessAt: string | null;
+  lastError: string | null;
+  lastReportId: string | null;
+  lastReportTitle: string | null;
+  lastReportAt: string | null;
+  reportCount: number;
+}
+
+export interface HeartbeatReportInfo {
+  reportId: string;
+  generatedAt: string;
+  trigger: 'scheduled' | 'manual' | 'startup';
+  agentId: string;
+  agentName: string;
+  department: string;
+  title: string;
+  summaryPreview: string;
+  keywords: string[];
+  searchResultCount: number;
+  jsonPath: string;
+  markdownPath: string;
+}
+
+export type PanelView =
+  | 'directive'
+  | 'org'
+  | 'workflow'
+  | 'review'
+  | 'history'
+  | 'memory'
+  | 'reports';
+
+function mergeHeartbeatStatus(
+  items: HeartbeatStatusInfo[],
+  next: HeartbeatStatusInfo
+): HeartbeatStatusInfo[] {
+  const found = items.some((item) => item.agentId === next.agentId);
+  const merged = found
+    ? items.map((item) => (item.agentId === next.agentId ? next : item))
+    : [...items, next];
+
+  return merged.sort((a, b) => a.agentId.localeCompare(b.agentId));
+}
 
 interface WorkflowState {
   socket: Socket | null;
@@ -117,6 +171,8 @@ interface WorkflowState {
   messages: MessageInfo[];
   agentMemoryRecent: AgentMemoryEntry[];
   agentMemorySearchResults: AgentMemorySummary[];
+  heartbeatStatuses: HeartbeatStatusInfo[];
+  heartbeatReports: HeartbeatReportInfo[];
 
   stages: StageInfo[];
 
@@ -124,6 +180,8 @@ interface WorkflowState {
   activeView: PanelView;
   isSubmitting: boolean;
   isMemoryLoading: boolean;
+  isHeartbeatLoading: boolean;
+  runningHeartbeatAgentId: string | null;
   selectedMemoryAgentId: string | null;
   memoryQuery: string;
   eventLog: Array<{ type: string; data: any; timestamp: string }>;
@@ -136,6 +194,9 @@ interface WorkflowState {
   fetchWorkflowDetail: (id: string) => Promise<void>;
   fetchAgentRecentMemory: (agentId: string, workflowId?: string | null, limit?: number) => Promise<void>;
   searchAgentMemory: (agentId: string, query: string, topK?: number) => Promise<void>;
+  fetchHeartbeatStatuses: () => Promise<void>;
+  fetchHeartbeatReports: (agentId?: string | null, limit?: number) => Promise<void>;
+  runHeartbeat: (agentId: string) => Promise<boolean>;
   submitDirective: (directive: string) => Promise<string | null>;
   setSelectedMemoryAgent: (id: string | null) => void;
   setMemoryQuery: (query: string) => void;
@@ -157,11 +218,15 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   messages: [],
   agentMemoryRecent: [],
   agentMemorySearchResults: [],
+  heartbeatStatuses: [],
+  heartbeatReports: [],
   stages: [],
   isWorkflowPanelOpen: false,
   activeView: 'directive',
   isSubmitting: false,
   isMemoryLoading: false,
+  isHeartbeatLoading: false,
+  runningHeartbeatAgentId: null,
   selectedMemoryAgentId: null,
   memoryQuery: '',
   eventLog: [],
@@ -218,6 +283,24 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           set((store) => ({
             agentStatuses: { ...store.agentStatuses, [event.agentId]: event.action },
           }));
+          break;
+        }
+
+        case 'heartbeat_status': {
+          set((store) => ({
+            heartbeatStatuses: mergeHeartbeatStatus(store.heartbeatStatuses, event.status),
+            agentStatuses:
+              store.agentStatuses[event.status.agentId] === 'heartbeat' &&
+              event.status.state !== 'running'
+                ? { ...store.agentStatuses, [event.status.agentId]: 'idle' }
+                : store.agentStatuses,
+          }));
+          break;
+        }
+
+        case 'heartbeat_report_saved': {
+          void get().fetchHeartbeatStatuses();
+          void get().fetchHeartbeatReports(undefined, 12);
           break;
         }
 
@@ -392,6 +475,63 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     } catch (err) {
       console.error('[Store] Failed to search memory:', err);
       set({ agentMemorySearchResults: [], isMemoryLoading: false });
+    }
+  },
+
+  fetchHeartbeatStatuses: async () => {
+    try {
+      const res = await fetch('/api/reports/heartbeat/status');
+      const data = await res.json();
+      set({ heartbeatStatuses: data.statuses || [] });
+    } catch (err) {
+      console.error('[Store] Failed to fetch heartbeat statuses:', err);
+    }
+  },
+
+  fetchHeartbeatReports: async (agentId?: string | null, limit: number = 12) => {
+    set({ isHeartbeatLoading: true });
+
+    try {
+      const params = new URLSearchParams();
+      params.set('limit', String(limit));
+      if (agentId) {
+        params.set('agentId', agentId);
+      }
+
+      const res = await fetch(`/api/reports/heartbeat?${params.toString()}`);
+      const data = await res.json();
+      set({
+        heartbeatReports: data.reports || [],
+        isHeartbeatLoading: false,
+      });
+    } catch (err) {
+      console.error('[Store] Failed to fetch heartbeat reports:', err);
+      set({ heartbeatReports: [], isHeartbeatLoading: false });
+    }
+  },
+
+  runHeartbeat: async (agentId: string) => {
+    if (!agentId) return false;
+    set({ runningHeartbeatAgentId: agentId });
+
+    try {
+      const res = await fetch(`/api/reports/heartbeat/${agentId}/run`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Heartbeat run failed');
+      }
+
+      await get().fetchHeartbeatStatuses();
+      await get().fetchHeartbeatReports(undefined, 12);
+      set({ runningHeartbeatAgentId: null });
+      return true;
+    } catch (err) {
+      console.error('[Store] Failed to run heartbeat:', err);
+      set({ runningHeartbeatAgentId: null });
+      return false;
     }
   },
 

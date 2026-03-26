@@ -39,11 +39,13 @@ router.get('/:id', (req, res) => {
 
   const tasks = db.getTasksByWorkflow(req.params.id);
   const messages = db.getMessagesByWorkflow(req.params.id);
+  const report = reportStore.readFinalWorkflowReport(req.params.id);
 
   res.json({
     workflow: wf,
     tasks,
     messages,
+    report,
   });
 });
 
