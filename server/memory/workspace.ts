@@ -2,7 +2,6 @@ import fs from 'fs';
 import path from 'path';
 
 const AGENTS_ROOT = path.resolve(process.cwd(), 'data/agents');
-const SAFE_SEGMENT_PATTERN = /^[a-zA-Z0-9._-]+$/;
 
 export interface AgentWorkspacePaths {
   rootDir: string;
@@ -11,7 +10,20 @@ export interface AgentWorkspacePaths {
   reportsDir: string;
 }
 
-export type AgentWorkspaceSection = 'root' | 'sessions' | 'memory' | 'reports';
+export type AgentWorkspaceScope = 'root' | 'sessions' | 'memory' | 'reports';
+
+function assertValidAgentId(agentId: string): string {
+  const normalized = agentId.trim();
+  if (!normalized) {
+    throw new Error('Agent ID is required');
+  }
+
+  if (!/^[a-z0-9][a-z0-9_-]*$/i.test(normalized)) {
+    throw new Error(`Invalid agent ID: ${agentId}`);
+  }
+
+  return normalized;
+}
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
@@ -19,32 +31,9 @@ function ensureDir(dir: string): void {
   }
 }
 
-function assertSafeSegment(value: string, label: string): void {
-  if (!value || !SAFE_SEGMENT_PATTERN.test(value)) {
-    throw new Error(`Invalid ${label}: ${value}`);
-  }
-}
-
-function assertSafeRelativePath(relativePath: string): void {
-  if (!relativePath) return;
-
-  const normalized = relativePath.replace(/\\/g, '/');
-  if (path.posix.isAbsolute(normalized)) {
-    throw new Error(`Absolute paths are not allowed in agent workspace: ${relativePath}`);
-  }
-
-  for (const segment of normalized.split('/')) {
-    if (!segment || segment === '.') continue;
-    if (segment === '..') {
-      throw new Error(`Path traversal is not allowed in agent workspace: ${relativePath}`);
-    }
-    assertSafeSegment(segment, 'workspace path segment');
-  }
-}
-
 export function getAgentWorkspacePaths(agentId: string): AgentWorkspacePaths {
-  assertSafeSegment(agentId, 'agent id');
-  const rootDir = path.join(AGENTS_ROOT, agentId);
+  const normalizedAgentId = assertValidAgentId(agentId);
+  const rootDir = path.join(AGENTS_ROOT, normalizedAgentId);
   return {
     rootDir,
     sessionsDir: path.join(rootDir, 'sessions'),
@@ -63,86 +52,35 @@ export function ensureAgentWorkspace(agentId: string): AgentWorkspacePaths {
   return paths;
 }
 
-function getSectionDir(paths: AgentWorkspacePaths, section: AgentWorkspaceSection): string {
-  switch (section) {
+export function ensureAgentWorkspaces(agentIds: string[]): AgentWorkspacePaths[] {
+  const uniqueAgentIds = Array.from(new Set(agentIds.map((agentId) => assertValidAgentId(agentId))));
+  return uniqueAgentIds.map((agentId) => ensureAgentWorkspace(agentId));
+}
+
+export function getAgentWorkspaceScopeDir(
+  agentId: string,
+  scope: AgentWorkspaceScope = 'root'
+): string {
+  const paths = getAgentWorkspacePaths(agentId);
+
+  switch (scope) {
+    case 'root':
+      return paths.rootDir;
     case 'sessions':
       return paths.sessionsDir;
     case 'memory':
       return paths.memoryDir;
     case 'reports':
       return paths.reportsDir;
-    case 'root':
     default:
-      return paths.rootDir;
+      throw new Error(`Unsupported workspace scope: ${scope}`);
   }
 }
 
-export function resolveAgentWorkspacePath(
-  agentId: string,
-  section: AgentWorkspaceSection,
-  relativePath: string = ''
-): string {
-  const paths = ensureAgentWorkspace(agentId);
-  assertSafeRelativePath(relativePath);
-
-  const baseDir = getSectionDir(paths, section);
-  const resolved = path.resolve(baseDir, relativePath || '.');
-  const normalizedBase = `${path.resolve(baseDir)}${path.sep}`;
-  const normalizedResolved = path.resolve(resolved);
-
-  if (normalizedResolved !== path.resolve(baseDir) && !normalizedResolved.startsWith(normalizedBase)) {
-    throw new Error(`Resolved path escapes agent workspace: ${relativePath}`);
-  }
-
-  return normalizedResolved;
-}
-
-export function writeAgentWorkspaceFile(
-  agentId: string,
-  section: AgentWorkspaceSection,
-  relativePath: string,
-  content: string
-): string {
-  const filePath = resolveAgentWorkspacePath(agentId, section, relativePath);
-  ensureDir(path.dirname(filePath));
-  fs.writeFileSync(filePath, content, 'utf-8');
-  return filePath;
-}
-
-export function appendAgentWorkspaceFile(
-  agentId: string,
-  section: AgentWorkspaceSection,
-  relativePath: string,
-  content: string
-): string {
-  const filePath = resolveAgentWorkspacePath(agentId, section, relativePath);
-  ensureDir(path.dirname(filePath));
-  fs.appendFileSync(filePath, content, 'utf-8');
-  return filePath;
-}
-
-export function readAgentWorkspaceFile(
-  agentId: string,
-  section: AgentWorkspaceSection,
-  relativePath: string
-): string | null {
-  const filePath = resolveAgentWorkspacePath(agentId, section, relativePath);
-  if (!fs.existsSync(filePath)) return null;
-  return fs.readFileSync(filePath, 'utf-8');
-}
-
-export function fileExistsInAgentWorkspace(
-  agentId: string,
-  section: AgentWorkspaceSection,
-  relativePath: string
-): boolean {
-  const filePath = resolveAgentWorkspacePath(agentId, section, relativePath);
-  return fs.existsSync(filePath);
+export function getAgentsRootDir(): string {
+  return AGENTS_ROOT;
 }
 
 export function ensureAllAgentWorkspaces(agentIds: string[]): void {
-  ensureDir(AGENTS_ROOT);
-  for (const agentId of agentIds) {
-    ensureAgentWorkspace(agentId);
-  }
+  ensureAgentWorkspaces(agentIds);
 }

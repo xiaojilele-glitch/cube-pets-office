@@ -1,8 +1,8 @@
 import {
-  fileExistsInAgentWorkspace,
+  agentWorkspaceFileExists,
   readAgentWorkspaceFile,
   writeAgentWorkspaceFile,
-} from './workspace.js';
+} from '../core/access-guard.js';
 
 export interface VectorizedMemorySummary {
   workflowId: string;
@@ -107,12 +107,12 @@ export class VectorStore {
   }
 
   private readIndex(agentId: string): VectorIndexFile {
-    if (!fileExistsInAgentWorkspace(agentId, 'memory', this.getIndexFile(agentId))) {
+    if (!agentWorkspaceFileExists(agentId, this.getIndexFile(agentId), 'memory')) {
       return { version: 1, dimension: VECTOR_DIMENSION, records: [] };
     }
 
     try {
-      const content = readAgentWorkspaceFile(agentId, 'memory', this.getIndexFile(agentId));
+      const content = readAgentWorkspaceFile(agentId, this.getIndexFile(agentId), 'memory');
       if (!content) {
         return { version: 1, dimension: VECTOR_DIMENSION, records: [] };
       }
@@ -129,7 +129,7 @@ export class VectorStore {
   }
 
   private writeIndex(agentId: string, index: VectorIndexFile): void {
-    writeAgentWorkspaceFile(agentId, 'memory', this.getIndexFile(agentId), JSON.stringify(index, null, 2));
+    writeAgentWorkspaceFile(agentId, this.getIndexFile(agentId), JSON.stringify(index, null, 2), 'memory');
   }
 
   upsertMemorySummary(agentId: string, summary: VectorizedMemorySummary): void {

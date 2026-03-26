@@ -13,6 +13,17 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+async function initializeAgentRuntime() {
+  const db = (await import('./db/index.js')).default;
+  const { ensureAgentWorkspaces } = await import('./memory/workspace.js');
+
+  const agentIds = db.getAgents().map((agent) => agent.id);
+  const workspaces = ensureAgentWorkspaces(agentIds);
+
+  console.log(`[Workspace] Ready. ${workspaces.length} agent workspaces materialized.`);
+  return { agentIds, workspaceCount: workspaces.length };
+}
+
 async function startServer() {
   const app = express();
   const server = createServer(app);
@@ -28,11 +39,10 @@ async function startServer() {
   // Seed database
   const { seedAgents } = await import("./db/seed.js");
   seedAgents();
+  await initializeAgentRuntime();
 
   const db = (await import("./db/index.js")).default;
-  const { ensureAllAgentWorkspaces } = await import("./memory/workspace.js");
   const { soulStore } = await import("./memory/soul-store.js");
-  ensureAllAgentWorkspaces(db.getAgents().map((agent) => agent.id));
   soulStore.ensureAllSoulFiles();
 
   // Initialize agent registry
@@ -93,4 +103,5 @@ async function startServer() {
   });
 }
 
+export { initializeAgentRuntime, startServer };
 startServer().catch(console.error);

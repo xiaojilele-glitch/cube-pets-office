@@ -1,8 +1,11 @@
 import fs from 'fs';
-import path from 'path';
 
 import db from '../db/index.js';
-import { fileExistsInAgentWorkspace, resolveAgentWorkspacePath, writeAgentWorkspaceFile } from './workspace.js';
+import {
+  agentWorkspaceFileExists,
+  resolveAgentWorkspacePath,
+  writeAgentWorkspaceFile,
+} from '../core/access-guard.js';
 
 function normalizeSoulContent(content: string): string {
   const normalized = content.replace(/\r\n/g, '\n').trim();
@@ -15,7 +18,7 @@ function dedupeStrings(items: string[]): string[] {
 
 export class SoulStore {
   getSoulFilePath(agentId: string): string {
-    return resolveAgentWorkspacePath(agentId, 'root', 'SOUL.md');
+    return resolveAgentWorkspacePath(agentId, 'SOUL.md', 'root');
   }
 
   ensureSoulFile(agentId: string, fallbackSoulMd: string = ''): string {
@@ -31,7 +34,7 @@ export class SoulStore {
     }
 
     const content = normalizeSoulContent(dbSoul);
-    writeAgentWorkspaceFile(agentId, 'root', 'SOUL.md', content);
+    writeAgentWorkspaceFile(agentId, 'SOUL.md', content, 'root');
     if (content && content !== (db.getAgent(agentId)?.soul_md || '')) {
       db.updateAgentSoul(agentId, content);
     }
@@ -57,13 +60,13 @@ export class SoulStore {
     return {
       soulMd,
       filePath: this.getSoulFilePath(agentId),
-      exists: fileExistsInAgentWorkspace(agentId, 'root', 'SOUL.md'),
+      exists: agentWorkspaceFileExists(agentId, 'SOUL.md', 'root'),
     };
   }
 
   updateSoul(agentId: string, soulMd: string): string {
     const normalized = normalizeSoulContent(soulMd);
-    writeAgentWorkspaceFile(agentId, 'root', 'SOUL.md', normalized);
+    writeAgentWorkspaceFile(agentId, 'SOUL.md', normalized, 'root');
     db.updateAgentSoul(agentId, normalized);
     return normalized;
   }

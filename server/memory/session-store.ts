@@ -3,7 +3,7 @@ import {
   appendAgentWorkspaceFile,
   readAgentWorkspaceFile,
   writeAgentWorkspaceFile,
-} from './workspace.js';
+} from '../core/access-guard.js';
 import { vectorStore } from './vector-store.js';
 
 export interface SessionEntry {
@@ -73,7 +73,7 @@ function safeParseJson<T>(value: string | null, fallback: T): T {
 }
 
 function readJsonLines(agentId: string, workflowId?: string | null): SessionEntry[] {
-  const content = readAgentWorkspaceFile(agentId, 'sessions', getSessionFile(workflowId));
+  const content = readAgentWorkspaceFile(agentId, getSessionFile(workflowId), 'sessions');
   if (!content) return [];
 
   return content
@@ -84,14 +84,11 @@ function readJsonLines(agentId: string, workflowId?: string | null): SessionEntr
 }
 
 function readSummaryIndex(agentId: string): MemorySummary[] {
-  return safeParseJson<MemorySummary[]>(
-    readAgentWorkspaceFile(agentId, 'memory', getSummaryFile()),
-    []
-  );
+  return safeParseJson<MemorySummary[]>(readAgentWorkspaceFile(agentId, getSummaryFile(), 'memory'), []);
 }
 
 function writeSummaryIndex(agentId: string, summaries: MemorySummary[]): void {
-  writeAgentWorkspaceFile(agentId, 'memory', getSummaryFile(), JSON.stringify(summaries, null, 2));
+  writeAgentWorkspaceFile(agentId, getSummaryFile(), JSON.stringify(summaries, null, 2), 'memory');
 }
 
 function compactText(text: string, limit: number = 1200): string {
@@ -117,9 +114,9 @@ class SessionStore {
 
     appendAgentWorkspaceFile(
       agentId,
-      'sessions',
       getSessionFile(row.workflowId),
-      `${JSON.stringify(row)}\n`
+      `${JSON.stringify(row)}\n`,
+      'sessions'
     );
   }
 
