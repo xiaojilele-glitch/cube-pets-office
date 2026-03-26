@@ -46,6 +46,7 @@ interface ProviderConfig {
 const MAX_CONCURRENT = Math.max(1, Number(process.env.LLM_MAX_CONCURRENT || 1));
 let activeRequests = 0;
 const requestQueue: Array<() => void> = [];
+const providerCooldownUntil = new Map<string, number>();
 
 function buildProviders(): ProviderConfig[] {
   const aiConfig = getAIConfig();
@@ -115,6 +116,39 @@ function getProviderName(provider: ProviderConfig): string {
   }
 }
 
+function getProviderKey(provider: ProviderConfig): string {
+  return `${provider.name}:${provider.baseUrl}`;
+}
+
+function getProviderCooldownMs(provider: ProviderConfig): number {
+  const raw =
+    provider.name === 'fallback'
+      ? process.env.FALLBACK_LLM_COOLDOWN_MS || '30000'
+      : process.env.LLM_PROVIDER_COOLDOWN_MS || '120000';
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
+
+function isProviderCoolingDown(provider: ProviderConfig): boolean {
+  const until = providerCooldownUntil.get(getProviderKey(provider));
+  return typeof until === 'number' && until > Date.now();
+}
+
+function getRemainingCooldownMs(provider: ProviderConfig): number {
+  const until = providerCooldownUntil.get(getProviderKey(provider)) || 0;
+  return Math.max(0, until - Date.now());
+}
+
+function openProviderCooldown(provider: ProviderConfig): void {
+  const cooldownMs = getProviderCooldownMs(provider);
+  if (cooldownMs <= 0) return;
+  providerCooldownUntil.set(getProviderKey(provider), Date.now() + cooldownMs);
+}
+
+function clearProviderCooldown(provider: ProviderConfig): void {
+  providerCooldownUntil.delete(getProviderKey(provider));
+}
+
 function resolveModel(provider: ProviderConfig, requestedModel?: string): string {
   if (provider.forceModel) {
     return provider.defaultModel;
@@ -178,6 +212,12 @@ function shouldTryNextProvider(error: Error): boolean {
 
 function shouldStopRetryingProvider(error: Error): boolean {
   return /no available clients|authentication failed|invalid_request_error|timed out/i.test(error.message);
+}
+
+function shouldOpenCircuit(error: Error): boolean {
+  return /no available clients|temporarily unavailable|timed out|Cannot reach LLM service|rate limited|out of quota/i.test(
+    error.message
+  );
 }
 
 function buildResponsesInput(messages: LLMMessage[]) {
@@ -484,6 +524,15 @@ export async function callLLM(
     let lastError: Error | null = null;
 
     for (const provider of providers) {
+      if (isProviderCoolingDown(provider)) {
+        const remainingMs = getRemainingCooldownMs(provider);
+        lastError = new Error(
+          `Skip ${provider.name}: provider cooling down for ${Math.ceil(remainingMs / 1000)}s after recent failures.`
+        );
+        console.warn(`[LLM:${provider.name}] ${lastError.message}`);
+        continue;
+      }
+
       const attempts = Math.max(
         1,
         Number(
@@ -495,10 +544,16 @@ export async function callLLM(
 
       for (let attempt = 0; attempt < attempts; attempt++) {
         try {
-          return await callProvider(provider, messages, options);
+          const response = await callProvider(provider, messages, options);
+          clearProviderCooldown(provider);
+          return response;
         } catch (error) {
           lastError = normalizeNetworkError(provider, error);
           console.error(`[LLM:${provider.name}] Attempt ${attempt + 1} failed:`, lastError.message);
+
+          if (shouldOpenCircuit(lastError)) {
+            openProviderCooldown(provider);
+          }
 
           if (shouldStopRetryingProvider(lastError)) {
             break;

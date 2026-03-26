@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 import db from '../db/index.js';
 import type { TaskRow } from '../db/index.js';
+import type { FinalWorkflowReport } from '../memory/report-store.js';
+import { reportStore } from '../memory/report-store.js';
 import { sessionStore } from '../memory/session-store.js';
 import { registry } from './registry.js';
 import { messageBus } from './message-bus.js';
@@ -112,6 +114,18 @@ export class WorkflowEngine {
         status: 'completed',
         completed_at: new Date().toISOString(),
       });
+      try {
+        this.persistFinalReport(workflowId);
+      } catch (reportErr: any) {
+        console.error(`[Workflow] Failed to persist final report for ${workflowId}:`, reportErr);
+        const wf = db.getWorkflow(workflowId);
+        db.updateWorkflow(workflowId, {
+          results: {
+            ...(wf?.results || {}),
+            report_error: reportErr.message,
+          },
+        });
+      }
       sessionStore.materializeWorkflowMemories(workflowId);
 
       emitEvent({
@@ -790,6 +804,16 @@ ${task.deliverable_v2}
 
     const departments = wf.departments_involved || [];
     const summaries: string[] = [];
+    const departmentReports: Array<{
+      manager_id: string;
+      manager_name: string;
+      department: string;
+      summary: string;
+      task_count: number;
+      average_score: number | null;
+      report_json_path: string;
+      report_markdown_path: string;
+    }> = [];
 
     await Promise.all(
       departments.map(async (deptId: string) => {
@@ -833,6 +857,28 @@ ${taskResults}
           summaries.push(`## ${deptId} 部门（${manager.config.name}）\n\n${summary}`);
 
           await messageBus.send(manager.config.id, 'ceo', summary, workflowId, 'summary');
+
+          const departmentReport = reportStore.buildDepartmentReport(
+            wf,
+            {
+              id: manager.config.id,
+              name: manager.config.name,
+              department: deptId,
+            },
+            summary,
+            deptTasks
+          );
+          const savedReport = reportStore.saveDepartmentReport(departmentReport);
+          departmentReports.push({
+            manager_id: manager.config.id,
+            manager_name: manager.config.name,
+            department: deptId,
+            summary,
+            task_count: deptTasks.length,
+            average_score: departmentReport.stats.averageScore,
+            report_json_path: savedReport.jsonPath,
+            report_markdown_path: savedReport.markdownPath,
+          });
         } catch (err: any) {
           summaries.push(`## ${deptId} 部门\n\n汇总生成失败：${err.message}`);
         }
@@ -850,6 +896,7 @@ ${taskResults}
       results: {
         ...(wf.results || {}),
         summaries: summaries.join('\n\n'),
+        department_reports: departmentReports,
       },
     });
   }
@@ -967,6 +1014,102 @@ ${summaryText}
         }
       }
     }
+  }
+
+  private persistFinalReport(workflowId: string): void {
+    const workflow = db.getWorkflow(workflowId);
+    if (!workflow) return;
+
+    const tasks = db.getTasksByWorkflow(workflowId);
+    const messages = db.getMessagesByWorkflow(workflowId);
+    const scoredTasks = tasks.filter((task) => task.total_score !== null);
+    const averageScore =
+      scoredTasks.length > 0
+        ? scoredTasks.reduce((sum, task) => sum + (task.total_score || 0), 0) / scoredTasks.length
+        : null;
+
+    const departmentReports = Array.isArray(workflow.results?.department_reports)
+      ? workflow.results.department_reports
+      : [];
+
+    const keyIssues = tasks
+      .filter((task) => task.status === 'failed' || (task.total_score || 0) < 16)
+      .flatMap((task) => {
+        const items: string[] = [];
+        if (task.total_score !== null && task.total_score < 16) {
+          items.push(
+            `${task.worker_id} scored ${task.total_score}/20 on task ${task.id}: ${task.description}`
+          );
+        }
+        if (task.manager_feedback) {
+          items.push(`Manager feedback for task ${task.id}: ${task.manager_feedback}`);
+        }
+        return items;
+      })
+      .slice(0, 12);
+
+    const report: FinalWorkflowReport = {
+      kind: 'final_workflow_report',
+      version: 1,
+      workflowId,
+      generatedAt: new Date().toISOString(),
+      workflow: {
+        directive: workflow.directive,
+        status: workflow.status,
+        currentStage: workflow.current_stage,
+        startedAt: workflow.started_at,
+        completedAt: workflow.completed_at,
+        departmentsInvolved: workflow.departments_involved || [],
+      },
+      stats: {
+        messageCount: messages.length,
+        taskCount: tasks.length,
+        passedTaskCount: tasks.filter((task) => task.status === 'passed').length,
+        revisedTaskCount: tasks.filter((task) => task.version > 1).length,
+        averageScore,
+      },
+      departmentReports: departmentReports.map((item: any) => ({
+        managerId: item.manager_id,
+        managerName: item.manager_name,
+        department: item.department,
+        summary: item.summary,
+        taskCount: item.task_count,
+        averageScore: item.average_score,
+        reportJsonPath: item.report_json_path,
+        reportMarkdownPath: item.report_markdown_path,
+      })),
+      ceoFeedback: workflow.results?.ceo_feedback || '',
+      keyIssues,
+      tasks: tasks.map((task) => ({
+        id: task.id,
+        department: task.department,
+        workerId: task.worker_id,
+        managerId: task.manager_id,
+        status: task.status,
+        totalScore: task.total_score,
+        description: task.description,
+        deliverablePreview: bestDeliverable(task).substring(0, 800),
+      })),
+    };
+
+    const savedReport = reportStore.saveFinalWorkflowReport(report);
+    db.updateWorkflow(workflowId, {
+      results: {
+        ...(workflow.results || {}),
+        final_report: {
+          generated_at: report.generatedAt,
+          json_path: savedReport.jsonPath,
+          markdown_path: savedReport.markdownPath,
+          overview: {
+            department_count: report.departmentReports.length,
+            task_count: report.stats.taskCount,
+            passed_task_count: report.stats.passedTaskCount,
+            average_score: report.stats.averageScore,
+            message_count: report.stats.messageCount,
+          },
+        },
+      },
+    });
   }
 }
 

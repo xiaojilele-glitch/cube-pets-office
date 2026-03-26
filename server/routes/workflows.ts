@@ -2,8 +2,10 @@
  * Workflow Routes — REST API for workflow management
  */
 import { Router } from 'express';
+import path from 'path';
 import db from '../db/index.js';
 import { workflowEngine } from '../core/workflow-engine.js';
+import { reportStore } from '../memory/report-store.js';
 
 const router = Router();
 
@@ -43,6 +45,58 @@ router.get('/:id', (req, res) => {
     tasks,
     messages,
   });
+});
+
+// GET /api/workflows/:id/report — Get final workflow report
+router.get('/:id/report', (req, res) => {
+  const workflow = db.getWorkflow(req.params.id);
+  if (!workflow) {
+    return res.status(404).json({ error: 'Workflow not found' });
+  }
+
+  const report = reportStore.readFinalWorkflowReport(req.params.id);
+  if (!report) {
+    return res.status(404).json({ error: 'Final report not found' });
+  }
+
+  res.json({ report });
+});
+
+// GET /api/workflows/:id/report/download?format=json|md — Download final workflow report
+router.get('/:id/report/download', (req, res) => {
+  const workflow = db.getWorkflow(req.params.id);
+  if (!workflow) {
+    return res.status(404).json({ error: 'Workflow not found' });
+  }
+
+  const format = req.query.format === 'json' ? 'json' : 'md';
+  const filePath = reportStore.getFinalWorkflowReportFilePath(req.params.id, format);
+  if (!filePath) {
+    return res.status(404).json({ error: 'Final report file not found' });
+  }
+
+  res.download(filePath, path.basename(filePath));
+});
+
+// GET /api/workflows/:id/report/department/:managerId/download?format=json|md
+router.get('/:id/report/department/:managerId/download', (req, res) => {
+  const workflow = db.getWorkflow(req.params.id);
+  if (!workflow) {
+    return res.status(404).json({ error: 'Workflow not found' });
+  }
+
+  const manager = db.getAgent(req.params.managerId);
+  if (!manager) {
+    return res.status(404).json({ error: 'Manager not found' });
+  }
+
+  const format = req.query.format === 'json' ? 'json' : 'md';
+  const filePath = reportStore.getDepartmentReportFilePath(req.params.managerId, req.params.id, format);
+  if (!filePath) {
+    return res.status(404).json({ error: 'Department report file not found' });
+  }
+
+  res.download(filePath, path.basename(filePath));
 });
 
 // GET /api/workflows/:id/tasks — Get tasks for a workflow

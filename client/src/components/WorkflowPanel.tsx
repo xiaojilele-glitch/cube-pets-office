@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Circle,
   Clock,
+  Download,
   History,
   Loader2,
   Network,
@@ -532,6 +533,96 @@ function WorkflowProgressView() {
             <div className="max-h-40 overflow-y-auto whitespace-pre-wrap text-[10px] text-emerald-700">
               {currentWorkflow.results.ceo_feedback}
             </div>
+          </div>
+        )}
+
+        {currentWorkflow.status === 'completed' && currentWorkflow.results?.final_report?.overview && (
+          <div className="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-3">
+            <h4 className="mb-2 flex items-center gap-1.5 text-xs font-bold text-blue-800">
+              <BookOpenText className="h-3.5 w-3.5" />
+              最终报告已生成
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-[10px] text-blue-800">
+              <div className="rounded-lg bg-white/70 px-2 py-1.5">
+                任务数：{currentWorkflow.results.final_report.overview.task_count ?? '--'}
+              </div>
+              <div className="rounded-lg bg-white/70 px-2 py-1.5">
+                部门数：{currentWorkflow.results.final_report.overview.department_count ?? '--'}
+              </div>
+              <div className="rounded-lg bg-white/70 px-2 py-1.5">
+                通过数：{currentWorkflow.results.final_report.overview.passed_task_count ?? '--'}
+              </div>
+              <div className="rounded-lg bg-white/70 px-2 py-1.5">
+                平均分：
+                {typeof currentWorkflow.results.final_report.overview.average_score === 'number'
+                  ? currentWorkflow.results.final_report.overview.average_score.toFixed(1)
+                  : '--'}
+              </div>
+            </div>
+            <div className="mt-2 space-y-1 text-[9px] text-blue-700">
+              <p className="font-medium text-blue-800">下载目录</p>
+              <p className="break-all">JSON：{currentWorkflow.results.final_report.json_path}</p>
+              <p className="break-all">Markdown：{currentWorkflow.results.final_report.markdown_path}</p>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <a
+                href={`/api/workflows/${currentWorkflow.id}/report/download?format=json`}
+                className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
+              >
+                <Download className="h-3 w-3" />
+                下载 JSON
+              </a>
+              <a
+                href={`/api/workflows/${currentWorkflow.id}/report/download?format=md`}
+                className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
+              >
+                <Download className="h-3 w-3" />
+                下载 Markdown
+              </a>
+            </div>
+            {Array.isArray(currentWorkflow.results?.department_reports) &&
+              currentWorkflow.results.department_reports.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-[10px] font-bold text-blue-800">部门报告</p>
+                  {currentWorkflow.results.department_reports.map((item: any) => (
+                    <div
+                      key={`${item.manager_id}-${item.department}`}
+                      className="rounded-lg bg-white/70 p-2 text-[9px] text-blue-800"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">
+                            {item.department} · {item.manager_name}
+                          </p>
+                          <p className="mt-0.5 text-blue-700">
+                            任务数：{item.task_count ?? '--'} · 平均分：
+                            {typeof item.average_score === 'number'
+                              ? item.average_score.toFixed(1)
+                              : '--'}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 gap-1.5">
+                          <a
+                            href={`/api/workflows/${currentWorkflow.id}/report/department/${item.manager_id}/download?format=json`}
+                            className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-[9px] font-medium text-blue-700 transition-colors hover:bg-blue-200"
+                          >
+                            <Download className="h-3 w-3" />
+                            JSON
+                          </a>
+                          <a
+                            href={`/api/workflows/${currentWorkflow.id}/report/department/${item.manager_id}/download?format=md`}
+                            className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-[9px] font-medium text-blue-700 transition-colors hover:bg-blue-200"
+                          >
+                            <Download className="h-3 w-3" />
+                            MD
+                          </a>
+                        </div>
+                      </div>
+                      <p className="mt-1 break-all text-blue-700">目录：{item.report_markdown_path}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
           </div>
         )}
 
