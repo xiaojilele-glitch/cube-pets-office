@@ -1,8 +1,8 @@
 /**
- * State management for the multi-agent workflow UI.
+ * UI state for the browser runtime workflow experience.
+ * Zustand only mirrors runtime state; orchestration lives in the worker.
  */
 import { create } from "zustand";
-import { io, Socket } from "socket.io-client";
 import {
   getAgentsSnapshot,
   getHeartbeatReportsSnapshot,
@@ -20,141 +20,32 @@ import {
   persistWorkflows,
 } from "./browser-runtime-storage";
 
-export interface AgentInfo {
-  id: string;
-  name: string;
-  department: string;
-  role: "ceo" | "manager" | "worker";
-  managerId: string | null;
-  model: string;
-  isActive: boolean;
-  status:
-    | "idle"
-    | "thinking"
-    | "heartbeat"
-    | "executing"
-    | "reviewing"
-    | "planning"
-    | "analyzing"
-    | "auditing"
-    | "revising"
-    | "verifying"
-    | "summarizing"
-    | "evaluating";
-}
+import { runtimeEventBus } from "./runtime/local-event-bus";
+import { localRuntime } from "./runtime/local-runtime-client";
+import type {
+  AgentInfo,
+  AgentMemoryEntry,
+  AgentMemorySummary,
+  HeartbeatReportInfo,
+  HeartbeatStatusInfo,
+  MessageInfo,
+  RuntimeEvent,
+  StageInfo,
+  TaskInfo,
+  WorkflowInfo,
+} from "./runtime/types";
 
-export interface WorkflowInfo {
-  id: string;
-  directive: string;
-  status:
-    | "pending"
-    | "running"
-    | "completed"
-    | "completed_with_errors"
-    | "failed";
-  current_stage: string | null;
-  departments_involved: string[];
-  started_at: string | null;
-  completed_at: string | null;
-  results: any;
-  created_at: string;
-}
-
-export interface TaskInfo {
-  id: number;
-  workflow_id: string;
-  worker_id: string;
-  manager_id: string;
-  department: string;
-  description: string;
-  deliverable: string | null;
-  deliverable_v2: string | null;
-  deliverable_v3: string | null;
-  score_accuracy: number | null;
-  score_completeness: number | null;
-  score_actionability: number | null;
-  score_format: number | null;
-  total_score: number | null;
-  manager_feedback: string | null;
-  meta_audit_feedback: string | null;
-  version: number;
-  status: string;
-}
-
-export interface MessageInfo {
-  id: number;
-  workflow_id: string;
-  from_agent: string;
-  to_agent: string;
-  stage: string;
-  content: string;
-  metadata: any;
-  created_at: string;
-}
-
-export interface StageInfo {
-  id: string;
-  order: number;
-  label: string;
-}
-
-export interface AgentMemoryEntry {
-  timestamp: string;
-  workflowId: string | null;
-  stage: string | null;
-  type: "message" | "llm_prompt" | "llm_response" | "workflow_summary";
-  direction?: "inbound" | "outbound";
-  agentId?: string;
-  otherAgentId?: string;
-  preview: string;
-  content: string;
-  metadata?: any;
-}
-
-export interface AgentMemorySummary {
-  workflowId: string;
-  createdAt: string;
-  directive: string;
-  status: string;
-  role: string;
-  stage: string | null;
-  summary: string;
-  keywords: string[];
-}
-
-export interface HeartbeatStatusInfo {
-  agentId: string;
-  agentName: string;
-  department: string;
-  enabled: boolean;
-  state: "idle" | "scheduled" | "running" | "error";
-  intervalMinutes: number;
-  keywords: string[];
-  focus: string;
-  nextRunAt: string | null;
-  lastRunAt: string | null;
-  lastSuccessAt: string | null;
-  lastError: string | null;
-  lastReportId: string | null;
-  lastReportTitle: string | null;
-  lastReportAt: string | null;
-  reportCount: number;
-}
-
-export interface HeartbeatReportInfo {
-  reportId: string;
-  generatedAt: string;
-  trigger: "scheduled" | "manual" | "startup";
-  agentId: string;
-  agentName: string;
-  department: string;
-  title: string;
-  summaryPreview: string;
-  keywords: string[];
-  searchResultCount: number;
-  jsonPath: string;
-  markdownPath: string;
-}
+export type {
+  AgentInfo,
+  AgentMemoryEntry,
+  AgentMemorySummary,
+  HeartbeatReportInfo,
+  HeartbeatStatusInfo,
+  MessageInfo,
+  StageInfo,
+  TaskInfo,
+  WorkflowInfo,
+};
 
 export type PanelView =
   | "directive"
@@ -202,26 +93,35 @@ function isTerminalWorkflowStatus(status: WorkflowInfo["status"]): boolean {
   );
 }
 
-interface WorkflowState {
-  socket: Socket | null;
-  connected: boolean;
+function saveDownload(filename: string, mimeType: string, content: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
+let runtimeUnsubscribe: (() => void) | null = null;
+let runtimeInitPromise: Promise<void> | null = null;
+
+interface WorkflowState {
+  connected: boolean;
   agents: AgentInfo[];
   agentStatuses: Record<string, string>;
-
   currentWorkflowId: string | null;
   workflows: WorkflowInfo[];
   currentWorkflow: WorkflowInfo | null;
-
   tasks: TaskInfo[];
   messages: MessageInfo[];
   agentMemoryRecent: AgentMemoryEntry[];
   agentMemorySearchResults: AgentMemorySummary[];
   heartbeatStatuses: HeartbeatStatusInfo[];
   heartbeatReports: HeartbeatReportInfo[];
-
   stages: StageInfo[];
-
   isWorkflowPanelOpen: boolean;
   activeView: PanelView;
   isSubmitting: boolean;
@@ -233,8 +133,7 @@ interface WorkflowState {
   selectedMemoryAgentId: string | null;
   memoryQuery: string;
   eventLog: Array<{ type: string; data: any; timestamp: string }>;
-
-  initSocket: () => void;
+  initSocket: () => Promise<void>;
   disconnectSocket: () => void;
   fetchAgents: () => Promise<void>;
   fetchStages: () => Promise<void>;
@@ -257,6 +156,20 @@ interface WorkflowState {
   ) => Promise<void>;
   runHeartbeat: (agentId: string) => Promise<boolean>;
   submitDirective: (directive: string) => Promise<string | null>;
+  downloadWorkflowReport: (
+    workflowId: string,
+    format: "json" | "md"
+  ) => Promise<void>;
+  downloadDepartmentReport: (
+    workflowId: string,
+    managerId: string,
+    format: "json" | "md"
+  ) => Promise<void>;
+  downloadHeartbeatReport: (
+    agentId: string,
+    reportId: string,
+    format: "json" | "md"
+  ) => Promise<void>;
   setSelectedMemoryAgent: (id: string | null) => void;
   setMemoryQuery: (query: string) => void;
   setActiveView: (view: PanelView) => void;
@@ -265,8 +178,159 @@ interface WorkflowState {
   setCurrentWorkflow: (id: string | null) => void;
 }
 
+type WorkflowStoreSet = (
+  partial:
+    | Partial<WorkflowState>
+    | ((state: WorkflowState) => Partial<WorkflowState>)
+) => void;
+
+function applyAgentStatusUpdate(
+  agents: AgentInfo[],
+  agentId: string,
+  action: string
+) {
+  return agents.map(agent =>
+    agent.id === agentId
+      ? { ...agent, status: (action || "idle") as AgentInfo["status"] }
+      : agent
+  );
+}
+
+function handleRuntimeEvent(
+  event: RuntimeEvent,
+  set: WorkflowStoreSet,
+  get: () => WorkflowState
+) {
+  const state = get();
+
+  set({
+    eventLog: [
+      ...state.eventLog.slice(-100),
+      {
+        type: event.type,
+        data: event,
+        timestamp: new Date().toISOString(),
+      },
+    ],
+  });
+
+  switch (event.type) {
+    case "stage_change": {
+      set(store => ({
+        workflows: store.workflows.map(workflow =>
+          workflow.id === event.workflowId
+            ? { ...workflow, current_stage: event.stage, status: "running" }
+            : workflow
+        ),
+        currentWorkflow:
+          store.currentWorkflow && store.currentWorkflow.id === event.workflowId
+            ? {
+                ...store.currentWorkflow,
+                current_stage: event.stage,
+                status: "running",
+              }
+            : store.currentWorkflow,
+      }));
+      if (state.currentWorkflowId === event.workflowId) {
+        void get().fetchWorkflowDetail(event.workflowId);
+      }
+      break;
+    }
+    case "agent_active": {
+      set(store => ({
+        agentStatuses: {
+          ...store.agentStatuses,
+          [event.agentId]: event.action,
+        },
+        agents: applyAgentStatusUpdate(store.agents, event.agentId, event.action),
+      }));
+      break;
+    }
+    case "heartbeat_status": {
+      set(store => ({
+        heartbeatStatuses: mergeHeartbeatStatus(
+          store.heartbeatStatuses,
+          event.status
+        ),
+        agentStatuses:
+          store.agentStatuses[event.status.agentId] === "heartbeat" &&
+          event.status.state !== "running"
+            ? { ...store.agentStatuses, [event.status.agentId]: "idle" }
+            : store.agentStatuses,
+        agents:
+          store.agentStatuses[event.status.agentId] === "heartbeat" &&
+          event.status.state !== "running"
+            ? applyAgentStatusUpdate(store.agents, event.status.agentId, "idle")
+            : store.agents,
+      }));
+      break;
+    }
+    case "heartbeat_report_saved": {
+      void get().fetchHeartbeatStatuses();
+      void get().fetchHeartbeatReports(undefined, 12);
+      break;
+    }
+    case "message_sent":
+    case "score_assigned":
+    case "task_update": {
+      if (state.currentWorkflowId === event.workflowId) {
+        void get().fetchWorkflowDetail(event.workflowId);
+      }
+      break;
+    }
+    case "workflow_complete": {
+      set(store => ({
+        workflows: store.workflows.map(workflow =>
+          workflow.id === event.workflowId
+            ? { ...workflow, status: event.status }
+            : workflow
+        ),
+        currentWorkflow:
+          store.currentWorkflow && store.currentWorkflow.id === event.workflowId
+            ? { ...store.currentWorkflow, status: event.status }
+            : store.currentWorkflow,
+      }));
+      if (state.currentWorkflowId === event.workflowId) {
+        void get().fetchWorkflowDetail(event.workflowId);
+      }
+      void get().fetchWorkflows();
+      break;
+    }
+    case "workflow_error": {
+      set(store => ({
+        workflows: store.workflows.map(workflow =>
+          workflow.id === event.workflowId
+            ? {
+                ...workflow,
+                status: "failed",
+                results: {
+                  ...(workflow.results || {}),
+                  last_error: event.error,
+                },
+              }
+            : workflow
+        ),
+        currentWorkflow:
+          store.currentWorkflow && store.currentWorkflow.id === event.workflowId
+            ? {
+                ...store.currentWorkflow,
+                status: "failed",
+                results: {
+                  ...(store.currentWorkflow.results || {}),
+                  last_error: event.error,
+                },
+              }
+            : store.currentWorkflow,
+      }));
+      if (state.currentWorkflowId === event.workflowId) {
+        void get().fetchWorkflowDetail(event.workflowId);
+      }
+      break;
+    }
+  }
+}
+
 export const useWorkflowStore = create<WorkflowState>((set, get) => ({
-  socket: null,
   connected: false,
   agents: [],
   agentStatuses: {},
@@ -292,194 +356,65 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   memoryQuery: "",
   eventLog: [],
 
-  initSocket: () => {
-    const existing = get().socket;
-    if (existing?.connected) return;
+  initSocket: async () => {
+    if (runtimeInitPromise) {
+      await runtimeInitPromise;
+      return;
+    }
 
-    const socket = io(window.location.origin, {
-      transports: ["websocket", "polling"],
-    });
+    runtimeInitPromise = (async () => {
+      await localRuntime.ensureStarted();
 
-    socket.on("connect", () => {
-      console.log("[WS] Connected");
-      set({ connected: true });
-    });
-
-    socket.on("disconnect", () => {
-      console.log("[WS] Disconnected");
-      set({ connected: false });
-    });
-
-    socket.on("agent_event", (event: any) => {
-      const state = get();
-
-      set({
-        eventLog: [
-          ...state.eventLog.slice(-100),
-          {
-            type: event.type,
-            data: event,
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      });
-
-      switch (event.type) {
-        case "stage_change": {
-          if (state.currentWorkflowId === event.workflowId) {
-            set(store => ({
-              currentWorkflow: store.currentWorkflow
-                ? {
-                    ...store.currentWorkflow,
-                    current_stage: event.stage,
-                    status: "running",
-                  }
-                : null,
-            }));
-          }
-
-          set(store => ({
-            workflows: store.workflows.map(workflow =>
-              workflow.id === event.workflowId
-                ? { ...workflow, current_stage: event.stage, status: "running" }
-                : workflow
-            ),
-          }));
-          break;
-        }
-
-        case "agent_active": {
-          set(store => ({
-            agentStatuses: {
-              ...store.agentStatuses,
-              [event.agentId]: event.action,
-            },
-          }));
-          break;
-        }
-
-        case "heartbeat_status": {
-          set(store => ({
-            heartbeatStatuses: mergeHeartbeatStatus(
-              store.heartbeatStatuses,
-              event.status
-            ),
-            agentStatuses:
-              store.agentStatuses[event.status.agentId] === "heartbeat" &&
-              event.status.state !== "running"
-                ? { ...store.agentStatuses, [event.status.agentId]: "idle" }
-                : store.agentStatuses,
-          }));
-          break;
-        }
-
-        case "heartbeat_report_saved": {
-          void get().fetchHeartbeatStatuses();
-          void get().fetchHeartbeatReports(undefined, 12);
-          break;
-        }
-
-        case "message_sent":
-        case "score_assigned": {
-          if (state.currentWorkflowId === event.workflowId) {
-            get().fetchWorkflowDetail(event.workflowId);
-          }
-          break;
-        }
-
-        case "task_update": {
-          if (state.currentWorkflowId === event.workflowId) {
-            set(store => ({
-              tasks: store.tasks.map(task =>
-                task.id === event.taskId
-                  ? { ...task, status: event.status }
-                  : task
-              ),
-            }));
-          }
-          break;
-        }
-
-        case "workflow_complete": {
-          set(store => ({
-            workflows: store.workflows.map(workflow =>
-              workflow.id === event.workflowId
-                ? { ...workflow, status: event.status }
-                : workflow
-            ),
-            currentWorkflow:
-              store.currentWorkflow &&
-              store.currentWorkflow.id === event.workflowId
-                ? { ...store.currentWorkflow, status: event.status }
-                : store.currentWorkflow,
-          }));
-
-          if (state.currentWorkflowId === event.workflowId) {
-            get().fetchWorkflowDetail(event.workflowId);
-          }
-          break;
-        }
-
-        case "workflow_error": {
-          set(store => ({
-            workflows: store.workflows.map(workflow =>
-              workflow.id === event.workflowId
-                ? {
-                    ...workflow,
-                    status: "failed",
-                    results: {
-                      ...(workflow.results || {}),
-                      last_error: event.error,
-                    },
-                  }
-                : workflow
-            ),
-            currentWorkflow:
-              store.currentWorkflow &&
-              store.currentWorkflow.id === event.workflowId
-                ? {
-                    ...store.currentWorkflow,
-                    status: "failed",
-                    results: {
-                      ...(store.currentWorkflow.results || {}),
-                      last_error: event.error,
-                    },
-                  }
-                : store.currentWorkflow,
-          }));
-
-          if (state.currentWorkflowId === event.workflowId) {
-            get().fetchWorkflowDetail(event.workflowId);
-          }
-          break;
-        }
+      if (!runtimeUnsubscribe) {
+        runtimeUnsubscribe = runtimeEventBus.subscribe(event =>
+          handleRuntimeEvent(event, set, get)
+        );
       }
-    });
 
-    set({ socket });
+      const snapshot = await localRuntime.getSnapshot();
+      set({
+        connected: true,
+        agents: snapshot.agents,
+        agentStatuses: snapshot.agentStatuses,
+        workflows: snapshot.workflows,
+        heartbeatStatuses: snapshot.heartbeatStatuses,
+        heartbeatReports: snapshot.heartbeatReports,
+        stages: snapshot.stages,
+      });
+    })();
+
+    try {
+      await runtimeInitPromise;
+    } catch (error) {
+      set({ connected: false });
+      runtimeInitPromise = null;
+      throw error;
+    }
   },
 
   disconnectSocket: () => {
-    const { socket } = get();
-    if (socket) {
-      socket.disconnect();
-      set({ socket: null, connected: false });
+    if (runtimeUnsubscribe) {
+      runtimeUnsubscribe();
+      runtimeUnsubscribe = null;
     }
+    runtimeInitPromise = null;
+    set({ connected: false });
   },
 
   fetchAgents: async () => {
     try {
-      const res = await fetch("/api/agents");
-      const data = await res.json();
-      const agents = (data.agents || []).map((agent: any) => ({
+      const data = await localRuntime.getAgents();
+      const agents = data.agents.map(agent => ({
         ...agent,
-        isActive: agent.isActive ?? true,
-        status: get().agentStatuses[agent.id] || "idle",
+        status: (get().agentStatuses[agent.id] ||
+          agent.status) as AgentInfo["status"],
       }));
-      void persistAgents(agents).catch((storageError) => {
+      void persistAgents(agents).catch(storageError => {
         console.warn("[Store] Failed to persist agents snapshot:", storageError);
       });
-      set({ agents });
+      set({
+        agents,
+      });
     } catch (err) {
       console.error("[Store] Failed to fetch agents:", err);
       try {
@@ -501,8 +436,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
   fetchStages: async () => {
     try {
-      const res = await fetch("/api/config/stages");
-      const data = await res.json();
+      const data = await localRuntime.getStages();
       set({ stages: data.stages || [] });
     } catch (err) {
       console.error("[Store] Failed to fetch stages:", err);
@@ -512,10 +446,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
   fetchWorkflows: async () => {
     try {
-      const res = await fetch("/api/workflows");
-      const data = await res.json();
-      void persistWorkflows(data.workflows || []).catch((storageError) => {
-        console.warn("[Store] Failed to persist workflow list snapshot:", storageError);
+      const data = await localRuntime.listWorkflows();
+      void persistWorkflows(data.workflows || []).catch(storageError => {
+        console.warn(
+          "[Store] Failed to persist workflow list snapshot:",
+          storageError
+        );
       });
       set({ workflows: data.workflows || [] });
     } catch (err) {
@@ -533,16 +469,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
   fetchWorkflowDetail: async (id: string) => {
     try {
-      const res = await fetch(`/api/workflows/${id}`);
-      const data = await res.json();
+      const data = await localRuntime.getWorkflowDetail(id);
       void persistWorkflowDetail({
         id,
         workflow: data.workflow,
         tasks: data.tasks || [],
         messages: data.messages || [],
-        report: data.report || null,
-      }).catch((storageError) => {
-        console.warn("[Store] Failed to persist workflow detail snapshot:", storageError);
+        report: null,
+      }).catch(storageError => {
+        console.warn(
+          "[Store] Failed to persist workflow detail snapshot:",
+          storageError
+        );
       });
       set({
         currentWorkflow: data.workflow,
@@ -577,16 +515,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     set({ isMemoryLoading: true });
 
     try {
-      const params = new URLSearchParams();
-      params.set("limit", String(limit));
-      if (workflowId) {
-        params.set("workflowId", workflowId);
-      }
-
-      const res = await fetch(
-        `/api/agents/${agentId}/memory/recent?${params.toString()}`
+      const data = await localRuntime.getAgentRecentMemory(
+        agentId,
+        workflowId,
+        limit
       );
-      const data = await res.json();
       void persistRecentMemory(agentId, workflowId || null, data.entries || []).catch(
         storageError => {
           console.warn("[Store] Failed to persist recent memory snapshot:", storageError);
@@ -620,14 +553,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     set({ isMemoryLoading: true, memoryQuery: query });
 
     try {
-      const params = new URLSearchParams();
-      params.set("query", query);
-      params.set("topK", String(topK));
-
-      const res = await fetch(
-        `/api/agents/${agentId}/memory/search?${params.toString()}`
-      );
-      const data = await res.json();
+      const data = await localRuntime.searchAgentMemory(agentId, query, topK);
       void persistMemorySearch(agentId, query, data.memories || []).catch(
         storageError => {
           console.warn("[Store] Failed to persist memory search snapshot:", storageError);
@@ -654,10 +580,12 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
   fetchHeartbeatStatuses: async () => {
     try {
-      const res = await fetch("/api/reports/heartbeat/status");
-      const data = await res.json();
-      void persistHeartbeatStatuses(data.statuses || []).catch((storageError) => {
-        console.warn("[Store] Failed to persist heartbeat status snapshot:", storageError);
+      const data = await localRuntime.getHeartbeatStatuses();
+      void persistHeartbeatStatuses(data.statuses || []).catch(storageError => {
+        console.warn(
+          "[Store] Failed to persist heartbeat status snapshot:",
+          storageError
+        );
       });
       set({ heartbeatStatuses: data.statuses || [] });
     } catch (err) {
@@ -678,14 +606,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     set({ isHeartbeatLoading: true });
 
     try {
-      const params = new URLSearchParams();
-      params.set("limit", String(limit));
-      if (agentId) {
-        params.set("agentId", agentId);
-      }
-
-      const res = await fetch(`/api/reports/heartbeat?${params.toString()}`);
-      const data = await res.json();
+      const data = await localRuntime.getHeartbeatReports(agentId, limit);
       void persistHeartbeatReports(
         (data.reports || []).map((report: any) => ({
           agentId: report.agentId,
@@ -693,8 +614,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           summary: report,
           detail: null,
         }))
-      ).catch((storageError) => {
-        console.warn("[Store] Failed to persist heartbeat report snapshots:", storageError);
+      ).catch(storageError => {
+        console.warn(
+          "[Store] Failed to persist heartbeat report snapshots:",
+          storageError
+        );
       });
       set({
         heartbeatReports: data.reports || [],
@@ -720,15 +644,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     set({ runningHeartbeatAgentId: agentId });
 
     try {
-      const res = await fetch(`/api/reports/heartbeat/${agentId}/run`, {
-        method: "POST",
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Heartbeat run failed");
-      }
-
+      await localRuntime.runHeartbeat(agentId);
       await get().fetchHeartbeatStatuses();
       await get().fetchHeartbeatReports(undefined, 12);
       set({ runningHeartbeatAgentId: null });
@@ -783,12 +699,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     });
 
     try {
-      const res = await fetch("/api/workflows", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ directive: normalizedDirective }),
-      });
-      const data = await res.json();
+      const data = await localRuntime.submitDirective(normalizedDirective);
 
       if (data.workflowId) {
         set({
@@ -812,6 +723,29 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     }
   },
 
+  downloadWorkflowReport: async (workflowId, format) => {
+    const payload = await localRuntime.downloadWorkflowReport(workflowId, format);
+    saveDownload(payload.filename, payload.mimeType, payload.content);
+  },
+
+  downloadDepartmentReport: async (workflowId, managerId, format) => {
+    const payload = await localRuntime.downloadWorkflowReport(
+      workflowId,
+      format,
+      managerId
+    );
+    saveDownload(payload.filename, payload.mimeType, payload.content);
+  },
+
+  downloadHeartbeatReport: async (agentId, reportId, format) => {
+    const payload = await localRuntime.downloadHeartbeatReport(
+      agentId,
+      reportId,
+      format
+    );
+    saveDownload(payload.filename, payload.mimeType, payload.content);
+  },
+
   setSelectedMemoryAgent: id =>
     set({
       selectedMemoryAgentId: id,
@@ -826,7 +760,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   openWorkflowPanel: () => set({ isWorkflowPanelOpen: true }),
   setCurrentWorkflow: id => {
     if (id) {
-      get().fetchWorkflowDetail(id);
+      void get().fetchWorkflowDetail(id);
     } else {
       set({
         currentWorkflowId: null,

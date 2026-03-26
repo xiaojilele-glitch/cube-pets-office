@@ -445,17 +445,9 @@ function WorkflowProgressView() {
     tasks,
     stages,
     messages,
-    fetchWorkflowDetail,
-    currentWorkflowId,
+    downloadWorkflowReport,
+    downloadDepartmentReport,
   } = useWorkflowStore();
-
-  useEffect(() => {
-    if (!currentWorkflowId || currentWorkflow?.status !== "running") return;
-    const timer = setInterval(() => {
-      void fetchWorkflowDetail(currentWorkflowId);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [currentWorkflowId, currentWorkflow?.status, fetchWorkflowDetail]);
 
   if (!currentWorkflow) {
     return (
@@ -652,20 +644,26 @@ function WorkflowProgressView() {
                 </p>
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
-                <a
-                  href={`/api/workflows/${currentWorkflow.id}/report/download?format=json`}
+                <button
+                  type="button"
+                  onClick={() =>
+                    void downloadWorkflowReport(currentWorkflow.id, "json")
+                  }
                   className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
                 >
                   <Download className="h-3 w-3" />
                   下载 JSON
-                </a>
-                <a
-                  href={`/api/workflows/${currentWorkflow.id}/report/download?format=md`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void downloadWorkflowReport(currentWorkflow.id, "md")
+                  }
                   className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-medium text-blue-700 shadow-sm transition-colors hover:bg-blue-100"
                 >
                   <Download className="h-3 w-3" />
                   下载 Markdown
-                </a>
+                </button>
               </div>
               {Array.isArray(currentWorkflow.results?.department_reports) &&
                 currentWorkflow.results.department_reports.length > 0 && (
@@ -692,20 +690,34 @@ function WorkflowProgressView() {
                               </p>
                             </div>
                             <div className="flex shrink-0 gap-1.5">
-                              <a
-                                href={`/api/workflows/${currentWorkflow.id}/report/department/${item.manager_id}/download?format=json`}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void downloadDepartmentReport(
+                                    currentWorkflow.id,
+                                    item.manager_id,
+                                    "json"
+                                  )
+                                }
                                 className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-[9px] font-medium text-blue-700 transition-colors hover:bg-blue-200"
                               >
                                 <Download className="h-3 w-3" />
                                 JSON
-                              </a>
-                              <a
-                                href={`/api/workflows/${currentWorkflow.id}/report/department/${item.manager_id}/download?format=md`}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void downloadDepartmentReport(
+                                    currentWorkflow.id,
+                                    item.manager_id,
+                                    "md"
+                                  )
+                                }
                                 className="inline-flex items-center gap-1 rounded-md bg-blue-100 px-2 py-1 text-[9px] font-medium text-blue-700 transition-colors hover:bg-blue-200"
                               >
                                 <Download className="h-3 w-3" />
                                 MD
-                              </a>
+                              </button>
                             </div>
                           </div>
                           <p className="mt-1 break-all text-blue-700">
@@ -1110,6 +1122,10 @@ function MemoryView() {
 }
 
 function HeartbeatReportCard({ item }: { item: HeartbeatReportInfo }) {
+  const downloadHeartbeatReport = useWorkflowStore(
+    state => state.downloadHeartbeatReport
+  );
+
   return (
     <div className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
@@ -1143,20 +1159,26 @@ function HeartbeatReportCard({ item }: { item: HeartbeatReportInfo }) {
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2">
-        <a
-          href={`/api/reports/heartbeat/${item.agentId}/${item.reportId}/download?format=json`}
+        <button
+          type="button"
+          onClick={() =>
+            void downloadHeartbeatReport(item.agentId, item.reportId, "json")
+          }
           className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837] transition-colors hover:bg-[#E8DDD0]"
         >
           <Download className="h-3 w-3" />
           JSON
-        </a>
-        <a
-          href={`/api/reports/heartbeat/${item.agentId}/${item.reportId}/download?format=md`}
+        </button>
+        <button
+          type="button"
+          onClick={() =>
+            void downloadHeartbeatReport(item.agentId, item.reportId, "md")
+          }
           className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837] transition-colors hover:bg-[#E8DDD0]"
         >
           <Download className="h-3 w-3" />
           MD
-        </a>
+        </button>
       </div>
     </div>
   );

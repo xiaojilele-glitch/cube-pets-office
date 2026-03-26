@@ -96,9 +96,9 @@
    - [ ] 保留导出能力，允许用户将配置、报告、persona 和历史记录下载到本地
 
 3. **Phase PF-3：前端事件与状态收口**
-   - [ ] 把当前前端对 `/api/workflows`、`/api/agents`、`/api/reports` 的依赖逐步改为本地 runtime 调用
-   - [ ] 把当前 Socket.IO 实时事件改为 Worker `postMessage` / 本地事件总线
-   - [ ] 继续复用 Zustand 作为 UI 状态层，但不让 Zustand 直接承担长链路编排执行
+   - [x] 把当前前端对 `/api/workflows`、`/api/agents`、`/api/reports` 的依赖逐步改为本地 runtime 调用
+   - [x] 把当前 Socket.IO 实时事件改为 Worker `postMessage` / 本地事件总线
+   - [x] 继续复用 Zustand 作为 UI 状态层，但不让 Zustand 直接承担长链路编排执行
 
 4. **Phase PF-4：模型调用前端化**
    - [ ] 优先支持可浏览器直连的模型服务
