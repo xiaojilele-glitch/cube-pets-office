@@ -15,6 +15,12 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-111827" />
 </p>
 
+<p align="center">
+  <a href="https://opencroc.github.io/cube-pets-office/"><strong>Live Demo</strong></a>
+  ·
+  <a href="https://opencroc.github.io/cube-pets-office/">https://opencroc.github.io/cube-pets-office/</a>
+</p>
+
 ## 项目概览
 
 Cube Pets Office 是一个把 3D 场景展示、Agent 组织结构、工作流编排和聊天交互放在同一界面的实验性产品原型。
