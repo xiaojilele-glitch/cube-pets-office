@@ -10,9 +10,17 @@ import { Toolbar } from '@/components/Toolbar';
 import { WorkflowPanel } from '@/components/WorkflowPanel';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { useAppStore } from '@/lib/store';
+import { useEffect } from 'react';
 
 export default function Home() {
   const isSceneReady = useAppStore((state) => state.isSceneReady);
+  const hydrateAIConfig = useAppStore((state) => state.hydrateAIConfig);
+
+  useEffect(() => {
+    hydrateAIConfig().catch((error) => {
+      console.error('[Home] Failed to load AI config:', error);
+    });
+  }, [hydrateAIConfig]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#E2D6C7]">

@@ -11,6 +11,7 @@ class AgentRegistry {
    * Initialize all agents from database
    */
   init(): void {
+    this.agents.clear();
     const rows = db.getAgents();
     for (const row of rows) {
       const agent = new Agent({
@@ -88,6 +89,10 @@ class AgentRegistry {
     if (agent) {
       this.agents.set(agentId, agent);
     }
+  }
+
+  refreshAll(): void {
+    this.init();
   }
 }
 

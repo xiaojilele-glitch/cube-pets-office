@@ -1,5 +1,7 @@
 import dotenv from 'dotenv';
 
+import { getAIConfig } from './ai-config.js';
+
 dotenv.config();
 
 interface LLMMessage {
@@ -45,26 +47,19 @@ const MAX_CONCURRENT = Math.max(1, Number(process.env.LLM_MAX_CONCURRENT || 1));
 let activeRequests = 0;
 const requestQueue: Array<() => void> = [];
 
-const DEFAULT_MODEL = process.env.OPENAI_API_KEY
-  ? 'gpt-4.1-mini'
-  : (process.env.LLM_MODEL || 'gpt-4o-mini');
-
 function buildProviders(): ProviderConfig[] {
+  const aiConfig = getAIConfig();
   const primary: ProviderConfig = {
     name: 'primary',
-    apiKey: process.env.OPENAI_API_KEY || process.env.LLM_API_KEY || '',
-    baseUrl: process.env.OPENAI_API_KEY
-      ? (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1')
-      : (process.env.LLM_BASE_URL || 'https://api.openai.com/v1'),
-    wireApi: ((process.env.OPENAI_WIRE_API || process.env.LLM_WIRE_API || 'chat_completions').toLowerCase() === 'responses'
-      ? 'responses'
-      : 'chat_completions'),
-    defaultModel: process.env.OPENAI_API_KEY ? 'gpt-4.1-mini' : (process.env.LLM_MODEL || 'gpt-4o-mini'),
-    timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || process.env.LLM_TIMEOUT_MS || 45000),
-    reasoningEffort: process.env.OPENAI_REASONING_EFFORT || process.env.LLM_REASONING_EFFORT || undefined,
+    apiKey: aiConfig.apiKey,
+    baseUrl: aiConfig.baseUrl,
+    wireApi: aiConfig.wireApi,
+    defaultModel: aiConfig.model,
+    timeoutMs: aiConfig.timeoutMs,
+    reasoningEffort: aiConfig.modelReasoningEffort || undefined,
     forceModel: false,
-    stream: (process.env.OPENAI_STREAM || process.env.LLM_STREAM || 'true').toLowerCase() !== 'false',
-    chatThinkingType: process.env.OPENAI_CHAT_THINKING_TYPE || process.env.LLM_CHAT_THINKING_TYPE || undefined,
+    stream: aiConfig.stream,
+    chatThinkingType: aiConfig.chatThinkingType || undefined,
   };
 
   const fallbackApiKey = process.env.FALLBACK_LLM_API_KEY || '';
@@ -90,13 +85,6 @@ function buildProviders(): ProviderConfig[] {
 
   return providers.filter((provider) => provider.apiKey && provider.baseUrl);
 }
-
-const PROVIDERS = buildProviders();
-const API_KEY = PROVIDERS[0]?.apiKey || '';
-const BASE_URL = PROVIDERS[0]?.baseUrl || '';
-const WIRE_API = PROVIDERS[0]?.wireApi || 'chat_completions';
-const REASONING_EFFORT = PROVIDERS[0]?.reasoningEffort;
-const LLM_TIMEOUT_MS = PROVIDERS[0]?.timeoutMs || 45000;
 
 function acquireSlot(): Promise<void> {
   if (activeRequests < MAX_CONCURRENT) {
@@ -488,13 +476,14 @@ export async function callLLM(
   await acquireSlot();
 
   try {
-    if (PROVIDERS.length === 0) {
+    const providers = buildProviders();
+    if (providers.length === 0) {
       throw missingKeyError();
     }
 
     let lastError: Error | null = null;
 
-    for (const provider of PROVIDERS) {
+    for (const provider of providers) {
       const attempts = Math.max(
         1,
         Number(
@@ -556,5 +545,3 @@ export async function callLLMJson<T = any>(
     throw new Error('Failed to parse LLM JSON response');
   }
 }
-
-export { DEFAULT_MODEL, API_KEY, BASE_URL, WIRE_API, REASONING_EFFORT, LLM_TIMEOUT_MS };

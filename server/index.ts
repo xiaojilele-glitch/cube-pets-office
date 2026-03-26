@@ -53,10 +53,12 @@ async function startServer() {
 
   // API Routes
   const agentRoutes = (await import("./routes/agents.js")).default;
+  const chatRoutes = (await import("./routes/chat.js")).default;
   const workflowRoutes = (await import("./routes/workflows.js")).default;
   const configRoutes = (await import("./routes/config.js")).default;
 
   app.use("/api/agents", agentRoutes);
+  app.use("/api/chat", chatRoutes);
   app.use("/api/workflows", workflowRoutes);
   app.use("/api/config", configRoutes);
 

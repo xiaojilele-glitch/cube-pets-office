@@ -11,6 +11,7 @@ export interface AIConfig {
   modelReasoningEffort: string;
   maxContext: number;
   providerName: string;
+  wireApi: string;
 }
 
 export interface ChatMessage {
@@ -21,7 +22,6 @@ export interface ChatMessage {
 }
 
 interface AppState {
-  // PDF Viewer
   currentPage: number;
   totalPages: number;
   isPdfOpen: boolean;
@@ -30,13 +30,12 @@ interface AppState {
   openPdf: () => void;
   closePdf: () => void;
 
-  // AI Config
   aiConfig: AIConfig;
+  isAIConfigLoading: boolean;
+  hydrateAIConfig: () => Promise<void>;
   isConfigOpen: boolean;
-  setAIConfig: (config: Partial<AIConfig>) => void;
   toggleConfig: () => void;
 
-  // Chat
   chatMessages: ChatMessage[];
   isChatOpen: boolean;
   isLoading: boolean;
@@ -45,39 +44,26 @@ interface AppState {
   toggleChat: () => void;
   setLoading: (loading: boolean) => void;
 
-  // Pet interaction
   selectedPet: string | null;
   setSelectedPet: (pet: string | null) => void;
 
-  // Scene
   isSceneReady: boolean;
   setSceneReady: (ready: boolean) => void;
   loadingProgress: number;
   setLoadingProgress: (progress: number) => void;
 }
 
-// Load saved AI config from localStorage
-function loadSavedConfig(): AIConfig {
-  try {
-    const saved = localStorage.getItem('cube-pets-ai-config');
-    if (saved) {
-      return { ...DEFAULT_AI_CONFIG, ...JSON.parse(saved) };
-    }
-  } catch {}
-  return DEFAULT_AI_CONFIG;
-}
-
 const DEFAULT_AI_CONFIG: AIConfig = {
-  apiKey: 'clp_8a761eb26d953931769b4cb8186baff6ce3d797b8ed5ed923a54967027d93f52',
-  baseUrl: 'https://api-vip.codex-for.me/v1',
-  model: 'gpt-5.4',
+  apiKey: '',
+  baseUrl: '',
+  model: '',
   modelReasoningEffort: 'high',
   maxContext: 1000000,
-  providerName: 'codex-for-me',
+  providerName: '',
+  wireApi: 'chat_completions',
 };
 
 export const useAppStore = create<AppState>((set) => ({
-  // PDF Viewer
   currentPage: 1,
   totalPages: 33,
   isPdfOpen: false,
@@ -86,19 +72,31 @@ export const useAppStore = create<AppState>((set) => ({
   openPdf: () => set({ isPdfOpen: true }),
   closePdf: () => set({ isPdfOpen: false }),
 
-  // AI Config
-  aiConfig: loadSavedConfig(),
-  isConfigOpen: false,
-  setAIConfig: (config) => set((s) => {
-    const newConfig = { ...s.aiConfig, ...config };
+  aiConfig: DEFAULT_AI_CONFIG,
+  isAIConfigLoading: false,
+  hydrateAIConfig: async () => {
+    set({ isAIConfigLoading: true });
+
     try {
-      localStorage.setItem('cube-pets-ai-config', JSON.stringify(newConfig));
-    } catch {}
-    return { aiConfig: newConfig };
-  }),
+      const response = await fetch('/api/config/ai');
+      if (!response.ok) {
+        throw new Error(`API ${response.status}`);
+      }
+
+      const data = await response.json();
+      set({
+        aiConfig: { ...DEFAULT_AI_CONFIG, ...data.config },
+        isAIConfigLoading: false,
+      });
+    } catch (error) {
+      console.error('[AI Config] Failed to hydrate config:', error);
+      set({ isAIConfigLoading: false });
+      throw error;
+    }
+  },
+  isConfigOpen: false,
   toggleConfig: () => set((s) => ({ isConfigOpen: !s.isConfigOpen })),
 
-  // Chat
   chatMessages: [],
   isChatOpen: false,
   isLoading: false,
@@ -107,11 +105,9 @@ export const useAppStore = create<AppState>((set) => ({
   toggleChat: () => set((s) => ({ isChatOpen: !s.isChatOpen })),
   setLoading: (loading) => set({ isLoading: loading }),
 
-  // Pet interaction
   selectedPet: null,
   setSelectedPet: (pet) => set({ selectedPet: pet }),
 
-  // Scene
   isSceneReady: false,
   setSceneReady: (ready) => set({ isSceneReady: ready }),
   loadingProgress: 0,

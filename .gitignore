@@ -116,3 +116,6 @@ data/agents/*/reports/
 
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
+
+# Local verification artifacts
+tmp-server-*.log

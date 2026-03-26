@@ -3,25 +3,29 @@
  */
 import { Router } from 'express';
 
+import { getAIConfig } from '../core/ai-config.js';
 import { V3_STAGES } from '../core/workflow-engine.js';
 import db from '../db/index.js';
 
 const router = Router();
 
 const STAGE_LABELS: Record<string, string> = {
-  direction: '方向下发',
-  planning: '任务规划',
-  execution: '执行任务',
-  review: '评审打分',
-  meta_audit: '元审计',
-  revision: '修订改进',
-  verify: '验证确认',
-  summary: '部门汇总',
-  feedback: 'CEO 反馈',
-  evolution: '自动进化',
+  direction: 'Direction',
+  planning: 'Planning',
+  execution: 'Execution',
+  review: 'Review',
+  meta_audit: 'Meta Audit',
+  revision: 'Revision',
+  verify: 'Verify',
+  summary: 'Summary',
+  feedback: 'Feedback',
+  evolution: 'Evolution',
 };
 
-// GET /api/config/stages
+router.get('/ai', (_req, res) => {
+  res.json({ config: getAIConfig(), source: '.env', writable: false });
+});
+
 router.get('/stages', (_req, res) => {
   const stageInfo = V3_STAGES.map((stage, idx) => ({
     id: stage,
@@ -32,7 +36,6 @@ router.get('/stages', (_req, res) => {
   res.json({ stages: stageInfo });
 });
 
-// GET /api/config/stats
 router.get('/stats', (_req, res) => {
   const agents = db.getAgents();
   const workflows = db.getWorkflows();

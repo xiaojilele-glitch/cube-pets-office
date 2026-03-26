@@ -4,6 +4,7 @@
  * does not keep polluting prompts or the UI.
  */
 import db from './index.js';
+import { getAIConfig } from '../core/ai-config.js';
 
 type Department = 'game' | 'ai' | 'life' | 'meta';
 type Role = 'ceo' | 'manager' | 'worker';
@@ -459,10 +460,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 
 export function seedAgents(): void {
   console.log('[Seed] Refreshing agent definitions...');
+  const workflowModel = getAIConfig().model;
 
   for (const agent of AGENT_SEEDS) {
     db.upsertAgent({
       ...agent,
+      model: workflowModel,
       heartbeat_config: null,
       is_active: 1,
     });
