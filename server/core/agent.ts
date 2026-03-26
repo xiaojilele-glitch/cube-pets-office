@@ -3,16 +3,18 @@
  * Each agent carries identity, prompt context, workspace helpers,
  * and a consistent LLM invocation interface.
  */
-import fs from 'fs';
-import path from 'path';
-
 import db from '../db/index.js';
 import { sessionStore } from '../memory/session-store.js';
+import { soulStore } from '../memory/soul-store.js';
+import {
+  type AgentWorkspaceSection,
+  ensureAgentWorkspace,
+  readAgentWorkspaceFile,
+  writeAgentWorkspaceFile,
+} from '../memory/workspace.js';
 import { callLLM, callLLMJson } from './llm-client.js';
 import { messageBus } from './message-bus.js';
 import { emitEvent } from './socket.js';
-
-const DATA_DIR = path.resolve(process.cwd(), 'data/agents');
 
 export interface AgentConfig {
   id: string;
@@ -50,7 +52,7 @@ export class Agent {
       role: row.role,
       managerId: row.manager_id,
       model: row.model,
-      soulMd: row.soul_md || '',
+      soulMd: soulStore.getSoulText(agentId, row.soul_md || ''),
     });
   }
 
@@ -186,6 +188,7 @@ export class Agent {
    * Build the system prompt from SOUL.md plus runtime identity info.
    */
   private buildSystemPrompt(): string {
+    this.config.soulMd = soulStore.getSoulText(this.config.id, this.config.soulMd);
     return `${this.config.soulMd}
 
 ---
@@ -198,29 +201,24 @@ export class Agent {
    * Ensure the agent workspace directory exists.
    */
   ensureWorkspace(): string {
-    const dir = path.join(DATA_DIR, this.config.id);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    return dir;
+    return ensureAgentWorkspace(this.config.id).rootDir;
   }
 
   /**
    * Save a file to the agent workspace.
    */
-  saveToWorkspace(filename: string, content: string): void {
-    const dir = this.ensureWorkspace();
-    fs.writeFileSync(path.join(dir, filename), content, 'utf-8');
+  saveToWorkspace(
+    filename: string,
+    content: string,
+    section: AgentWorkspaceSection = 'root'
+  ): void {
+    writeAgentWorkspaceFile(this.config.id, section, filename, content);
   }
 
   /**
    * Read a file from the agent workspace.
    */
-  readFromWorkspace(filename: string): string | null {
-    const filepath = path.join(DATA_DIR, this.config.id, filename);
-    if (fs.existsSync(filepath)) {
-      return fs.readFileSync(filepath, 'utf-8');
-    }
-    return null;
+  readFromWorkspace(filename: string, section: AgentWorkspaceSection = 'root'): string | null {
+    return readAgentWorkspaceFile(this.config.id, section, filename);
   }
 }

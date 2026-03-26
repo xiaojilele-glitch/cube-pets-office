@@ -30,10 +30,11 @@
    - [ ] 为基础层补一轮最小验证：注册表、工作空间、层级通信
 
 2. **Phase 5 补强：把记忆系统从摘要检索推进到论文目标版**
-   - [ ] 补齐当前 workflow 内完整上下文注入，而不只是最近片段
-   - [ ] 实现中期记忆的 embedding / 向量检索
-   - [ ] 将长期记忆从数据库 `soul_md` 推进到文件版 `SOUL.md`
-   - [ ] 明确每个 agent 只能访问自己的 sessions / memory / reports
+   - [x] 补齐当前 workflow 内完整上下文注入，而不只是最近片段
+   - [x] 实现中期记忆的 embedding / 向量检索
+   - [x] 将长期记忆从数据库 `soul_md` 推进到文件版 `SOUL.md`
+   - [x] 明确每个 agent 只能访问自己的 sessions / memory / reports
+   - [x] 已先行执行 `phase-5-memory`；若后续与 Phase 1 hardening 的 workspace / 访问接口收敛冲突，再解决冲突
 
 3. **Phase 7 启动：把智能体从“被动执行”推进到“定时自主工作”**
    - [ ] 增加 heartbeat 调度器与配置载入
@@ -48,7 +49,7 @@
 ### 近期里程碑建议（按 1-2 周拆分）
 
 - [ ] 里程碑 A：完成 Phase 1 未勾选项
-- [ ] 里程碑 B：完成 Phase 5 未勾选项中的“完整上下文 + 向量检索”
+- [x] 里程碑 B：完成 Phase 5 未勾选项中的“完整上下文 + 向量检索”
 - [ ] 里程碑 B+：补齐结构化报告输出链路（部门汇总、CEO 总报告、落盘与查看）
 - [ ] 里程碑 C：跑通首个 heartbeat 自主报告闭环
 - [ ] 里程碑 D：完成 Phase 8 的关键词学习与能力注册
@@ -781,17 +782,36 @@ class MidTermMemory {
 当前代码状态（2026-03-26）：
 - 已实现 persona 长期记忆，但当前落在数据库 `soul_md` 字段
 - `evolution` 阶段已能自动给 `soul_md` 追加 learned behaviors
-- 文件版 `SOUL.md` 自动更新尚未落地
+- 文件版 `SOUL.md` 已落地，并与数据库 `soul_md` 保持同步
 
 ### 5.4 交付物
 
 - [x] 短期记忆：最近会话上下文注入已实现
-- [ ] 短期记忆：当前工作流内的完整上下文
+- [x] 短期记忆：当前工作流内的完整上下文
 - [x] 中期记忆：历史工作流可检索摘要（当前为摘要 + 关键词检索）
-- [ ] 中期记忆：向量检索 / embedding 召回
+- [x] 中期记忆：向量检索 / embedding 召回
 - [x] 长期记忆：persona / `soul_md` 自动更新
-- [ ] 长期记忆：文件版 `SOUL.md` 自动更新
-- [ ] 记忆严格隔离：每个智能体只能访问自己的记忆
+- [x] 长期记忆：文件版 `SOUL.md` 自动更新
+- [x] 记忆严格隔离：每个智能体只能访问自己的记忆
+
+### 5.5 实施备注（`phase-5-memory`）
+
+目标：完整上下文、向量检索、`SOUL.md` 文件化、记忆隔离。
+
+主写文件：
+- `server/memory/session-store.ts`
+- `server/core/agent.ts`
+- `server/routes/agents.ts`
+
+可新增文件：
+- `server/memory/vector-store.ts`
+- `server/memory/soul-store.ts`
+
+冲突高风险：
+- `server/core/agent.ts` 会与 Phase 1 hardening 的 workspace / 访问接口收敛产生明显重叠，合并时需要特别注意
+
+建议：
+- 已先行执行 `phase-5-memory`；后续如与 Phase 1 hardening 冲突，再按接口收敛结果解决
 
 ---
 

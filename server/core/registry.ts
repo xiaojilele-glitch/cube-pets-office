@@ -14,16 +14,10 @@ class AgentRegistry {
     this.agents.clear();
     const rows = db.getAgents();
     for (const row of rows) {
-      const agent = new Agent({
-        id: row.id,
-        name: row.name,
-        department: row.department,
-        role: row.role,
-        managerId: row.manager_id,
-        model: row.model,
-        soulMd: row.soul_md || '',
-      });
-      this.agents.set(row.id, agent);
+      const agent = Agent.fromDB(row.id);
+      if (agent) {
+        this.agents.set(row.id, agent);
+      }
     }
     console.log(`[Registry] Loaded ${this.agents.size} agents`);
   }

@@ -8,6 +8,7 @@ import type { TaskRow } from '../db/index.js';
 import type { FinalWorkflowReport } from '../memory/report-store.js';
 import { reportStore } from '../memory/report-store.js';
 import { sessionStore } from '../memory/session-store.js';
+import { soulStore } from '../memory/soul-store.js';
 import { registry } from './registry.js';
 import { messageBus } from './message-bus.js';
 import { emitEvent } from './socket.js';
@@ -999,19 +1000,13 @@ ${summaryText}
       }
 
       if (weakDims.length > 0) {
-        const agent = db.getAgent(agentId);
-        if (agent?.soul_md) {
-          const patch = `\n\n## Learned Behaviors (Auto-evolved)\n${weakDims
-            .map((dim) => `- 需要继续强化 ${dim} 维度的表现`)
-            .join('\n')}`;
-          const newSoul = agent.soul_md + patch;
-          db.updateAgentSoul(agentId, newSoul);
-          registry.refresh(agentId);
+        soulStore.appendLearnedBehaviors(
+          agentId,
+          weakDims.map((dim) => `需要继续强化 ${dim} 维度的表现`)
+        );
+        registry.refresh(agentId);
 
-          console.log(
-            `[Evolution] ${agentId}: patched SOUL.md for weak dims: ${weakDims.join(', ')}`
-          );
-        }
+        console.log(`[Evolution] ${agentId}: patched SOUL.md for weak dims: ${weakDims.join(', ')}`);
       }
     }
   }
