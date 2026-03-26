@@ -1,7 +1,7 @@
 [
   {
     "workflowId": "0edfec3e-b91b-44f1-9cf2-380cee8c246f",
-    "createdAt": "2026-03-26T02:47:00.533Z",
+    "createdAt": "2026-03-26T02:51:00.704Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略。",
     "status": "completed",
     "role": "worker",
@@ -24,7 +24,7 @@
   },
   {
     "workflowId": "f585edbf-6149-462e-b420-557258598475",
-    "createdAt": "2026-03-26T02:47:00.870Z",
+    "createdAt": "2026-03-26T02:51:01.067Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略",
     "status": "completed",
     "role": "worker",

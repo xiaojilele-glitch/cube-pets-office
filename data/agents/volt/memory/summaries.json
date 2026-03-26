@@ -1,7 +1,7 @@
 [
   {
     "workflowId": "0edfec3e-b91b-44f1-9cf2-380cee8c246f",
-    "createdAt": "2026-03-26T02:47:00.540Z",
+    "createdAt": "2026-03-26T02:51:00.711Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略。",
     "status": "completed",
     "role": "worker",
@@ -24,7 +24,7 @@
   },
   {
     "workflowId": "2e590995-efec-460a-9efa-da27f05e6d1f",
-    "createdAt": "2026-03-26T02:47:00.624Z",
+    "createdAt": "2026-03-26T02:51:00.792Z",
     "directive": "本周聚焦用户增长，请各部门制定具体行动方案。",
     "status": "failed",
     "role": "worker",
@@ -47,7 +47,7 @@
   },
   {
     "workflowId": "d4ae4c55-38be-4d50-ba82-62b144762bda",
-    "createdAt": "2026-03-26T02:47:00.747Z",
+    "createdAt": "2026-03-26T02:51:00.923Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略。",
     "status": "failed",
     "role": "worker",
@@ -70,7 +70,7 @@
   },
   {
     "workflowId": "f585edbf-6149-462e-b420-557258598475",
-    "createdAt": "2026-03-26T02:47:00.876Z",
+    "createdAt": "2026-03-26T02:51:01.073Z",
     "directive": "分析竞品最新动态，并制定我们的应对策略",
     "status": "completed",
     "role": "worker",
@@ -93,7 +93,7 @@
   },
   {
     "workflowId": "e728272b-c3a7-4072-ad3b-f9814519b44a",
-    "createdAt": "2026-03-26T02:47:00.952Z",
+    "createdAt": "2026-03-26T02:51:01.147Z",
     "directive": "分析竞品最新动态，制定应对策略",
     "status": "completed",
     "role": "worker",
@@ -116,7 +116,7 @@
   },
   {
     "workflowId": "4f2684be-1beb-4f54-b8d3-3b16032c1a96",
-    "createdAt": "2026-03-26T02:47:01.033Z",
+    "createdAt": "2026-03-26T02:51:01.229Z",
     "directive": "分析竞品最新动态，制定应对策略",
     "status": "failed",
     "role": "worker",
