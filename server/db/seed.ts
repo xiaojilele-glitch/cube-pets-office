@@ -463,10 +463,12 @@ export function seedAgents(): void {
   const workflowModel = getAIConfig().model;
 
   for (const agent of AGENT_SEEDS) {
+    const existing = db.getAgent(agent.id);
     db.upsertAgent({
       ...agent,
       model: workflowModel,
-      heartbeat_config: null,
+      soul_md: existing?.soul_md || agent.soul_md,
+      heartbeat_config: existing?.heartbeat_config ?? null,
       is_active: 1,
     });
   }

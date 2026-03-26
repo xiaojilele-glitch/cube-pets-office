@@ -8,7 +8,7 @@ import type { TaskRow } from '../db/index.js';
 import type { FinalWorkflowReport } from '../memory/report-store.js';
 import { reportStore } from '../memory/report-store.js';
 import { sessionStore } from '../memory/session-store.js';
-import { soulStore } from '../memory/soul-store.js';
+import { evolutionService } from './evolution.js';
 import { registry } from './registry.js';
 import { messageBus } from './message-bus.js';
 import { emitEvent } from './socket.js';
@@ -964,6 +964,16 @@ ${summaryText}
   // ============================================================
   private async runEvolution(workflowId: string): Promise<void> {
     this.emitStage(workflowId, 'evolution');
+
+    const workflow = db.getWorkflow(workflowId);
+    const evolution = evolutionService.evolveWorkflow(workflowId);
+    db.updateWorkflow(workflowId, {
+      results: {
+        ...(workflow?.results || {}),
+        evolution,
+      },
+    });
+    return;
 
     const tasks = db.getTasksByWorkflow(workflowId);
     const agentScores = new Map<string, TaskRow[]>();
