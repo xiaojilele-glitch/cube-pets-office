@@ -3,6 +3,7 @@
  * Manages: PDF viewer, AI config, pet interactions, UI panels
  */
 import { create } from 'zustand';
+import { getAIConfigSnapshot, persistAIConfig } from './browser-runtime-storage';
 
 export interface AIConfig {
   apiKey: string;
@@ -84,12 +85,28 @@ export const useAppStore = create<AppState>((set) => ({
       }
 
       const data = await response.json();
+      void persistAIConfig(data.config || {}).catch((storageError) => {
+        console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+      });
       set({
         aiConfig: { ...DEFAULT_AI_CONFIG, ...data.config },
         isAIConfigLoading: false,
       });
     } catch (error) {
       console.error('[AI Config] Failed to hydrate config:', error);
+      try {
+        const cachedConfig = await getAIConfigSnapshot();
+        if (cachedConfig) {
+          set({
+            aiConfig: { ...DEFAULT_AI_CONFIG, ...cachedConfig },
+            isAIConfigLoading: false,
+          });
+          return;
+        }
+      } catch (storageError) {
+        console.warn('[AI Config] Failed to load browser snapshot:', storageError);
+      }
+
       set({ isAIConfigLoading: false });
       throw error;
     }

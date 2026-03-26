@@ -3,6 +3,22 @@
  */
 import { create } from "zustand";
 import { io, Socket } from "socket.io-client";
+import {
+  getAgentsSnapshot,
+  getHeartbeatReportsSnapshot,
+  getHeartbeatStatusesSnapshot,
+  getMemorySearchSnapshot,
+  getRecentMemorySnapshot,
+  getWorkflowDetailSnapshot,
+  getWorkflowsSnapshot,
+  persistAgents,
+  persistHeartbeatReports,
+  persistHeartbeatStatuses,
+  persistMemorySearch,
+  persistRecentMemory,
+  persistWorkflowDetail,
+  persistWorkflows,
+} from "./browser-runtime-storage";
 
 export interface AgentInfo {
   id: string;
@@ -148,6 +164,19 @@ export type PanelView =
   | "history"
   | "memory"
   | "reports";
+
+const FALLBACK_STAGES: StageInfo[] = [
+  { id: "direction", order: 1, label: "方向下发" },
+  { id: "planning", order: 2, label: "任务规划" },
+  { id: "execution", order: 3, label: "执行" },
+  { id: "review", order: 4, label: "评审" },
+  { id: "meta_audit", order: 5, label: "元审计" },
+  { id: "revision", order: 6, label: "修订" },
+  { id: "verify", order: 7, label: "验证" },
+  { id: "summary", order: 8, label: "汇总" },
+  { id: "feedback", order: 9, label: "反馈" },
+  { id: "evolution", order: 10, label: "进化" },
+];
 
 function mergeHeartbeatStatus(
   items: HeartbeatStatusInfo[],
@@ -447,9 +476,26 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         isActive: agent.isActive ?? true,
         status: get().agentStatuses[agent.id] || "idle",
       }));
+      void persistAgents(agents).catch((storageError) => {
+        console.warn("[Store] Failed to persist agents snapshot:", storageError);
+      });
       set({ agents });
     } catch (err) {
       console.error("[Store] Failed to fetch agents:", err);
+      try {
+        const agents = await getAgentsSnapshot();
+        if (agents.length > 0) {
+          set({
+            agents: agents.map((agent: any) => ({
+              ...agent,
+              isActive: agent.isActive ?? true,
+              status: get().agentStatuses[agent.id] || agent.status || "idle",
+            })),
+          });
+        }
+      } catch (storageError) {
+        console.warn("[Store] Failed to load agent snapshot:", storageError);
+      }
     }
   },
 
@@ -460,6 +506,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       set({ stages: data.stages || [] });
     } catch (err) {
       console.error("[Store] Failed to fetch stages:", err);
+      set({ stages: FALLBACK_STAGES });
     }
   },
 
@@ -467,9 +514,20 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     try {
       const res = await fetch("/api/workflows");
       const data = await res.json();
+      void persistWorkflows(data.workflows || []).catch((storageError) => {
+        console.warn("[Store] Failed to persist workflow list snapshot:", storageError);
+      });
       set({ workflows: data.workflows || [] });
     } catch (err) {
       console.error("[Store] Failed to fetch workflows:", err);
+      try {
+        const workflows = await getWorkflowsSnapshot();
+        if (workflows.length > 0) {
+          set({ workflows });
+        }
+      } catch (storageError) {
+        console.warn("[Store] Failed to load workflow snapshots:", storageError);
+      }
     }
   },
 
@@ -477,6 +535,15 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     try {
       const res = await fetch(`/api/workflows/${id}`);
       const data = await res.json();
+      void persistWorkflowDetail({
+        id,
+        workflow: data.workflow,
+        tasks: data.tasks || [],
+        messages: data.messages || [],
+        report: data.report || null,
+      }).catch((storageError) => {
+        console.warn("[Store] Failed to persist workflow detail snapshot:", storageError);
+      });
       set({
         currentWorkflow: data.workflow,
         tasks: data.tasks || [],
@@ -485,6 +552,19 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       });
     } catch (err) {
       console.error("[Store] Failed to fetch workflow detail:", err);
+      try {
+        const snapshot = await getWorkflowDetailSnapshot(id);
+        if (snapshot) {
+          set({
+            currentWorkflow: snapshot.workflow,
+            tasks: snapshot.tasks || [],
+            messages: snapshot.messages || [],
+            currentWorkflowId: id,
+          });
+        }
+      } catch (storageError) {
+        console.warn("[Store] Failed to load workflow detail snapshot:", storageError);
+      }
     }
   },
 
@@ -507,13 +587,27 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         `/api/agents/${agentId}/memory/recent?${params.toString()}`
       );
       const data = await res.json();
+      void persistRecentMemory(agentId, workflowId || null, data.entries || []).catch(
+        storageError => {
+          console.warn("[Store] Failed to persist recent memory snapshot:", storageError);
+        }
+      );
       set({
         agentMemoryRecent: data.entries || [],
         isMemoryLoading: false,
       });
     } catch (err) {
       console.error("[Store] Failed to fetch recent memory:", err);
-      set({ agentMemoryRecent: [], isMemoryLoading: false });
+      try {
+        const snapshot = await getRecentMemorySnapshot(agentId, workflowId || null);
+        set({
+          agentMemoryRecent: snapshot?.entries || [],
+          isMemoryLoading: false,
+        });
+      } catch (storageError) {
+        console.warn("[Store] Failed to load recent memory snapshot:", storageError);
+        set({ agentMemoryRecent: [], isMemoryLoading: false });
+      }
     }
   },
 
@@ -534,13 +628,27 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         `/api/agents/${agentId}/memory/search?${params.toString()}`
       );
       const data = await res.json();
+      void persistMemorySearch(agentId, query, data.memories || []).catch(
+        storageError => {
+          console.warn("[Store] Failed to persist memory search snapshot:", storageError);
+        }
+      );
       set({
         agentMemorySearchResults: data.memories || [],
         isMemoryLoading: false,
       });
     } catch (err) {
       console.error("[Store] Failed to search memory:", err);
-      set({ agentMemorySearchResults: [], isMemoryLoading: false });
+      try {
+        const snapshot = await getMemorySearchSnapshot(agentId, query);
+        set({
+          agentMemorySearchResults: snapshot?.results || [],
+          isMemoryLoading: false,
+        });
+      } catch (storageError) {
+        console.warn("[Store] Failed to load memory search snapshot:", storageError);
+        set({ agentMemorySearchResults: [], isMemoryLoading: false });
+      }
     }
   },
 
@@ -548,9 +656,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     try {
       const res = await fetch("/api/reports/heartbeat/status");
       const data = await res.json();
+      void persistHeartbeatStatuses(data.statuses || []).catch((storageError) => {
+        console.warn("[Store] Failed to persist heartbeat status snapshot:", storageError);
+      });
       set({ heartbeatStatuses: data.statuses || [] });
     } catch (err) {
       console.error("[Store] Failed to fetch heartbeat statuses:", err);
+      try {
+        const statuses = await getHeartbeatStatusesSnapshot();
+        set({ heartbeatStatuses: statuses || [] });
+      } catch (storageError) {
+        console.warn("[Store] Failed to load heartbeat status snapshots:", storageError);
+      }
     }
   },
 
@@ -569,13 +686,32 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
       const res = await fetch(`/api/reports/heartbeat?${params.toString()}`);
       const data = await res.json();
+      void persistHeartbeatReports(
+        (data.reports || []).map((report: any) => ({
+          agentId: report.agentId,
+          reportId: report.reportId,
+          summary: report,
+          detail: null,
+        }))
+      ).catch((storageError) => {
+        console.warn("[Store] Failed to persist heartbeat report snapshots:", storageError);
+      });
       set({
         heartbeatReports: data.reports || [],
         isHeartbeatLoading: false,
       });
     } catch (err) {
       console.error("[Store] Failed to fetch heartbeat reports:", err);
-      set({ heartbeatReports: [], isHeartbeatLoading: false });
+      try {
+        const reports = await getHeartbeatReportsSnapshot(agentId || null);
+        set({
+          heartbeatReports: reports.map((item) => item.summary),
+          isHeartbeatLoading: false,
+        });
+      } catch (storageError) {
+        console.warn("[Store] Failed to load heartbeat report snapshots:", storageError);
+        set({ heartbeatReports: [], isHeartbeatLoading: false });
+      }
     }
   },
 

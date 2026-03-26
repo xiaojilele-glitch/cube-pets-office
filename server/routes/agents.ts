@@ -4,6 +4,7 @@
 import { Router } from 'express';
 
 import db from '../db/index.js';
+import { readAgentWorkspaceFile } from '../core/access-guard.js';
 import { sessionStore } from '../memory/session-store.js';
 import { soulStore } from '../memory/soul-store.js';
 
@@ -63,6 +64,23 @@ router.get('/:id/soul', (req, res) => {
     soulMd: soul.soulMd,
     filePath: soul.filePath,
     exists: soul.exists,
+  });
+});
+
+// GET /api/agents/:id/heartbeat
+router.get('/:id/heartbeat', (req, res) => {
+  const agent = db.getAgent(req.params.id);
+  if (!agent) {
+    return res.status(404).json({ error: 'Agent not found' });
+  }
+
+  const heartbeatMd = readAgentWorkspaceFile(agent.id, 'HEARTBEAT.md', 'root') || '';
+  res.json({
+    heartbeatMd,
+    heartbeatConfig: agent.heartbeat_config || null,
+    keywords: db.getHeartbeatKeywords(agent.id),
+    capabilities: db.getAgentCapabilities(agent.id),
+    exists: Boolean(heartbeatMd),
   });
 });
 
