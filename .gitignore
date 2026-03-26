@@ -105,11 +105,16 @@ temp/
 *.sqlite
 *.sqlite3
 data/database.json
+data/ai-config.json
+data/progress.md
 
 # Runtime agent memory / session artifacts
 data/agents/*/sessions/
 data/agents/*/memory/
 data/agents/*/reports/
+
+# Local debug artifacts
+.manus-logs/
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
