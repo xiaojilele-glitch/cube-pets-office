@@ -1,26 +1,27 @@
-/**
- * Home Page - Cube Pets Office
- * Full-screen 3D scene with layered workspace UI
- */
-import { Scene3D } from '@/components/Scene3D';
-import { PdfViewer } from '@/components/PdfViewer';
-import { ConfigPanel } from '@/components/ConfigPanel';
-import { ChatPanel } from '@/components/ChatPanel';
-import { Toolbar } from '@/components/Toolbar';
-import { WorkflowPanel } from '@/components/WorkflowPanel';
-import { LoadingScreen } from '@/components/LoadingScreen';
-import { useAppStore } from '@/lib/store';
-import { useWorkflowStore } from '@/lib/workflow-store';
 import { useEffect } from 'react';
 
+import { ChatPanel } from '@/components/ChatPanel';
+import { ConfigPanel } from '@/components/ConfigPanel';
+import { LoadingScreen } from '@/components/LoadingScreen';
+import { PdfViewer } from '@/components/PdfViewer';
+import { Scene3D } from '@/components/Scene3D';
+import { Toolbar } from '@/components/Toolbar';
+import { WorkflowPanel } from '@/components/WorkflowPanel';
+import { useViewportTier } from '@/hooks/useViewportTier';
+import { useI18n } from '@/i18n';
+import { useAppStore } from '@/lib/store';
+import { useWorkflowStore } from '@/lib/workflow-store';
+
 export default function Home() {
-  const isSceneReady = useAppStore((state) => state.isSceneReady);
-  const hydrateAIConfig = useAppStore((state) => state.hydrateAIConfig);
-  const runtimeMode = useAppStore((state) => state.runtimeMode);
-  const disconnectSocket = useWorkflowStore((state) => state.disconnectSocket);
+  const isSceneReady = useAppStore(state => state.isSceneReady);
+  const hydrateAIConfig = useAppStore(state => state.hydrateAIConfig);
+  const runtimeMode = useAppStore(state => state.runtimeMode);
+  const disconnectSocket = useWorkflowStore(state => state.disconnectSocket);
+  const { isMobile } = useViewportTier();
+  const { copy } = useI18n();
 
   useEffect(() => {
-    hydrateAIConfig().catch((error) => {
+    hydrateAIConfig().catch(error => {
       console.error('[Home] Failed to load AI config:', error);
     });
   }, [hydrateAIConfig]);
@@ -32,7 +33,7 @@ export default function Home() {
   }, [disconnectSocket, runtimeMode]);
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-[#E2D6C7]">
+    <div className="relative h-[100svh] w-screen overflow-hidden bg-[#E2D6C7]">
       <Scene3D />
 
       <div className="pointer-events-none absolute inset-0 z-[5]">
@@ -43,6 +44,12 @@ export default function Home() {
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#D7C8B8]/35 to-transparent" />
         <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(79,58,38,0.12)]" />
       </div>
+
+      {isMobile && (
+        <div className="pointer-events-none absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+72px)] z-[18] rounded-2xl border border-white/40 bg-white/45 px-3 py-2 text-[11px] leading-5 text-[#5C4A39] shadow-sm backdrop-blur-md">
+          {copy.home.mobileHint}
+        </div>
+      )}
 
       {!isSceneReady && <LoadingScreen />}
 

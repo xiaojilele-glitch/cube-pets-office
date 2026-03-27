@@ -6,6 +6,12 @@ import { create } from 'zustand';
 
 import { getAIConfigSnapshot, persistAIConfig } from './browser-runtime-storage';
 import {
+  DEFAULT_LOCALE,
+  isLocale,
+  LOCALE_STORAGE_KEY,
+  type AppLocale,
+} from './locale';
+import {
   createBrowserAIConfig,
   createDefaultAIConfig,
   createServerAIConfig,
@@ -28,6 +34,10 @@ export interface ChatMessage {
 }
 
 interface AppState {
+  locale: AppLocale;
+  setLocale: (locale: AppLocale) => void;
+  toggleLocale: () => void;
+
   currentPage: number;
   totalPages: number;
   isPdfOpen: boolean;
@@ -69,6 +79,18 @@ interface AppState {
 const DEFAULT_AI_CONFIG = createDefaultAIConfig();
 const RUNTIME_MODE_STORAGE_KEY = 'cube-pets-office-runtime-mode';
 
+function getInitialLocale(): AppLocale {
+  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+
+  const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+  return isLocale(stored) ? stored : DEFAULT_LOCALE;
+}
+
+function persistLocale(locale: AppLocale) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+}
+
 function createPreviewAIConfig(): AIConfig {
   return createServerAIConfig({
     baseUrl: 'browser-preview',
@@ -108,6 +130,17 @@ function getFrontendAIConfig(serverConfig: AIConfig): AIConfig {
 const initialRuntimeMode = getInitialRuntimeMode();
 
 export const useAppStore = create<AppState>((set, get) => ({
+  locale: getInitialLocale(),
+  setLocale: locale => {
+    persistLocale(locale);
+    set({ locale });
+  },
+  toggleLocale: () => {
+    const nextLocale: AppLocale = get().locale === 'zh-CN' ? 'en-US' : 'zh-CN';
+    persistLocale(nextLocale);
+    set({ locale: nextLocale });
+  },
+
   currentPage: 1,
   totalPages: 33,
   isPdfOpen: false,

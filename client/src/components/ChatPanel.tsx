@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, Monitor, Send, Server, Trash2, X } from 'lucide-react';
 
 import {
@@ -10,6 +10,8 @@ import {
 import { callBrowserLLM } from '@/lib/browser-llm';
 import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
 import { useAppStore, type ChatMessage } from '@/lib/store';
+import { useI18n } from '@/i18n';
+import { useViewportTier } from '@/hooks/useViewportTier';
 
 const PAPER_CONTEXT = `You are a cute cube-pet research assistant working in a warm study.
 
@@ -25,48 +27,44 @@ Reply naturally, stay concise, and keep a bit of character.`;
 
 function buildFrontendModeReply({
   input,
-  agentName,
-  agentEmoji,
-  agentRole,
   canUseAdvancedRuntime,
+  copy,
 }: {
   input: string;
-  agentName: string;
-  agentEmoji: string;
-  agentRole: string;
   canUseAdvancedRuntime: boolean;
+  copy: ReturnType<typeof useI18n>['copy'];
 }) {
   const normalized = input.toLowerCase();
 
-  if (/workflow|阶段|phase|流程|编排/.test(normalized)) {
-    return canUseAdvancedRuntime
-      ? `${agentEmoji} ${agentName}：现在是纯前端模式，我先用本地演示带你过一遍主链路。系统会按 CEO -> Manager -> Worker 展开，再经过 review、meta-audit、revision、verify、summary、feedback 和 evolution。想跑真实服务端工作流的话，切到“高级模式”就可以。`
-      : `${agentEmoji} ${agentName}：当前是 GitHub Pages 静态演示模式，我可以带你看完整的工作流结构和界面分工。系统设计仍然是 CEO -> Manager -> Worker，再经过 review、meta-audit、revision、verify、summary、feedback 和 evolution，只是这里不会真的调用服务端执行。`;
+  if (/workflow|phase|flow|阶段|流程|工作流|编排/.test(normalized)) {
+    return copy.chat.presets.workflow;
   }
 
-  if (/memory|记忆|soul|heartbeat|报告/.test(normalized)) {
-    return canUseAdvancedRuntime
-      ? `${agentEmoji} ${agentName}：当前前端模式会优先保留浏览器内体验，所以我可以解释 memory、SOUL、heartbeat 和报告结构，但默认不会直接依赖服务端。如果你想查看真实报告和历史记录，可以切到“高级模式”。`
-      : `${agentEmoji} ${agentName}：当前部署只保留浏览器内体验，所以我可以解释 memory、SOUL、heartbeat 和报告结构，但这里不会生成真实服务端报告或历史记录。`;
+  if (/memory|report|heartbeat|soul|记忆|报告/.test(normalized)) {
+    return copy.chat.presets.memory;
   }
 
-  if (/怎么用|如何|help|模式|mode/.test(normalized)) {
-    return canUseAdvancedRuntime
-      ? `${agentEmoji} ${agentName}：你可以先用纯前端模式浏览 3D 场景、查看组织结构、体验本地聊天；准备好后再切到高级模式，走真实服务端工作流。如果你已经在浏览器里配好了 API，也可以继续留在前端模式做本地直连聊天。`
-      : `${agentEmoji} ${agentName}：你现在用的是 GitHub Pages 静态演示版，可以先浏览 3D 场景、查看组织结构、体验本地聊天和界面流程。这个站点不会切到服务端工作流，但本地部署或服务端版本仍然保留完整能力。`;
+  if (/help|mode|how|use|怎么|如何|模式/.test(normalized)) {
+    return canUseAdvancedRuntime ? copy.chat.presets.helpAdvanced : copy.chat.presets.helpPages;
   }
 
-  return canUseAdvancedRuntime
-    ? `${agentEmoji} ${agentName}：我现在在纯前端模式里值班，角色定位是“${agentRole}”。我可以先帮你理解论文思路、组织结构和界面分工；如果你想让我真正调用服务端链路，切到“高级模式”就可以。`
-    : `${agentEmoji} ${agentName}：我现在在 GitHub Pages 静态演示模式里值班，角色定位是“${agentRole}”。我可以先帮你理解论文思路、组织结构和界面分工；这个版本不会真正调用服务端链路。`;
+  if (canUseAdvancedRuntime) {
+    return copy.chat.presets.genericAdvanced;
+  }
+
+  return copy.chat.presets.genericPages;
 }
 
-function getModeLabel(runtimeMode: 'frontend' | 'advanced', browserDirect: boolean) {
+function getModeLabel(
+  runtimeMode: 'frontend' | 'advanced',
+  browserDirect: boolean,
+  copy: ReturnType<typeof useI18n>['copy']
+) {
   if (runtimeMode === 'frontend') {
-    return browserDirect ? 'Frontend + Browser AI' : 'Frontend Preview';
+    return browserDirect ? copy.chat.modeLabels.frontendBrowser : copy.chat.modeLabels.frontendPreview;
   }
 
-  return browserDirect ? 'Browser Direct' : 'Server Proxy';
+  return browserDirect ? copy.chat.modeLabels.browserDirect : copy.chat.modeLabels.serverProxy;
 }
 
 export function ChatPanel() {
@@ -81,7 +79,10 @@ export function ChatPanel() {
     aiConfig,
     selectedPet,
     runtimeMode,
+    locale,
   } = useAppStore();
+  const { copy } = useI18n();
+  const { isMobile, isTablet } = useViewportTier();
 
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -90,10 +91,9 @@ export function ChatPanel() {
   const agentId = selectedPet || DEFAULT_AGENT_ID;
   const agentName = getAgentLabel(agentId);
   const agentEmoji = getAgentEmoji(agentId);
-  const agentRole = getAgentChatRole(agentId);
+  const agentRole = getAgentChatRole(agentId, locale);
   const isFrontendMode = runtimeMode === 'frontend';
   const isBrowserDirect = aiConfig.mode === 'browser_direct';
-  const canUseAdvancedRuntime = CAN_USE_ADVANCED_RUNTIME;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,6 +104,18 @@ export function ChatPanel() {
     const timer = window.setTimeout(() => inputRef.current?.focus(), 250);
     return () => window.clearTimeout(timer);
   }, [isChatOpen]);
+
+  const shellClass = useMemo(() => {
+    if (isMobile) {
+      return 'left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+8px)] top-[calc(env(safe-area-inset-top)+108px)] rounded-[30px]';
+    }
+
+    if (isTablet) {
+      return 'bottom-5 right-5 h-[min(68svh,560px)] w-[380px] rounded-3xl';
+    }
+
+    return 'bottom-6 right-6 h-[560px] w-[390px] rounded-3xl';
+  }, [isMobile, isTablet]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
@@ -132,16 +144,14 @@ export function ChatPanel() {
         { role: 'user' as const, content: currentInput },
       ];
 
-      let assistantContent = 'I lost my train of thought. Please ask me again.';
+      let assistantContent: string = copy.chat.lostThought;
 
       if (isFrontendMode && !isBrowserDirect) {
         await new Promise(resolve => window.setTimeout(resolve, 280));
         assistantContent = buildFrontendModeReply({
           input: currentInput,
-          agentName,
-          agentEmoji,
-          agentRole,
-          canUseAdvancedRuntime,
+          canUseAdvancedRuntime: CAN_USE_ADVANCED_RUNTIME,
+          copy,
         });
       } else if (isBrowserDirect) {
         const data = await callBrowserLLM(messages, aiConfig, {
@@ -152,9 +162,7 @@ export function ChatPanel() {
       } else {
         const response = await fetch('/api/chat', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages,
             maxTokens: 400,
@@ -180,7 +188,7 @@ export function ChatPanel() {
     } catch (error: any) {
       addMessage({
         role: 'assistant',
-        content: `The connection had a problem.\n${error?.message || 'Please check the current AI configuration.'}`,
+        content: `${copy.chat.errorTitle}\n${error?.message || copy.chat.errorHint}`,
         petName: agentId,
         timestamp: Date.now(),
       });
@@ -194,12 +202,13 @@ export function ChatPanel() {
     agentName,
     agentRole,
     aiConfig,
-    canUseAdvancedRuntime,
     chatMessages,
+    copy,
     input,
     isBrowserDirect,
     isFrontendMode,
     isLoading,
+    locale,
     setLoading,
   ]);
 
@@ -207,48 +216,48 @@ export function ChatPanel() {
 
   return (
     <div
-      className="fixed bottom-6 right-5 z-[55] flex h-[500px] w-[380px] flex-col rounded-3xl border border-white/60 bg-white/90 shadow-[0_12px_48px_rgba(0,0,0,0.12)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 fade-in duration-300"
+      className={`fixed z-[71] flex flex-col border border-white/60 bg-white/92 shadow-[0_12px_48px_rgba(0,0,0,0.12)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`}
       style={{ pointerEvents: 'auto' }}
     >
-      <div className="flex items-center justify-between border-b border-[#F0E8E0] px-5 py-3.5">
-        <div className="flex items-center gap-2.5">
+      <div className="flex items-center justify-between border-b border-[#F0E8E0] px-4 py-3 sm:px-5">
+        <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A] shadow-sm">
             <MessageCircle className="h-4 w-4 text-white" />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-[#3A2A1A]">Chat with {agentName}</h3>
-            <p className="text-[10px] text-[#8B7355]">
-              {agentRole} / {getModeLabel(runtimeMode, isBrowserDirect)}
+          <div className="min-w-0">
+            <h3 className="truncate text-sm font-bold text-[#3A2A1A]">{copy.chat.title(agentName)}</h3>
+            <p className="truncate text-[10px] text-[#8B7355]">
+              {agentRole} / {getModeLabel(runtimeMode, isBrowserDirect, copy)}
             </p>
           </div>
           <span className="text-lg">{agentEmoji}</span>
         </div>
 
-        <div className="rounded-full bg-[#F7F1EA] px-2 py-1 text-[9px] font-semibold text-[#6B5A4A]">
-          {isFrontendMode ? (
-            <span className="inline-flex items-center gap-1">
-              <Monitor className="h-3 w-3" />
-              Frontend Mode
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1">
-              <Server className="h-3 w-3" />
-              Advanced Mode
-            </span>
-          )}
-        </div>
-
         <div className="flex items-center gap-1">
+          <div className="rounded-full bg-[#F7F1EA] px-2 py-1 text-[9px] font-semibold text-[#6B5A4A]">
+            {isFrontendMode ? (
+              <span className="inline-flex items-center gap-1">
+                <Monitor className="h-3 w-3" />
+                {copy.chat.badges.frontend}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1">
+                <Server className="h-3 w-3" />
+                {copy.chat.badges.advanced}
+              </span>
+            )}
+          </div>
           <button
             onClick={clearChat}
             className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
-            title="Clear chat"
+            title={copy.chat.clear}
           >
             <Trash2 className="h-3.5 w-3.5 text-[#8B7355]" />
           </button>
           <button
             onClick={toggleChat}
             className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+            title={copy.common.close}
           >
             <X className="h-3.5 w-3.5 text-[#8B7355]" />
           </button>
@@ -261,31 +270,13 @@ export function ChatPanel() {
             <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F0E8E0] to-[#E8DDD0]">
               <span className="text-2xl">{agentEmoji}</span>
             </div>
-            <p className="mb-1 text-sm font-semibold text-[#3A2A1A]">{agentName} is ready</p>
+            <p className="mb-1 text-sm font-semibold text-[#3A2A1A]">{copy.chat.ready(agentName)}</p>
             <p className="text-xs leading-relaxed text-[#8B7355]">
-              {isFrontendMode ? (
-                <>
-                  {canUseAdvancedRuntime ? (
-                    <>
-                      Ask about the paper, the browser runtime,
-                      <br />
-                      or when to switch to Advanced Mode.
-                    </>
-                  ) : (
-                    <>
-                      Ask about the paper, the static demo flow,
-                      <br />
-                      or what stays available in the Pages build.
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  Ask about the paper, the multi-agent system,
-                  <br />
-                  or how this 18-agent workflow is organized.
-                </>
-              )}
+              {isFrontendMode
+                ? CAN_USE_ADVANCED_RUNTIME
+                  ? copy.chat.emptyFrontendAdvanced
+                  : copy.chat.emptyFrontendPages
+                : copy.chat.emptyAdvanced}
             </p>
           </div>
         )}
@@ -296,10 +287,10 @@ export function ChatPanel() {
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-200`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
+              className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
                 message.role === 'user'
-                  ? 'bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white rounded-br-md'
-                  : 'bg-[#F7F1EA] text-[#3A2A1A] border border-[#E8DDD0] rounded-bl-md'
+                  ? 'rounded-br-md bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white'
+                  : 'rounded-bl-md border border-[#E8DDD0] bg-[#F7F1EA] text-[#3A2A1A]'
               }`}
             >
               {message.role !== 'user' && (
@@ -344,8 +335,8 @@ export function ChatPanel() {
                 void sendMessage();
               }
             }}
-            placeholder={`Message ${agentName}...`}
-            className="flex-1 rounded-2xl border border-[#E8DDD0] bg-[#FFFCF8] px-4 py-3 text-sm text-[#3A2A1A] placeholder-[#B8A897] outline-none transition-all focus:border-[#2D5F4A]/40 focus:ring-2 focus:ring-[#2D5F4A]/15"
+            placeholder={copy.chat.placeholder(agentName)}
+            className="flex-1 rounded-2xl border border-[#E8DDD0] bg-[#FFFCF8] px-4 py-3 text-sm text-[#3A2A1A] outline-none transition-all placeholder:text-[#B8A897] focus:border-[#2D5F4A]/40 focus:ring-2 focus:ring-[#2D5F4A]/15"
           />
           <button
             onClick={() => void sendMessage()}

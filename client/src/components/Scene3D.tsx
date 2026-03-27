@@ -1,32 +1,38 @@
-/**
- * Main 3D Scene Component
- * Design: Scandinavian Warm Minimalism - Cozy Study Room
- * Warm natural lighting, honey-brown wood tones, cream walls
- */
-import { Canvas } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
 import { Suspense } from 'react';
 import { ACESFilmicToneMapping } from 'three';
+
+import { useViewportTier } from '@/hooks/useViewportTier';
+
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
 
 export function Scene3D() {
+  const { isMobile, isTablet } = useViewportTier();
+
+  const camera = isMobile
+    ? { position: [0, 8.4, 16.2] as [number, number, number], fov: 46, near: 0.1, far: 100 }
+    : isTablet
+      ? { position: [0, 7.8, 14.6] as [number, number, number], fov: 43, near: 0.1, far: 100 }
+      : { position: [0, 7.3, 13.8] as [number, number, number], fov: 40, near: 0.1, far: 100 };
+
   return (
-    <div className="w-full h-full absolute inset-0 z-0">
+    <div className="absolute inset-0 z-0 h-full w-full touch-pan-y">
       <Canvas
         shadows
-        camera={{ position: [0, 7.3, 13.8], fov: 40, near: 0.1, far: 100 }}
+        camera={camera}
+        dpr={isMobile ? [1, 1.5] : [1, 2]}
         gl={{ antialias: true, alpha: false }}
-        onCreated={({ gl, camera }) => {
+        onCreated={({ gl, camera: sceneCamera }) => {
           gl.setClearColor('#D9D0C3');
           gl.toneMapping = ACESFilmicToneMapping;
-          gl.toneMappingExposure = 0.82;
-          camera.lookAt(0, 1.35, 0);
+          gl.toneMappingExposure = isMobile ? 0.88 : 0.82;
+          sceneCamera.lookAt(0, isMobile ? 1.6 : 1.35, 0);
         }}
       >
         <Suspense fallback={null}>
           <ambientLight intensity={0.38} color="#F7EDE1" />
-
           <hemisphereLight color="#FAEEDD" groundColor="#B28A67" intensity={0.34} />
 
           <directionalLight
@@ -34,13 +40,13 @@ export function Scene3D() {
             intensity={0.98}
             color="#FBE2BC"
             castShadow
-            shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
+            shadow-mapSize-width={2048}
+            shadow-camera-bottom={-11}
             shadow-camera-far={22}
             shadow-camera-left={-11}
             shadow-camera-right={11}
             shadow-camera-top={11}
-            shadow-camera-bottom={-11}
             shadow-bias={-0.00025}
           />
 

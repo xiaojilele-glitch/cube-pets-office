@@ -2,6 +2,7 @@ import { Html, useGLTF } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
+import { useI18n } from '@/i18n';
 import { FURNITURE_MODELS } from '@/lib/assets';
 import { useAppStore } from '@/lib/store';
 
@@ -267,6 +268,8 @@ function CorkBoard() {
 }
 
 function WallBrandPlaque() {
+  const { copy } = useI18n();
+
   return (
     <group position={[0, 3.44, -4.72]}>
       <Html center transform position={[0, 0, 0.02]} distanceFactor={6.2} style={{ pointerEvents: 'none' }}>
@@ -277,7 +280,7 @@ function WallBrandPlaque() {
             textShadow: '0 2px 6px rgba(255,244,228,0.18)',
           }}
         >
-          Cube Pets Office
+          {copy.scene.brand}
         </div>
       </Html>
     </group>
@@ -372,14 +375,16 @@ function ZoneBanner({
 }
 
 function GameDepartmentDecor() {
+  const { copy } = useI18n();
+
   return (
     <group>
       <ZoneBanner
         position={[-7.6, 1.93, -1.75]}
         rotation={[0, Math.PI / 2, 0]}
         color="#D97706"
-        title="GAME LAB"
-        subtitle="loops and events"
+        title={copy.scene.banners.game.title}
+        subtitle={copy.scene.banners.game.subtitle}
         wallMounted
       />
 
@@ -414,14 +419,16 @@ function GameDepartmentDecor() {
 }
 
 function AIDepartmentDecor() {
+  const { copy } = useI18n();
+
   return (
     <group>
       <ZoneBanner
         position={[7.6, 1.93, -1.7]}
         rotation={[0, -Math.PI / 2, 0]}
         color="#2563EB"
-        title="AI CORE"
-        subtitle="models and data"
+        title={copy.scene.banners.ai.title}
+        subtitle={copy.scene.banners.ai.subtitle}
         wallMounted
       />
 
@@ -464,14 +471,16 @@ function AIDepartmentDecor() {
 }
 
 function LifeDepartmentDecor() {
+  const { copy } = useI18n();
+
   return (
     <group>
       <ZoneBanner
         position={[-7.6, 1.93, 2.65]}
         rotation={[0, Math.PI / 2, 0]}
         color="#059669"
-        title="LIFE HUB"
-        subtitle="community and voice"
+        title={copy.scene.banners.life.title}
+        subtitle={copy.scene.banners.life.subtitle}
         wallMounted
       />
 
@@ -494,14 +503,16 @@ function LifeDepartmentDecor() {
 }
 
 function MetaDepartmentDecor() {
+  const { copy } = useI18n();
+
   return (
     <group>
       <ZoneBanner
         position={[7.6, 1.93, 2.55]}
         rotation={[0, -Math.PI / 2, 0]}
         color="#7C3AED"
-        title="META DESK"
-        subtitle="audit and ops"
+        title={copy.scene.banners.meta.title}
+        subtitle={copy.scene.banners.meta.subtitle}
         wallMounted
       />
 
@@ -651,6 +662,7 @@ function DecorativePlants() {
 export function OfficeRoom() {
   const setSceneReady = useAppStore((state) => state.setSceneReady);
   const setLoadingProgress = useAppStore((state) => state.setLoadingProgress);
+  const { copy } = useI18n();
 
   useEffect(() => {
     let progress = 0;
@@ -676,10 +688,10 @@ export function OfficeRoom() {
       <CorkBoard />
       <DepartmentDecor />
 
-      <ZoneBase position={[-3.5, 0, -1.8]} color="#F59E0B" title="游戏部工位区" />
-      <ZoneBase position={[3.5, 0, -1.8]} color="#3B82F6" title="AI 部工位区" />
-      <ZoneBase position={[-3.2, 0, 2.35]} color="#10B981" title="生活部协作区" />
-      <ZoneBase position={[3.2, 0, 2.35]} color="#8B5CF6" title="元部门审计区" />
+      <ZoneBase position={[-3.5, 0, -1.8]} color="#F59E0B" title={copy.scene.zoneTitles.game} />
+      <ZoneBase position={[3.5, 0, -1.8]} color="#3B82F6" title={copy.scene.zoneTitles.ai} />
+      <ZoneBase position={[-3.2, 0, 2.35]} color="#10B981" title={copy.scene.zoneTitles.life} />
+      <ZoneBase position={[3.2, 0, 2.35]} color="#8B5CF6" title={copy.scene.zoneTitles.meta} />
 
       <DesktopDesk position={[0, 0, -3.15]} withLamp />
 

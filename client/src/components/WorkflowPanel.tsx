@@ -1,13 +1,10 @@
-﻿
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
   BarChart3,
   BookOpenText,
   Brain,
   CheckCircle2,
-  ChevronRight,
-  Circle,
   Clock,
   Download,
   History,
@@ -21,80 +18,121 @@ import {
   Star,
   X,
   Zap,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { CAN_USE_ADVANCED_RUNTIME } from "@/lib/deploy-target";
-import { useAppStore } from "@/lib/store";
+import { useViewportTier } from '@/hooks/useViewportTier';
+import { useI18n } from '@/i18n';
+import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
+import { useAppStore } from '@/lib/store';
 import {
   useWorkflowStore,
   type AgentInfo,
   type AgentMemoryEntry,
-  type AgentMemorySummary,
   type HeartbeatReportInfo,
-  type HeartbeatStatusInfo,
   type PanelView,
   type StageInfo,
   type TaskInfo,
   type WorkflowInfo,
   type WorkflowOrganizationNode,
   type WorkflowOrganizationSnapshot,
-} from "@/lib/workflow-store";
+} from '@/lib/workflow-store';
 
-const DEPARTMENT_LABELS: Record<string, string> = {
-  game: "Game",
-  ai: "AI",
-  life: "Life",
-  meta: "Meta",
-  general: "General",
+const wfBadge: Record<string, string> = {
+  pending: 'bg-gray-100 text-gray-700',
+  running: 'bg-blue-100 text-blue-700',
+  completed: 'bg-emerald-100 text-emerald-700',
+  completed_with_errors: 'bg-amber-100 text-amber-700',
+  failed: 'bg-red-100 text-red-700',
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  idle: "bg-gray-300",
-  thinking: "bg-yellow-400 animate-pulse",
-  heartbeat: "bg-cyan-500 animate-pulse",
-  executing: "bg-blue-500 animate-pulse",
-  reviewing: "bg-purple-500 animate-pulse",
-  planning: "bg-indigo-500 animate-pulse",
-  analyzing: "bg-amber-500 animate-pulse",
-  auditing: "bg-red-400 animate-pulse",
-  revising: "bg-orange-500 animate-pulse",
-  verifying: "bg-teal-500 animate-pulse",
-  summarizing: "bg-cyan-500 animate-pulse",
-  evaluating: "bg-pink-500 animate-pulse",
+const taskBadge: Record<string, string> = {
+  assigned: 'bg-slate-100 text-slate-700',
+  executing: 'bg-blue-100 text-blue-700',
+  submitted: 'bg-violet-100 text-violet-700',
+  reviewed: 'bg-emerald-100 text-emerald-700',
+  audited: 'bg-amber-100 text-amber-700',
+  revising: 'bg-orange-100 text-orange-700',
+  verified: 'bg-teal-100 text-teal-700',
+  passed: 'bg-emerald-100 text-emerald-700',
+  failed: 'bg-red-100 text-red-700',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  idle: "Idle",
-  thinking: "Thinking",
-  heartbeat: "Heartbeat",
-  executing: "Executing",
-  reviewing: "Reviewing",
-  planning: "Planning",
-  analyzing: "Analyzing",
-  auditing: "Auditing",
-  revising: "Revising",
-  verifying: "Verifying",
-  summarizing: "Summarizing",
-  evaluating: "Evaluating",
+const hbBadge: Record<string, string> = {
+  idle: 'bg-gray-100 text-gray-700',
+  scheduled: 'bg-blue-100 text-blue-700',
+  running: 'bg-cyan-100 text-cyan-700',
+  error: 'bg-red-100 text-red-700',
 };
 
-const WORKFLOW_STATUS_LABELS: Record<string, string> = {
-  pending: "Pending",
-  running: "Running",
-  completed: "Completed",
-  completed_with_errors: "Completed with warnings",
-  failed: "Failed",
-};
-
-function formatTime(value: string | null | undefined) {
-  return value ? new Date(value).toLocaleString("zh-CN") : "--";
+function t(locale: string, zh: string, en: string) {
+  return locale === 'zh-CN' ? zh : en;
 }
 
-function getWorkflowOrganization(
+function useFmt() {
+  const locale = useAppStore(state => state.locale);
+  const { copy } = useI18n();
+  return (value: string | null | undefined) =>
+    value
+      ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+      : copy.common.unavailable;
+}
+
+function Section({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="border-b border-[#F0E8E0] px-4 py-3">
+      <h3 className="text-sm font-bold text-[#3A2A1A]">{title}</h3>
+      {description ? <p className="mt-0.5 text-[10px] leading-5 text-[#8B7355]">{description}</p> : null}
+    </div>
+  );
+}
+
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+      <Network className="mb-3 h-10 w-10 text-[#C4B5A0]" />
+      <p className="text-sm font-medium text-[#5A4A3A]">{title}</p>
+      <p className="mt-1 text-[10px] text-[#8B7355]">{description}</p>
+    </div>
+  );
+}
+
+function Pill({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-full bg-white/85 px-2 py-0.5 text-[8px] font-medium text-[#6B5A4A]">
+      {children}
+    </span>
+  );
+}
+
+function StageBar({ stages, current }: { stages: StageInfo[]; current: string | null }) {
+  const { copy } = useI18n();
+  const idx = stages.findIndex(stage => stage.id === current);
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1">
+      {stages.map((stage, i) => {
+        const active = stage.id === current;
+        const done = idx >= 0 && i < idx;
+        const label = copy.workflow.stages[stage.id as keyof typeof copy.workflow.stages] || stage.label;
+        return (
+          <div
+            key={stage.id}
+            className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${
+              done ? 'bg-emerald-100 text-emerald-700' : active ? 'bg-blue-100 text-blue-700' : 'bg-[#F5EFE8] text-[#8B7355]'
+            }`}
+          >
+            {label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function getOrganization(
   workflow: WorkflowInfo | null | undefined
 ): WorkflowOrganizationSnapshot | null {
   const organization = workflow?.results?.organization;
-  if (!organization || typeof organization !== "object") return null;
+  if (!organization || typeof organization !== 'object') return null;
   return Array.isArray((organization as WorkflowOrganizationSnapshot).nodes)
     ? (organization as WorkflowOrganizationSnapshot)
     : null;
@@ -106,876 +144,548 @@ function getNodeMap(organization: WorkflowOrganizationSnapshot | null) {
 
 function getNodeName(
   agentId: string,
-  nodeMap: Map<string, WorkflowOrganizationNode>
+  nodeMap: Map<string, WorkflowOrganizationNode>,
+  fallback?: string
 ) {
-  return nodeMap.get(agentId)?.name || agentId;
+  return nodeMap.get(agentId)?.name || fallback || agentId;
 }
 
-function getDepartmentLabel(department: string) {
-  return DEPARTMENT_LABELS[department] || department;
+function agentStatusLabel(
+  copy: ReturnType<typeof useI18n>['copy'],
+  status: string | null | undefined
+) {
+  if (!status) return copy.workflow.statuses.agent.idle;
+  return (
+    copy.workflow.statuses.agent[
+      status as keyof typeof copy.workflow.statuses.agent
+    ] || status
+  );
 }
 
-function getWorkflowStatusClass(status: string) {
+function taskStatusIcon(status: string) {
   switch (status) {
-    case "running":
-      return "bg-blue-100 text-blue-700";
-    case "completed":
-      return "bg-emerald-100 text-emerald-700";
-    case "completed_with_errors":
-      return "bg-amber-100 text-amber-700";
-    case "failed":
-      return "bg-red-100 text-red-700";
+    case 'assigned':
+      return <Clock className="h-3.5 w-3.5 text-slate-500" />;
+    case 'executing':
+    case 'revising':
+      return <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />;
+    case 'submitted':
+    case 'passed':
+      return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
+    case 'reviewed':
+      return <Star className="h-3.5 w-3.5 text-amber-500" />;
+    case 'audited':
+      return <Shield className="h-3.5 w-3.5 text-orange-500" />;
+    case 'failed':
+      return <AlertCircle className="h-3.5 w-3.5 text-red-500" />;
     default:
-      return "bg-gray-100 text-gray-600";
+      return <Clock className="h-3.5 w-3.5 text-slate-400" />;
   }
 }
 
-function getHeartbeatStateClass(state: HeartbeatStatusInfo["state"]) {
-  switch (state) {
-    case "running":
-      return "bg-cyan-100 text-cyan-700";
-    case "scheduled":
-      return "bg-blue-100 text-blue-700";
-    case "error":
-      return "bg-red-100 text-red-700";
-    default:
-      return "bg-gray-100 text-gray-600";
-  }
-}
-
-function getHeartbeatStateLabel(state: HeartbeatStatusInfo["state"]) {
+function getMemoryTypeLabel(
+  copy: ReturnType<typeof useI18n>['copy'],
+  type: AgentMemoryEntry['type']
+) {
   return (
-    {
-      idle: "Idle",
-      scheduled: "Scheduled",
-      running: "Running",
-      error: "Error",
-    }[state] || state
+    copy.workflow.statuses.memoryType[
+      type as keyof typeof copy.workflow.statuses.memoryType
+    ] || type
   );
 }
 
-function getTaskStatusLabel(status: string) {
-  return (
-    {
-      assigned: "Assigned",
-      executing: "Executing",
-      submitted: "Submitted",
-      reviewed: "Reviewed",
-      audited: "Audited",
-      revising: "Revising",
-      verified: "Verified",
-      passed: "Passed",
-      failed: "Failed",
-    }[status] || status
-  );
-}
-
-function getMemoryTypeLabel(type: AgentMemoryEntry["type"]) {
-  return (
-    {
-      message: "Message",
-      llm_prompt: "Prompt",
-      llm_response: "Response",
-      workflow_summary: "Workflow summary",
-    }[type] || type
-  );
-}
-
-function StageProgressBar({
-  stages,
-  currentStage,
-  status,
-}: {
-  stages: StageInfo[];
-  currentStage: string | null;
-  status: string;
-}) {
-  const currentIndex = stages.findIndex(stage => stage.id === currentStage);
-
-  return (
-    <div className="flex items-center gap-1 overflow-x-auto pb-2">
-      {stages.map((stage, index) => {
-        const state =
-          status === "completed" || status === "completed_with_errors"
-            ? "done"
-            : index < currentIndex
-              ? "done"
-              : index === currentIndex
-                ? "active"
-                : "pending";
-
-        return (
-          <div key={stage.id} className="flex shrink-0 items-center">
-            <div
-              className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium ${
-                state === "done"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : state === "active"
-                    ? "bg-blue-100 text-blue-700 animate-pulse"
-                    : "bg-gray-100 text-gray-400"
-              }`}
-            >
-              {state === "done" && <CheckCircle2 className="h-3 w-3" />}
-              {state === "active" && <Loader2 className="h-3 w-3 animate-spin" />}
-              {state === "pending" && <Circle className="h-3 w-3" />}
-              <span>{stage.label}</span>
-            </div>
-            {index < stages.length - 1 && (
-              <ChevronRight className="mx-0.5 h-3 w-3 text-gray-300" />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function EmptyState({ title, description }: { title: string; description: string }) {
-  return (
-    <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <Circle className="mb-3 h-10 w-10 text-[#C4B5A0]" />
-      <p className="text-sm font-medium text-[#5A4A3A]">{title}</p>
-      <p className="mt-1 text-[10px] text-[#8B7355]">{description}</p>
-    </div>
-  );
-}
-
-function Pill({ children }: { children: ReactNode }) {
-  return (
-    <span className="rounded-full bg-white/80 px-2 py-0.5 text-[8px] font-medium text-[#6B5A4A]">
-      {children}
-    </span>
-  );
-}
 function DirectiveView() {
-  const { submitDirective, isSubmitting } = useWorkflowStore();
+  const { copy } = useI18n();
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
-  const [directive, setDirective] = useState("");
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const isFrontendMode = runtimeMode === "frontend";
-  const canUpgrade = isFrontendMode && CAN_USE_ADVANCED_RUNTIME;
-
-  const examples = [
-    "Design a go-to-market plan for the next growth milestone.",
-    "Analyze competitors and propose the best response.",
-    "Improve onboarding and retention for core users.",
-    "Plan a cross-functional experiment with explicit owners.",
-  ];
+  const { submitDirective, isSubmitting } = useWorkflowStore();
+  const [directive, setDirective] = useState('');
+  const isFrontend = runtimeMode === 'frontend';
+  const canUpgrade = isFrontend && CAN_USE_ADVANCED_RUNTIME;
 
   const handleSubmit = async () => {
     if (!directive.trim() || isSubmitting) return;
     if (canUpgrade) {
-      await setRuntimeMode("advanced");
-      inputRef.current?.focus();
+      await setRuntimeMode('advanced');
       return;
     }
     await submitDirective(directive.trim());
-    setDirective("");
-    inputRef.current?.focus();
+    setDirective('');
   };
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-          <Zap className="h-4 w-4 text-amber-500" />
-          Submit Directive
-        </h3>
-        <p className="mt-0.5 text-[10px] text-[#8B7355]">
-          Start a workflow and let the server generate a task-specific
-          organization, skills, and MCP bindings.
-        </p>
-      </div>
-
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-3">
-        {isFrontendMode && (
-          <div className="rounded-xl border border-[#E8DDD0] bg-gradient-to-br from-[#FFF7EC] to-[#F7EDE2] p-3">
-            <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-white/80 p-2 text-[#D4845A]">
-                {canUpgrade ? <Monitor className="h-4 w-4" /> : <Server className="h-4 w-4" />}
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs font-bold text-[#3A2A1A]">
-                  {canUpgrade ? "Frontend-only mode" : "Static demo mode"}
-                </p>
-                <p className="text-[10px] leading-5 text-[#6B5A4A]">
-                  {canUpgrade
-                    ? "Switch to advanced mode to run the live server workflow."
-                    : "This deployment does not connect to the server runtime."}
-                </p>
-                {canUpgrade && (
-                  <button
-                    onClick={() => void setRuntimeMode("advanced")}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#D4845A] px-3 py-2 text-[10px] font-semibold text-white hover:bg-[#C9774E]"
-                  >
-                    <Server className="h-3.5 w-3.5" />
-                    Switch to advanced mode
-                  </button>
-                )}
-              </div>
-            </div>
+      <Section title={copy.workflow.directive.title} description={copy.workflow.directive.description} />
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {isFrontend ? (
+          <div className="mb-4 rounded-2xl border border-[#E8DDD0] bg-gradient-to-br from-[#FFF7EC] to-[#F7EDE2] p-3 text-[11px] leading-5 text-[#6B5A4A]">
+            <p className="font-bold text-[#3A2A1A]">
+              {CAN_USE_ADVANCED_RUNTIME ? copy.workflow.directive.frontendTitle : copy.workflow.directive.pagesTitle}
+            </p>
+            <p className="mt-1">
+              {CAN_USE_ADVANCED_RUNTIME ? copy.workflow.directive.frontendDescription : copy.workflow.directive.pagesDescription}
+            </p>
           </div>
-        )}
+        ) : null}
 
-        <div className="space-y-1.5">
-          {examples.map(example => (
-            <button
-              key={example}
-              onClick={() => setDirective(example)}
-              className="w-full rounded-xl border border-transparent bg-[#F8F4F0] px-3 py-2 text-left text-xs text-[#5A4A3A] hover:border-[#E8DDD0] hover:bg-[#F0E8E0]"
-            >
+        <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.directive.examplesTitle}</p>
+        <div className="space-y-2">
+          {copy.workflow.directive.examples.map(example => (
+            <button key={example} onClick={() => setDirective(example)} className="w-full rounded-xl bg-[#F8F4F0] px-3 py-2 text-left text-xs text-[#5A4A3A] hover:bg-[#F0E8E0]">
               {example}
             </button>
           ))}
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-[#E8DDD0] bg-gradient-to-br from-[#F8F4F0] to-[#F0E8E0] p-3">
+          <p className="mb-2 text-[11px] font-bold text-[#3A2A1A]">{copy.workflow.directive.stepsTitle}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {copy.workflow.directive.steps.map(([step, desc]) => (
+              <div key={step} className="rounded-xl bg-white/60 px-3 py-2 text-[11px] text-[#5A4A3A]">
+                <p className="font-semibold text-[#D4845A]">{step}</p>
+                <p className="mt-1">{desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="border-t border-[#F0E8E0] p-4">
         <textarea
-          ref={inputRef}
           value={directive}
-          onChange={event => setDirective(event.target.value)}
-          onKeyDown={event => {
-            if (event.key === "Enter" && !event.shiftKey) {
-              event.preventDefault();
+          onChange={e => setDirective(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
               void handleSubmit();
             }
           }}
+          placeholder={copy.workflow.directive.placeholder}
           rows={3}
-          placeholder="Describe the task you want the organization to solve..."
-          className="w-full resize-none rounded-xl border border-[#F0E8E0] bg-[#F8F4F0] px-3 py-2 text-sm text-[#3A2A1A] placeholder-[#C4B5A0] focus:border-[#D4845A]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4845A]/20"
+          className="w-full resize-none rounded-xl border border-[#F0E8E0] bg-[#F8F4F0] px-3 py-2 text-sm text-[#3A2A1A] placeholder:text-[#C4B5A0] focus:border-[#D4845A]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4845A]/20"
         />
-        <button
-          onClick={() => void handleSubmit()}
-          disabled={!directive.trim() || isSubmitting}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D4845A] to-[#E4946A] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : canUpgrade ? <Server className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-          <span>{isSubmitting ? "Starting workflow..." : canUpgrade ? "Switch mode" : "Submit directive"}</span>
+        <button onClick={() => void handleSubmit()} disabled={!directive.trim() || isSubmitting} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D4845A] to-[#E4946A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-40">
+          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : canUpgrade ? <Server className="h-4 w-4" /> : isFrontend ? <Monitor className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+          <span>{isSubmitting ? copy.workflow.directive.submitting : canUpgrade ? copy.workflow.directive.switchCta : isFrontend ? copy.workflow.directive.previewCta : copy.workflow.directive.submit}</span>
         </button>
       </div>
     </div>
   );
 }
 
-function OrgTreeView() {
-  const { currentWorkflow, agentStatuses, setActiveView, setSelectedMemoryAgent } =
-    useWorkflowStore();
-  const organization = getWorkflowOrganization(currentWorkflow);
-  const rootNode = organization?.nodes.find(node => node.id === organization.rootNodeId) || null;
-
-  const openMemory = (agentId: string) => {
-    setSelectedMemoryAgent(agentId);
-    setActiveView("memory");
+function OrgView() {
+  const { copy } = useI18n();
+  const locale = useAppStore(state => state.locale);
+  const {
+    agents,
+    agentStatuses,
+    currentWorkflow,
+    setActiveView,
+    setSelectedMemoryAgent,
+  } = useWorkflowStore();
+  const fmt = useFmt();
+  const organization = getOrganization(currentWorkflow);
+  const openMemory = (id: string) => {
+    setSelectedMemoryAgent(id);
+    setActiveView('memory');
   };
 
-  if (!organization || !rootNode) {
-    return <EmptyState title="No organization yet" description="Submit a directive to generate a dynamic org chart." />;
-  }
+  if (organization) {
+    const rootNode =
+      organization.nodes.find(node => node.id === organization.rootNodeId) || null;
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-          <Network className="h-4 w-4 text-indigo-500" />
-          Dynamic Organization
-        </h3>
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        <div className="rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-slate-50 p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Pill>{organization.source}</Pill>
-            <Pill>{organization.taskProfile}</Pill>
-            <Pill>{formatTime(organization.generatedAt)}</Pill>
-          </div>
-          <p className="mt-2 text-[10px] leading-5 text-indigo-800">{organization.reasoning}</p>
-          {currentWorkflow?.results?.organization_debug?.logPath && (
-            <p className="mt-2 break-all text-[9px] text-indigo-700">
-              Replay log: {currentWorkflow.results.organization_debug.logPath}
-            </p>
-          )}
-        </div>
-
-        <button
-          onClick={() => openMemory(rootNode.agentId)}
-          className="w-full rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3 text-left"
-        >
-          <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${STATUS_COLORS[agentStatuses[rootNode.agentId] || "idle"]}`} />
-            <span className="text-sm font-bold text-amber-900">{rootNode.name}</span>
-            <span className="ml-auto text-[9px] text-amber-700">
-              {STATUS_LABELS[agentStatuses[rootNode.agentId] || "idle"] || "Idle"}
-            </span>
-          </div>
-          <p className="mt-2 text-[10px] text-amber-800">{rootNode.responsibility}</p>
-        </button>
-
-        {organization.departments.map(department => {
-          const manager = organization.nodes.find(node => node.id === department.managerNodeId);
-          const workers = organization.nodes.filter(node => node.parentId === department.managerNodeId);
-
-          return (
-            <div key={department.id} className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] p-3">
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-[#3A2A1A]">{department.label}</span>
-                <Pill>{department.strategy}</Pill>
-                <Pill>x{department.maxConcurrency}</Pill>
-              </div>
-
-              {manager && (
-                <button
-                  onClick={() => openMemory(manager.agentId)}
-                  className="w-full rounded-lg bg-white/80 p-3 text-left"
-                >
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-semibold text-[#3A2A1A]">{manager.name}</span>
-                    <Pill>{manager.title}</Pill>
-                    <Pill>{manager.execution.strategy}</Pill>
-                  </div>
-                  <p className="mt-1 text-[9px] text-[#8B7355]">{manager.responsibility}</p>
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {manager.skills.map(skill => <Pill key={skill.id}>Skill: {skill.name}</Pill>)}
-                    {manager.mcp.map(binding => <Pill key={binding.id}>MCP: {binding.name}</Pill>)}
-                  </div>
-                </button>
-              )}
-
-              <div className="mt-2 space-y-2 pl-4">
-                {workers.map(worker => (
-                  <button
-                    key={worker.id}
-                    onClick={() => openMemory(worker.agentId)}
-                    className="w-full rounded-lg bg-white/70 p-2.5 text-left"
-                  >
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-semibold text-[#3A2A1A]">{worker.name}</span>
-                      <Pill>{worker.title}</Pill>
-                      <Pill>{worker.execution.mode}</Pill>
-                    </div>
-                    <p className="mt-1 text-[9px] text-[#8B7355]">{worker.responsibility}</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {worker.skills.map(skill => <Pill key={skill.id}>Skill: {skill.name}</Pill>)}
-                      {worker.mcp.map(binding => <Pill key={binding.id}>MCP: {binding.name}</Pill>)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-function WorkflowProgressView() {
-  const { currentWorkflow, tasks, stages, messages, downloadWorkflowReport, downloadDepartmentReport } =
-    useWorkflowStore();
-
-  if (!currentWorkflow) {
-    return <EmptyState title="No active workflow" description="Execution progress will appear here after you submit a directive." />;
-  }
-
-  const organization = getWorkflowOrganization(currentWorkflow);
-  const nodeMap = useMemo(() => getNodeMap(organization), [organization]);
-  const tasksByDepartment = useMemo(() => {
-    const map = new Map<string, TaskInfo[]>();
-    for (const task of tasks) {
-      const group = map.get(task.department) || [];
-      group.push(task);
-      map.set(task.department, group);
-    }
-    return map;
-  }, [tasks]);
-
-  const statusIcon = (status: string) =>
-    ({
-      assigned: <Clock className="h-3 w-3 text-gray-400" />,
-      executing: <Loader2 className="h-3 w-3 animate-spin text-blue-500" />,
-      submitted: <CheckCircle2 className="h-3 w-3 text-blue-500" />,
-      reviewed: <Star className="h-3 w-3 text-purple-500" />,
-      audited: <Shield className="h-3 w-3 text-orange-500" />,
-      revising: <Loader2 className="h-3 w-3 animate-spin text-orange-500" />,
-      passed: <CheckCircle2 className="h-3 w-3 text-emerald-500" />,
-      failed: <AlertCircle className="h-3 w-3 text-red-500" />,
-    }[status] || <Circle className="h-3 w-3 text-gray-300" />);
-
-  return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-            <BarChart3 className="h-4 w-4 text-blue-500" />
-            Workflow Progress
-          </h3>
-          <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${getWorkflowStatusClass(currentWorkflow.status)}`}>
-            {WORKFLOW_STATUS_LABELS[currentWorkflow.status] || currentWorkflow.status}
-          </span>
-        </div>
-        <p className="mt-1 line-clamp-2 text-[10px] text-[#8B7355]">{currentWorkflow.directive}</p>
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        <StageProgressBar stages={stages} currentStage={currentWorkflow.current_stage} status={currentWorkflow.status} />
-
-        {organization && (
-          <div className="rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-slate-50 p-3 text-[10px] text-indigo-900">
+    return (
+      <div className="flex h-full flex-col">
+        <Section title={copy.workflow.org.title} description={copy.workflow.org.description} />
+        <div className="flex-1 overflow-y-auto px-4 py-3">
+          <div className="mb-4 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-slate-50 p-4">
             <div className="flex flex-wrap gap-2">
               <Pill>{organization.source}</Pill>
               <Pill>{organization.taskProfile}</Pill>
-              <Pill>{organization.nodes.length} nodes</Pill>
-              <Pill>{organization.departments.length} departments</Pill>
+              <Pill>{fmt(organization.generatedAt)}</Pill>
+              <Pill>{organization.nodes.length} {t(locale, '节点', 'nodes')}</Pill>
+              <Pill>{organization.departments.length} {t(locale, '部门', 'departments')}</Pill>
             </div>
-            <p className="mt-2 leading-5 text-indigo-800">{organization.reasoning}</p>
+            <p className="mt-3 text-[11px] leading-5 text-indigo-900">{organization.reasoning}</p>
+            {currentWorkflow?.results?.organization_debug?.logPath ? (
+              <p className="mt-2 break-all text-[10px] text-indigo-700">
+                {t(locale, '回放日志', 'Replay log')}: {currentWorkflow.results.organization_debug.logPath}
+              </p>
+            ) : null}
           </div>
-        )}
 
-        {currentWorkflow.status === "failed" && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-[10px] text-red-700">
-            {currentWorkflow.results?.last_error || "Unknown workflow error"}
-          </div>
-        )}
+          {rootNode ? (
+            <button
+              onClick={() => openMemory(rootNode.agentId)}
+              className="mb-4 w-full rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 text-left"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-bold text-amber-900">{rootNode.name}</span>
+                <Pill>{rootNode.title}</Pill>
+                <Pill>{agentStatusLabel(copy, agentStatuses[rootNode.agentId] || 'idle')}</Pill>
+              </div>
+              <p className="mt-2 text-[11px] leading-5 text-amber-800">{rootNode.responsibility}</p>
+            </button>
+          ) : null}
 
-        {Array.from(tasksByDepartment.entries()).map(([department, departmentTasks]) => (
-          <div key={department} className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-xs font-bold text-[#3A2A1A]">{getDepartmentLabel(department)}</span>
-              <span className="text-[9px] text-[#8B7355]">
-                {departmentTasks.filter(task => task.status === "passed").length}/{departmentTasks.length} passed
-              </span>
-            </div>
-            <div className="space-y-1.5">
-              {departmentTasks.map(task => (
-                <div key={task.id} className="flex items-start gap-2 rounded-lg bg-white/70 px-2.5 py-2">
-                  {statusIcon(task.status)}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[10px] font-semibold text-[#3A2A1A]">{getNodeName(task.worker_id, nodeMap)}</span>
-                      <Pill>{getTaskStatusLabel(task.status)}</Pill>
-                      {task.total_score !== null && <Pill>{task.total_score}/20</Pill>}
-                    </div>
-                    <p className="mt-0.5 line-clamp-2 text-[9px] text-[#8B7355]">{task.description}</p>
+          <div className="space-y-3">
+            {organization.departments.map(department => {
+              const manager =
+                organization.nodes.find(node => node.id === department.managerNodeId) || null;
+              const workers = organization.nodes.filter(
+                node => node.parentId === department.managerNodeId
+              );
+
+              return (
+                <div key={department.id} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3">
+                  <div className="mb-3 flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold text-[#3A2A1A]">{department.label}</span>
+                    <Pill>{department.strategy}</Pill>
+                    <Pill>{t(locale, '并发', 'concurrency')} {department.maxConcurrency}</Pill>
+                  </div>
+
+                  {manager ? (
+                    <button
+                      onClick={() => openMemory(manager.agentId)}
+                      className="w-full rounded-xl bg-[#F8F4F0] p-3 text-left hover:bg-[#F0E8E0]"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold text-[#3A2A1A]">{manager.name}</span>
+                        <Pill>{manager.title}</Pill>
+                        <Pill>{manager.execution.strategy}</Pill>
+                      </div>
+                      <p className="mt-2 text-[10px] leading-5 text-[#6B5A4A]">{manager.responsibility}</p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {manager.skills.map(skill => (
+                          <Pill key={skill.id}>{t(locale, '技能', 'Skill')}: {skill.name}</Pill>
+                        ))}
+                        {manager.mcp.map(binding => (
+                          <Pill key={binding.id}>MCP: {binding.name}</Pill>
+                        ))}
+                      </div>
+                    </button>
+                  ) : null}
+
+                  <div className="mt-3 space-y-2">
+                    {workers.map(worker => (
+                      <button
+                        key={worker.id}
+                        onClick={() => openMemory(worker.agentId)}
+                        className="w-full rounded-xl border border-[#E8DDD0] bg-white p-3 text-left hover:bg-[#F8F4F0]"
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[12px] font-semibold text-[#3A2A1A]">{worker.name}</span>
+                          <Pill>{worker.title}</Pill>
+                          <Pill>{worker.execution.mode}</Pill>
+                        </div>
+                        <p className="mt-1 text-[10px] leading-5 text-[#6B5A4A]">{worker.responsibility}</p>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {worker.skills.map(skill => (
+                            <Pill key={skill.id}>{t(locale, '技能', 'Skill')}: {skill.name}</Pill>
+                          ))}
+                          {worker.mcp.map(binding => (
+                            <Pill key={binding.id}>MCP: {binding.name}</Pill>
+                          ))}
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        ))}
+        </div>
+      </div>
+    );
+  }
 
-        {(currentWorkflow.status === "completed" || currentWorkflow.status === "completed_with_errors") &&
-          currentWorkflow.results?.final_report?.overview && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-[10px] text-blue-800">
-              <p className="font-bold">Final report</p>
-              <p className="mt-1">Tasks: {currentWorkflow.results.final_report.overview.task_count ?? "--"}</p>
-              <p>Departments: {currentWorkflow.results.final_report.overview.department_count ?? "--"}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => void downloadWorkflowReport(currentWorkflow.id, "json")}
-                  className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-medium text-blue-700"
-                >
-                  <Download className="h-3 w-3" />
-                  JSON
+  const ceo = agents.find(a => a.role === 'ceo');
+  const managers = agents.filter(a => a.role === 'manager');
+
+  return (
+    <div className="flex h-full flex-col">
+      <Section title={copy.workflow.org.title} description={copy.workflow.org.description} />
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {ceo ? (
+          <button onClick={() => openMemory(ceo.id)} className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-3 text-left">
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-amber-800">{ceo.name}</p>
+              <p className="text-[10px] text-amber-700">{agentStatusLabel(copy, agentStatuses[ceo.id] || 'idle')}</p>
+            </div>
+          </button>
+        ) : null}
+
+        <div className="space-y-3">
+          {managers.map(manager => {
+            const dept = copy.workflow.departments[manager.department as keyof typeof copy.workflow.departments] || manager.department;
+            const workers = agents.filter(agent => agent.managerId === manager.id && agent.role === 'worker');
+            return (
+              <div key={manager.id} className="rounded-2xl border border-[#E8DDD0] bg-white/72 p-3">
+                <button onClick={() => openMemory(manager.id)} className="flex w-full items-center gap-3 rounded-xl bg-[#F8F4F0] px-3 py-2 text-left hover:bg-[#F0E8E0]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-[11px] font-bold text-[#8B7355]">{dept.slice(0, 2).toUpperCase()}</div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-bold text-[#3A2A1A]">{dept}</p>
+                    <p className="truncate text-[10px] text-[#8B7355]">{manager.name}</p>
+                  </div>
+                  <span className="text-[10px] text-[#8B7355]">{copy.workflow.org.viewMemory}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void downloadWorkflowReport(currentWorkflow.id, "md")}
-                  className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1.5 text-[10px] font-medium text-blue-700"
-                >
-                  <Download className="h-3 w-3" />
-                  Markdown
-                </button>
-                {Array.isArray(currentWorkflow.results?.department_reports) &&
-                  currentWorkflow.results.department_reports.map((item: any) => (
-                    <button
-                      key={`${item.manager_id}-${item.department}`}
-                      type="button"
-                      onClick={() => void downloadDepartmentReport(currentWorkflow.id, item.manager_id, "md")}
-                      className="inline-flex items-center gap-1 rounded-lg bg-blue-100 px-2.5 py-1.5 text-[10px] font-medium text-blue-700"
-                    >
-                      <Download className="h-3 w-3" />
-                      {item.department_label || item.department}
+                <div className="mt-2 space-y-2">
+                  {workers.map(worker => (
+                    <button key={worker.id} onClick={() => openMemory(worker.id)} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left hover:bg-[#F8F4F0]">
+                      <div className="h-2 w-2 rounded-full bg-[#D4845A]" />
+                      <span className="flex-1 truncate text-[11px] text-[#5A4A3A]">{worker.name}</span>
+                      <span className="text-[10px] text-[#B0A090]">{agentStatusLabel(copy, agentStatuses[worker.id] || 'idle')}</span>
                     </button>
                   ))}
-              </div>
-            </div>
-          )}
-
-        {messages.length > 0 && (
-          <div className="rounded-xl border border-[#E8DDD0] bg-white/70 p-3">
-            <p className="mb-2 text-[10px] font-bold text-[#8B7355]">Recent messages</p>
-            <div className="space-y-1">
-              {messages.slice(-8).reverse().map(message => (
-                <div key={message.id} className="rounded-lg bg-[#F8F4F0] px-2 py-1.5 text-[9px] text-[#5A4A3A]">
-                  <span className="font-medium text-[#D4845A]">{getNodeName(message.from_agent, nodeMap)}</span>
-                  <span className="text-[#B0A090]"> to </span>
-                  <span className="font-medium text-[#3A7A5A]">{getNodeName(message.to_agent, nodeMap)}</span>
-                  <span className="text-[#B0A090]"> [{message.stage}]</span>
-                  <p className="mt-0.5 line-clamp-2 text-[#8B7355]">{message.content}</p>
                 </div>
-              ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProgressView() {
+  const { copy } = useI18n();
+  const locale = useAppStore(state => state.locale);
+  const fmt = useFmt();
+  const { currentWorkflow, tasks, messages, stages, downloadWorkflowReport, downloadDepartmentReport } = useWorkflowStore();
+  if (!currentWorkflow) {
+    return <EmptyState title={copy.workflow.progress.emptyTitle} description={copy.workflow.progress.emptyDescription} />;
+  }
+
+  const organization = getOrganization(currentWorkflow);
+  const nodeMap = useMemo(() => getNodeMap(organization), [organization]);
+  const grouped = Object.entries(
+    tasks.reduce<Record<string, TaskInfo[]>>((acc, task) => {
+      (acc[task.department] ||= []).push(task);
+      return acc;
+    }, {})
+  );
+
+  return (
+    <div className="flex h-full flex-col">
+      <Section title={copy.workflow.progress.overview} />
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-3">
+        <div className="rounded-2xl border border-[#E8DDD0] bg-white/80 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-[#3A2A1A]">{currentWorkflow.directive}</p>
+              <p className="mt-2 text-[11px] text-[#8B7355]">{copy.workflow.progress.startedAt}: {fmt(currentWorkflow.started_at || currentWorkflow.created_at)}</p>
+              <p className="mt-1 text-[11px] text-[#8B7355]">{copy.workflow.progress.currentStage}: {copy.workflow.stages[(currentWorkflow.current_stage || 'direction') as keyof typeof copy.workflow.stages] || currentWorkflow.current_stage || copy.common.unavailable}</p>
             </div>
+            <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${wfBadge[currentWorkflow.status] || wfBadge.pending}`}>
+              {copy.workflow.statuses.workflow[currentWorkflow.status as keyof typeof copy.workflow.statuses.workflow] || currentWorkflow.status}
+            </span>
           </div>
-        )}
+          <div className="mt-4">
+            <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.stageProgress}</p>
+            <StageBar stages={stages} current={currentWorkflow.current_stage} />
+          </div>
+          {organization ? (
+            <div className="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/80 p-3">
+              <div className="flex flex-wrap gap-2">
+                <Pill>{organization.source}</Pill>
+                <Pill>{organization.taskProfile}</Pill>
+                <Pill>{organization.nodes.length} {t(locale, '节点', 'nodes')}</Pill>
+                <Pill>{organization.departments.length} {t(locale, '部门', 'departments')}</Pill>
+              </div>
+              <p className="mt-2 text-[11px] leading-5 text-indigo-900">{organization.reasoning}</p>
+            </div>
+          ) : null}
+          {currentWorkflow.status === 'failed' ? (
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-[11px] text-red-700">
+              {currentWorkflow.results?.last_error || copy.common.unavailable}
+            </div>
+          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
+            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.tasks}</p>
+          {grouped.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">{copy.workflow.progress.noTasks}</div> : <div className="space-y-3">{grouped.map(([department, items]) => <div key={department} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3"><div className="mb-2 flex items-center justify-between gap-3"><h4 className="text-sm font-semibold text-[#3A2A1A]">{copy.workflow.departments[department as keyof typeof copy.workflow.departments] || department}</h4>{items[0]?.manager_id ? <button onClick={() => void downloadDepartmentReport(currentWorkflow.id, items[0].manager_id, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[10px] font-semibold text-[#5B4837]"><Download className="h-3 w-3" />{copy.workflow.progress.departmentReport}</button> : null}</div><div className="space-y-2">{items.map(task => <div key={task.id} className="rounded-xl bg-[#F8F4F0] p-3"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0 flex-1"><div className="flex items-center gap-2">{taskStatusIcon(task.status)}<p className="flex-1 text-[12px] font-medium text-[#3A2A1A]">{task.description}</p></div><p className="mt-1 text-[10px] text-[#8B7355]">{t(locale, '执行者', 'Worker')}: {getNodeName(task.worker_id, nodeMap)}</p></div><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p> : null}{task.total_score !== null ? <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-[#8B7355]"><Pill>{copy.workflow.progress.score}: {task.total_score}/20</Pill><Pill>{t(locale, '版本', 'Version')} {task.version}</Pill></div> : null}</div>)}</div></div>)}</div>}
+        </div>
+
+        <div>
+          <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.messageFlow}</p>
+          {messages.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">{copy.workflow.progress.noMessages}</div> : <div className="space-y-2">{messages.slice(-10).map(message => <div key={message.id} className="rounded-xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8B7355]"><span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span><span>{fmt(message.created_at)}</span></div><p className="mt-1 text-[10px] text-[#B0A090]">{copy.workflow.stages[message.stage as keyof typeof copy.workflow.stages] || message.stage}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{message.content}</p></div>)}</div>}
+        </div>
       </div>
     </div>
   );
 }
 
 function ReviewView() {
+  const { copy } = useI18n();
   const { tasks } = useWorkflowStore();
-  const reviewed = tasks.filter(task => task.total_score !== null);
-
-  if (reviewed.length === 0) {
-    return <EmptyState title="No review data" description="Review scores will appear here after the workflow reaches scoring stages." />;
-  }
-
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-          <Star className="h-4 w-4 text-amber-500" />
-          Review Scores
-        </h3>
+      <Section title={copy.workflow.review.title} description={copy.workflow.review.description} />
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        {tasks.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-8 text-center text-[11px] text-[#8B7355]">{copy.workflow.review.empty}</div> : <div className="space-y-3">{tasks.map(task => <div key={task.id} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-[#3A2A1A]">{task.description}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <div className="mt-3 rounded-xl bg-[#F8F4F0] p-3"><p className="mb-1 text-[10px] font-semibold text-[#8B7355]">{copy.workflow.review.deliverable}</p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p></div> : null}{task.manager_feedback ? <div className="mt-3 rounded-xl bg-emerald-50 p-3"><p className="mb-1 text-[10px] font-semibold text-emerald-700">{copy.workflow.review.feedback}</p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#375B46]">{task.manager_feedback}</p></div> : null}{task.meta_audit_feedback ? <div className="mt-3 rounded-xl bg-amber-50 p-3"><p className="mb-1 text-[10px] font-semibold text-amber-700">{copy.workflow.review.audit}</p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#6B5635]">{task.meta_audit_feedback}</p></div> : null}</div>)}</div>}
       </div>
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        {reviewed.map(task => (
-          <div key={task.id} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#3A2A1A]">{task.worker_id}</span>
-              <span className="text-sm font-bold text-[#3A2A1A]">{task.total_score}/20</span>
-            </div>
-            {task.manager_feedback && (
-              <p className="mt-2 text-[9px] text-[#8B7355]">{task.manager_feedback}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-function MemoryResultCard({ item }: { item: AgentMemorySummary }) {
-  return (
-    <div className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3">
-      <div className="flex items-center justify-between gap-2">
-        <Pill>{item.status}</Pill>
-        <span className="text-[9px] text-[#B0A090]">{formatTime(item.createdAt)}</span>
-      </div>
-      <p className="mt-1 text-[10px] font-semibold text-[#3A2A1A]">{item.directive}</p>
-      <p className="mt-1 line-clamp-5 whitespace-pre-wrap text-[9px] leading-5 text-[#6B5A4A]">{item.summary}</p>
     </div>
   );
 }
 
 function MemoryView() {
-  const {
-    agents,
-    currentWorkflow,
-    currentWorkflowId,
-    selectedMemoryAgentId,
-    setSelectedMemoryAgent,
-    agentMemoryRecent,
-    agentMemorySearchResults,
-    fetchAgentRecentMemory,
-    searchAgentMemory,
-    isMemoryLoading,
-    memoryQuery,
-    setMemoryQuery,
-  } = useWorkflowStore();
-
-  const [localQuery, setLocalQuery] = useState(memoryQuery);
-  const organization = getWorkflowOrganization(currentWorkflow);
+  const { copy } = useI18n();
+  const locale = useAppStore(state => state.locale);
+  const fmt = useFmt();
+  const { agents, currentWorkflow, currentWorkflowId, selectedMemoryAgentId, setSelectedMemoryAgent, agentMemoryRecent, agentMemorySearchResults, memoryQuery, isMemoryLoading, setMemoryQuery, fetchAgentRecentMemory, searchAgentMemory } = useWorkflowStore();
+  const [draft, setDraft] = useState(memoryQuery);
+  const organization = getOrganization(currentWorkflow);
   const nodeMap = useMemo(() => getNodeMap(organization), [organization]);
-  const organizationIds = useMemo(() => new Set(organization?.nodes.map(node => node.agentId) || []), [organization]);
-  const sortedAgents = useMemo(() => {
-    const filtered = organization ? agents.filter(agent => organizationIds.has(agent.id)) : agents;
-    const rank: Record<AgentInfo["role"], number> = { ceo: 0, manager: 1, worker: 2 };
-    return [...filtered].sort((a, b) => (rank[a.role] - rank[b.role]) || a.name.localeCompare(b.name));
-  }, [agents, organization, organizationIds]);
-
+  const organizationIds = useMemo(
+    () => new Set(organization?.nodes.map(node => node.agentId) || []),
+    [organization]
+  );
+  const availableAgents = useMemo(() => {
+    const list = organization ? agents.filter(agent => organizationIds.has(agent.id)) : agents;
+    const rank: Record<AgentInfo['role'], number> = { ceo: 0, manager: 1, worker: 2 };
+    return [...list].sort(
+      (a, b) => rank[a.role] - rank[b.role] || a.name.localeCompare(b.name, locale)
+    );
+  }, [agents, locale, organization, organizationIds]);
   const selectedAgent =
-    sortedAgents.find(agent => agent.id === selectedMemoryAgentId) ||
-    (organization?.rootAgentId ? sortedAgents.find(agent => agent.id === organization.rootAgentId) : null) ||
-    sortedAgents[0] ||
+    availableAgents.find(agent => agent.id === selectedMemoryAgentId) ||
+    (organization?.rootAgentId
+      ? availableAgents.find(agent => agent.id === organization.rootAgentId)
+      : null) ||
+    availableAgents[0] ||
     null;
 
+  useEffect(() => setDraft(memoryQuery), [memoryQuery]);
   useEffect(() => {
     if (!selectedMemoryAgentId && selectedAgent) {
       setSelectedMemoryAgent(selectedAgent.id);
     }
-  }, [selectedMemoryAgentId, selectedAgent, setSelectedMemoryAgent]);
-
+  }, [selectedAgent, selectedMemoryAgentId, setSelectedMemoryAgent]);
   useEffect(() => {
-    if (selectedAgent) void fetchAgentRecentMemory(selectedAgent.id, currentWorkflowId, 12);
-  }, [selectedAgent, currentWorkflowId, fetchAgentRecentMemory]);
+    if (selectedAgent) void fetchAgentRecentMemory(selectedAgent.id, currentWorkflowId, 10);
+  }, [currentWorkflowId, fetchAgentRecentMemory, selectedAgent]);
 
-  useEffect(() => {
-    setLocalQuery(memoryQuery);
-  }, [memoryQuery]);
-
-  const handleSearch = async () => {
-    if (!selectedAgent || !localQuery.trim()) return;
-    setMemoryQuery(localQuery.trim());
-    await searchAgentMemory(selectedAgent.id, localQuery.trim(), 6);
+  const doSearch = async () => {
+    if (!selectedAgent || !draft.trim()) return;
+    const query = draft.trim();
+    setMemoryQuery(query);
+    await searchAgentMemory(selectedAgent.id, query, 6);
   };
 
   return (
     <div className="flex h-full flex-col">
+      <Section title={copy.workflow.memory.title} description={copy.workflow.memory.description} />
       <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-          <BookOpenText className="h-4 w-4 text-violet-500" />
-          Agent Memory
-        </h3>
-      </div>
-
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {sortedAgents.map(agent => (
+        <div className="flex flex-wrap gap-1.5">
+          {availableAgents.map(agent => (
             <button
               key={agent.id}
               onClick={() => setSelectedMemoryAgent(agent.id)}
               className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                selectedAgent?.id === agent.id ? "bg-[#D4845A] text-white" : "bg-[#F8F4F0] text-[#6B5A4A]"
+                selectedAgent?.id === agent.id
+                  ? 'bg-[#D4845A] text-white'
+                  : 'bg-[#F8F4F0] text-[#6B5A4A]'
               }`}
             >
               {agent.name}
             </button>
           ))}
         </div>
-
-        {selectedAgent && (
-          <div className="rounded-xl bg-[#F8F4F0] px-3 py-2 text-[10px] text-[#6B5A4A]">
+        {selectedAgent ? (
+          <div className="mt-2 rounded-xl bg-[#F8F4F0] px-3 py-2 text-[10px] text-[#6B5A4A]">
             {selectedAgent.name} / {nodeMap.get(selectedAgent.id)?.title || selectedAgent.role} / {nodeMap.get(selectedAgent.id)?.departmentLabel || selectedAgent.department}
           </div>
-        )}
-
-        <div className="mt-2 flex gap-2">
-          <input
-            value={localQuery}
-            onChange={event => setLocalQuery(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void handleSearch();
-              }
-            }}
-            placeholder="Search this agent's historical memory..."
-            className="flex-1 rounded-xl border border-[#F0E8E0] bg-white px-3 py-2 text-xs text-[#3A2A1A] focus:border-[#D4845A]/50 focus:outline-none focus:ring-2 focus:ring-[#D4845A]/20"
-          />
-          <button
-            onClick={() => void handleSearch()}
-            disabled={!selectedAgent || !localQuery.trim() || isMemoryLoading}
-            className="flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-medium text-[#5B4837] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isMemoryLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-            Search
-          </button>
-        </div>
+        ) : null}
       </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        <div>
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="mb-4">
           <div className="mb-1.5 flex items-center justify-between">
-            <h4 className="text-[10px] font-bold text-[#8B7355]">Recent memory</h4>
-            {isMemoryLoading && <Loader2 className="h-3 w-3 animate-spin text-[#B0A090]" />}
+            <h4 className="text-[11px] font-bold text-[#8B7355]">{copy.workflow.memory.recent}</h4>
+            {isMemoryLoading ? <span className="flex items-center gap-1 text-[10px] text-[#B0A090]"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}
           </div>
-          {agentMemoryRecent.length === 0 ? (
-            <div className="rounded-xl bg-[#F8F4F0] px-3 py-4 text-center text-[10px] text-[#8B7355]">
-              No recent memory entries.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {agentMemoryRecent.slice().reverse().map((entry, index) => (
-                <div key={`${entry.timestamp}-${index}`} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <Pill>{getMemoryTypeLabel(entry.type)}</Pill>
-                      {entry.direction && <Pill>{entry.direction}</Pill>}
-                      {entry.stage && <Pill>{entry.stage}</Pill>}
-                    </div>
-                    <span className="text-[8px] text-[#B0A090]">{formatTime(entry.timestamp)}</span>
-                  </div>
-                  <p className="mt-1 line-clamp-4 whitespace-pre-wrap text-[9px] leading-5 text-[#5D4C3B]">
-                    {entry.preview || entry.content}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
+          {!selectedAgent ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.memory.emptySelected}</div> : agentMemoryRecent.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.memory.emptyRecent}</div> : <div className="space-y-2">{agentMemoryRecent.slice().reverse().map((entry, index) => <div key={`${entry.timestamp}-${index}`} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3"><div className="mb-1 flex items-center justify-between gap-2"><div className="flex flex-wrap items-center gap-1.5"><span className="rounded-full bg-[#F0E8E0] px-2 py-0.5 text-[8px] text-[#6B5A4A]">{getMemoryTypeLabel(copy, entry.type)}</span>{entry.direction ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] text-blue-700">{copy.workflow.directions[entry.direction as keyof typeof copy.workflow.directions] || entry.direction}</span> : null}{entry.stage ? <Pill>{entry.stage}</Pill> : null}</div><span className="text-[8px] text-[#B0A090]">{fmt(entry.timestamp)}</span></div><p className="whitespace-pre-wrap text-[10px] leading-5 text-[#5D4C3B]">{entry.preview || entry.content}</p></div>)}</div>}
         </div>
 
         <div>
-          <h4 className="mb-1.5 text-[10px] font-bold text-[#8B7355]">Historical search</h4>
-          {agentMemorySearchResults.length === 0 ? (
-            <div className="rounded-xl bg-[#F8F4F0] px-3 py-4 text-center text-[10px] text-[#8B7355]">
-              Search results will appear here.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {agentMemorySearchResults.map(item => (
-                <MemoryResultCard key={`${item.workflowId}-${item.createdAt}`} item={item} />
-              ))}
-            </div>
-          )}
+          <h4 className="mb-1.5 text-[11px] font-bold text-[#8B7355]">{copy.workflow.memory.search}</h4>
+          <div className="mb-3 flex items-center gap-2">
+            <input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void doSearch(); } }} placeholder={copy.workflow.memory.searchPlaceholder} className="flex-1 rounded-xl border border-[#E8DDD0] bg-[#FFFCF8] px-3 py-2 text-sm text-[#3A2A1A] placeholder:text-[#B8A897] focus:border-[#2D5F4A]/40 focus:outline-none focus:ring-2 focus:ring-[#2D5F4A]/15" />
+            <button onClick={() => void doSearch()} disabled={!selectedAgent || !draft.trim()} className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2D5F4A] px-3 text-sm font-semibold text-white disabled:opacity-40">{copy.common.search}</button>
+          </div>
+          {agentMemorySearchResults.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.memory.emptySearch}</div> : <div className="space-y-2">{agentMemorySearchResults.map(item => <div key={`${item.workflowId}-${item.createdAt}`} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[11px] font-semibold text-[#3A2A1A]">{item.directive}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${wfBadge[item.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[item.status as keyof typeof copy.workflow.statuses.workflow] || item.status}</span></div><p className="mt-1 text-[9px] text-[#8B7355]">{fmt(item.createdAt)}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{item.summary}</p></div>)}</div>}
         </div>
       </div>
     </div>
   );
 }
+
+function ReportCard({ item }: { item: HeartbeatReportInfo }) {
+  const { copy } = useI18n();
+  const fmt = useFmt();
+  const downloadHeartbeatReport = useWorkflowStore(state => state.downloadHeartbeatReport);
+  return (
+    <div className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-[#3A2A1A]">{item.title}</p>
+          <p className="mt-0.5 text-[9px] text-[#8B7355]">{item.agentName} · {item.department} · {fmt(item.generatedAt)}</p>
+        </div>
+        <span className="rounded-full bg-[#F0E8E0] px-2 py-0.5 text-[8px] font-medium text-[#6B5A4A]">{copy.workflow.reports.triggers[item.trigger as keyof typeof copy.workflow.reports.triggers] || item.trigger}</span>
+      </div>
+      <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-[#5D4C3B]">{item.summaryPreview}</p>
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, 'json')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837]"><Download className="h-3 w-3" />{copy.common.json}</button>
+        <button onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837]"><Download className="h-3 w-3" />{copy.common.markdown}</button>
+      </div>
+    </div>
+  );
+}
+
 function ReportsView() {
-  const {
-    heartbeatStatuses,
-    heartbeatReports,
-    fetchHeartbeatStatuses,
-    fetchHeartbeatReports,
-    runHeartbeat,
-    runningHeartbeatAgentId,
-    isHeartbeatLoading,
-    downloadHeartbeatReport,
-  } = useWorkflowStore();
-
-  useEffect(() => {
-    void fetchHeartbeatStatuses();
-    void fetchHeartbeatReports(undefined, 12);
-  }, [fetchHeartbeatStatuses, fetchHeartbeatReports]);
-
+  const { copy } = useI18n();
+  const fmt = useFmt();
+  const { heartbeatStatuses, heartbeatReports, fetchHeartbeatStatuses, fetchHeartbeatReports, runHeartbeat, runningHeartbeatAgentId, isHeartbeatLoading } = useWorkflowStore();
+  useEffect(() => { void fetchHeartbeatStatuses(); void fetchHeartbeatReports(undefined, 12); }, [fetchHeartbeatReports, fetchHeartbeatStatuses]);
+  const enabled = heartbeatStatuses.filter(item => item.enabled).length;
+  const running = heartbeatStatuses.filter(item => item.state === 'running').length;
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-          <Search className="h-4 w-4 text-cyan-500" />
-          Heartbeat Reports
-        </h3>
-      </div>
-
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
-        <div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] p-3 text-[10px] text-[#6B5A4A]">
-          Enabled: {heartbeatStatuses.filter(item => item.enabled).length} / Running: {heartbeatStatuses.filter(item => item.state === "running").length}
-          {isHeartbeatLoading && <span className="ml-2">Loading...</span>}
-        </div>
-
-        {heartbeatStatuses.map(item => (
-          <div key={item.agentId} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-[11px] font-semibold text-[#3A2A1A]">{item.agentName}</p>
-                  <span className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${getHeartbeatStateClass(item.state)}`}>
-                    {getHeartbeatStateLabel(item.state)}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[9px] text-[#8B7355]">
-                  {item.department} / every {item.intervalMinutes} min / {item.reportCount} reports
-                </p>
-              </div>
-              <button
-                onClick={() => void runHeartbeat(item.agentId)}
-                disabled={!item.enabled || runningHeartbeatAgentId === item.agentId}
-                className="inline-flex items-center gap-1 rounded-lg bg-cyan-100 px-2.5 py-1.5 text-[9px] font-medium text-cyan-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {runningHeartbeatAgentId === item.agentId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
-                {runningHeartbeatAgentId === item.agentId ? "Running" : "Run now"}
-              </button>
-            </div>
-            <p className="mt-2 text-[9px] text-[#6B5A4A]">Focus: {item.focus}</p>
-          </div>
-        ))}
-
-        {heartbeatReports.map((item: HeartbeatReportInfo) => (
-          <div key={`${item.agentId}-${item.reportId}`} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold text-[#3A2A1A]">{item.title}</p>
-              <Pill>{item.trigger}</Pill>
-            </div>
-            <p className="mt-1 text-[9px] text-[#8B7355]">
-              {item.agentName} / {item.department} / {formatTime(item.generatedAt)}
-            </p>
-            <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-[9px] leading-5 text-[#5D4C3B]">{item.summaryPreview}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, "json")}
-                className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837]"
-              >
-                <Download className="h-3 w-3" />
-                JSON
-              </button>
-              <button
-                type="button"
-                onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, "md")}
-                className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837]"
-              >
-                <Download className="h-3 w-3" />
-                MD
-              </button>
-            </div>
-          </div>
-        ))}
+      <Section title={copy.workflow.reports.title} description={copy.workflow.reports.description} />
+      <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="mb-3 grid grid-cols-3 gap-2"><div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2"><p className="text-[9px] text-[#8B7355]">{copy.workflow.reports.enabled}</p><p className="mt-1 text-sm font-bold text-[#3A2A1A]">{enabled}</p></div><div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2"><p className="text-[9px] text-[#8B7355]">{copy.workflow.reports.running}</p><p className="mt-1 text-sm font-bold text-[#3A2A1A]">{running}</p></div><div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2"><p className="text-[9px] text-[#8B7355]">{copy.workflow.reports.latest}</p><p className="mt-1 text-[10px] font-semibold text-[#3A2A1A]">{fmt(heartbeatReports[0]?.generatedAt || null)}</p></div></div>
+        <div className="mb-4"><div className="mb-1.5 flex items-center justify-between"><h4 className="text-[11px] font-bold text-[#8B7355]">{copy.workflow.reports.statusList}</h4>{isHeartbeatLoading ? <span className="flex items-center gap-1 text-[10px] text-[#B0A090]"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}</div>{heartbeatStatuses.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.reports.emptyStatuses}</div> : <div className="space-y-2">{heartbeatStatuses.map(item => <div key={item.agentId} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex items-center gap-2"><p className="text-[11px] font-semibold text-[#3A2A1A]">{item.agentName}</p><span className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${hbBadge[item.state] || hbBadge.idle}`}>{copy.workflow.statuses.heartbeat[item.state as keyof typeof copy.workflow.statuses.heartbeat] || item.state}</span></div><p className="mt-0.5 text-[9px] text-[#8B7355]">{item.department} · {item.intervalMinutes} min · {item.reportCount}</p></div><button onClick={() => void runHeartbeat(item.agentId)} disabled={!item.enabled || runningHeartbeatAgentId === item.agentId} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-cyan-100 px-2.5 py-1.5 text-[9px] font-medium text-cyan-700 disabled:opacity-50">{runningHeartbeatAgentId === item.agentId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}{runningHeartbeatAgentId === item.agentId ? copy.workflow.reports.runningNow : copy.workflow.reports.triggerNow}</button></div><div className="mt-2 rounded-lg bg-[#F8F4F0] px-2.5 py-2 text-[9px] text-[#6B5A4A]"><p>{copy.workflow.reports.focus}: {item.focus}</p><p className="mt-1">{copy.workflow.reports.keywords}: {item.keywords.length > 0 ? item.keywords.join(' / ') : copy.common.unavailable}</p><p className="mt-1">{copy.workflow.reports.lastSuccess}: {fmt(item.lastSuccessAt)}</p><p className="mt-1">{copy.workflow.reports.nextRun}: {fmt(item.nextRunAt)}</p>{item.lastReportTitle ? <p className="mt-1">{copy.workflow.reports.lastReport}: {item.lastReportTitle}</p> : null}{item.lastError ? <p className="mt-1 text-red-600">{copy.workflow.reports.error}: {item.lastError}</p> : null}</div></div>)}</div>}</div>
+        <div><h4 className="mb-1.5 text-[11px] font-bold text-[#8B7355]">{copy.workflow.reports.reportsList}</h4>{heartbeatReports.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.reports.emptyReports}</div> : <div className="space-y-2">{heartbeatReports.map(item => <ReportCard key={`${item.agentId}-${item.reportId}`} item={item} />)}</div>}</div>
       </div>
     </div>
   );
 }
 
 function HistoryView() {
+  const { copy } = useI18n();
+  const fmt = useFmt();
   const { workflows, setCurrentWorkflow, setActiveView, fetchWorkflows } = useWorkflowStore();
-
-  useEffect(() => {
-    void fetchWorkflows();
-  }, [fetchWorkflows]);
-
+  useEffect(() => { void fetchWorkflows(); }, [fetchWorkflows]);
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-[#3A2A1A]">
-          <History className="h-4 w-4 text-[#8B7355]" />
-          Workflow History
-        </h3>
-      </div>
+      <Section title={copy.workflow.history.title} />
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
-        {workflows.length === 0 ? (
-          <div className="py-8 text-center text-xs text-[#8B7355]">No workflow history yet.</div>
-        ) : (
-          workflows.map(workflow => (
-            <button
-              key={workflow.id}
-              onClick={() => {
-                setCurrentWorkflow(workflow.id);
-                setActiveView("workflow");
-              }}
-              className="w-full rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] p-3 text-left"
-            >
-              <div className="mb-1 flex items-center justify-between">
-                <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${getWorkflowStatusClass(workflow.status)}`}>
-                  {WORKFLOW_STATUS_LABELS[workflow.status] || workflow.status}
-                </span>
-                <span className="text-[9px] text-[#B0A090]">{formatTime(workflow.created_at)}</span>
-              </div>
-              <p className="line-clamp-2 text-xs text-[#3A2A1A]">{workflow.directive}</p>
-            </button>
-          ))
-        )}
+        {workflows.length === 0 ? <div className="py-8 text-center text-xs text-[#8B7355]">{copy.workflow.history.empty}</div> : workflows.map(workflow => <button key={workflow.id} onClick={() => { setCurrentWorkflow(workflow.id); setActiveView('workflow'); }} className="w-full rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] p-3 text-left hover:bg-[#F0E8E0]"><div className="mb-1 flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${wfBadge[workflow.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[workflow.status as keyof typeof copy.workflow.statuses.workflow] || workflow.status}</span><span className="text-[9px] text-[#B0A090]">{fmt(workflow.created_at)}</span></div><p className="line-clamp-2 text-xs text-[#3A2A1A]">{workflow.directive}</p></button>)}
       </div>
     </div>
   );
 }
 
 export function WorkflowPanel() {
+  const { copy } = useI18n();
   const runtimeMode = useAppStore(state => state.runtimeMode);
-  const {
-    isWorkflowPanelOpen,
-    toggleWorkflowPanel,
-    activeView,
-    setActiveView,
-    initSocket,
-    fetchAgents,
-    fetchStages,
-    fetchWorkflows,
-    fetchHeartbeatStatuses,
-    fetchHeartbeatReports,
-    connected,
-  } = useWorkflowStore();
-  const isFrontendMode = runtimeMode === "frontend";
+  const { isMobile, isTablet } = useViewportTier();
+  const { isWorkflowPanelOpen, toggleWorkflowPanel, activeView, setActiveView, initSocket, fetchAgents, fetchStages, fetchWorkflows, fetchHeartbeatStatuses, fetchHeartbeatReports, connected } = useWorkflowStore();
 
   useEffect(() => {
     void initSocket();
@@ -984,74 +694,43 @@ export function WorkflowPanel() {
     void fetchWorkflows();
     void fetchHeartbeatStatuses();
     void fetchHeartbeatReports(undefined, 12);
-  }, [initSocket, fetchAgents, fetchStages, fetchWorkflows, fetchHeartbeatStatuses, fetchHeartbeatReports, runtimeMode]);
+  }, [fetchAgents, fetchHeartbeatReports, fetchHeartbeatStatuses, fetchStages, fetchWorkflows, initSocket, runtimeMode]);
 
   if (!isWorkflowPanelOpen) return null;
 
-  const views: Array<{ id: PanelView; icon: typeof Zap; label: string }> = [
-    { id: "directive", icon: Zap, label: "Directive" },
-    { id: "org", icon: Network, label: "Org" },
-    { id: "workflow", icon: BarChart3, label: "Progress" },
-    { id: "review", icon: Star, label: "Review" },
-    { id: "memory", icon: BookOpenText, label: "Memory" },
-    { id: "reports", icon: Search, label: "Reports" },
-    { id: "history", icon: History, label: "History" },
+  const shellClass = isMobile ? 'left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+8px)] top-[calc(env(safe-area-inset-top)+108px)] rounded-[30px]' : isTablet ? 'bottom-5 right-5 h-[min(74svh,620px)] w-[420px] rounded-3xl' : 'bottom-6 right-6 h-[620px] w-[440px] rounded-3xl';
+  const tabs: Array<{ id: PanelView; icon: typeof Zap; label: string }> = [
+    { id: 'directive', icon: Zap, label: copy.workflow.tabs.directive },
+    { id: 'org', icon: Network, label: copy.workflow.tabs.org },
+    { id: 'workflow', icon: BarChart3, label: copy.workflow.tabs.workflow },
+    { id: 'review', icon: Star, label: copy.workflow.tabs.review },
+    { id: 'memory', icon: BookOpenText, label: copy.workflow.tabs.memory },
+    { id: 'reports', icon: Search, label: copy.workflow.tabs.reports },
+    { id: 'history', icon: History, label: copy.workflow.tabs.history },
   ];
 
   return (
-    <div
-      className="fixed bottom-6 right-5 z-[55] flex h-[560px] w-[400px] flex-col rounded-3xl border border-white/60 bg-white/92 shadow-[0_12px_48px_rgba(0,0,0,0.15)] backdrop-blur-2xl"
-      style={{ pointerEvents: "auto" }}
-    >
+    <div className={`fixed z-[71] flex flex-col border border-white/60 bg-white/92 shadow-[0_12px_48px_rgba(0,0,0,0.15)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`} style={{ pointerEvents: 'auto' }}>
       <div className="flex items-center justify-between border-b border-[#F0E8E0] px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A]">
-            <Brain className="h-4 w-4 text-white" />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A] shadow-sm"><Brain className="h-4 w-4 text-white" /></div>
           <div>
-            <h3 className="text-sm font-bold text-[#3A2A1A]">Multi-Agent Workflow</h3>
-            <span className="text-[9px] text-[#8B7355]">
-              {isFrontendMode ? "Frontend-only mode" : connected ? "Connected" : "Disconnected"}
-            </span>
+            <h3 className="text-sm font-bold text-[#3A2A1A]">{copy.workflow.title}</h3>
+            <div className="flex items-center gap-1.5"><div className={`h-1.5 w-1.5 rounded-full ${runtimeMode === 'frontend' ? 'bg-amber-400' : connected ? 'bg-emerald-500' : 'bg-red-400'}`} /><span className="text-[9px] text-[#8B7355]">{connected ? copy.workflow.connected : copy.workflow.disconnected}</span></div>
           </div>
         </div>
-
-        <button onClick={toggleWorkflowPanel} className="rounded-xl p-2 hover:bg-[#F0E8E0]">
-          <X className="h-4 w-4 text-[#8B7355]" />
-        </button>
+        <button onClick={toggleWorkflowPanel} className="rounded-xl p-2 hover:bg-[#F0E8E0]" title={copy.common.close}><X className="h-4 w-4 text-[#8B7355]" /></button>
       </div>
-
-      <div className="flex items-center gap-1 border-b border-[#F0E8E0] px-3 py-2">
-        {views.map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            onClick={() => setActiveView(id)}
-            className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${
-              activeView === id ? "bg-[#D4845A] text-white" : "text-[#8B7355] hover:bg-[#F0E8E0]"
-            }`}
-          >
-            <Icon className="h-3 w-3" />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {isFrontendMode && (
-        <div className="border-b border-[#F0E8E0] bg-[#FFF7EC] px-4 py-2.5">
-          <p className="text-[10px] leading-5 text-[#6B5A4A]">
-            Dynamic workflow execution and heartbeat reports are available in advanced mode.
-          </p>
-        </div>
-      )}
-
-      <div className="flex-1 overflow-hidden">
-        {activeView === "directive" && <DirectiveView />}
-        {activeView === "org" && <OrgTreeView />}
-        {activeView === "workflow" && <WorkflowProgressView />}
-        {activeView === "review" && <ReviewView />}
-        {activeView === "memory" && <MemoryView />}
-        {activeView === "reports" && <ReportsView />}
-        {activeView === "history" && <HistoryView />}
+      <div className="border-b border-[#F0E8E0] px-3 py-2"><div className="flex gap-1 overflow-x-auto pb-1">{tabs.map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setActiveView(id)} className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${activeView === id ? 'bg-[#D4845A] text-white shadow-sm' : 'text-[#8B7355] hover:bg-[#F0E8E0]'}`}><Icon className="h-3 w-3" />{label}</button>)}</div></div>
+      {runtimeMode === 'frontend' ? <div className="border-b border-[#F0E8E0] bg-[#FFF7EC] px-4 py-2.5"><p className="text-[10px] leading-5 text-[#6B5A4A]">{copy.workflow.frontendBanner}</p></div> : null}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        {activeView === 'directive' ? <DirectiveView /> : null}
+        {activeView === 'org' ? <OrgView /> : null}
+        {activeView === 'workflow' ? <ProgressView /> : null}
+        {activeView === 'review' ? <ReviewView /> : null}
+        {activeView === 'memory' ? <MemoryView /> : null}
+        {activeView === 'reports' ? <ReportsView /> : null}
+        {activeView === 'history' ? <HistoryView /> : null}
       </div>
     </div>
   );

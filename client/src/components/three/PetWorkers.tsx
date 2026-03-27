@@ -3,17 +3,29 @@ import { useFrame } from '@react-three/fiber';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
+import { useI18n } from '@/i18n';
 import {
   AGENT_VISUAL_CONFIGS,
   DEPARTMENT_COLORS,
+  getAgentIdleText,
+  getAgentTitle,
   type AgentAnimationType,
   type AgentVisualConfig,
 } from '@/lib/agent-config';
 import { PET_MODELS } from '@/lib/assets';
+import type { AppLocale } from '@/lib/locale';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
-function SpeechBubble({ text, visible, accent }: { text: string; visible: boolean; accent: string }) {
+function SpeechBubble({
+  text,
+  visible,
+  accent,
+}: {
+  text: string;
+  visible: boolean;
+  accent: string;
+}) {
   if (!visible) return null;
 
   return (
@@ -67,21 +79,35 @@ function animateWorker(
   }
 }
 
-function getStatusBubble(status: string, fallback: string): string {
-  return (
-    {
-      analyzing: '正在分析指令...\n先拆清楚重点。',
-      planning: '正在规划任务...\n把人放到对的位置。',
-      executing: '执行中...\n先把结果做出来。',
-      reviewing: '评审中...\n我在逐条看。',
-      auditing: '审计中...\n把问题找出来。',
-      revising: '修订中...\n这一版会更稳。',
-      verifying: '验证中...\n确认是不是真的解决。',
-      summarizing: '汇总中...\n准备交付结论。',
-      evaluating: '评估中...\n看整体表现。',
-      thinking: '思考中...\n让我组织一下。',
-    }[status] || fallback
-  );
+const STATUS_BUBBLES: Record<AppLocale, Record<string, string>> = {
+  'zh-CN': {
+    analyzing: '正在分析指令...\n先把重点梳清。',
+    planning: '正在规划任务...\n把人放到对的位置。',
+    executing: '执行中...\n先把结果做出来。',
+    reviewing: '评审中...\n我在逐条看。',
+    auditing: '审计中...\n把问题找出来。',
+    revising: '修订中...\n这一版会更稳。',
+    verifying: '验证中...\n确认是不是真的解决了。',
+    summarizing: '汇总中...\n准备交付结论。',
+    evaluating: '评估中...\n先看整体表现。',
+    thinking: '思考中...\n让我组织一下。',
+  },
+  'en-US': {
+    analyzing: 'Analyzing the directive...\nLet me untangle the key points first.',
+    planning: 'Planning the task...\nPutting the right people in the right spots.',
+    executing: 'Executing...\nI am turning it into something tangible first.',
+    reviewing: 'Reviewing...\nGoing through it point by point.',
+    auditing: 'Auditing...\nLooking for the hidden gaps.',
+    revising: 'Revising...\nThis pass should feel sturdier.',
+    verifying: 'Verifying...\nChecking whether the issue is truly resolved.',
+    summarizing: 'Summarizing...\nPreparing the handoff.',
+    evaluating: 'Evaluating...\nLooking at the whole outcome.',
+    thinking: 'Thinking...\nLet me structure it for a second.',
+  },
+};
+
+function getStatusBubble(status: string, locale: AppLocale, fallback: string) {
+  return STATUS_BUBBLES[locale][status] || fallback;
 }
 
 const STAGE_FLOW_COLORS: Record<string, string> = {
@@ -97,7 +123,7 @@ const STAGE_FLOW_COLORS: Record<string, string> = {
   evolution: '#EAB308',
 };
 
-function getFlowAnchor(position: [number, number, number]): THREE.Vector3 {
+function getFlowAnchor(position: [number, number, number]) {
   return new THREE.Vector3(position[0], 0.74, position[2]);
 }
 
@@ -137,9 +163,7 @@ function MessageFlowPath({
 
       const t = (clock.elapsedTime * 0.18 + phase + index * 0.19) % 1;
       mesh.position.copy(curve.getPointAt(t));
-
-      const pulse = 0.88 + Math.sin(clock.elapsedTime * 6 + index) * 0.12;
-      mesh.scale.setScalar(0.84 * pulse);
+      mesh.scale.setScalar(0.84 * (0.88 + Math.sin(clock.elapsedTime * 6 + index) * 0.12));
     });
   });
 
@@ -147,10 +171,10 @@ function MessageFlowPath({
     <group>
       <Line points={points} color={color} lineWidth={1.25} transparent opacity={opacity} />
 
-      {[0, 1, 2].map((index) => (
+      {[0, 1, 2].map(index => (
         <mesh
           key={index}
-          ref={(mesh) => {
+          ref={mesh => {
             particleRefs.current[index] = mesh;
           }}
         >
@@ -169,6 +193,7 @@ function MessageFlowPath({
 }
 
 function AgentWorker({ config }: { config: AgentVisualConfig }) {
+  const { locale } = useI18n();
   const { scene } = useGLTF(PET_MODELS[config.animal]);
   const cloned = useMemo(() => {
     const next = scene.clone(true);
@@ -176,7 +201,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
     const minY = Number.isFinite(bounds.min.y) ? bounds.min.y : 0;
     next.position.y -= minY;
 
-    next.traverse((child) => {
+    next.traverse(child => {
       if (!('isMesh' in child) || !child.isMesh) return;
 
       const mesh = child as THREE.Mesh;
@@ -189,6 +214,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
         material.envMapIntensity = 0.05;
       }
     });
+
     return next;
   }, [scene]);
 
@@ -196,11 +222,11 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
   const [hovered, setHovered] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
 
-  const selectedPet = useAppStore((state) => state.selectedPet);
-  const setSelectedPet = useAppStore((state) => state.setSelectedPet);
-  const toggleChat = useAppStore((state) => state.toggleChat);
-  const isChatOpen = useAppStore((state) => state.isChatOpen);
-  const agentStatuses = useWorkflowStore((state) => state.agentStatuses);
+  const selectedPet = useAppStore(state => state.selectedPet);
+  const setSelectedPet = useAppStore(state => state.setSelectedPet);
+  const toggleChat = useAppStore(state => state.toggleChat);
+  const isChatOpen = useAppStore(state => state.isChatOpen);
+  const agentStatuses = useWorkflowStore(state => state.agentStatuses);
 
   const agentStatus = agentStatuses[config.id] || 'idle';
   const accent = DEPARTMENT_COLORS[config.department];
@@ -209,9 +235,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
   const handleClick = useCallback(() => {
     setSelectedPet(config.id);
     setShowBubble(true);
-    if (!isChatOpen) {
-      toggleChat();
-    }
+    if (!isChatOpen) toggleChat();
     window.setTimeout(() => setShowBubble(false), 3500);
   }, [config.id, isChatOpen, setSelectedPet, toggleChat]);
 
@@ -244,8 +268,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
           ? config.scale * 1.04
           : config.scale;
 
-    const currentScale = groupRef.current.scale.x;
-    const nextScale = currentScale + (targetScale - currentScale) * 0.12;
+    const nextScale = groupRef.current.scale.x + (targetScale - groupRef.current.scale.x) * 0.12;
     groupRef.current.scale.setScalar(nextScale);
   });
 
@@ -256,7 +279,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
       rotation={config.rotation}
       scale={config.scale}
       onClick={handleClick}
-      onPointerOver={(event) => {
+      onPointerOver={event => {
         event.stopPropagation();
         setHovered(true);
         document.body.style.cursor = 'pointer';
@@ -270,29 +293,29 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
 
       <Html position={[0, 1.8, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
         <div
-          className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap shadow-sm transition-all duration-200 ${
-            isActive
-              ? 'scale-110 text-white'
-              : 'bg-white/88 text-[#3A3A3A]'
+          className={`flex whitespace-nowrap items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
+            isActive ? 'scale-110 text-white' : 'bg-white/88 text-[#3A3A3A]'
           }`}
           style={{
             background: isActive ? accent : 'rgba(255,255,255,0.88)',
             borderColor: `${accent}66`,
           }}
         >
-          <span>{config.emoji} {config.shortLabel}</span>
+          <span>
+            {config.emoji} {config.shortLabel}
+          </span>
           <span
             className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-[0.08em] ${
               isActive ? 'bg-white/20 text-white' : 'bg-black/6 text-[#6B5A4A]'
             }`}
           >
-            {config.title}
+            {getAgentTitle(config.id, locale)}
           </span>
         </div>
       </Html>
 
       <SpeechBubble
-        text={getStatusBubble(agentStatus, config.idleText)}
+        text={getStatusBubble(agentStatus, locale, getAgentIdleText(config.id, locale))}
         visible={showBubble || selectedPet === config.id || agentStatus !== 'idle'}
         accent={accent}
       />
@@ -316,13 +339,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
       )}
 
       {(hovered || selectedPet === config.id) && (
-        <pointLight
-          position={[0, 0.6, 0]}
-          intensity={0.32}
-          color={accent}
-          distance={2}
-          decay={2}
-        />
+        <pointLight position={[0, 0.6, 0]} intensity={0.32} color={accent} distance={2} decay={2} />
       )}
     </group>
   );
@@ -352,15 +369,16 @@ function DepartmentMarker({
 }
 
 export function PetWorkers() {
-  const agents = useWorkflowStore((state) => state.agents);
-  const currentWorkflow = useWorkflowStore((state) => state.currentWorkflow);
-  const messages = useWorkflowStore((state) => state.messages);
+  const { copy } = useI18n();
+  const agents = useWorkflowStore(state => state.agents);
+  const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
+  const messages = useWorkflowStore(state => state.messages);
 
   const configs = useMemo(() => {
     if (agents.length === 0) return AGENT_VISUAL_CONFIGS;
 
-    return AGENT_VISUAL_CONFIGS.map((config) => {
-      const liveAgent = agents.find((agent) => agent.id === config.id);
+    return AGENT_VISUAL_CONFIGS.map(config => {
+      const liveAgent = agents.find(agent => agent.id === config.id);
       return liveAgent
         ? {
             ...config,
@@ -372,13 +390,13 @@ export function PetWorkers() {
   }, [agents]);
 
   const configMap = useMemo(
-    () => Object.fromEntries(configs.map((config) => [config.id, config])) as Record<string, AgentVisualConfig>,
+    () => Object.fromEntries(configs.map(config => [config.id, config])) as Record<string, AgentVisualConfig>,
     [configs]
   );
 
   const flowRoutes = useMemo(() => {
     const recentMessages = messages
-      .filter((message) => configMap[message.from_agent] && configMap[message.to_agent])
+      .filter(message => configMap[message.from_agent] && configMap[message.to_agent])
       .slice(-8);
 
     if (recentMessages.length > 0) {
@@ -387,7 +405,8 @@ export function PetWorkers() {
         from: configMap[message.from_agent].position,
         to: configMap[message.to_agent].position,
         color:
-          STAGE_FLOW_COLORS[message.stage] || DEPARTMENT_COLORS[configMap[message.to_agent].department],
+          STAGE_FLOW_COLORS[message.stage] ||
+          DEPARTMENT_COLORS[configMap[message.to_agent].department],
         opacity: 0.16 + ((index + 1) / recentMessages.length) * 0.36,
         phase: index * 0.11,
       }));
@@ -401,10 +420,10 @@ export function PetWorkers() {
         : ['game', 'ai', 'life', 'meta'];
 
     const managers = configs.filter(
-      (config) => config.role === 'manager' && involvedDepartments.includes(config.department)
+      config => config.role === 'manager' && involvedDepartments.includes(config.department)
     );
     const workers = configs.filter(
-      (config) => config.role === 'worker' && involvedDepartments.includes(config.department)
+      config => config.role === 'worker' && involvedDepartments.includes(config.department)
     );
 
     const makeRoute = (fromId: string, toId: string, index: number) => ({
@@ -430,14 +449,16 @@ export function PetWorkers() {
               ])
             : managers.flatMap((manager, index) =>
                 workers
-                  .filter((worker) => worker.department === manager.department)
+                  .filter(worker => worker.department === manager.department)
                   .map((worker, workerIndex) =>
                     makeRoute(manager.id, worker.id, index * 8 + workerIndex)
                   )
               );
 
     return routes.filter(
-      (route): route is {
+      (
+        route
+      ): route is {
         key: string;
         from: [number, number, number];
         to: [number, number, number];
@@ -450,7 +471,7 @@ export function PetWorkers() {
 
   return (
     <group>
-      {flowRoutes.map((route) => (
+      {flowRoutes.map(route => (
         <MessageFlowPath
           key={route.key}
           from={route.from}
@@ -461,19 +482,35 @@ export function PetWorkers() {
         />
       ))}
 
-      <DepartmentMarker label="CEO" position={[0, 0, -2.45]} color="#7C3AED" />
-      <DepartmentMarker label="GAME" position={[-3.25, 0, -1.7]} color={DEPARTMENT_COLORS.game} />
-      <DepartmentMarker label="AI" position={[3.2, 0, -1.7]} color={DEPARTMENT_COLORS.ai} />
-      <DepartmentMarker label="LIFE" position={[-2.8, 0, 2.2]} color={DEPARTMENT_COLORS.life} />
-      <DepartmentMarker label="META" position={[2.9, 0, 2.2]} color={DEPARTMENT_COLORS.meta} />
+      <DepartmentMarker label={copy.scene.departmentMarkers.ceo} position={[0, 0, -2.45]} color="#7C3AED" />
+      <DepartmentMarker
+        label={copy.scene.departmentMarkers.game}
+        position={[-3.25, 0, -1.7]}
+        color={DEPARTMENT_COLORS.game}
+      />
+      <DepartmentMarker
+        label={copy.scene.departmentMarkers.ai}
+        position={[3.2, 0, -1.7]}
+        color={DEPARTMENT_COLORS.ai}
+      />
+      <DepartmentMarker
+        label={copy.scene.departmentMarkers.life}
+        position={[-2.8, 0, 2.2]}
+        color={DEPARTMENT_COLORS.life}
+      />
+      <DepartmentMarker
+        label={copy.scene.departmentMarkers.meta}
+        position={[2.9, 0, 2.2]}
+        color={DEPARTMENT_COLORS.meta}
+      />
 
-      {configs.map((config) => (
+      {configs.map(config => (
         <AgentWorker key={config.id} config={config} />
       ))}
     </group>
   );
 }
 
-Object.values(PET_MODELS).forEach((url) => {
+Object.values(PET_MODELS).forEach(url => {
   useGLTF.preload(url);
 });

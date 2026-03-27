@@ -2,8 +2,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Router as WouterRouter, Switch } from "wouter";
+import { useEffect } from 'react';
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { useAppStore } from './lib/store';
 import Home from "./pages/Home";
 
 const routerBase =
@@ -21,11 +23,22 @@ function Router() {
   );
 }
 
+function LocaleSync() {
+  const locale = useAppStore(state => state.locale);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
+          <LocaleSync />
           <Toaster
             position="top-center"
             toastOptions={{

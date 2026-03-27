@@ -1,5 +1,9 @@
 import { PET_MODELS } from '@/lib/assets';
 
+import type { AppLocale } from './locale';
+
+type LocalizedText = Record<AppLocale, string>;
+
 export type AgentAnimationType =
   | 'typing'
   | 'reading'
@@ -11,7 +15,7 @@ export interface AgentVisualConfig {
   id: string;
   name: string;
   shortLabel: string;
-  title: string;
+  title: LocalizedText;
   department: 'game' | 'ai' | 'life' | 'meta';
   role: 'ceo' | 'manager' | 'worker';
   emoji: string;
@@ -20,8 +24,8 @@ export interface AgentVisualConfig {
   rotation: [number, number, number];
   scale: number;
   animationType: AgentAnimationType;
-  idleText: string;
-  chatRole: string;
+  idleText: LocalizedText;
+  chatRole: LocalizedText;
 }
 
 export const DEFAULT_AGENT_ID = 'ceo';
@@ -40,12 +44,19 @@ export const DEPARTMENT_SOFT_COLORS: Record<AgentVisualConfig['department'], str
   meta: 'bg-violet-100 text-violet-800',
 };
 
+function localized(zh: string, en: string): LocalizedText {
+  return {
+    'zh-CN': zh,
+    'en-US': en,
+  };
+}
+
 export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
   {
     id: 'ceo',
     name: 'CEO Gateway',
     shortLabel: 'CEO',
-    title: '全局编排中枢',
+    title: localized('全局编排中枢', 'Executive orchestrator'),
     department: 'meta',
     role: 'ceo',
     emoji: '🐱',
@@ -54,14 +65,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI, 0],
     scale: 0.38,
     animationType: 'typing',
-    idleText: '我在盯全局。\n有新指令就来。',
-    chatRole: 'CEO，负责战略拆解、优先级判断和跨部门协同，语气沉稳、清晰、有全局感。',
+    idleText: localized(
+      '我在盯全局。\n有新指令就来。',
+      'I am watching the whole board.\nBring me the next directive.'
+    ),
+    chatRole: localized(
+      'CEO，负责战略拆解、优先级判断和跨部门协同，语气沉稳、清晰、有全局感。',
+      'The CEO who handles strategic breakdowns, prioritization, and cross-team coordination with calm, clear, big-picture answers.'
+    ),
   },
   {
     id: 'pixel',
     name: 'Pixel',
     shortLabel: 'Pixel',
-    title: '游戏部经理',
+    title: localized('游戏部经理', 'Game manager'),
     department: 'game',
     role: 'manager',
     emoji: '🐯',
@@ -70,14 +87,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 0.92, 0],
     scale: 0.34,
     animationType: 'reading',
-    idleText: '游戏部待命。\n先看节奏，再拆任务。',
-    chatRole: '游戏部经理，擅长玩法策略、活动包装和项目推进，回答要具体、有节奏感。',
+    idleText: localized(
+      '游戏部待命。\n先看节奏，再拆任务。',
+      'Game team standing by.\nFirst we map the cadence, then the tasks.'
+    ),
+    chatRole: localized(
+      '游戏部经理，擅长玩法策略、活动包装和项目推进，回答要具体、有节奏感。',
+      'A game manager focused on feature strategy, event packaging, and shipping plans. Answers should be concrete and paced.'
+    ),
   },
   {
     id: 'nova',
     name: 'Nova',
     shortLabel: 'Nova',
-    title: '游戏策划',
+    title: localized('游戏策划', 'Game designer'),
     department: 'game',
     role: 'worker',
     emoji: '🐵',
@@ -86,14 +109,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI / 2, 0],
     scale: 0.28,
     animationType: 'discussing',
-    idleText: '我在磨玩法点子。\n最好要新鲜一点。',
-    chatRole: '游戏策划，擅长活动玩法、节奏设计和奖励结构，回答偏创意策划但要可执行。',
+    idleText: localized(
+      '我在磨玩法点子。\n最好再新鲜一点。',
+      'I am polishing gameplay ideas.\nLet us make them a little fresher.'
+    ),
+    chatRole: localized(
+      '游戏策划，擅长活动玩法、节奏设计和奖励结构，回答偏创意但要可执行。',
+      'A gameplay designer who is strong at event mechanics, pacing, and reward structure. Creative, but always executable.'
+    ),
   },
   {
     id: 'blaze',
     name: 'Blaze',
     shortLabel: 'Blaze',
-    title: '技术实现',
+    title: localized('技术实现', 'Implementation'),
     department: 'game',
     role: 'worker',
     emoji: '🐶',
@@ -102,14 +131,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI / 1.15, 0],
     scale: 0.28,
     animationType: 'typing',
-    idleText: '实现路径我来拆。\n风险也会一起算。',
-    chatRole: '技术型游戏 worker，擅长实现方案、工程拆解和风险判断，回答要务实。',
+    idleText: localized(
+      '实现路径我来拆。\n风险也会一起算。',
+      'I can break down the implementation path.\nI will count the risks too.'
+    ),
+    chatRole: localized(
+      '技术型游戏 worker，擅长实现方案、工程拆解和风险判断，回答要务实。',
+      'A technical game worker who focuses on implementation plans, engineering breakdowns, and risks. Keep it practical.'
+    ),
   },
   {
     id: 'lyra',
     name: 'Lyra',
     shortLabel: 'Lyra',
-    title: '交互体验',
+    title: localized('交互体验', 'UX design'),
     department: 'game',
     role: 'worker',
     emoji: '🐰',
@@ -118,14 +153,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 0.72, 0],
     scale: 0.26,
     animationType: 'organizing',
-    idleText: '我盯用户体验。\n哪里别扭我一眼能看出。',
-    chatRole: '游戏体验设计 worker，擅长交互路径、反馈设计和体验诊断，回答要贴近用户。',
+    idleText: localized(
+      '我盯用户体验。\n哪里别扭一眼就能看出来。',
+      'I watch the player experience.\nAwkward interactions stand out fast.'
+    ),
+    chatRole: localized(
+      '游戏体验设计 worker，擅长交互路径、反馈设计和体验诊断，回答要贴近用户。',
+      'A game UX worker who focuses on interaction flows, feedback systems, and experience diagnosis. Stay close to the user.'
+    ),
   },
   {
     id: 'volt',
     name: 'Volt',
     shortLabel: 'Volt',
-    title: '增长分析',
+    title: localized('增长分析', 'Growth analytics'),
     department: 'game',
     role: 'worker',
     emoji: '🐷',
@@ -134,14 +175,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 1.1, 0],
     scale: 0.27,
     animationType: 'noting',
-    idleText: '先别拍脑袋。\n让我看看数据。',
-    chatRole: '增长分析 worker，擅长留存、漏斗和验证设计，回答尽量量化。',
+    idleText: localized(
+      '先别拍脑袋。\n让我看看数据。',
+      'Let us not guess yet.\nShow me the numbers first.'
+    ),
+    chatRole: localized(
+      '增长分析 worker，擅长留存、漏斗和验证设计，回答尽量量化。',
+      'A growth analyst worker specializing in retention, funnels, and validation design. Quantify when possible.'
+    ),
   },
   {
     id: 'nexus',
     name: 'Nexus',
     shortLabel: 'Nexus',
-    title: 'AI 部经理',
+    title: localized('AI 部经理', 'AI manager'),
     department: 'ai',
     role: 'manager',
     emoji: '🦁',
@@ -150,14 +197,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI, 0],
     scale: 0.34,
     animationType: 'reading',
-    idleText: 'AI 部在线。\n先判断可行性，再定方案。',
-    chatRole: 'AI 部经理，擅长模型、数据、算法和产品落地的综合判断，回答理性直接。',
+    idleText: localized(
+      'AI 部在线。\n先判断可行性，再定方案。',
+      'AI team online.\nFirst we judge feasibility, then we choose the approach.'
+    ),
+    chatRole: localized(
+      'AI 部经理，擅长模型、数据、算法和产品落地的综合判断，回答理性直接。',
+      'An AI manager with strong judgment across models, data, algorithms, and productization. Rational and direct.'
+    ),
   },
   {
     id: 'flux',
     name: 'Flux',
     shortLabel: 'Flux',
-    title: '模型优化',
+    title: localized('模型优化', 'Model optimization'),
     department: 'ai',
     role: 'worker',
     emoji: '🦒',
@@ -166,14 +219,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 0.95, 0],
     scale: 0.29,
     animationType: 'typing',
-    idleText: '模型怎么训、怎么调，\n我来算最优解。',
-    chatRole: '模型优化 worker，擅长训练策略、推理表现和成本效果权衡。',
+    idleText: localized(
+      '模型怎么训、怎么调，\n我来算最优解。',
+      'Training, tuning, inference tradeoffs,\nI will map the best fit.'
+    ),
+    chatRole: localized(
+      '模型优化 worker，擅长训练策略、推理表现和成本效果权衡。',
+      'A model-optimization worker focused on training strategy, inference behavior, and cost-performance tradeoffs.'
+    ),
   },
   {
     id: 'tensor',
     name: 'Tensor',
     shortLabel: 'Tensor',
-    title: '数据工程',
+    title: localized('数据工程', 'Data engineering'),
     department: 'ai',
     role: 'worker',
     emoji: '🐘',
@@ -182,14 +241,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 1.08, 0],
     scale: 0.29,
     animationType: 'organizing',
-    idleText: '脏数据先别进来。\n我会把管道梳干净。',
-    chatRole: '数据工程 worker，擅长数据清洗、标注、特征工程和流程设计。',
+    idleText: localized(
+      '脏数据先别进来。\n我会把管道梳干净。',
+      'Messy data does not enter first.\nI will clean the pipeline.'
+    ),
+    chatRole: localized(
+      '数据工程 worker，擅长数据清洗、标注、特征工程和流程设计。',
+      'A data-engineering worker focused on data cleaning, labeling, feature work, and pipeline design.'
+    ),
   },
   {
     id: 'quark',
     name: 'Quark',
     shortLabel: 'Quark',
-    title: '算法研究',
+    title: localized('算法研究', 'Algorithm research'),
     department: 'ai',
     role: 'worker',
     emoji: '🦜',
@@ -198,14 +263,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI / 1.35, 0],
     scale: 0.27,
     animationType: 'discussing',
-    idleText: '方案对比这件事，\n得把边界讲清楚。',
-    chatRole: '算法研究 worker，擅长方法比较、适用边界和推理链路说明。',
+    idleText: localized(
+      '方案对比这件事，\n得把边界讲清楚。',
+      'Method comparisons only work\nwhen the boundaries are clear.'
+    ),
+    chatRole: localized(
+      '算法研究 worker，擅长方法比较、适用边界和推理链路说明。',
+      'An algorithm researcher focused on method comparison, applicability boundaries, and reasoning paths.'
+    ),
   },
   {
     id: 'iris',
     name: 'Iris',
     shortLabel: 'Iris',
-    title: '应用集成',
+    title: localized('应用集成', 'Applied integration'),
     department: 'ai',
     role: 'worker',
     emoji: '🐟',
@@ -214,14 +285,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 1.25, 0],
     scale: 0.26,
     animationType: 'noting',
-    idleText: '纸上方案不算数。\n我更关心怎么真正接进去。',
-    chatRole: 'AI 应用集成 worker，擅长接口接入、服务化部署和真实业务落地。',
+    idleText: localized(
+      '纸上方案不算数。\n我更关心怎么接进去。',
+      'A paper design is not enough.\nI care about how it plugs into the stack.'
+    ),
+    chatRole: localized(
+      'AI 应用集成 worker，擅长接口接入、服务化部署和真实业务落地。',
+      'An AI integration worker focused on API wiring, service deployment, and real business adoption.'
+    ),
   },
   {
     id: 'echo',
     name: 'Echo',
     shortLabel: 'Echo',
-    title: '生活部经理',
+    title: localized('生活部经理', 'Life manager'),
     department: 'life',
     role: 'manager',
     emoji: '🐥',
@@ -230,14 +307,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, -Math.PI / 6, 0],
     scale: 0.3,
     animationType: 'discussing',
-    idleText: '内容和用户感受，\n我来兜底。',
-    chatRole: '生活部经理，擅长内容表达、用户沟通和品牌温度，回答要自然有人味。',
+    idleText: localized(
+      '内容和用户感受，\n我来兜底。',
+      'Content and audience feeling,\nI will keep the tone intact.'
+    ),
+    chatRole: localized(
+      '生活部经理，擅长内容表达、用户沟通和品牌温度，回答要自然有人味。',
+      'A life-team manager focused on content voice, user communication, and brand warmth. Sound natural and human.'
+    ),
   },
   {
     id: 'zen',
     name: 'Zen',
     shortLabel: 'Zen',
-    title: '内容创作',
+    title: localized('内容创作', 'Content creation'),
     department: 'life',
     role: 'worker',
     emoji: '🐰',
@@ -246,14 +329,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, -Math.PI / 12, 0],
     scale: 0.24,
     animationType: 'reading',
-    idleText: '文案别空，\n也别硬卖。',
-    chatRole: '内容创作 worker，擅长文案、选题和品牌表达，回答轻盈但要有信息量。',
+    idleText: localized(
+      '文案别空，\n也别硬卖。',
+      'Copy should not feel empty,\nand it should not oversell.'
+    ),
+    chatRole: localized(
+      '内容创作 worker，擅长文案、选题和品牌表达，回答轻盈但要有信息量。',
+      'A content creator focused on copy, editorial framing, and brand voice. Light, but information-dense.'
+    ),
   },
   {
     id: 'coco',
     name: 'Coco',
     shortLabel: 'Coco',
-    title: '社区运营',
+    title: localized('社区运营', 'Community operations'),
     department: 'life',
     role: 'worker',
     emoji: '🐛',
@@ -262,14 +351,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI / 12, 0],
     scale: 0.24,
     animationType: 'noting',
-    idleText: '用户怎么想，\n得听他们自己说。',
-    chatRole: '社区运营 worker，擅长社群互动、反馈整理和长期关系维护。',
+    idleText: localized(
+      '用户怎么想，\n得听他们自己说。',
+      'If we want to know what users think,\nwe need to listen to them directly.'
+    ),
+    chatRole: localized(
+      '社区运营 worker，擅长社群互动、反馈整理和长期关系维护。',
+      'A community operations worker focused on interaction, feedback synthesis, and long-term relationship care.'
+    ),
   },
   {
     id: 'warden',
     name: 'Warden',
     shortLabel: 'Warden',
-    title: '元部门经理',
+    title: localized('元部门经理', 'Meta manager'),
     department: 'meta',
     role: 'manager',
     emoji: '🐗',
@@ -278,14 +373,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI + Math.PI / 6, 0],
     scale: 0.32,
     animationType: 'discussing',
-    idleText: '流程有没有跑顺，\n我会盯到底。',
-    chatRole: '元部门经理，负责流程审视、质量把关和跨角色复盘，回答要客观锋利。',
+    idleText: localized(
+      '流程有没有跑偏，\n我会盯到底。',
+      'If the process drifts off course,\nI will catch it.'
+    ),
+    chatRole: localized(
+      '元部门经理，负责流程审视、质量把关和跨角色复盘，回答要客观锐利。',
+      'A meta manager responsible for process review, quality control, and cross-role retrospectives. Objective and sharp.'
+    ),
   },
   {
     id: 'forge',
     name: 'Forge',
     shortLabel: 'Forge',
-    title: '流程分析',
+    title: localized('流程分析', 'Process analysis'),
     department: 'meta',
     role: 'worker',
     emoji: '🐮',
@@ -294,14 +395,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI + Math.PI / 8, 0],
     scale: 0.27,
     animationType: 'organizing',
-    idleText: '哪里卡住了，\n我会顺着流程往回找。',
-    chatRole: '流程分析 worker，擅长识别协作卡点、链路断点和可执行优化。',
+    idleText: localized(
+      '哪里卡住了，\n我会顺着流程往回找。',
+      'If something gets stuck,\nI trace it back through the workflow.'
+    ),
+    chatRole: localized(
+      '流程分析 worker，擅长识别协作卡点、链路断点和可执行优化。',
+      'A process analyst worker focused on collaboration bottlenecks, broken handoffs, and actionable optimizations.'
+    ),
   },
   {
     id: 'prism',
     name: 'Prism',
     shortLabel: 'Prism',
-    title: '质量审计',
+    title: localized('质量审计', 'Quality audit'),
     department: 'meta',
     role: 'worker',
     emoji: '🐛',
@@ -310,14 +417,20 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI + Math.PI / 18, 0],
     scale: 0.23,
     animationType: 'noting',
-    idleText: '哪句是套话，\n我很快就能挑出来。',
-    chatRole: '质量审计 worker，擅长识别空话、浅层回答和结构缺口，回答要挑问题挑得准。',
+    idleText: localized(
+      '哪句是套话，\n我很快就能挑出来。',
+      'If something is filler,\nI can spot it quickly.'
+    ),
+    chatRole: localized(
+      '质量审计 worker，擅长识别空话、浅层回答和结构缺口，提问要准。',
+      'A quality-audit worker who spots fluff, shallow answers, and structural gaps with precise questioning.'
+    ),
   },
   {
     id: 'scout',
     name: 'Scout',
     shortLabel: 'Scout',
-    title: '效能评估',
+    title: localized('效能评估', 'Performance evaluation'),
     department: 'meta',
     role: 'worker',
     emoji: '🐶',
@@ -326,14 +439,24 @@ export const AGENT_VISUAL_CONFIGS: AgentVisualConfig[] = [
     rotation: [0, Math.PI * 1.08, 0],
     scale: 0.24,
     animationType: 'reading',
-    idleText: '单次表现不够，\n我更看长期趋势。',
-    chatRole: '效能评估 worker，擅长趋势判断、薄弱项识别和持续改进建议。',
+    idleText: localized(
+      '单次表现不够，\n我更看长期趋势。',
+      'One run is not enough.\nI care more about the long-term pattern.'
+    ),
+    chatRole: localized(
+      '效能评估 worker，擅长趋势判断、薄弱项识别和持续改进建议。',
+      'A performance-evaluation worker focused on trends, weak-point detection, and continuous improvement suggestions.'
+    ),
   },
 ];
 
 export const AGENT_VISUAL_MAP = Object.fromEntries(
-  AGENT_VISUAL_CONFIGS.map((config) => [config.id, config])
+  AGENT_VISUAL_CONFIGS.map(config => [config.id, config])
 ) as Record<string, AgentVisualConfig>;
+
+function getLocalizedText(value: LocalizedText, locale: AppLocale) {
+  return value[locale] || value['zh-CN'];
+}
 
 export function getAgentConfig(agentId?: string | null): AgentVisualConfig {
   return AGENT_VISUAL_MAP[agentId || DEFAULT_AGENT_ID] || AGENT_VISUAL_MAP[DEFAULT_AGENT_ID];
@@ -347,11 +470,22 @@ export function getAgentEmoji(agentId?: string | null): string {
   return getAgentConfig(agentId).emoji;
 }
 
-export function getAgentChatRole(agentId?: string | null): string {
-  return getAgentConfig(agentId).chatRole;
+export function getAgentTitle(agentId: string | null | undefined, locale: AppLocale): string {
+  return getLocalizedText(getAgentConfig(agentId).title, locale);
 }
 
-export function getAgentToolbarLabel(agentId?: string | null): string {
+export function getAgentIdleText(agentId: string | null | undefined, locale: AppLocale): string {
+  return getLocalizedText(getAgentConfig(agentId).idleText, locale);
+}
+
+export function getAgentChatRole(agentId: string | null | undefined, locale: AppLocale): string {
+  return getLocalizedText(getAgentConfig(agentId).chatRole, locale);
+}
+
+export function getAgentToolbarLabel(
+  agentId: string | null | undefined,
+  locale: AppLocale
+): string {
   const config = getAgentConfig(agentId);
-  return `${config.emoji} ${config.name} · ${config.title}`;
+  return `${config.emoji} ${config.name} · ${getLocalizedText(config.title, locale)}`;
 }

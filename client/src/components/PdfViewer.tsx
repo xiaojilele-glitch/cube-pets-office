@@ -1,14 +1,15 @@
-/**
- * PDF Viewer Panel — Slide-in panel showing paper pages
- * Design: Warm paper-like background, smooth transitions
- */
+import { BookOpen, ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+
+import { useViewportTier } from '@/hooks/useViewportTier';
+import { useI18n } from '@/i18n';
+import { PDF_PAGES, PDF_TOTAL_PAGES } from '@/lib/assets';
 import { useAppStore } from '@/lib/store';
-import { PDF_PAGES, PDF_TITLE, PDF_AUTHOR, PDF_TOTAL_PAGES } from '@/lib/assets';
-import { ChevronLeft, ChevronRight, X, BookOpen, Maximize2, Minimize2 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
 
 export function PdfViewer() {
   const { currentPage, setCurrentPage, isPdfOpen, closePdf } = useAppStore();
+  const { copy } = useI18n();
+  const { isMobile, isTablet } = useViewportTier();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -19,116 +20,125 @@ export function PdfViewer() {
 
   if (!isPdfOpen) return null;
 
-  const panelWidth = isFullscreen ? 'w-full' : 'w-[520px]';
+  const isOverlayFullscreen = isMobile || isFullscreen;
+  const shellClass = isOverlayFullscreen
+    ? 'inset-0 rounded-none'
+    : isTablet
+      ? 'inset-y-4 right-4 left-auto w-[min(56vw,560px)] rounded-[28px]'
+      : 'inset-y-6 right-6 left-auto w-[min(42vw,560px)] rounded-[32px]';
 
   return (
     <div
-      className={`fixed top-0 right-0 h-full ${panelWidth} z-[55] flex flex-col
-        bg-[#FEFBF7]/98 backdrop-blur-2xl border-l border-[#E8DDD0]/60
-        shadow-[-12px_0_40px_rgba(0,0,0,0.1)]
-        animate-in slide-in-from-right duration-300`}
+      className={`fixed z-[72] flex border border-[#E8DDD0]/60 bg-[#FEFBF7]/98 shadow-[-12px_0_40px_rgba(0,0,0,0.1)] backdrop-blur-2xl animate-in slide-in-from-right duration-300 ${shellClass} flex-col`}
       style={{ pointerEvents: 'auto' }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#E8DDD0]/60 bg-gradient-to-r from-[#FFF8F0] to-[#FFF5EC]">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#C4956A] to-[#D4A57A] flex items-center justify-center shadow-sm">
-            <BookOpen className="w-4 h-4 text-white" />
+      <div className="flex items-center justify-between border-b border-[#E8DDD0]/60 bg-gradient-to-r from-[#FFF8F0] to-[#FFF5EC] px-4 py-3 sm:px-5 sm:py-3.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#C4956A] to-[#D4A57A] shadow-sm">
+            <BookOpen className="h-4 w-4 text-white" />
           </div>
           <div className="min-w-0">
             <h3
-              className="text-sm font-bold text-[#3A2A1A] truncate"
+              className="truncate text-sm font-bold text-[#3A2A1A]"
               style={{ fontFamily: "'Playfair Display', serif" }}
             >
-              {PDF_TITLE}
+              {copy.pdf.title}
             </h3>
-            <p className="text-[10px] text-[#8B7355] mt-0.5">{PDF_AUTHOR}</p>
+            <p className="mt-0.5 truncate text-[10px] text-[#8B7355]">
+              {copy.pdf.subtitle} · {copy.pdf.author}
+            </p>
           </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-xl hover:bg-[#F0E8E0] transition-colors"
-          >
-            {isFullscreen
-              ? <Minimize2 className="w-4 h-4 text-[#8B7355]" />
-              : <Maximize2 className="w-4 h-4 text-[#8B7355]" />}
-          </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {!isMobile && (
+            <button
+              onClick={() => setIsFullscreen(prev => !prev)}
+              className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+              title={isFullscreen ? copy.pdf.exitFullscreen : copy.pdf.fullscreen}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="h-4 w-4 text-[#8B7355]" />
+              ) : (
+                <Maximize2 className="h-4 w-4 text-[#8B7355]" />
+              )}
+            </button>
+          )}
           <button
             onClick={closePdf}
-            className="p-2 rounded-xl hover:bg-[#F0E8E0] transition-colors"
+            className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+            title={copy.common.close}
           >
-            <X className="w-4 h-4 text-[#8B7355]" />
+            <X className="h-4 w-4 text-[#8B7355]" />
           </button>
         </div>
       </div>
 
-      {/* Page content */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-5">
-        <div className="relative bg-white rounded-xl shadow-[0_2px_20px_rgba(0,0,0,0.06)] overflow-hidden border border-[#F0E8E0]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
+        <div className="relative overflow-hidden rounded-xl border border-[#F0E8E0] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
           {!imageLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#FEFBF7]" style={{ minHeight: 600 }}>
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-[#FEFBF7]"
+              style={{ minHeight: isMobile ? 360 : 600 }}
+            >
               <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-2 border-[#C4956A] border-t-transparent rounded-full animate-spin" />
-                <span className="text-xs text-[#8B7355]">加载第 {currentPage} 页...</span>
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C4956A] border-t-transparent" />
+                <span className="text-xs text-[#8B7355]">
+                  {copy.pdf.loadingPage(currentPage)}
+                </span>
               </div>
             </div>
           )}
           <img
             src={PDF_PAGES[currentPage - 1]}
-            alt={`Page ${currentPage}`}
-            className={`w-full h-auto transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            alt={`${copy.pdf.page} ${currentPage}`}
+            className={`h-auto w-full transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             onLoad={() => setImageLoaded(true)}
           />
         </div>
       </div>
 
-      {/* Footer navigation */}
-      <div className="flex items-center justify-between px-5 py-3 border-t border-[#E8DDD0]/60 bg-gradient-to-r from-[#FFF8F0] to-[#FFF5EC]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E8DDD0]/60 bg-gradient-to-r from-[#FFF8F0] to-[#FFF5EC] px-4 py-3 sm:px-5">
         <button
-          onClick={() => { setCurrentPage(currentPage - 1); scrollRef.current?.scrollTo(0, 0); }}
+          onClick={() => {
+            setCurrentPage(currentPage - 1);
+            scrollRef.current?.scrollTo(0, 0);
+          }}
           disabled={currentPage <= 1}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-            bg-gradient-to-r from-[#C4956A] to-[#D4A57A] text-white
-            hover:from-[#B08060] hover:to-[#C09570]
-            disabled:opacity-30 disabled:cursor-not-allowed
-            transition-all duration-200 active:scale-95 shadow-sm"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#C4956A] to-[#D4A57A] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          <ChevronLeft className="w-4 h-4" />
-          上一页
+          <ChevronLeft className="h-4 w-4" />
+          {copy.pdf.previous}
         </button>
 
         <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-[#8B7355]">{copy.pdf.page}</label>
           <input
             type="number"
             min={1}
             max={PDF_TOTAL_PAGES}
             value={currentPage}
-            onChange={(e) => {
-              const v = parseInt(e.target.value);
-              if (v >= 1 && v <= PDF_TOTAL_PAGES) {
-                setCurrentPage(v);
+            onChange={event => {
+              const page = Number(event.target.value);
+              if (page >= 1 && page <= PDF_TOTAL_PAGES) {
+                setCurrentPage(page);
                 scrollRef.current?.scrollTo(0, 0);
               }
             }}
-            className="w-14 text-center text-sm font-semibold border border-[#E8DDD0] rounded-xl py-1.5 bg-white text-[#3A2A1A]
-              focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30 focus:border-[#C4956A]
-              transition-all"
+            className="w-16 rounded-xl border border-[#E8DDD0] bg-white py-1.5 text-center text-sm font-semibold text-[#3A2A1A] transition-all focus:border-[#C4956A] focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30"
           />
-          <span className="text-sm text-[#8B7355] font-medium">/ {PDF_TOTAL_PAGES}</span>
+          <span className="text-sm font-medium text-[#8B7355]">/ {PDF_TOTAL_PAGES}</span>
         </div>
 
         <button
-          onClick={() => { setCurrentPage(currentPage + 1); scrollRef.current?.scrollTo(0, 0); }}
+          onClick={() => {
+            setCurrentPage(currentPage + 1);
+            scrollRef.current?.scrollTo(0, 0);
+          }}
           disabled={currentPage >= PDF_TOTAL_PAGES}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold
-            bg-gradient-to-r from-[#C4956A] to-[#D4A57A] text-white
-            hover:from-[#B08060] hover:to-[#C09570]
-            disabled:opacity-30 disabled:cursor-not-allowed
-            transition-all duration-200 active:scale-95 shadow-sm"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#C4956A] to-[#D4A57A] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all duration-200 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          下一页
-          <ChevronRight className="w-4 h-4" />
+          {copy.pdf.next}
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
     </div>

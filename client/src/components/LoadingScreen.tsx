@@ -1,63 +1,51 @@
-/**
- * Loading Screen — Shown while 3D scene loads
- * Design: Warm minimalist with cute pet animation
- */
+import { useI18n } from '@/i18n';
 import { useAppStore } from '@/lib/store';
 
 export function LoadingScreen() {
-  const loadingProgress = useAppStore((s) => s.loadingProgress);
+  const loadingProgress = useAppStore(state => state.loadingProgress);
+  const { copy } = useI18n();
 
   return (
-    <div className="fixed inset-0 z-[100] bg-gradient-to-br from-[#FFF8F0] via-[#FFF5EC] to-[#F0E8E0] flex flex-col items-center justify-center">
-      {/* Animated pet silhouette */}
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-gradient-to-br from-[#FFF8F0] via-[#FFF5EC] to-[#F0E8E0] px-6 text-center">
       <div className="relative mb-8">
         <div
-          className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#D4A57A] to-[#C4956A] shadow-lg relative"
-          style={{
-            animation: 'petBounce 1.2s ease-in-out infinite',
-          }}
+          className="relative h-20 w-20 rounded-3xl bg-gradient-to-br from-[#D4A57A] to-[#C4956A] shadow-lg"
+          style={{ animation: 'petBounce 1.2s ease-in-out infinite' }}
         >
-          {/* Eyes */}
-          <div className="absolute top-6 left-4 w-2.5 h-3 bg-white rounded-full" />
-          <div className="absolute top-6 right-4 w-2.5 h-3 bg-white rounded-full" />
-          {/* Pupils */}
+          <div className="absolute left-4 top-6 h-3 w-2.5 rounded-full bg-white" />
+          <div className="absolute right-4 top-6 h-3 w-2.5 rounded-full bg-white" />
           <div
-            className="absolute top-7 left-5 w-1.5 h-1.5 bg-[#3A2A1A] rounded-full"
+            className="absolute left-5 top-7 h-1.5 w-1.5 rounded-full bg-[#3A2A1A]"
             style={{ animation: 'lookAround 3s ease-in-out infinite' }}
           />
           <div
-            className="absolute top-7 right-5 w-1.5 h-1.5 bg-[#3A2A1A] rounded-full"
+            className="absolute right-5 top-7 h-1.5 w-1.5 rounded-full bg-[#3A2A1A]"
             style={{ animation: 'lookAround 3s ease-in-out infinite' }}
           />
-          {/* Mouth */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-3 h-1.5 border-b-2 border-[#3A2A1A] rounded-b-full" />
-          {/* Ears */}
-          <div className="absolute -top-2.5 left-2 w-4 h-4 bg-[#D4A57A] rounded-tl-xl rounded-tr-sm rotate-[-15deg]" />
-          <div className="absolute -top-2.5 right-2 w-4 h-4 bg-[#D4A57A] rounded-tl-sm rounded-tr-xl rotate-[15deg]" />
+          <div className="absolute bottom-4 left-1/2 h-1.5 w-3 -translate-x-1/2 rounded-b-full border-b-2 border-[#3A2A1A]" />
+          <div className="absolute -top-2.5 left-2 h-4 w-4 rotate-[-15deg] rounded-tl-xl rounded-tr-sm bg-[#D4A57A]" />
+          <div className="absolute -top-2.5 right-2 h-4 w-4 rotate-[15deg] rounded-tl-sm rounded-tr-xl bg-[#D4A57A]" />
         </div>
 
-        {/* Shadow */}
         <div
-          className="w-16 h-3 mx-auto mt-2 bg-[#D4B896]/30 rounded-full"
+          className="mx-auto mt-2 h-3 w-16 rounded-full bg-[#D4B896]/30"
           style={{ animation: 'shadowPulse 1.2s ease-in-out infinite' }}
         />
       </div>
 
-      {/* Title */}
       <h2
-        className="text-xl font-bold text-[#3A2A1A] mb-2"
+        className="mb-2 text-xl font-bold text-[#3A2A1A]"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
-        正在布置书房...
+        {copy.loading.title}
       </h2>
-      <p className="text-sm text-[#8B7355] mb-6">
-        小宠物们正在搬家具 {Math.round(loadingProgress)}%
+      <p className="mb-6 text-sm text-[#8B7355]">
+        {copy.loading.description(Math.round(loadingProgress))}
       </p>
 
-      {/* Progress bar */}
-      <div className="w-56 h-2 bg-[#E8DDD0] rounded-full overflow-hidden">
+      <div className="h-2 w-56 overflow-hidden rounded-full bg-[#E8DDD0]">
         <div
-          className="h-full bg-gradient-to-r from-[#C4956A] to-[#D4845A] rounded-full transition-all duration-300 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-[#C4956A] to-[#D4845A] transition-all duration-300 ease-out"
           style={{ width: `${loadingProgress}%` }}
         />
       </div>
