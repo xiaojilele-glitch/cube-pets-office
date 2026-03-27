@@ -20,6 +20,7 @@ async function stopWindowsProjectProcesses() {
     `  if ($commandLine -match 'scripts[\\\\/]dev-all\\.mjs') { return $true }`,
     `  if ($commandLine -match '--import\\s+tsx/esm\\s+server/index\\.ts') { return $true }`,
     `  if ($commandLine -match '--watch-path=server\\s+--watch-path=shared\\s+--import\\s+tsx/esm\\s+server/index\\.ts') { return $true }`,
+    `  if ($commandLine -match 'tsx(?:\\.cmd)?\"?\\s+watch.*server/index\\.ts') { return $true }`,
     `  if ($commandLine -match 'npm(?:\\.cmd)?\"?\\s+run\\s+dev(?::server|:all)?') { return $true }`,
     `  return $false`,
     `}`,

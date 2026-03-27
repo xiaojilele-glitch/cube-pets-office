@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "dev:frontend": "vite --host",
-    "dev:server": "node --watch --watch-path=server --watch-path=shared --import tsx/esm server/index.ts",
+    "dev:server": "tsx watch --include server/**/* --include shared/**/* --exclude data/**/* --exclude client/**/* --exclude dist/**/* --exclude .git/**/* --exclude .manus-logs/**/* server/index.ts",
     "dev:all": "node scripts/dev-all.mjs",
     "dev:advanced": "node scripts/dev-all.mjs",
     "dev:stop": "node scripts/dev-stop.mjs",
