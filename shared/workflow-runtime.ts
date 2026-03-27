@@ -27,7 +27,7 @@ export const WORKFLOW_STAGE_LABELS: Record<WorkflowStage, string> = {
 };
 
 export type AgentRole = "ceo" | "manager" | "worker";
-export type AgentDepartment = "game" | "ai" | "life" | "meta";
+export type AgentDepartment = string;
 
 export type WorkflowStatus =
   | "pending"
@@ -180,6 +180,8 @@ export interface FinalWorkflowReportRecord {
   workflowId: string;
   generatedAt: string;
   workflow: {
+    rootAgentId: string;
+    rootAgentName: string;
     directive: string;
     status: string;
     currentStage: string | null;
@@ -267,6 +269,7 @@ export interface AgentDirectory {
   getManagerByDepartment(dept: string): AgentHandle | undefined;
   getWorkersByManager(managerId: string): AgentHandle[];
   refresh(agentId: string): void;
+  refreshAll?(): void;
 }
 
 export interface WorkflowRepository {

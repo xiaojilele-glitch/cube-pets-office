@@ -325,6 +325,11 @@ class SessionStore {
   materializeWorkflowMemories(workflowId: string): void {
     const workflow = db.getWorkflow(workflowId);
     if (!workflow) return;
+    const rootAgentId =
+      workflow.results?.organization?.rootAgentId &&
+      typeof workflow.results.organization.rootAgentId === 'string'
+        ? workflow.results.organization.rootAgentId
+        : null;
 
     const messages = db.getMessagesByWorkflow(workflowId);
     const tasks = db.getTasksByWorkflow(workflowId);
@@ -332,7 +337,7 @@ class SessionStore {
       [
         ...messages.flatMap((message) => [message.from_agent, message.to_agent]),
         ...tasks.flatMap((task) => [task.worker_id, task.manager_id]),
-        'ceo',
+        rootAgentId,
       ].filter(Boolean)
     );
 

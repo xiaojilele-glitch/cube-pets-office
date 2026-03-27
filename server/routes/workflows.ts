@@ -4,8 +4,11 @@
 import { Router } from "express";
 import path from "path";
 import db from "../db/index.js";
+import { getAIConfig } from "../core/ai-config.js";
+import { generateWorkflowOrganization } from "../core/dynamic-organization.js";
 import { workflowEngine } from "../core/workflow-engine.js";
 import { reportStore } from "../memory/report-store.js";
+import { serverRuntime } from "../runtime/server-runtime.js";
 
 const router = Router();
 const ACTIVE_WORKFLOW_STATUSES = ["pending", "running"] as const;
@@ -16,6 +19,30 @@ function normalizeDirective(directive: string): string {
 }
 
 // POST /api/workflows — Start a new workflow
+router.post("/organization/preview", async (req, res) => {
+  const { directive } = req.body;
+  if (!directive || typeof directive !== "string") {
+    return res.status(400).json({ error: "directive is required" });
+  }
+
+  const normalizedDirective = normalizeDirective(directive);
+  if (!normalizedDirective) {
+    return res.status(400).json({ error: "directive is required" });
+  }
+
+  try {
+    const { organization, debug } = await generateWorkflowOrganization({
+      workflowId: `preview_${Date.now()}`,
+      directive: normalizedDirective,
+      llmProvider: serverRuntime.llmProvider,
+      model: getAIConfig().model,
+    });
+    res.json({ organization, debug });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post("/", async (req, res) => {
   const { directive } = req.body;
   if (!directive || typeof directive !== "string") {

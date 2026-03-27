@@ -18,7 +18,7 @@ const DB_FILE = path.join(DATA_DIR, "database.json");
 export interface AgentRow {
   id: string;
   name: string;
-  department: "game" | "ai" | "life" | "meta";
+  department: string;
   role: "ceo" | "manager" | "worker";
   manager_id: string | null;
   model: string;
@@ -64,7 +64,7 @@ export interface TaskRow {
   workflow_id: string;
   worker_id: string;
   manager_id: string;
-  department: "game" | "ai" | "life" | "meta";
+  department: string;
   description: string;
   deliverable: string | null;
   deliverable_v2: string | null;
@@ -297,7 +297,7 @@ class Database {
       this.data.agents.push({
         id: agent.id,
         name: agent.name || agent.id,
-        department: agent.department || "meta",
+        department: agent.department || "general",
         role: agent.role || "worker",
         manager_id: agent.manager_id ?? null,
         model: agent.model || "gpt-4o-mini",

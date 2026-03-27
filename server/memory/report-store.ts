@@ -42,6 +42,8 @@ export interface FinalWorkflowReport {
   workflowId: string;
   generatedAt: string;
   workflow: {
+    rootAgentId: string;
+    rootAgentName: string;
     directive: string;
     status: string;
     currentStage: string | null;
@@ -200,6 +202,7 @@ function renderFinalWorkflowMarkdown(report: FinalWorkflowReport): string {
 
 - Workflow ID: ${report.workflowId}
 - Generated At: ${report.generatedAt}
+- Root Agent: ${report.workflow.rootAgentName} (${report.workflow.rootAgentId})
 - Status: ${report.workflow.status}
 - Current Stage: ${report.workflow.currentStage || 'completed'}
 - Started At: ${report.workflow.startedAt || 'N/A'}
@@ -338,7 +341,7 @@ class ReportStore {
   }
 
   saveFinalWorkflowReport(report: FinalWorkflowReport): SavedReportPaths {
-    const { reportsDir } = ensureAgentWorkspace('ceo');
+    const { reportsDir } = ensureAgentWorkspace(report.workflow.rootAgentId);
     const basename = `${report.workflowId}__final-report`;
     const jsonPath = path.join(reportsDir, `${basename}.json`);
     const markdownPath = path.join(reportsDir, `${basename}.md`);
@@ -368,8 +371,10 @@ class ReportStore {
   }
 
   readFinalWorkflowReport(workflowId: string): FinalWorkflowReport | null {
-    const { reportsDir } = ensureAgentWorkspace('ceo');
-    const jsonPath = path.join(reportsDir, `${workflowId}__final-report.json`);
+    const workflow = db.getWorkflow(workflowId);
+    const relativePath = workflow?.results?.final_report?.json_path;
+    if (!relativePath || typeof relativePath !== 'string') return null;
+    const jsonPath = path.resolve(process.cwd(), relativePath);
     if (!fs.existsSync(jsonPath)) return null;
 
     try {
@@ -429,9 +434,13 @@ class ReportStore {
   }
 
   getFinalWorkflowReportFilePath(workflowId: string, format: ReportFormat): string | null {
-    const { reportsDir } = ensureAgentWorkspace('ceo');
-    const filename = `${workflowId}__final-report.${format}`;
-    const filePath = path.join(reportsDir, filename);
+    const workflow = db.getWorkflow(workflowId);
+    const relativePath =
+      format === 'json'
+        ? workflow?.results?.final_report?.json_path
+        : workflow?.results?.final_report?.markdown_path;
+    if (!relativePath || typeof relativePath !== 'string') return null;
+    const filePath = path.resolve(process.cwd(), relativePath);
     return fs.existsSync(filePath) ? filePath : null;
   }
 

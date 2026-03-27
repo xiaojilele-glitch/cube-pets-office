@@ -1,3 +1,9 @@
+import type {
+  OrganizationGenerationDebugLog,
+  WorkflowOrganizationNode,
+  WorkflowOrganizationSnapshot,
+} from "@shared/organization-schema";
+
 export interface AgentInfo {
   id: string;
   name: string;
@@ -37,6 +43,12 @@ export interface WorkflowInfo {
   results: any;
   created_at: string;
 }
+
+export type {
+  OrganizationGenerationDebugLog,
+  WorkflowOrganizationNode,
+  WorkflowOrganizationSnapshot,
+};
 
 export interface TaskInfo {
   id: number;

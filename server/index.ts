@@ -38,9 +38,6 @@ async function startServer() {
   const { initSocketIO } = await import("./core/socket.js");
   initSocketIO(server);
 
-  // Seed database
-  const { seedAgents } = await import("./db/seed.js");
-  seedAgents();
   await initializeAgentRuntime();
 
   const db = (await import("./db/index.js")).default;

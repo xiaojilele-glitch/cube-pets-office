@@ -1319,6 +1319,8 @@ Cover:
       workflowId,
       generatedAt: new Date().toISOString(),
       workflow: {
+        rootAgentId: "ceo",
+        rootAgentName: "CEO Gateway",
         directive: workflow.directive,
         status: workflow.status,
         currentStage: workflow.current_stage,

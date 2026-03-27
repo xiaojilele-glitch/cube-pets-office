@@ -1,16 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getAgents = vi.fn();
+const getAgent = vi.fn();
 
 vi.mock('../db/index.js', () => ({
   default: {
     getAgents,
+    getAgent,
   },
 }));
 
 describe('phase1 registry validation', () => {
   beforeEach(() => {
     getAgents.mockReset();
+    getAgent.mockReset();
     vi.resetModules();
   });
 
@@ -44,6 +47,9 @@ describe('phase1 registry validation', () => {
         soul_md: '',
       },
     ]);
+    getAgent.mockImplementation((id: string) =>
+      getAgents.mock.results[0]?.value.find((agent: any) => agent.id === id)
+    );
 
     const { registry } = await import('../core/registry.js');
     registry.init();

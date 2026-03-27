@@ -34,6 +34,8 @@ import type {
   StageInfo,
   TaskInfo,
   WorkflowInfo,
+  WorkflowOrganizationNode,
+  WorkflowOrganizationSnapshot,
 } from "./runtime/types";
 
 export type {
@@ -46,6 +48,8 @@ export type {
   StageInfo,
   TaskInfo,
   WorkflowInfo,
+  WorkflowOrganizationNode,
+  WorkflowOrganizationSnapshot,
 };
 
 export type PanelView =
