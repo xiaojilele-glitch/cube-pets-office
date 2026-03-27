@@ -5,6 +5,49 @@ import * as THREE from 'three';
 import { useI18n } from '@/i18n';
 import { FURNITURE_MODELS } from '@/lib/assets';
 import { useAppStore } from '@/lib/store';
+import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
+import { useWorkflowStore } from '@/lib/workflow-store';
+
+type SceneDepartmentInfo = {
+  id: string;
+  title: string;
+  subtitle: string;
+  zoneLabel: string;
+  color: string;
+};
+
+const SCENE_DEPARTMENT_COLORS = ['#D97706', '#2563EB', '#059669', '#7C3AED'];
+
+function getPodLabel(index: number, locale: 'zh-CN' | 'en-US') {
+  const suffix = String.fromCharCode(65 + index);
+  return locale === 'zh-CN' ? `临时战区 ${suffix}` : `Pod ${suffix}`;
+}
+
+function getScenePodTitle(index: number, locale: 'zh-CN' | 'en-US') {
+  const suffix = String.fromCharCode(65 + index);
+  return locale === 'zh-CN' ? `战区 ${suffix}` : `Pod ${suffix}`;
+}
+
+function getFallbackPodSubtitle(index: number, locale: 'zh-CN' | 'en-US') {
+  const zhSubtitles = ['策略集结单元', '能力装配单元', '协作推进单元', '复核汇总单元'];
+  const enSubtitles = ['Strategy Rally Cell', 'Capability Assembly Cell', 'Execution Push Cell', 'Review Wrap-up Cell'];
+  return locale === 'zh-CN' ? zhSubtitles[index] || '动态编组' : enSubtitles[index] || 'Dynamic Team';
+}
+
+function getWorkflowOrganization(
+  workflow: ReturnType<typeof useWorkflowStore.getState>['currentWorkflow']
+): WorkflowOrganizationSnapshot | null {
+  const organization = workflow?.results?.organization;
+  if (!organization || typeof organization !== 'object') return null;
+  return Array.isArray((organization as WorkflowOrganizationSnapshot).nodes)
+    ? (organization as WorkflowOrganizationSnapshot)
+    : null;
+}
+
+function toShortLabel(value: string, fallback: string) {
+  const text = (value || fallback).trim();
+  return text.length > 12 ? `${text.slice(0, 12)}…` : text;
+}
 
 function FurnitureModel({
   url,
@@ -119,16 +162,16 @@ function Floor() {
 function Walls() {
   return (
     <group>
-      <mesh position={[0, 1.7, -4.9]} receiveShadow>
-        <boxGeometry args={[15.5, 3.4, 0.18]} />
+      <mesh position={[0, 1.5, -4.9]} receiveShadow>
+        <boxGeometry args={[15.42, 3, 0.18]} />
         <meshStandardMaterial color="#D8C8B7" roughness={0.98} />
       </mesh>
-      <mesh position={[-7.8, 1.7, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[10, 3.4, 0.18]} />
+      <mesh position={[-7.8, 1.5, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[9.98, 3, 0.18]} />
         <meshStandardMaterial color="#D2C2B2" roughness={0.98} />
       </mesh>
-      <mesh position={[7.8, 1.7, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[10, 3.4, 0.18]} />
+      <mesh position={[7.8, 1.5, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[9.98, 3, 0.18]} />
         <meshStandardMaterial color="#D2C2B2" roughness={0.98} />
       </mesh>
 
@@ -166,30 +209,28 @@ function Walls() {
 
 function WindowStrip() {
   return (
-    <group position={[-7.65, 1.8, -1.2]}>
+    <group position={[-7.65, 1.68, -1.2]}>
       {[-2.6, 0, 2.6].map((offset) => (
         <group key={offset} position={[0, 0, offset]}>
-          <FurnitureModel
-            url={FURNITURE_MODELS.wallWindowSlide}
-            position={[-0.12, -1.6, 0]}
-            rotation={[0, Math.PI / 2, 0]}
-            scale={1.05}
-          />
           <mesh rotation={[0, Math.PI / 2, 0]}>
             <boxGeometry args={[2.1, 1.55, 0.08]} />
             <meshStandardMaterial color="#D9CDBC" roughness={0.7} />
           </mesh>
+          <mesh rotation={[0, Math.PI / 2, 0]} position={[-0.05, 0, 0]}>
+            <boxGeometry args={[2.02, 1.46, 0.03]} />
+            <meshStandardMaterial color="#EEE2D2" roughness={0.78} />
+          </mesh>
           <mesh rotation={[0, Math.PI / 2, 0]} position={[-0.08, 0, 0]}>
             <planeGeometry args={[1.9, 1.36]} />
-            <meshBasicMaterial color="#F6EFE2" transparent opacity={0.52} />
+            <meshBasicMaterial color="#F4F9FF" transparent opacity={0.24} />
           </mesh>
           <mesh rotation={[0, Math.PI / 2, 0]} position={[0.02, 0, 0]}>
             <planeGeometry args={[1.86, 1.32]} />
             <meshStandardMaterial
-              color="#BFD5DF"
+              color="#B6DBF8"
               transparent
-              opacity={0.18}
-              roughness={0.25}
+              opacity={0.12}
+              roughness={0.18}
               metalness={0.02}
             />
           </mesh>
@@ -227,23 +268,23 @@ function ArchitecturalAccents() {
 
       <FurnitureModel
         url={FURNITURE_MODELS.lampWall}
-        position={[-1.9, 1.25, -4.72]}
+        position={[-1.9, 1.08, -4.72]}
         scale={1.05}
       />
       <FurnitureModel
         url={FURNITURE_MODELS.lampWall}
-        position={[1.9, 1.25, -4.72]}
+        position={[1.9, 1.08, -4.72]}
         scale={1.05}
       />
-      <pointLight position={[-1.9, 1.38, -4.4]} intensity={0.22} color="#FFDDB0" distance={3.2} decay={2} />
-      <pointLight position={[1.9, 1.38, -4.4]} intensity={0.22} color="#FFDDB0" distance={3.2} decay={2} />
+      <pointLight position={[-1.9, 1.22, -4.4]} intensity={0.22} color="#FFDDB0" distance={3.2} decay={2} />
+      <pointLight position={[1.9, 1.22, -4.4]} intensity={0.22} color="#FFDDB0" distance={3.2} decay={2} />
     </group>
   );
 }
 
 function CorkBoard() {
   return (
-    <group position={[0, 2.35, -4.72]}>
+    <group position={[0, 2.02, -4.72]}>
       <mesh>
         <boxGeometry args={[3.4, 1.45, 0.06]} />
         <meshStandardMaterial color="#C4956A" roughness={0.95} />
@@ -271,13 +312,13 @@ function WallBrandPlaque() {
   const { copy } = useI18n();
 
   return (
-    <group position={[0, 3.44, -4.72]}>
-      <Html center transform position={[0, 0, 0.02]} distanceFactor={6.2} style={{ pointerEvents: 'none' }}>
+    <group position={[0, 3.42, -4.2]}>
+      <Html center transform position={[0, 0, 0]} distanceFactor={8.4} style={{ pointerEvents: 'none' }}>
         <div
-          className="whitespace-nowrap text-center text-[28px] font-bold leading-none tracking-[-0.03em] text-[#4A3524]"
+          className="whitespace-nowrap text-center text-[26px] font-bold leading-none tracking-[-0.03em] text-[#8B765F]"
           style={{
             fontFamily: "'Playfair Display', serif",
-            textShadow: '0 2px 6px rgba(255,244,228,0.18)',
+            textShadow: '0 3px 14px rgba(255,248,238,0.38)',
           }}
         >
           {copy.scene.brand}
@@ -290,11 +331,9 @@ function WallBrandPlaque() {
 function ZoneBase({
   position,
   color,
-  title,
 }: {
   position: [number, number, number];
   color: string;
-  title: string;
 }) {
   return (
     <group position={position}>
@@ -302,11 +341,14 @@ function ZoneBase({
         <planeGeometry args={[4.2, 3.3]} />
         <meshStandardMaterial color={color} transparent opacity={0.13} />
       </mesh>
-      <Html center position={[0, 0.1, -1.75]} distanceFactor={12} style={{ pointerEvents: 'none' }}>
-        <div className="rounded-full bg-white/88 px-3 py-1 text-[10px] font-semibold text-[#5A4A3A] shadow-sm">
-          {title}
-        </div>
-      </Html>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -1.46]}>
+        <planeGeometry args={[1.48, 0.1]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.12} transparent opacity={0.28} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.021, -1.46]}>
+        <planeGeometry args={[0.92, 0.04]} />
+        <meshStandardMaterial color="#FFF8ED" transparent opacity={0.42} />
+      </mesh>
     </group>
   );
 }
@@ -353,200 +395,152 @@ function ZoneBanner({
       )}
 
       <mesh>
-        <boxGeometry args={[1.55, 0.9, panelDepth]} />
+        <boxGeometry args={[1.74, 0.84, panelDepth]} />
         <meshStandardMaterial color="#F4E9DB" roughness={0.92} />
       </mesh>
-      <mesh position={[0, 0.3, panelDepth / 2 + accentDepth / 2]}>
-        <boxGeometry args={[1.55, 0.16, accentDepth]} />
+      <mesh position={[0, 0.28, panelDepth / 2 + accentDepth / 2]}>
+        <boxGeometry args={[1.74, 0.14, accentDepth]} />
         <meshStandardMaterial color={color} roughness={0.65} />
       </mesh>
-      <mesh position={[-0.56, 0.3, panelDepth / 2 + badgeDepth / 2 + 0.002]}>
+      <mesh position={[-0.64, 0.28, panelDepth / 2 + badgeDepth / 2 + 0.002]}>
         <cylinderGeometry args={[0.045, 0.045, badgeDepth, 20]} />
         <meshStandardMaterial color="#FFF7EA" emissive={color} emissiveIntensity={0.26} />
       </mesh>
-      <Html center transform position={[0, -0.02, htmlZ]} distanceFactor={8} style={{ pointerEvents: 'none' }}>
-        <div className="w-[120px] rounded-xl bg-white/85 px-3 py-2 text-center shadow-md backdrop-blur-sm">
-          <div className="text-[11px] font-bold tracking-[0.22em] text-[#3F3124]">{title}</div>
-          <div className="mt-1 text-[9px] uppercase tracking-[0.16em] text-[#8F7A66]">{subtitle}</div>
+      <Html center position={[0, -0.02, htmlZ + 0.01]} distanceFactor={13} style={{ pointerEvents: 'none' }}>
+        <div className="w-[152px] rounded-2xl border border-white/70 bg-white/92 px-3 py-2 text-center shadow-[0_10px_24px_rgba(74,54,34,0.16)] backdrop-blur-md">
+          <div className="whitespace-nowrap text-[12px] font-bold tracking-[0.08em] text-[#3F3124]">{title}</div>
+          <div className="mt-1 truncate text-[9px] font-medium tracking-[0.04em] text-[#8F7A66]">{subtitle}</div>
         </div>
       </Html>
     </group>
   );
 }
 
-function GameDepartmentDecor() {
-  const { copy } = useI18n();
+const POD_SLOTS = [
+  {
+    bannerPosition: [-6.92, 1.76, -1.75] as [number, number, number],
+    bannerRotation: [0, Math.PI / 2, 0] as [number, number, number],
+    floorPosition: [-3.45, 0.03, -1.78] as [number, number, number],
+    decorPosition: [-5.15, 0, -1.95] as [number, number, number],
+    glassPosition: [-4.52, 1.02, -1.02] as [number, number, number],
+    storagePosition: [-4.92, 0, -2.9] as [number, number, number],
+    storageRotation: [0, 0, 0] as [number, number, number],
+  },
+  {
+    bannerPosition: [6.92, 1.76, -1.7] as [number, number, number],
+    bannerRotation: [0, -Math.PI / 2, 0] as [number, number, number],
+    floorPosition: [3.35, 0.03, -1.72] as [number, number, number],
+    decorPosition: [5.3, 0, -1.8] as [number, number, number],
+    glassPosition: [4.9, 1.06, -0.98] as [number, number, number],
+    storagePosition: [5.92, 0, -2.78] as [number, number, number],
+    storageRotation: [0, 0, 0] as [number, number, number],
+  },
+  {
+    bannerPosition: [-6.92, 1.76, 2.65] as [number, number, number],
+    bannerRotation: [0, Math.PI / 2, 0] as [number, number, number],
+    floorPosition: [-3.08, 0.03, 2.45] as [number, number, number],
+    decorPosition: [-5.08, 0, 2.68] as [number, number, number],
+    glassPosition: [-4.48, 1.02, 2.96] as [number, number, number],
+    storagePosition: [-4.92, 0, 3.02] as [number, number, number],
+    storageRotation: [0, 0, 0] as [number, number, number],
+  },
+  {
+    bannerPosition: [6.92, 1.76, 2.55] as [number, number, number],
+    bannerRotation: [0, -Math.PI / 2, 0] as [number, number, number],
+    floorPosition: [3.25, 0.03, 2.45] as [number, number, number],
+    decorPosition: [5.25, 0, 2.58] as [number, number, number],
+    glassPosition: [4.86, 1.04, 2.04] as [number, number, number],
+    storagePosition: [5.94, 0, 1.55] as [number, number, number],
+    storageRotation: [0, -Math.PI / 2, 0] as [number, number, number],
+  },
+];
+
+function PodDecor({
+  slotIndex,
+  title,
+  subtitle,
+  color,
+}: SceneDepartmentInfo & { slotIndex: number }) {
+  const slot = POD_SLOTS[slotIndex];
+  if (!slot) return null;
+
+  const ringRadius = 1.04 + slotIndex * 0.05;
+  const cardColors = ['#F7E7D2', '#E8F1FA', '#E6F3EA', '#EEE4F8'];
 
   return (
     <group>
       <ZoneBanner
-        position={[-7.6, 1.93, -1.75]}
-        rotation={[0, Math.PI / 2, 0]}
-        color="#D97706"
-        title={copy.scene.banners.game.title}
-        subtitle={copy.scene.banners.game.subtitle}
+        position={slot.bannerPosition}
+        rotation={slot.bannerRotation}
+        color={color}
+        title={title}
+        subtitle={subtitle}
         wallMounted
       />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.45, 0.03, -1.78]}>
-        <torusGeometry args={[1.12, 0.06, 16, 64]} />
-        <meshStandardMaterial color="#B86C18" emissive="#D97706" emissiveIntensity={0.14} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={slot.floorPosition}>
+        <torusGeometry args={[ringRadius, 0.055, 16, 64]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.14} transparent opacity={0.78} />
       </mesh>
 
-      <group position={[-5.6, 0, -1.15]}>
+      <group position={slot.decorPosition}>
         <mesh position={[0, 0.11, 0]}>
-          <boxGeometry args={[0.52, 0.18, 0.52]} />
-          <meshStandardMaterial color="#8E5F31" roughness={0.8} />
+          <boxGeometry args={[0.58, 0.16, 0.44]} />
+          <meshStandardMaterial color="#8E775F" roughness={0.82} />
         </mesh>
-        <mesh position={[-0.12, 0.28, -0.08]}>
-          <boxGeometry args={[0.13, 0.13, 0.13]} />
-          <meshStandardMaterial color="#F59E0B" roughness={0.55} />
-        </mesh>
-        <mesh position={[0.05, 0.28, 0.02]}>
-          <boxGeometry args={[0.16, 0.16, 0.16]} />
-          <meshStandardMaterial color="#FB923C" roughness={0.55} />
-        </mesh>
-        <mesh position={[0.18, 0.28, -0.12]}>
-          <boxGeometry args={[0.1, 0.1, 0.1]} />
-          <meshStandardMaterial color="#FCD34D" roughness={0.48} />
-        </mesh>
-      </group>
-
-      <FurnitureModel url={FURNITURE_MODELS.sideTable} position={[-4.95, 0, -2.9]} scale={0.86} centerXZ />
-      <FurnitureModel url={FURNITURE_MODELS.books} position={[-4.96, 0.34, -2.92]} scale={0.75} centerXZ />
-    </group>
-  );
-}
-
-function AIDepartmentDecor() {
-  const { copy } = useI18n();
-
-  return (
-    <group>
-      <ZoneBanner
-        position={[7.6, 1.93, -1.7]}
-        rotation={[0, -Math.PI / 2, 0]}
-        color="#2563EB"
-        title={copy.scene.banners.ai.title}
-        subtitle={copy.scene.banners.ai.subtitle}
-        wallMounted
-      />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.35, 0.03, -1.72]}>
-        <ringGeometry args={[1.06, 1.22, 48]} />
-        <meshStandardMaterial color="#2A5DD8" transparent opacity={0.26} />
-      </mesh>
-
-      <group position={[5.95, 0, -1.2]}>
-        {[0, 0.48].map((offset, index) => (
-          <group key={index} position={[0, 0, offset]}>
-            <mesh position={[0, 0.42, 0]}>
-              <boxGeometry args={[0.42, 0.84, 0.3]} />
-              <meshStandardMaterial color="#384861" roughness={0.7} />
-            </mesh>
-            {[-0.22, 0, 0.22].map((y) => (
-              <mesh key={y} position={[0, 0.42 + y, 0.16]}>
-                <boxGeometry args={[0.28, 0.05, 0.02]} />
-                <meshStandardMaterial color="#8BC3FF" emissive="#3B82F6" emissiveIntensity={0.55} />
-              </mesh>
-            ))}
-          </group>
+        {[-0.14, 0.02, 0.18].map((x, index) => (
+          <mesh key={index} position={[x, 0.26 + index * 0.05, -0.06 + index * 0.06]}>
+            <boxGeometry args={[0.26, 0.04, 0.18]} />
+            <meshStandardMaterial
+              color={cardColors[(slotIndex + index) % cardColors.length]}
+              roughness={0.72}
+            />
+          </mesh>
         ))}
+        <mesh position={[0.24, 0.28, -0.04]}>
+          <cylinderGeometry args={[0.055, 0.055, 0.1, 18]} />
+          <meshStandardMaterial color="#FFF3DB" emissive={color} emissiveIntensity={0.18} roughness={0.42} />
+        </mesh>
       </group>
 
-      <group position={[5.18, 1.08, -0.92]} rotation={[0, -Math.PI / 12, 0]}>
+      <group position={slot.glassPosition} rotation={[0, slotIndex % 2 === 0 ? Math.PI / 16 : -Math.PI / 16, 0]}>
         <mesh>
           <boxGeometry args={[0.92, 0.68, 0.05]} />
-          <meshStandardMaterial color="#D6E8F7" transparent opacity={0.3} metalness={0.12} roughness={0.25} />
+          <meshStandardMaterial color="#EDF4FB" transparent opacity={0.28} metalness={0.12} roughness={0.25} />
         </mesh>
         {[-0.2, 0, 0.2].map((y) => (
           <mesh key={y} position={[0, y, 0.03]}>
             <boxGeometry args={[0.58, 0.02, 0.02]} />
-            <meshStandardMaterial color="#60A5FA" emissive="#2563EB" emissiveIntensity={0.45} />
-          </mesh>
-        ))}
-      </group>
-    </group>
-  );
-}
-
-function LifeDepartmentDecor() {
-  const { copy } = useI18n();
-
-  return (
-    <group>
-      <ZoneBanner
-        position={[-7.6, 1.93, 2.65]}
-        rotation={[0, Math.PI / 2, 0]}
-        color="#059669"
-        title={copy.scene.banners.life.title}
-        subtitle={copy.scene.banners.life.subtitle}
-        wallMounted
-      />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.08, 0.03, 2.45]}>
-        <torusGeometry args={[1.18, 0.08, 18, 64]} />
-        <meshStandardMaterial color="#2F8E68" transparent opacity={0.34} />
-      </mesh>
-
-      <FurnitureModel url={FURNITURE_MODELS.sideTable} position={[-4.92, 0, 3.02]} scale={0.9} centerXZ />
-      <FurnitureModel url={FURNITURE_MODELS.books} position={[-4.92, 0.34, 3.02]} scale={0.7} centerXZ />
-      <FurnitureModel url={FURNITURE_MODELS.plantSmall2} position={[-5.55, 0, 2.45]} scale={1.05} centerXZ />
-      <FurnitureModel url={FURNITURE_MODELS.plantSmall3} position={[-4.4, 0, 2.38]} scale={1.05} centerXZ />
-
-      <mesh position={[-4.82, 0.41, 3.18]}>
-        <cylinderGeometry args={[0.06, 0.06, 0.08, 18]} />
-        <meshStandardMaterial color="#FFF1D6" roughness={0.45} />
-      </mesh>
-    </group>
-  );
-}
-
-function MetaDepartmentDecor() {
-  const { copy } = useI18n();
-
-  return (
-    <group>
-      <ZoneBanner
-        position={[7.6, 1.93, 2.55]}
-        rotation={[0, -Math.PI / 2, 0]}
-        color="#7C3AED"
-        title={copy.scene.banners.meta.title}
-        subtitle={copy.scene.banners.meta.subtitle}
-        wallMounted
-      />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.25, 0.03, 2.45]}>
-        <ringGeometry args={[1.05, 1.2, 48]} />
-        <meshStandardMaterial color="#7C3AED" transparent opacity={0.22} />
-      </mesh>
-
-      <group position={[5.6, 0, 2.7]}>
-        <mesh position={[0, 0.16, 0]}>
-          <boxGeometry args={[0.55, 0.22, 0.4]} />
-          <meshStandardMaterial color="#725B93" roughness={0.75} />
-        </mesh>
-        {[-0.1, 0.05, 0.2].map((x, index) => (
-          <mesh key={index} position={[x, 0.34 + index * 0.08, 0.02]}>
-            <boxGeometry args={[0.32, 0.06, 0.02]} />
-            <meshStandardMaterial color={index === 1 ? '#C4B5FD' : '#E9D5FF'} roughness={0.5} />
+            <meshStandardMaterial color="#FFFFFF" emissive={color} emissiveIntensity={0.38} />
           </mesh>
         ))}
       </group>
 
-      <FurnitureModel url={FURNITURE_MODELS.bookcaseOpenLow} position={[5.95, 0, 1.55]} rotation={[0, -Math.PI / 2, 0]} scale={0.92} centerXZ />
-      <FurnitureModel url={FURNITURE_MODELS.books} position={[5.96, 0.48, 1.55]} rotation={[0, -Math.PI / 2, 0]} scale={0.68} centerXZ />
+      <FurnitureModel
+        url={slotIndex >= 2 ? FURNITURE_MODELS.bookcaseOpenLow : FURNITURE_MODELS.sideTable}
+        position={slot.storagePosition}
+        rotation={slot.storageRotation}
+        scale={slotIndex >= 2 ? 0.92 : 0.88}
+        centerXZ
+      />
+      <FurnitureModel
+        url={FURNITURE_MODELS.books}
+        position={[slot.storagePosition[0], slot.storagePosition[1] + (slotIndex >= 2 ? 0.48 : 0.34), slot.storagePosition[2]]}
+        rotation={slot.storageRotation}
+        scale={slotIndex >= 2 ? 0.68 : 0.74}
+        centerXZ
+      />
     </group>
   );
 }
 
-function DepartmentDecor() {
+function DepartmentDecor({ departments }: { departments: SceneDepartmentInfo[] }) {
+  const slots = departments.slice(0, 4);
   return (
     <group>
-      <GameDepartmentDecor />
-      <AIDepartmentDecor />
-      <LifeDepartmentDecor />
-      <MetaDepartmentDecor />
+      {slots.map((department, index) => (
+        <PodDecor key={department.id} slotIndex={index} {...department} />
+      ))}
     </group>
   );
 }
@@ -646,6 +640,101 @@ function StorageColumn({
   );
 }
 
+function MobileBoard({
+  position,
+  rotation = [0, 0, 0],
+  color,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  color: string;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 1.02, 0]}>
+        <boxGeometry args={[1.18, 0.88, 0.05]} />
+        <meshStandardMaterial color="#F9F7F2" roughness={0.92} />
+      </mesh>
+      <mesh position={[0, 1.48, 0.012]}>
+        <boxGeometry args={[1.18, 0.08, 0.04]} />
+        <meshStandardMaterial color={color} roughness={0.56} />
+      </mesh>
+      <mesh position={[-0.48, 0.58, 0]}>
+        <boxGeometry args={[0.06, 1.12, 0.06]} />
+        <meshStandardMaterial color="#8C765F" roughness={0.84} />
+      </mesh>
+      <mesh position={[0.48, 0.58, 0]}>
+        <boxGeometry args={[0.06, 1.12, 0.06]} />
+        <meshStandardMaterial color="#8C765F" roughness={0.84} />
+      </mesh>
+      <mesh position={[0, 0.06, 0]}>
+        <boxGeometry args={[0.94, 0.05, 0.34]} />
+        <meshStandardMaterial color="#90755B" roughness={0.86} />
+      </mesh>
+      {[-0.36, 0.36].flatMap((x) => [-0.12, 0.12].map((z) => ({ x, z }))).map(({ x, z }) => (
+        <mesh key={`${x}-${z}`} position={[x, 0.02, z]}>
+          <cylinderGeometry args={[0.045, 0.045, 0.04, 18]} />
+          <meshStandardMaterial color="#625246" roughness={0.6} metalness={0.12} />
+        </mesh>
+      ))}
+      {[
+        { position: [-0.22, 1.08, 0.03] as [number, number, number], noteColor: '#FDE68A', rotationZ: -0.08 },
+        { position: [0.08, 0.98, 0.03] as [number, number, number], noteColor: '#BFDBFE', rotationZ: 0.05 },
+        { position: [0.24, 1.18, 0.03] as [number, number, number], noteColor: '#FBCFE8', rotationZ: -0.04 },
+      ].map((note, index) => (
+        <mesh key={index} position={note.position} rotation={[0, 0, note.rotationZ]}>
+          <planeGeometry args={[0.18, 0.13]} />
+          <meshStandardMaterial color={note.noteColor} roughness={0.88} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function TaskCart({
+  position,
+  rotation = [0, 0, 0],
+  color,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  color: string;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh position={[0, 0.3, 0]}>
+        <boxGeometry args={[0.68, 0.08, 0.46]} />
+        <meshStandardMaterial color="#8F755D" roughness={0.82} />
+      </mesh>
+      <mesh position={[0, 0.74, 0]}>
+        <boxGeometry args={[0.68, 0.08, 0.46]} />
+        <meshStandardMaterial color="#9B8268" roughness={0.8} />
+      </mesh>
+      {[-0.26, 0.26].flatMap((x) => [-0.16, 0.16].map((z) => ({ x, z }))).map(({ x, z }) => (
+        <mesh key={`${x}-${z}`} position={[x, 0.38, z]}>
+          <boxGeometry args={[0.04, 0.74, 0.04]} />
+          <meshStandardMaterial color="#6F5B48" roughness={0.86} />
+        </mesh>
+      ))}
+      <mesh position={[0.05, 0.82, 0.04]}>
+        <boxGeometry args={[0.28, 0.12, 0.18]} />
+        <meshStandardMaterial color={color} roughness={0.66} />
+      </mesh>
+      <mesh position={[-0.17, 0.82, -0.06]}>
+        <boxGeometry args={[0.12, 0.18, 0.12]} />
+        <meshStandardMaterial color="#FFF5E2" roughness={0.52} />
+      </mesh>
+      <FurnitureModel url={FURNITURE_MODELS.books} position={[-0.03, 0.41, 0]} scale={0.48} centerXZ />
+      {[-0.22, 0.22].flatMap((x) => [-0.12, 0.12].map((z) => ({ x, z }))).map(({ x, z }) => (
+        <mesh key={`wheel-${x}-${z}`} position={[x, 0.02, z]}>
+          <cylinderGeometry args={[0.038, 0.038, 0.032, 18]} />
+          <meshStandardMaterial color="#56483D" roughness={0.56} metalness={0.12} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 function DecorativePlants() {
   return (
     <group>
@@ -663,6 +752,59 @@ export function OfficeRoom() {
   const setSceneReady = useAppStore((state) => state.setSceneReady);
   const setLoadingProgress = useAppStore((state) => state.setLoadingProgress);
   const { copy } = useI18n();
+  const currentWorkflow = useWorkflowStore((state) => state.currentWorkflow);
+  const locale = useAppStore((state) => state.locale);
+  const organization = useMemo(() => getWorkflowOrganization(currentWorkflow), [currentWorkflow]);
+  const sceneDepartments = useMemo<SceneDepartmentInfo[]>(() => {
+    if (organization) {
+      return organization.departments.slice(0, 4).map((department, index) => {
+        const manager =
+          organization.nodes.find((node) => node.id === department.managerNodeId) || null;
+        const slotName = getScenePodTitle(index, locale);
+        return {
+          id: department.id,
+          title: slotName,
+          subtitle: toShortLabel(
+            department.label || manager?.title || manager?.name || department.strategy,
+            locale === 'zh-CN' ? '动态编组' : 'Dynamic Team'
+          ),
+          zoneLabel: slotName,
+          color: SCENE_DEPARTMENT_COLORS[index] || '#8B5CF6',
+        };
+      });
+    }
+
+    return [
+      {
+        id: 'game',
+        title: getScenePodTitle(0, locale),
+        subtitle: getFallbackPodSubtitle(0, locale),
+        zoneLabel: getScenePodTitle(0, locale),
+        color: SCENE_DEPARTMENT_COLORS[0],
+      },
+      {
+        id: 'ai',
+        title: getScenePodTitle(1, locale),
+        subtitle: getFallbackPodSubtitle(1, locale),
+        zoneLabel: getScenePodTitle(1, locale),
+        color: SCENE_DEPARTMENT_COLORS[1],
+      },
+      {
+        id: 'life',
+        title: getScenePodTitle(2, locale),
+        subtitle: getFallbackPodSubtitle(2, locale),
+        zoneLabel: getScenePodTitle(2, locale),
+        color: SCENE_DEPARTMENT_COLORS[2],
+      },
+      {
+        id: 'meta',
+        title: getScenePodTitle(3, locale),
+        subtitle: getFallbackPodSubtitle(3, locale),
+        zoneLabel: getScenePodTitle(3, locale),
+        color: SCENE_DEPARTMENT_COLORS[3],
+      },
+    ];
+  }, [locale, organization]);
 
   useEffect(() => {
     let progress = 0;
@@ -686,37 +828,96 @@ export function OfficeRoom() {
       <ArchitecturalAccents />
       <WallBrandPlaque />
       <CorkBoard />
-      <DepartmentDecor />
+      <DepartmentDecor departments={sceneDepartments} />
 
-      <ZoneBase position={[-3.5, 0, -1.8]} color="#F59E0B" title={copy.scene.zoneTitles.game} />
-      <ZoneBase position={[3.5, 0, -1.8]} color="#3B82F6" title={copy.scene.zoneTitles.ai} />
-      <ZoneBase position={[-3.2, 0, 2.35]} color="#10B981" title={copy.scene.zoneTitles.life} />
-      <ZoneBase position={[3.2, 0, 2.35]} color="#8B5CF6" title={copy.scene.zoneTitles.meta} />
+      {sceneDepartments[0] ? <ZoneBase position={[-3.5, 0, -1.8]} color={sceneDepartments[0].color} /> : null}
+      {sceneDepartments[1] ? <ZoneBase position={[3.5, 0, -1.8]} color={sceneDepartments[1].color} /> : null}
+      {sceneDepartments[2] ? <ZoneBase position={[-3.2, 0, 2.35]} color={sceneDepartments[2].color} /> : null}
+      {sceneDepartments[3] ? <ZoneBase position={[3.2, 0, 2.35]} color={sceneDepartments[3].color} /> : null}
 
       <DesktopDesk position={[0, 0, -3.15]} withLamp />
-
-      <DesktopDesk position={[-3.35, 0, -3.1]} />
-      <DesktopDesk position={[-5.25, 0, -1.75]} rotation={[0, Math.PI / 2, 0]} compact />
-      <LaptopDesk position={[-3.4, 0, -0.95]} />
-      <DesktopDesk position={[-1.65, 0, -2.2]} compact />
-      <StorageColumn position={[-6.15, 0, -3.45]} rotation={[0, Math.PI / 2, 0]} />
-
-      <DesktopDesk position={[3.35, 0, -3.1]} />
-      <DesktopDesk position={[5.25, 0, -1.75]} rotation={[0, -Math.PI / 2, 0]} compact />
-      <LaptopDesk position={[3.4, 0, -0.95]} />
-      <DesktopDesk position={[1.65, 0, -2.2]} compact />
-      <StorageColumn position={[6.15, 0, -3.45]} rotation={[0, -Math.PI / 2, 0]} />
-
-      <MeetingSet position={[-3.25, 0, 2.55]} />
-      <LaptopDesk position={[-5.45, 0, 2.35]} rotation={[0, Math.PI / 2, 0]} />
-      <StorageColumn position={[-6.1, 0, 1.0]} rotation={[0, Math.PI / 2, 0]} low />
-      <FurnitureModel url={FURNITURE_MODELS.rugRectangle} position={[-3.25, 0.01, 2.55]} scale={1.35} />
-
-      <MeetingSet position={[3.15, 0, 2.55]} />
-      <DesktopDesk position={[5.55, 0, 2.15]} rotation={[0, -Math.PI / 2, 0]} compact />
-      <StorageColumn position={[6.1, 0, 0.95]} rotation={[0, -Math.PI / 2, 0]} low />
-      <FurnitureModel url={FURNITURE_MODELS.rugRectangle} position={[3.15, 0.01, 2.55]} scale={1.35} />
       <FurnitureModel url={FURNITURE_MODELS.rugRounded} position={[0, 0.01, -3.15]} scale={1.05} />
+
+      <FurnitureModel
+        url={FURNITURE_MODELS.rugRectangle}
+        position={[-3.5, 0.01, -1.95]}
+        rotation={[0, Math.PI / 12, 0]}
+        scale={1.26}
+      />
+      <DesktopDesk position={[-4.35, 0, -2.95]} rotation={[0, Math.PI / 18, 0]} compact />
+      <LaptopDesk position={[-2.45, 0, -1.15]} rotation={[0, -Math.PI / 7, 0]} />
+      <FurnitureModel
+        url={FURNITURE_MODELS.chairRounded}
+        position={[-3.1, 0, -2.22]}
+        rotation={[0, Math.PI / 2.8, 0]}
+      />
+      <StorageColumn position={[-2.1, 0, -2.92]} rotation={[0, -Math.PI / 5, 0]} low />
+      <MobileBoard position={[-5.92, 0, -1.15]} rotation={[0, Math.PI / 2, 0]} color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]} />
+      <TaskCart position={[-5.25, 0, -2.72]} rotation={[0, Math.PI / 8, 0]} color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]} />
+
+      <FurnitureModel
+        url={FURNITURE_MODELS.rugRectangle}
+        position={[3.55, 0.01, -1.92]}
+        rotation={[0, -Math.PI / 10, 0]}
+        scale={1.22}
+      />
+      <LaptopDesk position={[2.35, 0, -1.08]} rotation={[0, Math.PI / 6, 0]} />
+      <MeetingSet position={[4.85, 0, -1.42]} rotation={[0, -Math.PI / 8, 0]} />
+      <FurnitureModel
+        url={FURNITURE_MODELS.sideTable}
+        position={[3.55, 0, -2.88]}
+        rotation={[0, -Math.PI / 6, 0]}
+        scale={0.92}
+        centerXZ
+      />
+      <FurnitureModel
+        url={FURNITURE_MODELS.laptop}
+        position={[3.55, 0.39, -2.88]}
+        rotation={[0, -Math.PI / 6, 0]}
+        scale={0.92}
+        centerXZ
+      />
+      <MobileBoard position={[5.95, 0, -2.45]} rotation={[0, -Math.PI / 2.3, 0]} color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]} />
+      <TaskCart position={[2.05, 0, -2.52]} rotation={[0, -Math.PI / 10, 0]} color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]} />
+
+      <FurnitureModel
+        url={FURNITURE_MODELS.rugRectangle}
+        position={[-3.35, 0.01, 2.45]}
+        rotation={[0, -Math.PI / 14, 0]}
+        scale={1.3}
+      />
+      <MeetingSet position={[-3.55, 0, 2.28]} rotation={[0, Math.PI / 10, 0]} />
+      <LaptopDesk position={[-5.3, 0, 2.9]} rotation={[0, Math.PI / 2.4, 0]} />
+      <FurnitureModel
+        url={FURNITURE_MODELS.chairRounded}
+        position={[-2.1, 0, 2.98]}
+        rotation={[0, -Math.PI / 2.6, 0]}
+      />
+      <StorageColumn position={[-5.95, 0, 3.5]} rotation={[0, Math.PI / 2, 0]} low />
+      <MobileBoard position={[-5.98, 0, 1.48]} rotation={[0, Math.PI / 2, 0]} color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]} />
+      <TaskCart position={[-1.98, 0, 2.62]} rotation={[0, Math.PI / 7, 0]} color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]} />
+
+      <FurnitureModel
+        url={FURNITURE_MODELS.rugRounded}
+        position={[3.18, 0.01, 2.42]}
+        rotation={[0, Math.PI / 11, 0]}
+        scale={1.24}
+      />
+      <FurnitureModel url={FURNITURE_MODELS.tableCoffeeSquare} position={[3.05, 0, 2.42]} />
+      <FurnitureModel
+        url={FURNITURE_MODELS.loungeChair}
+        position={[2.02, 0, 2.08]}
+        rotation={[0, Math.PI / 3.4, 0]}
+      />
+      <FurnitureModel
+        url={FURNITURE_MODELS.loungeChair}
+        position={[4.18, 0, 2.12]}
+        rotation={[0, -Math.PI / 2.8, 0]}
+      />
+      <LaptopDesk position={[5.25, 0, 2.26]} rotation={[0, -Math.PI / 2.2, 0]} />
+      <StorageColumn position={[5.92, 0, 3.42]} rotation={[0, -Math.PI / 2.2, 0]} low />
+      <MobileBoard position={[5.95, 0, 1.58]} rotation={[0, -Math.PI / 2, 0]} color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]} />
+      <TaskCart position={[1.96, 0, 2.88]} rotation={[0, -Math.PI / 8, 0]} color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]} />
 
       <LoungeArea position={[0.2, 0, 4.1]} />
       <FurnitureModel url={FURNITURE_MODELS.tableCoffee} position={[-0.3, 0, 1.15]} />

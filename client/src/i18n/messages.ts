@@ -30,7 +30,7 @@ export const messages = {
       description: (progress: number) => `小宠物们正在搬家具 ${progress}%`,
     },
     home: {
-      mobileHint: '点击左上角菜单可展开导航、论文与面板。',
+      mobileHint: '点击左上角菜单可展开导航与核心面板。',
     },
     pdf: {
       title: '从单条指令到整组协作',
@@ -47,7 +47,7 @@ export const messages = {
     toolbar: {
       modeTitle: '运行模式',
       modeDescription:
-        '默认先进入前端模式，保留 3D 场景、论文浏览、本地工作流演示和浏览器侧 AI 配置。',
+        '默认先进入前端模式，保留 3D 场景、本地工作流演示和浏览器侧 AI 配置。',
       pagesDescription:
         'GitHub Pages 预览只保留前端模式，但默认语言和文案字典与本地模式保持一致。',
       helpTitle: '快速上手',
@@ -55,7 +55,7 @@ export const messages = {
       actionsTitle: '导航与面板',
       currentFocus: '当前焦点',
       mobileMenuTitle: '导航菜单',
-      mobileMenuDescription: '打开核心面板、查看论文或切换语言。',
+      mobileMenuDescription: '打开核心面板或切换语言。',
       dockButtons: {
         paper: { label: '论文', sublabel: 'PAPER' },
         config: { label: '配置', sublabel: 'MODEL' },
@@ -452,7 +452,7 @@ export const messages = {
       description: (progress: number) => `The cube pets are moving furniture ${progress}%`,
     },
     home: {
-      mobileHint: 'Open the menu in the top-left corner for navigation, paper, and panels.',
+      mobileHint: 'Open the menu in the top-left corner for navigation and core panels.',
     },
     pdf: {
       title: 'From One Instruction to Coordinated Work',
@@ -478,7 +478,7 @@ export const messages = {
       actionsTitle: 'Navigation & Panels',
       currentFocus: 'Current Focus',
       mobileMenuTitle: 'Navigation',
-      mobileMenuDescription: 'Open a core panel, read the paper, or switch language.',
+      mobileMenuDescription: 'Open a core panel or switch language.',
       dockButtons: {
         paper: { label: 'Paper', sublabel: 'PAPER' },
         config: { label: 'Config', sublabel: 'MODEL' },

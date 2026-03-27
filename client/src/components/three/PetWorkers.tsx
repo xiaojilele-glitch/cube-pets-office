@@ -3,19 +3,210 @@ import { useFrame } from '@react-three/fiber';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-import { useI18n } from '@/i18n';
 import {
+  AGENT_VISUAL_MAP,
   AGENT_VISUAL_CONFIGS,
-  DEPARTMENT_COLORS,
-  getAgentIdleText,
-  getAgentTitle,
   type AgentAnimationType,
   type AgentVisualConfig,
 } from '@/lib/agent-config';
 import { PET_MODELS } from '@/lib/assets';
 import type { AppLocale } from '@/lib/locale';
 import { useAppStore } from '@/lib/store';
+import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
 import { useWorkflowStore } from '@/lib/workflow-store';
+
+type SceneAgentConfig = {
+  id: string;
+  name: string;
+  shortLabel: string;
+  titleLabel: string;
+  department: string;
+  role: 'ceo' | 'manager' | 'worker';
+  emoji: string;
+  animal: AgentVisualConfig['animal'];
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: number;
+  animationType: AgentAnimationType;
+  idleText: string;
+  color: string;
+};
+
+type SceneDepartmentMarker = {
+  id: string;
+  label: string;
+  position: [number, number, number];
+  color: string;
+};
+
+const SCENE_SLOT_TEMPLATES = [
+  {
+    color: '#D97706',
+    markerPosition: [-3.25, 0, -1.7] as [number, number, number],
+    manager: AGENT_VISUAL_MAP.pixel,
+    workers: [AGENT_VISUAL_MAP.nova, AGENT_VISUAL_MAP.blaze, AGENT_VISUAL_MAP.lyra, AGENT_VISUAL_MAP.volt],
+  },
+  {
+    color: '#2563EB',
+    markerPosition: [3.2, 0, -1.7] as [number, number, number],
+    manager: AGENT_VISUAL_MAP.nexus,
+    workers: [AGENT_VISUAL_MAP.flux, AGENT_VISUAL_MAP.tensor, AGENT_VISUAL_MAP.quark, AGENT_VISUAL_MAP.iris],
+  },
+  {
+    color: '#059669',
+    markerPosition: [-2.8, 0, 2.2] as [number, number, number],
+    manager: AGENT_VISUAL_MAP.echo,
+    workers: [AGENT_VISUAL_MAP.zen, AGENT_VISUAL_MAP.coco, AGENT_VISUAL_MAP.nova, AGENT_VISUAL_MAP.lyra],
+  },
+  {
+    color: '#7C3AED',
+    markerPosition: [2.9, 0, 2.2] as [number, number, number],
+    manager: AGENT_VISUAL_MAP.warden,
+    workers: [AGENT_VISUAL_MAP.forge, AGENT_VISUAL_MAP.prism, AGENT_VISUAL_MAP.scout, AGENT_VISUAL_MAP.blaze],
+  },
+];
+
+function getPodLabel(index: number, locale: AppLocale) {
+  const suffix = String.fromCharCode(65 + index);
+  return locale === 'zh-CN' ? `临时战区 ${suffix}` : `Pod ${suffix}`;
+}
+
+function getLeadMarkerLabel(locale: AppLocale) {
+  return locale === 'zh-CN' ? '总控席' : 'Lead';
+}
+
+function getWorkflowOrganization(
+  workflow: ReturnType<typeof useWorkflowStore.getState>['currentWorkflow']
+): WorkflowOrganizationSnapshot | null {
+  const organization = workflow?.results?.organization;
+  if (!organization || typeof organization !== 'object') return null;
+  return Array.isArray((organization as WorkflowOrganizationSnapshot).nodes)
+    ? (organization as WorkflowOrganizationSnapshot)
+    : null;
+}
+
+function clampLabel(value: string, fallback: string) {
+  const text = (value || fallback).trim();
+  return text.length > 18 ? `${text.slice(0, 18)}…` : text;
+}
+
+function createFallbackSceneConfig(config: AgentVisualConfig, locale: AppLocale): SceneAgentConfig {
+  return {
+    id: config.id,
+    name: config.name,
+    shortLabel: config.shortLabel,
+    titleLabel: config.title[locale] || config.title['zh-CN'],
+    department: config.department,
+    role: config.role,
+    emoji: config.emoji,
+    animal: config.animal,
+    position: config.position,
+    rotation: config.rotation,
+    scale: config.scale,
+    animationType: config.animationType,
+    idleText: config.idleText[locale] || config.idleText['zh-CN'],
+    color: SCENE_SLOT_TEMPLATES.find(slot => slot.manager.department === config.department)?.color || '#8B5CF6',
+  };
+}
+
+function createDynamicSceneData(
+  organization: WorkflowOrganizationSnapshot,
+  locale: AppLocale
+) {
+  const rootTemplate = AGENT_VISUAL_MAP.ceo;
+  const rootNode =
+    organization.nodes.find(node => node.id === organization.rootNodeId) || null;
+  const sceneAgents: SceneAgentConfig[] = [];
+  const markers: SceneDepartmentMarker[] = [];
+
+  if (rootNode) {
+    sceneAgents.push({
+      id: rootNode.agentId,
+      name: rootNode.name,
+      shortLabel: clampLabel(rootNode.name, rootTemplate.shortLabel),
+      titleLabel: rootNode.title,
+      department: rootNode.departmentId,
+      role: rootNode.role,
+      emoji: rootTemplate.emoji,
+      animal: rootTemplate.animal,
+      position: rootTemplate.position,
+      rotation: rootTemplate.rotation,
+      scale: rootTemplate.scale,
+      animationType: rootTemplate.animationType,
+      idleText: rootNode.responsibility,
+      color: '#7C3AED',
+    });
+
+    markers.push({
+      id: rootNode.id,
+      label: getLeadMarkerLabel(locale),
+      position: [0, 0, -2.45],
+      color: '#7C3AED',
+    });
+  }
+
+  organization.departments.slice(0, SCENE_SLOT_TEMPLATES.length).forEach((department, departmentIndex) => {
+    const slot = SCENE_SLOT_TEMPLATES[departmentIndex];
+    const managerNode =
+      organization.nodes.find(node => node.id === department.managerNodeId) || null;
+    const workers = organization.nodes.filter(node => node.parentId === department.managerNodeId);
+
+    markers.push({
+      id: department.id,
+      label: getPodLabel(departmentIndex, locale),
+      position: slot.markerPosition,
+      color: slot.color,
+    });
+
+    if (managerNode) {
+      sceneAgents.push({
+        id: managerNode.agentId,
+        name: managerNode.name,
+        shortLabel: clampLabel(managerNode.name, slot.manager.shortLabel),
+        titleLabel: managerNode.title,
+        department: department.id,
+        role: managerNode.role,
+        emoji: slot.manager.emoji,
+        animal: slot.manager.animal,
+        position: slot.manager.position,
+        rotation: slot.manager.rotation,
+        scale: slot.manager.scale,
+        animationType: slot.manager.animationType,
+        idleText: managerNode.responsibility,
+        color: slot.color,
+      });
+    }
+
+    workers.forEach((workerNode, workerIndex) => {
+      const template = slot.workers[workerIndex % slot.workers.length];
+      const overflowRow = Math.floor(workerIndex / slot.workers.length);
+      const overflowOffset = overflowRow * 0.42;
+
+      sceneAgents.push({
+        id: workerNode.agentId,
+        name: workerNode.name,
+        shortLabel: clampLabel(workerNode.name, template.shortLabel),
+        titleLabel: workerNode.title,
+        department: department.id,
+        role: workerNode.role,
+        emoji: template.emoji,
+        animal: template.animal,
+        position: [
+          template.position[0],
+          template.position[1],
+          template.position[2] + overflowOffset,
+        ],
+        rotation: template.rotation,
+        scale: template.scale,
+        animationType: template.animationType,
+        idleText: workerNode.responsibility,
+        color: slot.color,
+      });
+    });
+  });
+
+  return { sceneAgents, markers };
+}
 
 function SpeechBubble({
   text,
@@ -192,8 +383,7 @@ function MessageFlowPath({
   );
 }
 
-function AgentWorker({ config }: { config: AgentVisualConfig }) {
-  const { locale } = useI18n();
+function AgentWorker({ config }: { config: SceneAgentConfig }) {
   const { scene } = useGLTF(PET_MODELS[config.animal]);
   const cloned = useMemo(() => {
     const next = scene.clone(true);
@@ -229,7 +419,7 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
   const agentStatuses = useWorkflowStore(state => state.agentStatuses);
 
   const agentStatus = agentStatuses[config.id] || 'idle';
-  const accent = DEPARTMENT_COLORS[config.department];
+  const accent = config.color;
   const isActive = hovered || selectedPet === config.id;
 
   const handleClick = useCallback(() => {
@@ -309,13 +499,13 @@ function AgentWorker({ config }: { config: AgentVisualConfig }) {
               isActive ? 'bg-white/20 text-white' : 'bg-black/6 text-[#6B5A4A]'
             }`}
           >
-            {getAgentTitle(config.id, locale)}
+            {config.titleLabel}
           </span>
         </div>
       </Html>
 
       <SpeechBubble
-        text={getStatusBubble(agentStatus, locale, getAgentIdleText(config.id, locale))}
+        text={getStatusBubble(agentStatus, useAppStore.getState().locale, config.idleText)}
         visible={showBubble || selectedPet === config.id || agentStatus !== 'idle'}
         accent={accent}
       />
@@ -357,11 +547,12 @@ function DepartmentMarker({
   return (
     <group position={position}>
       <Html center position={[0, 0.18, 0]} distanceFactor={10} style={{ pointerEvents: 'none' }}>
-        <div
-          className="rounded-full px-3 py-1 text-[10px] font-semibold text-white shadow-md"
-          style={{ background: `${color}CC` }}
-        >
-          {label}
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-[#FFF9F2]/88 px-3 py-1 text-[10px] font-semibold text-[#4E3C2C] shadow-md backdrop-blur-sm">
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <span>{label}</span>
         </div>
       </Html>
     </group>
@@ -369,15 +560,22 @@ function DepartmentMarker({
 }
 
 export function PetWorkers() {
-  const { copy } = useI18n();
+  const locale = useAppStore(state => state.locale);
   const agents = useWorkflowStore(state => state.agents);
   const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
   const messages = useWorkflowStore(state => state.messages);
+  const organization = useMemo(() => getWorkflowOrganization(currentWorkflow), [currentWorkflow]);
 
-  const configs = useMemo(() => {
-    if (agents.length === 0) return AGENT_VISUAL_CONFIGS;
+  const { configs, departmentMarkers } = useMemo(() => {
+    if (organization) {
+      const sceneData = createDynamicSceneData(organization, locale);
+      return {
+        configs: sceneData.sceneAgents,
+        departmentMarkers: sceneData.markers,
+      };
+    }
 
-    return AGENT_VISUAL_CONFIGS.map(config => {
+    const fallbackConfigs = (agents.length === 0 ? AGENT_VISUAL_CONFIGS : AGENT_VISUAL_CONFIGS.map(config => {
       const liveAgent = agents.find(agent => agent.id === config.id);
       return liveAgent
         ? {
@@ -386,11 +584,22 @@ export function PetWorkers() {
             shortLabel: liveAgent.name || config.shortLabel,
           }
         : config;
-    });
-  }, [agents]);
+    })).map(config => createFallbackSceneConfig(config, locale));
+
+    return {
+      configs: fallbackConfigs,
+      departmentMarkers: [
+        { id: 'ceo', label: getLeadMarkerLabel(locale), position: [0, 0, -2.45] as [number, number, number], color: '#7C3AED' },
+        { id: 'game', label: getPodLabel(0, locale), position: [-3.25, 0, -1.7] as [number, number, number], color: '#D97706' },
+        { id: 'ai', label: getPodLabel(1, locale), position: [3.2, 0, -1.7] as [number, number, number], color: '#2563EB' },
+        { id: 'life', label: getPodLabel(2, locale), position: [-2.8, 0, 2.2] as [number, number, number], color: '#059669' },
+        { id: 'meta', label: getPodLabel(3, locale), position: [2.9, 0, 2.2] as [number, number, number], color: '#7C3AED' },
+      ],
+    };
+  }, [agents, locale, organization]);
 
   const configMap = useMemo(
-    () => Object.fromEntries(configs.map(config => [config.id, config])) as Record<string, AgentVisualConfig>,
+    () => Object.fromEntries(configs.map(config => [config.id, config])) as Record<string, SceneAgentConfig>,
     [configs]
   );
 
@@ -406,7 +615,7 @@ export function PetWorkers() {
         to: configMap[message.to_agent].position,
         color:
           STAGE_FLOW_COLORS[message.stage] ||
-          DEPARTMENT_COLORS[configMap[message.to_agent].department],
+          configMap[message.to_agent].color,
         opacity: 0.16 + ((index + 1) / recentMessages.length) * 0.36,
         phase: index * 0.11,
       }));
@@ -417,7 +626,7 @@ export function PetWorkers() {
     const involvedDepartments =
       currentWorkflow.departments_involved?.length > 0
         ? currentWorkflow.departments_involved
-        : ['game', 'ai', 'life', 'meta'];
+        : departmentMarkers.map(marker => marker.id).filter(id => id !== 'ceo');
 
     const managers = configs.filter(
       config => config.role === 'manager' && involvedDepartments.includes(config.department)
@@ -432,7 +641,7 @@ export function PetWorkers() {
       to: configMap[toId]?.position,
       color:
         STAGE_FLOW_COLORS[currentWorkflow.current_stage || ''] ||
-        DEPARTMENT_COLORS[configMap[toId]?.department || 'meta'],
+        configMap[toId]?.color || '#7C3AED',
       opacity: 0.26,
       phase: index * 0.13,
     });
@@ -481,28 +690,6 @@ export function PetWorkers() {
           phase={route.phase}
         />
       ))}
-
-      <DepartmentMarker label={copy.scene.departmentMarkers.ceo} position={[0, 0, -2.45]} color="#7C3AED" />
-      <DepartmentMarker
-        label={copy.scene.departmentMarkers.game}
-        position={[-3.25, 0, -1.7]}
-        color={DEPARTMENT_COLORS.game}
-      />
-      <DepartmentMarker
-        label={copy.scene.departmentMarkers.ai}
-        position={[3.2, 0, -1.7]}
-        color={DEPARTMENT_COLORS.ai}
-      />
-      <DepartmentMarker
-        label={copy.scene.departmentMarkers.life}
-        position={[-2.8, 0, 2.2]}
-        color={DEPARTMENT_COLORS.life}
-      />
-      <DepartmentMarker
-        label={copy.scene.departmentMarkers.meta}
-        position={[2.9, 0, 2.2]}
-        color={DEPARTMENT_COLORS.meta}
-      />
 
       {configs.map(config => (
         <AgentWorker key={config.id} config={config} />

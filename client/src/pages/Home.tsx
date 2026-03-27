@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { ChatPanel } from '@/components/ChatPanel';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { LoadingScreen } from '@/components/LoadingScreen';
-import { PdfViewer } from '@/components/PdfViewer';
 import { Scene3D } from '@/components/Scene3D';
 import { Toolbar } from '@/components/Toolbar';
 import { WorkflowPanel } from '@/components/WorkflowPanel';
@@ -33,14 +32,15 @@ export default function Home() {
   }, [disconnectSocket, runtimeMode]);
 
   return (
-    <div className="relative h-[100svh] w-screen overflow-hidden bg-[#E2D6C7]">
+    <div className="relative h-[100svh] w-screen overflow-hidden bg-[#CFE5FA]">
       <Scene3D />
 
       <div className="pointer-events-none absolute inset-0 z-[5]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,250,244,0.28),rgba(255,250,244,0)_34%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(120,88,56,0.12),rgba(120,88,56,0)_32%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(103,80,58,0.14),rgba(103,80,58,0)_28%)]" />
-        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/20 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(214,236,255,0.62),rgba(214,236,255,0)_40%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.3),rgba(255,255,255,0)_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(120,88,56,0.08),rgba(120,88,56,0)_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(103,80,58,0.1),rgba(103,80,58,0)_26%)]" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#EAF5FF]/42 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#D7C8B8]/35 to-transparent" />
         <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(79,58,38,0.12)]" />
       </div>
@@ -56,7 +56,6 @@ export default function Home() {
       {isSceneReady && (
         <>
           <Toolbar />
-          <PdfViewer />
           <ConfigPanel />
           <ChatPanel />
           <WorkflowPanel />

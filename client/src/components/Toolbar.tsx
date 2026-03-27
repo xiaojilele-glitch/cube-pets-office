@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  BookOpen,
   Brain,
   Globe2,
   HelpCircle,
@@ -22,7 +21,35 @@ import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
-type DockButtonId = 'paper' | 'config' | 'workflow' | 'chat' | 'help';
+type DockButtonId = 'config' | 'workflow' | 'chat' | 'help';
+
+function getRuntimeNarrative(
+  locale: string,
+  runtimeMode: 'frontend' | 'advanced',
+  canUseAdvanced: boolean
+) {
+  if (locale === 'zh-CN') {
+    return {
+      title: '组织运行模式',
+      heading: runtimeMode === 'frontend' ? '前端预演模式' : '动态执行模式',
+      body: canUseAdvanced
+        ? runtimeMode === 'frontend'
+          ? '当前先在浏览器里预演动态组队流程：你可以看组织生成、角色分布和界面联动，但不会真正向服务端发起完整执行。'
+          : '当前会把用户问题交给服务端，让系统先分析需要哪些角色，再动态创建组织、装配 skills 与 MCP，并推进真实工作流。'
+        : '当前部署仅保留浏览器内的动态组队预演：可以体验组织生成后的展示和流程，但不会连接服务端执行。',
+    };
+  }
+
+  return {
+    title: 'Organization Mode',
+    heading: runtimeMode === 'frontend' ? 'Preview Teaming Mode' : 'Dynamic Execution Mode',
+    body: canUseAdvanced
+      ? runtimeMode === 'frontend'
+        ? 'The browser currently previews the dynamic teaming flow: you can inspect org generation, role placement, and UI reactions without running the full server workflow.'
+        : 'The server now analyzes the user ask, creates the needed organization, attaches skills and MCP tools, and runs the real workflow.'
+      : 'This deployment keeps only the browser-side dynamic teaming preview: you can inspect the generated org and flow, but it does not connect to the server runtime.',
+  };
+}
 
 function RuntimeCard({
   compact = false,
@@ -34,6 +61,8 @@ function RuntimeCard({
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
   const { copy } = useI18n();
+  const locale = useAppStore(state => state.locale);
+  const narrative = getRuntimeNarrative(locale, runtimeMode, CAN_USE_ADVANCED_RUNTIME);
 
   const handleSwitch = async (mode: 'frontend' | 'advanced') => {
     await setRuntimeMode(mode);
@@ -43,18 +72,16 @@ function RuntimeCard({
   return (
     <div className="rounded-[28px] border border-white/60 bg-white/88 p-4 shadow-[0_16px_44px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A08972]">
-        {copy.toolbar.modeTitle}
+        {narrative.title}
       </p>
       <h4
         className="mt-1 text-sm font-bold text-[#3A2A1A]"
         style={{ fontFamily: "'Playfair Display', serif" }}
       >
-        {runtimeMode === 'frontend'
-          ? copy.toolbar.runtimeLabels.frontend
-          : copy.toolbar.runtimeLabels.advanced}
+        {narrative.heading}
       </h4>
       <p className="mt-1 text-[11px] leading-relaxed text-[#6B5A4A]">
-        {CAN_USE_ADVANCED_RUNTIME ? copy.toolbar.modeDescription : copy.toolbar.pagesDescription}
+        {narrative.body}
       </p>
 
       <div className={`mt-3 grid gap-2 ${compact ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -131,10 +158,8 @@ export function Toolbar() {
   const {
     toggleConfig,
     toggleChat,
-    togglePdf,
     isConfigOpen,
     isChatOpen,
-    isPdfOpen,
     selectedPet,
     locale,
     toggleLocale,
@@ -155,13 +180,6 @@ export function Toolbar() {
     active: boolean;
     onClick: () => void;
   }> = [
-    {
-      id: 'paper',
-      icon: BookOpen,
-      accent: '#9A6F46',
-      active: isPdfOpen,
-      onClick: () => togglePdf(),
-    },
     {
       id: 'config',
       icon: Settings,
@@ -400,7 +418,7 @@ export function Toolbar() {
         style={{ pointerEvents: 'auto' }}
       >
         <div className="rounded-[32px] border border-white/60 bg-white/78 px-3 py-2.5 shadow-[0_14px_40px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
-          <div className={`grid gap-2 ${isTablet ? 'grid-cols-5' : 'grid-cols-5'}`}>
+          <div className={`grid gap-2 ${isTablet ? 'grid-cols-4' : 'grid-cols-4'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
               const labels = copy.toolbar.dockButtons[button.id];

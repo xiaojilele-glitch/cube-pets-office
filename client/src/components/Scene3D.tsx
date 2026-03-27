@@ -25,9 +25,9 @@ export function Scene3D() {
         dpr={isMobile ? [1, 1.5] : [1, 2]}
         gl={{ antialias: true, alpha: false }}
         onCreated={({ gl, camera: sceneCamera }) => {
-          gl.setClearColor('#D9D0C3');
+          gl.setClearColor('#BFDFFF');
           gl.toneMapping = ACESFilmicToneMapping;
-          gl.toneMappingExposure = isMobile ? 0.88 : 0.82;
+          gl.toneMappingExposure = isMobile ? 0.92 : 0.88;
           sceneCamera.lookAt(0, isMobile ? 1.6 : 1.35, 0);
         }}
       >
