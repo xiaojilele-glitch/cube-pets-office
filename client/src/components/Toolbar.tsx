@@ -14,10 +14,11 @@ import {
   X,
 } from 'lucide-react';
 
+import { GitHubRepoBadge } from '@/components/GitHubRepoBadge';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
 import { getAgentToolbarLabel } from '@/lib/agent-config';
-import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
+import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
@@ -145,6 +146,7 @@ export function Toolbar() {
 
   const [showHelp, setShowHelp] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const showGitHubBadge = IS_GITHUB_PAGES;
 
   const dockButtons: Array<{
     id: DockButtonId;
@@ -257,6 +259,15 @@ export function Toolbar() {
           </div>
         </div>
 
+        {showGitHubBadge && !showMobileMenu ? (
+          <div
+            className="fixed right-3 top-[calc(env(safe-area-inset-top)+88px)] z-[81] max-w-[calc(100vw-1.5rem)]"
+            style={{ pointerEvents: 'auto' }}
+          >
+            <GitHubRepoBadge />
+          </div>
+        ) : null}
+
         {showMobileMenu && (
           <>
             <button
@@ -351,6 +362,12 @@ export function Toolbar() {
         className={`fixed z-[60] ${isTablet ? 'right-5 top-5 w-[280px]' : 'right-6 top-6 w-[320px]'}`}
         style={{ pointerEvents: 'auto' }}
       >
+        {showGitHubBadge ? (
+          <div className="mb-3">
+            <GitHubRepoBadge />
+          </div>
+        ) : null}
+
         <div className="rounded-[28px] border border-white/60 bg-white/84 p-4 shadow-[0_16px_44px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
           <div className="flex items-center justify-between gap-3">
             <div>

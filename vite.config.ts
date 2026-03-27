@@ -153,6 +153,7 @@ const plugins = [react(), tailwindcss(), vitePluginManusRuntime(), vitePluginMan
 export default defineConfig(() => {
   const repository = process.env.GITHUB_REPOSITORY || "opencroc/cube-pets-office";
   const repositoryName = repository.split("/")[1] || "cube-pets-office";
+  const repositoryUrl = `https://github.com/${repository}`;
   const isGitHubPagesBuild =
     process.env.GITHUB_PAGES === "true" ||
     process.env.DEPLOY_TARGET === "github-pages";
@@ -161,6 +162,8 @@ export default defineConfig(() => {
     base: isGitHubPagesBuild ? `/${repositoryName}/` : "/",
     define: {
       __GITHUB_PAGES__: JSON.stringify(isGitHubPagesBuild),
+      __GITHUB_REPOSITORY__: JSON.stringify(repository),
+      __GITHUB_REPOSITORY_URL__: JSON.stringify(repositoryUrl),
     },
     plugins,
     resolve: {
