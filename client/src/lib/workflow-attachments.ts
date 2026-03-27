@@ -5,6 +5,9 @@ import {
   type WorkflowInputAttachment,
 } from "@shared/workflow-input";
 
+type TesseractModule = typeof import("tesseract.js");
+type OCRWorker = Awaited<ReturnType<TesseractModule["createWorker"]>>;
+
 const TEXT_EXTENSIONS = new Set([
   "txt",
   "md",
@@ -39,6 +42,14 @@ const PDF_EXTENSIONS = new Set(["pdf"]);
 const WORD_EXTENSIONS = new Set(["docx", "doc"]);
 const SPREADSHEET_EXTENSIONS = new Set(["xlsx", "xls", "csv", "tsv"]);
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "bmp", "gif"]);
+const OCR_LANGUAGES = ["eng", "chi_sim"];
+const OCR_TIMEOUT_MS = 30_000;
+const OCR_WORKER_PATH =
+  import.meta.env.BASE_URL === "/"
+    ? "/tesseract-worker-proxy.js"
+    : `${import.meta.env.BASE_URL.replace(/\/+$/, "/")}tesseract-worker-proxy.js`;
+
+let ocrWorkerPromise: Promise<OCRWorker> | null = null;
 
 function getFileExtension(name: string) {
   const parts = name.split(".");
@@ -118,6 +129,49 @@ function makeAttachmentId(file: File) {
   }
 
   return `${file.name}-${file.size}-${Date.now()}`;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.ceil(timeoutMs / 1000)}s.`));
+    }, timeoutMs);
+
+    promise.then(
+      value => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      error => {
+        window.clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
+async function getOcrWorker() {
+  if (!ocrWorkerPromise) {
+    ocrWorkerPromise = (async () => {
+      const tesseract = await import("tesseract.js");
+      tesseract.setLogging(false);
+
+      return tesseract.createWorker(OCR_LANGUAGES, undefined, {
+        workerPath: OCR_WORKER_PATH,
+        logger: () => {
+          // OCR progress stays silent in the UI.
+        },
+        errorHandler: error => {
+          console.warn("[WorkflowAttachments] OCR worker warning:", error);
+        },
+      });
+    })().catch(error => {
+      ocrWorkerPromise = null;
+      throw error;
+    });
+  }
+
+  return ocrWorkerPromise;
 }
 
 function finalizeAttachment(
@@ -217,13 +271,25 @@ async function parseSpreadsheetFile(file: File) {
 }
 
 async function parseImageFile(file: File) {
-  const tesseract = await import("tesseract.js");
-  const result = await tesseract.recognize(file, "eng+chi_sim", {
-    logger: () => {
-      // Keep OCR progress silent in the UI for now.
-    },
-  });
-  return finalizeAttachment(file, result.data.text || "", "parsed");
+  const worker = await withTimeout(getOcrWorker(), OCR_TIMEOUT_MS, "OCR worker setup");
+  const result = await withTimeout(
+    worker.recognize(file, {
+      rotateAuto: true,
+    }),
+    OCR_TIMEOUT_MS,
+    "OCR"
+  );
+  const text = normalizeWorkflowAttachmentContent(result.data.text || "");
+
+  if (!text) {
+    return finalizeAttachment(
+      file,
+      buildMetadataNote(file, "No readable text was detected in the image."),
+      "metadata_only"
+    );
+  }
+
+  return finalizeAttachment(file, text, "parsed");
 }
 
 async function fileToAttachment(file: File): Promise<WorkflowInputAttachment> {

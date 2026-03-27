@@ -8,6 +8,13 @@
 - [x] UI 层保持预览摘要展示，但 workflow、去重签名和输入上下文已改为基于附件全文内容。
 - [x] `README.md` 已同步补充附件输入能力、支持格式、全文导入行为与当前边界说明。
 
+## 2026-03-28 增补
+
+- [x] 图片附件 OCR 已切换为独立浏览器 worker：不再走顶层 `tesseract.recognize()`，改为单例 worker 复用。
+- [x] OCR 链路已补齐超时与降级回退：图片识别失败或无可读文本时，附件会自动退回 `metadata_only`，不阻塞上传。
+- [x] Tesseract 初始化噪音已做过滤：已知 `Parameter not found` / `Estimating resolution` 控制台信息不再干扰排障。
+- [x] 静态预览体验已补齐 favicon：减少本地开发与 GitHub Pages 下浏览器默认 `favicon.ico` 404 噪音。
+
 ## 当前状态
 
 ## 并行改造分工（2026-03-27）
@@ -112,6 +119,7 @@
 - [x] **GitHub Pages 静态演示版已打通**：仓库已新增专用的 `build:pages` 构建入口与 Actions 部署工作流，Pages 版本只保留纯前端体验，不影响本地与服务端版本。
 - [x] **Pages 子路径兼容问题已修复**：已补齐 GitHub Pages 下的路由 base、3D 模型资源 base 与静态演示模式开关，线上 Live Demo 已可作为公开体验入口。
 - [x] **README 已同步对外信息**：仓库首页已补上 Live Demo 链接、GitHub Pages 部署说明与 Star History 展示，便于传播与开源展示。
+- [x] **附件上传链路稳定性已补强**：图片 OCR 已切换为独立 worker，补齐超时、降级与日志降噪，上传附件时不再被初始化 warning 干扰。
 
 ### 当前确认结论
 
