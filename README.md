@@ -5,7 +5,7 @@
 <h1 align="center">Cube Pets Office</h1>
 
 <p align="center">
-  把一条自然语言指令编排成一套动态组织，在 3D 办公室里可视化展示 CEO / Manager / Worker 协作过程的多智能体原型。
+  把一条自然语言指令编排成动态组织，并进一步落地为 mission 任务、Docker 执行、Feishu 回传和 3D 任务宇宙可视化的多智能体控制台。
 </p>
 
 <p align="center">
@@ -43,11 +43,19 @@ Cube Pets Office 是一个把动态组织生成、工作流编排、3D 场景可
 - 角色执行视图已从明细堆叠改为按部门汇总的一行摘要，完整交付、反馈、附件和消息记录默认折叠
 - 3D 办公室墙面继续做减法：移除了左墙背景板与多余背墙装饰，墙灯和公告板也同步简化，整体更清爽
 
+## 2026-03-29 更新
+
+- mission 主线已收口到 `main`：`shared/mission/**`、`shared/executor/**`、任务路由、Feishu bridge、lobster executor、brain dispatch 和 `/tasks` 页面已合并
+- 前端任务页已正式挂到 `/tasks` 与 `/tasks/:taskId`，与现有 workflow 视图并存
+- 服务端入口已接入 mission / executor / Feishu 集成路由，同时保留原有 workflow / chat / agent 主链
+- `.env.example`、README 与 smoke 脚本已补齐，便于本地和服务器做闭环验证
+
 ## 当前能力
 
 - 动态组织生成：不再写死固定 18 角色，按任务临时生成 CEO / manager / worker 结构
 - Skills / MCP 装配：节点可随组织一起进入执行链路
 - 双运行模式：支持浏览器前端预演模式和服务端高级执行模式
+- Mission 控制平面：支持任务列表、任务详情、决策恢复、executor 回调和 Feishu relay / webhook 入口
 - 附件输入工作流：支持“文字 + 附件”一起发布指令，附件会进入工作流输入上下文
 - 附件全文导入：文本、PDF、Word、Excel、图片 OCR 解析后会以全文导入工作流，界面仅显示预览摘要
 - GitHub Pages 演示：提供纯静态体验入口，右上角展示仓库链接

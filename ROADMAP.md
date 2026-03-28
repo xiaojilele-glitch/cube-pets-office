@@ -101,13 +101,22 @@
 
 ## 2026-03-28 增补：Cube Brain + Docker 执行层合并
 
-- [ ] 主定位从“生成 md/json 报告”升级为“真实任务编排 + Docker 实例执行 + 进度回传 + 可视化交付”。
-- [ ] `cube-pets-office` 作为唯一主控 Brain，统一承接 Cube UI 与 Feishu 两个入口。
-- [ ] 第一版执行载体固定为 Docker 容器，后续再评估安卓模拟器 / 完整虚机。
-- [ ] `openclaw-feishu-progress` 本轮只迁移任务状态机、Feishu ACK / relay、任务宇宙 API、`/tasks` 页面与执行协调思想。
-- [ ] scanner / pipeline / codegen / Playwright 报告链路不纳入本轮主线，避免稀释真实执行闭环。
-- [ ] 真实执行任务的核心交付从“默认写 md/json”改为“任务状态、实例信息、日志摘要、工件链接、最终结果”。
+- [x] 主定位从“生成 md/json 报告”升级为“真实任务编排 + Docker 实例执行 + 进度回传 + 可视化交付”。
+- [x] `cube-pets-office` 作为唯一主控 Brain，统一承接 Cube UI 与 Feishu 两个入口。
+- [x] 第一版执行载体固定为 Docker 容器，后续再评估安卓模拟器 / 完整虚机。
+- [x] `openclaw-feishu-progress` 本轮只迁移任务状态机、Feishu ACK / relay、任务宇宙 API、`/tasks` 页面与执行协调思想。
+- [x] scanner / pipeline / codegen / Playwright 报告链路不纳入本轮主线，避免稀释真实执行闭环。
+- [x] 真实执行任务的核心交付从“默认写 md/json”改为“任务状态、实例信息、日志摘要、工件链接、最终结果”。
 - 执行细则见 `docs/mission-worktree-dual-repo.md`，用于约束多 worktree + 双仓参考的读写边界。
+
+## 2026-03-29 收口更新
+
+- [x] `Worktree 0 / A / B / C / D / E / F` 的代码都已合并回 `main`。
+- [x] `shared/mission/**`、`shared/executor/**`、任务路由、executor 参考实现、brain dispatch、Feishu bridge、任务宇宙页面和总集成入口都已进入主线。
+- [x] `.env.example`、README、mission smoke 脚本与总集成入口文档已补齐。
+- [x] `npm run check` 已在合并后通过。
+- [x] 本地 `main` 已完成收口并准备推送远端。
+- [ ] mission smoke 脚本已落地，但尚未在本轮文档更新时记录完整服务器实机验证结果。
 
 ## 并行改造分工（2026-03-28：Cube Brain + Docker 执行层）
 
@@ -272,11 +281,11 @@
 
 ### 合并顺序
 
-- [ ] 先合并 `Worktree 0`，冻结 shared 契约和接口文档。
-- [ ] 然后并行推进 `Worktree A / B / C / D / E`。
-- [ ] `Worktree F` 只在 A/B/C/D/E 主体完成后做总集成，不提前抢改共享入口文件。
-- [ ] 除 `Worktree 0` 外，其余分支禁止并行改同一批 `shared/mission/**` 契约文件。
-- [ ] `server/index.ts`、主路由注册、README 环境变量章节默认归 `Worktree F` 单独持有。
+- [x] 先合并 `Worktree 0`，冻结 shared 契约和接口文档。
+- [x] 然后并行推进 `Worktree A / B / C / D / E`。
+- [x] `Worktree F` 只在 A/B/C/D/E 主体完成后做总集成，不提前抢改共享入口文件。
+- [x] 除 `Worktree 0` 外，其余分支禁止并行改同一批 `shared/mission/**` 契约文件。
+- [x] `server/index.ts`、主路由注册、README 环境变量章节默认归 `Worktree F` 单独持有。
 
 ### 集成验收口径
 
@@ -315,6 +324,7 @@
 
 ### 本轮新增完成
 
+- [x] **Mission 主线已收口到 `main`**：`Worktree 0 / A / B / C / D / E / F` 的共享契约、任务状态机、lobster executor、brain dispatch、Feishu bridge、`/tasks` 页面与总集成入口都已合并进主线，当前 `main` 已具备 mission 首版闭环骨架。
 - [x] **中英文切换与移动端适配已收口到 `main`**：默认语言已改为中文，语言切换会持久化；顶部工具栏、工作流面板、配置/聊天/报告等核心界面已完成中英文接入与移动端布局适配。
 - [x] **固定 18 智能体已升级为动态组织生成**：服务端会按用户指令自动生成组织结构、角色职责、skills 与 MCP 配置；前端组织与进度视图已能展示动态节点和组织信息。
 - [x] **GitHub Pages 预览页已增加仓库入口**：预览模式右上角已展示 GitHub 仓库入口，兼容桌面端与移动端，便于用户直接跳转点 Star。
