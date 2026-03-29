@@ -105,24 +105,23 @@ export default function TasksPage({
   return (
     <div
       className={cn(
-        "min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1),transparent_26%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.1),transparent_22%),linear-gradient(180deg,#fffdf8,#f3ecdf)] text-stone-900",
+        "min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1),transparent_26%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.1),transparent_22%),linear-gradient(180deg,#fffdf8,#f3ecdf)] text-stone-900 xl:h-[100svh] xl:overflow-hidden",
         className
       )}
     >
-      <div className="mx-auto flex min-h-screen max-w-[1680px] flex-col px-4 py-4 md:px-6">
-        <header className="rounded-[30px] border border-stone-200/80 bg-white/75 px-5 py-5 shadow-[0_26px_80px_rgba(112,84,51,0.08)] backdrop-blur">
+      <div className="mx-auto flex min-h-screen max-w-[1680px] flex-col px-3 py-3 md:px-5 md:py-4 xl:h-full xl:min-h-0">
+        <header className="shrink-0 rounded-[28px] border border-stone-200/80 bg-white/75 px-4 py-4 shadow-[0_20px_60px_rgba(112,84,51,0.08)] backdrop-blur md:px-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-stone-500">
-                Worktree E / Tasks Universe
+                Mission Control
               </div>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-stone-900">
-                Mission List + Mission Detail
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-stone-900 md:text-[2rem]">
+                Task Universe
               </h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-600">
-                This workspace reads runtime workflows and turns them into a
-                task universe with live list updates, interior view, timeline,
-                decision entry, artifacts, and failure diagnostics.
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600 md:line-clamp-2">
+                Track mission status, inspect task interiors, review timelines,
+                submit decisions, and open artifacts from one live workspace.
               </p>
             </div>
 
@@ -142,9 +141,9 @@ export default function TasksPage({
           </div>
         </header>
 
-        <div className="mt-4 grid min-h-0 flex-1 gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className="flex min-h-[70vh] flex-col overflow-hidden rounded-[30px] border border-stone-200/80 bg-white/78 shadow-[0_24px_70px_rgba(112,84,51,0.08)] backdrop-blur">
-            <div className="border-b border-stone-200/80 px-5 py-5">
+        <div className="mt-3 grid min-h-0 flex-1 gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
+          <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-stone-200/80 bg-white/78 shadow-[0_24px_70px_rgba(112,84,51,0.08)] backdrop-blur">
+            <div className="shrink-0 border-b border-stone-200/80 px-4 py-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold text-stone-900">
@@ -159,7 +158,7 @@ export default function TasksPage({
                 ) : null}
               </div>
 
-              <div className="relative mt-4">
+              <div className="relative mt-3">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
                 <Input
                   value={search}
@@ -171,7 +170,7 @@ export default function TasksPage({
             </div>
 
             <ScrollArea className="min-h-0 flex-1">
-              <div className="space-y-3 px-4 py-4">
+              <div className="space-y-2.5 px-3 py-3">
                 {error ? (
                   <div className="rounded-[24px] border border-rose-200 bg-rose-50/80 px-4 py-4 text-sm leading-6 text-rose-800">
                     {error}
@@ -200,7 +199,7 @@ export default function TasksPage({
                       key={task.id}
                       type="button"
                       className={cn(
-                        "w-full rounded-[24px] border px-4 py-4 text-left transition-all",
+                        "w-full rounded-[22px] border px-3.5 py-3.5 text-left transition-all",
                         active
                           ? "border-amber-300 bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,243,224,0.94))] shadow-[0_16px_44px_rgba(164,113,29,0.12)]"
                           : "border-stone-200/80 bg-stone-50/70 hover:border-stone-300 hover:bg-white/85"
@@ -228,7 +227,7 @@ export default function TasksPage({
                               </span>
                             ) : null}
                           </div>
-                          <div className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-stone-900">
+                          <div className="mt-2.5 line-clamp-2 text-sm font-medium leading-6 text-stone-900">
                             {task.title}
                           </div>
                         </div>
@@ -240,14 +239,14 @@ export default function TasksPage({
                         </div>
                       </div>
 
-                      <div className="mt-3 text-xs leading-5 text-stone-500">
+                      <div className="mt-2.5 text-xs leading-5 text-stone-500">
                         {task.currentStageLabel || "No stage yet"}
                         {task.waitingFor ? ` • ${task.waitingFor}` : ""}
                       </div>
-                      <div className="mt-3 text-sm leading-6 text-stone-600">
+                      <div className="mt-2 text-sm leading-6 text-stone-600">
                         {compactText(task.summary || task.sourceText, 160)}
                       </div>
-                      <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-stone-500">
+                      <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-stone-500">
                         <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
                           {task.taskCount} tasks
                         </span>
@@ -265,7 +264,7 @@ export default function TasksPage({
             </ScrollArea>
           </aside>
 
-          <main className="min-w-0">
+          <main className="min-w-0 xl:min-h-0 xl:overflow-hidden">
             <TaskDetailView
               detail={selectedDetail || null}
               decisionNote={decisionNote}
@@ -275,7 +274,7 @@ export default function TasksPage({
               }}
               onLaunchDecision={handleLaunchDecision}
               launchingPresetId={launchingPresetId}
-              className="min-w-0"
+              className="min-w-0 xl:h-full xl:min-h-0"
             />
           </main>
         </div>

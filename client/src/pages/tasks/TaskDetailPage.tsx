@@ -65,7 +65,7 @@ export default function TaskDetailPage({
               Mission Detail
             </div>
             <div className="mt-1 text-sm text-stone-600">
-              Standalone detail shell for Worktree F route integration.
+              Review mission status, timeline, decisions, logs, and artifacts.
             </div>
           </div>
           <div className="flex items-center gap-2">

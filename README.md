@@ -49,6 +49,8 @@ Cube Pets Office 是一个把动态组织生成、工作流编排、3D 场景可
 - 前端任务页已正式挂到 `/tasks` 与 `/tasks/:taskId`，与现有 workflow 视图并存
 - 服务端入口已接入 mission / executor / Feishu 集成路由，同时保留原有 workflow / chat / agent 主链
 - `.env.example`、README 与 smoke 脚本已补齐，便于本地和服务器做闭环验证
+- `/tasks` 已完成一轮 16:9 桌面态收口：`Overview / Execution / Artifacts` 改为单屏任务驾驶舱，长文本统一走摘要预览 + 详情弹窗，不再默认整页长滚动
+- `Overview` 已重构为左侧 2D Star Map、中列 Orbit Stages / Agent Crew、右侧 Directive / Decision / Runtime 的平衡布局；`Execution` 与 `Artifacts` 也统一为紧凑摘要视图
 
 ## 当前能力
 
@@ -56,6 +58,7 @@ Cube Pets Office 是一个把动态组织生成、工作流编排、3D 场景可
 - Skills / MCP 装配：节点可随组织一起进入执行链路
 - 双运行模式：支持浏览器前端预演模式和服务端高级执行模式
 - Mission 控制平面：支持任务列表、任务详情、决策恢复、executor 回调和 Feishu relay / webhook 入口
+- `/tasks` 任务驾驶舱：支持 `Overview / Execution / Artifacts` 三页签、桌面端单屏详情、长文本弹窗、工件下载和决策入口
 - 附件输入工作流：支持“文字 + 附件”一起发布指令，附件会进入工作流输入上下文
 - 附件全文导入：文本、PDF、Word、Excel、图片 OCR 解析后会以全文导入工作流，界面仅显示预览摘要
 - GitHub Pages 演示：提供纯静态体验入口，右上角展示仓库链接
@@ -228,6 +231,7 @@ Pages 版本特性：
 ## Mission 集成
 
 - 前端任务页已挂到 `/tasks` 和 `/tasks/:taskId`，高级模式下会与现有 workflow 视图并存。
+- 任务详情页当前采用总览优先的桌面驾驶舱布局：`Overview / Execution / Artifacts` 各自独立滚动，适合 16:9 屏幕持续观察任务状态。
 - 服务端同时保留原有 workflow Socket 事件与新 `mission_event`，不会替换旧的 `agent_event`。
 - executor 回调默认走 HMAC-SHA256：服务端校验 `x-cube-executor-timestamp` 与 `x-cube-executor-signature`，签名串格式为 `timestamp.rawBody`。
 - smoke only 路由默认关闭；只有设置 `MISSION_SMOKE_ENABLED=true` 时，`/api/tasks/smoke/dispatch` 和 `/api/tasks/smoke/seed-running` 才会暴露。

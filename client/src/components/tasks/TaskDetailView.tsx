@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -7,12 +7,12 @@ import {
   FileText,
   FolderKanban,
   LoaderCircle,
-  Orbit,
   Sparkles,
   TimerReset,
   Workflow,
 } from "lucide-react";
 
+import { useViewportTier } from "@/hooks/useViewportTier";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +22,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -29,7 +37,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { MissionTaskDetail, TaskArtifact } from "@/lib/tasks-store";
 import { useWorkflowStore } from "@/lib/workflow-store";
@@ -85,36 +95,133 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-white/70 bg-white/70 px-4 py-4 shadow-sm backdrop-blur">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+    <div className="rounded-[20px] border border-white/70 bg-white/72 px-3.5 py-3.5 shadow-sm backdrop-blur">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">
         {label}
       </div>
-      <div className="mt-2 text-2xl font-semibold text-stone-900">{value}</div>
+      <div className="mt-1.5 text-xl font-semibold text-stone-900 md:text-2xl">
+        {value}
+      </div>
       <div className="mt-1 text-xs leading-5 text-stone-500">{hint}</div>
     </div>
   );
 }
 
-function KeyValueList({
-  rows,
+function DetailTextDialog({
+  title,
+  description,
+  text,
+  buttonLabel = "More",
 }: {
-  rows: Array<{ label: string; value: string }>;
+  title: string;
+  description?: string;
+  text: string;
+  buttonLabel?: string;
 }) {
   return (
-    <div className="space-y-3">
-      {rows.map(row => (
-        <div
-          key={row.label}
-          className="rounded-2xl border border-stone-200/80 bg-stone-50/80 px-3 py-3"
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="rounded-full border-stone-200 bg-white/80 text-xs"
         >
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-            {row.label}
+          {buttonLabel}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl rounded-[24px] border-stone-200 bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
+        <DialogHeader className="border-b border-stone-200/80 px-6 py-5">
+          <DialogTitle className="text-stone-900">{title}</DialogTitle>
+          {description ? (
+            <DialogDescription className="text-sm leading-6 text-stone-500">
+              {description}
+            </DialogDescription>
+          ) : null}
+        </DialogHeader>
+        <ScrollArea className="max-h-[70vh] w-full">
+          <div className="whitespace-pre-wrap px-6 py-5 text-sm leading-7 text-stone-700">
+            {text}
           </div>
-          <div className="mt-1 break-words text-sm leading-6 text-stone-800">
-            {row.value}
-          </div>
-        </div>
-      ))}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ExcerptBlock({
+  title,
+  description,
+  text,
+  maxLength,
+  emptyText,
+  className,
+}: {
+  title: string;
+  description?: string;
+  text: string;
+  maxLength: number;
+  emptyText?: string;
+  className?: string;
+}) {
+  const normalized = text.trim();
+  const fallback = emptyText || "No detail captured yet.";
+  const resolved = normalized || fallback;
+  const preview = compactText(resolved, maxLength);
+  const isTruncated = normalized.length > maxLength;
+
+  return (
+    <div className={cn("space-y-3", className)}>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+        {title}
+      </div>
+      <div className="text-sm leading-6 text-stone-700">{preview}</div>
+      {isTruncated ? (
+        <DetailTextDialog
+          title={title}
+          description={description}
+          text={resolved}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function SnapshotTile({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-3">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+        {label}
+      </div>
+      <div className="mt-1 text-sm font-medium leading-6 text-stone-800">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function DetailTabViewport({
+  isDesktop,
+  children,
+}: {
+  isDesktop: boolean;
+  children: ReactNode;
+}) {
+  if (!isDesktop) {
+    return <div className="space-y-4">{children}</div>;
+  }
+
+  return (
+    <div className="h-full min-h-0 overflow-hidden rounded-[28px] border border-stone-200/80 bg-white/55 p-2 shadow-[0_24px_60px_rgba(112,84,51,0.06)]">
+      <ScrollArea className="h-full w-full">
+        <div className="space-y-4 p-1 pr-3">{children}</div>
+      </ScrollArea>
     </div>
   );
 }
@@ -134,6 +241,7 @@ export function TaskDetailView({
   launchingPresetId?: string | null;
   className?: string;
 }) {
+  const { isDesktop } = useViewportTier();
   const downloadWorkflowReport = useWorkflowStore(
     state => state.downloadWorkflowReport
   );
@@ -166,7 +274,7 @@ export function TaskDetailView({
     return (
       <Empty
         className={cn(
-          "rounded-[28px] border-stone-200/80 bg-stone-50/80",
+          "flex h-full items-center justify-center rounded-[28px] border-stone-200/80 bg-stone-50/80",
           className
         )}
       >
@@ -214,9 +322,468 @@ export function TaskDetailView({
     }
   }
 
+  const summaryText = compactText(detail.summary, isDesktop ? 240 : 420);
+  const liveSignalText = compactText(
+    detail.lastSignal || detail.waitingFor || "No recent signal yet.",
+    160
+  );
+  const summaryDialogNeeded = detail.summary.trim().length > (isDesktop ? 240 : 420);
+  const liveSignalResolved =
+    detail.lastSignal || detail.waitingFor || "No recent signal yet.";
+  const liveSignalDialogNeeded = liveSignalResolved.trim().length > 160;
+
+  const sourceDirectiveText = detail.sourceText.trim();
+  const runtimePreviewRows = [
+    ...detail.instanceInfo.slice(0, 4),
+    ...detail.logSummary.slice(0, 4),
+  ];
+  const runtimeDetailText = [
+    "Instance Info",
+    ...detail.instanceInfo.map(row => `${row.label}: ${row.value}`),
+    "",
+    "Log Summary",
+    ...detail.logSummary.map(row => `${row.label}: ${row.value}`),
+  ].join("\n");
+
+  const sourceDirectivePanel = (
+    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <CardHeader className="space-y-1 pb-3">
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <FileText className="size-4 text-stone-600" />
+          Source Directive
+        </CardTitle>
+        <CardDescription>
+          The original request driving this mission.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3.5 py-3">
+          <ExcerptBlock
+            title="Directive Preview"
+            description="Full original mission directive."
+            text={sourceDirectiveText}
+            maxLength={132}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const workPackagesPanel = (
+    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <Workflow className="size-4 text-amber-600" />
+          Work Packages
+        </CardTitle>
+        <CardDescription>
+          Delivery snapshots from workers, review loops, revisions, and scores.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2.5">
+        {detail.tasks.length > 0 ? (
+          detail.tasks.map(task => {
+            const progressValue = workPackageProgress(task.status);
+            const scoreValue =
+              task.total_score !== null && task.total_score !== undefined
+                ? String(task.total_score)
+                : "n/a";
+            const reviewState = task.meta_audit_feedback
+              ? "Audit flagged"
+              : task.manager_feedback
+                ? "Manager replied"
+                : "Pending";
+            const deliverableText =
+              task.deliverable_v3 ||
+              task.deliverable_v2 ||
+              task.deliverable ||
+              "No deliverable text captured yet.";
+            const managerText = task.manager_feedback || "No manager feedback yet.";
+            const auditText =
+              task.meta_audit_feedback || "No audit signal captured yet.";
+
+            return (
+              <div
+                key={task.id}
+                className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 p-3.5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-stone-700">
+                        #{task.id}
+                      </span>
+                      <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
+                        {task.department}
+                      </span>
+                      <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
+                        v{task.version}
+                      </span>
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">
+                        {task.status}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-sm font-medium leading-6 text-stone-900">
+                      {compactText(task.description || "No work brief captured yet.", 118)}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
+                        {progressValue}% progress
+                      </span>
+                      <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
+                        Score {scoreValue}
+                      </span>
+                      <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
+                        {reviewState}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="min-w-[184px] max-w-[220px] flex-1 rounded-[16px] border border-stone-200/80 bg-white/80 px-3 py-2.5">
+                    <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
+                      <span>Execution lane</span>
+                      <span>{progressValue}%</span>
+                    </div>
+                    <Progress
+                      className="mt-2 h-1.5 bg-stone-200"
+                      value={progressValue}
+                    />
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <SnapshotTile label="Score" value={scoreValue} />
+                      <SnapshotTile label="Review" value={reviewState} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid gap-2.5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                  <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                    <ExcerptBlock
+                      title="Work Brief"
+                      description={`Full work brief for task #${task.id}.`}
+                      text={task.description || "No work brief captured yet."}
+                      maxLength={104}
+                    />
+                  </div>
+                  <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                    <ExcerptBlock
+                      title="Deliverable Preview"
+                      description={`Full deliverable payload for task #${task.id}.`}
+                      text={deliverableText}
+                      maxLength={150}
+                    />
+                  </div>
+                  <div className="grid gap-2.5">
+                    <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                      <ExcerptBlock
+                        title="Manager Signal"
+                        description={`Manager review notes for task #${task.id}.`}
+                        text={managerText}
+                        maxLength={86}
+                      />
+                    </div>
+                    <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                      <ExcerptBlock
+                        title="Audit Signal"
+                        description={`Audit notes for task #${task.id}.`}
+                        text={auditText}
+                        maxLength={86}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
+            The workflow has not emitted work packages yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const timelinePanel = (
+    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <TimerReset className="size-4 text-sky-600" />
+          Timeline
+        </CardTitle>
+        <CardDescription>
+          Workflow events, task transitions, and the latest coordination
+          messages.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2.5">
+        {detail.timeline.length > 0 ? (
+          detail.timeline.map(event => (
+            <div key={event.id} className="relative pl-6">
+              <div className="absolute left-[6px] top-0 h-full w-px bg-stone-200" />
+              <div
+                className={cn(
+                  "absolute left-0 top-1.5 size-[13px] rounded-full border shadow-sm",
+                  timelineTone(event.level)
+                )}
+              />
+              <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/70 px-3.5 py-2.5">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-sm font-medium text-stone-900">
+                        {event.title}
+                      </div>
+                      <span
+                        className={cn(
+                          "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                          event.level === "error"
+                            ? "border-rose-200 bg-rose-50 text-rose-700"
+                            : event.level === "warn"
+                              ? "border-amber-200 bg-amber-50 text-amber-700"
+                              : event.level === "success"
+                                ? "border-teal-200 bg-teal-50 text-teal-700"
+                                : "border-sky-200 bg-sky-50 text-sky-700"
+                        )}
+                      >
+                        {event.level}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 text-sm leading-6 text-stone-600">
+                      {compactText(event.description, 96)}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                        {formatTaskDate(event.time)}
+                      </span>
+                      {event.actor ? (
+                        <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                          {event.actor}
+                        </span>
+                      ) : null}
+                      {event.description.trim().length > 96 ? (
+                        <DetailTextDialog
+                          title={event.title}
+                          description="Full timeline event detail."
+                          text={event.description}
+                          buttonLabel="Detail"
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
+            No timeline signals have been captured yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const decisionPanel = (
+    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <CardHeader className="space-y-1 pb-3">
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <Sparkles className="size-4 text-teal-600" />
+          Decision Entry
+        </CardTitle>
+        <CardDescription>
+          Launch a follow-up workflow without refreshing the page.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <Textarea
+          value={decisionNote}
+          onChange={event => onDecisionNoteChange(event.target.value)}
+          className="min-h-20 rounded-[18px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
+          placeholder="Optional steering: add emphasis, constraints, or the exact question the next workflow should answer."
+        />
+        <div className="grid gap-2 sm:grid-cols-2">
+          {detail.decisionPresets.map(preset => (
+            <button
+              key={preset.id}
+              type="button"
+              className={cn(
+                "w-full rounded-[18px] border px-3.5 py-3 text-left transition-colors",
+                toneFromDecisionTone(preset.tone)
+              )}
+              onClick={() => void onLaunchDecision(preset.id)}
+              disabled={launchingPresetId === preset.id}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold">{preset.label}</div>
+                  <div className="mt-1 line-clamp-2 text-xs leading-5 opacity-80">
+                    {preset.description}
+                  </div>
+                </div>
+                {launchingPresetId === preset.id ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <ArrowUpRight className="size-4" />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const runtimeSnapshotPanel = (
+    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <CardHeader className="space-y-1 pb-3">
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <Bot className="size-4 text-sky-600" />
+          Runtime Snapshot
+        </CardTitle>
+        <CardDescription>
+          Compact preview of instance facts and runtime metrics.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {runtimePreviewRows.map(row => (
+            <SnapshotTile key={row.label} label={row.label} value={row.value} />
+          ))}
+        </div>
+        <div className="flex justify-end">
+          <DetailTextDialog
+            title="Runtime Snapshot Details"
+            description="Full instance info and log summary."
+            text={runtimeDetailText}
+            buttonLabel="More details"
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const artifactsPanel = (
+    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <FileText className="size-4 text-teal-600" />
+          Artifacts
+        </CardTitle>
+        <CardDescription>
+          Workflow reports, department summaries, and captured input
+          attachments.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {orderedArtifacts.length > 0 ? (
+          orderedArtifacts.map((artifact, index) => (
+            <div key={artifact.id}>
+              {index > 0 ? <Separator className="mb-3 bg-stone-200/80" /> : null}
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="text-sm font-medium text-stone-900">
+                      {artifact.title}
+                    </div>
+                    <span className="rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
+                      {artifact.kind.replace("_", " ")}
+                    </span>
+                    {artifact.format ? (
+                      <span className="rounded-full border border-stone-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                        {artifact.format}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-3 rounded-[18px] border border-stone-200/80 bg-stone-50/70 px-3.5 py-3">
+                    <ExcerptBlock
+                      title="Artifact Summary"
+                      description={`Full metadata for ${artifact.title}.`}
+                      text={
+                        artifact.description ||
+                        artifact.href ||
+                        "Downloadable artifact."
+                      }
+                      maxLength={160}
+                    />
+                  </div>
+                  {artifact.content ? (
+                    <div className="mt-3 rounded-[18px] border border-stone-200/80 bg-white/80 px-3.5 py-3">
+                      <ExcerptBlock
+                        title="Content Preview"
+                        description={`Full captured content for ${artifact.title}.`}
+                        text={artifact.content}
+                        maxLength={200}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 rounded-full border-stone-200 bg-white/80"
+                  onClick={() => void handleArtifactDownload(artifact)}
+                  disabled={
+                    downloadingArtifactId === artifact.id ||
+                    (!artifact.workflowId &&
+                      artifact.downloadKind !== "attachment")
+                  }
+                >
+                  {downloadingArtifactId === artifact.id ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                  ) : (
+                    <Download className="size-4" />
+                  )}
+                  {artifactActionLabel(artifact)}
+                </Button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
+            No artifacts are linked to this workflow yet.
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const failurePanel =
+    detail.failureReasons.length > 0 ? (
+      <Card className="rounded-[28px] border-rose-200/80 bg-rose-50/70 shadow-[0_24px_60px_rgba(175,69,95,0.08)]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-rose-900">
+            <AlertTriangle className="size-4 text-rose-600" />
+            Failure Reasons
+          </CardTitle>
+        </CardHeader>
+      <CardContent className="space-y-2">
+        {detail.failureReasons.map(reason => (
+          <div
+            key={reason}
+            className="rounded-2xl border border-rose-200/80 bg-white/75 px-3 py-3"
+          >
+            <ExcerptBlock
+              title="Failure Signal"
+              description="Full captured failure reason."
+              text={reason}
+              maxLength={160}
+              className="text-rose-900"
+            />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    ) : null;
+
   return (
-    <div className={cn("space-y-6", className)}>
-      <section className="overflow-hidden rounded-[30px] border border-stone-200/80 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_28%),linear-gradient(180deg,#fffdf8,#f7f0e6)] p-6 shadow-[0_30px_80px_rgba(113,83,49,0.12)]">
+    <div
+      className={cn(
+        "flex min-h-0 flex-col gap-4",
+        isDesktop && "h-full",
+        className
+      )}
+    >
+      <section className="shrink-0 overflow-hidden rounded-[28px] border border-stone-200/80 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_28%),linear-gradient(180deg,#fffdf8,#f7f0e6)] p-5 shadow-[0_24px_70px_rgba(113,83,49,0.1)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-4xl">
             <div className="flex flex-wrap gap-2">
@@ -240,30 +807,44 @@ export function TaskDetailView({
                 </span>
               ))}
             </div>
-            <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-tight text-stone-900 md:text-4xl">
+            <h1 className="mt-3 max-w-4xl text-2xl font-semibold tracking-tight text-stone-900 md:text-3xl">
               {detail.title}
             </h1>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-700 md:text-base">
-              {detail.summary}
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-700">
+              {summaryText}
             </p>
+            {summaryDialogNeeded ? (
+              <div className="mt-3">
+                <DetailTextDialog
+                  title="Mission Summary"
+                  description="Full summary for the selected mission."
+                  text={detail.summary}
+                />
+              </div>
+            ) : null}
           </div>
 
-          <div className="rounded-[22px] border border-white/75 bg-white/70 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur">
+          <div className="max-w-[300px] rounded-[22px] border border-white/75 bg-white/72 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur">
             <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
               Live signal
             </div>
-            <div className="mt-2 max-w-[280px] text-sm leading-6">
-              {detail.lastSignal ||
-                detail.waitingFor ||
-                "No recent signal yet."}
-            </div>
+            <div className="mt-2 text-sm leading-6">{liveSignalText}</div>
+            {liveSignalDialogNeeded ? (
+              <div className="mt-3">
+                <DetailTextDialog
+                  title="Live Signal"
+                  description="Full live signal text."
+                  text={liveSignalResolved}
+                />
+              </div>
+            ) : null}
             <div className="mt-3 text-xs text-stone-500">
               Updated {formatTaskRelative(detail.updatedAt)}
             </div>
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard
             label="Progress"
             value={`${detail.progress}%`}
@@ -290,316 +871,66 @@ export function TaskDetailView({
             hint="Reports and linked references"
           />
         </div>
-
-        <div className="mt-6 rounded-[24px] border border-white/75 bg-white/70 p-4 shadow-sm backdrop-blur">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-            Source Directive
-          </div>
-          <div className="mt-3 whitespace-pre-wrap text-sm leading-7 text-stone-700">
-            {detail.sourceText}
-          </div>
-        </div>
       </section>
 
-      <TaskPlanetInterior detail={detail} />
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_360px]">
-        <div className="space-y-6">
-          <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
-                <Workflow className="size-4 text-amber-600" />
-                Work Packages
-              </CardTitle>
-              <CardDescription>
-                Delivery snapshots from workers, review loops, revisions, and
-                scores.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {detail.tasks.length > 0 ? (
-                detail.tasks.map(task => (
-                  <div
-                    key={task.id}
-                    className="rounded-[24px] border border-stone-200/80 bg-stone-50/80 p-4"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap gap-2">
-                          <span className="rounded-full border border-stone-200 bg-white/75 px-2.5 py-1 text-[11px] font-semibold text-stone-700">
-                            #{task.id}
-                          </span>
-                          <span className="rounded-full border border-stone-200 bg-white/75 px-2.5 py-1 text-[11px] text-stone-600">
-                            {task.department}
-                          </span>
-                          <span className="rounded-full border border-stone-200 bg-white/75 px-2.5 py-1 text-[11px] text-stone-600">
-                            v{task.version}
-                          </span>
-                        </div>
-                        <div className="mt-3 text-sm font-medium leading-6 text-stone-900">
-                          {task.description}
-                        </div>
-                      </div>
-                      <div className="min-w-[130px]">
-                        <div className="flex items-center justify-between text-xs text-stone-500">
-                          <span>{task.status}</span>
-                          <span>{workPackageProgress(task.status)}%</span>
-                        </div>
-                        <Progress
-                          className="mt-2 h-2 bg-stone-200"
-                          value={workPackageProgress(task.status)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                      <div className="rounded-2xl border border-stone-200/80 bg-white/80 p-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                          Deliverable Preview
-                        </div>
-                        <div className="mt-2 text-sm leading-6 text-stone-700">
-                          {compactText(
-                            task.deliverable_v3 ||
-                              task.deliverable_v2 ||
-                              task.deliverable ||
-                              "No deliverable text captured yet.",
-                            260
-                          )}
-                        </div>
-                      </div>
-                      <div className="rounded-2xl border border-stone-200/80 bg-white/80 p-3">
-                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                          Review Signals
-                        </div>
-                        <div className="mt-2 space-y-2 text-sm leading-6 text-stone-700">
-                          <div>Total score: {task.total_score ?? "n/a"}</div>
-                          {task.manager_feedback ? (
-                            <div>Manager: {task.manager_feedback}</div>
-                          ) : null}
-                          {task.meta_audit_feedback ? (
-                            <div>Audit: {task.meta_audit_feedback}</div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-                  The workflow has not emitted work packages yet.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
-                <TimerReset className="size-4 text-sky-600" />
-                Timeline
-              </CardTitle>
-              <CardDescription>
-                Workflow events, task transitions, and the latest coordination
-                messages.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {detail.timeline.length > 0 ? (
-                detail.timeline.map(event => (
-                  <div key={event.id} className="relative pl-8">
-                    <div className="absolute left-[9px] top-0 h-full w-px bg-stone-200" />
-                    <div
-                      className={cn(
-                        "absolute left-0 top-1.5 size-[18px] rounded-full border shadow-sm",
-                        timelineTone(event.level)
-                      )}
-                    />
-                    <div className="rounded-[22px] border border-stone-200/80 bg-stone-50/70 px-4 py-3">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="text-sm font-medium text-stone-900">
-                            {event.title}
-                          </div>
-                          <div className="mt-1 text-sm leading-6 text-stone-600">
-                            {event.description}
-                          </div>
-                        </div>
-                        <div className="text-right text-xs text-stone-500">
-                          <div>{formatTaskDate(event.time)}</div>
-                          {event.actor ? (
-                            <div className="mt-1">{event.actor}</div>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-                  No timeline signals have been captured yet.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      <Tabs
+        defaultValue="overview"
+        className="flex min-h-0 flex-1 flex-col gap-3"
+      >
+        <div className="shrink-0 rounded-[24px] border border-stone-200/80 bg-white/78 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]">
+          <TabsList className="grid h-auto w-full grid-cols-3 rounded-[18px] bg-stone-100/80 p-1">
+            <TabsTrigger className="rounded-[14px]" value="overview">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger className="rounded-[14px]" value="execution">
+              Execution
+            </TabsTrigger>
+            <TabsTrigger className="rounded-[14px]" value="artifacts">
+              Artifacts
+            </TabsTrigger>
+          </TabsList>
         </div>
 
-        <div className="space-y-6">
-          <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
-                <Sparkles className="size-4 text-teal-600" />
-                Decision Entry
-              </CardTitle>
-              <CardDescription>
-                Launch a follow-up workflow without touching shared contracts or
-                refreshing the page.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Textarea
-                value={decisionNote}
-                onChange={event => onDecisionNoteChange(event.target.value)}
-                className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
-                placeholder="Optional steering: add emphasis, constraints, or the exact question the next workflow should answer."
-              />
-              <div className="space-y-2.5">
-                {detail.decisionPresets.map(preset => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    className={cn(
-                      "w-full rounded-[20px] border px-4 py-3 text-left transition-colors",
-                      toneFromDecisionTone(preset.tone)
-                    )}
-                    onClick={() => void onLaunchDecision(preset.id)}
-                    disabled={launchingPresetId === preset.id}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-semibold">
-                          {preset.label}
-                        </div>
-                        <div className="mt-1 text-xs leading-5 opacity-80">
-                          {preset.description}
-                        </div>
-                      </div>
-                      {launchingPresetId === preset.id ? (
-                        <LoaderCircle className="size-4 animate-spin" />
-                      ) : (
-                        <ArrowUpRight className="size-4" />
-                      )}
-                    </div>
-                  </button>
-                ))}
+        <TabsContent
+          value="overview"
+          className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+        >
+          <DetailTabViewport isDesktop={isDesktop}>
+            <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1.12fr)_380px]">
+              <TaskPlanetInterior detail={detail} />
+              <div className="self-start space-y-3">
+                {sourceDirectivePanel}
+                {decisionPanel}
+                {runtimeSnapshotPanel}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </DetailTabViewport>
+        </TabsContent>
 
-          <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
-                <Orbit className="size-4 text-amber-600" />
-                Instance Info
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <KeyValueList rows={detail.instanceInfo} />
-            </CardContent>
-          </Card>
+        <TabsContent
+          value="execution"
+          className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+        >
+          <DetailTabViewport isDesktop={isDesktop}>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
+              {workPackagesPanel}
+              {timelinePanel}
+            </div>
+          </DetailTabViewport>
+        </TabsContent>
 
-          <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
-                <Bot className="size-4 text-sky-600" />
-                Log Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <KeyValueList rows={detail.logSummary} />
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-stone-900">
-                <FileText className="size-4 text-teal-600" />
-                Artifacts
-              </CardTitle>
-              <CardDescription>
-                Workflow reports, department summaries, and captured input
-                attachments.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {orderedArtifacts.length > 0 ? (
-                orderedArtifacts.map((artifact, index) => (
-                  <div key={artifact.id}>
-                    {index > 0 ? (
-                      <Separator className="mb-3 bg-stone-200/80" />
-                    ) : null}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="text-sm font-medium text-stone-900">
-                          {artifact.title}
-                        </div>
-                        <div className="mt-1 text-xs leading-5 text-stone-500">
-                          {artifact.description ||
-                            artifact.href ||
-                            "Downloadable artifact"}
-                        </div>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0 rounded-full border-stone-200 bg-white/80"
-                        onClick={() => void handleArtifactDownload(artifact)}
-                        disabled={
-                          downloadingArtifactId === artifact.id ||
-                          (!artifact.workflowId &&
-                            artifact.downloadKind !== "attachment")
-                        }
-                      >
-                        {downloadingArtifactId === artifact.id ? (
-                          <LoaderCircle className="size-4 animate-spin" />
-                        ) : (
-                          <Download className="size-4" />
-                        )}
-                        {artifactActionLabel(artifact)}
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-                  No artifacts are linked to this workflow yet.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {detail.failureReasons.length > 0 ? (
-            <Card className="rounded-[28px] border-rose-200/80 bg-rose-50/70 shadow-[0_24px_60px_rgba(175,69,95,0.08)]">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-rose-900">
-                  <AlertTriangle className="size-4 text-rose-600" />
-                  Failure Reasons
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {detail.failureReasons.map(reason => (
-                  <div
-                    key={reason}
-                    className="rounded-2xl border border-rose-200/80 bg-white/75 px-3 py-3 text-sm leading-6 text-rose-900"
-                  >
-                    {reason}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ) : null}
-        </div>
-      </div>
+        <TabsContent
+          value="artifacts"
+          className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+        >
+          <DetailTabViewport isDesktop={isDesktop}>
+            <div className="space-y-4">
+              {artifactsPanel}
+              {failurePanel}
+            </div>
+          </DetailTabViewport>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

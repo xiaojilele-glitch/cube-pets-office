@@ -119,6 +119,14 @@
 - [x] 已合并的本地并行 worktree（`0 / A / B / C / D / E / F`）已删除，只保留主仓继续开发。
 - [ ] mission smoke 脚本已落地，但尚未在本轮文档更新时记录完整服务器实机验证结果。
 
+## 2026-03-29 界面收口补记
+
+- [x] `/tasks` 桌面端已收口为更适合 16:9 屏幕的单屏任务驾驶舱，页签内容改为内部滚动，不再依赖整页长滚动。
+- [x] `Overview` 已重构为左侧 2D Star Map、中列 `Orbit Stages / Agent Crew`、右侧 `Source Directive / Decision Entry / Runtime Snapshot` 的平衡布局。
+- [x] `Execution` 已改为高密度摘要卡：Work Package、Timeline 都采用总览优先、长文本弹窗展开的模式。
+- [x] `Artifacts` 已改为资源面板式展示：工件摘要、内容预览、失败原因统一支持摘要 + 详情弹窗。
+- [ ] 当前 `/tasks` 前端数据仍主要来自 workflow 投影层，尚未完全切换到 mission 原生数据源；后续需要继续完成这一步收口。
+
 ## 并行改造分工（2026-03-28：Cube Brain + Docker 执行层）
 
 ### Worktree 0：契约冻结与并行边界
