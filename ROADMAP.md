@@ -127,6 +127,15 @@
 - [x] `Artifacts` 已改为资源面板式展示：工件摘要、内容预览、失败原因统一支持摘要 + 详情弹窗。
 - [ ] 当前 `/tasks` 前端数据仍主要来自 workflow 投影层，尚未完全切换到 mission 原生数据源；后续需要继续完成这一步收口。
 
+## 2026-03-30 状态对齐
+
+- [x] 已按当前仓库实装结果同步 Worktree 0 / A / D / F 的主要完成状态，并补齐部分 C / E 的已落地项。
+- [x] `npm run check` 当前通过。
+- [x] mission / Feishu / executor 相关单测当前通过：`server/tests/mission-store.test.ts`、`server/tests/mission-routes.test.ts`、`server/tests/feishu-bridge.test.ts`、`server/tests/feishu-routes.test.ts`、`services/lobster-executor/src/app.test.ts`、`server/tests/dynamic-organization.test.ts`。
+- [ ] `/tasks` 仍主要消费 workflow 投影数据，`/api/planets` mission 原生路由尚未补齐。
+- [ ] `services/lobster-executor` 当前仍是 mock-first 参考实现，真实 Docker 生命周期、主动回调与签名链路还未完全接上。
+- [ ] `MissionOrchestrator`、`ExecutionPlanBuilder`、`ExecutorClient` 已落地，但 Cube UI 创建任务尚未切到 mission 主线。
+
 ## 并行改造分工（2026-03-28：Cube Brain + Docker 执行层）
 
 ### Worktree 0：契约冻结与并行边界
@@ -138,17 +147,17 @@
 
 可执行清单：
 
-- [ ] 定义 `MissionRecord`、`MissionStage`、`MissionEvent`、`MissionDecision`、`ExecutionPlan`、`ExecutorJobRequest`、`ExecutorEvent`。
-- [ ] 明确命名边界：旧 `workflow/task` 保留给现有编排内核，新 `mission` 专用于真实执行链路，避免和现有 `TaskRecord` 冲突。
-- [ ] 冻结 Cube 与远端执行器的 HTTP 契约：`/health`、`/api/executor/jobs`、`/api/executor/events`。
-- [ ] 冻结前端任务宇宙接口：`/api/tasks`、`/api/tasks/:id`、`/api/tasks/:id/decision`、`/api/planets`、`/api/planets/:id/interior`。
-- [ ] 明确 Socket 事件名和 payload 结构，统一继续走 Cube 现有 Socket.IO，不新增 raw WebSocket 技术栈。
-- [ ] 输出一份“目录所有权清单”，后续 worktree 不并行修改同一批 shared 契约文件。
+- [x] 定义 `MissionRecord`、`MissionStage`、`MissionEvent`、`MissionDecision`、`ExecutionPlan`、`ExecutorJobRequest`、`ExecutorEvent`。
+- [x] 明确命名边界：旧 `workflow/task` 保留给现有编排内核，新 `mission` 专用于真实执行链路，避免和现有 `TaskRecord` 冲突。
+- [x] 冻结 Cube 与远端执行器的 HTTP 契约：`/health`、`/api/executor/jobs`、`/api/executor/events`。
+- [x] 冻结前端任务宇宙接口：`/api/tasks`、`/api/tasks/:id`、`/api/tasks/:id/decision`、`/api/planets`、`/api/planets/:id/interior`。
+- [x] 明确 Socket 事件名和 payload 结构，统一继续走 Cube 现有 Socket.IO，不新增 raw WebSocket 技术栈。
+- [x] 输出一份“目录所有权清单”，后续 worktree 不并行修改同一批 shared 契约文件。
 
 完成标准：
 
-- [ ] 其余所有 worktree 都基于该分支 rebase / merge 开工。
-- [ ] 后续并行开发不再争抢共享类型文件命名权和接口字段定义权。
+- [x] 其余所有 worktree 都基于该分支 rebase / merge 开工。
+- [x] 后续并行开发不再争抢共享类型文件命名权和接口字段定义权。
 
 ### Worktree A：任务域模型 + 状态机 + 持久化
 
@@ -159,19 +168,19 @@
 
 可执行清单：
 
-- [ ] 新增 `MissionStore`，支持 create / progress / waiting / decision / done / failed / recovery。
+- [x] 新增 `MissionStore`，支持 create / progress / waiting / decision / done / failed / recovery。
 - [ ] 将 mission 数据持久化进 Cube 现有 `data/database.json`，不再依赖 `.opencroc/task-snapshots.json`。
 - [ ] 新增任务 REST API：创建、列表、详情、决策提交、最近事件。
-- [ ] 加入 topic/thread 维度，支持 Feishu 线程与 Cube UI 的同主题聚合。
+- [x] 加入 topic/thread 维度，支持 Feishu 线程与 Cube UI 的同主题聚合。
 - [ ] 为 mission 增加 `executor`、`instance`、`artifacts`、`summary` 字段，承接真实执行结果。
 - [ ] 任务阶段固定为 `receive -> understand -> plan -> provision -> execute -> finalize`。
-- [ ] 加入服务重启后的恢复逻辑，确保运行中 mission 不会静默丢失。
+- [x] 加入服务重启后的恢复逻辑，确保运行中 mission 不会静默丢失。
 
 完成标准：
 
-- [ ] 不接执行器也能完整演示 mission 生命周期和等待确认恢复。
-- [ ] `GET /api/tasks` 与 `GET /api/tasks/:id` 返回稳定结构。
-- [ ] 重启服务后 mission 状态和事件可恢复。
+- [x] 不接执行器也能完整演示 mission 生命周期和等待确认恢复。
+- [x] `GET /api/tasks` 与 `GET /api/tasks/:id` 返回稳定结构。
+- [x] 重启服务后 mission 状态和事件可恢复。
 
 ### Worktree B：执行器契约 + Docker 参考执行器
 
@@ -182,7 +191,7 @@
 
 可执行清单：
 
-- [ ] 新增 `services/lobster-executor` 轻量服务，提供 `/health`、`/api/executor/jobs`、可选 `/api/executor/jobs/:id/cancel`。
+- [x] 新增 `services/lobster-executor` 轻量服务，提供 `/health`、`/api/executor/jobs`、可选 `/api/executor/jobs/:id/cancel`。
 - [ ] 实现 Docker 容器创建、启动、超时、退出码判断、日志采集与工件目录挂载。
 - [ ] 执行器将运行进度、完成、失败、等待确认回调到 Cube 的 `/api/executor/events`。
 - [ ] 为执行器与 Cube 之间加入共享密钥签名和时间戳校验。
@@ -205,18 +214,18 @@
 
 可执行清单：
 
-- [ ] 新增 `MissionOrchestrator`，不要直接改写现有 `WorkflowEngine` 主链。
+- [x] 新增 `MissionOrchestrator`，不要直接改写现有 `WorkflowEngine` 主链。
 - [ ] 复用动态组织生成能力，让 CEO / manager / worker 参与 `understand` 和 `plan` 阶段，但最终产物必须落成结构化 `ExecutionPlan`。
 - [ ] `ExecutionPlan` 至少包含 `image`、`command`、`env`、`mounts`、`artifacts`、`successCriteria`、`timeoutSec`。
-- [ ] 新增 `ExecutorClient`，按契约把计划发往远端 Docker 执行器。
-- [ ] 规划失败、计划字段缺失、执行器不可达时，mission 必须进入明确失败态，而不是只生成报告文件。
-- [ ] 给真实执行链路增加“等待确认”节点，允许 Brain 在执行前或执行中暂停并请求人工决策。
-- [ ] 保留现有分析型 workflow，不把所有旧 `/api/workflows` 请求强行切到 mission 主线。
+- [x] 新增 `ExecutorClient`，按契约把计划发往远端 Docker 执行器。
+- [x] 规划失败、计划字段缺失、执行器不可达时，mission 必须进入明确失败态，而不是只生成报告文件。
+- [x] 给真实执行链路增加“等待确认”节点，允许 Brain 在执行前或执行中暂停并请求人工决策。
+- [x] 保留现有分析型 workflow，不把所有旧 `/api/workflows` 请求强行切到 mission 主线。
 
 完成标准：
 
 - [ ] 一个来自 Cube UI 的任务能走完 `understand -> plan -> dispatch`。
-- [ ] 规划结果是结构化 JSON，不是仅自然语言说明。
+- [x] 规划结果是结构化 JSON，不是仅自然语言说明。
 - [ ] 执行器不可达时，错误能在任务详情和事件流中可见。
 
 ### Worktree D：Feishu 入口 + ACK / Relay / Progress Bridge
@@ -228,19 +237,19 @@
 
 可执行清单：
 
-- [ ] 迁移 `FeishuProgressBridge`、relay auth、去重、task start、decision resume、done/failed 终态回传。
-- [ ] 将 Fastify 路由重写为 Cube 当前 Express 路由风格。
-- [ ] 新增 `/api/feishu/relay` 与 `/api/feishu/relay/event`，对接 mission 而不是旧 CrocOffice task。
-- [ ] 统一 topicId 生成规则，确保飞书线程、回复链和 Cube `/tasks` 聚合一致。
-- [ ] 支持复杂请求立即 ACK，随后持续发送 progress / waiting / complete / failed。
-- [ ] 保留 `suppressFinalSummary` 等开关，避免上游和 Cube 重复发最终答复。
-- [ ] 本轮先支持文本卡片 / 文本消息，不扩复杂交互卡片工作流。
+- [x] 迁移 `FeishuProgressBridge`、relay auth、去重、task start、decision resume、done/failed 终态回传。
+- [x] 将 Fastify 路由重写为 Cube 当前 Express 路由风格。
+- [x] 新增 `/api/feishu/relay` 与 `/api/feishu/relay/event`，对接 mission 而不是旧 CrocOffice task。
+- [x] 统一 topicId 生成规则，确保飞书线程、回复链和 Cube `/tasks` 聚合一致。
+- [x] 支持复杂请求立即 ACK，随后持续发送 progress / waiting / complete / failed。
+- [x] 保留 `suppressFinalSummary` 等开关，避免上游和 Cube 重复发最终答复。
+- [x] 本轮先支持文本卡片 / 文本消息，不扩复杂交互卡片工作流。
 
 完成标准：
 
-- [ ] 飞书复杂请求进入后 3 秒内能收到 ACK。
-- [ ] 任务推进、等待确认、完成、失败都能稳定回传飞书。
-- [ ] relay 鉴权、重放保护、重复事件去重都有单测覆盖。
+- [x] 飞书复杂请求进入后 3 秒内能收到 ACK。
+- [x] 任务推进、等待确认、完成、失败都能稳定回传飞书。
+- [x] relay 鉴权、重放保护、重复事件去重都有单测覆盖。
 
 ### Worktree E：任务宇宙 UI + 3D 内部视图
 
@@ -251,19 +260,19 @@
 
 可执行清单：
 
-- [ ] 迁移任务总览、planet 列表、planet interior、时间线、决策按钮、同主题聚合视图。
+- [x] 迁移任务总览、planet 列表、planet interior、时间线、决策按钮、同主题聚合视图。
 - [ ] 改写数据源，统一从 Cube 的 `/api/tasks`、`/api/planets` 和 Socket.IO 读取。
 - [ ] 在 UI 上展示实例信息、当前镜像、执行日志摘要、工件链接、失败原因。
-- [ ] 让等待确认任务可以直接在详情页完成 decision 提交。
-- [ ] 保持移动端和桌面端都可用，不引入仅适配大屏的布局。
-- [ ] 与现有首页 / workflow 面板共存，不破坏当前 Home 主场景。
-- [ ] 优先保证“信息清晰 + 实时感”，不追求一次性迁完所有视觉细节。
+- [x] 让等待确认任务可以直接在详情页完成 decision 提交。
+- [x] 保持移动端和桌面端都可用，不引入仅适配大屏的布局。
+- [x] 与现有首页 / workflow 面板共存，不破坏当前 Home 主场景。
+- [x] 优先保证“信息清晰 + 实时感”，不追求一次性迁完所有视觉细节。
 
 完成标准：
 
 - [ ] `/tasks` 能稳定展示真实 mission，而不是旧 workflow 报告。
-- [ ] 任务详情页可看到阶段、事件、机器人状态、决策入口。
-- [ ] 任务运行中页面无需手动刷新即可看到状态变化。
+- [x] 任务详情页可看到阶段、事件、机器人状态、决策入口。
+- [x] 任务运行中页面无需手动刷新即可看到状态变化。
 
 ### Worktree F：整合收口 + 兼容路由 + 验证与部署
 
@@ -275,18 +284,18 @@
 可执行清单：
 
 - [ ] 把 A/B/C/D/E 的能力统一接入主服务启动流程。
-- [ ] 新增 mission 相关 Socket 事件并保持旧 workflow 事件不被破坏。
-- [ ] 更新 `.env.example`、README、部署脚本、本地联调脚本。
-- [ ] 加入本地一键 smoke：Cube 创建任务 -> Docker 执行器 -> 回调 -> `/tasks` 可见。
-- [ ] 加入 Feishu smoke：relay -> ACK -> progress -> done / failed。
-- [ ] 加入服务重启恢复 smoke：运行中 mission 重启后状态可恢复或明确失败。
+- [x] 新增 mission 相关 Socket 事件并保持旧 workflow 事件不被破坏。
+- [x] 更新 `.env.example`、README、部署脚本、本地联调脚本。
+- [x] 加入本地一键 smoke：Cube 创建任务 -> Docker 执行器 -> 回调 -> `/tasks` 可见。
+- [x] 加入 Feishu smoke：relay -> ACK -> progress -> done / failed。
+- [x] 加入服务重启恢复 smoke：运行中 mission 重启后状态可恢复或明确失败。
 - [ ] 清理冲突命名、废弃临时 mock、补齐收尾文档。
 
 完成标准：
 
-- [ ] `main` 分支上保留旧 workflow 能力，同时新增 mission 主线。
+- [x] `main` 分支上保留旧 workflow 能力，同时新增 mission 主线。
 - [ ] 本地和服务器各至少跑通一轮真实 Docker 执行闭环。
-- [ ] 所有新接口、事件和环境变量都有文档。
+- [x] 所有新接口、事件和环境变量都有文档。
 
 ### 合并顺序
 
@@ -299,20 +308,20 @@
 ### 集成验收口径
 
 - [ ] Cube UI 创建任务后，能生成 mission，并进入 `receive -> understand -> plan`。
-- [ ] Brain 产出的 `ExecutionPlan` 是结构化对象，不是单纯自然语言。
+- [x] Brain 产出的 `ExecutionPlan` 是结构化对象，不是单纯自然语言。
 - [ ] Cube 能把计划发给远端 Docker 执行器，并收到回调。
 - [ ] `/tasks`、`/planets`、`/planets/:id/interior` 能实时展示运行状态。
-- [ ] 飞书复杂请求能收到 ACK，并持续看到进度、等待确认、完成或失败。
-- [ ] 决策提交接口幂等，重复点击不会把 mission 弄乱。
-- [ ] 服务重启后 mission 不会无声消失。
+- [x] 飞书复杂请求能收到 ACK，并持续看到进度、等待确认、完成或失败。
+- [x] 决策提交接口幂等，重复点击不会把 mission 弄乱。
+- [x] 服务重启后 mission 不会无声消失。
 - [ ] 真实执行任务的最终交付以状态、日志摘要、工件链接和结果摘要为主，不再默认只产出 md/json。
 
 ### 收尾状态
 
 - [ ] `cube-pets-office` 已具备 Brain + Docker 执行 + Feishu 回传 + 任务宇宙可视化的首版闭环。
-- [ ] `openclaw-feishu-progress` 中桥接与执行层核心已迁入 Cube 主线。
-- [ ] scanner / pipeline / codegen / report 仍作为旧能力保留，但不再阻塞真实执行主线。
-- [ ] 所有并行 worktree 都已完成、合并回 `main`、删除本地 worktree 并清理分支。
+- [x] `openclaw-feishu-progress` 中桥接与执行层核心已迁入 Cube 主线。
+- [x] scanner / pipeline / codegen / report 仍作为旧能力保留，但不再阻塞真实执行主线。
+- [x] 所有并行 worktree 都已完成、合并回 `main`、删除本地 worktree 并清理分支。
 
 ## Test Plan
 
