@@ -293,6 +293,13 @@ export function TaskDetailView({
   }
 
   async function handleArtifactDownload(artifact: TaskArtifact) {
+    if (artifact.downloadKind === "external") {
+      if (artifact.href && typeof window !== "undefined") {
+        window.open(artifact.href, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+
     if (artifact.downloadKind === "attachment") {
       downloadAttachmentArtifact(artifact);
       return;
@@ -331,6 +338,12 @@ export function TaskDetailView({
   const liveSignalResolved =
     detail.lastSignal || detail.waitingFor || "No recent signal yet.";
   const liveSignalDialogNeeded = liveSignalResolved.trim().length > 160;
+  const decisionEnabled = detail.decisionPresets.length > 0;
+  const decisionTextareaPlaceholder =
+    detail.decisionPlaceholder ||
+    (detail.decisionAllowsFreeText
+      ? "Optional decision note: add confirmation detail, constraints, or the exact follow-up the mission should respect."
+      : "This mission uses structured decision options only.");
 
   const sourceDirectiveText = detail.sourceText.trim();
   const runtimePreviewRows = [
@@ -590,7 +603,8 @@ export function TaskDetailView({
           Decision Entry
         </CardTitle>
         <CardDescription>
-          Launch a follow-up workflow without refreshing the page.
+          {detail.decisionPrompt ||
+            "Submit the current mission decision and resume execution."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
@@ -598,36 +612,43 @@ export function TaskDetailView({
           value={decisionNote}
           onChange={event => onDecisionNoteChange(event.target.value)}
           className="min-h-20 rounded-[18px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
-          placeholder="Optional steering: add emphasis, constraints, or the exact question the next workflow should answer."
+          placeholder={decisionTextareaPlaceholder}
+          disabled={!detail.decisionAllowsFreeText}
         />
-        <div className="grid gap-2 sm:grid-cols-2">
-          {detail.decisionPresets.map(preset => (
-            <button
-              key={preset.id}
-              type="button"
-              className={cn(
-                "w-full rounded-[18px] border px-3.5 py-3 text-left transition-colors",
-                toneFromDecisionTone(preset.tone)
-              )}
-              onClick={() => void onLaunchDecision(preset.id)}
-              disabled={launchingPresetId === preset.id}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold">{preset.label}</div>
-                  <div className="mt-1 line-clamp-2 text-xs leading-5 opacity-80">
-                    {preset.description}
-                  </div>
-                </div>
-                {launchingPresetId === preset.id ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <ArrowUpRight className="size-4" />
+        {decisionEnabled ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {detail.decisionPresets.map(preset => (
+              <button
+                key={preset.id}
+                type="button"
+                className={cn(
+                  "w-full rounded-[18px] border px-3.5 py-3 text-left transition-colors",
+                  toneFromDecisionTone(preset.tone)
                 )}
-              </div>
-            </button>
-          ))}
-        </div>
+                onClick={() => void onLaunchDecision(preset.id)}
+                disabled={launchingPresetId === preset.id}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold">{preset.label}</div>
+                    <div className="mt-1 line-clamp-2 text-xs leading-5 opacity-80">
+                      {preset.description}
+                    </div>
+                  </div>
+                  {launchingPresetId === preset.id ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                  ) : (
+                    <ArrowUpRight className="size-4" />
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[20px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-4 text-sm leading-6 text-stone-500">
+            This mission is not currently waiting for a decision.
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -724,8 +745,10 @@ export function TaskDetailView({
                   onClick={() => void handleArtifactDownload(artifact)}
                   disabled={
                     downloadingArtifactId === artifact.id ||
+                    (artifact.downloadKind === "external" && !artifact.href) ||
                     (!artifact.workflowId &&
-                      artifact.downloadKind !== "attachment")
+                      artifact.downloadKind !== "attachment" &&
+                      artifact.downloadKind !== "external")
                   }
                 >
                   {downloadingArtifactId === artifact.id ? (

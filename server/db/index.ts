@@ -7,6 +7,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import type { MissionRecord } from "../../shared/mission/contracts.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.resolve(__dirname, "../../data");
@@ -122,6 +124,7 @@ interface DatabaseSchema {
   workflow_runs: WorkflowRun[];
   messages: MessageRow[];
   tasks: TaskRow[];
+  missions: MissionRecord[];
   evolution_log: EvolutionLogRow[];
   heartbeat_keywords: HeartbeatKeywordRow[];
   agent_capabilities: AgentCapabilityRow[];
@@ -151,6 +154,7 @@ class Database {
       workflow_runs: [],
       messages: [],
       tasks: [],
+      missions: [],
       evolution_log: [],
       heartbeat_keywords: [],
       agent_capabilities: [],
@@ -177,6 +181,7 @@ class Database {
       : [];
     const messages = Array.isArray(data.messages) ? data.messages : [];
     const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+    const missions = Array.isArray(data.missions) ? data.missions : [];
     const evolutionLog = Array.isArray(data.evolution_log)
       ? data.evolution_log
       : [];
@@ -194,6 +199,7 @@ class Database {
       workflow_runs: workflowRuns,
       messages,
       tasks,
+      missions,
       evolution_log: evolutionLog,
       heartbeat_keywords: heartbeatKeywords,
       agent_capabilities: agentCapabilities,
@@ -437,6 +443,18 @@ class Database {
     this.data.tasks.push(row);
     this.save();
     return row;
+  }
+
+  // ============================================================
+  // Missions
+  // ============================================================
+  getMissions(): MissionRecord[] {
+    return structuredClone(this.data.missions);
+  }
+
+  saveMissions(missions: MissionRecord[]): void {
+    this.data.missions = structuredClone(missions);
+    this.save();
   }
 
   getTasksByWorkflow(workflowId: string): TaskRow[] {

@@ -169,11 +169,11 @@
 可执行清单：
 
 - [x] 新增 `MissionStore`，支持 create / progress / waiting / decision / done / failed / recovery。
-- [ ] 将 mission 数据持久化进 Cube 现有 `data/database.json`，不再依赖 `.opencroc/task-snapshots.json`。
-- [ ] 新增任务 REST API：创建、列表、详情、决策提交、最近事件。
+- [x] 将 mission 数据持久化进 Cube 现有 `data/database.json`，不再依赖 `.opencroc/task-snapshots.json`。
+- [x] 新增任务 REST API：创建、列表、详情、决策提交、最近事件。
 - [x] 加入 topic/thread 维度，支持 Feishu 线程与 Cube UI 的同主题聚合。
-- [ ] 为 mission 增加 `executor`、`instance`、`artifacts`、`summary` 字段，承接真实执行结果。
-- [ ] 任务阶段固定为 `receive -> understand -> plan -> provision -> execute -> finalize`。
+- [x] 为 mission 增加 `executor`、`instance`、`artifacts`、`summary` 字段，承接真实执行结果。
+- [x] 任务阶段固定为 `receive -> understand -> plan -> provision -> execute -> finalize`。
 - [x] 加入服务重启后的恢复逻辑，确保运行中 mission 不会静默丢失。
 
 完成标准：
@@ -181,6 +181,131 @@
 - [x] 不接执行器也能完整演示 mission 生命周期和等待确认恢复。
 - [x] `GET /api/tasks` 与 `GET /api/tasks/:id` 返回稳定结构。
 - [x] 重启服务后 mission 状态和事件可恢复。
+
+#### Worktree A 当前状态
+
+- [x] Worktree A 的后端任务域内核已完成：`MissionStore`、任务状态机、本地持久化、任务 REST API、重启恢复、topic/thread 聚合都已落地。
+- [x] mission 主链阶段已固定为 `receive -> understand -> plan -> provision -> execute -> finalize`，并已承接 `executor`、`instance`、`artifacts`、`summary` 等执行结果字段。
+- [x] `/tasks` 页面已经切到 `mission` 主数据源：左侧任务列表、详情头部、时间线、运行态、等待态优先读取 `GET /api/tasks`、`GET /api/tasks/:id`、`GET /api/tasks/:id/events`。
+- [x] 详情页中的 `Mission Summary`、`Live Signal`、`Timeline`、`Runtime Snapshot`、`Artifacts` 已优先切到 mission 原生字段和事件流。
+- [x] `Decision Entry` 已接到 `POST /api/tasks/:id/decision`，页面内可以直接提交确认并恢复当前 mission，不再默认新开后续 workflow。
+- [x] 前端已接入 `MISSION_SOCKET_EVENT`，任务状态变化会按 mission 事件做局部更新，`Refresh` 退化为兜底能力。
+- [x] 页面已提供原生 `POST /api/tasks` 创建入口：`/tasks` 页面支持 `New Mission`，首页支持快速创建入口。
+- [ ] `Work Packages`、`Agent Crew`、`Organization`、复杂 report 下载链路当前仍保留为 `workflow` 补充层，尚未完全迁入 mission 原生投影。
+- [ ] 首页 workflow 面板与 `/tasks` mission 控制台的职责边界仍可继续收口，目前属于“双轨并存、mission 主线优先”的阶段。
+
+#### Worktree A 页面改造实施清单
+
+当前完成情况（2026-03-30）：
+
+- [x] 第一阶段已完成：`/tasks` 主数据源已切到 mission，`workflow` 仅作为补充层保留。
+- [x] 第二阶段已完成：详情页已改成 mission-first，时间线、运行态、artifacts、等待态都以 mission 原生字段为准。
+- [x] 第三阶段已完成：`Decision Entry` 已接入真实 mission 决策流，支持等待确认后的恢复执行。
+- [x] 第四阶段已完成：前端已接入 mission socket，任务更新按 mission 事件做局部刷新。
+- [x] 第五阶段已完成：前端已补齐 mission 创建入口，用户可以直接从页面创建 mission。
+- [ ] 暂未迁移的区域继续挂在 workflow 补充层：`Work Packages`、`Agent Crew`、`Organization`、复杂 report 下载。
+
+推荐路线：
+
+- 先走 `mission` 主数据源 + `workflow` 补充信息的混合迁移，而不是一次性全切。
+- `mission` 已经有任务状态、阶段、事件、决策、执行上下文。
+- 当前页面里的 `Work Packages / Agent Crew / Organization` 这类高密度内容，很多还只能从 `workflow` 投影出来。
+- 最稳的方式是先把 `/tasks` 的任务主线切到 mission，再逐步缩减 workflow 依赖。
+
+第一阶段：把 `/tasks` 主数据源切到 mission
+
+- 目标：左侧列表、右侧头部、时间线、决策、运行态先用 mission 原生数据。
+- 主要改动文件：
+- `client/src/lib/tasks-store.ts`
+- 新增真正的 mission 数据加载：`GET /api/tasks`、`GET /api/tasks/:id`、`GET /api/tasks/:id/events`。
+- 把当前 `buildSummaryRecord / buildDetailRecord` 里依赖 workflow 的主链字段改成优先读取 mission。
+- 保留 workflow 作为补充层，只给 `work packages / organization / crew` 这些区域兜底。
+- 建议新增 `client/src/lib/mission-client.ts`。
+- 专门封装 mission API，请求不要再散在 store 里。
+- 同时定义前端的 mission normalize 逻辑。
+- 页面效果：
+- 左侧 `Mission Queue` 会真正显示 mission 列表，不再是 workflow 映射结果。
+- 任务状态、当前阶段、等待事项、摘要会和后端 mission 保持一致。
+- 刷新后任务不会像重新算了一遍，而是直接读持久化状态。
+
+第二阶段：把详情页改成 mission-first
+
+- 目标：让右侧详情真正对应 Worktree A 的任务状态机。
+- 主要改动文件：
+- `client/src/components/tasks/TaskDetailView.tsx`
+- `Mission Summary` 直接用 mission `summary`。
+- `Live Signal` 直接用 mission 最近事件和 `waitingFor`。
+- `Runtime Snapshot` 直接用 mission `executor` 和 `instance`。
+- `Artifacts` 直接用 mission `artifacts`。
+- `Timeline` 直接用 `/api/tasks/:id/events`。
+- `client/src/components/tasks/TaskPlanetInterior.tsx`
+- 阶段节点固定成六阶段。
+- `Waiting` 不再是假推导，而是 mission 原生 waiting 状态。
+- 中心态显示 `currentStageKey / currentStageLabel`。
+- 页面效果：
+- 详情页会从“workflow 任务宇宙”变成“mission 控制台”。
+- 时间线会更像真正的任务事件流。
+- Runtime Snapshot 会开始反映 executor / job / instance，而不是摘要拼装结果。
+
+第三阶段：把 Decision Entry 接到真正的 mission 决策
+
+- 目标：让页面里的“决策”不是再开一个 workflow，而是恢复当前 mission。
+- 主要改动文件：
+- `client/src/lib/tasks-store.ts`
+- 把 `launchDecision()` 从 `submitDirective()` 改成 `POST /api/tasks/:id/decision`。
+- `client/src/components/tasks/TaskDetailView.tsx`
+- 把 `Decision Entry` 的文案和按钮逻辑改成“提交确认 / 恢复执行”。
+- 如果 mission 当前不在 waiting，隐藏或禁用这块。
+- 可能需要补一个更轻的 preset 结构。
+- 现在的 preset 更像“发起后续 workflow”。
+- mission 决策更像“选择 Continue / Report only / Add note”。
+- 页面效果：
+- 用户在详情页点击决策，当前 mission 会恢复推进。
+- 不会再莫名新生成一条 workflow。
+- 这一步做完，Worktree A 的“等待确认恢复”才算真正落在页面里。
+
+第四阶段：把实时更新切到 mission socket
+
+- 目标：让页面实时跟 mission 走，而不是主要靠 workflow refresh。
+- 主要改动文件：
+- `client/src/lib/tasks-store.ts`
+- 接入 `shared/mission/socket.ts` 定义的 `MISSION_SOCKET_EVENT`。
+- 监听 `mission.record.updated / waiting / completed / failed`。
+- 收到事件后只局部更新对应任务，不全量重刷。
+- 可能复用现有 `client/src/lib/workflow-store.ts` 的 socket 初始化方式。
+- 页面效果：
+- 任务进度、等待状态、完成失败会实时变化。
+- `/tasks` 页会更像真正的控制台。
+- `Refresh` 按钮会变成兜底，而不是主更新方式。
+
+第五阶段：补“创建 mission”入口
+
+- 目标：把后端 `POST /api/tasks` 真正暴露给用户。
+- 主要改动文件：
+- `client/src/pages/tasks/TasksPage.tsx`
+- 增加 `New Mission` 按钮。
+- `client/src/pages/Home.tsx`
+- 当前只有“进入 Mission Universe”。
+- 可以补一个“快速创建任务”入口。
+- 建议新增一个小表单组件，例如 `client/src/components/tasks/CreateMissionDialog.tsx`。
+- 页面效果：
+- 用户可以直接在前端创建 mission。
+- Worktree A 的创建 API 才会真正被用起来。
+
+哪些可以暂时不动：
+
+- `Work Packages`
+- `Agent Crew`
+- `Organization`
+- 复杂 report 下载和部门报告下载
+- 这些区域当前仍然适合继续挂在 workflow 上，避免过早强切导致页面信息密度明显下降。
+
+建议执行顺序：
+
+1. 先改 `client/src/lib/tasks-store.ts`，把列表和详情头部切到 mission。
+2. 再改 `client/src/components/tasks/TaskDetailView.tsx`，把 timeline / runtime / artifacts 切到 mission。
+3. 再把决策入口接到 `POST /api/tasks/:id/decision`。
+4. 最后接 mission socket 实时更新。
 
 ### Worktree B：执行器契约 + Docker 参考执行器
 

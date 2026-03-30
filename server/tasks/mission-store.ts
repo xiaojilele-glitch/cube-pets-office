@@ -1,10 +1,14 @@
 import type {
+  MissionArtifact,
+  MissionExecutorContext,
   MissionDecision,
   MissionEvent,
   MissionEventLevel,
+  MissionInstanceContext,
   MissionRecord,
   MissionStage,
 } from '../../shared/mission/contracts.js';
+import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
 
 export interface MissionSnapshotStore {
   load(): MissionRecord[];
@@ -16,12 +20,19 @@ export interface CreateMissionInput {
   title: string;
   sourceText?: string;
   topicId?: string;
-  stageLabels: Array<{ key: string; label: string }>;
+  stageLabels?: Array<{ key: string; label: string }>;
 }
 
 export interface RecoverMissionsOptions {
   message?: string;
   source?: MissionEvent['source'];
+}
+
+export interface PatchMissionExecutionInput {
+  summary?: string;
+  executor?: MissionExecutorContext;
+  instance?: MissionInstanceContext;
+  artifacts?: MissionArtifact[];
 }
 
 function now(): number {
@@ -51,6 +62,10 @@ export class MissionStore {
 
   create(input: CreateMissionInput): MissionRecord {
     const createdAt = now();
+    const stageLabels =
+      input.stageLabels && input.stageLabels.length > 0
+        ? input.stageLabels
+        : [...MISSION_CORE_STAGE_BLUEPRINT];
     const mission: MissionRecord = {
       id: createMissionId(createdAt),
       kind: input.kind,
@@ -59,7 +74,7 @@ export class MissionStore {
       topicId: input.topicId,
       status: 'queued',
       progress: 0,
-      stages: input.stageLabels.map(stage => ({
+      stages: stageLabels.map(stage => ({
         ...stage,
         status: 'pending',
       })),
@@ -92,6 +107,17 @@ export class MissionStore {
     return task ? structuredClone(task) : undefined;
   }
 
+  listEvents(id: string, limit = 20): MissionEvent[] {
+    const task = this.missions.get(id);
+    if (!task) return [];
+
+    return task.events
+      .slice()
+      .sort((left, right) => right.time - left.time)
+      .slice(0, limit)
+      .map(event => structuredClone(event));
+  }
+
   update(id: string, updater: (task: MissionRecord) => void): MissionRecord | undefined {
     const task = this.missions.get(id);
     if (!task) return undefined;
@@ -101,6 +127,26 @@ export class MissionStore {
     this.missions.set(id, task);
     this.persist();
     return structuredClone(task);
+  }
+
+  patchExecution(
+    id: string,
+    patch: PatchMissionExecutionInput
+  ): MissionRecord | undefined {
+    return this.update(id, task => {
+      if (patch.summary !== undefined) {
+        task.summary = patch.summary;
+      }
+      if (patch.executor !== undefined) {
+        task.executor = structuredClone(patch.executor);
+      }
+      if (patch.instance !== undefined) {
+        task.instance = structuredClone(patch.instance);
+      }
+      if (patch.artifacts !== undefined) {
+        task.artifacts = structuredClone(patch.artifacts);
+      }
+    });
   }
 
   markRunning(

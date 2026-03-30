@@ -5,16 +5,23 @@ import {
   type MissionSocketRecordEvent,
 } from '../../shared/mission/socket.js';
 import type {
+  MissionArtifact,
   MissionDecision,
+  MissionExecutorContext,
   MissionEvent,
   MissionEventLevel,
+  MissionInstanceContext,
   MissionRecord,
   MissionStage,
 } from '../../shared/mission/contracts.js';
 import { getSocketIO } from '../core/socket.js';
-import { getMissionSnapshotFilePath } from '../db/mission-storage.js';
-import { MissionFileSnapshotStore } from './mission-store.file.js';
-import { MissionStore, type CreateMissionInput } from './mission-store.js';
+import { DatabaseMissionSnapshotStore } from '../db/mission-storage.js';
+import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
+import {
+  MissionStore,
+  type CreateMissionInput,
+  type PatchMissionExecutionInput,
+} from './mission-store.js';
 
 export interface MissionRuntimeOptions {
   store?: MissionStore;
@@ -37,9 +44,7 @@ export class MissionRuntime {
   constructor(options: MissionRuntimeOptions = {}) {
     this.store =
       options.store ??
-      new MissionStore(
-        new MissionFileSnapshotStore(getMissionSnapshotFilePath())
-      );
+      new MissionStore(new DatabaseMissionSnapshotStore());
 
     if (options.autoRecover) {
       this.recoverInterruptedMissions(options.recoveryMessage);
@@ -62,13 +67,7 @@ export class MissionRuntime {
       title,
       sourceText,
       topicId,
-      stageLabels: [
-        { key: 'receive', label: 'Receive task' },
-        { key: 'understand', label: 'Understand problem' },
-        { key: 'gather', label: 'Gather materials / scan context' },
-        { key: 'generate', label: 'Generate answer' },
-        { key: 'finalize', label: 'Finalize output' },
-      ],
+      stageLabels: [...MISSION_CORE_STAGE_BLUEPRINT],
     });
   }
 
@@ -78,6 +77,19 @@ export class MissionRuntime {
 
   getTask(id: string): MissionRecord | undefined {
     return this.store.get(id);
+  }
+
+  listTaskEvents(id: string, limit = 20): MissionEvent[] {
+    return this.store.listEvents(id, limit);
+  }
+
+  patchMissionExecution(
+    id: string,
+    patch: PatchMissionExecutionInput
+  ): MissionRecord | undefined {
+    const task = this.store.patchExecution(id, patch);
+    this.emitMissionUpdate(task);
+    return task;
   }
 
   markMissionRunning(

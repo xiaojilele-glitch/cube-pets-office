@@ -5,10 +5,27 @@ import type {
   WorkflowOrganizationSnapshot,
 } from "@shared/organization-schema";
 import {
+  MISSION_CORE_STAGE_BLUEPRINT,
+  type MissionArtifact,
+  type MissionDecision,
+  type MissionEvent,
+  type MissionRecord,
+  type MissionStage,
+} from "@shared/mission/contracts";
+import { MISSION_SOCKET_EVENT, type MissionSocketPayload } from "@shared/mission/socket";
+import {
   normalizeWorkflowAttachments,
   type WorkflowInputAttachment,
 } from "@shared/workflow-input";
+import { io, type Socket } from "socket.io-client";
 
+import {
+  createMission as createMissionRequest,
+  getMission,
+  listMissionEvents,
+  listMissions,
+  submitMissionDecision as submitMissionDecisionRequest,
+} from "./mission-client";
 import { useAppStore, type RuntimeMode } from "./store";
 import { localRuntime } from "./runtime/local-runtime-client";
 import type {
@@ -175,12 +192,12 @@ export interface TaskArtifact {
   id: string;
   title: string;
   description: string;
-  kind: "report" | "department_report" | "attachment";
+  kind: "report" | "department_report" | "attachment" | "file" | "url" | "log";
   managerId?: string;
   format?: string;
   filename?: string;
   workflowId?: string;
-  downloadKind?: "workflow" | "department" | "attachment";
+  downloadKind?: "workflow" | "department" | "attachment" | "external";
   href?: string;
   content?: string;
   mimeType?: string;
@@ -192,6 +209,8 @@ export interface TaskDecisionPreset {
   description: string;
   prompt: string;
   tone: "primary" | "secondary" | "warning";
+  action: "workflow" | "mission";
+  optionId?: string;
 }
 
 export interface MissionTaskDetail extends MissionTaskSummary {
@@ -206,6 +225,9 @@ export interface MissionTaskDetail extends MissionTaskSummary {
   artifacts: TaskArtifact[];
   failureReasons: string[];
   decisionPresets: TaskDecisionPreset[];
+  decisionPrompt: string | null;
+  decisionPlaceholder: string | null;
+  decisionAllowsFreeText: boolean;
   instanceInfo: Array<{ label: string; value: string }>;
   logSummary: Array<{ label: string; value: string }>;
 }
@@ -227,6 +249,12 @@ interface TasksStoreState {
   ensureReady: () => Promise<void>;
   refresh: (options?: { preferredTaskId?: string | null }) => Promise<void>;
   selectTask: (taskId: string | null) => void;
+  createMission: (input: {
+    title?: string;
+    sourceText?: string;
+    kind?: string;
+    topicId?: string;
+  }) => Promise<string | null>;
   setDecisionNote: (taskId: string, note: string) => void;
   launchDecision: (taskId: string, presetId: string) => Promise<string | null>;
   clearDecisionLaunch: () => void;
@@ -735,6 +763,7 @@ let taskStoreWatchersStarted = false;
 let scheduledRefreshTimer: number | null = null;
 let queuedRefreshOptions: { preferredTaskId?: string | null } | null = null;
 let inFlightRefresh: Promise<void> | null = null;
+let missionSocket: Socket | null = null;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -1417,6 +1446,7 @@ function buildDecisionPresets(
       description: "Continue the mission with a sharper follow-up directive.",
       prompt: `Continue the work started by "${subject}". Keep the strongest progress, close remaining gaps, and produce the next actionable pass.`,
       tone: "primary",
+      action: "workflow",
     },
     {
       id: "audit-lens",
@@ -1425,6 +1455,7 @@ function buildDecisionPresets(
         "Launch a review-heavy mission focused on risks and blind spots.",
       prompt: `Audit the current mission for "${subject}". Focus on assumptions, weak evidence, missing owners, and unresolved risks.`,
       tone: "secondary",
+      action: "workflow",
     },
     {
       id: "stakeholder-brief",
@@ -1432,6 +1463,7 @@ function buildDecisionPresets(
       description: "Turn the current state into a stakeholder-ready update.",
       prompt: `Create a stakeholder brief for "${subject}". Summarize status, decisions, blockers, next steps, and the most useful artifacts.`,
       tone: "secondary",
+      action: "workflow",
     },
     {
       id: "recovery",
@@ -1446,6 +1478,7 @@ function buildDecisionPresets(
           ? `Recover the blocked mission "${subject}". Address these failure signals first: ${failureReasons.join("; ")}.`
           : `Propose an alternative execution path for "${subject}" with different sequencing, roles, and trade-offs.`,
       tone: "warning",
+      action: "workflow",
     },
   ];
 }
@@ -1582,8 +1615,748 @@ function buildDetailRecord(
     artifacts: buildArtifacts(workflow, report),
     failureReasons,
     decisionPresets: buildDecisionPresets(summary, failureReasons),
+    decisionPrompt: null,
+    decisionPlaceholder: null,
+    decisionAllowsFreeText: false,
     instanceInfo: buildInstanceInfo(summary, workflow, organization),
     logSummary: buildLogSummary(workflow, detail, workflowEvents),
+  };
+}
+
+type MissionWorkflowSupplement = {
+  workflow: WorkflowInfo | null;
+  detail: WorkflowDetailRecord | null;
+};
+
+function normalizeSearchText(value: string | null | undefined): string {
+  return (value || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function clampPercentage(value: number | null | undefined, fallback = 0): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function workflowStatusFromMission(
+  status: MissionTaskStatus
+): WorkflowInfo["status"] {
+  if (status === "queued") return "pending";
+  if (status === "done") return "completed";
+  if (status === "failed") return "failed";
+  return "running";
+}
+
+function missionStageCatalog(mission: MissionRecord): StageInfo[] {
+  const stages =
+    mission.stages.length > 0
+      ? mission.stages
+      : MISSION_CORE_STAGE_BLUEPRINT.map((stage, index) => ({
+          key: stage.key,
+          label: stage.label,
+          status:
+            mission.currentStageKey === stage.key && mission.status !== "queued"
+              ? ("running" as const)
+              : ("pending" as const),
+        }));
+
+  return stages.map((stage, index) => ({
+    id: stage.key,
+    order: index + 1,
+    label: stage.label,
+  }));
+}
+
+function stageKeyFromMission(mission: MissionRecord): string | null {
+  return (
+    mission.currentStageKey ||
+    mission.stages.find(stage => stage.status === "running")?.key ||
+    mission.stages.find(stage => stage.status === "failed")?.key ||
+    mission.stages.find(stage => stage.status === "done")?.key ||
+    MISSION_CORE_STAGE_BLUEPRINT[0]?.key ||
+    null
+  );
+}
+
+function stageLabelFromMission(
+  mission: MissionRecord,
+  stageKey?: string | null
+): string | null {
+  if (!stageKey) return null;
+  return (
+    mission.stages.find(stage => stage.key === stageKey)?.label ||
+    MISSION_CORE_STAGE_BLUEPRINT.find(stage => stage.key === stageKey)?.label ||
+    stageKey
+  );
+}
+
+function missionStartedAt(mission: MissionRecord): number | null {
+  const stageStartedAt = mission.stages
+    .flatMap(stage => [stage.startedAt, stage.completedAt])
+    .filter((value): value is number => typeof value === "number")
+    .sort((left, right) => left - right)[0];
+
+  if (typeof stageStartedAt === "number") {
+    return stageStartedAt;
+  }
+
+  return mission.status === "queued" ? null : mission.createdAt;
+}
+
+function syntheticWorkflowFromMission(mission: MissionRecord): WorkflowInfo {
+  return {
+    id: mission.id,
+    directive: mission.sourceText || mission.title,
+    status: workflowStatusFromMission(mission.status),
+    current_stage: stageKeyFromMission(mission),
+    departments_involved: mission.kind ? [mission.kind] : [],
+    started_at: missionStartedAt(mission)
+      ? new Date(missionStartedAt(mission) || mission.createdAt).toISOString()
+      : null,
+    completed_at: mission.completedAt
+      ? new Date(mission.completedAt).toISOString()
+      : null,
+    results: {
+      missionId: mission.id,
+      summary: mission.summary,
+      waitingFor: mission.waitingFor,
+      executor: mission.executor,
+      instance: mission.instance,
+      artifacts: mission.artifacts,
+    },
+    created_at: new Date(mission.createdAt).toISOString(),
+  };
+}
+
+function findSupplementalWorkflow(
+  mission: MissionRecord,
+  workflows: WorkflowInfo[]
+): WorkflowInfo | null {
+  const missionText = normalizeSearchText(mission.sourceText || mission.title);
+
+  return (
+    workflows.find(workflow => workflow.id === mission.id) ||
+    workflows.find(
+      workflow => safeString(workflow.results?.missionId) === mission.id
+    ) ||
+    workflows.find(
+      workflow => safeString(workflow.results?.taskId) === mission.id
+    ) ||
+    workflows.find(
+      workflow => normalizeSearchText(workflow.directive) === missionText
+    ) ||
+    null
+  );
+}
+
+function missionFailureReasons(
+  mission: MissionRecord,
+  events: MissionEvent[]
+): string[] {
+  const reasons = new Set<string>();
+
+  if (mission.status === "failed" && mission.summary) {
+    reasons.add(mission.summary);
+  }
+
+  for (const stage of mission.stages) {
+    if (stage.status === "failed" && stage.detail) {
+      reasons.add(stage.detail);
+    }
+  }
+
+  for (const event of events) {
+    if (event.level === "error" || event.type === "failed") {
+      reasons.add(event.message);
+    }
+  }
+
+  return Array.from(reasons).filter(Boolean);
+}
+
+function missionSummaryText(
+  mission: MissionRecord,
+  events: MissionEvent[],
+  waitingFor: string | null
+): string {
+  if (trimText(mission.summary, 180)) {
+    return trimText(mission.summary, 180);
+  }
+
+  const latestEventMessage = trimText(events[events.length - 1]?.message, 180);
+  if (latestEventMessage) {
+    return latestEventMessage;
+  }
+
+  if (waitingFor) {
+    return waitingFor;
+  }
+
+  if (mission.status === "queued") {
+    return "Mission created and waiting for execution signals.";
+  }
+
+  if (mission.status === "done") {
+    return "Mission completed and is ready for review.";
+  }
+
+  if (mission.status === "failed") {
+    return "Mission stopped before the execution chain could complete.";
+  }
+
+  return "Mission is progressing through the execution pipeline.";
+}
+
+function timelineLevelForMissionEvent(event: MissionEvent): TimelineLevel {
+  if (event.type === "done") return "success";
+  if (event.type === "failed" || event.level === "error") return "error";
+  if (event.type === "waiting" || event.level === "warn") return "warn";
+  return "info";
+}
+
+function titleForMissionEvent(
+  mission: MissionRecord,
+  event: MissionEvent
+): string {
+  const stageLabel = stageLabelFromMission(mission, event.stageKey);
+
+  switch (event.type) {
+    case "created":
+      return "Mission created";
+    case "progress":
+      return stageLabel ? `Stage active: ${stageLabel}` : "Mission progressed";
+    case "waiting":
+      return stageLabel ? `Waiting in ${stageLabel}` : "Awaiting decision";
+    case "done":
+      return "Mission completed";
+    case "failed":
+      return "Mission failed";
+    case "log":
+    default:
+      return stageLabel ? `${stageLabel} signal` : "Mission log";
+  }
+}
+
+function buildMissionTimeline(
+  mission: MissionRecord,
+  events: MissionEvent[]
+): TaskTimelineEvent[] {
+  const items: TaskTimelineEvent[] = events.map((event, index) => ({
+    id: `${mission.id}:${event.time}:${event.type}:${index}`,
+    type: event.type,
+    time: event.time,
+    level: timelineLevelForMissionEvent(event),
+    title: titleForMissionEvent(mission, event),
+    description: event.message,
+    actor: event.source ? capitalize(event.source.replace(/-/g, " ")) : undefined,
+  }));
+
+  if (!items.some(item => item.type === "created")) {
+    items.unshift({
+      id: `${mission.id}:created`,
+      type: "created",
+      time: mission.createdAt,
+      level: "info",
+      title: "Mission created",
+      description: trimText(mission.sourceText || mission.title, 180) || "Mission created.",
+    });
+  }
+
+  return items.sort((left, right) => left.time - right.time).slice(-40);
+}
+
+function buildMissionInteriorStages(mission: MissionRecord): TaskStageRing[] {
+  const orderedStages: MissionStage[] =
+    mission.stages.length > 0
+      ? mission.stages
+      : MISSION_CORE_STAGE_BLUEPRINT.map(stage => ({
+          key: stage.key,
+          label: stage.label,
+          status:
+            mission.currentStageKey === stage.key && mission.status !== "queued"
+              ? ("running" as const)
+              : ("pending" as const),
+          detail: undefined,
+        }));
+
+  return orderedStages.map((stage, index) => {
+    const arcStart = (index / orderedStages.length) * 360;
+    const arcEnd = ((index + 1) / orderedStages.length) * 360;
+    const midAngle = (arcStart + arcEnd) / 2;
+    const segmentStart = (index / orderedStages.length) * 100;
+    const segmentEnd = ((index + 1) / orderedStages.length) * 100;
+    const segmentProgress =
+      segmentEnd <= segmentStart
+        ? 0
+        : ((clampPercentage(mission.progress) - segmentStart) /
+            (segmentEnd - segmentStart)) *
+          100;
+
+    let progress = 0;
+    if (stage.status === "done") {
+      progress = 100;
+    } else if (stage.status === "running") {
+      progress = Math.max(18, Math.min(96, Math.round(segmentProgress)));
+    } else if (stage.status === "failed") {
+      progress = Math.max(24, Math.min(92, Math.round(segmentProgress || 42)));
+    }
+
+    return {
+      key: stage.key,
+      label: stage.label,
+      status: stage.status,
+      progress,
+      detail:
+        stage.detail ||
+        (stage.status === "done"
+          ? "Completed"
+          : stage.status === "running"
+            ? "Live stage"
+            : stage.status === "failed"
+              ? "Blocked"
+              : "Queued"),
+      arcStart,
+      arcEnd,
+      midAngle,
+    };
+  });
+}
+
+function inferMissionCoreAgentStatus(
+  status: MissionTaskStatus
+): InteriorAgentStatus {
+  if (status === "running") return "working";
+  if (status === "waiting") return "thinking";
+  if (status === "done") return "done";
+  if (status === "failed") return "error";
+  return "idle";
+}
+
+function inferExecutorAgentStatus(
+  mission: MissionRecord
+): InteriorAgentStatus {
+  const executorStatus = normalizeSearchText(mission.executor?.status);
+
+  if (mission.status === "failed" || /fail|error/.test(executorStatus)) {
+    return "error";
+  }
+  if (mission.status === "done" || /done|complete|success|finished/.test(executorStatus)) {
+    return "done";
+  }
+  if (/run|exec|dispatch/.test(executorStatus)) {
+    return "working";
+  }
+  if (/queue|wait|pending|provision/.test(executorStatus)) {
+    return "thinking";
+  }
+  return mission.status === "queued" ? "idle" : "working";
+}
+
+function withAgentAngles(
+  agents: Omit<TaskInteriorAgent, "angle">[]
+): TaskInteriorAgent[] {
+  return agents.map((agent, index) => ({
+    ...agent,
+    angle: agents.length <= 1 ? 0 : Math.round((360 / agents.length) * index),
+  }));
+}
+
+function buildMissionInteriorAgents(
+  summary: MissionTaskSummary,
+  mission: MissionRecord
+): TaskInteriorAgent[] {
+  const currentStageKey = summary.currentStageKey || MISSION_CORE_STAGE_BLUEPRINT[0]?.key || "receive";
+  const currentStageLabel =
+    summary.currentStageLabel || stageLabelFromMission(mission, currentStageKey) || currentStageKey;
+  const agents: Array<Omit<TaskInteriorAgent, "angle">> = [
+    {
+      id: `${mission.id}:mission-core`,
+      name: "Mission Core",
+      role: "ceo",
+      department: "Mission",
+      title: "Mission controller",
+      status: inferMissionCoreAgentStatus(summary.status),
+      stageKey: currentStageKey,
+      stageLabel: currentStageLabel,
+      progress: summary.progress,
+      currentAction: trimText(
+        mission.waitingFor || mission.summary || mission.events[mission.events.length - 1]?.message,
+        120
+      ) || undefined,
+    },
+  ];
+
+  if (mission.executor || mission.instance) {
+    agents.push({
+      id: `${mission.id}:executor`,
+      name: mission.executor?.name || "Executor",
+      role: "worker",
+      department: "Execution",
+      title:
+        mission.instance?.id ||
+        mission.executor?.jobId ||
+        "Execution runtime",
+      status: inferExecutorAgentStatus(mission),
+      stageKey:
+        currentStageKey === "receive" || currentStageKey === "understand"
+          ? "provision"
+          : currentStageKey,
+      stageLabel:
+        stageLabelFromMission(
+          mission,
+          currentStageKey === "receive" || currentStageKey === "understand"
+            ? "provision"
+            : currentStageKey
+        ) || "Execution runtime",
+      progress:
+        mission.status === "queued" ? 0 : clampPercentage(mission.progress, 12),
+      currentAction: trimText(
+        mission.executor?.status ||
+          mission.instance?.workspaceRoot ||
+          mission.executor?.jobId,
+        120
+      ) || undefined,
+    });
+  }
+
+  if (mission.status === "waiting") {
+    agents.push({
+      id: `${mission.id}:decision-gate`,
+      name: "Decision Gate",
+      role: "manager",
+      department: "Control",
+      title: "Waiting for confirmation",
+      status: "thinking",
+      stageKey: currentStageKey,
+      stageLabel: currentStageLabel,
+      progress: null,
+      currentAction: trimText(
+        mission.decision?.prompt || mission.waitingFor,
+        120
+      ) || undefined,
+    });
+  }
+
+  return withAgentAngles(agents);
+}
+
+function missionActiveAgentCount(mission: MissionRecord): number {
+  return buildMissionInteriorAgents(
+    {
+      id: mission.id,
+      title: mission.title,
+      kind: mission.kind,
+      sourceText: mission.sourceText || mission.title,
+      status: mission.status,
+      workflowStatus: workflowStatusFromMission(mission.status),
+      progress: clampPercentage(mission.progress),
+      currentStageKey: stageKeyFromMission(mission),
+      currentStageLabel: stageLabelFromMission(mission, stageKeyFromMission(mission)),
+      summary: "",
+      waitingFor: mission.waitingFor || null,
+      createdAt: mission.createdAt,
+      updatedAt: mission.updatedAt,
+      startedAt: missionStartedAt(mission),
+      completedAt: mission.completedAt || null,
+      departmentLabels: [],
+      taskCount: 0,
+      completedTaskCount: 0,
+      messageCount: 0,
+      activeAgentCount: 0,
+      attachmentCount: mission.artifacts?.length || 0,
+      issueCount: 0,
+      hasWarnings: false,
+      lastSignal: null,
+    },
+    mission
+  ).filter(agent => agent.status === "working" || agent.status === "thinking")
+    .length;
+}
+
+function extensionFromValue(value?: string | null): string | null {
+  if (!value) return null;
+  const normalized = value.split(/[?#]/)[0];
+  const index = normalized.lastIndexOf(".");
+  if (index === -1 || index === normalized.length - 1) {
+    return null;
+  }
+  return normalized.slice(index + 1).toLowerCase();
+}
+
+function buildMissionArtifacts(mission: MissionRecord): TaskArtifact[] {
+  return (mission.artifacts || []).map((artifact: MissionArtifact, index) => {
+    const href = artifact.url || undefined;
+    const format =
+      extensionFromValue(artifact.name) ||
+      extensionFromValue(artifact.path) ||
+      extensionFromValue(artifact.url) ||
+      undefined;
+
+    return {
+      id: `${mission.id}:mission-artifact:${index}`,
+      title: artifact.name,
+      description:
+        artifact.description ||
+        artifact.path ||
+        artifact.url ||
+        `${capitalize(artifact.kind)} artifact`,
+      kind: artifact.kind,
+      format,
+      filename: artifact.name,
+      downloadKind: href ? "external" : undefined,
+      href,
+    };
+  });
+}
+
+function dedupeArtifacts(artifacts: TaskArtifact[]): TaskArtifact[] {
+  const seen = new Set<string>();
+  return artifacts.filter(artifact => {
+    const key = [
+      artifact.kind,
+      artifact.title,
+      artifact.format || "",
+      artifact.href || "",
+      artifact.filename || "",
+    ].join("::");
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildMissionDecisionPresets(
+  decision: MissionDecision | undefined
+): TaskDecisionPreset[] {
+  if (!decision) {
+    return [];
+  }
+
+  const options = Array.isArray(decision.options) ? decision.options : [];
+  if (options.length === 0 && decision.allowFreeText) {
+    return [
+      {
+        id: "mission-free-text",
+        label: "Submit note",
+        description: "Resume the mission with a decision note.",
+        prompt: decision.prompt,
+        tone: "primary",
+        action: "mission",
+      },
+    ];
+  }
+
+  return options.map((option, index) => ({
+    id: `mission:${option.id}`,
+    label: option.label,
+    description:
+      option.description ||
+      (decision.allowFreeText
+        ? "Submit this option with an optional note."
+        : "Submit this option and resume the mission."),
+    prompt: decision.prompt,
+    tone:
+      index === 0
+        ? "primary"
+        : /abort|stop|reject|fail|report/i.test(option.label)
+          ? "warning"
+          : "secondary",
+    action: "mission",
+    optionId: option.id,
+  }));
+}
+
+function buildMissionInstanceInfo(
+  summary: MissionTaskSummary,
+  mission: MissionRecord
+): Array<{ label: string; value: string }> {
+  return [
+    { label: "Mission ID", value: mission.id },
+    { label: "Runtime", value: "Advanced server runtime" },
+    { label: "Current stage", value: summary.currentStageLabel || "Not started" },
+    { label: "Executor", value: mission.executor?.name || "n/a" },
+    { label: "Executor job", value: mission.executor?.jobId || "n/a" },
+    { label: "Executor request", value: mission.executor?.requestId || "n/a" },
+    { label: "Instance", value: mission.instance?.id || "n/a" },
+    { label: "Workspace", value: mission.instance?.workspaceRoot || "n/a" },
+    { label: "Created", value: formatShortDate(summary.createdAt) },
+    { label: "Completed", value: formatShortDate(summary.completedAt) },
+  ];
+}
+
+function buildMissionLogSummary(
+  mission: MissionRecord,
+  events: MissionEvent[]
+): Array<{ label: string; value: string }> {
+  const lastEvent = events[events.length - 1];
+
+  return [
+    { label: "Event entries", value: formatCount(events.length) },
+    {
+      label: "Progress signals",
+      value: formatCount(events.filter(event => event.type === "progress").length),
+    },
+    {
+      label: "Waiting signals",
+      value: formatCount(events.filter(event => event.type === "waiting").length),
+    },
+    {
+      label: "Log entries",
+      value: formatCount(events.filter(event => event.type === "log").length),
+    },
+    {
+      label: "Executor status",
+      value: mission.executor?.status || "n/a",
+    },
+    {
+      label: "Last signal",
+      value: lastEvent
+        ? `${lastEvent.type} @ ${formatShortDate(lastEvent.time)}`
+        : "No live mission event yet",
+    },
+  ];
+}
+
+function buildMissionSummaryRecord(
+  mission: MissionRecord,
+  supplement: MissionWorkflowSupplement,
+  agents: AgentInfo[],
+  workflowStageCatalog: StageInfo[],
+  events: MissionEvent[]
+): MissionTaskSummary {
+  const workflow = supplement.workflow || syntheticWorkflowFromMission(mission);
+  const detail = supplement.detail;
+  const organization = supplement.workflow
+    ? getOrganizationSnapshot(supplement.workflow)
+    : null;
+  const report =
+    supplement.workflow && supplement.detail
+      ? normalizeDetailReport(supplement.workflow, supplement.detail)
+      : null;
+  const tasks = detail?.tasks || [];
+  const messages = detail?.messages || [];
+  const currentStageKey = stageKeyFromMission(mission);
+  const currentStageLabel = stageLabelFromMission(mission, currentStageKey);
+  const waitingFor =
+    mission.waitingFor ||
+    (mission.status === "waiting"
+      ? mission.decision?.prompt || "Awaiting decision"
+      : null);
+  const failureReasons = [
+    ...missionFailureReasons(mission, events),
+    ...buildFailureReasons(workflow, tasks, report),
+  ].filter(Boolean);
+  const attachmentCount = Math.max(
+    mission.artifacts?.length || 0,
+    supplement.workflow ? getAttachmentCount(workflow, report) : 0
+  );
+  const taskCount = tasks.length;
+  const completedTaskCount = tasks.filter(
+    task => task.status === "passed" || task.status === "verified"
+  ).length;
+  const updatedAt = Math.max(
+    mission.updatedAt,
+    ...events.map(event => event.time),
+    detail ? getWorkflowUpdatedAt(workflow, detail, []) : 0
+  );
+  const runtimeAgents = missionActiveAgentCount(mission);
+
+  return {
+    id: mission.id,
+    title: trimText(mission.title, 76) || "Untitled mission",
+    kind: mission.kind || inferTaskKind(workflow, organization),
+    sourceText: mission.sourceText || workflow.directive || mission.title,
+    status: mission.status,
+    workflowStatus: workflow.status,
+    progress: clampPercentage(mission.progress),
+    currentStageKey,
+    currentStageLabel,
+    summary: missionSummaryText(mission, events, waitingFor),
+    waitingFor,
+    createdAt: mission.createdAt,
+    updatedAt,
+    startedAt: missionStartedAt(mission),
+    completedAt: mission.completedAt || null,
+    departmentLabels:
+      organization?.departments.map(item => item.label) ||
+      (mission.kind ? [capitalize(mission.kind.replace(/[_-]/g, " "))] : []),
+    taskCount,
+    completedTaskCount,
+    messageCount: messages.length,
+    activeAgentCount:
+      taskCount > 0 ? getActiveAgentCount(organization, agents) : runtimeAgents,
+    attachmentCount,
+    issueCount: failureReasons.length,
+    hasWarnings:
+      failureReasons.length > 0 ||
+      events.some(event => event.level === "warn") ||
+      workflow.status === "completed_with_errors",
+    lastSignal:
+      trimText(events[events.length - 1]?.message, 96) ||
+      trimText(messages[messages.length - 1]?.content, 96) ||
+      stageLabelFor(workflowStageCatalog, workflow.current_stage) ||
+      null,
+  };
+}
+
+function buildMissionDetailRecord(
+  summary: MissionTaskSummary,
+  mission: MissionRecord,
+  supplement: MissionWorkflowSupplement,
+  agents: AgentInfo[],
+  workflowStageCatalog: StageInfo[],
+  events: MissionEvent[]
+): MissionTaskDetail {
+  const workflow = supplement.workflow || syntheticWorkflowFromMission(mission);
+  const detail = supplement.detail;
+  const report =
+    supplement.workflow && detail
+      ? normalizeDetailReport(supplement.workflow, detail)
+      : null;
+  const organization = supplement.workflow
+    ? getOrganizationSnapshot(supplement.workflow)
+    : null;
+  const failureReasons = Array.from(
+    new Set([
+      ...missionFailureReasons(mission, events),
+      ...buildFailureReasons(workflow, detail?.tasks || [], report),
+    ])
+  );
+  const missionArtifacts = buildMissionArtifacts(mission);
+  const supplementalArtifacts =
+    supplement.workflow && report ? buildArtifacts(workflow, report) : [];
+
+  return {
+    ...summary,
+    workflow,
+    tasks: detail?.tasks || [],
+    messages: detail?.messages || [],
+    report,
+    organization,
+    stages: buildMissionInteriorStages(mission),
+    agents:
+      detail?.tasks?.length || detail?.messages?.length
+        ? buildInteriorAgents(
+            summary,
+            workflow,
+            detail,
+            agents,
+            organization,
+            workflowStageCatalog
+          )
+        : buildMissionInteriorAgents(summary, mission),
+    timeline: buildMissionTimeline(mission, events),
+    artifacts: dedupeArtifacts([...missionArtifacts, ...supplementalArtifacts]),
+    failureReasons,
+    decisionPresets: buildMissionDecisionPresets(mission.decision),
+    decisionPrompt: mission.decision?.prompt || null,
+    decisionPlaceholder: mission.decision?.placeholder || null,
+    decisionAllowsFreeText: mission.decision?.allowFreeText === true,
+    instanceInfo: buildMissionInstanceInfo(summary, mission),
+    logSummary: buildMissionLogSummary(mission, events),
   };
 }
 
@@ -1653,6 +2426,201 @@ function queueTasksRefresh(options?: { preferredTaskId?: string | null }) {
   }, 140);
 }
 
+function stopMissionSocket() {
+  if (!missionSocket) return;
+  missionSocket.off(MISSION_SOCKET_EVENT);
+  missionSocket.disconnect();
+  missionSocket = null;
+}
+
+async function loadMissionSupplementMap(
+  missions: MissionRecord[],
+  workflows: WorkflowInfo[],
+  runtimeMode: RuntimeMode
+): Promise<Record<string, MissionWorkflowSupplement>> {
+  const workflowByMissionId = new Map<string, WorkflowInfo | null>();
+  const detailPromises = new Map<string, Promise<WorkflowDetailRecord | null>>();
+
+  for (const mission of missions) {
+    const workflow = findSupplementalWorkflow(mission, workflows);
+    workflowByMissionId.set(mission.id, workflow);
+    if (workflow && !detailPromises.has(workflow.id)) {
+      detailPromises.set(
+        workflow.id,
+        loadWorkflowDetailRecord(workflow.id, runtimeMode)
+      );
+    }
+  }
+
+  const detailsByWorkflowId = Object.fromEntries(
+    await Promise.all(
+      Array.from(detailPromises.entries()).map(async ([workflowId, promise]) => {
+        return [workflowId, await promise] as const;
+      })
+    )
+  ) as Record<string, WorkflowDetailRecord | null>;
+
+  return Object.fromEntries(
+    missions.map(mission => {
+      const workflow = workflowByMissionId.get(mission.id) || null;
+      return [
+        mission.id,
+        {
+          workflow,
+          detail: workflow ? detailsByWorkflowId[workflow.id] || null : null,
+        },
+      ] as const;
+    })
+  );
+}
+
+function resolveSelectedTaskId(
+  summaries: MissionTaskSummary[],
+  currentSelectedTaskId: string | null,
+  preferredTaskId?: string | null
+): string | null {
+  const nextSelectedTaskId = preferredTaskId ?? currentSelectedTaskId ?? null;
+  if (
+    nextSelectedTaskId &&
+    summaries.some(summary => summary.id === nextSelectedTaskId)
+  ) {
+    return nextSelectedTaskId;
+  }
+  return pickFallbackTaskId(summaries);
+}
+
+async function patchMissionRecordInStore(
+  missionId: string,
+  set: (
+    partial:
+      | Partial<TasksStoreState>
+      | ((state: TasksStoreState) => Partial<TasksStoreState>)
+  ) => void,
+  get: () => TasksStoreState
+): Promise<void> {
+  if (useAppStore.getState().runtimeMode !== "advanced") {
+    return;
+  }
+
+  const workflowState = useWorkflowStore.getState();
+  if (!workflowState.connected) {
+    await workflowState.initSocket();
+  }
+
+  await Promise.all([
+    workflowState.fetchStages(),
+    workflowState.fetchAgents(),
+    workflowState.fetchWorkflows(),
+  ]);
+
+  const latestWorkflowState = useWorkflowStore.getState();
+  const missionResponse = await getMission(missionId);
+  const eventsResponse = await listMissionEvents(missionId, 60);
+  const supplement = (
+    await loadMissionSupplementMap(
+      [missionResponse.task],
+      latestWorkflowState.workflows,
+      "advanced"
+    )
+  )[missionId];
+  const stageCatalog = toStageCatalog(latestWorkflowState.stages);
+  const summary = buildMissionSummaryRecord(
+    missionResponse.task,
+    supplement,
+    latestWorkflowState.agents,
+    stageCatalog,
+    eventsResponse.events
+  );
+  const detail = buildMissionDetailRecord(
+    summary,
+    missionResponse.task,
+    supplement,
+    latestWorkflowState.agents,
+    stageCatalog,
+    eventsResponse.events
+  );
+
+  set(state => {
+    const nextTasks = [...state.tasks.filter(task => task.id !== missionId), summary]
+      .sort((left, right) => right.updatedAt - left.updatedAt);
+
+    return {
+      ready: true,
+      loading: false,
+      error: null,
+      tasks: nextTasks,
+      detailsById: {
+        ...state.detailsById,
+        [missionId]: detail,
+      },
+      selectedTaskId: resolveSelectedTaskId(
+        nextTasks,
+        state.selectedTaskId,
+        state.selectedTaskId === missionId ? missionId : undefined
+      ),
+    };
+  });
+}
+
+function ensureMissionSocket(
+  set: (
+    partial:
+      | Partial<TasksStoreState>
+      | ((state: TasksStoreState) => Partial<TasksStoreState>)
+  ) => void,
+  get: () => TasksStoreState
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (useAppStore.getState().runtimeMode !== "advanced") {
+    stopMissionSocket();
+    return;
+  }
+
+  if (missionSocket) {
+    return;
+  }
+
+  missionSocket = io(window.location.origin, {
+    transports: ["websocket", "polling"],
+  });
+
+  missionSocket.on(MISSION_SOCKET_EVENT, (payload: MissionSocketPayload) => {
+    if (!payload || typeof payload !== "object" || !("type" in payload)) {
+      return;
+    }
+
+    if (payload.type === "mission.snapshot") {
+      queueTasksRefresh({
+        preferredTaskId: get().selectedTaskId,
+      });
+      return;
+    }
+
+    if (!("missionId" in payload) || !payload.missionId) {
+      return;
+    }
+
+    void patchMissionRecordInStore(payload.missionId, set, get).catch(error => {
+      console.warn(
+        `[Tasks] Failed to patch mission ${payload.missionId} from socket event:`,
+        error
+      );
+      queueTasksRefresh({
+        preferredTaskId: payload.missionId,
+      });
+    });
+  });
+
+  missionSocket.on("disconnect", () => {
+    if (useAppStore.getState().runtimeMode !== "advanced") {
+      stopMissionSocket();
+    }
+  });
+}
+
 function startTaskStoreWatchers() {
   if (taskStoreWatchersStarted) return;
   taskStoreWatchersStarted = true;
@@ -1668,12 +2636,15 @@ function startTaskStoreWatchers() {
 
   useAppStore.subscribe((state, previousState) => {
     if (state.runtimeMode !== previousState.runtimeMode) {
+      if (state.runtimeMode !== "advanced") {
+        stopMissionSocket();
+      }
       queueTasksRefresh();
     }
   });
 }
 
-async function hydrateTaskData(
+async function hydrateWorkflowTaskData(
   set: (
     partial:
       | Partial<TasksStoreState>
@@ -1768,6 +2739,125 @@ async function hydrateTaskData(
   });
 }
 
+async function hydrateMissionTaskData(
+  set: (
+    partial:
+      | Partial<TasksStoreState>
+      | ((state: TasksStoreState) => Partial<TasksStoreState>)
+  ) => void,
+  get: () => TasksStoreState,
+  options?: { preferredTaskId?: string | null }
+): Promise<void> {
+  const workflowStore = useWorkflowStore.getState();
+  if (!workflowStore.connected) {
+    await workflowStore.initSocket();
+  }
+
+  ensureMissionSocket(set, get);
+
+  await Promise.all([
+    workflowStore.fetchStages(),
+    workflowStore.fetchAgents(),
+    workflowStore.fetchWorkflows(),
+  ]);
+
+  const latestWorkflowState = useWorkflowStore.getState();
+  const missionsResponse = await listMissions(200);
+  const missions = [...missionsResponse.tasks].sort(
+    (left, right) => right.updatedAt - left.updatedAt
+  );
+  const supplements = await loadMissionSupplementMap(
+    missions,
+    latestWorkflowState.workflows,
+    "advanced"
+  );
+
+  const eventsEntries = await Promise.all(
+    missions.map(async mission => {
+      try {
+        const response = await listMissionEvents(mission.id, 60);
+        return [mission.id, response.events] as const;
+      } catch (error) {
+        console.warn(
+          `[Tasks] Failed to load mission events for ${mission.id}:`,
+          error
+        );
+        return [mission.id, mission.events || []] as const;
+      }
+    })
+  );
+  const missionEvents = Object.fromEntries(eventsEntries) as Record<
+    string,
+    MissionEvent[]
+  >;
+
+  const stageCatalog = toStageCatalog(latestWorkflowState.stages);
+  const summaries = missions
+    .map(mission =>
+      buildMissionSummaryRecord(
+        mission,
+        supplements[mission.id] || { workflow: null, detail: null },
+        latestWorkflowState.agents,
+        stageCatalog,
+        missionEvents[mission.id] || mission.events || []
+      )
+    )
+    .sort((left, right) => right.updatedAt - left.updatedAt);
+
+  const detailsById = Object.fromEntries(
+    missions.map(mission => {
+      const summary = summaries.find(item => item.id === mission.id);
+      if (!summary) {
+        return [mission.id, undefined];
+      }
+      return [
+        mission.id,
+        buildMissionDetailRecord(
+          summary,
+          mission,
+          supplements[mission.id] || { workflow: null, detail: null },
+          latestWorkflowState.agents,
+          stageCatalog,
+          missionEvents[mission.id] || mission.events || []
+        ),
+      ];
+    })
+  ) as Record<string, MissionTaskDetail>;
+
+  set({
+    ready: true,
+    loading: false,
+    error: null,
+    tasks: summaries,
+    detailsById,
+    selectedTaskId: resolveSelectedTaskId(
+      summaries,
+      get().selectedTaskId,
+      options?.preferredTaskId
+    ),
+  });
+}
+
+async function hydrateTaskData(
+  set: (
+    partial:
+      | Partial<TasksStoreState>
+      | ((state: TasksStoreState) => Partial<TasksStoreState>)
+  ) => void,
+  get: () => TasksStoreState,
+  options?: { preferredTaskId?: string | null }
+): Promise<void> {
+  startTaskStoreWatchers();
+
+  if (useAppStore.getState().runtimeMode === "advanced") {
+    await hydrateMissionTaskData(set, get, options);
+    return;
+  }
+
+  stopMissionSocket();
+  await hydrateWorkflowTaskData(set, get, options);
+}
+
 export const useTasksStore = create<TasksStoreState>((set, get) => ({
   ready: false,
   loading: false,
@@ -1847,6 +2937,21 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
     set({ selectedTaskId: taskId });
   },
 
+  createMission: async input => {
+    if (useAppStore.getState().runtimeMode !== "advanced") {
+      set({
+        error: "Mission creation is only available in advanced runtime mode.",
+      });
+      return null;
+    }
+
+    const response = await createMissionRequest(input);
+    await get().refresh({
+      preferredTaskId: response.task.id,
+    });
+    return response.task.id;
+  },
+
   setDecisionNote: (taskId, note) => {
     set(state => ({
       decisionNotes: {
@@ -1863,6 +2968,58 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
     if (!detail || !preset) return null;
 
     const note = get().decisionNotes[taskId]?.trim();
+
+    if (preset.action === "mission") {
+      if (!preset.optionId && detail.decisionAllowsFreeText !== true) {
+        set({
+          error: "This mission decision requires a configured option.",
+        });
+        return null;
+      }
+
+      if (!preset.optionId && detail.decisionAllowsFreeText && !note) {
+        set({
+          error: "Add a note before submitting this mission decision.",
+        });
+        return null;
+      }
+
+      const response = await submitMissionDecisionRequest(taskId, {
+        optionId: preset.optionId,
+        freeText: detail.decisionAllowsFreeText ? note || undefined : undefined,
+        detail:
+          detail.decisionAllowsFreeText !== true && note ? note : undefined,
+      });
+
+      set(state => ({
+        error: null,
+        decisionNotes: {
+          ...state.decisionNotes,
+          [taskId]: "",
+        },
+        lastDecisionLaunch: {
+          sourceTaskId: taskId,
+          sourceTaskTitle: detail.title,
+          spawnedWorkflowId: null,
+          at: Date.now(),
+        },
+      }));
+
+      try {
+        await patchMissionRecordInStore(taskId, set, get);
+      } catch (error) {
+        console.warn(
+          `[Tasks] Failed to patch mission ${taskId} after decision submit:`,
+          error
+        );
+        await get().refresh({
+          preferredTaskId: response.task.id || taskId,
+        });
+      }
+
+      return response.task.id;
+    }
+
     const directive = [
       preset.prompt,
       `Reference workflow: ${detail.workflow.id}`,
@@ -1885,6 +3042,10 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
         sourceTaskTitle: detail.title,
         spawnedWorkflowId,
         at: Date.now(),
+      },
+      decisionNotes: {
+        ...get().decisionNotes,
+        [taskId]: "",
       },
     });
 

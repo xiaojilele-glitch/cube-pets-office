@@ -6,9 +6,12 @@ import {
   MISSION_EVENT_TYPES,
   MISSION_STAGE_STATUSES,
   MISSION_STATUSES,
+  type MissionArtifact,
   type MissionDecision,
   type MissionDecisionOption,
+  type MissionExecutorContext,
   type MissionEvent,
+  type MissionInstanceContext,
   type MissionRecord,
   type MissionStage,
 } from '../../shared/mission/contracts.js';
@@ -145,6 +148,87 @@ function normalizeEvent(value: unknown): MissionEvent | null {
   };
 }
 
+function normalizeArtifact(value: unknown): MissionArtifact | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const candidate = value as Partial<MissionArtifact>;
+  if (
+    (candidate.kind !== 'file' &&
+      candidate.kind !== 'report' &&
+      candidate.kind !== 'url' &&
+      candidate.kind !== 'log') ||
+    typeof candidate.name !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    kind: candidate.kind,
+    name: candidate.name,
+    path: typeof candidate.path === 'string' ? candidate.path : undefined,
+    url: typeof candidate.url === 'string' ? candidate.url : undefined,
+    description:
+      typeof candidate.description === 'string'
+        ? candidate.description
+        : undefined,
+  };
+}
+
+function normalizeExecutorContext(value: unknown): MissionExecutorContext | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+
+  const candidate = value as Partial<MissionExecutorContext>;
+  if (typeof candidate.name !== 'string' || !candidate.name.trim()) {
+    return undefined;
+  }
+
+  return {
+    name: candidate.name,
+    requestId:
+      typeof candidate.requestId === 'string' ? candidate.requestId : undefined,
+    jobId: typeof candidate.jobId === 'string' ? candidate.jobId : undefined,
+    status: typeof candidate.status === 'string' ? candidate.status : undefined,
+    baseUrl:
+      typeof candidate.baseUrl === 'string' ? candidate.baseUrl : undefined,
+    lastEventType:
+      typeof candidate.lastEventType === 'string'
+        ? candidate.lastEventType
+        : undefined,
+    lastEventAt:
+      typeof candidate.lastEventAt === 'number'
+        ? candidate.lastEventAt
+        : undefined,
+  };
+}
+
+function normalizeInstanceContext(value: unknown): MissionInstanceContext | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+
+  const candidate = value as Partial<MissionInstanceContext>;
+  return {
+    id: typeof candidate.id === 'string' ? candidate.id : undefined,
+    image: typeof candidate.image === 'string' ? candidate.image : undefined,
+    command: Array.isArray(candidate.command)
+      ? candidate.command.filter(
+          (entry): entry is string => typeof entry === 'string'
+        )
+      : undefined,
+    workspaceRoot:
+      typeof candidate.workspaceRoot === 'string'
+        ? candidate.workspaceRoot
+        : undefined,
+    startedAt:
+      typeof candidate.startedAt === 'number' ? candidate.startedAt : undefined,
+    completedAt:
+      typeof candidate.completedAt === 'number'
+        ? candidate.completedAt
+        : undefined,
+    exitCode:
+      typeof candidate.exitCode === 'number' ? candidate.exitCode : undefined,
+    host: typeof candidate.host === 'string' ? candidate.host : undefined,
+  };
+}
+
 function normalizeTask(value: unknown): MissionRecord | null {
   if (!value || typeof value !== 'object') return null;
 
@@ -186,6 +270,13 @@ function normalizeTask(value: unknown): MissionRecord | null {
         : undefined,
     stages,
     summary: typeof candidate.summary === 'string' ? candidate.summary : undefined,
+    executor: normalizeExecutorContext(candidate.executor),
+    instance: normalizeInstanceContext(candidate.instance),
+    artifacts: Array.isArray(candidate.artifacts)
+      ? candidate.artifacts
+          .map(artifact => normalizeArtifact(artifact))
+          .filter((artifact): artifact is MissionArtifact => Boolean(artifact))
+      : undefined,
     waitingFor:
       typeof candidate.waitingFor === 'string' ? candidate.waitingFor : undefined,
     decision: normalizeDecision(candidate.decision),

@@ -79,6 +79,44 @@ export interface MissionDecisionResolved {
   freeText?: string;
 }
 
+export const MISSION_CORE_STAGE_BLUEPRINT = [
+  { key: "receive", label: "Receive task" },
+  { key: "understand", label: "Understand request" },
+  { key: "plan", label: "Build execution plan" },
+  { key: "provision", label: "Provision execution runtime" },
+  { key: "execute", label: "Run execution" },
+  { key: "finalize", label: "Finalize mission" },
+] as const;
+
+export interface MissionArtifact {
+  kind: "file" | "report" | "url" | "log";
+  name: string;
+  path?: string;
+  url?: string;
+  description?: string;
+}
+
+export interface MissionExecutorContext {
+  name: string;
+  requestId?: string;
+  jobId?: string;
+  status?: string;
+  baseUrl?: string;
+  lastEventType?: string;
+  lastEventAt?: number;
+}
+
+export interface MissionInstanceContext {
+  id?: string;
+  image?: string;
+  command?: string[];
+  workspaceRoot?: string;
+  startedAt?: number;
+  completedAt?: number;
+  exitCode?: number;
+  host?: string;
+}
+
 export interface MissionRecord {
   id: string;
   kind: string;
@@ -90,6 +128,9 @@ export interface MissionRecord {
   currentStageKey?: string;
   stages: MissionStage[];
   summary?: string;
+  executor?: MissionExecutorContext;
+  instance?: MissionInstanceContext;
+  artifacts?: MissionArtifact[];
   waitingFor?: string;
   decision?: MissionDecision;
   createdAt: number;

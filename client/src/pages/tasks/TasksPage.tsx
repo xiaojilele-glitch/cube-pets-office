@@ -5,8 +5,16 @@ import {
   useMemo,
   useState,
 } from "react";
-import { FolderKanban, LoaderCircle, RefreshCw, Search } from "lucide-react";
+import {
+  FolderKanban,
+  LoaderCircle,
+  Plus,
+  RefreshCw,
+  Search,
+} from "lucide-react";
+import { toast } from "sonner";
 
+import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
 import {
   compactText,
@@ -37,6 +45,7 @@ export default function TasksPage({
   const ensureReady = useTasksStore(state => state.ensureReady);
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
+  const createMission = useTasksStore(state => state.createMission);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
   const tasks = useTasksStore(state => state.tasks);
@@ -47,6 +56,7 @@ export default function TasksPage({
   const error = useTasksStore(state => state.error);
   const decisionNotes = useTasksStore(state => state.decisionNotes);
   const [search, setSearch] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
   );
@@ -64,6 +74,14 @@ export default function TasksPage({
       });
     }
   }, [initialTaskId, selectTask]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") === "1") {
+      setCreateDialogOpen(true);
+    }
+  }, []);
 
   const filteredTasks = useMemo(() => {
     if (!deferredSearch) return tasks;
@@ -102,6 +120,26 @@ export default function TasksPage({
     }
   }
 
+  async function handleCreateMission(input: {
+    title?: string;
+    sourceText?: string;
+    kind?: string;
+    topicId?: string;
+  }) {
+    try {
+      const missionId = await createMission(input);
+      if (missionId) {
+        toast.success("Mission created and loaded into the queue.");
+      }
+      return missionId;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create mission.";
+      toast.error(message);
+      return null;
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -126,6 +164,14 @@ export default function TasksPage({
             </div>
 
             <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                className="rounded-full bg-[#d07a4f] text-white hover:bg-[#c26d42]"
+                onClick={() => setCreateDialogOpen(true)}
+              >
+                <Plus className="size-4" />
+                New Mission
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -185,8 +231,8 @@ export default function TasksPage({
                       </EmptyMedia>
                       <EmptyTitle>No missions yet</EmptyTitle>
                       <EmptyDescription>
-                        Start a workflow from the runtime and it will appear
-                        here without refreshing the page.
+                        Create a mission here or let the runtime dispatch one,
+                        and it will appear in this queue without reloading.
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
@@ -279,6 +325,12 @@ export default function TasksPage({
           </main>
         </div>
       </div>
+
+      <CreateMissionDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreate={handleCreateMission}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type {
+  MissionEvent,
   MissionDecisionResolved,
   MissionDecisionSubmission,
   MissionPlanetEdge,
@@ -9,8 +10,10 @@ import type {
 } from "./contracts.js";
 
 export const MISSION_API_ROUTES = {
+  createTask: "/api/tasks",
   listTasks: "/api/tasks",
   getTask: "/api/tasks/:id",
+  listTaskEvents: "/api/tasks/:id/events",
   submitTaskDecision: "/api/tasks/:id/decision",
   listPlanets: "/api/planets",
   getPlanet: "/api/planets/:id",
@@ -34,9 +37,31 @@ export interface ListMissionsResponse {
   tasks: MissionRecord[];
 }
 
+export interface CreateMissionRequest {
+  kind?: string;
+  title?: string;
+  sourceText?: string;
+  topicId?: string;
+}
+
+export interface CreateMissionResponse {
+  ok: true;
+  task: MissionRecord;
+}
+
 export interface GetMissionResponse {
   ok: true;
   task: MissionRecord;
+}
+
+export interface ListMissionEventsQuery {
+  limit?: number;
+}
+
+export interface ListMissionEventsResponse {
+  ok: true;
+  missionId: string;
+  events: MissionEvent[];
 }
 
 export type SubmitMissionDecisionRequest = MissionDecisionSubmission;

@@ -8,7 +8,12 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import type { MissionDecision } from "../shared/mission/contracts.js";
+import {
+  MISSION_CORE_STAGE_BLUEPRINT,
+  type MissionArtifact,
+  type MissionDecision,
+  type MissionInstanceContext,
+} from "../shared/mission/contracts.js";
 
 dotenv.config();
 
@@ -17,25 +22,21 @@ const __dirname = path.dirname(__filename);
 
 const DEFAULT_EXECUTOR_BASE_URL = "http://127.0.0.1:3031";
 const EXECUTOR_STAGE_LABELS: Record<string, string> = {
+  receive: "Receive task",
   understand: "Understand request",
-  "build-plan": "Build execution plan",
-  dispatch: "Dispatch to executor",
+  plan: "Build execution plan",
+  provision: "Provision execution runtime",
   scan: "Scan workspace",
   analyze: "Analyze request",
-  plan: "Build plan",
+  "build-plan": "Build execution plan",
+  dispatch: "Provision execution runtime",
   codegen: "Generate artifacts",
   execute: "Run execution",
   report: "Publish report",
   custom: "Custom action",
-  decision: "Waiting for decision",
   finalize: "Finalize mission",
 };
-const SMOKE_STAGE_LABELS = Object.entries(EXECUTOR_STAGE_LABELS).map(
-  ([key, label]) => ({
-    key,
-    label,
-  })
-);
+const SMOKE_STAGE_LABELS = [...MISSION_CORE_STAGE_BLUEPRINT];
 
 interface RequestWithRawBody extends Request {
   rawBody?: string;
@@ -71,6 +72,25 @@ interface ExecutorCallbackRequestBody {
     log?: {
       level?: "info" | "warn" | "error";
       message?: string;
+    };
+    artifacts?: Array<{
+      kind?: "file" | "report" | "url" | "log";
+      name?: string;
+      path?: string;
+      url?: string;
+      description?: string;
+    }>;
+    payload?: {
+      instance?: {
+        id?: string;
+        image?: string;
+        command?: string[];
+        workspaceRoot?: string;
+        startedAt?: number;
+        completedAt?: number;
+        exitCode?: number;
+        host?: string;
+      };
     };
   };
 }
@@ -189,10 +209,24 @@ function resolveExecutorStageKey(
   event: NonNullable<ExecutorCallbackRequestBody["event"]>,
   fallback: string | undefined
 ): string {
-  if (event.stageKey?.trim()) return event.stageKey.trim();
+  const rawStageKey = event.stageKey?.trim();
+  if (rawStageKey) {
+    if (["receive", "understand", "plan", "provision", "execute", "finalize"].includes(rawStageKey)) {
+      return rawStageKey;
+    }
+    if (rawStageKey === "scan" || rawStageKey === "analyze") return "understand";
+    if (rawStageKey === "build-plan") return "plan";
+    if (rawStageKey === "dispatch") return "provision";
+    if (rawStageKey === "codegen" || rawStageKey === "execute" || rawStageKey === "custom") {
+      return "execute";
+    }
+    if (rawStageKey === "report") return "finalize";
+  }
 
-  if (event.type === "job.accepted") return "dispatch";
-  if (event.type === "job.waiting" || event.status === "waiting") return "decision";
+  if (event.type === "job.accepted") return "provision";
+  if (event.type === "job.waiting" || event.status === "waiting") {
+    return fallback || "execute";
+  }
   if (
     event.type === "job.completed" ||
     event.type === "job.failed" ||
@@ -205,6 +239,58 @@ function resolveExecutorStageKey(
   }
 
   return fallback || "execute";
+}
+
+function normalizeExecutorArtifacts(
+  artifacts: NonNullable<ExecutorCallbackRequestBody["event"]>["artifacts"]
+): MissionArtifact[] | undefined {
+  if (!Array.isArray(artifacts)) return undefined;
+
+  const normalized = artifacts.flatMap(artifact => {
+    if (
+      !artifact ||
+      (artifact.kind !== "file" &&
+        artifact.kind !== "report" &&
+        artifact.kind !== "url" &&
+        artifact.kind !== "log") ||
+      !artifact.name?.trim()
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        kind: artifact.kind,
+        name: artifact.name.trim(),
+        path: artifact.path?.trim() || undefined,
+        url: artifact.url?.trim() || undefined,
+        description: artifact.description?.trim() || undefined,
+      },
+    ];
+  });
+
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeExecutorInstance(
+  value: NonNullable<ExecutorCallbackRequestBody["event"]>["payload"]
+): MissionInstanceContext | undefined {
+  const instance = value?.instance;
+  if (!instance || typeof instance !== "object") return undefined;
+
+  return {
+    id: instance.id?.trim() || undefined,
+    image: instance.image?.trim() || undefined,
+    command: Array.isArray(instance.command)
+      ? instance.command.filter((entry): entry is string => typeof entry === "string")
+      : undefined,
+    workspaceRoot: instance.workspaceRoot?.trim() || undefined,
+    startedAt: typeof instance.startedAt === "number" ? instance.startedAt : undefined,
+    completedAt:
+      typeof instance.completedAt === "number" ? instance.completedAt : undefined,
+    exitCode: typeof instance.exitCode === "number" ? instance.exitCode : undefined,
+    host: instance.host?.trim() || undefined,
+  };
 }
 
 function normalizeSmokeOutcome(value: unknown): "success" | "failed" {
@@ -363,6 +449,23 @@ async function startServer() {
       event.detail?.trim() ||
       event.message?.trim() ||
       `Executor event at ${executorStageLabel(stageKey)}`;
+    const executorName = event.executor?.trim() || current.executor?.name || "executor";
+    const artifacts = normalizeExecutorArtifacts(event.artifacts);
+    const instance = normalizeExecutorInstance(event.payload);
+
+    missionRuntime.patchMissionExecution(missionId, {
+      executor: {
+        name: executorName,
+        requestId: current.executor?.requestId,
+        jobId: event.jobId.trim(),
+        status: event.status?.trim() || current.executor?.status,
+        baseUrl: current.executor?.baseUrl,
+        lastEventType: event.type?.trim() || current.executor?.lastEventType,
+        lastEventAt: Date.now(),
+      },
+      instance: instance || current.instance,
+      artifacts: artifacts || current.artifacts,
+    });
 
     if (event.type === "job.log") {
       missionRuntime.logMission(
@@ -466,22 +569,22 @@ async function startServer() {
       );
       missionRuntime.markMissionRunning(
         mission.id,
-        "build-plan",
+        "plan",
         "Structured execution plan created for smoke dispatch.",
         28,
         "brain"
       );
       missionRuntime.updateMissionStage(
         mission.id,
-        "build-plan",
+        "plan",
         { status: "done", detail: buildResult.plan.summary },
         36,
         "brain"
       );
       missionRuntime.markMissionRunning(
         mission.id,
-        "dispatch",
-        "Dispatching first executor job to lobster.",
+        "provision",
+        "Provisioning executor job on lobster.",
         45,
         "brain"
       );
@@ -526,7 +629,7 @@ async function startServer() {
 
       missionRuntime.updateMissionStage(
         mission.id,
-        "dispatch",
+        "provision",
         {
           status: "done",
           detail: `Executor accepted job ${dispatchResult.response.jobId}.`,
@@ -534,6 +637,21 @@ async function startServer() {
         60,
         "brain"
       );
+      missionRuntime.patchMissionExecution(mission.id, {
+        executor: {
+          name: dispatchResult.request.executor,
+          requestId: dispatchResult.request.requestId,
+          jobId: dispatchResult.response.jobId,
+          status: "queued",
+          baseUrl: executorBaseUrl,
+          lastEventType: "job.accepted",
+          lastEventAt: Date.now(),
+        },
+        instance: {
+          workspaceRoot: buildResult.plan.workspaceRoot,
+        },
+        artifacts: buildResult.plan.artifacts,
+      });
       missionRuntime.markMissionRunning(
         mission.id,
         "execute",

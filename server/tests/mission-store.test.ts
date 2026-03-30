@@ -105,4 +105,64 @@ describe('MissionStore', () => {
       'Server restarted during mission execution.'
     );
   });
+
+  it('persists executor metadata, instance context, artifacts, and summary', () => {
+    const filePath = path.join(tempDir, 'mission-snapshots.json');
+    const store = new MissionStore(new MissionFileSnapshotStore(filePath));
+
+    const mission = store.create({
+      kind: 'chat',
+      title: 'Persist execution fields',
+      stageLabels: [{ key: 'execute', label: 'Run execution' }],
+    });
+
+    store.patchExecution(mission.id, {
+      summary: 'Executor completed the mission successfully.',
+      executor: {
+        name: 'lobster',
+        requestId: 'req_1',
+        jobId: 'job_1',
+        status: 'completed',
+      },
+      instance: {
+        id: 'instance_1',
+        workspaceRoot: 'C:/workspace/demo',
+        host: 'docker-local',
+      },
+      artifacts: [
+        {
+          kind: 'report',
+          name: 'Execution report',
+          description: 'Final report artifact',
+        },
+      ],
+    });
+
+    const restored = new MissionStore(
+      new MissionFileSnapshotStore(filePath)
+    ).get(mission.id);
+
+    expect(restored).toMatchObject({
+      id: mission.id,
+      summary: 'Executor completed the mission successfully.',
+      executor: {
+        name: 'lobster',
+        requestId: 'req_1',
+        jobId: 'job_1',
+        status: 'completed',
+      },
+      instance: {
+        id: 'instance_1',
+        workspaceRoot: 'C:/workspace/demo',
+        host: 'docker-local',
+      },
+      artifacts: [
+        {
+          kind: 'report',
+          name: 'Execution report',
+          description: 'Final report artifact',
+        },
+      ],
+    });
+  });
 });

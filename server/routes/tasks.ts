@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
 import { submitMissionDecision } from '../tasks/mission-decision.js';
 import {
   missionRuntime,
@@ -15,8 +16,53 @@ function parseLimit(rawValue: unknown): number {
   return Math.max(1, Math.min(MAX_LIMIT, Math.trunc(value)));
 }
 
+function buildTaskTitle(
+  title: unknown,
+  sourceText: unknown
+): string | null {
+  if (typeof title === 'string' && title.trim()) {
+    return title.trim();
+  }
+
+  if (typeof sourceText === 'string' && sourceText.trim()) {
+    const compact = sourceText.trim().replace(/\s+/g, ' ');
+    return compact.length > 48 ? `${compact.slice(0, 48)}...` : compact;
+  }
+
+  return null;
+}
+
 export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Router {
   const router = Router();
+
+  router.post('/', (req, res) => {
+    const body = req.body || {};
+    const title = buildTaskTitle(body.title, body.sourceText);
+    if (!title) {
+      return res.status(400).json({
+        error: 'title or sourceText is required',
+      });
+    }
+
+    const task = runtime.createTask({
+      kind: typeof body.kind === 'string' && body.kind.trim() ? body.kind.trim() : 'chat',
+      title,
+      sourceText:
+        typeof body.sourceText === 'string' && body.sourceText.trim()
+          ? body.sourceText.trim()
+          : undefined,
+      topicId:
+        typeof body.topicId === 'string' && body.topicId.trim()
+          ? body.topicId.trim()
+          : undefined,
+      stageLabels: [...MISSION_CORE_STAGE_BLUEPRINT],
+    });
+
+    return res.status(201).json({
+      ok: true,
+      task,
+    });
+  });
 
   router.get('/', (req, res) => {
     const limit = parseLimit(req.query.limit);
@@ -35,6 +81,20 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
     res.json({
       ok: true,
       task,
+    });
+  });
+
+  router.get('/:id/events', (req, res) => {
+    const task = runtime.getTask(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const limit = parseLimit(req.query.limit);
+    res.json({
+      ok: true,
+      missionId: task.id,
+      events: runtime.listTaskEvents(task.id, limit),
     });
   });
 

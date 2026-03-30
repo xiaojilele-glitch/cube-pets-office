@@ -91,6 +91,36 @@ describe('tasks routes', () => {
     });
   });
 
+  it('creates a mission from POST /api/tasks with the fixed mission stages', async () => {
+    const response = await fetch(`${baseUrl}/api/tasks`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        kind: 'chat',
+        sourceText: 'Help me plan a relay rollout across Feishu and Cube.',
+        topicId: 'thread_123',
+      }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(body.ok).toBe(true);
+    expect(body.task).toMatchObject({
+      kind: 'chat',
+      topicId: 'thread_123',
+      stages: [
+        { key: 'receive', label: 'Receive task', status: 'pending' },
+        { key: 'understand', label: 'Understand request', status: 'pending' },
+        { key: 'plan', label: 'Build execution plan', status: 'pending' },
+        { key: 'provision', label: 'Provision execution runtime', status: 'pending' },
+        { key: 'execute', label: 'Run execution', status: 'pending' },
+        { key: 'finalize', label: 'Finalize mission', status: 'pending' },
+      ],
+    });
+  });
+
   it('returns a task detail from GET /api/tasks/:id', async () => {
     const task = runtime.createTask({
       kind: 'chat',
@@ -150,11 +180,44 @@ describe('tasks routes', () => {
     expect(runtime.getTask(task.id)?.decision).toBeUndefined();
   });
 
+  it('returns recent task events from GET /api/tasks/:id/events', async () => {
+    const task = runtime.createChatTask('Task events');
+    runtime.markMissionRunning(task.id, 'understand', 'Reading mission details', 18);
+    runtime.logMission(task.id, 'Collected first batch of notes', 'info', 22);
+
+    const response = await fetch(`${baseUrl}/api/tasks/${task.id}/events?limit=3`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      missionId: task.id,
+    });
+    expect(body.events).toHaveLength(3);
+    expect(body.events.map((event: { message: string }) => event.message)).toContain(
+      'Collected first batch of notes'
+    );
+  });
+
   it('returns 404 for missing task detail', async () => {
     const response = await fetch(`${baseUrl}/api/tasks/task_missing`);
     const body = await response.json();
 
     expect(response.status).toBe(404);
     expect(body).toEqual({ error: 'Task not found' });
+  });
+
+  it('returns 400 when POST /api/tasks is missing title and source text', async () => {
+    const response = await fetch(`${baseUrl}/api/tasks`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ kind: 'chat' }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ error: 'title or sourceText is required' });
   });
 });

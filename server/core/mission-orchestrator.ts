@@ -6,6 +6,7 @@ import type {
   MissionRecord,
   MissionStage,
 } from "../../shared/mission/contracts.js";
+import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
 import type { ExecutorEvent, ExecutionPlan } from "../../shared/executor/contracts.js";
 import {
   ExecutionPlanBuilder,
@@ -75,13 +76,9 @@ interface MissionRuntimeState {
   submittedDecision?: MissionDecisionResolved;
 }
 
-const CORE_STAGE_BLUEPRINT: Array<Pick<MissionStage, "key" | "label">> = [
-  { key: "understand", label: "Understand request" },
-  { key: "build-plan", label: "Build execution plan" },
-  { key: "dispatch", label: "Dispatch to executor" },
-  { key: "decision", label: "Waiting for decision" },
-  { key: "finalize", label: "Finalize mission" },
-];
+const MISSION_STAGE_LABELS = Object.fromEntries(
+  MISSION_CORE_STAGE_BLUEPRINT.map(stage => [stage.key, stage.label]),
+) as Record<string, string>;
 
 function createMissionId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -118,15 +115,11 @@ function cloneEvents(events: MissionEvent[]): MissionEvent[] {
 }
 
 function cloneMission(record: MissionRecord): MissionRecord {
-  return {
-    ...record,
-    stages: cloneStages(record.stages),
-    events: cloneEvents(record.events),
-  };
+  return structuredClone(record);
 }
 
 function baseStages(): MissionStage[] {
-  return CORE_STAGE_BLUEPRINT.map(stage => ({
+  return MISSION_CORE_STAGE_BLUEPRINT.map(stage => ({
     ...stage,
     status: "pending",
   }));
@@ -199,6 +192,98 @@ function missionEvent(
   };
 }
 
+function missionStageLabel(stageKey: string): string {
+  return MISSION_STAGE_LABELS[stageKey] || toTitleCase(stageKey);
+}
+
+function resolveMissionStageKey(
+  event: ExecutorEvent,
+  fallback: string | undefined,
+): string {
+  const rawStageKey = event.stageKey?.trim();
+  if (rawStageKey) {
+    if (MISSION_STAGE_LABELS[rawStageKey]) return rawStageKey;
+    if (rawStageKey === "scan" || rawStageKey === "analyze") return "understand";
+    if (rawStageKey === "build-plan") return "plan";
+    if (rawStageKey === "dispatch") return "provision";
+    if (rawStageKey === "codegen" || rawStageKey === "execute" || rawStageKey === "custom") {
+      return "execute";
+    }
+    if (rawStageKey === "report") return "finalize";
+  }
+
+  if (event.type === "job.accepted") return "provision";
+  if (event.type === "job.waiting" || event.status === "waiting") {
+    return fallback || "execute";
+  }
+  if (
+    event.type === "job.completed" ||
+    event.type === "job.failed" ||
+    event.type === "job.cancelled" ||
+    event.status === "completed" ||
+    event.status === "failed" ||
+    event.status === "cancelled"
+  ) {
+    return "finalize";
+  }
+
+  return fallback || "execute";
+}
+
+function normalizeExecutorArtifacts(
+  artifacts: ExecutorEvent["artifacts"],
+): MissionRecord["artifacts"] | undefined {
+  if (!Array.isArray(artifacts)) return undefined;
+
+  const normalized = artifacts.flatMap(artifact => {
+    if (
+      !artifact ||
+      (artifact.kind !== "file" &&
+        artifact.kind !== "report" &&
+        artifact.kind !== "url" &&
+        artifact.kind !== "log") ||
+      !artifact.name?.trim()
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        kind: artifact.kind,
+        name: artifact.name.trim(),
+        path: artifact.path?.trim() || undefined,
+        url: artifact.url?.trim() || undefined,
+        description: artifact.description?.trim() || undefined,
+      },
+    ];
+  });
+
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeExecutorInstance(
+  payload: ExecutorEvent["payload"],
+): MissionRecord["instance"] | undefined {
+  const instance = payload?.instance as Record<string, unknown> | undefined;
+  if (!instance || typeof instance !== "object") return undefined;
+
+  return {
+    id: typeof instance.id === "string" ? instance.id.trim() || undefined : undefined,
+    image: typeof instance.image === "string" ? instance.image.trim() || undefined : undefined,
+    command: Array.isArray(instance.command)
+      ? instance.command.filter((entry: unknown): entry is string => typeof entry === "string")
+      : undefined,
+    workspaceRoot:
+      typeof instance.workspaceRoot === "string"
+        ? instance.workspaceRoot.trim() || undefined
+        : undefined,
+    startedAt: typeof instance.startedAt === "number" ? instance.startedAt : undefined,
+    completedAt: typeof instance.completedAt === "number" ? instance.completedAt : undefined,
+    exitCode: typeof instance.exitCode === "number" ? instance.exitCode : undefined,
+    host: typeof instance.host === "string" ? instance.host.trim() || undefined : undefined,
+  };
+}
+
 class InMemoryMissionRepository implements MissionRepository {
   private readonly records = new Map<string, MissionRecord>();
 
@@ -248,14 +333,14 @@ export class MissionOrchestrator {
         topicId: input.topicId,
         status: "queued",
         progress: 0,
-        currentStageKey: "understand",
+        currentStageKey: "receive",
         stages: baseStages(),
         createdAt: now,
         updatedAt: now,
         events: [
           missionEvent("created", "Mission created by brain dispatch.", {
             source: "brain",
-            stageKey: "understand",
+            stageKey: "receive",
             progress: 0,
             time: now,
           }),
@@ -270,9 +355,12 @@ export class MissionOrchestrator {
           progress: 8,
           currentStageKey: "understand",
           stages: touchStage(
-            mission.stages,
+            touchStage(mission.stages, "receive", missionStageLabel("receive"), {
+              status: "done",
+              detail: "Mission intake accepted by brain dispatch.",
+            }),
             "understand",
-            "Understand request",
+            missionStageLabel("understand"),
             { status: "running", detail: "Reading mission objective and constraints." },
           ),
         }),
@@ -299,25 +387,22 @@ export class MissionOrchestrator {
       appendEvent(
         replaceMission(mission, {
           progress: 32,
-          currentStageKey: "build-plan",
-          stages: this.attachPlanStages(
+          currentStageKey: "plan",
+          stages: touchStage(
             touchStage(
-              touchStage(
-                mission.stages,
-                "understand",
-                "Understand request",
-                { status: "done", detail: planResult.understanding.summary },
-              ),
-              "build-plan",
-              "Build execution plan",
-              { status: "done", detail: planResult.plan.summary },
+              mission.stages,
+              "understand",
+              missionStageLabel("understand"),
+              { status: "done", detail: planResult.understanding.summary },
             ),
-            planResult.plan,
+            "plan",
+            missionStageLabel("plan"),
+            { status: "done", detail: planResult.plan.summary },
           ),
         }),
         missionEvent("progress", "Structured ExecutionPlan created.", {
           source: "brain",
-          stageKey: "build-plan",
+          stageKey: "plan",
           progress: 32,
         }),
       ),
@@ -331,11 +416,11 @@ export class MissionOrchestrator {
       appendEvent(
         replaceMission(mission, {
           progress: 45,
-          currentStageKey: "dispatch",
+          currentStageKey: "provision",
           stages: touchStage(
             mission.stages,
-            "dispatch",
-            "Dispatch to executor",
+            "provision",
+            missionStageLabel("provision"),
             {
               status: "running",
               detail: `Dispatching ${planResult.plan.jobs.length} executor job(s).`,
@@ -344,7 +429,7 @@ export class MissionOrchestrator {
         }),
         missionEvent("progress", "Dispatching plan to executor.", {
           source: "brain",
-          stageKey: "dispatch",
+          stageKey: "provision",
           progress: 45,
         }),
       ),
@@ -361,22 +446,22 @@ export class MissionOrchestrator {
             status: "failed",
             progress: 45,
             summary: message,
-            currentStageKey: "dispatch",
+            currentStageKey: "finalize",
             stages: touchStage(
               touchStage(
                 mission.stages,
-                "dispatch",
-                "Dispatch to executor",
+                "provision",
+                missionStageLabel("provision"),
                 { status: "failed", detail: message },
               ),
               "finalize",
-              "Finalize mission",
+              missionStageLabel("finalize"),
               { status: "failed", detail: "Mission failed before executor acceptance." },
             ),
           }),
           missionEvent("failed", message, {
             source: "brain",
-            stageKey: "dispatch",
+            stageKey: "finalize",
             progress: 45,
             level: "error",
           }),
@@ -395,20 +480,42 @@ export class MissionOrchestrator {
         replaceMission(mission, {
           status: "running",
           progress: 60,
-          currentStageKey: "dispatch",
+          currentStageKey: "execute",
+          executor: {
+            name: dispatched.request.executor,
+            requestId: dispatched.request.requestId,
+            jobId: dispatched.response.jobId,
+            status: "queued",
+            lastEventType: "job.accepted",
+            lastEventAt: eventTimeFromIso(dispatched.response.receivedAt),
+          },
+          instance: planResult.plan.workspaceRoot
+            ? {
+                workspaceRoot: planResult.plan.workspaceRoot,
+              }
+            : undefined,
+          artifacts: normalizeExecutorArtifacts(planResult.plan.artifacts),
           stages: touchStage(
-            mission.stages,
-            "dispatch",
-            "Dispatch to executor",
+            touchStage(
+              mission.stages,
+              "provision",
+              missionStageLabel("provision"),
+              {
+                status: "done",
+                detail: `Executor accepted job ${dispatched.response.jobId}.`,
+              },
+            ),
+            "execute",
+            missionStageLabel("execute"),
             {
-              status: "done",
-              detail: `Executor accepted job ${dispatched.response.jobId}.`,
+              status: "running",
+              detail: "Executor accepted the mission and execution is now in progress.",
             },
           ),
         }),
         missionEvent("progress", "Executor accepted mission dispatch.", {
           source: "brain",
-          stageKey: "dispatch",
+          stageKey: "execute",
           progress: 60,
         }),
       ),
@@ -431,16 +538,29 @@ export class MissionOrchestrator {
     runtimeState.lastExecutorEvent = event;
     this.runtime.set(event.missionId, runtimeState);
 
-    const stageKey = event.stageKey || "finalize";
+    const stageKey = resolveMissionStageKey(event, mission.currentStageKey);
     const stageLabel = this.stageLabelForExecutorEvent(event, runtimeState.plan);
     const progress = clampProgress(event.progress, mission.progress);
     const time = eventTimeFromIso(event.occurredAt);
     const sourceEvent = this.mapExecutorEvent(event, progress, time, stageKey);
+    const artifacts = normalizeExecutorArtifacts(event.artifacts);
+    const instance = normalizeExecutorInstance(event.payload);
 
     let next = appendEvent(
       replaceMission(mission, {
         progress,
         currentStageKey: stageKey,
+        executor: {
+          name: event.executor?.trim() || mission.executor?.name || "executor",
+          requestId: mission.executor?.requestId,
+          jobId: event.jobId.trim(),
+          status: event.status,
+          baseUrl: mission.executor?.baseUrl,
+          lastEventType: event.type,
+          lastEventAt: time,
+        },
+        instance: instance || mission.instance,
+        artifacts: artifacts || mission.artifacts,
         stages: touchStage(
           mission.stages,
           stageKey,
@@ -460,17 +580,7 @@ export class MissionOrchestrator {
         status: "waiting",
         waitingFor: event.waitingFor || event.message,
         decision: event.decision,
-        currentStageKey: "decision",
-        stages: touchStage(
-          next.stages,
-          "decision",
-          "Waiting for decision",
-          {
-            status: "running",
-            detail: event.waitingFor || event.message,
-          },
-          time,
-        ),
+        currentStageKey: stageKey,
       });
     } else if (event.status === "completed" || event.type === "job.completed") {
       next = replaceMission(next, {
@@ -481,22 +591,10 @@ export class MissionOrchestrator {
         decision: undefined,
         completedAt: time,
         currentStageKey: "finalize",
-        stages: touchStage(
-          touchStage(
-            next.stages,
-            "decision",
-            "Waiting for decision",
-            { status: "done", detail: "No pending decision." },
-            time,
-          ),
-          "finalize",
-          "Finalize mission",
-          {
-            status: "done",
-            detail: event.summary || event.message,
-          },
-          time,
-        ),
+        stages: touchStage(next.stages, "finalize", missionStageLabel("finalize"), {
+          status: "done",
+          detail: event.summary || event.message,
+        }, time),
       });
     } else if (event.status === "failed" || event.status === "cancelled" || event.type === "job.failed") {
       next = replaceMission(next, {
@@ -505,22 +603,10 @@ export class MissionOrchestrator {
         waitingFor: undefined,
         decision: undefined,
         currentStageKey: "finalize",
-        stages: touchStage(
-          touchStage(
-            next.stages,
-            "decision",
-            "Waiting for decision",
-            { status: "failed", detail: event.summary || event.message },
-            time,
-          ),
-          "finalize",
-          "Finalize mission",
-          {
-            status: "failed",
-            detail: event.summary || event.message,
-          },
-          time,
-        ),
+        stages: touchStage(next.stages, "finalize", missionStageLabel("finalize"), {
+          status: "failed",
+          detail: event.summary || event.message,
+        }, time),
       });
     } else {
       next = replaceMission(next, {
@@ -561,27 +647,21 @@ export class MissionOrchestrator {
       cloneMission(mission),
       missionEvent("log", detail, {
         source: "user",
-        stageKey: "decision",
+        stageKey: mission.currentStageKey,
         level: "info",
         progress: mission.progress,
       }),
     );
 
     if (resumed) {
+      const resumedStageKey = runtimeState.lastExecutorEvent
+        ? resolveMissionStageKey(runtimeState.lastExecutorEvent, mission.currentStageKey)
+        : mission.currentStageKey || "execute";
       next = replaceMission(next, {
         status: "running",
         waitingFor: undefined,
         decision: undefined,
-        currentStageKey: runtimeState.lastExecutorEvent?.stageKey || "dispatch",
-        stages: touchStage(
-          next.stages,
-          "decision",
-          "Waiting for decision",
-          {
-            status: "done",
-            detail,
-          },
-        ),
+        currentStageKey: resumedStageKey,
       });
     }
 
@@ -614,18 +694,9 @@ export class MissionOrchestrator {
     return saved;
   }
 
-  private attachPlanStages(stages: MissionStage[], plan: ExecutionPlan): MissionStage[] {
-    const next = cloneStages(stages);
-    for (const step of plan.steps) {
-      ensureStage(next, step.key, step.label);
-    }
-    return next;
-  }
-
   private stageLabelForExecutorEvent(event: ExecutorEvent, plan: ExecutionPlan | undefined): string {
-    if (!event.stageKey) return "Finalize mission";
-    const matchingStep = plan?.steps.find(step => step.key === event.stageKey);
-    return matchingStep?.label || toTitleCase(event.stageKey);
+    const missionStageKey = resolveMissionStageKey(event, plan?.steps.at(-1)?.key);
+    return missionStageLabel(missionStageKey);
   }
 
   private mapExecutorStatus(status: ExecutorEvent["status"]): MissionStage["status"] {

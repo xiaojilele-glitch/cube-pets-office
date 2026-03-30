@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ArrowRight, Orbit } from 'lucide-react';
+import { ArrowRight, Orbit, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 import { ChatPanel } from '@/components/ChatPanel';
@@ -92,6 +92,13 @@ export default function Home() {
               >
                 {locale === 'zh-CN' ? '打开任务宇宙' : 'Open Mission Universe'}
                 <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setLocation('/tasks?new=1')}
+                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#D7C4AF] bg-white/80 px-4 py-2.5 text-sm font-semibold text-[#6B5A4A] shadow-sm transition-colors hover:bg-white"
+              >
+                {locale === 'zh-CN' ? '快速新建 Mission' : 'Quick Create Mission'}
+                <Plus className="h-4 w-4" />
               </button>
             </div>
           </div>
