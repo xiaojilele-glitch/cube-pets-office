@@ -306,6 +306,7 @@ cube-pets-office/
 | Workflow 寄生依赖解耦 | `.kiro/specs/workflow-decoupling/` | `client/src/lib/tasks-store.ts` `server/core/mission-orchestrator.ts` `shared/mission/contracts.ts` | 🔲 待开发 |
 | Docker 真实容器执行器 | `.kiro/specs/lobster-executor-real/` | `services/lobster-executor/src/service.ts` `services/lobster-executor/src/docker-runner.ts` `services/lobster-executor/src/callback-sender.ts` | 🔲 待开发 |
 | Guest Agent 访客代理 | `.kiro/specs/agent-marketplace/` | `shared/organization-schema.ts` `server/core/registry.ts` `server/routes/guest-agents.ts` `server/core/guest-agent.ts` | 🔲 待开发 |
+| 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 
 ## 核心数据流
 
