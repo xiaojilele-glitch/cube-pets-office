@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，21 个待开发（含新增 agent-autonomy-upgrade）。
+28 个 Spec，其中 8 个已完成，20 个待开发。
 
 ### 已完成（基座层）
 
@@ -63,12 +63,12 @@ flowchart TB
     MMA[multi-modal-agent<br/>Vision + TTS / STT]
     AM[agent-marketplace<br/>Guest Agent]
     SLP[sandbox-live-preview<br/>终端 + 截图预览]
+    DRS[dynamic-role-system<br/>运行时角色切换]
   end
 
   subgraph Phase5["阶段 5：生态互联"]
     AS[autonomous-swarm<br/>跨 Pod 自主协作]
     A2A[a2a-protocol<br/>Agent 互操作协议]
-    AAU[agent-autonomy-upgrade<br/>Agent 自治能力升级]
     CFE[cross-framework-export<br/>导出 CrewAI 等]
     TD[telemetry-dashboard<br/>实时监控面板]
   end
@@ -88,11 +88,10 @@ flowchart TB
   CO --> TD
   MMV --> MMA
   AM --> A2A
-  AS --> AAU
-  A2A --> AAU
-  DO --> AAU
   EH --> AS
   DO --> AM
+  DO --> DRS
+  EH --> DRS
 
   Phase1 --> Phase2
   Phase2 --> Phase3
@@ -165,11 +164,13 @@ flowchart TB
 | multi-modal-agent | 跨前后端 | multi-modal-vision | Vision + TTS/STT，宠物"能看能说" |
 | agent-marketplace | 跨前后端 | dynamic-organization | Guest Agent 临时加入办公室 |
 | sandbox-live-preview | 跨前后端 | lobster-executor-real | 3D 场景内终端 + 截图预览 |
+| dynamic-role-system | 跨前后端 | dynamic-organization, evolution-heartbeat | Agent 运行时角色切换，多角色绩效档案 |
 
 产出：
 - Agent 能处理图片/语音
 - 外部 Agent 可临时加入协作
 - 执行过程实时可视
+- Agent 支持运行时角色切换，资源利用率提升
 
 ### 阶段 5：生态互联（2-3 周）
 
@@ -179,14 +180,12 @@ flowchart TB
 |------|------|------|------|
 | autonomous-swarm | 后端 | evolution-heartbeat | 跨 Pod 自主协作 |
 | a2a-protocol | 跨前后端 | agent-marketplace | Agent 互操作标准协议 |
-| agent-autonomy-upgrade | 跨前后端 | autonomous-swarm, a2a-protocol, dynamic-organization | Agent 自治能力升级（自评估/竞争执行/动态协作） |
 | cross-framework-export | 跨前后端 | workflow-engine | 导出为 CrewAI/AutoGen/LangGraph |
 | telemetry-dashboard | 跨前后端 | cost-observability | 3D 场景实时监控面板 |
 
 产出：
 - Pod 之间自主发起子任务
 - 与 CrewAI/Claude 等外部 Agent 互操作
-- Agent 自评估、竞争执行、动态协作网络
 - 一键导出到其他框架
 - 全局监控看板
 
@@ -415,7 +414,7 @@ flowchart TB
 | 监控 | cost-observability → telemetry-dashboard | 先有成本埋点，再有全局面板 |
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
-| Agent 自治能力 | autonomous-swarm + a2a-protocol + dynamic-organization → agent-autonomy-upgrade | 自治能力升级依赖 Swarm 编排、A2A 协议和动态组织生成 |
+| 动态角色 | dynamic-organization → dynamic-role-system | 角色模板从动态组织生成中解耦，复用 resolveSkills/resolveMcp |
 
 ## 风险提示
 
