@@ -63,6 +63,7 @@ flowchart TB
     MMA[multi-modal-agent<br/>Vision + TTS / STT]
     AM[agent-marketplace<br/>Guest Agent]
     SLP[sandbox-live-preview<br/>终端 + 截图预览]
+    DRS[dynamic-role-system<br/>运行时角色切换]
   end
 
   subgraph Phase5["阶段 5：生态互联"]
@@ -89,6 +90,8 @@ flowchart TB
   AM --> A2A
   EH --> AS
   DO --> AM
+  DO --> DRS
+  EH --> DRS
 
   Phase1 --> Phase2
   Phase2 --> Phase3
@@ -161,11 +164,13 @@ flowchart TB
 | multi-modal-agent | 跨前后端 | multi-modal-vision | Vision + TTS/STT，宠物"能看能说" |
 | agent-marketplace | 跨前后端 | dynamic-organization | Guest Agent 临时加入办公室 |
 | sandbox-live-preview | 跨前后端 | lobster-executor-real | 3D 场景内终端 + 截图预览 |
+| dynamic-role-system | 跨前后端 | dynamic-organization, evolution-heartbeat | Agent 运行时角色切换，多角色绩效档案 |
 
 产出：
 - Agent 能处理图片/语音
 - 外部 Agent 可临时加入协作
 - 执行过程实时可视
+- Agent 支持运行时角色切换，资源利用率提升
 
 ### 阶段 5：生态互联（2-3 周）
 
@@ -409,6 +414,7 @@ flowchart TB
 | 监控 | cost-observability → telemetry-dashboard | 先有成本埋点，再有全局面板 |
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
+| 动态角色 | dynamic-organization → dynamic-role-system | 角色模板从动态组织生成中解耦，复用 resolveSkills/resolveMcp |
 
 ## 风险提示
 
