@@ -275,11 +275,9 @@ cube-pets-office/
 │       ├── workflow-decoupling/     # Workflow 寄生依赖解耦
 │       ├── lobster-executor-real/   # Docker 真实容器执行器
 │       ├── agent-marketplace/      # Guest Agent 访客代理市场
-<<<<<<< HEAD
-│       └── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
-=======
-│       └── multi-user-office/     # 多人实时协作办公室
->>>>>>> feat/multi-user-office
+│       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
+│       ├── multi-user-office/     # 多人实时协作办公室
+│       └── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -316,6 +314,7 @@ cube-pets-office/
 | 跨框架导出 | `.kiro/specs/cross-framework-export/` | `shared/export-schema.ts` `server/core/exporter.ts` `server/core/export-adapters/crewai.ts` `server/core/export-adapters/langgraph.ts` `server/core/export-adapters/autogen.ts` `server/routes/export.ts` `client/src/components/ExportDialog.tsx` | 🔲 待开发 |
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
+| A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 
