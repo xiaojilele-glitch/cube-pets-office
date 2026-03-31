@@ -35,7 +35,6 @@ inclusion: auto
 │                    记忆层                             │
 │  短期记忆 (会话) · 中期记忆 (向量检索)                 │
 │  长期记忆 (SOUL.md) · 心跳调度 · 自进化引擎           │
-│  知识图谱 (结构化知识管理 · 图查询 · 审核队列)         │
 ├─────────────────────────────────────────────────────┤
 │                    执行层                             │
 │  Lobster Executor (Docker 参考执行器)                 │
@@ -145,17 +144,6 @@ cube-pets-office/
 │   │   ├── soul-store.ts            # 长期记忆（SOUL.md 文件管理/数据库双向同步）
 │   │   ├── report-store.ts          # 报告生成与落盘（部门报告/最终报告）
 │   │   └── workspace.ts             # 工作空间目录管理
-│   ├── knowledge/                   # 知识图谱模块
-│   │   ├── ontology-registry.ts     # 本体模型注册表
-│   │   ├── graph-store.ts           # 图谱存储引擎（JSON 文件持久化）
-│   │   ├── code-extractor.ts        # 代码知识提取器（AST + LLM）
-│   │   ├── agent-sink.ts            # Agent 知识沉淀服务
-│   │   ├── query-service.ts         # 图查询服务
-│   │   ├── knowledge-service.ts     # 统一知识检索（融合图谱+向量）
-│   │   ├── review-queue.ts          # 审核队列
-│   │   ├── garbage-collector.ts     # 垃圾回收器
-│   │   ├── lifecycle-log.ts         # 生命周期日志
-│   │   └── metrics.ts               # Prometheus 指标
 │   ├── tasks/
 │   │   ├── index.ts                 # 任务模块入口
 │   │   ├── mission-store.ts         # Mission 状态机（六阶段/create/running/waiting/done/failed）
@@ -213,9 +201,6 @@ cube-pets-office/
 │   │   ├── socket.ts                # Mission Socket 事件常量
 │   │   ├── topic.ts                 # topicId 生成规则
 │   │   └── index.ts                 # 模块导出
-│   ├── knowledge/
-│   │   ├── types.ts                 # 知识图谱共享类型（Entity/Relation/QueryResult 等）
-│   │   └── api.ts                   # 知识图谱 API 路由常量和请求/响应类型
 │   └── executor/
 │       ├── contracts.ts             # Executor 契约（ExecutionPlan/Job/Step/Artifact）
 │       ├── api.ts                   # Executor REST API 路由和回调 Header 常量
@@ -239,11 +224,6 @@ cube-pets-office/
 │   ├── database.json                # 本地 JSON 数据库
 │   ├── ai-config.json               # AI 配置快照
 │   ├── progress.md                  # 进度记录
-│   ├── knowledge/                   # 知识图谱数据
-│   │   ├── ontology.json            # 本体模型定义
-│   │   ├── graph-{projectId}.json   # 按项目分文件的图谱数据
-│   │   ├── lifecycle-log.jsonl      # 生命周期操作日志
-│   │   └── metrics-snapshot.json    # 指标快照
 │   └── agents/                      # 智能体工作空间
 │       └── <agentId>/
 │           ├── SOUL.md              # 长期记忆：人设定义
@@ -298,7 +278,7 @@ cube-pets-office/
 │       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
 │       ├── multi-user-office/     # 多人实时协作办公室
 │       ├── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
-│       └── knowledge-graph/     # 知识图谱集成（结构化知识管理层）
+│       └── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -336,7 +316,7 @@ cube-pets-office/
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
-| 知识图谱集成 | `.kiro/specs/knowledge-graph/` | `server/knowledge/ontology-registry.ts` `server/knowledge/graph-store.ts` `server/knowledge/code-extractor.ts` `server/knowledge/agent-sink.ts` `server/knowledge/query-service.ts` `server/knowledge/knowledge-service.ts` `server/knowledge/review-queue.ts` `server/knowledge/garbage-collector.ts` `server/routes/knowledge.ts` `server/routes/knowledge-admin.ts` `shared/knowledge/types.ts` `shared/knowledge/api.ts` `client/src/components/knowledge/KnowledgeGraphPanel.tsx` | 🔲 待开发 |
+| 向量数据库与 RAG 管道 | `.kiro/specs/vector-db-rag-pipeline/` | `server/rag/ingestion/ingestion-pipeline.ts` `server/rag/chunking/chunk-router.ts` `server/rag/embedding/embedding-generator.ts` `server/rag/store/vector-store-adapter.ts` `server/rag/retrieval/rag-retriever.ts` `server/rag/augmentation/rag-pipeline.ts` `server/routes/rag.ts` `shared/rag/contracts.ts` `client/src/components/rag/RAGInfoPanel.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 
@@ -380,14 +360,6 @@ cube-pets-office/
   EvolutionService.evolveWorkflow() → SoulStore.appendLearnedBehaviors() (长期记忆)
   CapabilityRegistry.registerWorkflow() → agent_capabilities 表
 
-知识图谱链路：
-  CodeKnowledgeExtractor.extract() → GraphStore (代码知识入图)
-  AgentKnowledgeSink.recordDecision/recordRule/recordBugfix() → GraphStore (Agent 知识沉淀)
-  task.completed → AgentKnowledgeSink.extractFromTaskCompletion() → LLM 被动提取 → 审核队列
-  KnowledgeService.query() → GraphStore + VectorStore (统一检索)
-  graph.entityChanged → VectorStore (图谱→记忆同步)
-  KnowledgeGarbageCollector.run() → 定时清理过期/低质量知识
-
 定时心跳：
   HeartbeatScheduler.trigger() → search() → LLM 总结 → 报告落盘
 ```
@@ -426,18 +398,6 @@ cube-pets-office/
 | GET | /api/config/ai | AI 配置（只读） |
 | GET | /api/reports/* | 报告查询 |
 | GET | /api/health | 健康检查 |
-
-### 知识图谱
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/knowledge/graph | 图谱可视化数据（节点+边） |
-| GET | /api/knowledge/review-queue | 待审核知识列表 |
-| POST | /api/knowledge/review/:entityId | 执行审核操作 |
-| POST | /api/knowledge/query | 统一知识检索 |
-| GET | /api/admin/knowledge/stats | 图谱统计信息 |
-| POST | /api/admin/knowledge/reindex | 触发向量索引重建 |
-| GET | /api/admin/knowledge/reindex/:taskId | 查询重建进度 |
-| GET | /api/admin/knowledge/export | 导出项目图谱 |
 
 ## 开发规范
 
