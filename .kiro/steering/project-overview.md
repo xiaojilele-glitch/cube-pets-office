@@ -306,6 +306,7 @@ cube-pets-office/
 | Workflow 寄生依赖解耦 | `.kiro/specs/workflow-decoupling/` | `client/src/lib/tasks-store.ts` `server/core/mission-orchestrator.ts` `shared/mission/contracts.ts` | 🔲 待开发 |
 | Docker 真实容器执行器 | `.kiro/specs/lobster-executor-real/` | `services/lobster-executor/src/service.ts` `services/lobster-executor/src/docker-runner.ts` `services/lobster-executor/src/callback-sender.ts` | 🔲 待开发 |
 | Guest Agent 访客代理 | `.kiro/specs/agent-marketplace/` | `shared/organization-schema.ts` `server/core/registry.ts` `server/routes/guest-agents.ts` `server/core/guest-agent.ts` | 🔲 待开发 |
+| 多模态视觉能力 | `.kiro/specs/multi-modal-vision/` | `server/core/vision-provider.ts` `server/routes/vision.ts` `client/src/lib/workflow-attachments.ts` `shared/workflow-input.ts` `shared/workflow-runtime.ts` | 🔲 待开发 |
 
 ## 核心数据流
 
@@ -411,6 +412,7 @@ cube-pets-office/
 | Executor 回调 | `EXECUTOR_CALLBACK_SECRET`、`EXECUTOR_CALLBACK_MAX_SKEW_SECONDS` | HMAC 签名校验，留空跳过 |
 | Lobster 执行器 | `LOBSTER_EXECUTOR_BASE_URL`、`LOBSTER_EXECUTOR_PORT` | 默认 localhost:3031 |
 | 飞书 | `FEISHU_ENABLED`、`FEISHU_MODE`、`FEISHU_RELAY_SECRET` | 默认 mock 模式 |
+| Vision LLM | `VISION_LLM_API_KEY`、`VISION_LLM_BASE_URL`、`VISION_LLM_MODEL`、`VISION_LLM_WIRE_API`、`VISION_LLM_MAX_TOKENS`、`VISION_LLM_DETAIL`、`VISION_LLM_TIMEOUT_MS` | 视觉分析专用模型，未配置时回退到 Fallback/主 LLM |
 
 ## 常用命令
 
