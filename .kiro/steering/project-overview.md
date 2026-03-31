@@ -310,6 +310,7 @@ cube-pets-office/
 | 多模态视觉能力 | `.kiro/specs/multi-modal-vision/` | `server/core/vision-provider.ts` `server/routes/vision.ts` `client/src/lib/workflow-attachments.ts` `shared/workflow-input.ts` `shared/workflow-runtime.ts` | 🔲 待开发 |
 | 跨 Pod 自主协作 (Swarm) | `.kiro/specs/autonomous-swarm/` | `server/core/swarm-orchestrator.ts` `shared/swarm.ts` `shared/message-bus-rules.ts` `server/core/heartbeat.ts` `client/src/components/three/CrossPodParticles.tsx` | 🔲 待开发 |
 | 跨框架导出 | `.kiro/specs/cross-framework-export/` | `shared/export-schema.ts` `server/core/exporter.ts` `server/core/export-adapters/crewai.ts` `server/core/export-adapters/langgraph.ts` `server/core/export-adapters/autogen.ts` `server/routes/export.ts` `client/src/components/ExportDialog.tsx` | 🔲 待开发 |
+| 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 
 ## 核心数据流
 
