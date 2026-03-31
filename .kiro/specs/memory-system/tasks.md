@@ -1,0 +1,34 @@
+# 记忆系统 任务清单
+
+- [x] 1. 实现工作空间隔离 (AccessGuard)
+  - [x] 1.1 实现 resolveAgentWorkspacePath()：路径规范化 + 遍历检查
+  - [x] 1.2 实现 readAgentWorkspaceFile() / writeAgentWorkspaceFile() / appendAgentWorkspaceFile()
+  - [x] 1.3 实现 agentWorkspaceFileExists()
+  - [x] 1.4 拦截绝对路径、.. 遍历、跨智能体访问
+  - [x] 1.5 单元测试 (server/tests/phase1-access-guard.test.ts)
+- [x] 2. 实现短期记忆 (SessionStore)
+  - [x] 2.1 实现 buildPromptContext()：构建当前工作流上下文数组
+  - [x] 2.2 实现 appendLLMExchange()：记录 LLM prompt/response
+  - [x] 2.3 实现 appendMessageLog()：记录智能体间消息
+  - [x] 2.4 实现 materializeWorkflowMemories()：工作流完成后持久化
+  - [x] 2.5 会话记录以 JSONL 格式写入 sessions/ 目录
+- [x] 3. 实现中期记忆 (VectorStore)
+  - [x] 3.1 实现 tokenize()：中文按字切分、英文按单词切分
+  - [x] 3.2 实现 hashToken()：FNV-1a 哈希
+  - [x] 3.3 实现 embedText()：96 维本地向量化
+  - [x] 3.4 实现 normalizeVector()：L2 归一化
+  - [x] 3.5 实现 cosineSimilarity()：余弦相似度计算
+  - [x] 3.6 实现 upsertMemorySummary()：插入/更新摘要向量
+  - [x] 3.7 实现 searchMemorySummaries()：topK 语义检索
+  - [x] 3.8 向量索引持久化到 memory/vectors.json
+- [x] 4. 实现长期记忆 (SoulStore)
+  - [x] 4.1 实现 ensureSoulFile()：文件优先，不存在时从数据库创建
+  - [x] 4.2 实现 ensureAllSoulFiles()：服务启动时批量初始化
+  - [x] 4.3 实现 getSoulText() / updateSoul()
+  - [x] 4.4 实现 appendLearnedBehaviors()：追加到 ## Learned Behaviors 章节，自动去重
+  - [x] 4.5 文件与数据库 soul_md 字段双向同步
+- [x] 5. 实现工作空间初始化
+  - [x] 5.1 实现 ensureAgentWorkspace()：创建 sessions/memory/reports 目录
+  - [x] 5.2 实现 ensureAgentWorkspaces()：批量初始化所有智能体工作空间
+  - [x] 5.3 服务启动时调用 initializeAgentRuntime()
+  - [x] 5.4 单元测试 (server/tests/phase1-workspace.test.ts)

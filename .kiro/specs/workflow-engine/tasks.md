@@ -1,0 +1,63 @@
+# 工作流引擎 任务清单
+
+- [x] 1. 实现 WorkflowRuntime 抽象接口
+  - [x] 1.1 定义 WorkflowRepository 接口（工作流/任务/消息 CRUD）
+  - [x] 1.2 定义 MemoryRepository 接口（上下文构建、LLM 交换记录、记忆物化）
+  - [x] 1.3 定义 ReportRepository 接口（部门报告、最终报告生成与落盘）
+  - [x] 1.4 定义 RuntimeEventEmitter 接口（Socket 事件发射）
+  - [x] 1.5 定义 AgentHandle / AgentDirectory 接口（智能体查找与 LLM 调用）
+  - [x] 1.6 定义 RuntimeMessageBus 接口（层级消息发送与收件箱）
+  - [x] 1.7 定义 EvolutionService 接口
+- [x] 2. 实现 WorkflowEngine 核心类
+  - [x] 2.1 实现 startWorkflow()：创建工作流记录、构建 directiveContext 和 inputSignature、异步启动管道
+  - [x] 2.2 实现 runPipeline()：串行调度十个阶段，异常时标记 failed
+  - [x] 2.3 实现 runWithConcurrencyLimit() 并发控制工具函数
+  - [x] 2.4 实现 WorkflowIssue 记录机制和 completionStatus 判定
+- [x] 3. 实现 direction 阶段
+  - [x] 3.1 调用动态组织生成器创建 WorkflowOrganizationSnapshot
+  - [x] 3.2 CEO 智能体调用 LLM 分析指令，输出 CEOAnalysis
+  - [x] 3.3 通过消息总线向各经理发送方向指令
+  - [x] 3.4 组织快照写入工作流 results
+- [x] 4. 实现 planning 阶段
+  - [x] 4.1 各经理并行调用 LLM 生成 ManagerPlan
+  - [x] 4.2 为每个 Worker 创建 TaskRecord
+  - [x] 4.3 通过消息总线向 Worker 发送任务描述
+  - [x] 4.4 规划失败时使用默认任务分配
+- [x] 5. 实现 execution 阶段
+  - [x] 5.1 Worker 并行调用 LLM 产出交付物
+  - [x] 5.2 注入 SOUL.md 人设和记忆上下文
+  - [x] 5.3 交付物写入 TaskRecord.deliverable
+  - [x] 5.4 通过消息总线回传经理
+- [x] 6. 实现 review 阶段
+  - [x] 6.1 经理调用 LLM 输出 ReviewScore（四维度 0-5 分）
+  - [x] 6.2 评分写入 TaskRecord，状态更新为 reviewed
+  - [x] 6.3 发射 score_assigned Socket 事件
+  - [x] 6.4 LLM 返回格式异常时使用默认评分
+- [x] 7. 实现 meta_audit 阶段
+  - [x] 7.1 识别组织中的 audit 角色节点
+  - [x] 7.2 审计节点调用 LLM 检查合规性和质量
+  - [x] 7.3 审计反馈写入 TaskRecord.meta_audit_feedback
+  - [x] 7.4 无审计节点时跳过并记录日志
+- [x] 8. 实现 revision 阶段
+  - [x] 8.1 筛选评分 <16 的任务进入修订
+  - [x] 8.2 Worker 基于反馈生成 v2 交付物
+  - [x] 8.3 任务版本号递增
+- [x] 9. 实现 verify 阶段
+  - [x] 9.1 经理逐条确认反馈回应情况
+  - [x] 9.2 输出 VerifyResult
+  - [x] 9.3 未回应 >30% 触发 v3 修订
+- [x] 10. 实现 summary 阶段
+  - [x] 10.1 经理调用 LLM 生成部门汇总
+  - [x] 10.2 部门报告以 JSON + Markdown 落盘
+- [x] 11. 实现 feedback 阶段
+  - [x] 11.1 CEO 收到所有部门汇总后生成全局反馈
+  - [x] 11.2 最终综合报告落盘
+- [x] 12. 实现 evolution 阶段
+  - [x] 12.1 调用 EvolutionService.evolveWorkflow()
+  - [x] 12.2 调用 materializeWorkflowMemories()
+- [x] 13. 实现 Socket 事件推送
+  - [x] 13.1 stage_change / agent_active / message_sent / score_assigned / task_update
+  - [x] 13.2 workflow_complete / workflow_error
+- [x] 14. 实现附件输入支持
+  - [x] 14.1 directiveContext 合并指令文本与附件全文
+  - [x] 14.2 inputSignature 用于工作流去重

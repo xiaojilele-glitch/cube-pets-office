@@ -1,0 +1,77 @@
+# 3D 场景与前端 任务清单
+
+- [x] 1. 3D 办公场景
+  - [x] 1.1 搭建 React Three Fiber Canvas + 环境光 + 方向光 + 地板
+  - [x] 1.2 加载 Kenney Cube Pets GLB 宠物模型
+  - [x] 1.3 加载 Kenney Furniture Kit GLTF 家具模型
+  - [x] 1.4 实现四个部门区域（动态 Pod）布局
+  - [x] 1.5 区块标题由动态组织部门名称驱动
+  - [x] 1.6 实现宠物状态动画映射（idle/thinking/working/reviewing/done）
+  - [x] 1.7 实现头顶状态标签
+  - [x] 1.8 实现 OrbitControls 相机控制
+  - [x] 1.9 墙面简化：移除左墙背景板和多余装饰，保留壁灯和公告板
+  - [x] 1.10 背景收敛为清透天空底色 + 室内光感
+  - [x] 1.11 3D 资源 base path 根据 GitHub Pages 部署自动调整
+- [x] 2. 工作流面板 (WorkflowPanel)
+  - [x] 2.1 实现十阶段进度条可视化
+  - [x] 2.2 实现三级信息密度：总览 → 部门摘要 → 详情展开
+  - [x] 2.3 实现部门摘要 + 角色一行卡片
+  - [x] 2.4 实现关键事件流（默认 3 条 + 查看全部）
+  - [x] 2.5 实现指令输入面板（文本 + 附件上传）
+  - [x] 2.6 实现消息流可视化
+- [x] 3. 附件输入处理
+  - [x] 3.1 实现 workflow-attachments.ts：文件类型检测和解析分发
+  - [x] 3.2 实现 PDF 解析（pdfjs-dist）
+  - [x] 3.3 实现 Word 解析（mammoth）
+  - [x] 3.4 实现 Excel 解析（xlsx）
+  - [x] 3.5 实现图片 OCR（tesseract.js 独立 Worker）
+  - [x] 3.6 OCR 超时降级为 metadata_only
+  - [x] 3.7 Tesseract 初始化噪音过滤
+  - [x] 3.8 界面显示附件预览摘要，工作流使用全文内容
+- [x] 4. 任务驾驶舱 (/tasks)
+  - [x] 4.1 实现 TasksPage：左侧 Mission 列表 + 右侧详情
+  - [x] 4.2 实现 TaskDetailView：Overview / Execution / Artifacts 三视图
+  - [x] 4.3 实现 TaskPlanetInterior：六阶段环形可视化
+  - [x] 4.4 实现 CreateMissionDialog：前端创建 Mission
+  - [x] 4.5 实现决策提交入口（Decision Entry）
+  - [x] 4.6 桌面端单屏驾驶舱布局，页签内容内部滚动
+  - [x] 4.7 长文本弹窗展开模式
+- [x] 5. 聊天面板 (ChatPanel)
+  - [x] 5.1 实现服务端代理聊天（POST /api/chat）
+  - [x] 5.2 实现 Browser Direct 模式（browser-llm.ts 直连）
+  - [x] 5.3 聊天面板与工作流面板共存
+- [x] 6. 配置面板 (ConfigPanel)
+  - [x] 6.1 展示当前 AI 配置（模型、Base URL、运行模式）
+  - [x] 6.2 Advanced Mode 下只读，提示修改 .env
+  - [x] 6.3 Frontend Mode 下支持浏览器端编辑
+  - [x] 6.4 Frontend / Advanced 模式切换
+- [x] 7. i18n 中英文切换
+  - [x] 7.1 实现 messages.ts 中英文文案字典
+  - [x] 7.2 实现 useI18n() hook
+  - [x] 7.3 默认中文，语言选择持久化到 localStorage
+  - [x] 7.4 顶部工具栏、工作流面板、配置面板、聊天面板全部接入
+- [x] 8. 移动端适配
+  - [x] 8.1 三档响应式布局（≥1280 / 768-1279 / <768）
+  - [x] 8.2 移动端导航折叠、面板收起
+  - [x] 8.3 3D 场景移动端不溢出
+  - [x] 8.4 触屏交互细节
+  - [x] 8.5 useViewportTier / useMobile hooks
+- [x] 9. GitHub Pages 部署
+  - [x] 9.1 build:pages 构建脚本（scripts/build-pages.mjs）
+  - [x] 9.2 Vite base path 自动设置
+  - [x] 9.3 deploy-pages.yml GitHub Actions 工作流
+  - [x] 9.4 GitHubRepoBadge 组件（右上角仓库入口）
+  - [x] 9.5 deploy-target.ts 运行时模式检测
+  - [x] 9.6 favicon 补齐
+- [x] 10. 报告面板
+  - [x] 10.1 最终报告概览展示
+  - [x] 10.2 部门报告下载（Markdown / JSON）
+  - [x] 10.3 心跳报告列表
+- [x] 11. 加载页
+  - [x] 11.1 像素风毛玻璃进度卡
+  - [x] 11.2 像素宠物头像
+  - [x] 11.3 进度条动画
+- [x] 12. 顶部工具栏 (Toolbar)
+  - [x] 12.1 配置 / 工作流 / 对话 / 帮助四个核心入口
+  - [x] 12.2 论文入口已移除
+  - [x] 12.3 语言切换按钮

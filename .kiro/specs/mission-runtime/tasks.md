@@ -1,0 +1,76 @@
+# Mission 任务域 任务清单
+
+- [x] 1. 定义 Mission 契约层 (shared/mission/)
+  - [x] 1.1 定义 MissionRecord、MissionStage、MissionEvent、MissionStatus 类型
+  - [x] 1.2 定义 MissionDecision、MissionDecisionSubmission、MissionDecisionResolved 类型
+  - [x] 1.3 定义 MissionArtifact、MissionExecutorContext、MissionInstanceContext 类型
+  - [x] 1.4 定义 MISSION_CORE_STAGE_BLUEPRINT 六阶段蓝图
+  - [x] 1.5 定义 Mission REST API 路由常量 (shared/mission/api.ts)
+  - [x] 1.6 定义 Mission Socket 事件常量 (shared/mission/socket.ts)
+  - [x] 1.7 定义 topicId 生成规则 (shared/mission/topic.ts)
+- [x] 2. 定义 Executor 契约层 (shared/executor/)
+  - [x] 2.1 定义 ExecutionPlan、ExecutionPlanStep、ExecutionPlanJob 类型
+  - [x] 2.2 定义 ExecutorJobRequest、ExecutorEvent 类型
+  - [x] 2.3 定义 Executor REST API 路由和回调 Header 常量
+- [x] 3. 实现 MissionStore 状态机
+  - [x] 3.1 实现 create()：初始化六阶段，状态 queued
+  - [x] 3.2 实现 markRunning()：推进阶段到 running
+  - [x] 3.3 实现 updateStage()：更新阶段状态和详情
+  - [x] 3.4 实现 markWaiting()：暂停等待人工决策
+  - [x] 3.5 实现 resolveWaiting()：恢复执行
+  - [x] 3.6 实现 markDone() / markFailed()：终态处理
+  - [x] 3.7 实现 patchExecution()：更新 executor/instance/artifacts 字段
+  - [x] 3.8 实现 log()：追加事件到事件流
+  - [x] 3.9 实现 recoverInterrupted()：重启恢复
+  - [x] 3.10 实现快照持久化 (MissionSnapshotStore 接口)
+- [x] 4. 实现 ExecutionPlanBuilder
+  - [x] 4.1 实现 classifyExecutionIntent()：关键词匹配推断执行意图
+  - [x] 4.2 实现 INTENT_PIPELINES：每种意图对应的 job 序列
+  - [x] 4.3 实现 buildPlanSteps() / buildPlanJobs()：生成结构化步骤和作业
+  - [x] 4.4 实现 build()：组装完整 ExecutionPlan
+- [x] 5. 实现 ExecutorClient
+  - [x] 5.1 实现 assertReachable()：GET /health 健康检查
+  - [x] 5.2 实现 buildJobRequest()：构建 ExecutorJobRequest（含 callback URL 和 HMAC 配置）
+  - [x] 5.3 实现 dispatchPlan()：POST /api/executor/jobs 下发计划
+  - [x] 5.4 实现 AbortController 超时控制
+  - [x] 5.5 实现 ExecutorClientError 三种错误类型（unavailable/protocol/rejected）
+- [x] 6. 实现 MissionOrchestrator
+  - [x] 6.1 实现 startMission()：创建 Mission + 构建计划 + 推进阶段
+  - [x] 6.2 实现 applyExecutorEvent()：处理执行器回调事件
+  - [x] 6.3 实现 submitDecision()：处理人工决策提交
+  - [x] 6.4 实现 InMemoryMissionRepository
+- [x] 7. 实现 Mission REST API (server/routes/tasks.ts)
+  - [x] 7.1 POST /api/tasks：创建 Mission
+  - [x] 7.2 GET /api/tasks：列表查询
+  - [x] 7.3 GET /api/tasks/:id：详情查询
+  - [x] 7.4 GET /api/tasks/:id/events：事件流查询
+  - [x] 7.5 POST /api/tasks/:id/decision：决策提交（幂等）
+- [x] 8. 实现执行器回调端点 (server/index.ts)
+  - [x] 8.1 POST /api/executor/events：接收回调
+  - [x] 8.2 HMAC-SHA256 签名校验
+  - [x] 8.3 事件类型分发（log/waiting/completed/failed/cancelled）
+  - [x] 8.4 阶段映射（executor stageKey → mission stageKey）
+  - [x] 8.5 artifacts 和 instance 规范化
+- [x] 9. 实现前端 Mission 集成
+  - [x] 9.1 mission-client.ts：封装 Mission API 调用
+  - [x] 9.2 tasks-store.ts：Mission 数据源集成（mission-first + workflow 补充层）
+  - [x] 9.3 Socket mission_event 监听和局部更新
+  - [x] 9.4 CreateMissionDialog 组件
+  - [x] 9.5 TaskDetailView 组件（Overview/Execution/Artifacts 三视图）
+  - [x] 9.6 TaskPlanetInterior 组件（六阶段环形可视化）
+- [x] 10. 实现 Smoke 测试路由
+  - [x] 10.1 POST /api/tasks/smoke/dispatch：端到端 smoke（创建→规划→下发→回调）
+  - [x] 10.2 POST /api/tasks/smoke/seed-running：创建运行中 Mission 用于重启恢复测试
+- [x] 11. 单元测试
+  - [x] 11.1 mission-store.test.ts：状态机测试
+  - [x] 11.2 mission-routes.test.ts：REST API 测试
+  - [x] 11.3 mission-orchestrator.test.ts：编排器测试
+  - [x] 11.4 mission-storage.test.ts：快照持久化测试
+- [ ] 12. Docker 真实容器生命周期（开发中）
+  - [ ] 12.1 lobster-executor 从 mock runner 升级为真实 Docker API 调用
+  - [ ] 12.2 容器创建、启动、超时、退出码判断、日志采集
+  - [ ] 12.3 工件目录挂载和回收
+  - [ ] 12.4 执行器主动回调到 Cube /api/executor/events（含签名）
+- [ ] 13. /api/planets 路由实现（契约已定义，路由未实现）
+  - [ ] 13.1 GET /api/planets：Mission 列表的星球视图
+  - [ ] 13.2 GET /api/planets/:id/interior：星球内部视图数据

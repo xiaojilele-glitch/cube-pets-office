@@ -1,0 +1,28 @@
+# 飞书集成 任务清单
+
+- [x] 1. 迁移 FeishuProgressBridge 核心
+  - [x] 1.1 从 openclaw-feishu-progress 迁移 bridge 核心逻辑
+  - [x] 1.2 重写为 Express 路由风格（原为 Fastify）
+  - [x] 1.3 实现消息格式化：formatAckText / formatProgressText / formatWaitingText / formatCompleteText / formatFailedText
+  - [x] 1.4 实现卡片构建：createTaskCard()（含彩色 header、进度条、按钮区域）
+  - [x] 1.5 实现消息投递队列：enqueueDelivery() 串行化
+  - [x] 1.6 实现回复上下文：withReplyContext() 自动携带 replyMessageId
+- [x] 2. 实现 Relay 入口
+  - [x] 2.1 POST /api/feishu/relay：接收 relay 请求
+  - [x] 2.2 POST /api/feishu/relay/event：手动推送事件
+  - [x] 2.3 relay-auth.ts：鉴权校验
+  - [x] 2.4 ingress.ts：请求解析和 Mission 创建
+- [x] 3. 实现 Webhook 入口
+  - [x] 3.1 POST /api/feishu/webhook：接收飞书 webhook
+  - [x] 3.2 webhook-security.ts：签名校验
+  - [x] 3.3 webhook-dedup-store.ts：事件 ID 去重（TTL 清理）
+- [x] 4. 实现任务绑定与状态跟踪
+  - [x] 4.1 bindTask() / unbindTask() / getTaskBinding()
+  - [x] 4.2 handleTaskUpdate()：根据 Mission 状态分发消息
+  - [x] 4.3 终态摘要控制（suppressFinalSummary）
+  - [x] 4.4 卡片模式下支持 update() 更新已有卡片
+- [x] 5. 实现 topicId 统一
+  - [x] 5.1 统一 topicId 生成规则，确保飞书线程与 Cube /tasks 聚合一致
+- [x] 6. 单元测试
+  - [x] 6.1 feishu-bridge.test.ts：Bridge 核心逻辑测试
+  - [x] 6.2 feishu-routes.test.ts：路由和鉴权测试

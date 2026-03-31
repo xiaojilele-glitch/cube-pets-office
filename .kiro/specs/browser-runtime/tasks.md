@@ -1,0 +1,39 @@
+# 纯前端运行时 任务清单
+
+- [x] 1. 抽取 WorkflowRuntime 抽象接口 (Phase PF-1)
+  - [x] 1.1 从服务端 workflow-engine/agent/message-bus 中提取不依赖 Node 的核心编排逻辑
+  - [x] 1.2 定义 shared/workflow-runtime.ts 统一接口
+  - [x] 1.3 确保同一份 workflow 逻辑可被 server mode 与 browser mode 共同调用
+- [x] 2. 实现浏览器端 WorkflowRuntime 组件 (Phase PF-1)
+  - [x] 2.1 实现 BrowserWorkflowRepository（内存管理 agents/workflows/tasks/messages）
+  - [x] 2.2 实现 BrowserMemoryRepository（人设缓存 + 简化上下文构建）
+  - [x] 2.3 实现 BrowserReportRepository（内存报告生成）
+  - [x] 2.4 实现 BrowserEventEmitter（回调函数通知 UI）
+  - [x] 2.5 实现 BrowserMessageBus（复用 message-bus-rules 层级校验）
+  - [x] 2.6 实现 BrowserAgentDirectory（内存智能体管理 + LLM 调用）
+  - [x] 2.7 实现 createBrowserRuntime() / createBrowserWorkflowEngine()
+- [x] 3. 实现 IndexedDB 持久化层 (Phase PF-2)
+  - [x] 3.1 实现 openDatabase()：创建/升级 IndexedDB 数据库和 object store
+  - [x] 3.2 实现 canUseIndexedDb()：浏览器兼容性检测
+  - [x] 3.3 实现 readAll/readOne/writeMany/writeOne/clearStore 通用操作
+  - [x] 3.4 实现 AI 配置持久化：persistAIConfig() / getAIConfigSnapshot()
+  - [x] 3.5 实现智能体持久化：persistAgents() / getAgentsSnapshot()
+  - [x] 3.6 实现人设持久化：persistSoul() / getSoulSnapshot()
+  - [x] 3.7 实现工作流持久化：persistWorkflows() / getWorkflowsSnapshot()
+  - [x] 3.8 实现心跳持久化：persistHeartbeatStatuses/Reports()
+  - [x] 3.9 实现记忆持久化：persistRecentMemory() / persistMemorySearch()
+  - [x] 3.10 实现导入导出：exportBrowserRuntimeBundle() / importBrowserRuntimeBundle()
+- [x] 4. 实现前端事件与状态收口 (Phase PF-3)
+  - [x] 4.1 前端对 /api/workflows、/api/agents、/api/reports 的依赖改为本地 runtime 调用
+  - [x] 4.2 Socket.IO 实时事件改为 BrowserEventEmitter 回调
+  - [x] 4.3 Zustand 作为 UI 状态层，不承担长链路编排执行
+- [x] 5. 实现浏览器端 LLM 调用 (Phase PF-4)
+  - [x] 5.1 实现 browser-llm.ts：fetch 直连 OpenAI 兼容接口
+  - [x] 5.2 支持 Browser Direct / Server Proxy 双模式
+  - [x] 5.3 配置面板提示"仅适合本地使用"
+  - [x] 5.4 支持可选代理 URL
+- [x] 6. 产品化收口 (Phase PF-5)
+  - [x] 6.1 实现 deploy-target.ts：GitHub Pages / 静态预览自动检测
+  - [x] 6.2 实现 Frontend/Advanced 模式切换（Zustand 持久化）
+  - [x] 6.3 默认启动路径优先 Frontend Mode
+  - [x] 6.4 保留服务端实现不删除

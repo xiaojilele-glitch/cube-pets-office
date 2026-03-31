@@ -1,0 +1,36 @@
+# 自进化与心跳 任务清单
+
+- [x] 1. 实现 EvolutionService
+  - [x] 1.1 实现 evolveWorkflow()：提取本轮所有 TaskRecord 评分并按智能体分组
+  - [x] 1.2 实现 averageByDimension()：计算四维度平均分
+  - [x] 1.3 实现 analyzeWeakDimensions()：识别平均分 <3/5 的弱维度
+  - [x] 1.4 实现 upsertBulletSection()：向 SOUL.md 指定章节追加改进建议（去重、限制条目数）
+  - [x] 1.5 实现 buildKeywordSignals()：从任务文本中提取关键词并计算与高分的相关系数
+  - [x] 1.6 实现 renderHeartbeatMarkdown()：将关键词分析结果渲染为 HEARTBEAT.md 格式
+  - [x] 1.7 进化日志写入 evolution_log 表
+- [x] 2. 实现 CapabilityRegistry
+  - [x] 2.1 实现 registerTask()：从评分 ≥12 的任务中提取能力描述
+  - [x] 2.2 实现 extractTaskCapabilities()：按行切分 + cleanCapability() 清洗 + hasActionSignal() 过滤
+  - [x] 2.3 实现 scoreToConfidence()：评分映射到 0.35-0.95 的 evidence 值
+  - [x] 2.4 实现 EMA 置信度更新：confidence = previous * 0.7 + evidence * 0.3
+  - [x] 2.5 实现 registerWorkflow()：批量处理一轮工作流所有任务
+  - [x] 2.6 能力数据写入 agent_capabilities 表（upsert 语义）
+- [x] 3. 实现 HeartbeatScheduler
+  - [x] 3.1 实现 start() / stop()：启动和停止全局调度
+  - [x] 3.2 实现 syncAgent()：为单个智能体初始化心跳状态和配置
+  - [x] 3.3 实现 loadConfig()：从 HEARTBEAT.md 读取间隔、关键词等配置
+  - [x] 3.4 实现 buildDefaultConfig()：无配置时的默认心跳参数
+  - [x] 3.5 实现 scheduleNext()：按间隔设置下一次定时器（含 jitter）
+  - [x] 3.6 实现 trigger()：执行单次心跳（搜索 → LLM 总结 → 报告落盘）
+  - [x] 3.7 实现 search()：基于关键词和历史任务搜索候选
+  - [x] 3.8 实现 scoreCandidate()：关键词匹配评分
+  - [x] 3.9 实现 getRelatedTasks() / isWorkflowRelevant()：筛选相关历史任务
+  - [x] 3.10 心跳报告以 JSON + Markdown 落盘到 reports/ 目录
+- [x] 4. 实现 Socket 事件推送
+  - [x] 4.1 heartbeat_status 事件：心跳状态变化时推送
+  - [x] 4.2 heartbeat_report_saved 事件：报告保存后推送（含 agentId、reportId、title、summary）
+- [x] 5. 实现错误处理与退避
+  - [x] 5.1 实现 openLLMUnavailableWindow()：LLM 不可用时的全局退避窗口
+  - [x] 5.2 实现 parseRetryDelayMs()：从错误中提取 rate limit 建议等待时间
+  - [x] 5.3 实现 heartbeatRetryJitterMs()：每个智能体独立 jitter 避免雷群效应
+  - [x] 5.4 退避窗口内的心跳触发跳过执行
