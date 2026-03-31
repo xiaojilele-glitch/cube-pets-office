@@ -274,7 +274,8 @@ cube-pets-office/
 │       ├── sandbox-live-preview/    # 沙箱实时预览
 │       ├── workflow-decoupling/     # Workflow 寄生依赖解耦
 │       ├── lobster-executor-real/   # Docker 真实容器执行器
-│       └── agent-marketplace/      # Guest Agent 访客代理市场
+│       ├── agent-marketplace/      # Guest Agent 访客代理市场
+│       └── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -306,6 +307,7 @@ cube-pets-office/
 | Workflow 寄生依赖解耦 | `.kiro/specs/workflow-decoupling/` | `client/src/lib/tasks-store.ts` `server/core/mission-orchestrator.ts` `shared/mission/contracts.ts` | 🔲 待开发 |
 | Docker 真实容器执行器 | `.kiro/specs/lobster-executor-real/` | `services/lobster-executor/src/service.ts` `services/lobster-executor/src/docker-runner.ts` `services/lobster-executor/src/callback-sender.ts` | 🔲 待开发 |
 | Guest Agent 访客代理 | `.kiro/specs/agent-marketplace/` | `shared/organization-schema.ts` `server/core/registry.ts` `server/routes/guest-agents.ts` `server/core/guest-agent.ts` | 🔲 待开发 |
+| 跨 Pod 自主协作 (Swarm) | `.kiro/specs/autonomous-swarm/` | `server/core/swarm-orchestrator.ts` `shared/swarm.ts` `shared/message-bus-rules.ts` `server/core/heartbeat.ts` `client/src/components/three/CrossPodParticles.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 
