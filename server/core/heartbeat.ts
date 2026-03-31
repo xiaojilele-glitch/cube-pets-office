@@ -1,5 +1,6 @@
 import db from '../db/index.js';
 import type { AgentRow, TaskRow, WorkflowRun } from '../db/index.js';
+import { isLLMTemporarilyUnavailableError } from './llm-client.js';
 import {
   reportStore,
   type HeartbeatReport,
@@ -102,6 +103,28 @@ function createReportId(date: Date = new Date()): string {
   return date.toISOString().replace(/[:.]/g, '-');
 }
 
+function parseRetryDelayMs(error: unknown, fallbackMs: number = 30000): number {
+  const message = error instanceof Error ? error.message : String(error);
+  const match = message.match(/about\s+(\d+)s/i);
+  if (!match) {
+    return fallbackMs;
+  }
+
+  const seconds = Number(match[1]);
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return fallbackMs;
+  }
+
+  return seconds * 1000;
+}
+
+function heartbeatRetryJitterMs(agentId: string): number {
+  const seed = agentId
+    .split('')
+    .reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+  return 500 + (seed % 2500);
+}
+
 function buildDefaultConfig(agent: AgentRow): HeartbeatConfig {
   const defaultInterval = clamp(Number(process.env.HEARTBEAT_INTERVAL_MINUTES) || 360, 5, 1440);
   const defaultMaxResults = clamp(Number(process.env.HEARTBEAT_MAX_RESULTS) || 6, 3, 12);
@@ -141,6 +164,7 @@ export class HeartbeatScheduler {
   private timers = new Map<string, NodeJS.Timeout>();
   private states = new Map<string, HeartbeatStatus>();
   private started = false;
+  private llmUnavailableUntil = 0;
 
   start(): void {
     if (this.started) return;
@@ -155,6 +179,7 @@ export class HeartbeatScheduler {
     this.timers.forEach((timer) => clearTimeout(timer));
     this.timers.clear();
     this.started = false;
+    this.llmUnavailableUntil = 0;
   }
 
   getStatuses(): HeartbeatStatus[] {
@@ -212,6 +237,16 @@ export class HeartbeatScheduler {
     const config = this.loadConfig(agentId);
     if (!config.enabled) {
       throw new Error(`Heartbeat is disabled for ${agentId}`);
+    }
+
+    const llmCooldownRemainingMs = this.getLLMUnavailableRemainingMs();
+    if (llmCooldownRemainingMs > 0) {
+      throw new Error(
+        `LLM providers are temporarily unavailable for heartbeat. Retry in about ${Math.max(
+          1,
+          Math.ceil(llmCooldownRemainingMs / 1000)
+        )}s.`
+      );
     }
 
     const existing = this.states.get(agentId);
@@ -365,6 +400,14 @@ Rules:
     } catch (error: any) {
       const failedAt = new Date().toISOString();
       const current = this.states.get(agentId);
+      const temporarilyUnavailable = isLLMTemporarilyUnavailableError(error);
+      const retryDelayMs = temporarilyUnavailable
+        ? parseRetryDelayMs(error, 30000)
+        : config.intervalMinutes * 60 * 1000;
+
+      if (temporarilyUnavailable) {
+        this.openLLMUnavailableWindow(retryDelayMs);
+      }
 
       this.states.set(agentId, {
         ...(current || this.createEmptyStatus(agentRow, config)),
@@ -373,7 +416,7 @@ Rules:
         lastError: error?.message || 'Unknown heartbeat error',
       });
       this.publishStatus(agentId);
-      this.scheduleNext(agentId);
+      this.scheduleNext(agentId, retryDelayMs);
       emitEvent({ type: 'agent_active', agentId, action: 'idle' });
       throw error;
     }
@@ -428,7 +471,7 @@ Rules:
     };
   }
 
-  private scheduleNext(agentId: string): void {
+  private scheduleNext(agentId: string, overrideDelayMs?: number): void {
     const agent = db.getAgent(agentId);
     if (!agent) return;
 
@@ -438,7 +481,10 @@ Rules:
       return;
     }
 
-    const delayMs = config.intervalMinutes * 60 * 1000;
+    const delayMs =
+      overrideDelayMs && Number.isFinite(overrideDelayMs) && overrideDelayMs > 0
+        ? overrideDelayMs
+        : config.intervalMinutes * 60 * 1000;
     const nextRunAt = new Date(Date.now() + delayMs).toISOString();
     const current = this.states.get(agentId) || this.createEmptyStatus(agent, config);
 
@@ -454,7 +500,19 @@ Rules:
     this.publishStatus(agentId);
 
     const timer = setTimeout(() => {
+      const remainingMs = this.getLLMUnavailableRemainingMs();
+      if (remainingMs > 0) {
+        this.scheduleNext(agentId, remainingMs + heartbeatRetryJitterMs(agentId));
+        return;
+      }
+
       void this.trigger(agentId, 'scheduled').catch((error) => {
+        if (isLLMTemporarilyUnavailableError(error)) {
+          console.warn(
+            `[Heartbeat] ${agentId} delayed: ${error.message}`
+          );
+          return;
+        }
         console.error(`[Heartbeat] ${agentId} failed:`, error);
       });
     }, delayMs);
@@ -474,6 +532,18 @@ Rules:
     const status = this.states.get(agentId);
     if (!status) return;
     emitEvent({ type: 'heartbeat_status', status });
+  }
+
+  private openLLMUnavailableWindow(durationMs: number): void {
+    if (!Number.isFinite(durationMs) || durationMs <= 0) return;
+    this.llmUnavailableUntil = Math.max(
+      this.llmUnavailableUntil,
+      Date.now() + durationMs
+    );
+  }
+
+  private getLLMUnavailableRemainingMs(): number {
+    return Math.max(0, this.llmUnavailableUntil - Date.now());
   }
 
   private search(agent: AgentRow, config: HeartbeatConfig): HeartbeatSearchResult[] {
