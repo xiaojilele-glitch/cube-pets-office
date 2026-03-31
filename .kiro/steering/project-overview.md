@@ -316,6 +316,7 @@ cube-pets-office/
 | 跨框架导出 | `.kiro/specs/cross-framework-export/` | `shared/export-schema.ts` `server/core/exporter.ts` `server/core/export-adapters/crewai.ts` `server/core/export-adapters/langgraph.ts` `server/core/export-adapters/autogen.ts` `server/routes/export.ts` `client/src/components/ExportDialog.tsx` | 🔲 待开发 |
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
+| 状态持久化与恢复 | `.kiro/specs/state-persistence-recovery/` | `client/src/lib/browser-runtime-storage.ts` `client/src/lib/snapshot-scheduler.ts` `client/src/lib/recovery-detector.ts` `client/src/lib/session-export.ts` `client/src/workers/snapshot-worker.ts` `client/src/components/RecoveryDialog.tsx` `shared/mission/contracts.ts` | 🔲 待开发 |
 
 ## 核心数据流
 
@@ -441,7 +442,7 @@ npm run check          # TypeScript 类型检查
 s/lobster-executor` 的 `runAcceptedJob()` 当前完全是 mock 实现（模拟步骤延迟 + 写 mock result.json），没有任何 Docker API 调用。需要接入 dockerode 或 child_process 实现真实容器创建/启动/超时/退出码判断/日志采集/工件目录挂载，以及执行器主动回调到 Cube 的 `/api/executor/events`（含 HMAC 签名）。
 2. **`/api/planets` 路由未实现** — `shared/mission/api.ts` 中定义了 `listPlanets`、`getPlanet`、`getPlanetInterior` 等路由常量，但服务端 `server/routes/` 中没有对应的路由实现。前端 `/tasks` 页面的 planet 视图无法从 mission 原生数据源获取数据。
 3. **Work Packages / Agent Crew 未完全迁移到 mission** — 这些区域仍挂在 workflow 补充层上，尚未完全切换到 mission 原生投影。当前属于"双轨并存、mission 主线优先"的阶段。
-4. **纯前端模式风险项未处理** — 浏览器直连 LLM 的 API Key 安全提示、浏览器崩溃/刷新后长任务恢复、CORS 兜底代理这三项在代码中未见完整实现。
+4. **纯前端模式风险项未处理** — 浏览器直连 LLM 的 API Key 安全提示、浏览器崩溃/刷新后长任务恢复（→ 参见 `.kiro/specs/state-persistence-recovery/`）、CORS 兜底代理这三项在代码中未见完整实现。
 
 ## 下一步开发建议
 
