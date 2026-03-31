@@ -275,11 +275,9 @@ cube-pets-office/
 │       ├── workflow-decoupling/     # Workflow 寄生依赖解耦
 │       ├── lobster-executor-real/   # Docker 真实容器执行器
 │       ├── agent-marketplace/      # Guest Agent 访客代理市场
-<<<<<<< HEAD
-│       └── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
-=======
-│       └── multi-user-office/     # 多人实时协作办公室
->>>>>>> feat/multi-user-office
+│       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
+│       ├── multi-user-office/     # 多人实时协作办公室
+│       └── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -312,12 +310,11 @@ cube-pets-office/
 | Docker 真实容器执行器 | `.kiro/specs/lobster-executor-real/` | `services/lobster-executor/src/service.ts` `services/lobster-executor/src/docker-runner.ts` `services/lobster-executor/src/callback-sender.ts` | 🔲 待开发 |
 | Guest Agent 访客代理 | `.kiro/specs/agent-marketplace/` | `shared/organization-schema.ts` `server/core/registry.ts` `server/routes/guest-agents.ts` `server/core/guest-agent.ts` | 🔲 待开发 |
 | 多模态视觉能力 | `.kiro/specs/multi-modal-vision/` | `server/core/vision-provider.ts` `server/routes/vision.ts` `client/src/lib/workflow-attachments.ts` `shared/workflow-input.ts` `shared/workflow-runtime.ts` | 🔲 待开发 |
-| 多模态 Agent（TTS/STT/统一编排） | `.kiro/specs/multi-modal-agent/` | `server/core/voice-provider.ts` `server/routes/voice.ts` `client/src/lib/tts-engine.ts` `client/src/lib/stt-engine.ts` `shared/runtime-agent.ts` `server/core/dynamic-organization.ts` | 🔲 待开发 |
 | 跨 Pod 自主协作 (Swarm) | `.kiro/specs/autonomous-swarm/` | `server/core/swarm-orchestrator.ts` `shared/swarm.ts` `shared/message-bus-rules.ts` `server/core/heartbeat.ts` `client/src/components/three/CrossPodParticles.tsx` | 🔲 待开发 |
 | 跨框架导出 | `.kiro/specs/cross-framework-export/` | `shared/export-schema.ts` `server/core/exporter.ts` `server/core/export-adapters/crewai.ts` `server/core/export-adapters/langgraph.ts` `server/core/export-adapters/autogen.ts` `server/routes/export.ts` `client/src/components/ExportDialog.tsx` | 🔲 待开发 |
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
-| 状态持久化与恢复 | `.kiro/specs/state-persistence-recovery/` | `client/src/lib/browser-runtime-storage.ts` `client/src/lib/snapshot-scheduler.ts` `client/src/lib/recovery-detector.ts` `client/src/lib/session-export.ts` `client/src/workers/snapshot-worker.ts` `client/src/components/RecoveryDialog.tsx` `shared/mission/contracts.ts` | 🔲 待开发 |
+| A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 
@@ -424,8 +421,6 @@ cube-pets-office/
 | Lobster 执行器 | `LOBSTER_EXECUTOR_BASE_URL`、`LOBSTER_EXECUTOR_PORT` | 默认 localhost:3031 |
 | 飞书 | `FEISHU_ENABLED`、`FEISHU_MODE`、`FEISHU_RELAY_SECRET` | 默认 mock 模式 |
 | Vision LLM | `VISION_LLM_API_KEY`、`VISION_LLM_BASE_URL`、`VISION_LLM_MODEL`、`VISION_LLM_WIRE_API`、`VISION_LLM_MAX_TOKENS`、`VISION_LLM_DETAIL`、`VISION_LLM_TIMEOUT_MS` | 视觉分析专用模型，未配置时回退到 Fallback/主 LLM |
-| Voice TTS | `TTS_API_URL`、`TTS_API_KEY`、`TTS_MODEL`、`TTS_VOICE` | 服务端 TTS 语音合成，未配置时使用浏览器 SpeechSynthesis |
-| Voice STT | `STT_API_URL`、`STT_API_KEY`、`STT_MODEL` | 服务端 STT 语音识别，未配置时使用浏览器 SpeechRecognition |
 
 ## 常用命令
 
@@ -445,7 +440,7 @@ npm run check          # TypeScript 类型检查
 s/lobster-executor` 的 `runAcceptedJob()` 当前完全是 mock 实现（模拟步骤延迟 + 写 mock result.json），没有任何 Docker API 调用。需要接入 dockerode 或 child_process 实现真实容器创建/启动/超时/退出码判断/日志采集/工件目录挂载，以及执行器主动回调到 Cube 的 `/api/executor/events`（含 HMAC 签名）。
 2. **`/api/planets` 路由未实现** — `shared/mission/api.ts` 中定义了 `listPlanets`、`getPlanet`、`getPlanetInterior` 等路由常量，但服务端 `server/routes/` 中没有对应的路由实现。前端 `/tasks` 页面的 planet 视图无法从 mission 原生数据源获取数据。
 3. **Work Packages / Agent Crew 未完全迁移到 mission** — 这些区域仍挂在 workflow 补充层上，尚未完全切换到 mission 原生投影。当前属于"双轨并存、mission 主线优先"的阶段。
-4. **纯前端模式风险项未处理** — 浏览器直连 LLM 的 API Key 安全提示、浏览器崩溃/刷新后长任务恢复（→ 参见 `.kiro/specs/state-persistence-recovery/`）、CORS 兜底代理这三项在代码中未见完整实现。
+4. **纯前端模式风险项未处理** — 浏览器直连 LLM 的 API Key 安全提示、浏览器崩溃/刷新后长任务恢复、CORS 兜底代理这三项在代码中未见完整实现。
 
 ## 下一步开发建议
 
