@@ -117,6 +117,7 @@ data/agents/*/HEARTBEAT.md
 
 # Local debug artifacts
 .manus-logs/
+.tmp-dev-all.*.log
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/
