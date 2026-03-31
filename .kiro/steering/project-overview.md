@@ -315,6 +315,7 @@ cube-pets-office/
 | 跨 Pod 自主协作 (Swarm) | `.kiro/specs/autonomous-swarm/` | `server/core/swarm-orchestrator.ts` `shared/swarm.ts` `shared/message-bus-rules.ts` `server/core/heartbeat.ts` `client/src/components/three/CrossPodParticles.tsx` | 🔲 待开发 |
 | 跨框架导出 | `.kiro/specs/cross-framework-export/` | `shared/export-schema.ts` `server/core/exporter.ts` `server/core/export-adapters/crewai.ts` `server/core/export-adapters/langgraph.ts` `server/core/export-adapters/autogen.ts` `server/routes/export.ts` `client/src/components/ExportDialog.tsx` | 🔲 待开发 |
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
+| 成本可观测性 | `.kiro/specs/cost-observability/` | `shared/cost.ts` `server/core/cost-tracker.ts` `server/routes/cost.ts` `client/src/components/CostDashboard.tsx` `client/src/lib/cost-store.ts` `client/src/lib/browser-cost-store.ts` | 🔲 待开发 |
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | Human-in-the-Loop 决策系统 | `.kiro/specs/human-in-the-loop/` | `shared/mission/contracts.ts` `shared/mission/decision-templates.ts` `server/tasks/mission-decision.ts` `server/core/mission-orchestrator.ts` `client/src/components/tasks/DecisionPanel.tsx` `client/src/components/tasks/DecisionHistory.tsx` | 🔲 待开发 |
 
