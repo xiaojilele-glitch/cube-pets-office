@@ -1,0 +1,56 @@
+# 多人实时协作办公室 任务清单
+
+- [ ] 1. 共享类型定义
+  - [ ] 1.1 创建 `shared/room.ts`，定义 RoomUser、RoomState、RoomPod、ChatMessage 类型
+  - [ ] 1.2 在 `shared/room.ts` 中定义 Room Socket 事件常量和 payload 类型（ROOM_SOCKET_EVENTS、RoomSocketPayload）
+  - [ ] 1.3 在 `shared/organization-schema.ts` 的 WorkflowOrganizationSnapshot 中增加可选字段 `ownerUserId?: string`
+- [ ] 2. Room_Service 服务端核心
+  - [ ] 2.1 创建 `server/core/room-manager.ts`，实现 RoomManager 类（createRoom、joinRoom、leaveRoom、getRoom、listRooms）
+  - [ ] 2.2 实现 Avatar 颜色分配逻辑（8 色色板顺序分配 + 离开回收）
+  - [ ] 2.3 实现权限校验函数 `assertOwnership(userId, resource)`
+  - [ ] 2.4 实现房间超时清理调度器（每 5 分钟扫描，空闲 30 分钟自动销毁）
+  - [ ] 2.5 实现聊天消息管理（addChatMessage、getChatHistory，上限 50 条 FIFO）
+- [ ] 3. Socket.IO Room 事件集成
+  - [ ] 3.1 扩展 `server/core/socket.ts`，在 connection 回调中注册 room:join、room:leave、room:chat、room:avatar-move 事件处理
+  - [ ] 3.2 实现 room:join 处理：调用 RoomManager.joinRoom，socket.join(roomId)，广播 room:user-joined，回传 room:state
+  - [ ] 3.3 实现 room:leave 处理：调用 RoomManager.leaveRoom，socket.leave(roomId)，广播 room:user-left
+  - [ ] 3.4 实现 room:chat 处理：调用 RoomManager.addChatMessage，广播 room:chat-message
+  - [ ] 3.5 实现 room:avatar-move 处理：广播 room:avatar-moved 给同房间其他成员
+  - [ ] 3.6 实现 disconnect 处理：检测用户所在房间并自动执行 leaveRoom
+- [ ] 4. REST API 路由
+  - [ ] 4.1 创建 `server/routes/rooms.ts`，实现 POST /api/rooms（创建房间）、GET /api/rooms（房间列表）、GET /api/rooms/:roomId（房间详情）、DELETE /api/rooms/:roomId（销毁房间）
+  - [ ] 4.2 在 `server/index.ts` 中注册 rooms 路由
+- [ ] 5. Room_Service 单元测试
+  - [ ] 5.1 创建 `server/tests/room-manager.test.ts`，测试房间创建、加入、离开、人数上限、超时清理
+  - [ ] 5.2 测试权限校验：assertOwnership 对非所有者操作抛出错误
+  - [ ] 5.3 测试聊天消息 FIFO：超过 50 条时移除最早消息
+  - [ ] 5.4 测试 Avatar 颜色分配：唯一性和离开后回收
+- [ ] 6. Room_Service 属性测试
+  - [ ] 6.1 P1: 房间人数上限不变量 — 任意序列的 join/leave 操作后 users.length ≤ 8 **Validates: Requirements 1.3**
+  - [ ] 6.2 P3: 权限隔离正确性 — 非所有者对 Pod/Private Agent 的写操作必须被拒绝 **Validates: Requirements 7.1, 7.2**
+  - [ ] 6.3 P4: 聊天历史有界性 — 任意数量的 addChatMessage 后 chatHistory.length ≤ 50 **Validates: Requirements 6.3**
+  - [ ] 6.4 P5: Avatar 颜色唯一性 — 房间内任意两个用户的 avatarColor 不同 **Validates: Requirements 4.1**
+- [ ] 7. 客户端 Multi_User_Store
+  - [ ] 7.1 创建 `client/src/lib/multi-user-store.ts`，定义 Zustand store（currentRoom、roomUsers、roomPods、chatMessages）
+  - [ ] 7.2 实现 Socket 事件监听：room:state、room:user-joined、room:user-left、room:pod-created、room:pod-updated、room:chat-message、room:avatar-moved
+  - [ ] 7.3 实现 joinRoom / leaveRoom / sendChat / moveAvatar 动作方法（emit Socket 事件）
+  - [ ] 7.4 在 `client/src/lib/store.ts` 中增加 currentRoomId、currentUserId 状态字段
+- [ ] 8. 客户端路由与入口
+  - [ ] 8.1 在 `client/src/App.tsx` 中增加 `/room/:roomId` 路由，解析 roomId 并自动触发 joinRoom
+  - [ ] 8.2 在首页增加"创建房间"和"房间列表"入口（复用现有 UI 组件）
+- [ ] 9. 3D 场景多人渲染
+  - [ ] 9.1 在 `client/src/components/Scene3D.tsx` 中增加其他用户 Avatar 渲染（Box 几何体 + 用户颜色 + 头顶用户名 Billboard）
+  - [ ] 9.2 实现多用户 Pod 渲染：使用 ownerUserId 对应颜色作为 Pod 边框，非当前用户 Pod 透明度 0.7
+  - [ ] 9.3 实现跨用户消息粒子流颜色区分（使用发送方用户颜色）
+- [ ] 10. 房间内聊天面板
+  - [ ] 10.1 创建 `client/src/components/RoomChatPanel.tsx`，复用 ChatPanel 样式，显示房间聊天消息列表
+  - [ ] 10.2 实现 @提及功能：输入 @ 时弹出房间用户列表，选择后插入 @用户名
+  - [ ] 10.3 被提及消息高亮显示
+- [ ] 11. 指令与权限隔离集成
+  - [ ] 11.1 修改 `server/core/dynamic-organization.ts`，在组织生成时传入并记录 ownerUserId
+  - [ ] 11.2 在工作流启动和 Mission 创建时关联 ownerUserId，确保 Pod 归属正确
+  - [ ] 11.3 在 Socket 事件广播中附加 ownerUserId，前端据此过滤私有 Agent 可见性
+- [ ] 12. Smoke 测试与文档
+  - [ ] 12.1 创建 `scripts/multi-user-room-smoke.mjs`，模拟两个 Socket 客户端加入同一房间、发送聊天、创建 Pod
+  - [ ] 12.2 创建 `docs/multi-user-office.md`，说明房间创建、邀请链接分享、多人协作使用方式
+  - [ ] 12.3 更新 README.md "功能一览" 增加"多人协作办公室"条目
