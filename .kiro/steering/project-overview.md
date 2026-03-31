@@ -278,7 +278,7 @@ cube-pets-office/
 │       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
 │       ├── multi-user-office/     # 多人实时协作办公室
 │       ├── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
-│       └── dynamic-role-system/ # 动态角色系统（运行时角色切换）
+│       └── agent-reputation/    # Agent 信誉系统
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -316,7 +316,7 @@ cube-pets-office/
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
-| 动态角色系统 | `.kiro/specs/dynamic-role-system/` | `shared/role-schema.ts` `server/core/role-registry.ts` `server/core/role-matcher.ts` `server/core/role-constraint-validator.ts` `server/core/role-performance-tracker.ts` `server/core/role-analytics.ts` `client/src/lib/role-store.ts` | 🔲 待开发 |
+| Agent 信誉系统 | `.kiro/specs/agent-reputation/` | `shared/reputation.ts` `server/core/reputation/reputation-service.ts` `server/core/reputation/reputation-calculator.ts` `server/core/reputation/trust-tier-evaluator.ts` `server/core/reputation/anomaly-detector.ts` `server/core/reputation/decay-scheduler.ts` `server/routes/reputation.ts` `client/src/components/reputation/ReputationBadge.tsx` `client/src/lib/reputation-store.ts` | 🔲 待开发 |
 
 ## 核心数据流
 
