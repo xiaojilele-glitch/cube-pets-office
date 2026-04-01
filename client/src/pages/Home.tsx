@@ -83,52 +83,42 @@ export default function Home() {
       {isSceneReady && (
         <>
           <div
-            className={`fixed z-[60] ${isMobile ? 'left-3 right-3 top-[calc(env(safe-area-inset-top)+124px)]' : 'left-6 top-6 w-[320px]'}`}
+            className={`fixed z-[60] ${isMobile ? 'left-3 right-3 top-[calc(env(safe-area-inset-top)+124px)]' : 'left-6 top-6 w-[260px]'}`}
             style={{ pointerEvents: 'auto' }}
           >
-            <div className="rounded-[28px] border border-white/60 bg-white/84 p-4 shadow-[0_16px_44px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
-              <div className="flex items-start gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#F4EDE4] text-[#D07A4F] shadow-sm">
-                  <Orbit className="h-5 w-5" />
+            <div className="rounded-[22px] border border-white/60 bg-white/84 p-3 shadow-[0_12px_32px_rgba(60,44,28,0.12)] backdrop-blur-2xl">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F4EDE4] text-[#D07A4F] shadow-sm">
+                  <Orbit className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A08972]">
-                    {locale === 'zh-CN' ? 'Mission 入口' : 'Mission Entry'}
-                  </p>
-                  <h3
-                    className="mt-1 text-sm font-bold text-[#3A2A1A]"
-                    style={{ fontFamily: "'Playfair Display', serif" }}
-                  >
+                  <h3 className="text-[13px] font-bold text-[#3A2A1A]">
                     {locale === 'zh-CN' ? '任务宇宙' : 'Mission Universe'}
                   </h3>
-                  <p className="mt-1 text-[11px] leading-relaxed text-[#6B5A4A]">
-                    {locale === 'zh-CN'
-                      ? '查看 mission 列表、详情、决策入口、时间线和工件，不再只停留在首页工作流面板。'
-                      : 'Open the live mission list, details, decisions, timeline, and artifacts instead of staying only in the home workflow panel.'}
-                  </p>
                 </div>
               </div>
 
-              <button
-                onClick={() => setLocation('/tasks')}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#D07A4F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#C26D42]"
-              >
-                {locale === 'zh-CN' ? '打开任务宇宙' : 'Open Mission Universe'}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setLocation('/tasks?new=1')}
-                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#D7C4AF] bg-white/80 px-4 py-2.5 text-sm font-semibold text-[#6B5A4A] shadow-sm transition-colors hover:bg-white"
-              >
-                {locale === 'zh-CN' ? '快速新建 Mission' : 'Quick Create Mission'}
-                <Plus className="h-4 w-4" />
-              </button>
+              <div className="mt-2.5 flex gap-2">
+                <button
+                  onClick={() => setLocation('/tasks')}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#D07A4F] px-3 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#C26D42]"
+                >
+                  {locale === 'zh-CN' ? '打开' : 'Open'}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setLocation('/tasks?new=1')}
+                  className="inline-flex items-center justify-center rounded-xl border border-[#D7C4AF] bg-white/80 px-3 py-2 text-xs font-semibold text-[#6B5A4A] shadow-sm transition-colors hover:bg-white"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </button>
+              </div>
               <button
                 onClick={handleStartDemo}
-                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7CB9E8]/40 bg-[#E8F4FD] px-4 py-2.5 text-sm font-semibold text-[#2E86C1] shadow-sm transition-colors hover:bg-[#D6EAF8]"
+                className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#7CB9E8]/40 bg-[#E8F4FD] px-3 py-2 text-xs font-semibold text-[#2E86C1] shadow-sm transition-colors hover:bg-[#D6EAF8]"
               >
-                {locale === 'zh-CN' ? '🎬 Live Demo' : '🎬 Live Demo'}
-                <Play className="h-4 w-4" />
+                🎬 Live Demo
+                <Play className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
