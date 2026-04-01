@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。另有 1 个新增 Spec（agent-marketplace-platform，Agent Marketplace 开放交易平台）待开发。
 
 ### 已完成（基座层）
 
@@ -63,6 +63,7 @@ flowchart TB
     MMV[multi-modal-vision<br/>图片 / Vision LLM]
     MMA[multi-modal-agent<br/>Vision + TTS / STT]
     AM[agent-marketplace<br/>Guest Agent]
+    AMP[agent-marketplace-platform<br/>开放交易平台]
     SLP[sandbox-live-preview<br/>终端 + 截图预览]
   end
 
@@ -88,6 +89,7 @@ flowchart TB
   CO --> TD
   MMV --> MMA
   AM --> A2A
+  AM --> AMP
   EH --> AS
   DO --> AM
   MS --> VRAG
@@ -163,6 +165,7 @@ flowchart TB
 | multi-modal-vision | 跨前后端 | 无 | 图片/截图 Vision LLM 分析 |
 | multi-modal-agent | 跨前后端 | multi-modal-vision | Vision + TTS/STT，宠物"能看能说" |
 | agent-marketplace | 跨前后端 | dynamic-organization | Guest Agent 临时加入办公室 |
+| agent-marketplace-platform | 跨前后端 | agent-marketplace | 开放 Agent 交易平台（开发者发布/用户购买/许可证/收益分配） |
 | sandbox-live-preview | 跨前后端 | lobster-executor-real | 3D 场景内终端 + 截图预览 |
 
 产出：
@@ -409,6 +412,7 @@ flowchart TB
 | 执行器安全 | lobster-executor-real → secure-sandbox | 先有真实执行器，再加安全层 |
 | 多模态 | multi-modal-vision → multi-modal-agent | vision 是 agent 多模态的前置 |
 | 外部 Agent | agent-marketplace → a2a-protocol | 先有 Guest Agent，再有标准协议 |
+| Agent 交易平台 | agent-marketplace → agent-marketplace-platform | 先有 Guest Agent 机制，再建开放交易市场 |
 | 监控 | cost-observability → telemetry-dashboard | 先有成本埋点，再有全局面板 |
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
