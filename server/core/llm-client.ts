@@ -5,13 +5,10 @@ import { nanoid } from "nanoid";
 
 import { estimateCost, PRICING_TABLE, DEFAULT_PRICING } from "../../shared/cost.js";
 import { getAIConfig } from "./ai-config.js";
-<<<<<<< HEAD
 import { telemetryStore } from "./telemetry-store.js";
-import { estimateCost } from "../../shared/telemetry.js";
+import { estimateCost as estimateTelemetryCost } from "../../shared/telemetry.js";
 import type { LLMCallRecord } from "../../shared/telemetry.js";
-=======
 import { costTracker } from "./cost-tracker.js";
->>>>>>> feat/L06-cost-observability
 
 dotenv.config();
 

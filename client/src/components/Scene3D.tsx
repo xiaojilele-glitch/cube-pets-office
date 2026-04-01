@@ -1,23 +1,12 @@
 import { ContactShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { Activity } from 'lucide-react';
-=======
-import { AlertTriangle, DollarSign, ShieldOff } from 'lucide-react';
->>>>>>> feat/L06-cost-observability
-import { Suspense } from 'react';
-=======
+import { Activity, AlertTriangle, DollarSign, ShieldOff } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
->>>>>>> feat/L07-state-persistence-recovery
 import { ACESFilmicToneMapping } from 'three';
 
 import { useViewportTier } from '@/hooks/useViewportTier';
-<<<<<<< HEAD
 import { useTelemetryStore } from '@/lib/telemetry-store';
-=======
 import { useCostStore } from '@/lib/cost-store';
->>>>>>> feat/L06-cost-observability
 
 import { CostDashboard } from './CostDashboard';
 import { MissionIsland } from './three/MissionIsland';
@@ -26,25 +15,22 @@ import { PetWorkers } from './three/PetWorkers';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const { toggleDashboard, snapshot } = useTelemetryStore();
-  const hasAlerts = (snapshot?.alerts?.filter(a => !a.resolved).length ?? 0) > 0;
-=======
-  const snapshot = useCostStore((s) => s.snapshot);
-  const dashboardOpen = useCostStore((s) => s.dashboardOpen);
-  const toggleDashboard = useCostStore((s) => s.toggleDashboard);
 
-  const hasAlerts = (snapshot?.alerts?.filter((a) => !a.resolved).length ?? 0) > 0;
-  const isDowngraded = snapshot?.downgradeLevel !== 'none' && snapshot?.downgradeLevel != null;
-  const budgetRemaining = snapshot ? Math.max(0, 100 - snapshot.budgetUsedPercent * 100) : 100;
-  const totalCost = snapshot?.totalCost ?? 0;
->>>>>>> feat/L06-cost-observability
-=======
+  // Telemetry
+  const { toggleDashboard: toggleTelemetry, snapshot: telemetrySnapshot } = useTelemetryStore();
+  const hasTelemetryAlerts = (telemetrySnapshot?.alerts?.filter(a => !a.resolved).length ?? 0) > 0;
+
+  // Cost
+  const costSnapshot = useCostStore((s) => s.snapshot);
+  const costDashboardOpen = useCostStore((s) => s.dashboardOpen);
+  const toggleCostDashboard = useCostStore((s) => s.toggleDashboard);
+  const hasCostAlerts = (costSnapshot?.alerts?.filter((a) => !a.resolved).length ?? 0) > 0;
+  const isDowngraded = costSnapshot?.downgradeLevel !== 'none' && costSnapshot?.downgradeLevel != null;
+  const budgetRemaining = costSnapshot ? Math.max(0, 100 - costSnapshot.budgetUsedPercent * 100) : 100;
+  const totalCost = costSnapshot?.totalCost ?? 0;
+
+  // Recovery
   const [isRecovering, setIsRecovering] = useState(false);
-
-  // Register a globalThis accessor so the recovery flow can toggle the overlay.
-  // Follows the same pattern as __snapshotRestoreScene / __snapshotRestoreZustand.
   useEffect(() => {
     (globalThis as any).__sceneSetRecovering = (value: boolean) => {
       setIsRecovering(value);
@@ -53,7 +39,6 @@ export function Scene3D() {
       delete (globalThis as any).__sceneSetRecovering;
     };
   }, []);
->>>>>>> feat/L07-state-persistence-recovery
 
   const camera = isMobile
     ? { position: [0, 8.4, 16.2] as [number, number, number], fov: 46, near: 0.1, far: 100 }
@@ -63,17 +48,17 @@ export function Scene3D() {
 
   return (
     <div className="absolute inset-0 z-0 h-full w-full touch-pan-y">
-      {/* Cost overlay — HTML layer above the 3D canvas */}
+      {/* Cost overlay */}
       <div
         role="button"
         tabIndex={0}
-        onClick={toggleDashboard}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleDashboard(); }}
+        onClick={toggleCostDashboard}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleCostDashboard(); }}
         className={`absolute right-3 top-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/80 px-3 py-1.5 text-xs shadow-md backdrop-blur transition-colors select-none ${
-          hasAlerts ? 'border-2 border-red-500' : 'border border-gray-200'
+          hasCostAlerts ? 'border-2 border-red-500' : 'border border-gray-200'
         }`}
       >
-        {hasAlerts && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+        {hasCostAlerts && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
         {isDowngraded && <ShieldOff className="h-3.5 w-3.5 text-amber-500" />}
         <DollarSign className="h-3.5 w-3.5 text-gray-600" />
         <span className="font-medium text-gray-800">${totalCost.toFixed(4)}</span>
@@ -83,7 +68,7 @@ export function Scene3D() {
         </span>
       </div>
 
-      {dashboardOpen && (
+      {costDashboardOpen && (
         <div className="absolute right-3 top-14 z-10 max-h-[80vh] w-96 overflow-y-auto rounded-xl bg-white/95 shadow-xl backdrop-blur">
           <CostDashboard />
         </div>
@@ -155,20 +140,19 @@ export function Scene3D() {
         </Suspense>
       </Canvas>
 
-<<<<<<< HEAD
       {/* Telemetry dashboard toggle button */}
       <button
-        onClick={toggleDashboard}
+        onClick={toggleTelemetry}
         className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-xl border border-white/60 bg-white/80 text-[#6B5A4A] shadow-md backdrop-blur-sm transition-colors hover:bg-white hover:text-[#D07A4F]"
         aria-label="Toggle telemetry dashboard"
       >
         <Activity className="h-5 w-5" />
-        {hasAlerts && (
+        {hasTelemetryAlerts && (
           <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
         )}
       </button>
-=======
-      {/* Recovery overlay — shown while restoring a previous session */}
+
+      {/* Recovery overlay */}
       {isRecovering && (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -181,9 +165,6 @@ export function Scene3D() {
           </p>
         </div>
       )}
->>>>>>> feat/L07-state-persistence-recovery
     </div>
   );
 }
-
-
