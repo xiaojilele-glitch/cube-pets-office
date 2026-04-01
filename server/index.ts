@@ -410,12 +410,14 @@ async function startServer() {
   const reportRoutes = (await import("./routes/reports.js")).default;
   const workflowRoutes = (await import("./routes/workflows.js")).default;
   const configRoutes = (await import("./routes/config.js")).default;
+  const exportRoutes = (await import("./routes/export.js")).default;
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
   app.use("/api/reports", reportRoutes);
   app.use("/api/workflows", workflowRoutes);
   app.use("/api/config", configRoutes);
+  app.use("/api/export", exportRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
 

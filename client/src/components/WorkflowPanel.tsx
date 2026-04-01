@@ -26,6 +26,7 @@ import {
   Zap,
 } from 'lucide-react';
 
+import { ExportDialog } from '@/components/ExportDialog';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
 import { prepareWorkflowAttachments } from '@/lib/workflow-attachments';
@@ -827,6 +828,8 @@ function ProgressViewLegacy() {
       return acc;
     }, {})
   );
+  const [exportOpen, setExportOpen] = useState(false);
+  const canExport = currentWorkflow?.status === 'completed' || currentWorkflow?.status === 'completed_with_errors';
 
   if (!currentWorkflow) {
     return <EmptyState title={copy.workflow.progress.emptyTitle} description={copy.workflow.progress.emptyDescription} />;
@@ -891,6 +894,9 @@ function ProgressViewLegacy() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
             <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
+            {canExport ? (
+              <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
+            ) : null}
           </div>
         </div>
 
@@ -904,6 +910,7 @@ function ProgressViewLegacy() {
           {messages.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">{copy.workflow.progress.noMessages}</div> : <div className="space-y-2">{messages.slice(-10).map(message => <div key={message.id} className="rounded-xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8B7355]"><span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span><span>{fmt(message.created_at)}</span></div><p className="mt-1 text-[10px] text-[#B0A090]">{getDynamicStageLabel(locale, message.stage, copy.workflow.stages[message.stage as keyof typeof copy.workflow.stages] || message.stage)}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{message.content}</p></div>)}</div>}
         </div>
       </div>
+      {canExport ? <ExportDialog open={exportOpen} onOpenChange={setExportOpen} workflowId={currentWorkflow.id} /> : null}
     </div>
   );
 }
@@ -916,7 +923,9 @@ function ProgressView() {
   const [expandedRoleKeys, setExpandedRoleKeys] = useState<string[]>([]);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [isContextOpen, setIsContextOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const organization = getOrganization(currentWorkflow);
+  const canExport = currentWorkflow?.status === 'completed' || currentWorkflow?.status === 'completed_with_errors';
   const attachments = useMemo(
     () => normalizeWorkflowAttachments(currentWorkflow?.results?.input?.attachments),
     [currentWorkflow]
@@ -1161,6 +1170,9 @@ function ProgressView() {
           <div className="mt-4 flex flex-wrap gap-2">
             <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
             <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
+            {canExport ? (
+              <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
+            ) : null}
           </div>
         </div>
 
@@ -1431,6 +1443,7 @@ function ProgressView() {
           ) : null}
         </div>
       </div>
+      {canExport ? <ExportDialog open={exportOpen} onOpenChange={setExportOpen} workflowId={currentWorkflow.id} /> : null}
     </div>
   );
 }
