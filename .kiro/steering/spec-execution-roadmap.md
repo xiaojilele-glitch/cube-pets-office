@@ -57,6 +57,7 @@ flowchart TB
     SS[secure-sandbox<br/>执行器安全层]
     SPR[state-persistence-recovery<br/>跨重启恢复]
     WD3[workflow-decoupling<br/>前端切换 + 清除]
+    AC[audit-chain<br/>审计链 / 不可篡改日志]
   end
 
   subgraph Phase4["阶段 4：能力扩展"]
@@ -148,11 +149,13 @@ flowchart TB
 | secure-sandbox | 后端 | lobster-executor-real | 执行器安全层（权限/资源/网络隔离） |
 | state-persistence-recovery | 跨前后端 | 无 | 跨重启/崩溃自动恢复 |
 | workflow-decoupling (前端切换+清除) | 纯前端 | 数据补齐完成 | tasks-store 瘦身 30%+ |
+| audit-chain | 跨前后端 | 无 | 审计链 / 不可篡改日志（哈希链 + 签名 + 合规） |
 
 产出：
 - 执行器安全可控
 - 长任务零中断
 - tasks-store 从 2800+ 行降到 ~1800 行
+- 关键操作审计可追溯，满足 SOC2/GDPR/PCI-DSS 合规要求
 
 ### 阶段 4：能力扩展（2-3 周）
 
@@ -413,6 +416,7 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| 审计链集成 | audit-chain → workflow-engine, mission-runtime, dynamic-organization, message-bus, memory-system, feishu-bridge | 审计链需要在所有关键模块注入采集钩子，建议在各模块稳定后集成 |
 
 ## 风险提示
 
