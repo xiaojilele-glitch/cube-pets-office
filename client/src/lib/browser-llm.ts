@@ -1,4 +1,5 @@
 import type { AIConfig } from "./ai-config";
+import { recordBrowserLLMCall } from "./browser-telemetry-store";
 
 export interface BrowserLLMMessage {
   role: "system" | "user" | "assistant";
@@ -83,11 +84,19 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
   }
 }
 
+function generateTelemetryId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `tel_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export async function callBrowserLLM(
   messages: BrowserLLMMessage[],
   config: AIConfig,
   options: BrowserLLMOptions = {}
 ): Promise<{ content: string; model: string }> {
+  const startTime = Date.now();
+
   if (!config.apiKey.trim() && !config.proxyUrl.trim()) {
     throw new Error("Missing API key. Add it locally, or provide a proxy URL that handles auth.");
   }
@@ -102,23 +111,71 @@ export async function callBrowserLLM(
 
   const timeoutMs = Math.max(1_000, Number(config.timeoutMs) || 45_000);
 
-  if (config.wireApi === "responses") {
-    const { instructions, input } = buildResponsesInput(messages);
+  try {
+    if (config.wireApi === "responses") {
+      const { instructions, input } = buildResponsesInput(messages);
+      const body: any = {
+        model: config.model,
+        input,
+        instructions,
+        temperature: options.temperature ?? 0.7,
+        max_output_tokens: options.maxTokens ?? 400,
+        stream: false,
+      };
+
+      if (config.modelReasoningEffort) {
+        body.reasoning = { effort: config.modelReasoningEffort };
+      }
+
+      const response = await fetchWithTimeout(
+        buildEndpoint(config, "/responses"),
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        },
+        timeoutMs
+      );
+
+      if (!response.ok) {
+        throw normalizeError(response.status, await response.text().catch(() => ""));
+      }
+
+      const data = await response.json();
+      const content = extractResponsesText(data);
+      if (!content) {
+        throw new Error("The provider returned an empty response.");
+      }
+
+      const result = { content, model: data.model || config.model };
+
+      recordBrowserLLMCall({
+        id: generateTelemetryId(),
+        timestamp: startTime,
+        model: result.model,
+        tokensIn: 0,
+        tokensOut: 0,
+        cost: 0,
+        durationMs: Date.now() - startTime,
+      });
+
+      return result;
+    }
+
     const body: any = {
       model: config.model,
-      input,
-      instructions,
+      messages,
       temperature: options.temperature ?? 0.7,
-      max_output_tokens: options.maxTokens ?? 400,
+      max_tokens: options.maxTokens ?? 400,
       stream: false,
     };
 
-    if (config.modelReasoningEffort) {
-      body.reasoning = { effort: config.modelReasoningEffort };
+    if (config.chatThinkingType) {
+      body.thinking = { type: config.chatThinkingType };
     }
 
     const response = await fetchWithTimeout(
-      buildEndpoint(config, "/responses"),
+      buildEndpoint(config, "/chat/completions"),
       {
         method: "POST",
         headers,
@@ -132,45 +189,36 @@ export async function callBrowserLLM(
     }
 
     const data = await response.json();
-    const content = extractResponsesText(data);
+    const content = data?.choices?.[0]?.message?.content?.trim();
     if (!content) {
       throw new Error("The provider returned an empty response.");
     }
 
-    return { content, model: data.model || config.model };
+    const result = { content, model: data.model || config.model };
+
+    recordBrowserLLMCall({
+      id: generateTelemetryId(),
+      timestamp: startTime,
+      model: result.model,
+      tokensIn: 0,
+      tokensOut: 0,
+      cost: 0,
+      durationMs: Date.now() - startTime,
+    });
+
+    return result;
+  } catch (error: any) {
+    recordBrowserLLMCall({
+      id: generateTelemetryId(),
+      timestamp: startTime,
+      model: config.model,
+      tokensIn: 0,
+      tokensOut: 0,
+      cost: 0,
+      durationMs: Date.now() - startTime,
+      error: error?.message ?? String(error),
+    });
+    throw error;
   }
-
-  const body: any = {
-    model: config.model,
-    messages,
-    temperature: options.temperature ?? 0.7,
-    max_tokens: options.maxTokens ?? 400,
-    stream: false,
-  };
-
-  if (config.chatThinkingType) {
-    body.thinking = { type: config.chatThinkingType };
-  }
-
-  const response = await fetchWithTimeout(
-    buildEndpoint(config, "/chat/completions"),
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    },
-    timeoutMs
-  );
-
-  if (!response.ok) {
-    throw normalizeError(response.status, await response.text().catch(() => ""));
-  }
-
-  const data = await response.json();
-  const content = data?.choices?.[0]?.message?.content?.trim();
-  if (!content) {
-    throw new Error("The provider returned an empty response.");
-  }
-
-  return { content, model: data.model || config.model };
 }
+

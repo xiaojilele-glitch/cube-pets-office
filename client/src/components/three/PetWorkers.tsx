@@ -13,6 +13,7 @@ import { PET_MODELS } from '@/lib/assets';
 import type { AppLocale } from '@/lib/locale';
 import { useAppStore } from '@/lib/store';
 import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
+import { useTelemetryStore } from '@/lib/telemetry-store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
 type SceneAgentConfig = {
@@ -418,6 +419,11 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
   const isChatOpen = useAppStore(state => state.isChatOpen);
   const agentStatuses = useWorkflowStore(state => state.agentStatuses);
 
+  const telemetrySnapshot = useTelemetryStore(state => state.snapshot);
+  const hasSlowAlert = telemetrySnapshot?.alerts?.some(
+    a => a.type === 'agent_slow' && a.agentId === config.id && !a.resolved
+  ) ?? false;
+
   const agentStatus = agentStatuses[config.id] || 'idle';
   const accent = config.color;
   const isActive = hovered || selectedPet === config.id;
@@ -503,6 +509,14 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
           </span>
         </div>
       </Html>
+
+      {hasSlowAlert && (
+        <Html position={[0, 2.4, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
+          <div className="animate-pulse rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+            ⚠ SLOW
+          </div>
+        </Html>
+      )}
 
       <SpeechBubble
         text={getStatusBubble(agentStatus, useAppStore.getState().locale, config.idleText)}

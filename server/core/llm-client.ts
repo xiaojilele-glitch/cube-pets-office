@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
+import { nanoid } from "nanoid";
 
 import { getAIConfig } from "./ai-config.js";
+import { telemetryStore } from "./telemetry-store.js";
+import { estimateCost } from "../../shared/telemetry.js";
+import type { LLMCallRecord } from "../../shared/telemetry.js";
 
 dotenv.config();
 
@@ -594,20 +598,51 @@ async function callProvider(
   const maxTokens = options.maxTokens ?? 2000;
   const jsonMode = options.jsonMode ?? false;
 
-  if (provider.wireApi === "responses") {
-    return createResponse(provider, messages, {
+  const startTime = Date.now();
+  try {
+    let response: LLMResponse;
+    if (provider.wireApi === "responses") {
+      response = await createResponse(provider, messages, {
+        model,
+        temperature,
+        maxTokens,
+        jsonMode,
+      });
+    } else {
+      response = await createChatCompletion(provider, messages, {
+        model,
+        temperature,
+        maxTokens,
+        jsonMode,
+      });
+    }
+
+    const tokensIn = response.usage?.prompt_tokens ?? 0;
+    const tokensOut = response.usage?.completion_tokens ?? 0;
+    telemetryStore.recordLLMCall({
+      id: nanoid(),
+      timestamp: startTime,
       model,
-      temperature,
-      maxTokens,
-      jsonMode,
+      tokensIn,
+      tokensOut,
+      cost: estimateCost(model, tokensIn, tokensOut),
+      durationMs: Date.now() - startTime,
     });
+
+    return response;
+  } catch (error: any) {
+    telemetryStore.recordLLMCall({
+      id: nanoid(),
+      timestamp: startTime,
+      model,
+      tokensIn: 0,
+      tokensOut: 0,
+      cost: 0,
+      durationMs: Date.now() - startTime,
+      error: error?.message ?? String(error),
+    });
+    throw error;
   }
-  return createChatCompletion(provider, messages, {
-    model,
-    temperature,
-    maxTokens,
-    jsonMode,
-  });
 }
 
 export async function callLLM(

@@ -6,12 +6,14 @@ import { ChatPanel } from '@/components/ChatPanel';
 import { ConfigPanel } from '@/components/ConfigPanel';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { Scene3D } from '@/components/Scene3D';
+import { TelemetryDashboard } from '@/components/TelemetryDashboard';
 import { Toolbar } from '@/components/Toolbar';
 import { WorkflowPanel } from '@/components/WorkflowPanel';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useDemoMode } from '@/hooks/useDemoMode';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/lib/store';
+import { useTelemetryStore } from '@/lib/telemetry-store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
 export default function Home() {
@@ -19,6 +21,7 @@ export default function Home() {
   const hydrateAIConfig = useAppStore(state => state.hydrateAIConfig);
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const locale = useAppStore(state => state.locale);
+  const fetchTelemetry = useTelemetryStore(state => state.fetchInitial);
   const disconnectSocket = useWorkflowStore(state => state.disconnectSocket);
   const { isMobile } = useViewportTier();
   const { copy } = useI18n();
@@ -48,6 +51,12 @@ export default function Home() {
       disconnectSocket();
     }
   }, [disconnectSocket, runtimeMode]);
+
+  useEffect(() => {
+    if (isSceneReady && runtimeMode === 'advanced') {
+      fetchTelemetry();
+    }
+  }, [isSceneReady, runtimeMode, fetchTelemetry]);
 
   return (
     <div className="relative h-[100svh] w-screen overflow-hidden bg-[#CFE5FA]">
@@ -128,6 +137,7 @@ export default function Home() {
           <ConfigPanel />
           <ChatPanel />
           <WorkflowPanel />
+          <TelemetryDashboard />
         </>
       )}
     </div>

@@ -1,9 +1,11 @@
 import { ContactShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
+import { Activity } from 'lucide-react';
 import { Suspense } from 'react';
 import { ACESFilmicToneMapping } from 'three';
 
 import { useViewportTier } from '@/hooks/useViewportTier';
+import { useTelemetryStore } from '@/lib/telemetry-store';
 
 import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
@@ -11,6 +13,8 @@ import { PetWorkers } from './three/PetWorkers';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
+  const { toggleDashboard, snapshot } = useTelemetryStore();
+  const hasAlerts = (snapshot?.alerts?.filter(a => !a.resolved).length ?? 0) > 0;
 
   const camera = isMobile
     ? { position: [0, 8.4, 16.2] as [number, number, number], fov: 46, near: 0.1, far: 100 }
@@ -85,6 +89,18 @@ export function Scene3D() {
           />
         </Suspense>
       </Canvas>
+
+      {/* Telemetry dashboard toggle button */}
+      <button
+        onClick={toggleDashboard}
+        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-xl border border-white/60 bg-white/80 text-[#6B5A4A] shadow-md backdrop-blur-sm transition-colors hover:bg-white hover:text-[#D07A4F]"
+        aria-label="Toggle telemetry dashboard"
+      >
+        <Activity className="h-5 w-5" />
+        {hasAlerts && (
+          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
+        )}
+      </button>
     </div>
   );
 }

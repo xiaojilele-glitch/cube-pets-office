@@ -17,6 +17,7 @@ import { readAgentWorkspaceFile, writeAgentWorkspaceFile } from "./access-guard.
 import { callLLM, callLLMJson } from "./llm-client.js";
 import { messageBus } from "./message-bus.js";
 import { emitEvent } from "./socket.js";
+import { telemetryStore } from "./telemetry-store.js";
 
 export interface AgentConfig {
   id: string;
@@ -54,7 +55,41 @@ const sharedAgentDependencies: RuntimeAgentDependencies = {
 
 export class Agent extends RuntimeAgent {
   constructor(config: AgentConfig) {
-    super(config, sharedAgentDependencies);
+    // Create per-agent dependencies with timing instrumentation
+    const agentDeps: RuntimeAgentDependencies = {
+      ...sharedAgentDependencies,
+      llmProvider: {
+        call: async (messages, options) => {
+          const start = Date.now();
+          try {
+            const result = await callLLM(messages, options);
+            return result;
+          } finally {
+            telemetryStore.recordAgentTiming({
+              agentId: config.id,
+              agentName: config.name,
+              durationMs: Date.now() - start,
+              timestamp: start,
+            });
+          }
+        },
+        callJson: async (messages, options) => {
+          const start = Date.now();
+          try {
+            const result = await callLLMJson(messages, options);
+            return result;
+          } finally {
+            telemetryStore.recordAgentTiming({
+              agentId: config.id,
+              agentName: config.name,
+              durationMs: Date.now() - start,
+              timestamp: start,
+            });
+          }
+        },
+      },
+    };
+    super(config, agentDeps);
   }
 
   static fromDB(agentId: string): Agent | null {
