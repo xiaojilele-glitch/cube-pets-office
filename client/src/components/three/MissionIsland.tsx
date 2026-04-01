@@ -17,7 +17,7 @@ import {
 } from "../tasks/mission-island-helpers";
 
 /* ── Constants ── */
-const ISLAND_POSITION: [number, number, number] = [4.5, 0, -3.5];
+const ISLAND_POSITION: [number, number, number] = [0, 0, -2.5];
 const MINI_VIEW_OFFSET: [number, number, number] = [0, 2.8, 0];
 const DETAIL_OVERLAY_OFFSET: [number, number, number] = [0, 3.5, 0];
 

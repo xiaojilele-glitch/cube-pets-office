@@ -1,14 +1,10 @@
 import { ContactShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Activity, AlertTriangle, DollarSign, ShieldOff } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { ACESFilmicToneMapping } from 'three';
 
 import { useViewportTier } from '@/hooks/useViewportTier';
-import { useTelemetryStore } from '@/lib/telemetry-store';
-import { useCostStore } from '@/lib/cost-store';
 
-import { CostDashboard } from './CostDashboard';
 import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
@@ -16,20 +12,7 @@ import { PetWorkers } from './three/PetWorkers';
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
 
-  // Telemetry
-  const { toggleDashboard: toggleTelemetry, snapshot: telemetrySnapshot } = useTelemetryStore();
-  const hasTelemetryAlerts = (telemetrySnapshot?.alerts?.filter(a => !a.resolved).length ?? 0) > 0;
-
-  // Cost
-  const costSnapshot = useCostStore((s) => s.snapshot);
-  const costDashboardOpen = useCostStore((s) => s.dashboardOpen);
-  const toggleCostDashboard = useCostStore((s) => s.toggleDashboard);
-  const hasCostAlerts = (costSnapshot?.alerts?.filter((a) => !a.resolved).length ?? 0) > 0;
-  const isDowngraded = costSnapshot?.downgradeLevel !== 'none' && costSnapshot?.downgradeLevel != null;
-  const budgetRemaining = costSnapshot ? Math.max(0, 100 - costSnapshot.budgetUsedPercent * 100) : 100;
-  const totalCost = costSnapshot?.totalCost ?? 0;
-
-  // Recovery
+  // Recovery overlay state
   const [isRecovering, setIsRecovering] = useState(false);
   useEffect(() => {
     (globalThis as any).__sceneSetRecovering = (value: boolean) => {
@@ -48,32 +31,6 @@ export function Scene3D() {
 
   return (
     <div className="absolute inset-0 z-0 h-full w-full touch-pan-y">
-      {/* Cost overlay */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={toggleCostDashboard}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleCostDashboard(); }}
-        className={`absolute right-3 top-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-lg bg-white/80 px-3 py-1.5 text-xs shadow-md backdrop-blur transition-colors select-none ${
-          hasCostAlerts ? 'border-2 border-red-500' : 'border border-gray-200'
-        }`}
-      >
-        {hasCostAlerts && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
-        {isDowngraded && <ShieldOff className="h-3.5 w-3.5 text-amber-500" />}
-        <DollarSign className="h-3.5 w-3.5 text-gray-600" />
-        <span className="font-medium text-gray-800">${totalCost.toFixed(4)}</span>
-        <span className="text-gray-500">|</span>
-        <span className={budgetRemaining < 20 ? 'font-semibold text-red-600' : 'text-gray-600'}>
-          {budgetRemaining.toFixed(0)}%
-        </span>
-      </div>
-
-      {costDashboardOpen && (
-        <div className="absolute right-3 top-14 z-10 max-h-[80vh] w-96 overflow-y-auto rounded-xl bg-white/95 shadow-xl backdrop-blur">
-          <CostDashboard />
-        </div>
-      )}
-
       <Canvas
         shadows
         camera={camera}
@@ -139,18 +96,6 @@ export function Scene3D() {
           />
         </Suspense>
       </Canvas>
-
-      {/* Telemetry dashboard toggle button */}
-      <button
-        onClick={toggleTelemetry}
-        className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-xl border border-white/60 bg-white/80 text-[#6B5A4A] shadow-md backdrop-blur-sm transition-colors hover:bg-white hover:text-[#D07A4F]"
-        aria-label="Toggle telemetry dashboard"
-      >
-        <Activity className="h-5 w-5" />
-        {hasTelemetryAlerts && (
-          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-red-500 ring-2 ring-white" />
-        )}
-      </button>
 
       {/* Recovery overlay */}
       {isRecovering && (
