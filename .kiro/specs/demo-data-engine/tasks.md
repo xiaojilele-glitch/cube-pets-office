@@ -6,15 +6,15 @@
 
 ## 任务
 
-- [ ] 1. 创建 DemoDataBundle 类型定义和目录结构
-  - [ ] 1.1 创建 `client/src/runtime/demo-data/schema.ts`，定义 DemoDataBundle、DemoMemoryEntry、DemoEvolutionLog、DemoTimedEvent 类型
+- [x] 1. 创建 DemoDataBundle 类型定义和目录结构
+  - [x] 1.1 创建 `client/src/runtime/demo-data/schema.ts`，定义 DemoDataBundle、DemoMemoryEntry、DemoEvolutionLog、DemoTimedEvent 类型
     - 导入 shared/ 下的 AgentRecord、WorkflowRecord、MessageRecord、TaskRecord、AgentEvent、WorkflowOrganizationSnapshot
     - 定义 MemoryEntryKind 类型（short_term | medium_term | long_term）
     - 定义 DemoDataBundle 接口，包含 version、scenarioName、scenarioDescription、organization、workflow、agents、messages、tasks、memoryEntries、evolutionLogs、events 字段
     - _Requirements: 2.1_
 
-- [ ] 2. 实现序列化与反序列化
-  - [ ] 2.1 创建 `client/src/runtime/demo-data/serializer.ts`，实现 serializeDemoData 和 deserializeDemoData 函数
+- [x] 2. 实现序列化与反序列化
+  - [x] 2.1 创建 `client/src/runtime/demo-data/serializer.ts`，实现 serializeDemoData 和 deserializeDemoData 函数
     - serializeDemoData：使用 JSON.stringify(bundle, null, 2) 输出格式化 JSON
     - deserializeDemoData：JSON.parse 后调用 validateDemoDataBundle 进行结构验证
     - validateDemoDataBundle：检查 version、organization、workflow、agents、messages、tasks、memoryEntries、evolutionLogs、events 字段的存在性和类型
@@ -32,57 +32,57 @@
     - 测试空字符串、null、部分字段缺失、version 不匹配等边界情况
     - **Validates: Requirements 2.6**
 
-- [ ] 3. Checkpoint - 确保序列化模块测试通过
+- [x] 3. Checkpoint - 确保序列化模块测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
-- [ ] 4. 构建预录演示数据
-  - [ ] 4.1 创建 `client/src/runtime/demo-data/organization.ts`，构建演示组织快照
+- [x] 4. 构建预录演示数据
+  - [x] 4.1 创建 `client/src/runtime/demo-data/organization.ts`，构建演示组织快照
     - 基于 seed.ts 中的 agent 定义，选取 ceo、pixel、nexus、nova、blaze、flux、tensor 共 7 个角色
     - 构建符合 WorkflowOrganizationSnapshot 类型的组织快照
     - 场景：设计手游营销推广方案
     - _Requirements: 1.2_
 
-  - [ ] 4.2 创建 `client/src/runtime/demo-data/agents.ts`，导出演示智能体记录数组
+  - [x] 4.2 创建 `client/src/runtime/demo-data/agents.ts`，导出演示智能体记录数组
     - 基于 seed.ts 中选取的 7 个 agent 构建 AgentRecord 数组
     - _Requirements: 1.9_
 
-  - [ ] 4.3 创建 `client/src/runtime/demo-data/workflow.ts`，导出演示工作流记录
+  - [x] 4.3 创建 `client/src/runtime/demo-data/workflow.ts`，导出演示工作流记录
     - 构建一条 WorkflowRecord，status 为 completed，覆盖全部十阶段
     - _Requirements: 1.1_
 
-  - [ ] 4.4 创建 `client/src/runtime/demo-data/messages.ts`，导出演示消息记录数组
+  - [x] 4.4 创建 `client/src/runtime/demo-data/messages.ts`，导出演示消息记录数组
     - 构建至少 20 条 MessageRecord
     - 覆盖 CEO→Manager、Manager→Worker、Worker→Manager 消息流转
     - 消息内容围绕"手游营销推广方案"场景
     - _Requirements: 1.4_
 
-  - [ ] 4.5 创建 `client/src/runtime/demo-data/tasks.ts`，导出演示任务记录数组
+  - [x] 4.5 创建 `client/src/runtime/demo-data/tasks.ts`，导出演示任务记录数组
     - 构建至少 4 条 TaskRecord
     - 每条包含 deliverable、四维评分（score_accuracy、score_completeness、score_actionability、score_format）和 manager_feedback
     - _Requirements: 1.5_
 
-  - [ ] 4.6 创建 `client/src/runtime/demo-data/memory.ts`，导出演示记忆条目数组
+  - [x] 4.6 创建 `client/src/runtime/demo-data/memory.ts`，导出演示记忆条目数组
     - 构建覆盖 short_term、medium_term、long_term 三种类型的 DemoMemoryEntry 数组
     - 短期记忆关联 execution 阶段，中期记忆关联 summary 阶段，长期记忆关联 evolution 阶段
     - _Requirements: 1.6_
 
-  - [ ] 4.7 创建 `client/src/runtime/demo-data/evolution.ts`，导出演示进化日志数组
+  - [x] 4.7 创建 `client/src/runtime/demo-data/evolution.ts`，导出演示进化日志数组
     - 构建 DemoEvolutionLog 数组，包含 old_score → new_score 变化和 SOUL.md 补丁内容
     - _Requirements: 1.7_
 
-  - [ ] 4.8 创建 `client/src/runtime/demo-data/events.ts`，导出演示事件序列
+  - [x] 4.8 创建 `client/src/runtime/demo-data/events.ts`，导出演示事件序列
     - 构建按 timestampOffset 升序排列的 DemoTimedEvent 数组
     - 覆盖全部十阶段，包含 stage_change、agent_active、message_sent、score_assigned、task_update、workflow_complete 事件类型
     - 总时长 30 秒（0-30000ms）
     - _Requirements: 1.1, 1.3_
 
-- [ ] 5. 组装数据包并创建统一导出
-  - [ ] 5.1 创建 `client/src/runtime/demo-data/bundle.ts`，组装所有数据模块为完整的 DEMO_BUNDLE 实例
+- [x] 5. 组装数据包并创建统一导出
+  - [x] 5.1 创建 `client/src/runtime/demo-data/bundle.ts`，组装所有数据模块为完整的 DEMO_BUNDLE 实例
     - 导入 organization、agents、workflow、messages、tasks、memory、evolution、events 模块
     - 导出 DEMO_BUNDLE 常量，类型为 DemoDataBundle
     - _Requirements: 1.1, 1.8_
 
-  - [ ] 5.2 创建 `client/src/runtime/demo-data/index.ts`，统一导出类型和函数
+  - [x] 5.2 创建 `client/src/runtime/demo-data/index.ts`，统一导出类型和函数
     - 导出 DemoDataBundle 等类型
     - 导出 serializeDemoData、deserializeDemoData 函数
     - 导出 DEMO_BUNDLE 常量
@@ -111,7 +111,7 @@
     - **Property 4: 反序列化无效输入产生描述性错误**
     - **Validates: Requirements 2.6**
 
-- [ ] 7. 最终 Checkpoint - 确保所有测试通过
+- [x] 7. 最终 Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
 ## 备注
