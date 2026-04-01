@@ -6,8 +6,8 @@
 
 ## Tasks
 
-- [ ] 1. 共享类型定义与定价表
-  - [ ] 1.1 创建 `shared/cost.ts`，定义所有成本相关 TypeScript 接口（CostRecord、CostSnapshot、Budget、DowngradePolicy、CostAlert、AgentCostSummary、MissionCostSummary、ModelPricing）和常量（PRICING_TABLE、DEFAULT_PRICING、DEFAULT_BUDGET、DEFAULT_DOWNGRADE_POLICY）
+- [x] 1. 共享类型定义与定价表
+  - [x] 1.1 创建 `shared/cost.ts`，定义所有成本相关 TypeScript 接口（CostRecord、CostSnapshot、Budget、DowngradePolicy、CostAlert、AgentCostSummary、MissionCostSummary、ModelPricing）和常量（PRICING_TABLE、DEFAULT_PRICING、DEFAULT_BUDGET、DEFAULT_DOWNGRADE_POLICY）
     - 实现 `estimateCost(model, tokensIn, tokensOut)` 纯函数
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 13.1_
   - [ ]* 1.2 编写 estimateCost 属性测试
@@ -17,8 +17,8 @@
     - **Property 12: 成本类型 JSON 往返一致性**
     - **Validates: Requirements 13.3**
 
-- [ ] 2. 服务端成本追踪器核心
-  - [ ] 2.1 创建 `server/core/cost-tracker.ts`，实现 CostTracker 类
+- [x] 2. 服务端成本追踪器核心
+  - [x] 2.1 创建 `server/core/cost-tracker.ts`，实现 CostTracker 类
     - 实现 `recordCall(record)` 同步内存写入
     - 实现 `getSnapshot()` 实时快照计算
     - 实现 `getAgentCosts()` 按 Agent 聚合
@@ -38,8 +38,8 @@
     - **Property 4: 历史缓冲区有界性**
     - **Validates: Requirements 3.4, 3.5**
 
-- [ ] 3. 预算与预警系统
-  - [ ] 3.1 在 CostTracker 中实现预算管理和预警逻辑
+- [x] 3. 预算与预警系统
+  - [x] 3.1 在 CostTracker 中实现预算管理和预警逻辑
     - 实现 `getBudget()` / `setBudget(budget)` 预算配置
     - 实现 `checkAlerts()` 预警检查（费用预警、Token 预警、费用超限、Token 超限）
     - 实现预算百分比计算（budgetUsedPercent、tokenUsedPercent）
@@ -56,8 +56,8 @@
     - **Property 8: 预算更新触发预警重评估**
     - **Validates: Requirements 6.4**
 
-- [ ] 4. 自动降级策略
-  - [ ] 4.1 在 CostTracker 中实现降级逻辑
+- [x] 4. 自动降级策略
+  - [x] 4.1 在 CostTracker 中实现降级逻辑
     - 实现 `getEffectiveModel(originalModel)` 根据降级状态返回实际模型
     - 实现 `isAgentPaused(agentId)` 检查 Agent 暂停状态
     - 实现 `applyDowngrade()` 在预警检查后自动触发降级
@@ -68,11 +68,11 @@
     - **Property 7: 降级模型切换与恢复**
     - **Validates: Requirements 5.2, 5.3, 5.4**
 
-- [ ] 5. Checkpoint - 核心逻辑验证
+- [x] 5. Checkpoint - 核心逻辑验证
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. 历史持久化
-  - [ ] 6.1 在 CostTracker 中实现 JSON 文件持久化
+- [x] 6. 历史持久化
+  - [x] 6.1 在 CostTracker 中实现 JSON 文件持久化
     - 实现 `persistHistory()` 写入 `data/cost-history.json`（包含 budget、downgradePolicy、missions）
     - 实现 `loadHistory()` 启动时加载历史数据
     - 文件损坏或不存在时以空历史启动并记录 console.warn
@@ -81,16 +81,16 @@
     - **Property 10: 历史持久化往返一致性**
     - **Validates: Requirements 11.1, 11.2**
 
-- [ ] 7. LLM 调用埋点与降级集成
-  - [ ] 7.1 修改 `server/core/llm-client.ts`，在 callLLM 中集成成本追踪
+- [x] 7. LLM 调用埋点与降级集成
+  - [x] 7.1 修改 `server/core/llm-client.ts`，在 callLLM 中集成成本追踪
     - 在调用前检查 Agent 暂停状态（通过 options 传入 agentId）
     - 应用降级模型（通过 costTracker.getEffectiveModel）
     - 调用完成后记录 CostRecord（成功和失败都记录）
     - 扩展 LLMOptions 接口添加 agentId、missionId、sessionId 可选字段
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 5.2, 5.3_
 
-- [ ] 8. 成本 REST API
-  - [ ] 8.1 创建 `server/routes/cost.ts`，实现成本路由
+- [x] 8. 成本 REST API
+  - [x] 8.1 创建 `server/routes/cost.ts`，实现成本路由
     - GET /api/cost/live → 返回 CostSnapshot
     - GET /api/cost/history → 返回 MissionCostSummary[]
     - GET /api/cost/budget → 返回 Budget
@@ -98,14 +98,14 @@
     - POST /api/cost/downgrade/release → 手动解除降级
     - 无活跃 Mission 时返回零值快照
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-  - [ ] 8.2 在 `server/index.ts` 中注册成本路由
+  - [x] 8.2 在 `server/index.ts` 中注册成本路由
     - _Requirements: 6.1_
   - [ ]* 8.3 编写成本 REST API 单元测试
     - 测试各端点响应格式、零值快照、预算更新
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 9. Socket.IO 实时推送
-  - [ ] 9.1 扩展 `server/core/socket.ts`，添加成本广播函数
+- [x] 9. Socket.IO 实时推送
+  - [x] 9.1 扩展 `server/core/socket.ts`，添加成本广播函数
     - 实现 `emitCostUpdate(snapshot)` 带 500ms 节流
     - 实现 `emitCostAlert(alert)` 立即广播
     - 新客户端连接时发送当前快照
@@ -115,11 +115,11 @@
     - **Property 9: Socket 广播节流上界**
     - **Validates: Requirements 7.2**
 
-- [ ] 10. Checkpoint - 服务端完整验证
+- [x] 10. Checkpoint - 服务端完整验证
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. 前端成本 Store
-  - [ ] 11.1 创建 `client/src/lib/cost-store.ts`，实现 Zustand store
+- [x] 11. 前端成本 Store
+  - [x] 11.1 创建 `client/src/lib/cost-store.ts`，实现 Zustand store
     - 管理 CostSnapshot、MissionCostSummary[] 历史、dashboardOpen 状态
     - 实现 initSocket 监听 cost.update 和 cost.alert 事件
     - 实现 fetchInitial 从 REST API 加载初始数据
@@ -127,8 +127,8 @@
     - 实现 releaseDegradation 调用 POST /api/cost/downgrade/release
     - _Requirements: 8.3, 13.2_
 
-- [ ] 12. 成本看板组件
-  - [ ] 12.1 创建 `client/src/components/CostDashboard.tsx`
+- [x] 12. 成本看板组件
+  - [x] 12.1 创建 `client/src/components/CostDashboard.tsx`
     - Token 消耗卡片（input/output 分开，Progress 进度条）
     - 实时费用卡片（带预算进度条）
     - 剩余预算百分比卡片
@@ -140,24 +140,24 @@
     - 展开/收起两种模式
     - _Requirements: 8.1, 8.2, 8.4, 8.5, 8.6_
 
-- [ ] 13. 3D 场景成本浮窗
-  - [ ] 13.1 修改 `client/src/components/Scene3D.tsx`，添加成本浮窗
+- [x] 13. 3D 场景成本浮窗
+  - [x] 13.1 修改 `client/src/components/Scene3D.tsx`，添加成本浮窗
     - 右上角显示当前费用和剩余预算百分比
     - 预警时边框变红 + 预警图标
     - 降级时显示降级状态标识
     - 点击展开/收起 CostDashboard
     - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 14. /tasks 页面成本侧边栏
-  - [ ] 14.1 修改 `client/src/components/tasks/TaskDetailView.tsx`，添加成本标签页
+- [x] 14. /tasks 页面成本侧边栏
+  - [x] 14.1 修改 `client/src/components/tasks/TaskDetailView.tsx`，添加成本标签页
     - Mission 成本明细展示
     - Token 消耗时间线（Recharts AreaChart）
     - 费用累计曲线（Recharts LineChart）
     - 实时更新（通过 Socket 事件）
     - _Requirements: 10.1, 10.2, 10.3_
 
-- [ ] 15. 纯前端模式支持
-  - [ ] 15.1 创建 `client/src/lib/browser-cost-store.ts`
+- [x] 15. 纯前端模式支持
+  - [x] 15.1 创建 `client/src/lib/browser-cost-store.ts`
     - 在 browser-llm.ts 调用前后采集成本数据
     - 存入 IndexedDB 的 cost object store
     - 页面加载时从 IndexedDB 恢复
@@ -167,7 +167,7 @@
     - **Property 11: IndexedDB 往返一致性**
     - **Validates: Requirements 12.2, 12.3**
 
-- [ ] 16. Final checkpoint - 全部测试通过
+- [x] 16. Final checkpoint - 全部测试通过
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
