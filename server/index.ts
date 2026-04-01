@@ -411,6 +411,10 @@ async function startServer() {
   const workflowRoutes = (await import("./routes/workflows.js")).default;
   const configRoutes = (await import("./routes/config.js")).default;
   const exportRoutes = (await import("./routes/export.js")).default;
+  const costRoutes = (await import("./routes/cost.js")).default;
+  const { costTracker } = await import("./core/cost-tracker.js");
+
+  costTracker.loadHistory();
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
@@ -418,6 +422,7 @@ async function startServer() {
   app.use("/api/workflows", workflowRoutes);
   app.use("/api/config", configRoutes);
   app.use("/api/export", exportRoutes);
+  app.use("/api/cost", costRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
 

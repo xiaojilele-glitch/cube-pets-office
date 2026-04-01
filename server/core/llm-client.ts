@@ -1,6 +1,10 @@
+import { randomUUID } from "node:crypto";
+
 import dotenv from "dotenv";
 
+import { estimateCost, PRICING_TABLE, DEFAULT_PRICING } from "../../shared/cost.js";
 import { getAIConfig } from "./ai-config.js";
+import { costTracker } from "./cost-tracker.js";
 
 dotenv.config();
 
@@ -14,6 +18,12 @@ interface LLMOptions {
   temperature?: number;
   maxTokens?: number;
   jsonMode?: boolean;
+  /** 调用关联的 Agent ID（用于成本追踪和暂停检查） */
+  agentId?: string;
+  /** 调用关联的 Mission ID（用于成本追踪） */
+  missionId?: string;
+  /** 调用关联的 Session ID（用于成本追踪） */
+  sessionId?: string;
 }
 
 interface LLMResponse {
@@ -614,6 +624,17 @@ export async function callLLM(
   messages: LLMMessage[],
   options: LLMOptions = {}
 ): Promise<LLMResponse> {
+  // 1. 检查 Agent 是否被暂停（Req 5.3）
+  if (options.agentId && costTracker.isAgentPaused(options.agentId)) {
+    throw new Error(`Agent ${options.agentId} is paused due to budget exceeded.`);
+  }
+
+  // 2. 应用降级模型（Req 5.2）
+  const effectiveModel = costTracker.getEffectiveModel(options.model || "");
+  const effectiveOptions: LLMOptions = { ...options, model: effectiveModel || options.model };
+
+  const startTime = Date.now();
+
   await acquireSlot();
 
   try {
@@ -657,9 +678,31 @@ export async function callLLM(
 
       for (let attempt = 0; attempt < attempts; attempt++) {
         try {
-          const response = await callProvider(provider, messages, options);
+          const response = await callProvider(provider, messages, effectiveOptions);
           clearProviderCooldown(provider);
           clearGlobalProviderCooldown();
+
+          // 3. 记录成功调用的成本（Req 1.1, 1.3, 1.4）
+          const actualModel = effectiveOptions.model || provider.defaultModel;
+          const tokensIn = response.usage?.prompt_tokens ?? 0;
+          const tokensOut = response.usage?.completion_tokens ?? 0;
+          const pricing = PRICING_TABLE[actualModel] ?? DEFAULT_PRICING;
+
+          costTracker.recordCall({
+            id: randomUUID(),
+            timestamp: startTime,
+            model: actualModel,
+            tokensIn,
+            tokensOut,
+            unitPriceIn: pricing.input,
+            unitPriceOut: pricing.output,
+            actualCost: estimateCost(actualModel, tokensIn, tokensOut),
+            durationMs: Date.now() - startTime,
+            agentId: options.agentId,
+            missionId: options.missionId,
+            sessionId: options.sessionId,
+          });
+
           return response;
         } catch (error) {
           lastError = normalizeNetworkError(provider, error);
@@ -687,6 +730,26 @@ export async function callLLM(
       }
 
       if (lastError && !shouldTryNextProvider(lastError)) {
+        // 4. 记录失败调用的成本（Req 1.2, 1.3）
+        const failModel = effectiveOptions.model || provider.defaultModel;
+        const failPricing = PRICING_TABLE[failModel] ?? DEFAULT_PRICING;
+
+        costTracker.recordCall({
+          id: randomUUID(),
+          timestamp: startTime,
+          model: failModel,
+          tokensIn: 0,
+          tokensOut: 0,
+          unitPriceIn: failPricing.input,
+          unitPriceOut: failPricing.output,
+          actualCost: 0,
+          durationMs: Date.now() - startTime,
+          agentId: options.agentId,
+          missionId: options.missionId,
+          sessionId: options.sessionId,
+          error: lastError.message,
+        });
+
         throw lastError;
       }
     }
@@ -699,11 +762,34 @@ export async function callLLM(
       throw unavailableProvidersError(remainingMs);
     }
 
-    throw lastError || new Error("LLM call failed");
+    const finalError = lastError || new Error("LLM call failed");
+
+    // 5. 记录最终失败的成本（Req 1.2, 1.3）
+    const fallbackModel = effectiveOptions.model || "";
+    const fallbackPricing = PRICING_TABLE[fallbackModel] ?? DEFAULT_PRICING;
+
+    costTracker.recordCall({
+      id: randomUUID(),
+      timestamp: startTime,
+      model: fallbackModel,
+      tokensIn: 0,
+      tokensOut: 0,
+      unitPriceIn: fallbackPricing.input,
+      unitPriceOut: fallbackPricing.output,
+      actualCost: 0,
+      durationMs: Date.now() - startTime,
+      agentId: options.agentId,
+      missionId: options.missionId,
+      sessionId: options.sessionId,
+      error: finalError.message,
+    });
+
+    throw finalError;
   } finally {
     releaseSlot();
   }
 }
+
 
 export async function callLLMJson<T = any>(
   messages: LLMMessage[],

@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Bot,
+  Coins,
   Download,
   FileText,
   FolderKanban,
@@ -11,6 +12,17 @@ import {
   TimerReset,
   Workflow,
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 import { useViewportTier } from "@/hooks/useViewportTier";
 import { Button } from "@/components/ui/button";
@@ -44,6 +56,8 @@ import { Textarea } from "@/components/ui/textarea";
 import type { MissionTaskDetail, TaskArtifact } from "@/lib/tasks-store";
 import { useWorkflowStore } from "@/lib/workflow-store";
 import { cn } from "@/lib/utils";
+
+import { useCostStore } from "@/lib/cost-store";
 
 import { TaskPlanetInterior } from "./TaskPlanetInterior";
 import {
@@ -222,6 +236,226 @@ function DetailTabViewport({
       <ScrollArea className="h-full w-full">
         <div className="space-y-4 p-1 pr-3">{children}</div>
       </ScrollArea>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Cost tab — Mission cost details, token timeline, cost curve
+// @see Requirements 10.1, 10.2, 10.3
+// ---------------------------------------------------------------------------
+
+const TOKEN_AREA_COLORS = { in: "#6366f1", out: "#10b981" } as const;
+const COST_LINE_COLOR = "#d07a4f";
+
+function formatCostValue(v: number): string {
+  return `$${v.toFixed(4)}`;
+}
+
+function formatTokenCount(v: number): string {
+  if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
+  return String(v);
+}
+
+function MissionCostTab() {
+  const snapshot = useCostStore((s) => s.snapshot);
+  const history = useCostStore((s) => s.history);
+
+  // Derive per-agent token breakdown for AreaChart
+  const agentTokenData = useMemo(() => {
+    if (!snapshot?.agentCosts.length) return [];
+    return snapshot.agentCosts.map((a) => ({
+      name: a.agentName || a.agentId,
+      tokensIn: a.tokensIn,
+      tokensOut: a.tokensOut,
+      cost: a.totalCost,
+    }));
+  }, [snapshot?.agentCosts]);
+
+  // Derive history cost curve for LineChart
+  const historyCurveData = useMemo(() => {
+    if (!history.length) return [];
+    return history.map((m) => ({
+      name: m.title.length > 12 ? `${m.title.slice(0, 12)}…` : m.title,
+      cost: m.totalCost,
+      tokens: m.totalTokensIn + m.totalTokensOut,
+    }));
+  }, [history]);
+
+  if (!snapshot) {
+    return (
+      <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+        <CardContent className="py-10 text-center text-sm text-stone-500">
+          No cost data available. Cost metrics will appear once LLM calls are
+          recorded.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const budgetPct = Math.min(Math.round(snapshot.budgetUsedPercent * 100), 100);
+  const tokenPct = Math.min(Math.round(snapshot.tokenUsedPercent * 100), 100);
+
+  return (
+    <div className="space-y-4">
+      {/* Summary cards */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Total Cost"
+          value={formatCostValue(snapshot.totalCost)}
+          hint={`Budget ${budgetPct}% used`}
+        />
+        <MetricCard
+          label="Tokens In"
+          value={formatTokenCount(snapshot.totalTokensIn)}
+          hint={`Token budget ${tokenPct}% used`}
+        />
+        <MetricCard
+          label="Tokens Out"
+          value={formatTokenCount(snapshot.totalTokensOut)}
+          hint={`${snapshot.totalCalls} LLM calls`}
+        />
+        <MetricCard
+          label="Budget Remaining"
+          value={`${Math.max(100 - budgetPct, 0)}%`}
+          hint={`$${(snapshot.budget.maxCost - snapshot.totalCost).toFixed(4)} left`}
+        />
+      </div>
+
+      {/* Budget progress */}
+      <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-stone-900">
+            <Coins className="size-4 text-amber-600" />
+            Budget Usage
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div>
+            <div className="flex items-center justify-between text-xs text-stone-500">
+              <span>Cost</span>
+              <span>{budgetPct}%</span>
+            </div>
+            <Progress className="mt-1 h-2 bg-stone-200" value={budgetPct} />
+          </div>
+          <div>
+            <div className="flex items-center justify-between text-xs text-stone-500">
+              <span>Tokens</span>
+              <span>{tokenPct}%</span>
+            </div>
+            <Progress className="mt-1 h-2 bg-stone-200" value={tokenPct} />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Token consumption timeline — AreaChart by agent */}
+      {agentTokenData.length > 0 && (
+        <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-stone-900">
+              <Coins className="size-4 text-indigo-600" />
+              Token Consumption by Agent
+            </CardTitle>
+            <CardDescription>
+              Input and output token breakdown per agent.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={240}>
+              <AreaChart data={agentTokenData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <YAxis tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid #e7e5e4",
+                    fontSize: 12,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="tokensIn"
+                  name="Tokens In"
+                  stackId="1"
+                  stroke={TOKEN_AREA_COLORS.in}
+                  fill={TOKEN_AREA_COLORS.in}
+                  fillOpacity={0.35}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="tokensOut"
+                  name="Tokens Out"
+                  stackId="1"
+                  stroke={TOKEN_AREA_COLORS.out}
+                  fill={TOKEN_AREA_COLORS.out}
+                  fillOpacity={0.35}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Cost accumulation curve — LineChart from history */}
+      {historyCurveData.length > 0 && (
+        <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-stone-900">
+              <Coins className="size-4 text-orange-600" />
+              Cost Accumulation Curve
+            </CardTitle>
+            <CardDescription>
+              Historical mission cost trend (last {historyCurveData.length}{" "}
+              missions).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={historyCurveData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <YAxis tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: 12,
+                    border: "1px solid #e7e5e4",
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number) => [
+                    formatCostValue(value),
+                    "Cost",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cost"
+                  name="Cost ($)"
+                  stroke={COST_LINE_COLOR}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: COST_LINE_COLOR }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Downgrade status */}
+      {snapshot.downgradeLevel !== "none" && (
+        <Card className="rounded-[28px] border-amber-200/80 bg-amber-50/70 shadow-[0_24px_60px_rgba(175,140,69,0.08)]">
+          <CardContent className="flex items-center gap-3 py-4">
+            <AlertTriangle className="size-5 text-amber-600" />
+            <span className="text-sm font-medium text-amber-900">
+              Degradation active:{" "}
+              <span className="font-semibold uppercase">
+                {snapshot.downgradeLevel}
+              </span>
+            </span>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -901,7 +1135,7 @@ export function TaskDetailView({
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <div className="shrink-0 rounded-[24px] border border-stone-200/80 bg-white/78 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]">
-          <TabsList className="grid h-auto w-full grid-cols-3 rounded-[18px] bg-stone-100/80 p-1">
+          <TabsList className="grid h-auto w-full grid-cols-4 rounded-[18px] bg-stone-100/80 p-1">
             <TabsTrigger className="rounded-[14px]" value="overview">
               Overview
             </TabsTrigger>
@@ -910,6 +1144,10 @@ export function TaskDetailView({
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="artifacts">
               Artifacts
+            </TabsTrigger>
+            <TabsTrigger className="rounded-[14px]" value="cost">
+              <Coins className="mr-1.5 size-3.5" />
+              Cost
             </TabsTrigger>
           </TabsList>
         </div>
@@ -951,6 +1189,15 @@ export function TaskDetailView({
               {artifactsPanel}
               {failurePanel}
             </div>
+          </DetailTabViewport>
+        </TabsContent>
+
+        <TabsContent
+          value="cost"
+          className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+        >
+          <DetailTabViewport isDesktop={isDesktop}>
+            <MissionCostTab />
           </DetailTabViewport>
         </TabsContent>
       </Tabs>

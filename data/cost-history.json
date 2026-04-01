@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "budget": {
+    "maxCost": 0.01,
+    "maxTokens": 100,
+    "warningThreshold": 0.5
+  },
+  "downgradePolicy": {
+    "enabled": true,
+    "lowCostModel": "glm-4.6",
+    "criticalAgentIds": []
+  },
+  "missions": [
+    {
+      "missionId": "m-1",
+      "title": "Done",
+      "completedAt": 1775048583009,
+      "totalTokensIn": 80,
+      "totalTokensOut": 80,
+      "totalCost": 0.02,
+      "totalCalls": 1,
+      "topAgents": [
+        {
+          "agentId": "unknown",
+          "agentName": "unknown",
+          "tokensIn": 80,
+          "tokensOut": 80,
+          "totalCost": 0.02,
+          "callCount": 1
+        }
+      ]
+    }
+  ]
+}
