@@ -1,0 +1,346 @@
+# 实现计划：协作回放系统 (Collaboration Replay)
+
+## 概述
+
+基于设计文档，将协作回放系统的实现分为 8 个主要阶段：共享类型定义 → 事件采集层 → 存储层 → 回放引擎 → 分析功能 → 3D 可视化 → 前端 UI → 审计与导出。每个阶段包含核心实现和可选的属性测试/单元测试子任务。
+
+## Tasks
+
+- [ ] 1. 定义共享类型和契约
+  - [ ] 1.1 创建 `shared/replay/contracts.ts`，定义所有事件类型枚举（ReplayEventType、MessageType、MessageStatus、ExecutionStatus、ResourceType、AccessType）、事件接口（ExecutionEvent、CommunicationEventData、DecisionEventData、CodeExecutionEventData、ResourceAccessEventData）、时间轴接口（ExecutionTimeline、EventQuery）、快照接口（ReplaySnapshot）、分析接口（LineageGraph、CostSummary、PerformanceMetrics、AuditEntry）
+    - 所有枚举使用 `as const` 数组 + 类型推导模式，与现有 `shared/mission/contracts.ts` 风格一致
+    - _Requirements: 1.1, 1.2, 2.1, 2.2, 3.1, 4.1, 5.1, 5.2, 5.3, 6.1_
+  - [ ] 1.2 创建 `shared/replay/store-interface.ts`，定义 `ReplayStoreInterface` 抽象接口（appendEvents、queryEvents、getTimeline、exportEvents、verifyIntegrity、compact、cleanup）
+    - _Requirements: 6.2, 6.3, 6.4, 6.5, 6.6, 19.1, 19.2, 19.3_
+  - [ ] 1.3 创建 `shared/replay/index.ts` 模块导出
+    - _Requirements: 1.1_
+  - [ ]* 1.4 编写事件结构完整性属性测试
+    - 在 `shared/replay/__tests__/contracts.property.test.ts` 中使用 fast-check 生成随机 ExecutionEvent，验证各事件类型的必填字段完整性
+    - **Property 1: 事件结构完整性**
+    - **Validates: Requirements 1.1, 2.1, 3.1, 4.1, 5.1**
+  - [ ]* 1.5 编写决策置信度范围属性测试
+    - **Property 7: 决策置信度范围不变量**
+    - **Validates: Requirements 3.5**
+
+- [ ] 2. 实现事件采集层（服务端）
+  - [ ] 2.1 创建 `server/replay/event-collector.ts`，实现 EventCollector 类
+    - 内存缓冲区（默认 1000 条）、定时刷新（默认 500ms）、异步 emit()、flush()、retryFailed()
+    - emit() 同步入队到 buffer，不 await 存储操作
+    - 失败事件进入 failedQueue，指数退避重试
+    - _Requirements: 1.4, 1.5, 1.6_
+  - [ ]* 2.2 编写事件采集非阻塞属性测试
+    - **Property 2: 事件采集非阻塞**
+    - **Validates: Requirements 1.4**
+  - [ ]* 2.3 编写采集失败缓冲属性测试
+    - **Property 3: 采集失败缓冲与重试**
+    - **Validates: Requirements 1.6**
+  - [ ] 2.4 创建 `server/replay/interceptors.ts`，实现三个拦截器
+    - `installMissionInterceptor`：挂载到 MissionOrchestrator 的 create/stageTransition/complete/fail 生命周期
+    - `installMessageBusInterceptor`：包装 MessageBus.send()，采集 MESSAGE_SENT/MESSAGE_RECEIVED 事件
+    - `installExecutorInterceptor`：Express 中间件，监听 executor 回调采集 CODE_EXECUTED/RESOURCE_ACCESSED 事件
+    - _Requirements: 1.3, 2.1, 2.3, 2.6, 3.2, 3.3, 4.2, 4.3, 5.1_
+  - [ ]* 2.5 编写拦截器单元测试
+    - 模拟 MissionOrchestrator 和 MessageBus，验证事件采集正确性
+    - _Requirements: 1.3, 2.1_
+  - [ ] 2.6 创建 `server/replay/sensitive-data.ts`，实现敏感数据加密和脱敏工具
+    - 消息加密：AES-256-GCM 对称加密
+    - 数据脱敏：正则匹配密码、邮箱、手机号等模式并替换
+    - _Requirements: 2.4, 5.5_
+  - [ ]* 2.7 编写敏感数据保护属性测试
+    - **Property 5: 敏感数据保护**
+    - **Validates: Requirements 2.4, 5.5**
+
+- [ ] 3. Checkpoint - 确保采集层测试通过
+  - 确保所有测试通过，如有问题请向用户确认。
+
+- [ ] 4. 实现存储层
+  - [ ] 4.1 创建 `server/replay/replay-store.ts`，实现 ServerReplayStore
+    - JSONL 格式增量追加事件到 `data/replay/{missionId}/events.jsonl`
+    - 时间轴元数据和索引存储到 `timeline.json`
+    - 多维索引构建（byTime、byAgent、byType、byResource）
+    - 数据压缩（JSON.stringify + gzip）
+    - 校验和计算（SHA-256）
+    - 版本管理（每次更新递增 version）
+    - 数据清理（按天数阈值删除）
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.6, 19.1, 19.2, 19.3, 19.4, 19.5_
+  - [ ]* 4.2 编写时间轴一致性属性测试
+    - **Property 9: 时间轴一致性**
+    - **Validates: Requirements 6.1**
+  - [ ]* 4.3 编写多维索引正确性属性测试
+    - **Property 10: 多维索引正确性**
+    - **Validates: Requirements 6.2**
+  - [ ]* 4.4 编写增量追加不变量属性测试
+    - **Property 12: 增量追加不变量**
+    - **Validates: Requirements 6.4, 19.3**
+  - [ ]* 4.5 编写 JSON 导出往返属性测试
+    - **Property 13: JSON 导出往返**
+    - **Validates: Requirements 6.6, 15.1**
+  - [ ] 4.6 创建 `client/src/lib/replay/browser-replay-store.ts`，实现 BrowserReplayStore
+    - 使用 IndexedDB 存储热数据（replay-events、replay-timelines、replay-snapshots）
+    - 与 ServerReplayStore 共享 ReplayStoreInterface
+    - _Requirements: 19.1_
+  - [ ] 4.7 创建 `server/routes/replay.ts`，实现回放 REST API
+    - GET /api/replay/:missionId — 获取时间轴
+    - GET /api/replay/:missionId/events — 查询事件（支持 agentId、eventType、timeRange 过滤参数）
+    - GET /api/replay/:missionId/export — 导出事件流（format=json|csv）
+    - POST /api/replay/:missionId/verify — 验证数据完整性
+    - 在 `server/index.ts` 中注册路由
+    - _Requirements: 6.2, 6.5, 6.6, 20.3_
+  - [ ]* 4.8 编写数据完整性验证属性测试
+    - **Property 38: 数据完整性验证**
+    - **Validates: Requirements 20.3**
+  - [ ]* 4.9 编写版本递增不变量属性测试
+    - **Property 35: 版本递增不变量**
+    - **Validates: Requirements 19.4**
+  - [ ]* 4.10 编写数据清理正确性属性测试
+    - **Property 34: 数据清理正确性**
+    - **Validates: Requirements 19.5**
+
+- [ ] 5. Checkpoint - 确保存储层测试通过
+  - 确保所有测试通过，如有问题请向用户确认。
+
+- [ ] 6. 实现回放引擎（前端）
+  - [ ] 6.1 创建 `client/src/lib/replay/replay-engine.ts`，实现 ReplayEngine 类
+    - 状态机：idle → playing → paused → stopped
+    - 播放速度控制：0.5x/1x/2x/4x/8x
+    - requestAnimationFrame 驱动的事件推进
+    - 事件过滤（按 eventType、agentId）
+    - 时间戳跳转（seek）
+    - 交互式模式（在 DECISION_MADE 事件自动暂停）
+    - 事件回调和状态变更回调
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 17.4_
+  - [ ]* 6.2 编写回放引擎状态机属性测试
+    - **Property 14: 回放引擎状态机**
+    - **Validates: Requirements 7.1, 7.6**
+  - [ ]* 6.3 编写过滤正确性属性测试
+    - **Property 15: 过滤正确性**
+    - **Validates: Requirements 7.3, 7.4**
+  - [ ]* 6.4 编写时间戳跳转正确性属性测试
+    - **Property 16: 时间戳跳转正确性**
+    - **Validates: Requirements 7.5**
+  - [ ]* 6.5 编写交互式回放暂停属性测试
+    - **Property 32: 交互式回放在决策节点暂停**
+    - **Validates: Requirements 17.4**
+  - [ ] 6.6 创建 `client/src/lib/replay/replay-store-ui.ts`，实现 Zustand store
+    - 管理回放 UI 状态：missionId、engine、timeline、selectedEventId、isFullscreen、isDemoMode 等
+    - Actions：loadReplay、selectEvent、createSnapshot、jumpToSnapshot、toggleDemoMode、startComparison
+    - _Requirements: 7.1, 14.1, 14.2, 14.3, 17.1_
+  - [ ]* 6.7 编写快照往返属性测试
+    - **Property 26: 快照往返**
+    - **Validates: Requirements 14.1, 14.2, 14.3**
+  - [ ]* 6.8 编写快照导出/导入往返属性测试
+    - **Property 27: 快照导出/导入往返**
+    - **Validates: Requirements 14.4**
+
+- [ ] 7. Checkpoint - 确保回放引擎测试通过
+  - 确保所有测试通过，如有问题请向用户确认。
+
+- [ ] 8. 实现分析功能
+  - [ ] 8.1 创建 `client/src/lib/replay/cost-tracker.ts`，实现 CostTracker 类
+    - calculateCumulativeCost：按时间点计算累计成本
+    - getCostDistribution：按 Agent/模型/操作类型分组
+    - detectCostAnomalies：检测超阈值事件
+    - generateOptimizationSuggestions：基于分布生成建议
+    - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
+  - [ ]* 8.2 编写成本计算不变量属性测试
+    - **Property 21: 成本计算不变量**
+    - **Validates: Requirements 12.1, 12.2**
+  - [ ]* 8.3 编写成本异常检测属性测试
+    - **Property 22: 成本异常检测**
+    - **Validates: Requirements 12.3**
+  - [ ] 8.4 创建 `client/src/lib/replay/performance-analyzer.ts`，实现 PerformanceAnalyzer 类
+    - calculateMetrics：计算总耗时、阶段耗时、LLM 指标
+    - detectBottlenecks：标记耗时 > 2x 平均的阶段
+    - analyzeConcurrency：计算并发 Agent 数量时间线
+    - comparePerformance：两个时间轴的性能对比
+    - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
+  - [ ]* 8.5 编写性能指标一致性属性测试
+    - **Property 23: 性能指标一致性**
+    - **Validates: Requirements 13.1**
+  - [ ]* 8.6 编写瓶颈检测正确性属性测试
+    - **Property 24: 瓶颈检测正确性**
+    - **Validates: Requirements 13.2**
+  - [ ]* 8.7 编写并发度分析边界属性测试
+    - **Property 25: 并发度分析边界**
+    - **Validates: Requirements 13.4**
+  - [ ] 8.8 创建 `client/src/lib/replay/data-lineage.ts`，实现 DataLineageTracker 类
+    - buildLineageGraph：从事件流构建血缘有向图
+    - traceDataPoint：追溯数据点的完整血缘链路
+    - traceDecisionInputs：追溯决策依赖的所有数据源
+    - getDataChanges：获取数据变更历史
+    - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
+  - [ ]* 8.9 编写血缘追踪连通性属性测试
+    - **Property 18: 血缘追踪连通性**
+    - **Validates: Requirements 10.2, 10.3**
+  - [ ]* 8.10 编写血缘-时间轴集成属性测试
+    - **Property 19: 血缘-时间轴集成**
+    - **Validates: Requirements 10.4**
+  - [ ] 8.11 创建 `client/src/lib/replay/permission-auditor.ts`，实现 PermissionAuditor 类
+    - getPermissionEvents：提取权限相关事件
+    - getViolationStats：统计违规次数、类型分布、Agent 分布
+    - getPermissionChanges：追踪权限变更事件
+    - _Requirements: 11.1, 11.2, 11.4, 11.5_
+  - [ ]* 8.12 编写权限违规统计正确性属性测试
+    - **Property 20: 权限违规统计正确性**
+    - **Validates: Requirements 11.5**
+  - [ ] 8.13 创建 `client/src/lib/replay/related-events.ts`，实现关联事件查询
+    - findRelatedEvents：根据 messageId、decisionId、resourceId 查找关联事件
+    - _Requirements: 9.6_
+  - [ ]* 8.14 编写关联事件查询属性测试
+    - **Property 17: 关联事件查询**
+    - **Validates: Requirements 9.6**
+
+- [ ] 9. Checkpoint - 确保分析功能测试通过
+  - 确保所有测试通过，如有问题请向用户确认。
+
+- [ ] 10. 实现导出功能
+  - [ ] 10.1 创建 `client/src/lib/replay/exporter.ts`，实现 ReplayExporter 类
+    - exportJSON：导出时间轴为 JSON
+    - exportCSV：导出事件为 CSV（列头：eventId、timestamp、eventType、sourceAgent、targetAgent）
+    - exportInteractiveHTML：生成包含嵌入事件数据和基础回放控制的 HTML
+    - generateReport：生成回放报告（支持自定义章节选择）
+    - exportReportHTML / exportReportMarkdown
+    - _Requirements: 6.6, 15.1, 15.2, 15.3, 15.4, 15.5_
+  - [ ]* 10.2 编写报告内容定制属性测试
+    - **Property 28: 报告内容定制**
+    - **Validates: Requirements 15.3**
+  - [ ]* 10.3 编写交互式 HTML 包含事件数据属性测试
+    - **Property 29: 交互式 HTML 包含事件数据**
+    - **Validates: Requirements 15.5**
+  - [ ] 10.4 创建 `client/src/lib/replay/comparison.ts`，实现对比分析功能
+    - loadComparison：同时加载两个 Mission 时间轴
+    - diffEventStreams：计算事件流差异
+    - compareMetrics：性能指标对比
+    - exportComparison：导出对比结果
+    - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
+  - [ ]* 10.5 编写事件流差异正确性属性测试
+    - **Property 30: 事件流差异正确性**
+    - **Validates: Requirements 16.4**
+  - [ ]* 10.6 编写对比结果导出往返属性测试
+    - **Property 31: 对比结果导出往返**
+    - **Validates: Requirements 16.5**
+
+- [ ] 11. 实现审计功能（服务端）
+  - [ ] 11.1 创建 `server/replay/audit-logger.ts`，实现 ReplayAuditLogger 类
+    - logAction：记录回放操作到 `data/replay/{missionId}/audit.jsonl`
+    - queryAuditLog：按 userId、missionId、时间范围查询
+    - _Requirements: 20.1, 20.2_
+  - [ ] 11.2 创建 `server/replay/access-control.ts`，实现回放访问控制中间件
+    - 管理员角色可访问所有回放
+    - 普通用户仅可访问自己创建的 Mission 回放
+    - 在 replay 路由中应用中间件
+    - _Requirements: 20.4_
+  - [ ] 11.3 在 `server/routes/replay.ts` 中添加审计和快照相关端点
+    - GET /api/replay/:missionId/audit — 查询审计日志
+    - POST /api/replay/:missionId/snapshots — 创建快照
+    - GET /api/replay/:missionId/snapshots — 获取快照列表
+    - _Requirements: 14.1, 20.1, 20.2_
+  - [ ]* 11.4 编写审计日志完整性属性测试
+    - **Property 36: 审计日志完整性**
+    - **Validates: Requirements 20.1**
+  - [ ]* 11.5 编写审计日志查询往返属性测试
+    - **Property 37: 审计日志查询往返**
+    - **Validates: Requirements 20.2**
+  - [ ]* 11.6 编写访问控制属性测试
+    - **Property 39: 基于角色的访问控制**
+    - **Validates: Requirements 20.4**
+
+- [ ] 12. Checkpoint - 确保导出和审计功能测试通过
+  - 确保所有测试通过，如有问题请向用户确认。
+
+- [ ] 13. 实现 3D 回放可视化
+  - [ ] 13.1 创建 `client/src/components/replay/ReplayScene3D.tsx`
+    - 复用 OfficeRoom 和 PetWorkers 组件
+    - 接收 ReplayEngine 和 ExecutionTimeline 作为 props
+    - 根据当前事件更新 Agent 区块状态
+    - _Requirements: 8.1, 8.7_
+  - [ ] 13.2 创建 `client/src/components/replay/AgentActivityOverlay.tsx`
+    - Agent 活动状态动画（idle/working/thinking/done/error）
+    - _Requirements: 8.1, 8.4_
+  - [ ] 13.3 创建 `client/src/components/replay/CommunicationLine.tsx`
+    - Agent 之间的通信连线和粒子动画
+    - 使用 React Three Fiber 的 Line 组件 + useFrame 动画
+    - _Requirements: 8.2_
+  - [ ] 13.4 创建 `client/src/components/replay/DecisionGlow.tsx` 和 `ErrorHighlight.tsx`
+    - 决策节点光晕/脉冲动画
+    - 错误事件红色高亮和警告图标
+    - _Requirements: 8.3, 8.6_
+
+- [ ] 14. 实现前端 UI 组件
+  - [ ] 14.1 创建 `client/src/components/replay/ReplayPage.tsx`，回放主页面
+    - 四区域布局：3D 场景（中心）、时间轴（底部）、事件详情（右侧）、控制面板（顶部）
+    - 全屏模式切换
+    - 在 App.tsx 中添加 `/replay/:missionId` 路由
+    - _Requirements: 18.1, 18.5_
+  - [ ] 14.2 创建 `client/src/components/replay/TimelineBar.tsx`
+    - 事件分布可视化（按类型着色的标记点）
+    - 点击跳转到对应时间点
+    - 当前播放位置指示器
+    - _Requirements: 18.2_
+  - [ ] 14.3 创建 `client/src/components/replay/ControlPanel.tsx`
+    - 播放/暂停/快进/快退/停止按钮
+    - 速度选择器（0.5x ~ 8x）
+    - 搜索和过滤控件（事件类型、Agent、关键词）
+    - _Requirements: 18.3, 18.6_
+  - [ ] 14.4 创建 `client/src/components/replay/EventDetailPanel.tsx`
+    - 根据事件类型展示不同的详情视图
+    - 通信事件：消息内容、发送者、接收者、类型
+    - 决策事件：输入、逻辑、结果、置信度
+    - 代码执行事件：代码片段（语法高亮）、参数、结果、耗时
+    - 资源访问事件：资源类型、访问类型、结果、权限检查
+    - 关联事件链接
+    - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 18.4_
+  - [ ] 14.5 创建 `client/src/components/replay/SnapshotManager.tsx`
+    - 创建快照按钮（带标签和注释输入）
+    - 快照列表（点击跳转）
+    - 快照导出/导入
+    - _Requirements: 14.1, 14.2, 14.3, 14.4_
+  - [ ] 14.6 创建 `client/src/components/replay/CostTracker.tsx` 和 `PerformancePanel.tsx`
+    - 成本累计曲线图、分布饼图、异常高亮
+    - 性能指标仪表盘、瓶颈标记、并发度时间线
+    - _Requirements: 12.1, 12.2, 12.3, 13.1, 13.2, 13.4_
+  - [ ] 14.7 创建 `client/src/components/replay/DataLineageGraph.tsx`
+    - 有向图可视化（使用 SVG 或 Canvas）
+    - 节点点击追溯血缘链路
+    - 与时间轴事件联动
+    - _Requirements: 10.1, 10.2, 10.4_
+  - [ ] 14.8 创建 `client/src/components/replay/ComparisonView.tsx`
+    - 并排双时间轴视图
+    - 性能指标对比表格
+    - 差异事件高亮
+    - _Requirements: 16.1, 16.2, 16.3, 16.4_
+  - [ ] 14.9 创建 `client/src/components/replay/TeachingOverlay.tsx`
+    - 演示模式切换（隐藏技术面板、放大 3D）
+    - 注释和标注工具
+    - 提问标记
+    - _Requirements: 17.1, 17.2, 17.3_
+  - [ ] 14.10 创建 `client/src/components/replay/ExportDialog.tsx`
+    - 导出格式选择（JSON、CSV、交互式 HTML）
+    - 报告生成（章节选择、格式选择）
+    - _Requirements: 15.1, 15.2, 15.3, 15.4_
+
+- [ ] 15. 集成与接线
+  - [ ] 15.1 在 `server/index.ts` 中初始化 EventCollector 和拦截器
+    - 创建 EventCollector 实例
+    - 调用 installMissionInterceptor、installMessageBusInterceptor
+    - 注册 installExecutorInterceptor 中间件
+    - 注册 replay 路由
+    - _Requirements: 1.3, 1.4, 2.1_
+  - [ ] 15.2 在 `client/src/App.tsx` 中添加回放路由
+    - 添加 `/replay/:missionId` 路由指向 ReplayPage
+    - 在任务详情页添加"查看回放"入口按钮
+    - _Requirements: 18.1_
+  - [ ] 15.3 在 `client/src/lib/tasks-store.ts` 或 `mission-client.ts` 中添加回放数据加载方法
+    - fetchReplayTimeline、fetchReplayEvents 等 API 调用封装
+    - _Requirements: 6.2, 7.1_
+
+- [ ] 16. 最终 Checkpoint - 确保所有测试通过
+  - 确保所有测试通过，如有问题请向用户确认。
+
+## Notes
+
+- 标记 `*` 的任务为可选任务，可跳过以加速 MVP 开发
+- 每个任务引用了具体的需求编号以确保可追溯性
+- Checkpoint 任务确保增量验证
+- 属性测试验证通用正确性属性，单元测试验证具体示例和边界条件
+- 3D 可视化组件（任务 13）不包含属性测试，因为 WebGL 渲染不适合自动化属性验证
