@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。另有 1 个新增 Spec（data-lineage-tracking）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 2 个新增 Spec（vector-db-rag-pipeline、agent-permission-model）待开发。
 
 ### 已完成（基座层）
 
@@ -51,13 +51,13 @@ flowchart TB
     WD2[workflow-decoupling 数据补齐<br/>+ mission-native-projection]
     CO[cost-observability<br/>Token / 费用监控]
     VRAG[vector-db-rag-pipeline<br/>向量数据库与 RAG 管道]
-    DLT[data-lineage-tracking<br/>数据血缘追踪]
   end
 
   subgraph Phase3["阶段 3：安全 + 可靠性"]
     SS[secure-sandbox<br/>执行器安全层]
     SPR[state-persistence-recovery<br/>跨重启恢复]
     WD3[workflow-decoupling<br/>前端切换 + 清除]
+    APM[agent-permission-model<br/>Agent 细粒度权限]
   end
 
   subgraph Phase4["阶段 4：能力扩展"]
@@ -91,8 +91,8 @@ flowchart TB
   AM --> A2A
   EH --> AS
   DO --> AM
+  DO --> APM
   MS --> VRAG
-  MR --> DLT
 
   Phase1 --> Phase2
   Phase2 --> Phase3
@@ -134,7 +134,6 @@ flowchart TB
 | workflow-decoupling (数据补齐) + mission-native-projection (后端) | 跨前后端 | 盘点完成 | MissionRecord 丰富化 + /api/planets |
 | cost-observability | 跨前后端 | 无 | Token/费用监控（LLM 调用层埋点） |
 | vector-db-rag-pipeline | 跨前后端 | memory-system | 向量数据库 + RAG 管道（语义检索增强层） |
-| data-lineage-tracking | 跨前后端 | mission-runtime | 数据血缘追踪（采集/查询/审计/可视化） |
 
 产出：
 - 指令 → 真实 Docker 执行 → 产物回传 完整闭环
@@ -149,11 +148,13 @@ flowchart TB
 | Spec | 类型 | 依赖 | 说明 |
 |------|------|------|------|
 | secure-sandbox | 后端 | lobster-executor-real | 执行器安全层（权限/资源/网络隔离） |
+| agent-permission-model | 跨前后端 | dynamic-organization | Agent 治理层细粒度权限控制（与 secure-sandbox 互补） |
 | state-persistence-recovery | 跨前后端 | 无 | 跨重启/崩溃自动恢复 |
 | workflow-decoupling (前端切换+清除) | 纯前端 | 数据补齐完成 | tasks-store 瘦身 30%+ |
 
 产出：
 - 执行器安全可控
+- Agent 治理层权限控制（CapabilityToken + 运行时检查引擎）
 - 长任务零中断
 - tasks-store 从 2800+ 行降到 ~1800 行
 
@@ -416,7 +417,8 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
-| 数据血缘 | mission-runtime + runtime-agent → data-lineage-tracking | 血缘采集器集成到 Agent 框架和 Mission 状态机，依赖 mission-runtime 基座 |
+| Agent 权限治理 | secure-sandbox + agent-permission-model | secure-sandbox 处理容器物理隔离（执行层），agent-permission-model 处理 Agent 逻辑权限控制（治理层），两者互补 |
+| 权限与组织 | dynamic-organization → agent-permission-model | 组织生成时自动分配权限，权限继承遵循 CEO ⊇ Manager ⊇ Worker |
 
 ## 风险提示
 
