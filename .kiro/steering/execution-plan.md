@@ -40,12 +40,12 @@ inclusion: auto
 ## 第一层：无依赖，可独立并行，纯前端可执行
 
 ### 并行组 A：Frontend Mode 极致化（核心优先）
-- [ ] L01 `demo-data-engine` — 预录演示数据引擎（小）⚠️ C01 schema 必须先完成
-- [ ] L02 `demo-guided-experience` — 演示回放引擎 + 引导 UI（小）⚠️ 消费 L01 的 schema
+- [x] L01 `demo-data-engine` — 预录演示数据引擎 ✅ 已合并 (13 files, +1317)
+- [x] L02 `demo-guided-experience` — 演示回放引擎 + 引导 UI ✅ 已合并 (11 files, +940)
 
 ### 并行组 B：3D 场景增强
-- [ ] L03 `scene-mission-fusion` — 将 Mission 状态融合进 3D 场景（中）
-- [ ] L04 `cross-framework-export` — 导出为 CrewAI/LangGraph/AutoGen 格式（中）⚠️ C05 格式契约先完成
+- [x] L03 `scene-mission-fusion` — Mission 状态融合进 3D 场景 ✅ 已合并 (7 files, +627)
+- [x] L04 `cross-framework-export` — 导出为 CrewAI/LangGraph/AutoGen 格式 ✅ 已合并 (18 files, +2866)
 
 ### 并行组 C：可观测性（需先完成 C02 事件总线约定）
 - [ ] L05 `telemetry-dashboard` — 实时遥测仪表盘（中）
