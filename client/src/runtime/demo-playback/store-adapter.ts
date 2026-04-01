@@ -8,8 +8,8 @@
  */
 
 import type { DemoDataBundle, DemoTimelineEntry } from "@shared/demo/contracts";
-import type { RuntimeEvent } from "../runtime/types";
-import { runtimeEventBus } from "../runtime/local-event-bus";
+import type { RuntimeEvent } from "../../lib/runtime/types";
+import { runtimeEventBus } from "../../lib/runtime/local-event-bus";
 import { useTasksStore } from "../../lib/tasks-store";
 import { useDemoStore } from "../../lib/demo-store";
 import type { DemoMemoryEntry, DemoEvolutionLog } from "../../lib/demo-store";
