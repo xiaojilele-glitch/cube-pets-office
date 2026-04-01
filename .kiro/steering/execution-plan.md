@@ -48,9 +48,9 @@ inclusion: auto
 - [x] L04 `cross-framework-export` — 导出为 CrewAI/LangGraph/AutoGen 格式 ✅ 已合并 (18 files, +2866)
 
 ### 并行组 C：可观测性（需先完成 C02 事件总线约定）
-- [ ] L05 `telemetry-dashboard` — 实时遥测仪表盘（中）
-- [ ] L06 `cost-observability` — 成本可观测性，Token 追踪 + 前端看板（中）
-- [ ] L07 `state-persistence-recovery` — 浏览器端长任务恢复（中）
+- [x] L05 `telemetry-dashboard` — 实时遥测仪表盘 ✅ 已合并 (15 files, +1305)
+- [x] L06 `cost-observability` — 成本可观测性，Token 追踪 + 前端看板 ✅ 已合并 (14 files, +3181)
+- [x] L07 `state-persistence-recovery` — 浏览器端长任务恢复 ✅ 已合并 (30 files, +4639)
 
 ### 独立可做
 - [ ] L08 `collaboration-replay` — Mission 执行过程录制与回放（中）
