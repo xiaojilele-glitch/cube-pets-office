@@ -279,7 +279,7 @@ cube-pets-office/
 │       ├── multi-user-office/     # 多人实时协作办公室
 │       ├── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
 │       ├── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
-│       └── nl-command-center/    # 自然语言指挥中心
+│       └── agent-marketplace-platform/ # Agent Marketplace 开放交易平台
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -318,7 +318,7 @@ cube-pets-office/
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 | 向量数据库与 RAG 管道 | `.kiro/specs/vector-db-rag-pipeline/` | `server/rag/ingestion/ingestion-pipeline.ts` `server/rag/chunking/chunk-router.ts` `server/rag/embedding/embedding-generator.ts` `server/rag/store/vector-store-adapter.ts` `server/rag/retrieval/rag-retriever.ts` `server/rag/augmentation/rag-pipeline.ts` `server/routes/rag.ts` `shared/rag/contracts.ts` `client/src/components/rag/RAGInfoPanel.tsx` | 🔲 待开发 |
-| 自然语言指挥中心 | `.kiro/specs/nl-command-center/` | `shared/nl-command/contracts.ts` `server/core/nl-command/command-analyzer.ts` `server/core/nl-command/mission-decomposer.ts` `server/core/nl-command/execution-plan-generator.ts` `server/core/nl-command/orchestrator.ts` `server/routes/nl-command.ts` `client/src/pages/nl-command/CommandCenterPage.tsx` `client/src/lib/nl-command-store.ts` | 🔲 待开发 |
+| Agent Marketplace 开放交易平台 | `.kiro/specs/agent-marketplace-platform/` | `shared/marketplace/contracts.ts` `shared/marketplace/api.ts` `shared/marketplace/socket.ts` `server/marketplace/marketplace-store.ts` `server/marketplace/developer-service.ts` `server/marketplace/listing-service.ts` `server/marketplace/search-service.ts` `server/marketplace/transaction-service.ts` `server/marketplace/license-service.ts` `server/marketplace/revenue-service.ts` `server/marketplace/audit-chain.ts` `server/routes/marketplace.ts` `client/src/lib/marketplace-store.ts` `client/src/pages/marketplace/MarketplacePage.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 
