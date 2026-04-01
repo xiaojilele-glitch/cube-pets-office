@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。另有 1 个新增 Spec（multi-region-disaster-recovery）待开发。
 
 ### 已完成（基座层）
 
@@ -76,6 +76,7 @@ flowchart TB
   subgraph Phase6["阶段 6：规模化"]
     MUO[multi-user-office<br/>多人协作办公室]
     PD[production-deployment<br/>生产级部署]
+    MRDR[multi-region-disaster-recovery<br/>多区域灾难恢复]
   end
 
   Foundation --> Phase1
@@ -97,6 +98,9 @@ flowchart TB
   Phase3 --> Phase4
   Phase4 --> Phase5
   Phase5 --> Phase6
+
+  PD --> MRDR
+  SPR --> MRDR
 ```
 
 ---
@@ -195,10 +199,12 @@ flowchart TB
 |------|------|------|------|
 | multi-user-office | 跨前后端 | 大部分基座 | 多人同时进入办公室 |
 | production-deployment | DevOps | 大部分基座 | Docker Compose + Prometheus + 零停机 |
+| multi-region-disaster-recovery | 跨前后端 | production-deployment, state-persistence-recovery | 多区域部署 + 数据复制 + 故障转移 + 灾难恢复 |
 
 产出：
 - 多人协作办公室
 - 一键生产部署
+- 多区域高可用和灾难恢复
 
 ---
 
@@ -413,6 +419,7 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| 多区域灾难恢复 | production-deployment + state-persistence-recovery → multi-region-disaster-recovery | 先有生产部署和状态恢复，再做多区域扩展 |
 
 ## 风险提示
 
