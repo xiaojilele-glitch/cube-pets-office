@@ -125,6 +125,12 @@ export const messages = {
       exportingJson: '导出中...',
       importJson: '导入 JSON',
       importingJson: '导入中...',
+      sessionSnapshotTitle: '会话快照',
+      sessionSnapshotDescription: '导出或导入 Mission 快照（ZIP 格式），支持跨设备/跨浏览器恢复长任务。',
+      exportSession: '导出会话',
+      exportingSession: '导出中...',
+      importSession: '导入会话',
+      importingSession: '导入中...',
       proxyHelp: '如果模型提供方不能从浏览器直连，聊天可通过这个代理地址访问。',
       previewOnlyTitle: '预览模式说明',
       previewOnlyDescription:
@@ -166,6 +172,10 @@ export const messages = {
         importSuccess: '浏览器运行时已导入',
         importError: '导入浏览器运行时失败',
         resetSuccess: '本地浏览器配置已重置',
+        sessionExportSuccess: '会话快照已导出',
+        sessionExportError: '导出会话快照失败',
+        sessionImportSuccess: '会话快照已导入',
+        sessionImportError: '导入会话快照失败',
       },
     },
     chat: {
@@ -221,6 +231,7 @@ export const messages = {
         memory: '记忆',
         reports: '报告',
         history: '历史',
+        sessions: '会话',
       },
       departments: {
         game: '游戏部',
@@ -399,6 +410,12 @@ export const messages = {
         title: '历史工作流',
         empty: '暂无历史记录',
       },
+      sessions: {
+        title: '历史会话',
+        empty: '暂无本地快照',
+        savedAt: '保存于',
+        progress: '进度',
+      },
     },
     scene: {
       departmentMarkers: {
@@ -548,6 +565,12 @@ export const messages = {
       exportingJson: 'Exporting...',
       importJson: 'Import JSON',
       importingJson: 'Importing...',
+      sessionSnapshotTitle: 'Session Snapshot',
+      sessionSnapshotDescription: 'Export or import Mission snapshots (ZIP) for cross-device / cross-browser recovery.',
+      exportSession: 'Export Session',
+      exportingSession: 'Exporting...',
+      importSession: 'Import Session',
+      importingSession: 'Importing...',
       proxyHelp:
         'If the provider cannot be reached directly from the browser, chat can use this proxy URL.',
       previewOnlyTitle: 'Preview-only chat',
@@ -595,6 +618,10 @@ export const messages = {
         importSuccess: 'Browser runtime imported',
         importError: 'Failed to import browser runtime',
         resetSuccess: 'Local browser config reset',
+        sessionExportSuccess: 'Session snapshot exported',
+        sessionExportError: 'Failed to export session snapshot',
+        sessionImportSuccess: 'Session snapshot imported',
+        sessionImportError: 'Failed to import session snapshot',
       },
     },
     chat: {
@@ -650,6 +677,7 @@ export const messages = {
         memory: 'Memory',
         reports: 'Reports',
         history: 'History',
+        sessions: 'Sessions',
       },
       departments: {
         game: 'Game',
@@ -830,6 +858,12 @@ export const messages = {
       history: {
         title: 'Workflow History',
         empty: 'No history yet',
+      },
+      sessions: {
+        title: 'Session Snapshots',
+        empty: 'No local snapshots',
+        savedAt: 'Saved at',
+        progress: 'Progress',
       },
     },
     scene: {

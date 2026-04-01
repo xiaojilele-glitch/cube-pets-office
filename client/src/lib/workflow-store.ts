@@ -70,7 +70,8 @@ export type PanelView =
   | "review"
   | "history"
   | "memory"
-  | "reports";
+  | "reports"
+  | "sessions";
 
 const FALLBACK_STAGES: StageInfo[] = [
   { id: "direction", order: 1, label: "方向下发" },

@@ -1,6 +1,6 @@
 import { ContactShadows } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { ACESFilmicToneMapping } from 'three';
 
 import { useViewportTier } from '@/hooks/useViewportTier';
@@ -11,6 +11,18 @@ import { PetWorkers } from './three/PetWorkers';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
+  const [isRecovering, setIsRecovering] = useState(false);
+
+  // Register a globalThis accessor so the recovery flow can toggle the overlay.
+  // Follows the same pattern as __snapshotRestoreScene / __snapshotRestoreZustand.
+  useEffect(() => {
+    (globalThis as any).__sceneSetRecovering = (value: boolean) => {
+      setIsRecovering(value);
+    };
+    return () => {
+      delete (globalThis as any).__sceneSetRecovering;
+    };
+  }, []);
 
   const camera = isMobile
     ? { position: [0, 8.4, 16.2] as [number, number, number], fov: 46, near: 0.1, far: 100 }
@@ -85,6 +97,22 @@ export function Scene3D() {
           />
         </Suspense>
       </Canvas>
+
+      {/* Recovery overlay — shown while restoring a previous session */}
+      {isRecovering && (
+        <div
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="mb-4 size-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
+          <p className="text-base font-medium text-white drop-shadow-md">
+            正在恢复上一次任务…
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+
+

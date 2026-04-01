@@ -4,7 +4,9 @@ import NotFound from "@/pages/NotFound";
 import { Route, Router as WouterRouter, Switch, useLocation } from "wouter";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { RecoveryDialog } from "./components/RecoveryDialog";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { useRecoveryDetection } from "./hooks/useRecoveryDetection";
 import { useAppStore } from "./lib/store";
 import Home from "./pages/Home";
 import { TaskDetailPage, TasksPage } from "./pages/tasks";
@@ -55,6 +57,35 @@ function LocaleSync() {
   return null;
 }
 
+/**
+ * RecoveryGuard — 启动时检测未完成快照，显示 RecoveryDialog。
+ * 必须在 WouterRouter 内部渲染（需要 useLocation 进行导航）。
+ */
+function RecoveryGuard() {
+  const [, setLocation] = useLocation();
+  const {
+    candidate,
+    isRestoring,
+    restoreProgress,
+    restorePhase,
+    handleResume,
+    handleDiscard,
+  } = useRecoveryDetection(setLocation);
+
+  if (!candidate) return null;
+
+  return (
+    <RecoveryDialog
+      candidate={candidate}
+      onResume={handleResume}
+      onDiscard={handleDiscard}
+      isRestoring={isRestoring}
+      restoreProgress={restoreProgress}
+      restorePhase={restorePhase}
+    />
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
@@ -75,6 +106,7 @@ function App() {
             }}
           />
           <WouterRouter base={routerBase}>
+            <RecoveryGuard />
             <Router />
           </WouterRouter>
         </TooltipProvider>

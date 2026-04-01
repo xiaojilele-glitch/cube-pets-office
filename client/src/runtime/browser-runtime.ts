@@ -20,6 +20,15 @@ import type {
   WorkflowRepository,
   WorkflowRuntime,
 } from "@shared/workflow-runtime";
+import type { MissionRecord, MissionStatus, SnapshotPayload } from "@shared/mission/contracts";
+import {
+  createSnapshotScheduler,
+  type SnapshotScheduler,
+} from "../lib/snapshot-scheduler";
+import {
+  detectRecoveryCandidate,
+  type RecoveryCandidate,
+} from "../lib/recovery-detector";
 
 interface BrowserRuntimeOptions {
   agents: AgentRecord[];
@@ -408,6 +417,188 @@ class BrowserAgentDirectory implements AgentDirectory {
   refresh(_agentId: string): void {}
 }
 
+// ---------------------------------------------------------------------------
+// Snapshot Scheduler integration (Requirements 1.1, 1.2, 1.3)
+// ---------------------------------------------------------------------------
+
+const SNAPSHOT_INTERVAL_MS = 30_000;
+
+/** Module-level scheduler singleton — created once by createBrowserRuntime. */
+let _snapshotScheduler: SnapshotScheduler | null = null;
+
+/**
+ * Build a SnapshotPayload from the current runtime + Zustand state.
+ *
+ * `memoryRepo` is captured from the runtime so we can extract agent memory
+ * summaries. Fields that are not directly accessible here (3D camera, full
+ * decision history, attachments) use sensible defaults — Task 9.2 will wire
+ * richer state collection once the full lifecycle hooks are in place.
+ */
+function buildCollectState(
+  memoryRepo: BrowserMemoryRepository,
+  getMission: () => MissionRecord | null,
+): () => SnapshotPayload {
+  return (): SnapshotPayload => {
+    // --- Mission -----------------------------------------------------------
+    const mission: MissionRecord = getMission() ?? {
+      id: "",
+      kind: "",
+      title: "",
+      status: "queued",
+      progress: 0,
+      stages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      events: [],
+    };
+
+    // --- Agent memories (best-effort from BrowserMemoryRepository) ---------
+    const memEntries: [string, any][] = Array.from(
+      (memoryRepo as any).memories?.entries?.() ?? [],
+    );
+    const agentMemories = memEntries.map(([agentId, mem]) => ({
+      agentId,
+      soulMdHash: "",
+      recentExchanges: Array.isArray(mem?.exchanges)
+        ? mem.exchanges.slice(-10)
+        : [],
+    }));
+
+    // --- Scene layout (defaults — enriched by Task 9.2) --------------------
+    const sceneLayout = {
+      cameraPosition: [0, 8, 12] as [number, number, number],
+      cameraTarget: [0, 0, 0] as [number, number, number],
+      selectedPet: null,
+    };
+
+    // --- Decision history (extract from mission stages) --------------------
+    const decisionHistory = (mission.stages ?? [])
+      .filter((s) => s.status === "done" || s.status === "running")
+      .map((s) => ({
+        stageKey: s.key,
+        decision: mission.decision ?? { prompt: "", options: [] },
+        timestamp: s.startedAt ?? Date.now(),
+      }));
+
+    // --- Attachment index (from mission artifacts) -------------------------
+    const attachmentIndex = (mission.artifacts ?? []).map((a) => ({
+      name: a.name,
+      kind: a.kind,
+      path: a.path,
+      url: a.url,
+    }));
+
+    // --- Zustand slice (lazy-import avoided; read via globalThis) ----------
+    // The Zustand store is not directly importable here without creating a
+    // circular dependency. We read it through a well-known accessor that
+    // Task 9.2 will register, falling back to safe defaults.
+    const zustandAccessor =
+      (globalThis as any).__snapshotZustandAccessor as
+        | (() => { runtimeMode: string; aiConfig: any; chatMessages: any[] })
+        | undefined;
+    const zustand = zustandAccessor?.() ?? {
+      runtimeMode: "frontend",
+      aiConfig: {} as any,
+      chatMessages: [],
+    };
+
+    return {
+      mission,
+      agentMemories,
+      sceneLayout,
+      decisionHistory,
+      attachmentIndex,
+      zustandSlice: {
+        runtimeMode: zustand.runtimeMode as "frontend" | "advanced",
+        aiConfig: zustand.aiConfig,
+        chatMessages: zustand.chatMessages,
+      },
+    };
+  };
+}
+
+/**
+ * Return the module-level SnapshotScheduler (created by createBrowserRuntime).
+ * Returns `null` if the runtime has not been initialised yet.
+ */
+export function getSnapshotScheduler(): SnapshotScheduler | null {
+  return _snapshotScheduler;
+}
+
+/**
+ * Convenience: call from mission lifecycle hooks.
+ * Starts the scheduler when mission enters running/waiting,
+ * stops it on done/failed/cancelled.
+ */
+export function onMissionStatusChange(
+  missionId: string,
+  status: MissionStatus,
+): void {
+  const scheduler = _snapshotScheduler;
+  if (!scheduler) return;
+
+  if (status === "running" || status === "waiting") {
+    scheduler.start(missionId);
+  } else if (status === "done" || status === "failed") {
+    scheduler.stop();
+  }
+}
+
+/**
+ * Convenience: call when a MissionStage status changes.
+ * Triggers an immediate snapshot so stage transitions are captured.
+ */
+export function onMissionStageChange(): void {
+  _snapshotScheduler?.triggerImmediate();
+}
+
+// ---------------------------------------------------------------------------
+// Recovery detection (Requirements 6.1, 6.2, 6.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * Check for a recoverable snapshot at app startup.
+ *
+ * This is an async function intended to be called during app initialisation
+ * (e.g. in App.tsx / main.tsx — see Task 9.1), NOT inside the synchronous
+ * createBrowserRuntime().
+ *
+ * Recovery source priority (Requirement 6.1, 6.2):
+ * - Advanced mode: server snapshot takes priority; falls back to local.
+ * - Frontend mode: local snapshot only.
+ *
+ * Requirement 6.3: switching from Frontend → Advanced preserves local
+ * snapshots — this is the default behaviour since we never delete them
+ * during mode switches.
+ */
+export async function checkForRecovery(
+  runtimeMode: string,
+): Promise<RecoveryCandidate | null> {
+  // In Advanced mode, server snapshots take priority (Requirement 6.1).
+  // Server-side recovery is not yet implemented — log and fall through
+  // to local snapshot detection (Requirement 6.2).
+  if (runtimeMode === "advanced") {
+    console.log(
+      "[BrowserRuntime/Recovery] Advanced mode: checking server snapshot (not yet implemented), falling back to local",
+    );
+  }
+
+  // Detect local recovery candidate
+  const candidate = await detectRecoveryCandidate();
+
+  if (candidate) {
+    console.log(
+      `[BrowserRuntime/Recovery] Found local recovery candidate: mission=${candidate.snapshot.missionId}, valid=${candidate.isValid}`,
+    );
+  } else {
+    console.log("[BrowserRuntime/Recovery] No recovery candidate found");
+  }
+
+  return candidate;
+}
+
+// ---------------------------------------------------------------------------
+
 export function createBrowserRuntime(
   options: BrowserRuntimeOptions
 ): WorkflowRuntime {
@@ -422,6 +613,27 @@ export function createBrowserRuntime(
     memoryRepo,
     eventEmitter
   );
+
+  // --- Snapshot scheduler --------------------------------------------------
+  // The getMission callback is a placeholder that returns null by default.
+  // Task 9.2 will replace it via registerMissionProvider() once the mission
+  // lifecycle is fully wired.
+  let _missionProvider: () => MissionRecord | null = () => null;
+
+  const collectState = buildCollectState(memoryRepo, () => _missionProvider());
+
+  _snapshotScheduler = createSnapshotScheduler({
+    intervalMs: SNAPSHOT_INTERVAL_MS,
+    collectState,
+    onError: (err) => console.error("[BrowserRuntime/Snapshot]", err),
+  });
+
+  // Expose a way for external code to supply the mission provider
+  (globalThis as any).__snapshotRegisterMissionProvider = (
+    provider: () => MissionRecord | null,
+  ) => {
+    _missionProvider = provider;
+  };
 
   return {
     workflowRepo,
