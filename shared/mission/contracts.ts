@@ -225,3 +225,98 @@ export interface MissionPlanetInteriorData {
   summary?: string;
   waitingFor?: string;
 }
+
+/* ─── Snapshot Persistence Types ─── */
+
+export const SNAPSHOT_VERSION = 1 as const;
+
+/**
+ * 快照中保存的运行时模式。
+ * 与 client/src/lib/store.ts 中的 RuntimeMode 保持一致。
+ */
+export type SnapshotRuntimeMode = "frontend" | "advanced";
+
+/**
+ * 快照中保存的 AI 配置（精简版）。
+ * 与 client/src/lib/ai-config.ts 中的 AIConfig 保持一致。
+ */
+export interface SnapshotAIConfig {
+  mode: "server_proxy" | "browser_direct";
+  source: "server_env" | "browser_local";
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  modelReasoningEffort: string;
+  maxContext: number;
+  providerName: string;
+  wireApi: "responses" | "chat_completions";
+  timeoutMs: number;
+  stream: boolean;
+  chatThinkingType?: string;
+  proxyUrl: string;
+}
+
+/**
+ * 快照中保存的聊天消息。
+ * 与 client/src/lib/store.ts 中的 ChatMessage 保持一致。
+ */
+export interface SnapshotChatMessage {
+  role: "user" | "assistant" | "system";
+  content: string;
+  petName?: string;
+  timestamp: number;
+}
+
+export interface AgentMemorySummary {
+  agentId: string;
+  soulMdHash: string;
+  recentExchanges: unknown[];
+}
+
+export interface SceneLayoutState {
+  cameraPosition: [number, number, number];
+  cameraTarget: [number, number, number];
+  selectedPet: string | null;
+}
+
+export interface MissionDecisionEntry {
+  stageKey: string;
+  decision: MissionDecision;
+  resolved?: MissionDecisionResolved;
+  timestamp: number;
+}
+
+export interface AttachmentIndexEntry {
+  name: string;
+  kind: MissionArtifact["kind"];
+  path?: string;
+  url?: string;
+  size?: number;
+}
+
+export interface ZustandRecoverySlice {
+  runtimeMode: SnapshotRuntimeMode;
+  aiConfig: SnapshotAIConfig;
+  chatMessages: SnapshotChatMessage[];
+}
+
+export interface SnapshotPayload {
+  mission: MissionRecord;
+  agentMemories: AgentMemorySummary[];
+  sceneLayout: SceneLayoutState;
+  decisionHistory: MissionDecisionEntry[];
+  attachmentIndex: AttachmentIndexEntry[];
+  zustandSlice: ZustandRecoverySlice;
+}
+
+export interface SnapshotRecord {
+  id: string;
+  missionId: string;
+  version: number;
+  checksum: string;
+  createdAt: number;
+  missionTitle: string;
+  missionProgress: number;
+  missionStatus: MissionStatus;
+  payload: SnapshotPayload;
+}

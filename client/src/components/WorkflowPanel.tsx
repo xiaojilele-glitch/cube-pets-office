@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronRight,
   Clock,
+  Database,
   Download,
   FileText,
   History,
@@ -54,6 +55,7 @@ import { useDemoStore } from '@/lib/demo-store';
 import { useDemoMode } from '@/hooks/useDemoMode';
 import { MemoryTimeline } from '@/components/demo/MemoryTimeline';
 import { EvolutionScoreCard } from '@/components/demo/EvolutionScoreCard';
+import { SessionHistoryTab } from '@/components/SessionHistoryTab';
 
 const wfBadge: Record<string, string> = {
   pending: 'bg-gray-100 text-gray-700',
@@ -1670,6 +1672,7 @@ export function WorkflowPanel() {
     { id: 'memory', icon: BookOpenText, label: copy.workflow.tabs.memory },
     { id: 'reports', icon: Search, label: copy.workflow.tabs.reports },
     { id: 'history', icon: History, label: copy.workflow.tabs.history },
+    { id: 'sessions', icon: Database, label: copy.workflow.tabs.sessions },
   ];
 
   return (
@@ -1695,6 +1698,7 @@ export function WorkflowPanel() {
         {activeView === 'memory' ? <MemoryView /> : null}
         {activeView === 'reports' ? <ReportsView /> : null}
         {activeView === 'history' ? <HistoryView /> : null}
+        {activeView === 'sessions' ? <SessionHistoryTab /> : null}
       </div>
       <DemoEvolutionOverlay />
     </div>

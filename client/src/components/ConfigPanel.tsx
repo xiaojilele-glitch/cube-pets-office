@@ -26,6 +26,7 @@ import {
   restoreBrowserRuntimeFromBundle,
   syncBrowserRuntimeFromServer,
 } from '@/lib/browser-runtime-sync';
+import { exportSession, importSession } from '@/lib/session-export';
 import type {
   BrowserRuntimeExportBundle,
   BrowserRuntimeMetadata,
@@ -76,6 +77,9 @@ export function ConfigPanel() {
   const [isRuntimeExporting, setIsRuntimeExporting] = useState(false);
   const [isRuntimeImporting, setIsRuntimeImporting] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [isSessionExporting, setIsSessionExporting] = useState(false);
+  const [isSessionImporting, setIsSessionImporting] = useState(false);
+  const sessionImportRef = useRef<HTMLInputElement>(null);
 
   const isFrontendMode = runtimeMode === 'frontend';
   const isBrowserMode = aiConfig.mode === 'browser_direct';
@@ -226,6 +230,38 @@ export function ConfigPanel() {
     } finally {
       event.target.value = '';
       setIsRuntimeImporting(false);
+    }
+  };
+
+  const handleExportSession = async () => {
+    setIsSessionExporting(true);
+    try {
+      await exportSession();
+      toast.success(copy.config.toasts.sessionExportSuccess);
+    } catch (error: any) {
+      toast.error(copy.config.toasts.sessionExportError, {
+        description: error?.message || copy.chat.errorHint,
+      });
+    } finally {
+      setIsSessionExporting(false);
+    }
+  };
+
+  const handleImportSession = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsSessionImporting(true);
+    try {
+      await importSession(file);
+      toast.success(copy.config.toasts.sessionImportSuccess);
+    } catch (error: any) {
+      toast.error(copy.config.toasts.sessionImportError, {
+        description: error?.message || copy.chat.errorHint,
+      });
+    } finally {
+      event.target.value = '';
+      setIsSessionImporting(false);
     }
   };
 
@@ -404,6 +440,39 @@ export function ConfigPanel() {
               accept="application/json"
               className="hidden"
               onChange={event => void handleImportRuntime(event)}
+            />
+          </div>
+
+          <div className="rounded-xl border border-[#D8DDE6] bg-gradient-to-br from-[#F2F5FB] to-[#E7ECF4] p-3.5">
+            <div className="mb-1.5 flex items-center gap-2">
+              <Database className="h-3.5 w-3.5 text-[#4A5A8A]" />
+              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sessionSnapshotTitle}</span>
+            </div>
+            <p className="text-[10px] text-[#5A6068]">{copy.config.sessionSnapshotDescription}</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => void handleExportSession()}
+                disabled={isSessionExporting}
+                className="flex items-center justify-center gap-2 rounded-xl bg-white/75 px-3 py-2.5 text-xs font-semibold text-[#4A5A8A] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {isSessionExporting ? copy.config.exportingSession : copy.config.exportSession}
+              </button>
+              <button
+                onClick={() => sessionImportRef.current?.click()}
+                disabled={isSessionImporting}
+                className="flex items-center justify-center gap-2 rounded-xl bg-white/75 px-3 py-2.5 text-xs font-semibold text-[#4A5A8A] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                {isSessionImporting ? copy.config.importingSession : copy.config.importSession}
+              </button>
+            </div>
+            <input
+              ref={sessionImportRef}
+              type="file"
+              accept=".zip,application/zip"
+              className="hidden"
+              onChange={event => void handleImportSession(event)}
             />
           </div>
 

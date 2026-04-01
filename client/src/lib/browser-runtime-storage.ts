@@ -1,5 +1,7 @@
+import type { SnapshotRecord } from "../../../shared/mission/contracts";
+
 const DB_NAME = "cube-pets-office-browser-runtime";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORE_NAMES = {
   meta: "meta",
@@ -13,6 +15,7 @@ const STORE_NAMES = {
   agentMemorySearch: "agentMemorySearch",
   heartbeatStatuses: "heartbeatStatuses",
   heartbeatReports: "heartbeatReports",
+  snapshots: "snapshots",
 } as const;
 
 type StoreName = (typeof STORE_NAMES)[keyof typeof STORE_NAMES];
@@ -181,6 +184,11 @@ async function openDatabase(): Promise<IDBDatabase> {
         }
         if (!db.objectStoreNames.contains(STORE_NAMES.heartbeatReports)) {
           db.createObjectStore(STORE_NAMES.heartbeatReports, { keyPath: "id" });
+        }
+        if (!db.objectStoreNames.contains(STORE_NAMES.snapshots)) {
+          const snapshotStore = db.createObjectStore(STORE_NAMES.snapshots, { keyPath: "id" });
+          snapshotStore.createIndex("missionId", "missionId", { unique: false });
+          snapshotStore.createIndex("createdAt", "createdAt", { unique: false });
         }
       };
 
@@ -544,4 +552,68 @@ export async function importBrowserRuntimeBundle(
     STORE_NAMES.heartbeatReports,
     Array.isArray(bundle.heartbeatReports) ? bundle.heartbeatReports : []
   );
+}
+
+
+/* ─── Snapshot Store API ─── */
+
+export async function saveSnapshot(record: SnapshotRecord): Promise<void> {
+  await writeOne<SnapshotRecord>(STORE_NAMES.snapshots, record);
+}
+
+export async function getSnapshot(id: string): Promise<SnapshotRecord | null> {
+  return readOne<SnapshotRecord>(STORE_NAMES.snapshots, id);
+}
+
+export async function getLatestSnapshot(missionId?: string): Promise<SnapshotRecord | null> {
+  const db = await openDatabase();
+  const transaction = db.transaction(STORE_NAMES.snapshots, "readonly");
+  const store = transaction.objectStore(STORE_NAMES.snapshots);
+
+  let records: SnapshotRecord[];
+  if (missionId) {
+    const index = store.index("missionId");
+    records = await requestToPromise(index.getAll(missionId) as IDBRequest<SnapshotRecord[]>);
+  } else {
+    records = await requestToPromise(store.getAll() as IDBRequest<SnapshotRecord[]>);
+  }
+  await transactionToPromise(transaction);
+
+  if (records.length === 0) return null;
+  return records.reduce((latest, r) => (r.createdAt > latest.createdAt ? r : latest));
+}
+
+export async function listSnapshots(): Promise<SnapshotRecord[]> {
+  const db = await openDatabase();
+  const transaction = db.transaction(STORE_NAMES.snapshots, "readonly");
+  const store = transaction.objectStore(STORE_NAMES.snapshots);
+  const index = store.index("createdAt");
+
+  const records = await requestToPromise(index.getAll() as IDBRequest<SnapshotRecord[]>);
+  await transactionToPromise(transaction);
+
+  // createdAt index returns ascending; reverse for descending
+  return records.reverse();
+}
+
+export async function deleteSnapshot(id: string): Promise<void> {
+  const db = await openDatabase();
+  const transaction = db.transaction(STORE_NAMES.snapshots, "readwrite");
+  const store = transaction.objectStore(STORE_NAMES.snapshots);
+  store.delete(id);
+  await transactionToPromise(transaction);
+}
+
+export async function pruneSnapshots(keepCount: number): Promise<void> {
+  const all = await listSnapshots(); // sorted by createdAt descending
+  if (all.length <= keepCount) return;
+
+  const toDelete = all.slice(keepCount);
+  const db = await openDatabase();
+  const transaction = db.transaction(STORE_NAMES.snapshots, "readwrite");
+  const store = transaction.objectStore(STORE_NAMES.snapshots);
+  for (const record of toDelete) {
+    store.delete(record.id);
+  }
+  await transactionToPromise(transaction);
 }
