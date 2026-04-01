@@ -278,8 +278,7 @@ cube-pets-office/
 │       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
 │       ├── multi-user-office/     # 多人实时协作办公室
 │       ├── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
-│       ├── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
-│       └── plugin-skill-system/   # Plugin/Skill 模块化能力体系
+│       └── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -318,7 +317,7 @@ cube-pets-office/
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 | 向量数据库与 RAG 管道 | `.kiro/specs/vector-db-rag-pipeline/` | `server/rag/ingestion/ingestion-pipeline.ts` `server/rag/chunking/chunk-router.ts` `server/rag/embedding/embedding-generator.ts` `server/rag/store/vector-store-adapter.ts` `server/rag/retrieval/rag-retriever.ts` `server/rag/augmentation/rag-pipeline.ts` `server/routes/rag.ts` `shared/rag/contracts.ts` `client/src/components/rag/RAGInfoPanel.tsx` | 🔲 待开发 |
-| Plugin/Skill 体系 | `.kiro/specs/plugin-skill-system/` | `shared/skill-contracts.ts` `server/core/skill-registry.ts` `server/core/skill-activator.ts` `server/core/skill-monitor.ts` `server/core/skill-context.ts` `server/routes/skills.ts` `client/src/components/SkillCard.tsx` | 🔲 待开发 |
+| 多租户架构 | `.kiro/specs/multi-tenant-architecture/` | `shared/tenant.ts` `shared/marketplace.ts` `shared/audit.ts` `server/core/tenant-context.ts` `server/core/tenant-service.ts` `server/core/quota-service.ts` `server/core/rbac-service.ts` `server/core/marketplace-service.ts` `server/core/subscription-service.ts` `server/core/export-service.ts` `server/core/audit-logger.ts` `server/db/tenant-store.ts` `server/routes/tenants.ts` `server/routes/marketplace.ts` `client/src/lib/tenant-store.ts` `client/src/pages/TenantDashboard.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 

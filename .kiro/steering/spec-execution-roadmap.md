@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。另有 1 个新增 Spec（agent-marketplace-platform，Agent Marketplace 开放交易平台）待开发。
+29 个 Spec，其中 8 个已完成，21 个待开发（含 vector-db-rag-pipeline 和 multi-tenant-architecture）。
 
 ### 已完成（基座层）
 
@@ -63,7 +63,6 @@ flowchart TB
     MMV[multi-modal-vision<br/>图片 / Vision LLM]
     MMA[multi-modal-agent<br/>Vision + TTS / STT]
     AM[agent-marketplace<br/>Guest Agent]
-    AMP[agent-marketplace-platform<br/>开放交易平台]
     SLP[sandbox-live-preview<br/>终端 + 截图预览]
   end
 
@@ -75,6 +74,7 @@ flowchart TB
   end
 
   subgraph Phase6["阶段 6：规模化"]
+    MTA[multi-tenant-architecture<br/>多租户隔离 + 配额 + RBAC]
     MUO[multi-user-office<br/>多人协作办公室]
     PD[production-deployment<br/>生产级部署]
   end
@@ -89,7 +89,8 @@ flowchart TB
   CO --> TD
   MMV --> MMA
   AM --> A2A
-  AM --> AMP
+  AM --> MTA
+  SS --> MTA
   EH --> AS
   DO --> AM
   MS --> VRAG
@@ -165,7 +166,6 @@ flowchart TB
 | multi-modal-vision | 跨前后端 | 无 | 图片/截图 Vision LLM 分析 |
 | multi-modal-agent | 跨前后端 | multi-modal-vision | Vision + TTS/STT，宠物"能看能说" |
 | agent-marketplace | 跨前后端 | dynamic-organization | Guest Agent 临时加入办公室 |
-| agent-marketplace-platform | 跨前后端 | agent-marketplace | 开放 Agent 交易平台（开发者发布/用户购买/许可证/收益分配） |
 | sandbox-live-preview | 跨前后端 | lobster-executor-real | 3D 场景内终端 + 截图预览 |
 
 产出：
@@ -190,16 +190,20 @@ flowchart TB
 - 一键导出到其他框架
 - 全局监控看板
 
-### 阶段 6：规模化（2-3 周）
+### 阶段 6：规模化（3-4 周）
 
-目标：从单用户演示走向多人生产环境。
+目标：从单用户演示走向多人多租户生产环境。
 
 | Spec | 类型 | 依赖 | 说明 |
 |------|------|------|------|
+| multi-tenant-architecture | 跨前后端 | agent-marketplace, secure-sandbox | 多租户隔离、配额管理、RBAC、Marketplace、订阅管理 |
 | multi-user-office | 跨前后端 | 大部分基座 | 多人同时进入办公室 |
 | production-deployment | DevOps | 大部分基座 | Docker Compose + Prometheus + 零停机 |
 
 产出：
+- 完整多租户隔离（Agent 池、知识库、执行环境、配额）
+- RBAC 权限管理 + 审计日志
+- 公共 Agent Marketplace + 订阅管理
 - 多人协作办公室
 - 一键生产部署
 
@@ -360,6 +364,8 @@ flowchart TB
     CostEngine["成本监控 + 遥测"]
     HumanLoop["人机协作<br/>多步审批流"]
     Recovery["状态恢复引擎"]
+    TenantMW["多租户中间件<br/>上下文 / RBAC / 配额"]
+    TenantSvc["租户服务<br/>隔离 / 订阅 / 审计"]
   end
 
   subgraph Executor["安全执行集群"]
@@ -381,7 +387,7 @@ flowchart TB
 
   Users --> Room --> Scene3D
   Scene3D --> API
-  API --> Engine --> Memory
+  API --> TenantMW --> Engine --> Memory
   Engine --> MissionNative
   Engine --> Swarm
   Swarm --> A2A
@@ -412,14 +418,16 @@ flowchart TB
 | 执行器安全 | lobster-executor-real → secure-sandbox | 先有真实执行器，再加安全层 |
 | 多模态 | multi-modal-vision → multi-modal-agent | vision 是 agent 多模态的前置 |
 | 外部 Agent | agent-marketplace → a2a-protocol | 先有 Guest Agent，再有标准协议 |
-| Agent 交易平台 | agent-marketplace → agent-marketplace-platform | 先有 Guest Agent 机制，再建开放交易市场 |
 | 监控 | cost-observability → telemetry-dashboard | 先有成本埋点，再有全局面板 |
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| 多租户 + Marketplace | agent-marketplace → multi-tenant-architecture | Guest Agent 市场能力是多租户 Marketplace 的前置 |
+| 多租户 + 安全 | secure-sandbox → multi-tenant-architecture | 执行环境隔离依赖安全沙箱能力 |
 
 ## 风险提示
 
 - lobster-executor-real 是最大的单点风险：sandbox-live-preview、secure-sandbox、production-deployment 都依赖它
 - workflow-decoupling 的盘点阶段必须在任何前端 spec 之前完成，否则新代码可能引入新的 workflow 依赖
 - multi-user-office 是复杂度最高的 spec，建议放到最后，等其他能力稳定后再做
+- multi-tenant-architecture 涉及面广（14 个用户故事、70 个验收标准），建议在 agent-marketplace 和 secure-sandbox 完成后再启动，以复用 Marketplace 和安全隔离能力
