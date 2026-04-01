@@ -6,29 +6,29 @@
 
 ## 任务
 
-- [ ] 1. 实现核心纯逻辑函数
-  - [ ] 1.1 在 `client/src/components/tasks/mission-island-helpers.ts` 中实现 `selectDisplayMission` 函数
+- [x] 1. 实现核心纯逻辑函数
+  - [x] 1.1 在 `client/src/components/tasks/mission-island-helpers.ts` 中实现 `selectDisplayMission` 函数
     - 输入：MissionTaskSummary 数组
     - 按优先级选择：running > waiting > 最近创建（createdAt 降序）
     - 空列表返回 null
     - _需求: 4.2, 1.3_
 
-  - [ ] 1.2 在同一文件中实现 `truncateTitle` 函数
+  - [x] 1.2 在同一文件中实现 `truncateTitle` 函数
     - 输入：字符串和最大长度（默认 40）
     - 超长时截断并添加 '…' 后缀
     - _需求: 2.2_
 
-  - [ ] 1.3 在同一文件中实现 `extractActiveAgents` 函数
+  - [x] 1.3 在同一文件中实现 `extractActiveAgents` 函数
     - 输入：MissionTaskDetail 和最大数量（默认 3）
     - 过滤 working/thinking 状态的 Agent，返回 id + emoji
     - _需求: 2.3_
 
-  - [ ] 1.4 在同一文件中实现 `getIslandScale` 函数
+  - [x] 1.4 在同一文件中实现 `getIslandScale` 函数
     - 输入：ViewportTier
     - 返回对应缩放值：desktop=1.0, tablet=0.85, mobile=0.7
     - _需求: 1.5_
 
-  - [ ] 1.5 在同一文件中实现 `sliceRecentEvents` 函数
+  - [x] 1.5 在同一文件中实现 `sliceRecentEvents` 函数
     - 输入：TaskTimelineEvent 数组
     - 返回按时间降序排列的最近 10 条事件
     - _需求: 3.3_
@@ -63,11 +63,11 @@
     - 验证缩放值与档位的对应关系
     - **验证: 需求 1.5**
 
-- [ ] 2. 检查点 - 确保所有纯逻辑测试通过
+- [x] 2. 检查点 - 确保所有纯逻辑测试通过
   - 确保所有测试通过，如有问题请询问用户。
 
-- [ ] 3. 实现 MissionMiniView React 组件
-  - [ ] 3.1 创建 `client/src/components/tasks/MissionMiniView.tsx`
+- [x] 3. 实现 MissionMiniView React 组件
+  - [x] 3.1 创建 `client/src/components/tasks/MissionMiniView.tsx`
     - 接收 MissionTaskSummary | null、onExpand、onCreateMission props
     - 活跃态：显示截断标题、阶段标签、进度百分比、迷你进度条、最多 3 个 Agent emoji
     - 空闲态：显示"暂无活跃任务"和"创建任务"按钮
@@ -81,16 +81,16 @@
     - 测试 onExpand 和 onCreateMission 回调触发
     - _需求: 2.2, 2.5_
 
-- [ ] 4. 实现 CompactPlanetInterior 组件
-  - [ ] 4.1 创建 `client/src/components/tasks/CompactPlanetInterior.tsx`
+- [x] 4. 实现 CompactPlanetInterior 组件
+  - [x] 4.1 创建 `client/src/components/tasks/CompactPlanetInterior.tsx`
     - 从 TaskPlanetInterior 提取环形可视化核心逻辑
     - 仅保留中心环形图（conic-gradient 环 + 中心进度 + 阶段标签）
     - 移除侧边栏详情面板和 Agent Crew 面板
     - 缩小尺寸适配 Overlay 容器（max-w-[240px]）
     - _需求: 3.2_
 
-- [ ] 5. 实现 MissionDetailOverlay 组件
-  - [ ] 5.1 创建 `client/src/components/tasks/MissionDetailOverlay.tsx`
+- [x] 5. 实现 MissionDetailOverlay 组件
+  - [x] 5.1 创建 `client/src/components/tasks/MissionDetailOverlay.tsx`
     - 接收 MissionTaskDetail | null、onClose、onNavigateToDetail props
     - 包含 CompactPlanetInterior 环形可视化
     - 包含最近 10 条事件时间线（使用 sliceRecentEvents）
@@ -105,11 +105,11 @@
     - 测试"查看完整详情"按钮触发 onNavigateToDetail
     - _需求: 3.5, 3.7_
 
-- [ ] 6. 检查点 - 确保所有 React 组件测试通过
+- [x] 6. 检查点 - 确保所有 React 组件测试通过
   - 确保所有测试通过，如有问题请询问用户。
 
-- [ ] 7. 实现 MissionIsland 3D 组件
-  - [ ] 7.1 创建 `client/src/components/three/MissionIsland.tsx`
+- [x] 7. 实现 MissionIsland 3D 组件
+  - [x] 7.1 创建 `client/src/components/three/MissionIsland.tsx`
     - 实现 useMissionIslandData hook：从 useTasksStore 读取数据，调用 selectDisplayMission
     - 渲染基础 3D 几何体（CylinderGeometry 平台 + 发光环 RingGeometry）
     - 使用 useFrame 实现发光脉冲动画（Mission 运行时激活，空闲时暗淡）
@@ -121,13 +121,13 @@
     - 位置常量：ISLAND_POSITION = [4.5, 0, -3.5]
     - _需求: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.4, 3.1, 3.6, 3.7, 4.1, 4.2, 4.3, 5.1, 5.2, 5.4, 5.5_
 
-- [ ] 8. 集成到 Scene3D
-  - [ ] 8.1 修改 `client/src/components/Scene3D.tsx`
+- [x] 8. 集成到 Scene3D
+  - [x] 8.1 修改 `client/src/components/Scene3D.tsx`
     - 在 `<PetWorkers />` 之后、`<ContactShadows />` 之前添加 `<MissionIsland />`
     - 确保 import 路径正确
     - _需求: 1.1_
 
-- [ ] 9. 最终检查点 - 确保所有测试通过
+- [x] 9. 最终检查点 - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户。
   - 运行 `npm run check` 确保 TypeScript 类型检查通过。
 

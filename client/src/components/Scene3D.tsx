@@ -5,6 +5,7 @@ import { ACESFilmicToneMapping } from 'three';
 
 import { useViewportTier } from '@/hooks/useViewportTier';
 
+import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
 
@@ -72,6 +73,7 @@ export function Scene3D() {
 
           <OfficeRoom />
           <PetWorkers />
+          <MissionIsland />
 
           <ContactShadows
             position={[0, 0.01, 0]}
