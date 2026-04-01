@@ -40,8 +40,8 @@ inclusion: auto
 ## 第一层：无依赖，可独立并行，纯前端可执行
 
 ### 并行组 A：Frontend Mode 极致化（核心优先）
-- [x] L01 `demo-data-engine` — 预录演示数据引擎 ✅ 已合并到 main
-- [x] L02 `demo-guided-experience` — 演示回放引擎 + 引导 UI ✅ 已合并到 main
+- [ ] L01 `demo-data-engine` — 预录演示数据引擎（小）⚠️ C01 schema 必须先完成
+- [ ] L02 `demo-guided-experience` — 演示回放引擎 + 引导 UI（小）⚠️ 消费 L01 的 schema
 
 ### 并行组 B：3D 场景增强
 - [ ] L03 `scene-mission-fusion` — 将 Mission 状态融合进 3D 场景（中）
