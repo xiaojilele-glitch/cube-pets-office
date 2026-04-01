@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ArrowRight, Orbit, Plus } from 'lucide-react';
+import { useCallback, useEffect } from 'react';
+import { ArrowRight, Orbit, Play, Plus } from 'lucide-react';
 import { useLocation } from 'wouter';
 
 import { ChatPanel } from '@/components/ChatPanel';
@@ -9,6 +9,7 @@ import { Scene3D } from '@/components/Scene3D';
 import { Toolbar } from '@/components/Toolbar';
 import { WorkflowPanel } from '@/components/WorkflowPanel';
 import { useViewportTier } from '@/hooks/useViewportTier';
+import { useDemoMode } from '@/hooks/useDemoMode';
 import { useI18n } from '@/i18n';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
@@ -22,6 +23,19 @@ export default function Home() {
   const { isMobile } = useViewportTier();
   const { copy } = useI18n();
   const [, setLocation] = useLocation();
+  const { startDemo } = useDemoMode();
+
+  const handleStartDemo = useCallback(async () => {
+    try {
+      // Dynamic import — the bundle module is provided by demo-data-engine (L01).
+      // Falls back gracefully if not yet available.
+      const { DEMO_BUNDLE } = await import('@/runtime/demo-data/bundle');
+      await startDemo(DEMO_BUNDLE);
+      setLocation('/tasks');
+    } catch (err) {
+      console.warn('[Home] Demo bundle not available yet:', err);
+    }
+  }, [startDemo, setLocation]);
 
   useEffect(() => {
     hydrateAIConfig().catch(error => {
@@ -99,6 +113,13 @@ export default function Home() {
               >
                 {locale === 'zh-CN' ? '快速新建 Mission' : 'Quick Create Mission'}
                 <Plus className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleStartDemo}
+                className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#7CB9E8]/40 bg-[#E8F4FD] px-4 py-2.5 text-sm font-semibold text-[#2E86C1] shadow-sm transition-colors hover:bg-[#D6EAF8]"
+              >
+                {locale === 'zh-CN' ? '🎬 Live Demo' : '🎬 Live Demo'}
+                <Play className="h-4 w-4" />
               </button>
             </div>
           </div>

@@ -49,6 +49,10 @@ import {
   MAX_WORKFLOW_ATTACHMENTS,
   normalizeWorkflowAttachments,
 } from '@shared/workflow-input';
+import { useDemoStore } from '@/lib/demo-store';
+import { useDemoMode } from '@/hooks/useDemoMode';
+import { MemoryTimeline } from '@/components/demo/MemoryTimeline';
+import { EvolutionScoreCard } from '@/components/demo/EvolutionScoreCard';
 
 const wfBadge: Record<string, string> = {
   pending: 'bg-gray-100 text-gray-700',
@@ -1452,6 +1456,7 @@ function MemoryView() {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
   const fmt = useFmt();
+  const isDemoActive = useDemoStore(s => s.isActive);
   const { agents, currentWorkflow, currentWorkflowId, selectedMemoryAgentId, setSelectedMemoryAgent, agentMemoryRecent, agentMemorySearchResults, memoryQuery, isMemoryLoading, setMemoryQuery, fetchAgentRecentMemory, searchAgentMemory } = useWorkflowStore();
   const [draft, setDraft] = useState(memoryQuery);
   const organization = getOrganization(currentWorkflow);
@@ -1495,6 +1500,7 @@ function MemoryView() {
   return (
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.memory.title} description={copy.workflow.memory.description} />
+      {isDemoActive && <MemoryTimeline />}
       <div className="border-b border-[#F0E8E0] px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
           {availableAgents.map(agent => (
@@ -1595,6 +1601,35 @@ function HistoryView() {
   );
 }
 
+function DemoEvolutionOverlay() {
+  const isDemoActive = useDemoStore(s => s.isActive);
+  const currentStage = useDemoStore(s => s.currentStage);
+  if (!isDemoActive || currentStage !== 'evolution') return null;
+  return <EvolutionScoreCard />;
+}
+
+function DemoControls() {
+  const isDemoActive = useDemoStore(s => s.isActive);
+  const playbackState = useDemoStore(s => s.playbackState);
+  const { pauseDemo, resumeDemo, stopDemo } = useDemoMode();
+
+  if (!isDemoActive) return null;
+
+  return (
+    <div className="flex items-center gap-2 border-b border-[#7CB9E8]/30 bg-[#E8F4FD] px-4 py-2">
+      <span className="text-[10px] font-semibold text-[#2E86C1]">🎬 Demo</span>
+      <span className="rounded-full bg-[#7CB9E8]/20 px-2 py-0.5 text-[9px] font-medium text-[#2E86C1]">{playbackState}</span>
+      <div className="flex-1" />
+      {playbackState === 'playing' ? (
+        <button onClick={pauseDemo} className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-medium text-[#2E86C1] shadow-sm hover:bg-white">⏸ Pause</button>
+      ) : playbackState === 'paused' ? (
+        <button onClick={resumeDemo} className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-medium text-[#2E86C1] shadow-sm hover:bg-white">▶ Resume</button>
+      ) : null}
+      <button onClick={stopDemo} className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-medium text-red-500 shadow-sm hover:bg-white">⏹ Stop</button>
+    </div>
+  );
+}
+
 export function WorkflowPanel() {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
@@ -1638,6 +1673,7 @@ export function WorkflowPanel() {
       </div>
       <div className="border-b border-[#F0E8E0] px-3 py-2"><div className="flex gap-1 overflow-x-auto pb-1">{tabs.map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setActiveView(id)} className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${activeView === id ? 'bg-[#D4845A] text-white shadow-sm' : 'text-[#8B7355] hover:bg-[#F0E8E0]'}`}><Icon className="h-3 w-3" />{label}</button>)}</div></div>
       {runtimeMode === 'frontend' ? <div className="border-b border-[#F0E8E0] bg-[#FFF7EC] px-4 py-2.5"><p className="text-[10px] leading-5 text-[#6B5A4A]">{getFrontendWorkflowBanner(locale, CAN_USE_ADVANCED_RUNTIME)}</p></div> : null}
+      <DemoControls />
       <div className="min-h-0 flex-1 overflow-hidden">
         {activeView === 'directive' ? <DirectiveView /> : null}
         {activeView === 'org' ? <OrgView /> : null}
@@ -1647,6 +1683,7 @@ export function WorkflowPanel() {
         {activeView === 'reports' ? <ReportsView /> : null}
         {activeView === 'history' ? <HistoryView /> : null}
       </div>
+      <DemoEvolutionOverlay />
     </div>
   );
 }

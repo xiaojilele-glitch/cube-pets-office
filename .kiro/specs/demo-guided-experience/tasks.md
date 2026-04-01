@@ -6,8 +6,8 @@
 
 ## Tasks
 
-- [ ] 1. 实现 DemoPlaybackEngine 核心类
-  - [ ] 1.1 创建 `client/src/runtime/demo-playback/engine.ts`，实现 DemoPlaybackEngine 类
+- [x] 1. 实现 DemoPlaybackEngine 核心类
+  - [x] 1.1 创建 `client/src/runtime/demo-playback/engine.ts`，实现 DemoPlaybackEngine 类
     - 定义 PlaybackState 类型（idle/playing/paused/completed/failed）和 PlaybackCallbacks 接口
     - 实现 start()：记录 startTime，遍历 DemoTimedEvent 序列，使用 setTimeout 按 timestampOffset 调度每个事件
     - 实现 pause()：清除所有未触发的 timer，记录 currentIndex 和 pausedAt 时间
@@ -34,13 +34,13 @@
     - 测试连续快速 pause/resume 操作
     - _Requirements: 3.1, 3.3, 3.6_
 
-- [ ] 2. 实现 Store 集成层
-  - [ ] 2.1 创建 `client/src/lib/demo-store.ts`，实现 Demo 专属 Zustand store
+- [x] 2. 实现 Store 集成层
+  - [x] 2.1 创建 `client/src/lib/demo-store.ts`，实现 Demo 专属 Zustand store
     - 定义 DemoState 接口：isActive、playbackState、memoryTimeline、evolutionLogs、currentStage
     - 实现 activate/deactivate、appendMemoryEntry、setEvolutionLogs、reset 等方法
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ] 2.2 创建 `client/src/runtime/demo-playback/store-adapter.ts`，实现 DemoStoreAdapter 类
+  - [x] 2.2 创建 `client/src/runtime/demo-playback/store-adapter.ts`，实现 DemoStoreAdapter 类
     - 实现 initializeDemoMission()：通过 tasks-store 的 createMission 创建 kind="demo" 的 MissionRecord，设置为当前选中任务
     - 实现 handleEvent()：将 DemoTimedEvent 的 AgentEvent 通过 runtimeEventBus.emit() 分发到 workflow-store
     - 实现记忆条目调度：根据 timestampOffset 将 DemoMemoryEntry 写入 demo-store
@@ -60,30 +60,30 @@
     - 测试 cleanup 后 tasks 列表不包含 demo 记录
     - _Requirements: 4.3, 4.4, 4.5_
 
-- [ ] 3. Checkpoint - 确保引擎和 Store 集成测试通过
+- [x] 3. Checkpoint - 确保引擎和 Store 集成测试通过
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. 实现 UI 入口与展示组件
-  - [ ] 4.1 创建 `client/src/hooks/useDemoMode.ts`，实现 Demo 模式 React Hook
+- [x] 4. 实现 UI 入口与展示组件
+  - [x] 4.1 创建 `client/src/hooks/useDemoMode.ts`，实现 Demo 模式 React Hook
     - 封装 DemoPlaybackEngine 和 DemoStoreAdapter 的生命周期
     - 暴露 startDemo/pauseDemo/resumeDemo/stopDemo 方法
     - 组件卸载时自动调用 dispose 和 cleanup
     - _Requirements: 3.1, 3.5, 4.5_
 
-  - [ ] 4.2 修改 `client/src/pages/Home.tsx`，添加 Live Demo 入口按钮
+  - [x] 4.2 修改 `client/src/pages/Home.tsx`，添加 Live Demo 入口按钮
     - 在 Mission 入口卡片下方添加"🎬 Live Demo"按钮
     - 点击后调用 useDemoMode 的 startDemo 方法
     - 按钮样式醒目但不喧宾夺主（蓝色调边框 + 浅蓝背景）
     - 支持中英文 locale 切换
     - _Requirements: 5.3_
 
-  - [ ] 4.3 创建 `client/src/components/demo/MemoryTimeline.tsx`，实现记忆时间线组件
+  - [x] 4.3 创建 `client/src/components/demo/MemoryTimeline.tsx`，实现记忆时间线组件
     - 从 demo-store 读取 memoryTimeline 数据
     - 每条记忆条目显示：类型标签（短期/中期/长期，不同颜色）、Agent 名称、阶段标签、内容摘要
     - 时间线按 timestampOffset 排序展示
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 4.4 创建 `client/src/components/demo/EvolutionScoreCard.tsx`，实现进化评分卡组件
+  - [x] 4.4 创建 `client/src/components/demo/EvolutionScoreCard.tsx`，实现进化评分卡组件
     - 从 demo-store 读取 evolutionLogs 数据
     - 展示每个 Agent 的四维评分变化（accuracy、completeness、actionability、format）
     - 数值从 oldScore 到 newScore 的平滑过渡动画（CSS transition）
@@ -97,24 +97,24 @@
     - **Property 6: 进化评分卡包含全维度数据**
     - **Validates: Requirements 7.5**
 
-- [ ] 5. 集成联调与 WorkflowPanel 接入
-  - [ ] 5.1 创建 `client/src/runtime/demo-playback/index.ts`，统一导出模块
+- [x] 5. 集成联调与 WorkflowPanel 接入
+  - [x] 5.1 创建 `client/src/runtime/demo-playback/index.ts`，统一导出模块
     - 导出 DemoPlaybackEngine、DemoStoreAdapter、PlaybackState、PlaybackCallbacks 类型
     - _Requirements: 3.1, 4.1_
 
-  - [ ] 5.2 在 WorkflowPanel 的 memory 视图中集成 MemoryTimeline 组件
+  - [x] 5.2 在 WorkflowPanel 的 memory 视图中集成 MemoryTimeline 组件
     - 当 demo-store.isActive 为 true 时，在 memory 视图中渲染 MemoryTimeline
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 5.3 在 WorkflowPanel 中集成 EvolutionScoreCard 组件
+  - [x] 5.3 在 WorkflowPanel 中集成 EvolutionScoreCard 组件
     - 当 demo-store.isActive 为 true 且 currentStage 为 evolution 时，渲染 EvolutionScoreCard
     - _Requirements: 7.5, 7.6_
 
-  - [ ] 5.4 添加 Demo 模式的暂停/恢复控制 UI
+  - [x] 5.4 添加 Demo 模式的暂停/恢复控制 UI
     - 在 WorkflowPanel 或 Toolbar 中添加暂停/恢复按钮，仅在 demo-store.isActive 时显示
     - _Requirements: 3.5_
 
-- [ ] 6. Final checkpoint - 确保所有测试通过
+- [x] 6. Final checkpoint - 确保所有测试通过
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
