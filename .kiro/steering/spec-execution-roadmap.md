@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。新增 k8s-agent-operator Spec 用于 Kubernetes Operator 管理 Agent Pod 生命周期。
 
 ### 已完成（基座层）
 
@@ -76,6 +76,7 @@ flowchart TB
   subgraph Phase6["阶段 6：规模化"]
     MUO[multi-user-office<br/>多人协作办公室]
     PD[production-deployment<br/>生产级部署]
+    KAO[k8s-agent-operator<br/>K8s Agent Operator]
   end
 
   Foundation --> Phase1
@@ -91,6 +92,8 @@ flowchart TB
   EH --> AS
   DO --> AM
   MS --> VRAG
+  PD --> KAO
+  LER --> KAO
 
   Phase1 --> Phase2
   Phase2 --> Phase3
@@ -195,10 +198,12 @@ flowchart TB
 |------|------|------|------|
 | multi-user-office | 跨前后端 | 大部分基座 | 多人同时进入办公室 |
 | production-deployment | DevOps | 大部分基座 | Docker Compose + Prometheus + 零停机 |
+| k8s-agent-operator | 后端 | production-deployment, lobster-executor-real | K8s Operator 管理 Agent Pod 生命周期、自动扩缩容 |
 
 产出：
 - 多人协作办公室
 - 一键生产部署
+- K8s 原生 Agent 编排与自动扩缩容
 
 ---
 
@@ -413,6 +418,7 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| K8s 编排 | production-deployment + lobster-executor-real → k8s-agent-operator | 先有 Docker Compose 部署和真实执行器，再升级到 K8s Operator 管理 |
 
 ## 风险提示
 

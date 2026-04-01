@@ -207,7 +207,7 @@ cube-pets-office/
 │       └── index.ts                 # 模块导出
 │
 ├── services/
-│   └── lobster-executor/            # Docker 参考执行器（当前 mock-first）
+│   ├── lobster-executor/            # Docker 参考执行器（当前 mock-first）
 │       ├── src/
 │       │   ├── index.ts             # 服务入口
 │       │   ├── app.ts               # Express 应用（/health, /api/executor/jobs）
@@ -217,6 +217,33 @@ cube-pets-office/
 │       │   ├── request-schema.ts    # 请求校验
 │       │   ├── types.ts             # 类型定义
 │       │   └── app.test.ts          # 单元测试
+│       ├── tsconfig.json
+│       └── vitest.config.ts
+│   └── k8s-agent-operator/          # K8s Agent Operator
+│       ├── src/
+│       │   ├── index.ts             # Operator 主入口
+│       │   ├── types/
+│       │   │   └── agent-deployment.ts  # CRD 类型定义
+│       │   ├── controller/
+│       │   │   ├── controller.ts    # Informer + 工作队列
+│       │   │   └── reconciler.ts    # 协调逻辑
+│       │   ├── scaler/
+│       │   │   ├── scaler.ts        # 自动扩缩容
+│       │   │   └── metrics-client.ts # 指标采集
+│       │   ├── webhook/
+│       │   │   └── webhook-server.ts # Admission Webhook
+│       │   ├── metrics/
+│       │   │   └── metrics-exporter.ts # Prometheus 指标
+│       │   ├── api/
+│       │   │   └── api-server.ts    # REST API + WebSocket
+│       │   ├── migration/
+│       │   │   └── migration-tool.ts # Docker Compose 迁移
+│       │   └── utils/
+│       │       ├── logger.ts        # 结构化日志
+│       │       └── event-recorder.ts # K8s Event 记录
+│       ├── deploy/
+│       │   ├── crd.yaml             # CRD 定义
+│       │   └── operator.yaml        # Operator 部署清单
 │       ├── tsconfig.json
 │       └── vitest.config.ts
 │
@@ -278,7 +305,8 @@ cube-pets-office/
 │       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
 │       ├── multi-user-office/     # 多人实时协作办公室
 │       ├── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
-│       └── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
+│       ├── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
+│       └── k8s-agent-operator/  # K8s Agent Operator（CRD + 自动扩缩容）
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -317,6 +345,7 @@ cube-pets-office/
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 | 向量数据库与 RAG 管道 | `.kiro/specs/vector-db-rag-pipeline/` | `server/rag/ingestion/ingestion-pipeline.ts` `server/rag/chunking/chunk-router.ts` `server/rag/embedding/embedding-generator.ts` `server/rag/store/vector-store-adapter.ts` `server/rag/retrieval/rag-retriever.ts` `server/rag/augmentation/rag-pipeline.ts` `server/routes/rag.ts` `shared/rag/contracts.ts` `client/src/components/rag/RAGInfoPanel.tsx` | 🔲 待开发 |
+| K8s Agent Operator | `.kiro/specs/k8s-agent-operator/` | `services/k8s-agent-operator/src/index.ts` `services/k8s-agent-operator/src/controller/reconciler.ts` `services/k8s-agent-operator/src/scaler/scaler.ts` `services/k8s-agent-operator/src/webhook/webhook-server.ts` `services/k8s-agent-operator/src/migration/migration-tool.ts` | 🔲 待开发 |
 
 ## 核心数据流
 
