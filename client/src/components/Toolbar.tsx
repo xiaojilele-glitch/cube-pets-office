@@ -367,45 +367,15 @@ export function Toolbar() {
 
   return (
     <>
-      <div
-        className={`fixed z-[60] ${isTablet ? 'left-5 top-5 w-[300px]' : 'left-1/2 top-6 w-[min(36vw,420px)] -translate-x-1/2'}`}
-        style={{ pointerEvents: 'auto' }}
-      >
-        <RuntimeCard compact={isTablet} />
-      </div>
-
-      <div
-        className={`fixed z-[60] ${isTablet ? 'right-5 top-5 w-[220px]' : 'right-6 top-6 w-[240px]'}`}
-        style={{ pointerEvents: 'auto' }}
-      >
-        {showGitHubBadge ? (
-          <div className="mb-3">
-            <GitHubRepoBadge />
-          </div>
-        ) : null}
-
-        <div className="rounded-[22px] border border-white/60 bg-white/84 p-3 shadow-[0_12px_32px_rgba(60,44,28,0.12)] backdrop-blur-2xl">
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="truncate text-[13px] font-semibold text-[#3A2A1A]">{focusLabel}</p>
-            </div>
-            <button
-              onClick={toggleLocale}
-              className="inline-flex h-9 min-w-9 items-center justify-center rounded-xl bg-[#F4EDE4] px-2.5 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-[#ECE1D5]"
-              title={copy.app.localeSwitch}
-            >
-              <Globe2 className="mr-1 h-3.5 w-3.5" />
-              {localeLabel}
-            </button>
-          </div>
+      {/* Help card — floats above dock when open */}
+      {showHelp && (
+        <div
+          className="fixed right-6 bottom-24 z-[61] w-[320px]"
+          style={{ pointerEvents: 'auto' }}
+        >
+          <HelpCard onClose={() => setShowHelp(false)} />
         </div>
-
-        {showHelp && (
-          <div className="mt-3">
-            <HelpCard onClose={() => setShowHelp(false)} />
-          </div>
-        )}
-      </div>
+      )}
 
       <div
         className={`fixed left-1/2 z-[60] -translate-x-1/2 ${isTablet ? 'bottom-5' : 'bottom-6'}`}
