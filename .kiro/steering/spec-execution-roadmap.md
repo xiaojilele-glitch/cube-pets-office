@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 2 个新增 Spec（vector-db-rag-pipeline、vr-extension）待开发。
 
 ### 已完成（基座层）
 
@@ -78,6 +78,10 @@ flowchart TB
     PD[production-deployment<br/>生产级部署]
   end
 
+  subgraph Phase7["阶段 7：沉浸式体验"]
+    VRE[vr-extension<br/>AR/VR 扩展模块]
+  end
+
   Foundation --> Phase1
   DDE --> DGE
   WD1 --> WD2
@@ -97,6 +101,9 @@ flowchart TB
   Phase3 --> Phase4
   Phase4 --> Phase5
   Phase5 --> Phase6
+  Phase6 --> Phase7
+  MUO --> VRE
+  F3 --> VRE
 ```
 
 ---
@@ -199,6 +206,23 @@ flowchart TB
 产出：
 - 多人协作办公室
 - 一键生产部署
+
+### 阶段 7：沉浸式体验（3-4 周）
+
+目标：为 3D 协作办公室提供 VR 沉浸式交互能力。
+
+| Spec | 类型 | 依赖 | 说明 |
+|------|------|------|------|
+| vr-extension | 跨前后端 | frontend-3d, multi-user-office | AR/VR 扩展：场景生成、手势交互、3D 看板/数据流、多用户协作、平台适配 |
+
+产出：
+- VR 场景自动生成（组织结构 → 3D 空间映射）
+- 手势交互系统（手势识别 → 命令分发）
+- 3D 任务看板和数据流可视化
+- 多用户 VR 协作（姿态同步、CRDT 一致性）
+- VR 平台适配层（MockVR + WebXR 骨架）
+- 场景性能优化（LOD + 流式加载 + 自适应质量）
+- VR 会话录制与回放
 
 ---
 
@@ -413,9 +437,11 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| VR 扩展 | frontend-3d + multi-user-office → vr-extension | VR 模块依赖 3D 场景基座和多用户协作能力 |
 
 ## 风险提示
 
 - lobster-executor-real 是最大的单点风险：sandbox-live-preview、secure-sandbox、production-deployment 都依赖它
 - workflow-decoupling 的盘点阶段必须在任何前端 spec 之前完成，否则新代码可能引入新的 workflow 依赖
 - multi-user-office 是复杂度最高的 spec，建议放到最后，等其他能力稳定后再做
+- vr-extension 依赖 frontend-3d 和 multi-user-office，是最后实现的能力层，当前阶段聚焦核心数据模型和渲染管道
