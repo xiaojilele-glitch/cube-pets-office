@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 2 个新增 Spec（vector-db-rag-pipeline、edge-brain-deployment）待开发。
 
 ### 已完成（基座层）
 
@@ -76,6 +76,7 @@ flowchart TB
   subgraph Phase6["阶段 6：规模化"]
     MUO[multi-user-office<br/>多人协作办公室]
     PD[production-deployment<br/>生产级部署]
+    EBD[edge-brain-deployment<br/>EdgeBrain 边缘部署]
   end
 
   Foundation --> Phase1
@@ -91,6 +92,9 @@ flowchart TB
   EH --> AS
   DO --> AM
   MS --> VRAG
+  SS --> EBD
+  SPR --> EBD
+  MR --> EBD
 
   Phase1 --> Phase2
   Phase2 --> Phase3
@@ -195,10 +199,12 @@ flowchart TB
 |------|------|------|------|
 | multi-user-office | 跨前后端 | 大部分基座 | 多人同时进入办公室 |
 | production-deployment | DevOps | 大部分基座 | Docker Compose + Prometheus + 零停机 |
+| edge-brain-deployment | 跨前后端 | mission-runtime, secure-sandbox, state-persistence-recovery | EdgeBrain 边缘部署（离线 Agent + 双向同步） |
 
 产出：
 - 多人协作办公室
 - 一键生产部署
+- EdgeBrain 边缘节点管理和离线 Agent 执行
 
 ---
 
@@ -413,9 +419,11 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| 边缘部署 | mission-runtime + secure-sandbox + state-persistence-recovery → edge-brain-deployment | 边缘节点需要安全执行层和状态恢复能力作为前置 |
 
 ## 风险提示
 
 - lobster-executor-real 是最大的单点风险：sandbox-live-preview、secure-sandbox、production-deployment 都依赖它
 - workflow-decoupling 的盘点阶段必须在任何前端 spec 之前完成，否则新代码可能引入新的 workflow 依赖
 - multi-user-office 是复杂度最高的 spec，建议放到最后，等其他能力稳定后再做
+- edge-brain-deployment 涉及分布式同步和冲突解决，复杂度较高，建议在安全层和状态恢复完成后再启动
