@@ -278,7 +278,8 @@ cube-pets-office/
 │       ├── autonomous-swarm/      # 跨 Pod 自主协作 (Swarm)
 │       ├── multi-user-office/     # 多人实时协作办公室
 │       ├── a2a-protocol/         # A2A 跨框架 Agent 互操作协议
-│       └── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
+│       ├── vector-db-rag-pipeline/ # 向量数据库与 RAG 管道
+│       └── collaboration-replay/  # 协作回放系统
 │
 ├── .env                             # 环境变量（唯一配置真源，不进 Git）
 ├── .env.example                     # 环境变量模板
@@ -317,6 +318,7 @@ cube-pets-office/
 | 多人协作办公室 | `.kiro/specs/multi-user-office/` | `server/core/room-manager.ts` `shared/room.ts` `client/src/lib/multi-user-store.ts` `server/routes/rooms.ts` | 🔲 待开发 |
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 | 向量数据库与 RAG 管道 | `.kiro/specs/vector-db-rag-pipeline/` | `server/rag/ingestion/ingestion-pipeline.ts` `server/rag/chunking/chunk-router.ts` `server/rag/embedding/embedding-generator.ts` `server/rag/store/vector-store-adapter.ts` `server/rag/retrieval/rag-retriever.ts` `server/rag/augmentation/rag-pipeline.ts` `server/routes/rag.ts` `shared/rag/contracts.ts` `client/src/components/rag/RAGInfoPanel.tsx` | 🔲 待开发 |
+| 协作回放系统 | `.kiro/specs/collaboration-replay/` | `shared/replay/contracts.ts` `server/replay/event-collector.ts` `server/replay/interceptors.ts` `server/replay/replay-store.ts` `server/replay/audit-logger.ts` `server/routes/replay.ts` `client/src/lib/replay/replay-engine.ts` `client/src/lib/replay/replay-store-ui.ts` `client/src/components/replay/ReplayPage.tsx` `client/src/components/replay/ReplayScene3D.tsx` | 🔲 待开发 |
 
 ## 核心数据流
 
