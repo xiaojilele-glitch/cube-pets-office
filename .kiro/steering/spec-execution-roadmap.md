@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。
+28 个 Spec，其中 8 个已完成，20 个待开发。另有 1 个新增 Spec（vector-db-rag-pipeline）待开发。另有 1 个新增 Spec（data-lineage-tracking）待开发。
 
 ### 已完成（基座层）
 
@@ -51,6 +51,7 @@ flowchart TB
     WD2[workflow-decoupling 数据补齐<br/>+ mission-native-projection]
     CO[cost-observability<br/>Token / 费用监控]
     VRAG[vector-db-rag-pipeline<br/>向量数据库与 RAG 管道]
+    DLT[data-lineage-tracking<br/>数据血缘追踪]
   end
 
   subgraph Phase3["阶段 3：安全 + 可靠性"]
@@ -91,6 +92,7 @@ flowchart TB
   EH --> AS
   DO --> AM
   MS --> VRAG
+  MR --> DLT
 
   Phase1 --> Phase2
   Phase2 --> Phase3
@@ -132,6 +134,7 @@ flowchart TB
 | workflow-decoupling (数据补齐) + mission-native-projection (后端) | 跨前后端 | 盘点完成 | MissionRecord 丰富化 + /api/planets |
 | cost-observability | 跨前后端 | 无 | Token/费用监控（LLM 调用层埋点） |
 | vector-db-rag-pipeline | 跨前后端 | memory-system | 向量数据库 + RAG 管道（语义检索增强层） |
+| data-lineage-tracking | 跨前后端 | mission-runtime | 数据血缘追踪（采集/查询/审计/可视化） |
 
 产出：
 - 指令 → 真实 Docker 执行 → 产物回传 完整闭环
@@ -413,6 +416,7 @@ flowchart TB
 | 3D 场景扩展 | scene-mission-fusion → sandbox-live-preview | 共享 Html 桥接模式 |
 | 数据源 | workflow-decoupling → 所有前端 spec | 解耦完成后前端代码更干净 |
 | 记忆增强 | memory-system → vector-db-rag-pipeline | RAG 管道作为记忆系统的语义检索增强层，不替换现有记忆 |
+| 数据血缘 | mission-runtime + runtime-agent → data-lineage-tracking | 血缘采集器集成到 Agent 框架和 Mission 状态机，依赖 mission-runtime 基座 |
 
 ## 风险提示
 
