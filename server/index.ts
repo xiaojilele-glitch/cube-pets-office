@@ -425,6 +425,7 @@ async function startServer() {
 
   costTracker.loadHistory();
 
+<<<<<<< HEAD
   // ── Collaboration Replay: EventCollector + Interceptors (Requirements: 1.3, 1.4, 2.1) ──
   const { ServerReplayStore } = await import("./replay/replay-store.js");
   const { EventCollector } = await import("./replay/event-collector.js");
@@ -469,6 +470,17 @@ async function startServer() {
       io.emit("knowledge.entityChanged", { entity, action });
     }
   });
+=======
+  // RAG pipeline (conditional on rag.enabled)
+  const { getRAGConfig } = await import("./rag/config.js");
+  const ragConfig = getRAGConfig();
+  if (ragConfig.enabled) {
+    const { initRAG } = await import("./rag/index.js");
+    const ragDeps = initRAG();
+    const { createRAGRouter } = await import("./routes/rag.js");
+    app.use("/api/rag", createRAGRouter(ragDeps));
+  }
+>>>>>>> feat/L16-vector-db-rag-pipeline
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
