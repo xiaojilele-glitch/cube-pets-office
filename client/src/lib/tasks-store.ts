@@ -673,6 +673,87 @@ function buildMissionLogSummary(
 }
 
 /**
+ * Planet-native summary 构建：从 MissionPlanetOverviewItem 派生。
+ * 可选传入 MissionRecord 以获取 workPackages/messageLog 等丰富化字段。
+ */
+export function buildPlanetSummaryRecord(
+  planet: MissionPlanetOverviewItem,
+  mission?: MissionRecord
+): MissionTaskSummary {
+  const workPackages = mission?.workPackages ?? [];
+  const messageLog = mission?.messageLog ?? [];
+  const events = mission?.events ?? [];
+  const artifacts = mission?.artifacts ?? [];
+
+  const taskCount = workPackages.length;
+  const completedTaskCount = workPackages.filter(
+    wp => wp.status === "passed" || wp.status === "verified"
+  ).length;
+  const messageCount = messageLog.length;
+  const activeAgentCount = mission?.agentCrew
+    ? mission.agentCrew.filter(a => a.status === "working" || a.status === "thinking").length
+    : 0;
+
+  const failureReasons: string[] = [];
+  if (mission) {
+    failureReasons.push(...missionFailureReasons(mission, events));
+  }
+
+  const waitingFor = planet.waitingFor ?? null;
+  const currentStageKey = planet.currentStageKey ?? null;
+  const currentStageLabel = planet.currentStageLabel ?? null;
+
+  const summaryText = mission
+    ? missionSummaryText(mission, events, waitingFor)
+    : trimText(planet.summary, 180) || "Mission is progressing through the execution pipeline.";
+
+  const startedAt = mission ? missionStartedAt(mission) : null;
+
+  const lastEvent = events[events.length - 1];
+  const lastMessage = messageLog[messageLog.length - 1];
+
+  return {
+    id: planet.id,
+    title: trimText(planet.title, 76) || "Untitled mission",
+    kind: planet.kind || "general",
+    sourceText: planet.sourceText || planet.title,
+    status: planet.status === "archived" ? "done" : planet.status,
+    workflowStatus: workflowStatusFromMission(
+      planet.status === "archived" ? "done" : planet.status
+    ),
+    progress: clampPercentage(planet.progress),
+    currentStageKey,
+    currentStageLabel,
+    summary: summaryText,
+    waitingFor,
+    createdAt: planet.createdAt,
+    updatedAt: planet.updatedAt,
+    startedAt,
+    completedAt: planet.completedAt ?? null,
+    departmentLabels:
+      planet.tags.length > 0
+        ? planet.tags
+        : planet.kind
+          ? [capitalize(planet.kind.replace(/[_-]/g, " "))]
+          : [],
+    taskCount,
+    completedTaskCount,
+    messageCount,
+    activeAgentCount,
+    attachmentCount: artifacts.length,
+    issueCount: failureReasons.length,
+    hasWarnings:
+      failureReasons.length > 0 ||
+      events.some((event: MissionEvent) => event.level === "warn"),
+    lastSignal:
+      trimText(lastEvent?.message, 96) ||
+      trimText(lastMessage?.content, 96) ||
+      currentStageLabel ||
+      null,
+  };
+}
+
+/**
  * summary 构建：完全从 MissionRecord 派生。
  */
 function buildSummaryRecord(mission: MissionRecord): MissionTaskSummary {
@@ -1082,7 +1163,9 @@ function startTaskStoreWatchers() {
 }
 
 /**
- * 从 MissionRecord 构建任务数据（mission-native 数据源）。
+ * 任务数据加载入口。
+ * Advanced Mode: 优先走 planet-native，失败时降级到 mission-native。
+ * Frontend Mode: 走 mission-native。
  */
 async function hydrateTaskData(
   set: (
@@ -1094,7 +1177,17 @@ async function hydrateTaskData(
   options?: { preferredTaskId?: string | null }
 ): Promise<void> {
   startTaskStoreWatchers();
-  ensureMissionSocket(set, get);
+
+  if (useAppStore.getState().runtimeMode === "advanced") {
+    try {
+      await hydratePlanetTaskData(set, get, options);
+      return;
+    } catch (error) {
+      console.warn("[Tasks] Planet hydration failed, falling back to mission hydration:", error);
+    }
+  }
+
+  // mission-native fallback  ensureMissionSocket(set, get);
 
   const missionsResponse = await listMissions(200);
   const missions = [...missionsResponse.tasks].sort(
@@ -1152,8 +1245,66 @@ async function hydrateTaskData(
   });
 }
 
-/* Planet-native hydration is planned for L11 (mission-native-projection).
-   Currently using mission-native hydration only. */
+/**
+ * Planet-native hydration: uses /api/planets endpoints.
+ */
+async function hydratePlanetTaskData(
+  set: (
+    partial:
+      | Partial<TasksStoreState>
+      | ((state: TasksStoreState) => Partial<TasksStoreState>)
+  ) => void,
+  get: () => TasksStoreState,
+  options?: { preferredTaskId?: string | null }
+): Promise<void> {
+  ensureMissionSocket(set, get);
+
+  const [planetsResponse, missionsResponse] = await Promise.all([
+    listPlanets(200),
+    listMissions(200),
+  ]);
+
+  const planets = planetsResponse.planets;
+  const missionById = new Map<string, MissionRecord>(
+    missionsResponse.tasks.map((m: MissionRecord) => [m.id, m])
+  );
+
+  const summaries = planets
+    .map((planet: MissionPlanetOverviewItem) => buildPlanetSummaryRecord(planet, missionById.get(planet.id)))
+    .sort((left: MissionTaskSummary, right: MissionTaskSummary) => right.updatedAt - left.updatedAt);
+
+  const selectedTaskId = resolveSelectedTaskId(
+    summaries,
+    get().selectedTaskId,
+    options?.preferredTaskId
+  );
+
+  const detailsById: Record<string, MissionTaskDetail> = {};
+  for (const planet of planets) {
+    const mission = missionById.get(planet.id);
+    if (!mission) continue;
+
+    if (planet.id === selectedTaskId) {
+      try {
+        const interiorResponse = await getPlanetInterior(planet.id);
+        detailsById[planet.id] = buildPlanetDetailRecord(planet, interiorResponse.interior, mission);
+      } catch {
+        detailsById[planet.id] = buildMissionDetailRecord(mission);
+      }
+    } else {
+      detailsById[planet.id] = buildMissionDetailRecord(mission);
+    }
+  }
+
+  set({
+    ready: true,
+    loading: false,
+    error: null,
+    tasks: summaries,
+    detailsById,
+    selectedTaskId,
+  });
+}
 
 export const useTasksStore = create<TasksStoreState>((set, get) => ({
   ready: false,
