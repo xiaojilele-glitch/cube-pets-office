@@ -6,13 +6,13 @@
 
 ## 任务
 
-- [ ] 1. 共享类型定义与本体模型注册表
-  - [ ] 1.1 创建 `shared/knowledge/types.ts`，定义 Entity、Relation、EntityFilters、RelationFilters、QueryResult、UnifiedKnowledgeResult、ExtractionResult、ExtractionStats、LifecycleLogEntry 等共享类型
+- [x] 1. 共享类型定义与本体模型注册表
+  - [x] 1.1 创建 `shared/knowledge/types.ts`，定义 Entity、Relation、EntityFilters、RelationFilters、QueryResult、UnifiedKnowledgeResult、ExtractionResult、ExtractionStats、LifecycleLogEntry 等共享类型
     - 包含所有 source 枚举值、status 枚举值、扩展属性接口（CodeModuleExtended、APIExtended、ArchitectureDecisionExtended）
     - _Requirements: 1.3, 1.4_
-  - [ ] 1.2 创建 `shared/knowledge/api.ts`，定义 API 路由常量和请求/响应类型
+  - [x] 1.2 创建 `shared/knowledge/api.ts`，定义 API 路由常量和请求/响应类型
     - _Requirements: 7.1, 7.2, 8.2, 8.3, 8.5, 9.6_
-  - [ ] 1.3 创建 `server/knowledge/ontology-registry.ts`，实现 OntologyRegistry 类
+  - [x] 1.3 创建 `server/knowledge/ontology-registry.ts`，实现 OntologyRegistry 类
     - 初始化 10 个核心实体类型和 11 个核心关系类型
     - 实现 getEntityTypes()、getRelationTypes()、registerEntityType()、registerRelationType()
     - 实现 onChange 事件监听和 ontology.changed 事件触发
@@ -25,15 +25,15 @@
     - **Property 4: 本体变更事件触发**
     - **Validates: Requirements 1.7**
 
-- [ ] 2. 图谱存储引擎
-  - [ ] 2.1 创建 `server/knowledge/graph-store.ts`，实现 GraphStore 类
+- [x] 2. 图谱存储引擎
+  - [x] 2.1 创建 `server/knowledge/graph-store.ts`，实现 GraphStore 类
     - 实现实体 CRUD：createEntity、getEntity、findEntities、updateEntity、mergeEntity
     - 实现关系 CRUD：createRelation、getRelation、findRelations、updateRelation
     - 实现去重逻辑（entityType + projectId + filePath + name 唯一键）
     - 实现 debounced JSON 文件持久化（`data/knowledge/graph-{projectId}.json`）
     - 实现 onEntityChanged 事件回调
     - _Requirements: 1.3, 1.4, 2.6_
-  - [ ] 2.2 实现图遍历方法：getNeighbors（BFS N 跳）、findPath（BFS 最短路径）、getSubgraph
+  - [x] 2.2 实现图遍历方法：getNeighbors（BFS N 跳）、findPath（BFS 最短路径）、getSubgraph
     - 使用 visited set 防止循环引用
     - _Requirements: 4.1_
   - [ ]* 2.3 编写 GraphStore 属性测试
@@ -52,16 +52,16 @@
     - **Property 13: 图遍历深度约束**
     - **Validates: Requirements 4.1**
 
-- [ ] 3. 生命周期管理与垃圾回收
-  - [ ] 3.1 创建 `server/knowledge/lifecycle-log.ts`，实现 LifecycleLog 类
+- [x] 3. 生命周期管理与垃圾回收
+  - [x] 3.1 创建 `server/knowledge/lifecycle-log.ts`，实现 LifecycleLog 类
     - JSONL 追加写入到 `data/knowledge/lifecycle-log.jsonl`
     - 实现 append(entry) 和 query(filters) 方法
     - _Requirements: 6.5_
-  - [ ] 3.2 在 GraphStore 中实现实体状态机：enforceStatusTransition 方法
+  - [x] 3.2 在 GraphStore 中实现实体状态机：enforceStatusTransition 方法
     - 仅允许 active → deprecated、deprecated → archived、archived → active
     - 状态变更时写入 lifecycle log
     - _Requirements: 6.1_
-  - [ ] 3.3 创建 `server/knowledge/garbage-collector.ts`，实现 KnowledgeGarbageCollector 类
+  - [x] 3.3 创建 `server/knowledge/garbage-collector.ts`，实现 KnowledgeGarbageCollector 类
     - archiveExpiredDeprecated()：deprecated 超过 archiveAfterDays 转 archived
     - deleteLowQualityEntities()：confidence < 0.3 且 > 30 天且未被查询引用
     - mergeDuplicateEntities()：name + entityType + projectId 相似度 > 0.9 合并
@@ -76,22 +76,22 @@
     - **Property 18: 垃圾回收正确性**
     - **Validates: Requirements 6.3**
 
-- [ ] 4. Checkpoint - 确保所有测试通过
+- [x] 4. Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户。
 
-- [ ] 5. 代码知识提取器
-  - [ ] 5.1 创建 `server/knowledge/code-extractor.ts`，实现 CodeKnowledgeExtractor 类
+- [x] 5. 代码知识提取器
+  - [x] 5.1 创建 `server/knowledge/code-extractor.ts`，实现 CodeKnowledgeExtractor 类
     - 实现 TypeScript/JavaScript AST 解析提取（使用 typescript compiler API）
     - 提取 CodeModule 实体（含 filePath、language、linesOfCode、complexity、exports）
     - 提取 API 实体（从路由定义中提取 endpoint、httpMethod 等）
     - 提取 DEPENDS_ON 关系（从 import 语句）
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
-  - [ ] 5.2 实现增量提取逻辑
+  - [x] 5.2 实现增量提取逻辑
     - 接受 sinceCommit 参数，通过 git diff 获取变更文件列表
     - 对已存在实体执行 merge，对已删除代码标记 deprecated
     - 记录 ExtractionStats 调试日志
     - _Requirements: 2.5, 2.7, 6.2_
-  - [ ] 5.3 实现 LLM 辅助提取（非直接支持的语言）
+  - [x] 5.3 实现 LLM 辅助提取（非直接支持的语言）
     - 将代码片段 + 本体模型定义发送给 LLM，解析 JSON 输出
     - LLM 提取结果 confidence 默认 0.7
     - _Requirements: 2.2_
@@ -105,16 +105,16 @@
     - **Property 17: 删除文件触发废弃标记**
     - **Validates: Requirements 6.2**
 
-- [ ] 6. Agent 知识沉淀服务
-  - [ ] 6.1 创建 `server/knowledge/agent-sink.ts`，实现 AgentKnowledgeSink 类
+- [x] 6. Agent 知识沉淀服务
+  - [x] 6.1 创建 `server/knowledge/agent-sink.ts`，实现 AgentKnowledgeSink 类
     - 实现 recordDecision(payload)：验证必填字段（context、decision、alternatives、consequences），创建 ArchitectureDecision 实体
     - 实现 recordRule(payload)：创建 BusinessRule 实体
     - 实现 recordBugfix(payload)：创建 Bug 实体和 CAUSED_BY、RESOLVED_BY 关系
     - _Requirements: 3.1, 3.4_
-  - [ ] 6.2 实现自动关系建立逻辑
+  - [x] 6.2 实现自动关系建立逻辑
     - 写入实体时自动创建 EXECUTED_BY（关联 Mission）、KNOWS_ABOUT（关联 Agent）、BELONGS_TO 关系
     - _Requirements: 3.5_
-  - [ ] 6.3 实现被动提取模式
+  - [x] 6.3 实现被动提取模式
     - 监听 task.completed 事件，将 Agent 产出发送给 LLM 提取
     - confidence < 0.5 的条目标记 needsReview: true，进入审核队列
     - 写入 Mission 的 knowledgeSinkSummary 统计信息
@@ -129,19 +129,19 @@
     - **Property 10: 知识写入自动关系建立**
     - **Validates: Requirements 3.5**
 
-- [ ] 7. 图查询服务
-  - [ ] 7.1 创建 `server/knowledge/query-service.ts`，实现 KnowledgeGraphQuery 类
+- [x] 7. 图查询服务
+  - [x] 7.1 创建 `server/knowledge/query-service.ts`，实现 KnowledgeGraphQuery 类
     - 实现 getEntity、findEntities、getNeighbors、findPath、subgraph 查询
     - 实现结果按 confidence 降序排序，低置信度标注
     - 实现项目隔离（查询时强制 projectId 过滤）
     - 实现超时处理（返回部分结果 + isPartial: true）
     - _Requirements: 4.1, 4.4, 4.5, 4.6_
-  - [ ] 7.2 实现 naturalLanguageQuery 方法
+  - [x] 7.2 实现 naturalLanguageQuery 方法
     - 将问题 + 本体模型发送给 LLM 转译为结构化查询参数
     - 执行图查询，组装 contextSummary
     - LLM 转译失败时降级为向量检索
     - _Requirements: 4.2, 4.3_
-  - [ ] 7.3 实现 ArchitectureDecision 版本链查询
+  - [x] 7.3 实现 ArchitectureDecision 版本链查询
     - 默认返回最新版本，includeHistory: true 返回完整版本链
     - _Requirements: 6.4_
   - [ ]* 7.4 编写图查询属性测试
@@ -151,11 +151,11 @@
     - **Property 19: 架构决策版本链**
     - **Validates: Requirements 6.4**
 
-- [ ] 8. Checkpoint - 确保所有测试通过
+- [x] 8. Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户。
 
-- [ ] 9. 审核队列
-  - [ ] 9.1 创建 `server/knowledge/review-queue.ts`，实现 KnowledgeReviewQueue 类
+- [x] 9. 审核队列
+  - [x] 9.1 创建 `server/knowledge/review-queue.ts`，实现 KnowledgeReviewQueue 类
     - 实现 getQueue(filters)：按 projectId、entityType 筛选，按 confidence 排序
     - 实现 review(entityId, action)：approve（confidence → max(current, 0.8)）、reject（→ archived）、edit（更新后 approve）
     - 区分人工审核（confidence → 0.8）和 Agent 审核（confidence → 0.7）
@@ -165,17 +165,17 @@
     - **Property 21: 审核操作置信度调整**
     - **Validates: Requirements 7.2, 7.3**
 
-- [ ] 10. 统一知识检索与双向同步
-  - [ ] 10.1 创建 `server/knowledge/knowledge-service.ts`，实现 KnowledgeService 类
+- [x] 10. 统一知识检索与双向同步
+  - [x] 10.1 创建 `server/knowledge/knowledge-service.ts`，实现 KnowledgeService 类
     - 实现 query(question, projectId, options)：同时触发图查询和向量检索
     - 实现结果融合逻辑：preferStructured / preferSemantic / balanced 三种模式
     - 返回 UnifiedKnowledgeResult（structuredResults + semanticResults + mergedSummary）
     - _Requirements: 5.1, 5.5_
-  - [ ] 10.2 实现图谱 → 记忆方向同步
+  - [x] 10.2 实现图谱 → 记忆方向同步
     - 监听 graph.entityChanged 事件，异步生成文本摘要写入向量存储
     - 维护 linkedMemoryIds 和 linkedEntityId 双向链接
     - _Requirements: 5.2, 5.4_
-  - [ ] 10.3 实现记忆 → 图谱方向同步（批处理）
+  - [x] 10.3 实现记忆 → 图谱方向同步（批处理）
     - 从长期记忆中识别结构化知识候选项，推送到审核队列
     - _Requirements: 5.3_
   - [ ]* 10.4 编写统一检索属性测试
@@ -185,11 +185,11 @@
     - **Property 15: 图谱到向量同步双向链接**
     - **Validates: Requirements 5.4**
 
-- [ ] 11. 可观测性与运维 API
-  - [ ] 11.1 创建 `server/knowledge/metrics.ts`，实现 Prometheus 指标暴露
+- [x] 11. 可观测性与运维 API
+  - [x] 11.1 创建 `server/knowledge/metrics.ts`，实现 Prometheus 指标暴露
     - knowledge_graph_entity_total、knowledge_graph_relation_total、knowledge_graph_query_total、knowledge_graph_query_duration_ms、knowledge_extraction_total、knowledge_review_queue_size、knowledge_confidence_distribution
     - _Requirements: 8.1_
-  - [ ] 11.2 创建 `server/routes/knowledge-admin.ts`，实现运维 API
+  - [x] 11.2 创建 `server/routes/knowledge-admin.ts`，实现运维 API
     - GET /api/admin/knowledge/stats：图谱统计（按项目/类型分组、平均 confidence、状态占比、7 天趋势）
     - POST /api/admin/knowledge/reindex：触发向量索引重建，返回任务 ID
     - GET /api/admin/knowledge/reindex/:taskId：查询重建进度
@@ -199,47 +199,47 @@
     - **Property 22: 图谱导出往返一致性**
     - **Validates: Requirements 8.5**
 
-- [ ] 12. 公开 API 路由与 WebSocket 事件
-  - [ ] 12.1 创建 `server/routes/knowledge.ts`，实现公开 API
+- [x] 12. 公开 API 路由与 WebSocket 事件
+  - [x] 12.1 创建 `server/routes/knowledge.ts`，实现公开 API
     - GET /api/knowledge/graph：返回可视化所需的节点和边数据
     - GET /api/knowledge/review-queue：查询待审列表
     - POST /api/knowledge/review/:entityId：执行审核操作
     - POST /api/knowledge/query：统一知识检索
     - _Requirements: 7.1, 7.2, 9.6_
-  - [ ] 12.2 在 `server/index.ts` 中注册知识图谱路由和 WebSocket 事件
+  - [x] 12.2 在 `server/index.ts` 中注册知识图谱路由和 WebSocket 事件
     - 注册 /api/knowledge/* 和 /api/admin/knowledge/* 路由
     - 广播 knowledge.entityChanged WebSocket 事件
     - _Requirements: 9.6_
 
-- [ ] 13. Checkpoint - 确保所有测试通过
+- [x] 13. Checkpoint - 确保所有测试通过
   - 确保所有测试通过，如有问题请询问用户。
 
-- [ ] 14. 前端知识图谱可视化
-  - [ ] 14.1 创建 `client/src/components/knowledge/KnowledgeGraphPanel.tsx`
+- [x] 14. 前端知识图谱可视化
+  - [x] 14.1 创建 `client/src/components/knowledge/KnowledgeGraphPanel.tsx`
     - 使用 d3-force 实现力导向图可视化
     - 不同 entityType 使用不同颜色和图标，节点大小反映关联关系数量
     - 支持交互：点击展开详情、双击展开邻居、框选子图、搜索定位
     - _Requirements: 9.1, 9.2_
-  - [ ] 14.2 创建 `client/src/components/knowledge/KnowledgeFilters.tsx`
+  - [x] 14.2 创建 `client/src/components/knowledge/KnowledgeFilters.tsx`
     - entityType 勾选显示/隐藏、confidence 阈值滑块、status 过滤、relationType 勾选
     - _Requirements: 9.3_
-  - [ ] 14.3 创建 `client/src/components/knowledge/KnowledgeNodeDetail.tsx`
+  - [x] 14.3 创建 `client/src/components/knowledge/KnowledgeNodeDetail.tsx`
     - 节点详情面板：显示实体属性、关联实体列表
     - _Requirements: 9.2_
-  - [ ] 14.4 创建 `client/src/components/knowledge/KnowledgeReviewPanel.tsx`
+  - [x] 14.4 创建 `client/src/components/knowledge/KnowledgeReviewPanel.tsx`
     - 待审条目列表：实体/关系详情、来源 Agent、confidence、关联上下文
     - 支持 approve/reject/edit 操作
     - _Requirements: 9.5_
-  - [ ] 14.5 实现 MissionIsland 3D 场景集成
+  - [x] 14.5 实现 MissionIsland 3D 场景集成
     - 在 TelemetryOverlay 中添加知识子图浮动面板
     - Agent 执行图查询时展示查询涉及的知识子图
     - _Requirements: 9.4_
-  - [ ] 14.6 创建 `client/src/lib/knowledge-store.ts`，实现 Zustand store
+  - [x] 14.6 创建 `client/src/lib/knowledge-store.ts`，实现 Zustand store
     - 管理图谱数据、过滤器状态、审核队列
     - 通过 WebSocket 订阅 knowledge.entityChanged 实时更新
     - _Requirements: 9.6_
 
-- [ ] 15. 最终 Checkpoint - 全量测试验证
+- [x] 15. 最终 Checkpoint - 全量测试验证
   - 确保所有测试通过，如有问题请询问用户。
 
 ## 备注

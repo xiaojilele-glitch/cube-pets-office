@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "projectId": "other-proj",
+  "lastUpdated": "2026-04-02T09:02:41.110Z",
+  "entities": [
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "9871baa6-b26c-4ce3-b1ee-8e13e40d493b",
+      "createdAt": "2026-04-02T05:34:35.308Z",
+      "updatedAt": "2026-04-02T05:34:35.308Z",
+      "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "3ef45c4c-b06d-4ac8-ad36-320a8407be3b",
+      "createdAt": "2026-04-02T05:47:14.120Z",
+      "updatedAt": "2026-04-02T05:47:14.120Z",
+      "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "6869e8dc-ffa7-4636-9780-ebaa5494e8c9",
+      "createdAt": "2026-04-02T05:57:56.191Z",
+      "updatedAt": "2026-04-02T05:57:56.191Z",
+      "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "2df73551-a797-45b7-910e-3c34899d2376",
+      "createdAt": "2026-04-02T06:07:38.323Z",
+      "updatedAt": "2026-04-02T06:07:38.323Z",
+      "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "906ad047-9b17-4c01-a918-49a619dd66ff",
+      "createdAt": "2026-04-02T07:21:10.741Z",
+      "updatedAt": "2026-04-02T07:21:10.741Z",
+      "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "c950881f-9f19-4c07-ad1c-fdb41c734547",
+      "createdAt": "2026-04-02T08:20:26.874Z",
+      "updatedAt": "2026-04-02T08:20:26.874Z",
+      "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "6812c0cb-6e0b-4e7a-848d-aaa5502d0406",
+      "createdAt": "2026-04-02T09:02:41.110Z",
+      "updatedAt": "2026-04-02T09:02:41.110Z",
+      "status": "active"
+    }
+  ],
+  "relations": [],
+  "_counters": {
+    "entities": 7,
+    "relations": 0
+  }
+}
