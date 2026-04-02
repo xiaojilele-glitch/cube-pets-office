@@ -12,6 +12,7 @@ export default defineConfig({
     include: [
       "server/tests/**/*.test.ts",
       "shared/**/*.test.ts",
+      "client/src/lib/replay/__tests__/**/*.test.ts",
     ],
   },
 });
