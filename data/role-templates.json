@@ -1,0 +1,845 @@
+{
+  "templates": [],
+  "changeLog": [
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.510Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.519Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.523Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.527Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.532Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.536Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.540Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.545Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.549Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.553Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.557Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.561Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.574Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.579Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.584Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.587Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.592Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.596Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.601Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:06:48.604Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.221Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.231Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.237Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.242Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.247Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.252Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.258Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.264Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.270Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.275Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.281Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.286Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.296Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.302Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.307Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.312Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.317Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.322Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.328Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:15.333Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.324Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.335Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.341Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.345Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.350Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.355Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.360Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.365Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.370Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.374Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.377Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.381Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.389Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.392Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.396Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.400Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.404Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.408Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.413Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:07:52.417Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.750Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.763Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.769Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.774Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.779Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.784Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.790Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.795Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.801Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.806Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.811Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.816Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.825Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.829Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.834Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.838Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.844Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.847Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.853Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:17:59.857Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.708Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.720Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.726Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.730Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.737Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.741Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.747Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.752Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.758Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.763Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.768Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.773Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.786Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.793Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.798Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.803Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.808Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.813Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.818Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T03:49:15.824Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.381Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.395Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.400Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.405Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.411Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "architect",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.416Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.421Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "qa",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.426Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.432Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.437Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "role-x",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.442Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "role-y",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.447Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.457Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.462Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.467Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "reviewer",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.471Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.476Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.481Z",
+      "action": "deprecated",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.486Z",
+      "action": "created",
+      "diff": {}
+    },
+    {
+      "roleId": "coder",
+      "changedBy": "system",
+      "changedAt": "2026-04-02T04:36:37.492Z",
+      "action": "deprecated",
+      "diff": {}
+    }
+  ]
+}

@@ -15,6 +15,7 @@ export interface RuntimeAgentConfig {
   managerId: string | null;
   model: string;
   soulMd: string;
+  currentRoleId?: string | null;
 }
 
 export interface VisionContext {

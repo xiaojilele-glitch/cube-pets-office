@@ -48,6 +48,8 @@ import {
   type WorkflowOrganizationNode,
   type WorkflowOrganizationSnapshot,
 } from '@/lib/workflow-store';
+import { useRoleStore } from '@/lib/role-store';
+import { getRoleColor } from '@/components/AgentRolePanel';
 import {
   MAX_WORKFLOW_ATTACHMENTS,
   normalizeWorkflowAttachments,
@@ -937,6 +939,65 @@ function ProgressViewLegacy() {
   );
 }
 
+function RoleSwitchTimeline() {
+  const locale = useAppStore(state => state.locale);
+  const agentRoles = useRoleStore(state => state.agentRoles);
+  const fmt = useFmt();
+
+  const allSwitches = Array.from(agentRoles.entries()).flatMap(([agentId, info]) =>
+    info.roleHistory.map(entry => ({ agentId, ...entry }))
+  ).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 20);
+
+  if (allSwitches.length === 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+      <div className="mb-3 flex items-center gap-2">
+        <Shield className="h-4 w-4 text-[#B08F72]" />
+        <div>
+          <p className="text-sm font-semibold text-[#3A2A1A]">{t(locale, '角色切换时间轴', 'Role Switch Timeline')}</p>
+          <p className="text-[10px] leading-5 text-[#8B7355]">
+            {t(locale, '各 Agent 的角色切换事件，不同角色用不同颜色标注。', 'Role switch events per agent, color-coded by role.')}
+          </p>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        {allSwitches.map((entry, i) => (
+          <div key={`${entry.agentId}-${entry.timestamp}-${i}`} className="flex items-center gap-2 rounded-lg bg-[#F8F4F0] px-3 py-2">
+            <span
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: getRoleColor(entry.toRole) }}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                <span className="font-semibold text-[#3A2A1A]">{entry.agentId}</span>
+                <span className="text-[#8B7355]">:</span>
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
+                  style={{ backgroundColor: getRoleColor(entry.fromRole) }}
+                >
+                  {entry.fromRole || t(locale, '无', '—')}
+                </span>
+                <span className="text-[#B08F72]">→</span>
+                <span
+                  className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
+                  style={{ backgroundColor: getRoleColor(entry.toRole) }}
+                >
+                  {entry.toRole || t(locale, '无', '—')}
+                </span>
+              </div>
+              <div className="mt-0.5 flex flex-wrap gap-2 text-[9px] text-[#8B7355]">
+                {entry.missionName ? <span>{entry.missionName}</span> : null}
+                <span>{fmt(entry.timestamp)}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ProgressView() {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
@@ -1398,6 +1459,8 @@ function ProgressView() {
             </div>
           )}
         </div>
+
+        <RoleSwitchTimeline />
 
         <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
           <button

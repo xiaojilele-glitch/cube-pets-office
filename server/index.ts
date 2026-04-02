@@ -458,6 +458,8 @@ async function startServer() {
   app.use("/api/skills", skillRoutes);
   const { seedSkills } = await import("./core/skill-seed.js");
   seedSkills();
+  const analyticsRoutes = (await import("./routes/analytics.js")).default;
+  app.use("/api/analytics", analyticsRoutes);
   app.use("/api/replay", replayRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/planets", createPlanetRouter(missionRuntime));
