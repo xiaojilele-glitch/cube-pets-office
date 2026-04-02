@@ -1,4 +1,4 @@
-import { type ChangeEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   AlertTriangle,
@@ -19,10 +19,12 @@ import {
   Network,
   Paperclip,
   PanelRight,
+  Play,
   Search,
   Send,
   Server,
   Shield,
+  Square,
   Star,
   X,
   Zap,
@@ -39,6 +41,7 @@ import { useI18n } from '@/i18n';
 import { prepareWorkflowAttachments } from '@/lib/workflow-attachments';
 import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
+import { createTTSEngine, type ClientVoiceConfig, type TTSEngine } from '@/lib/tts-engine';
 import {
   useWorkflowStore,
   type AgentInfo,
@@ -428,6 +431,47 @@ function getMemoryTypeLabel(
     copy.workflow.statuses.memoryType[
       type as keyof typeof copy.workflow.statuses.memoryType
     ] || type
+  );
+}
+
+// ---------------------------------------------------------------------------
+// WorkflowPanel TTS context — shared across all sub-views (Req 3.4)
+// ---------------------------------------------------------------------------
+
+import { createContext, useContext } from 'react';
+
+interface WorkflowTtsCtx {
+  ttsEnabled: boolean;
+  playingId: string | null;
+  handleTtsPlay: (id: string, content: string) => void;
+}
+
+const WorkflowTtsContext = createContext<WorkflowTtsCtx>({
+  ttsEnabled: false,
+  playingId: null,
+  handleTtsPlay: () => {},
+});
+
+/** Small play/stop button reused wherever agent reply content appears. */
+function TtsPlayButton({ id, content }: { id: string; content: string }) {
+  const { ttsEnabled, playingId, handleTtsPlay } = useContext(WorkflowTtsContext);
+  if (!ttsEnabled) return null;
+  const isPlaying = playingId === id;
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); handleTtsPlay(id, content); }}
+      className={`relative ml-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all ${
+        isPlaying
+          ? 'bg-[#D4845A] text-white shadow-sm'
+          : 'bg-[#F0E8E0] text-[#8B7355] hover:bg-[#E8DDD0]'
+      }`}
+      title={isPlaying ? 'Stop' : 'Play'}
+    >
+      {isPlaying ? <Square className="h-2.5 w-2.5" /> : <Play className="h-2.5 w-2.5" />}
+      {isPlaying && (
+        <span className="absolute inset-0 animate-ping rounded-full bg-[#D4845A] opacity-25" />
+      )}
+    </button>
   );
 }
 
@@ -1701,12 +1745,13 @@ function ProgressView() {
                                         <div className="mt-3 space-y-2">
                                           {blocks.map(block => (
                                             <div key={block.key} className="rounded-lg bg-[#F8F4F0] px-3 py-2">
-                                              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#B08F72]">
+                                              <p className="flex items-center text-[9px] font-semibold uppercase tracking-[0.16em] text-[#B08F72]">
                                                 {block.key === 'deliverable'
                                                   ? t(locale, '交付内容', 'Deliverable')
                                                   : block.key === 'manager_feedback'
                                                     ? t(locale, '经理反馈', 'Manager feedback')
                                                     : t(locale, '审计反馈', 'Audit feedback')}
+                                                <TtsPlayButton id={`task-${task.id}-${block.key}`} content={block.content || ''} />
                                               </p>
                                               <p className="mt-1 whitespace-pre-wrap text-[10px] leading-5 text-[#5A4A3A]">
                                                 {block.content}
@@ -1735,9 +1780,12 @@ function ProgressView() {
                                             <span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span>
                                             <span>{fmt(message.created_at)}</span>
                                           </div>
-                                          <p className="mt-1 text-[10px] leading-5 text-[#5A4A3A]">
-                                            {summarizeText(message.content, copy.common.unavailable, 180)}
-                                          </p>
+                                          <div className="mt-1 flex items-start gap-1">
+                                            <p className="flex-1 text-[10px] leading-5 text-[#5A4A3A]">
+                                              {summarizeText(message.content, copy.common.unavailable, 180)}
+                                            </p>
+                                            {message.content ? <TtsPlayButton id={`msg-${message.id}`} content={message.content} /> : null}
+                                          </div>
                                         </div>
                                       ))}
                                     </div>
@@ -1797,9 +1845,12 @@ function ProgressView() {
                       copy.workflow.stages[message.stage as keyof typeof copy.workflow.stages] || message.stage
                     )}
                   </p>
-                  <p className="mt-2 text-[11px] leading-5 text-[#5A4A3A]">
-                    {summarizeText(message.content, copy.common.unavailable, 180)}
-                  </p>
+                  <div className="mt-2 flex items-start gap-1">
+                    <p className="flex-1 text-[11px] leading-5 text-[#5A4A3A]">
+                      {summarizeText(message.content, copy.common.unavailable, 180)}
+                    </p>
+                    {message.content ? <TtsPlayButton id={`evt-${message.id}`} content={message.content} /> : null}
+                  </div>
                 </div>
               ))}
             </div>
@@ -1890,7 +1941,7 @@ function ReviewView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.review.title} description={copy.workflow.review.description} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        {tasks.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-8 text-center text-[11px] text-[#8B7355]">{copy.workflow.review.empty}</div> : <div className="space-y-3">{tasks.map(task => <div key={task.id} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-[#3A2A1A]">{task.description}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <div className="mt-3 rounded-xl bg-[#F8F4F0] p-3"><p className="mb-1 text-[10px] font-semibold text-[#8B7355]">{copy.workflow.review.deliverable}</p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p></div> : null}{task.manager_feedback ? <div className="mt-3 rounded-xl bg-emerald-50 p-3"><p className="mb-1 text-[10px] font-semibold text-emerald-700">{copy.workflow.review.feedback}</p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#375B46]">{task.manager_feedback}</p></div> : null}{task.meta_audit_feedback ? <div className="mt-3 rounded-xl bg-amber-50 p-3"><p className="mb-1 text-[10px] font-semibold text-amber-700">{copy.workflow.review.audit}</p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#6B5635]">{task.meta_audit_feedback}</p></div> : null}</div>)}</div>}
+        {tasks.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-8 text-center text-[11px] text-[#8B7355]">{copy.workflow.review.empty}</div> : <div className="space-y-3">{tasks.map(task => <div key={task.id} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-[#3A2A1A]">{task.description}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <div className="mt-3 rounded-xl bg-[#F8F4F0] p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-[#8B7355]">{copy.workflow.review.deliverable}<TtsPlayButton id={`rv-del-${task.id}`} content={task.deliverable_v3 || task.deliverable_v2 || task.deliverable || ''} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p></div> : null}{task.manager_feedback ? <div className="mt-3 rounded-xl bg-emerald-50 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-emerald-700">{copy.workflow.review.feedback}<TtsPlayButton id={`rv-mf-${task.id}`} content={task.manager_feedback} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#375B46]">{task.manager_feedback}</p></div> : null}{task.meta_audit_feedback ? <div className="mt-3 rounded-xl bg-amber-50 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-amber-700">{copy.workflow.review.audit}<TtsPlayButton id={`rv-af-${task.id}`} content={task.meta_audit_feedback} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#6B5635]">{task.meta_audit_feedback}</p></div> : null}</div>)}</div>}
       </div>
     </div>
   );
@@ -2100,8 +2151,56 @@ export function WorkflowPanel() {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
   const runtimeMode = useAppStore(state => state.runtimeMode);
+  const ttsEnabled = useAppStore(state => state.ttsEnabled);
+  const ttsAvailable = useAppStore(state => state.ttsAvailable);
   const { isMobile, isTablet } = useViewportTier();
   const { isWorkflowPanelOpen, toggleWorkflowPanel, activeView, setActiveView, initSocket, fetchAgents, fetchStages, fetchWorkflows, fetchHeartbeatStatuses, fetchHeartbeatReports, connected } = useWorkflowStore();
+
+  // TTS engine setup — reuses same pattern as ChatPanel (Req 3.4)
+  const ttsEngineRef = useRef<TTSEngine | null>(null);
+  const [playingId, setPlayingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function initTts() {
+      let config: ClientVoiceConfig = { tts: { available: false }, stt: { available: false } };
+      try {
+        const res = await fetch('/api/voice/config');
+        if (res.ok) config = await res.json();
+      } catch { /* server unavailable */ }
+      if (cancelled) return;
+      ttsEngineRef.current = createTTSEngine(config);
+    }
+    void initTts();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Reset playingId when TTS engine goes idle (Req 3.5)
+  useEffect(() => {
+    const engine = ttsEngineRef.current;
+    if (!engine) return;
+    return engine.onStateChange((state) => {
+      if (state === 'idle') setPlayingId(null);
+    });
+  });
+
+  const handleTtsPlay = useCallback((id: string, content: string) => {
+    const engine = ttsEngineRef.current;
+    if (!engine) return;
+    if (playingId === id) {
+      engine.stop();
+      setPlayingId(null);
+      return;
+    }
+    engine.stop();
+    setPlayingId(id);
+    void engine.speak(content);
+  }, [playingId]);
+
+  const ttsCtx = useMemo<WorkflowTtsCtx>(
+    () => ({ ttsEnabled: ttsEnabled && ttsAvailable, playingId, handleTtsPlay }),
+    [ttsEnabled, ttsAvailable, playingId, handleTtsPlay]
+  );
 
   useEffect(() => {
     void initSocket();
@@ -2127,6 +2226,7 @@ export function WorkflowPanel() {
   ];
 
   return (
+    <WorkflowTtsContext.Provider value={ttsCtx}>
     <div className={`fixed z-[71] flex flex-col border border-white/60 bg-white/92 shadow-[0_12px_48px_rgba(0,0,0,0.15)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`} style={{ pointerEvents: 'auto' }}>
       <div className="flex items-center justify-between border-b border-[#F0E8E0] px-4 py-3">
         <div className="flex items-center gap-2.5">
@@ -2153,6 +2253,7 @@ export function WorkflowPanel() {
       </div>
       <DemoEvolutionOverlay />
     </div>
+    </WorkflowTtsContext.Provider>
   );
 }
 

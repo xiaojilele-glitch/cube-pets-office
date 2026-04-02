@@ -74,6 +74,14 @@ interface AppState {
   setSceneReady: (ready: boolean) => void;
   loadingProgress: number;
   setLoadingProgress: (progress: number) => void;
+
+  // Voice state (multi-modal-agent)
+  ttsEnabled: boolean;
+  setTtsEnabled: (enabled: boolean) => void;
+  sttAvailable: boolean;
+  setSttAvailable: (available: boolean) => void;
+  ttsAvailable: boolean;
+  setTtsAvailable: (available: boolean) => void;
 }
 
 const DEFAULT_AI_CONFIG = createDefaultAIConfig();
@@ -340,4 +348,12 @@ export const useAppStore = create<AppState>((set, get) => ({
   setSceneReady: ready => set({ isSceneReady: ready }),
   loadingProgress: 0,
   setLoadingProgress: progress => set({ loadingProgress: progress }),
+
+  // Voice state (multi-modal-agent)
+  ttsEnabled: false,
+  setTtsEnabled: enabled => set({ ttsEnabled: enabled }),
+  sttAvailable: false,
+  setSttAvailable: available => set({ sttAvailable: available }),
+  ttsAvailable: false,
+  setTtsAvailable: available => set({ ttsAvailable: available }),
 }));

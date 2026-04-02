@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MessageCircle, Monitor, Send, Server, Trash2, X } from 'lucide-react';
+import { MessageCircle, Mic, MicOff, Monitor, Play, Send, Server, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
 
 import {
   DEFAULT_AGENT_ID,
@@ -9,7 +9,9 @@ import {
 } from '@/lib/agent-config';
 import { callBrowserLLM } from '@/lib/browser-llm';
 import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
+import { createSTTEngine, type STTEngine } from '@/lib/stt-engine';
 import { useAppStore, type ChatMessage } from '@/lib/store';
+import { createTTSEngine, type ClientVoiceConfig, type TTSEngine } from '@/lib/tts-engine';
 import { useI18n } from '@/i18n';
 import { useViewportTier } from '@/hooks/useViewportTier';
 
@@ -80,13 +82,24 @@ export function ChatPanel() {
     selectedPet,
     runtimeMode,
     locale,
+    ttsEnabled,
+    setTtsEnabled,
+    sttAvailable,
+    setSttAvailable,
+    ttsAvailable,
+    setTtsAvailable,
   } = useAppStore();
   const { copy } = useI18n();
   const { isMobile, isTablet } = useViewportTier();
 
   const [input, setInput] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [interimText, setInterimText] = useState('');
+  const [playingMessageIndex, setPlayingMessageIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sttEngineRef = useRef<STTEngine | null>(null);
+  const ttsEngineRef = useRef<TTSEngine | null>(null);
 
   const agentId = selectedPet || DEFAULT_AGENT_ID;
   const agentName = getAgentLabel(agentId);
@@ -104,6 +117,105 @@ export function ChatPanel() {
     const timer = window.setTimeout(() => inputRef.current?.focus(), 250);
     return () => window.clearTimeout(timer);
   }, [isChatOpen]);
+
+  // Check voice capabilities on mount (Req 3.6, 3.7)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function detectVoiceCapabilities() {
+      // Browser API checks
+      const browserSTT =
+        typeof window !== 'undefined' &&
+        ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+      const browserTTS =
+        typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+      // Server config check
+      let serverConfig: ClientVoiceConfig = { tts: { available: false }, stt: { available: false } };
+      try {
+        const res = await fetch('/api/voice/config');
+        if (res.ok) {
+          serverConfig = await res.json();
+        }
+      } catch {
+        // Server unavailable — rely on browser APIs only
+      }
+
+      if (cancelled) return;
+      setSttAvailable(browserSTT || serverConfig.stt.available);
+      setTtsAvailable(browserTTS || serverConfig.tts.available);
+
+      // Create STT engine with detected config
+      sttEngineRef.current = createSTTEngine(serverConfig);
+
+      // Create TTS engine with detected config (Req 3.3, 3.5)
+      ttsEngineRef.current = createTTSEngine(serverConfig);
+    }
+
+    void detectVoiceCapabilities();
+    return () => { cancelled = true; };
+  }, [setSttAvailable, setTtsAvailable]);
+
+  // Reset playingMessageIndex when TTS engine goes idle (Req 3.5)
+  useEffect(() => {
+    const engine = ttsEngineRef.current;
+    if (!engine) return;
+    const unsub = engine.onStateChange((state) => {
+      if (state === 'idle') {
+        setPlayingMessageIndex(null);
+      }
+    });
+    return unsub;
+  });
+
+  const toggleRecording = useCallback(() => {
+    const engine = sttEngineRef.current;
+    if (!engine) return;
+
+    if (isRecording) {
+      engine.stopListening();
+      setIsRecording(false);
+      setInterimText('');
+      return;
+    }
+
+    void engine.startListening({
+      onInterimTranscript: (text) => {
+        setInterimText(text);
+      },
+      onFinalTranscript: (text) => {
+        setInput(prev => (prev ? `${prev} ${text}` : text));
+        setInterimText('');
+      },
+      onError: (error) => {
+        console.error('[ChatPanel STT] error:', error);
+        setIsRecording(false);
+        setInterimText('');
+      },
+      onStateChange: (state) => {
+        setIsRecording(state === 'listening');
+        if (state === 'idle') setInterimText('');
+      },
+    });
+  }, [isRecording]);
+
+  // Play or stop TTS for a specific message (Req 3.3, 3.5)
+  const handleTtsPlay = useCallback((index: number, content: string) => {
+    const engine = ttsEngineRef.current;
+    if (!engine) return;
+
+    // If already playing this message, stop it
+    if (playingMessageIndex === index) {
+      engine.stop();
+      setPlayingMessageIndex(null);
+      return;
+    }
+
+    // Stop any ongoing playback first
+    engine.stop();
+    setPlayingMessageIndex(index);
+    void engine.speak(content);
+  }, [playingMessageIndex]);
 
   const shellClass = useMemo(() => {
     if (isMobile) {
@@ -286,20 +398,44 @@ export function ChatPanel() {
             key={index}
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-200`}
           >
-            <div
-              className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
-                message.role === 'user'
-                  ? 'rounded-br-md bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white'
-                  : 'rounded-bl-md border border-[#E8DDD0] bg-[#F7F1EA] text-[#3A2A1A]'
-              }`}
-            >
-              {message.role !== 'user' && (
-                <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[#8B7355]">
-                  <span>{message.petName ? getAgentEmoji(message.petName) : agentEmoji}</span>
-                  <span>{message.petName ? getAgentLabel(message.petName) : agentName}</span>
-                </div>
+            <div className={`flex items-end gap-1.5 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div
+                className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
+                  message.role === 'user'
+                    ? 'rounded-br-md bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white'
+                    : 'rounded-bl-md border border-[#E8DDD0] bg-[#F7F1EA] text-[#3A2A1A]'
+                }`}
+              >
+                {message.role !== 'user' && (
+                  <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[#8B7355]">
+                    <span>{message.petName ? getAgentEmoji(message.petName) : agentEmoji}</span>
+                    <span>{message.petName ? getAgentLabel(message.petName) : agentName}</span>
+                  </div>
+                )}
+                <div className="whitespace-pre-wrap break-words">{message.content}</div>
+              </div>
+              {/* TTS play/stop button — visible for assistant messages when TTS is enabled (Req 3.3, 3.5) */}
+              {message.role === 'assistant' && ttsEnabled && (
+                <button
+                  onClick={() => handleTtsPlay(index, message.content)}
+                  className={`relative mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all ${
+                    playingMessageIndex === index
+                      ? 'bg-[#D4845A] text-white shadow-sm'
+                      : 'bg-[#F0E8E0] text-[#8B7355] hover:bg-[#E8DDD0]'
+                  }`}
+                  title={playingMessageIndex === index ? 'Stop' : 'Play'}
+                >
+                  {playingMessageIndex === index ? (
+                    <Square className="h-3 w-3" />
+                  ) : (
+                    <Play className="h-3 w-3" />
+                  )}
+                  {/* Pulsing indicator when playing (Req 3.5) */}
+                  {playingMessageIndex === index && (
+                    <span className="absolute inset-0 animate-ping rounded-full bg-[#D4845A] opacity-25" />
+                  )}
+                </button>
               )}
-              <div className="whitespace-pre-wrap break-words">{message.content}</div>
             </div>
           </div>
         ))}
@@ -323,7 +459,30 @@ export function ChatPanel() {
       </div>
 
       <div className="border-t border-[#F0E8E0] px-4 py-3">
+        {/* Interim transcript preview */}
+        {interimText && (
+          <p className="mb-2 truncate text-xs italic text-[#8B7355]">{interimText}</p>
+        )}
         <div className="flex items-center gap-2">
+          {/* Microphone button — visible only when STT is available (Req 3.6) */}
+          {sttAvailable && (
+            <button
+              onClick={toggleRecording}
+              disabled={isLoading}
+              className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all ${
+                isRecording
+                  ? 'bg-red-500 text-white shadow-md'
+                  : 'bg-[#F7F1EA] text-[#8B7355] hover:bg-[#EDE5DA]'
+              } disabled:cursor-not-allowed disabled:opacity-50`}
+              title={isRecording ? 'Stop recording' : 'Start recording'}
+            >
+              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {/* Pulse animation indicator when recording (Req 3.2) */}
+              {isRecording && (
+                <span className="absolute inset-0 animate-ping rounded-2xl bg-red-400 opacity-30" />
+              )}
+            </button>
+          )}
           <input
             ref={inputRef}
             type="text"
@@ -341,10 +500,24 @@ export function ChatPanel() {
           <button
             onClick={() => void sendMessage()}
             disabled={!input.trim() || isLoading}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white shadow-md transition-all hover:from-[#245040] hover:to-[#2D6F4A] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white shadow-md transition-all hover:from-[#245040] hover:to-[#2D6F4A] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Send className="h-4 w-4" />
           </button>
+          {/* TTS toggle — visible only when TTS is available (Req 3.7) */}
+          {ttsAvailable && (
+            <button
+              onClick={() => setTtsEnabled(!ttsEnabled)}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all ${
+                ttsEnabled
+                  ? 'bg-[#2D5F4A] text-white shadow-md'
+                  : 'bg-[#F7F1EA] text-[#8B7355] hover:bg-[#EDE5DA]'
+              }`}
+              title={ttsEnabled ? 'Disable TTS' : 'Enable TTS'}
+            >
+              {ttsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+          )}
         </div>
       </div>
     </div>

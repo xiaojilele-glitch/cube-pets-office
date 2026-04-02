@@ -454,6 +454,8 @@ async function startServer() {
   app.use("/api/cost", costRoutes);
   const visionRoutes = (await import("./routes/vision.js")).default;
   app.use("/api/vision", visionRoutes);
+  const voiceRoutes = (await import("./routes/voice.js")).default;
+  app.use("/api/voice", voiceRoutes);
   const skillRoutes = (await import("./routes/skills.js")).default;
   app.use("/api/skills", skillRoutes);
   const { seedSkills } = await import("./core/skill-seed.js");

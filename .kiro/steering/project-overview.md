@@ -312,6 +312,7 @@ cube-pets-office/
 | Docker 真实容器执行器 | `.kiro/specs/lobster-executor-real/` | `services/lobster-executor/src/service.ts` `services/lobster-executor/src/docker-runner.ts` `services/lobster-executor/src/callback-sender.ts` | 🔲 待开发 |
 | Guest Agent 访客代理 | `.kiro/specs/agent-marketplace/` | `shared/organization-schema.ts` `server/core/registry.ts` `server/routes/guest-agents.ts` `server/core/guest-agent.ts` | 🔲 待开发 |
 | 多模态视觉能力 — Vision LLM 图片分析、前端附件管道扩展、Agent 视觉上下文注入 | `.kiro/specs/multi-modal-vision/` | `server/core/vision-provider.ts` `server/routes/vision.ts` `shared/workflow-input.ts` `shared/runtime-agent.ts` `client/src/lib/workflow-attachments.ts` | 🔧 开发中 |
+| 多模态 Agent — TTS/STT 语音能力、Vision+Voice 统一编排、3D 语音状态动画 | `.kiro/specs/multi-modal-agent/` | `server/core/voice-provider.ts` `server/routes/voice.ts` `client/src/lib/tts-engine.ts` `client/src/lib/stt-engine.ts` `shared/runtime-agent.ts` | 🔧 开发中 |
 | 跨 Pod 自主协作 (Swarm) | `.kiro/specs/autonomous-swarm/` | `server/core/swarm-orchestrator.ts` `shared/swarm.ts` `shared/message-bus-rules.ts` `server/core/heartbeat.ts` `client/src/components/three/CrossPodParticles.tsx` | 🔲 待开发 |
 | 跨框架导出 | `.kiro/specs/cross-framework-export/` | `shared/export-schema.ts` `server/core/exporter.ts` `server/core/export-adapters/crewai.ts` `server/core/export-adapters/langgraph.ts` `server/core/export-adapters/autogen.ts` `server/routes/export.ts` `client/src/components/ExportDialog.tsx` | 🔲 待开发 |
 | 实时遥测仪表盘 | `.kiro/specs/telemetry-dashboard/` | `shared/telemetry.ts` `server/core/telemetry-store.ts` `server/routes/telemetry.ts` `client/src/components/TelemetryDashboard.tsx` `client/src/lib/telemetry-store.ts` | 🔲 待开发 |
@@ -426,6 +427,7 @@ cube-pets-office/
 | Lobster 执行器 | `LOBSTER_EXECUTOR_BASE_URL`、`LOBSTER_EXECUTOR_PORT` | 默认 localhost:3031 |
 | 飞书 | `FEISHU_ENABLED`、`FEISHU_MODE`、`FEISHU_RELAY_SECRET` | 默认 mock 模式 |
 | Vision LLM | `VISION_LLM_API_KEY`、`VISION_LLM_BASE_URL`、`VISION_LLM_MODEL`、`VISION_LLM_WIRE_API`、`VISION_LLM_MAX_TOKENS`、`VISION_LLM_DETAIL`、`VISION_LLM_TIMEOUT_MS` | 视觉分析专用模型，未配置时回退到 Fallback/主 LLM |
+| Voice (TTS/STT) | `TTS_API_URL`、`TTS_API_KEY`、`TTS_MODEL`、`TTS_VOICE`、`STT_API_URL`、`STT_API_KEY`、`STT_MODEL` | 服务端语音服务，未配置时前端回退到浏览器 Web Speech API |
 
 ## 常用命令
 

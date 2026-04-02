@@ -48,6 +48,7 @@ export interface AgentRecord {
   is_active: number;
   created_at: string;
   updated_at: string;
+  capabilities?: string[];
 }
 
 export interface WorkflowRecord {
