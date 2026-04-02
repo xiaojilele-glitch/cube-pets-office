@@ -30,6 +30,14 @@ import {
   buildWorkflowInputSignature,
   type WorkflowInputAttachment,
 } from "../../shared/workflow-input.js";
+import { AssignmentScorer } from "./reputation/assignment-scorer.js";
+import type { AssignmentResult } from "./reputation/assignment-scorer.js";
+import { ReputationService } from "./reputation/reputation-service.js";
+import { ReputationCalculator } from "./reputation/reputation-calculator.js";
+import { TrustTierEvaluator } from "./reputation/trust-tier-evaluator.js";
+import { AnomalyDetector } from "./reputation/anomaly-detector.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type { ReputationSignal } from "../../shared/reputation.js";
 
 interface WorkflowStartOptions {
   attachments?: WorkflowInputAttachment[];
@@ -103,7 +111,17 @@ async function runWithConcurrencyLimit<T>(
 }
 
 export class WorkflowEngine {
-  constructor(private readonly runtime: WorkflowRuntime) {}
+  private readonly reputationService: ReputationService;
+  private readonly assignmentScorer: AssignmentScorer;
+
+  constructor(private readonly runtime: WorkflowRuntime) {
+    const config = DEFAULT_REPUTATION_CONFIG;
+    const calculator = new ReputationCalculator(config);
+    const evaluator = new TrustTierEvaluator(config);
+    const detector = new AnomalyDetector(config);
+    this.reputationService = new ReputationService(calculator, evaluator, detector, config);
+    this.assignmentScorer = new AssignmentScorer(config);
+  }
 
   protected get repo() {
     return this.runtime.workflowRepo;
@@ -514,6 +532,79 @@ export class WorkflowEngine {
     });
   }
 
+  /**
+   * Log ranked assignment scores for all workers in a department.
+   * Computes assignmentScore for each worker and logs them sorted by rank.
+   * @see Requirements 4.1, 4.5
+   */
+  private logDepartmentAssignmentRanking(
+    departmentId: string,
+    workers: WorkflowOrganizationNode[],
+  ): void {
+    const results: AssignmentResult[] = [];
+    for (const worker of workers) {
+      const profile = this.reputationService.getReputation(worker.agentId);
+      if (!profile) continue;
+      try {
+        results.push(
+          this.assignmentScorer.computeAssignmentScore(1.0, profile),
+        );
+      } catch {
+        // skip agents whose score cannot be computed
+      }
+    }
+    if (results.length === 0) return;
+
+    results.sort((a, b) => b.assignmentScore - a.assignmentScore);
+    for (let rank = 0; rank < results.length; rank++) {
+      const r = results[rank];
+      console.log(
+        `[WorkflowEngine] Department ${departmentId} ranking: ` +
+        `#${rank + 1} agent=${r.agentId} ` +
+        `fitnessScore=${r.fitnessScore.toFixed(3)} ` +
+        `reputationFactor=${r.reputationFactor.toFixed(3)} ` +
+        `assignmentScore=${r.assignmentScore.toFixed(3)}`,
+      );
+    }
+  }
+
+  /**
+   * Build a ReputationSignal from a reviewed task and forward it to
+   * ReputationService.handleTaskCompleted.
+   * Called after the review stage scores a task.
+   * @see Requirements 2.3, 4.5
+   */
+  private emitTaskCompletedReputation(task: TaskRecord): void {
+    const totalScore = task.total_score ?? 0;
+    // Map review total_score (0-20) to taskQualityScore (0-100)
+    const taskQualityScore = Math.round((totalScore / 20) * 100);
+
+    const signal: ReputationSignal = {
+      agentId: task.worker_id,
+      taskId: task.id,
+      roleId: undefined,
+      taskQualityScore,
+      actualDurationMs: 0,
+      estimatedDurationMs: 1, // avoid division by zero; ratio = 0 → perfect speed
+      tokenConsumed: 0,
+      tokenBudget: 1, // avoid division by zero; ratio = 0 → perfect efficiency
+      wasRolledBack: task.status === "failed",
+      downstreamFailures: 0,
+      collaborationRating: undefined,
+      taskComplexity: undefined,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      this.reputationService.handleTaskCompleted(signal);
+    } catch (err) {
+      console.warn(
+        `[WorkflowEngine] Reputation update failed for task ${task.id}: ` +
+        `${err instanceof Error ? err.message : err}`,
+      );
+    }
+  }
+
   private async runDirection(
     workflowId: string,
     directive: string
@@ -654,6 +745,21 @@ Rules:
           const workerNode = workers.find(worker => worker.agentId === task.worker_id);
           if (!workerNode) continue;
 
+          // Compute reputation-based assignment score for this worker
+          const profile = this.reputationService.getReputation(workerNode.agentId);
+          let assignmentResult: AssignmentResult | undefined;
+          if (profile) {
+            try {
+              assignmentResult = this.assignmentScorer.computeAssignmentScore(
+                1.0, // default fitnessScore for planned assignments
+                profile,
+                undefined, // no specific taskRole in planning phase
+              );
+            } catch {
+              // Reputation scoring is non-blocking; continue without it
+            }
+          }
+
           const taskRow = this.repo.createTask({
             workflow_id: workflowId,
             worker_id: workerNode.agentId,
@@ -675,6 +781,16 @@ Rules:
             status: "assigned",
           });
 
+          // Log assignment score for traceability (Requirement 4.5)
+          if (assignmentResult) {
+            console.log(
+              `[WorkflowEngine] Assignment score: task=${taskRow.id} agent=${workerNode.agentId} ` +
+              `fitnessScore=${assignmentResult.fitnessScore.toFixed(3)} ` +
+              `reputationFactor=${assignmentResult.reputationFactor.toFixed(3)} ` +
+              `assignmentScore=${assignmentResult.assignmentScore.toFixed(3)}`,
+            );
+          }
+
           await this.runtime.messageBus.send(
             managerNode.agentId,
             workerNode.agentId,
@@ -689,6 +805,9 @@ Rules:
             }
           );
         }
+
+        // Log ranked assignment scores for all workers in this department (Requirement 4.5)
+        this.logDepartmentAssignmentRanking(department.id, workers);
 
         this.emit({
           type: "agent_active",
@@ -906,6 +1025,13 @@ Return valid JSON only:
               taskId: task.id,
               workerId: task.worker_id,
               score: total,
+            });
+
+            // Update agent reputation based on task review score (Requirement 2.3)
+            this.emitTaskCompletedReputation({
+              ...task,
+              total_score: total,
+              status: "reviewed",
             });
 
             await this.runtime.messageBus.send(

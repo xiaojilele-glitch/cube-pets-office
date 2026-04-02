@@ -123,3 +123,36 @@ export function emitCostAlert(alert: CostAlert): void {
   if (!io) return;
   io.emit("cost.alert", alert);
 }
+
+// ---------------------------------------------------------------------------
+// Reputation events
+// ---------------------------------------------------------------------------
+
+/**
+ * Broadcast agent.reputationChanged event.
+ * @see Requirement 5.5, 9.6
+ */
+export function emitReputationChanged(payload: {
+  agentId: string;
+  oldScore: number;
+  newScore: number;
+  grade: string;
+  dimensionDeltas: Record<string, number>;
+}): void {
+  if (!io) return;
+  io.emit("agent.reputationChanged", payload);
+}
+
+/**
+ * Broadcast agent.trustTierChanged event.
+ * @see Requirement 5.5
+ */
+export function emitTrustTierChanged(payload: {
+  agentId: string;
+  oldTier: string;
+  newTier: string;
+  reason: string;
+}): void {
+  if (!io) return;
+  io.emit("agent.trustTierChanged", payload);
+}

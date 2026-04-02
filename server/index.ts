@@ -461,6 +461,8 @@ async function startServer() {
   const analyticsRoutes = (await import("./routes/analytics.js")).default;
   app.use("/api/analytics", analyticsRoutes);
   app.use("/api/replay", replayRoutes);
+  const reputationRoutes = (await import("./routes/reputation.js")).default;
+  app.use("/api", reputationRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/decision-templates", createDecisionTemplatesRouter());
   app.use("/api/planets", createPlanetRouter(missionRuntime));

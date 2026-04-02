@@ -29,6 +29,10 @@ import {
 
 import { ExportDialog } from '@/components/ExportDialog';
 import { SkillCard, type SkillCardData } from '@/components/SkillCard';
+import { ReputationBadge } from '@/components/reputation/ReputationBadge';
+import { ReputationRadar } from '@/components/reputation/ReputationRadar';
+import { ReputationHistory } from '@/components/reputation/ReputationHistory';
+import { useReputationStore } from '@/lib/reputation-store';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
 import { prepareWorkflowAttachments } from '@/lib/workflow-attachments';
@@ -1614,10 +1618,32 @@ function MemoryView() {
         {selectedAgent ? (
           <div className="mt-2 rounded-xl bg-[#F8F4F0] px-3 py-2 text-[10px] text-[#6B5A4A]">
             {selectedAgent.name} / {nodeMap.get(selectedAgent.id)?.title || selectedAgent.role} / {nodeMap.get(selectedAgent.id)?.departmentLabel || selectedAgent.department}
+            {(() => {
+              const profile = useReputationStore.getState().profiles[selectedAgent.id];
+              return profile ? (
+                <span className="ml-2"><ReputationBadge grade={profile.grade} trustTier={profile.trustTier} size="sm" /></span>
+              ) : null;
+            })()}
           </div>
         ) : null}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {selectedAgent ? (
+          <div className="mb-4 space-y-3">
+            {(() => {
+              const profile = useReputationStore.getState().profiles[selectedAgent.id];
+              if (!profile) return null;
+              return (
+                <>
+                  <div className="flex justify-center">
+                    <ReputationRadar dimensions={profile.dimensions} size={160} />
+                  </div>
+                  <ReputationHistory agentId={selectedAgent.id} />
+                </>
+              );
+            })()}
+          </div>
+        ) : null}
         <div className="mb-4">
           <div className="mb-1.5 flex items-center justify-between">
             <h4 className="text-[11px] font-bold text-[#8B7355]">{copy.workflow.memory.recent}</h4>

@@ -13,6 +13,11 @@ import type {
   SkillExecutionMetrics,
   SkillAuditLog,
 } from "../../shared/skill-contracts.js";
+import type {
+  ReputationProfile,
+  ReputationChangeEvent,
+  ReputationAuditEntry,
+} from "../../shared/reputation.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -136,6 +141,9 @@ interface DatabaseSchema {
   skills: SkillRecord[];
   skill_metrics: SkillExecutionMetrics[];
   skill_audit_log: SkillAuditLog[];
+  reputation_profiles: ReputationProfile[];
+  reputation_events: ReputationChangeEvent[];
+  reputation_audit_log: ReputationAuditEntry[];
   _counters: {
     messages: number;
     tasks: number;
@@ -144,6 +152,8 @@ interface DatabaseSchema {
     agent_capabilities: number;
     skill_metrics: number;
     skill_audit_log: number;
+    reputation_events: number;
+    reputation_audit_log: number;
   };
 }
 
@@ -171,6 +181,9 @@ class Database {
       skills: [],
       skill_metrics: [],
       skill_audit_log: [],
+      reputation_profiles: [],
+      reputation_events: [],
+      reputation_audit_log: [],
       _counters: {
         messages: 0,
         tasks: 0,
@@ -179,6 +192,8 @@ class Database {
         agent_capabilities: 0,
         skill_metrics: 0,
         skill_audit_log: 0,
+        reputation_events: 0,
+        reputation_audit_log: 0,
       },
     };
   }
@@ -213,6 +228,15 @@ class Database {
     const skillAuditLog = Array.isArray(data.skill_audit_log)
       ? data.skill_audit_log
       : [];
+    const reputationProfiles = Array.isArray(data.reputation_profiles)
+      ? data.reputation_profiles
+      : [];
+    const reputationEvents = Array.isArray(data.reputation_events)
+      ? data.reputation_events
+      : [];
+    const reputationAuditLog = Array.isArray(data.reputation_audit_log)
+      ? data.reputation_audit_log
+      : [];
 
     const counters = data._counters || {};
 
@@ -228,6 +252,9 @@ class Database {
       skills,
       skill_metrics: skillMetrics,
       skill_audit_log: skillAuditLog,
+      reputation_profiles: reputationProfiles,
+      reputation_events: reputationEvents,
+      reputation_audit_log: reputationAuditLog,
       _counters: {
         messages: Math.max(
           Number(counters.messages) || 0,
@@ -250,6 +277,14 @@ class Database {
         skill_audit_log: Math.max(
           Number(counters.skill_audit_log) || 0,
           this.maxId(skillAuditLog)
+        ),
+        reputation_events: Math.max(
+          Number(counters.reputation_events) || 0,
+          this.maxId(reputationEvents)
+        ),
+        reputation_audit_log: Math.max(
+          Number(counters.reputation_audit_log) || 0,
+          this.maxId(reputationAuditLog)
         ),
       },
     };
@@ -704,6 +739,75 @@ class Database {
     this.data.skill_audit_log.push(row);
     this.save();
     return row;
+  }
+
+  // ============================================================
+  // Reputation Profiles
+  // ============================================================
+  getReputationProfile(agentId: string): ReputationProfile | undefined {
+    return this.data.reputation_profiles.find(p => p.agentId === agentId);
+  }
+
+  getAllReputationProfiles(): ReputationProfile[] {
+    return this.data.reputation_profiles;
+  }
+
+  upsertReputationProfile(profile: ReputationProfile): void {
+    const idx = this.data.reputation_profiles.findIndex(
+      p => p.agentId === profile.agentId
+    );
+    if (idx >= 0) {
+      this.data.reputation_profiles[idx] = profile;
+    } else {
+      this.data.reputation_profiles.push(profile);
+    }
+    this.save();
+  }
+
+  // ============================================================
+  // Reputation Events
+  // ============================================================
+  createReputationEvent(
+    event: Omit<ReputationChangeEvent, "id">
+  ): ReputationChangeEvent {
+    this.data._counters.reputation_events++;
+    const row: ReputationChangeEvent = {
+      ...event,
+      id: this.data._counters.reputation_events,
+    };
+    this.data.reputation_events.push(row);
+    this.save();
+    return row;
+  }
+
+  getReputationEvents(agentId: string, limit?: number): ReputationChangeEvent[] {
+    const events = this.data.reputation_events
+      .filter(e => e.agentId === agentId)
+      .reverse();
+    return limit !== undefined ? events.slice(0, limit) : events;
+  }
+
+  // ============================================================
+  // Reputation Audit Log
+  // ============================================================
+  createAuditEntry(
+    entry: Omit<ReputationAuditEntry, "id">
+  ): ReputationAuditEntry {
+    this.data._counters.reputation_audit_log++;
+    const row: ReputationAuditEntry = {
+      ...entry,
+      id: this.data._counters.reputation_audit_log,
+    };
+    this.data.reputation_audit_log.push(row);
+    this.save();
+    return row;
+  }
+
+  getAuditEntries(agentId: string, limit?: number): ReputationAuditEntry[] {
+    const entries = this.data.reputation_audit_log
+      .filter(e => e.agentId === agentId)
+      .reverse();
+    return limit !== undefined ? entries.slice(0, limit) : entries;
   }
 
   // ============================================================
