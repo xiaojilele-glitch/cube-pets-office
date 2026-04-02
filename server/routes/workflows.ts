@@ -218,4 +218,23 @@ router.get("/:id/messages", (req, res) => {
   res.json({ messages });
 });
 
+// GET /api/workflows/:id/nodes/:nodeId/skills — 查询节点的 Skill 列表
+router.get("/:id/nodes/:nodeId/skills", (req, res) => {
+  const wf = db.getWorkflow(req.params.id);
+  if (!wf) {
+    return res.status(404).json({ error: "Workflow not found" });
+  }
+
+  const organization = wf.results?.organization as
+    | { nodes?: Array<{ id: string; skills?: Array<{ id: string; name: string; summary: string; prompt: string }> }> }
+    | undefined;
+
+  const node = organization?.nodes?.find(n => n.id === req.params.nodeId);
+  if (!node) {
+    return res.status(404).json({ error: "Node not found" });
+  }
+
+  res.json({ skills: node.skills || [] });
+});
+
 export default router;

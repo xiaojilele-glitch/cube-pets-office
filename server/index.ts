@@ -454,6 +454,10 @@ async function startServer() {
   app.use("/api/cost", costRoutes);
   const visionRoutes = (await import("./routes/vision.js")).default;
   app.use("/api/vision", visionRoutes);
+  const skillRoutes = (await import("./routes/skills.js")).default;
+  app.use("/api/skills", skillRoutes);
+  const { seedSkills } = await import("./core/skill-seed.js");
+  seedSkills();
   app.use("/api/replay", replayRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/planets", createPlanetRouter(missionRuntime));

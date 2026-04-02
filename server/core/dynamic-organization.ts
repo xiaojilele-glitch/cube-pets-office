@@ -16,8 +16,12 @@ import db from "../db/index.js";
 import { writeAgentWorkspaceFile } from "./access-guard.js";
 import { ensureAgentWorkspaces } from "../memory/workspace.js";
 import { registry } from "./registry.js";
+import { SkillRegistry } from "./skill-registry.js";
 
 type ExecutionMode = WorkflowOrganizationNode["execution"]["mode"];
+
+// Singleton SkillRegistry instance — shared across the module
+export const skillRegistry = new SkillRegistry(db);
 type ExecutionStrategy = WorkflowOrganizationNode["execution"]["strategy"];
 
 interface McpTemplate {
@@ -123,7 +127,7 @@ const SKILL_LIBRARY: Record<string, WorkflowSkillBinding> = {
   },
 };
 
-const MCP_LIBRARY: Record<string, McpTemplate> = {
+export const MCP_LIBRARY: Record<string, McpTemplate> = {
   "workspace-files": {
     id: "workspace-files",
     name: "Workspace Files",
@@ -753,12 +757,23 @@ function normalizePlan(input: unknown): PlannerOutput {
 }
 
 function resolveSkills(skillIds: string[]): WorkflowSkillBinding[] {
+  // Try SkillRegistry first; fall back to hardcoded SKILL_LIBRARY for backward compat
+  const fromRegistry = skillRegistry.resolveSkills(skillIds);
+  if (fromRegistry.length > 0) {
+    return fromRegistry.map(b => ({
+      id: b.resolvedSkill.id,
+      name: b.resolvedSkill.name,
+      summary: b.resolvedSkill.summary,
+      prompt: b.resolvedSkill.prompt,
+    }));
+  }
+  // Fallback: hardcoded library
   return skillIds
     .map(skillId => SKILL_LIBRARY[skillId])
     .filter((skill): skill is WorkflowSkillBinding => Boolean(skill));
 }
 
-function resolveMcp(
+export function resolveMcp(
   mcpIds: string[],
   agentId: string,
   workflowId: string

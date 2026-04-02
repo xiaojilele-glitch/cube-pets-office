@@ -36,15 +36,17 @@ export interface RuntimeAgentDependencies {
 
 export function buildAgentSystemPrompt(
   config: RuntimeAgentConfig,
-  memoryRepo: MemoryRepository
+  memoryRepo: MemoryRepository,
+  skillPromptSection?: string
 ): string {
   const soulText = memoryRepo.getSoulText(config.id, config.soulMd);
+  const skillSection = skillPromptSection ? `\n${skillPromptSection}` : "";
   return `${soulText}
 
 ---
 Current identity: ${config.name}
 Role: ${config.role}
-Department: ${config.department}`;
+Department: ${config.department}${skillSection}`;
 }
 
 export function composeAgentMessages(

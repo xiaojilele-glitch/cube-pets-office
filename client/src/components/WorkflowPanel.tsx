@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 
 import { ExportDialog } from '@/components/ExportDialog';
+import { SkillCard, type SkillCardData } from '@/components/SkillCard';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
 import { prepareWorkflowAttachments } from '@/lib/workflow-attachments';
@@ -756,6 +757,21 @@ function OrgView() {
                             <Pill key={binding.id}>MCP: {binding.name}</Pill>
                           ))}
                         </div>
+                        {worker.skills.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {worker.skills.map(skill => (
+                              <SkillCard
+                                key={skill.id}
+                                skill={{
+                                  id: skill.id,
+                                  name: skill.name,
+                                  summary: skill.summary || '',
+                                  prompt: skill.prompt,
+                                } as SkillCardData}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>
