@@ -8,13 +8,14 @@ import { getAIConfig } from "./ai-config.js";
 import { telemetryStore } from "./telemetry-store.js";
 import { estimateCost as estimateTelemetryCost } from "../../shared/telemetry.js";
 import type { LLMCallRecord } from "../../shared/telemetry.js";
+import type { LLMMessageContentPart } from "../../shared/workflow-runtime.js";
 import { costTracker } from "./cost-tracker.js";
 
 dotenv.config();
 
 interface LLMMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | LLMMessageContentPart[];
 }
 
 interface LLMOptions {
@@ -304,15 +305,37 @@ export function isLLMTemporarilyUnavailableError(error: unknown): boolean {
 function buildResponsesInput(messages: LLMMessage[]) {
   const instructions = messages
     .filter(message => message.role === "system")
-    .map(message => message.content)
+    .map(message => {
+      if (typeof message.content === "string") {
+        return message.content;
+      }
+      // For array content in system messages, extract only text parts
+      return message.content
+        .filter(part => part.type === "text")
+        .map(part => (part as { type: "text"; text: string }).text)
+        .join("\n");
+    })
     .join("\n\n");
 
   const input = messages
     .filter(message => message.role !== "system")
-    .map(message => ({
-      role: message.role,
-      content: [{ type: "input_text", text: message.content }],
-    }));
+    .map(message => {
+      if (typeof message.content === "string") {
+        return {
+          role: message.role,
+          content: [{ type: "input_text", text: message.content }],
+        };
+      }
+      // Map LLMMessageContentPart[] to responses API format
+      const content = message.content.map(part => {
+        if (part.type === "image_url") {
+          return { type: "input_image", image_url: part.image_url.url };
+        }
+        // text → input_text
+        return { type: "input_text", text: part.text };
+      });
+      return { role: message.role, content };
+    });
 
   return { instructions: instructions || undefined, input };
 }
@@ -494,7 +517,12 @@ async function createChatCompletion(
   return withTimeout(provider, async signal => {
     const body: any = {
       model: options.model,
-      messages,
+      messages: messages.map(msg => ({
+        role: msg.role,
+        // When content is an array (multimodal: text + image_url parts),
+        // pass it directly — the chat_completions API supports both formats.
+        content: msg.content,
+      })),
       temperature: options.temperature,
       max_tokens: options.maxTokens,
       stream: provider.stream,

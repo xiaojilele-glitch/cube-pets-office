@@ -9,7 +9,8 @@ export type AgentAnimationType =
   | 'reading'
   | 'organizing'
   | 'discussing'
-  | 'noting';
+  | 'noting'
+  | 'examining';
 
 export interface AgentVisualConfig {
   id: string;

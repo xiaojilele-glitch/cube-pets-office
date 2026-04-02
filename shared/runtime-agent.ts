@@ -17,9 +17,15 @@ export interface RuntimeAgentConfig {
   soulMd: string;
 }
 
+export interface VisionContext {
+  imageName: string;
+  visualDescription: string;
+}
+
 export interface AgentInvokeOptions {
   workflowId?: string;
   stage?: string;
+  visionContexts?: VisionContext[];
 }
 
 export interface RuntimeAgentDependencies {
@@ -77,6 +83,15 @@ Important JSON requirements:
     messages.push({ role: "user", content: item });
   }
 
+  if (options.visionContexts?.length) {
+    for (const vc of options.visionContexts) {
+      messages.push({
+        role: "user",
+        content: `[Vision Analysis] ${vc.imageName}\n${vc.visualDescription}`,
+      });
+    }
+  }
+
   messages.push({ role: "user", content: prompt });
   return messages;
 }
@@ -95,6 +110,15 @@ export class RuntimeAgent implements AgentHandle {
     context?: string[],
     options: AgentInvokeOptions = {}
   ): Promise<string> {
+    if (options.visionContexts?.length) {
+      this.deps.eventEmitter.emit({
+        type: "agent_active",
+        agentId: this.config.id,
+        action: "analyzing_image",
+        workflowId: options.workflowId,
+      });
+    }
+
     this.deps.eventEmitter.emit({
       type: "agent_active",
       agentId: this.config.id,
@@ -115,6 +139,9 @@ export class RuntimeAgent implements AgentHandle {
       temperature: 0.7,
       maxTokens: 3000,
     };
+    if (options.visionContexts?.length) {
+      llmOptions.maxTokens = (llmOptions.maxTokens || 3000) + 1000;
+    }
     const response = await this.deps.llmProvider.call(messages, llmOptions);
 
     this.deps.eventEmitter.emit({
@@ -138,6 +165,15 @@ export class RuntimeAgent implements AgentHandle {
     context?: string[],
     options: AgentInvokeOptions = {}
   ): Promise<T> {
+    if (options.visionContexts?.length) {
+      this.deps.eventEmitter.emit({
+        type: "agent_active",
+        agentId: this.config.id,
+        action: "analyzing_image",
+        workflowId: options.workflowId,
+      });
+    }
+
     this.deps.eventEmitter.emit({
       type: "agent_active",
       agentId: this.config.id,
@@ -158,6 +194,9 @@ export class RuntimeAgent implements AgentHandle {
       temperature: 0.5,
       maxTokens: 3000,
     };
+    if (options.visionContexts?.length) {
+      llmOptions.maxTokens = (llmOptions.maxTokens || 3000) + 1000;
+    }
     const result = await this.deps.llmProvider.callJson<T>(messages, llmOptions);
 
     this.deps.eventEmitter.emit({

@@ -42,6 +42,7 @@ const PDF_EXTENSIONS = new Set(["pdf"]);
 const WORD_EXTENSIONS = new Set(["docx", "doc"]);
 const SPREADSHEET_EXTENSIONS = new Set(["xlsx", "xls", "csv", "tsv"]);
 const IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "bmp", "gif"]);
+const IMAGE_COMPRESS_THRESHOLD = 4 * 1024 * 1024; // 4MB
 const OCR_LANGUAGES = ["eng", "chi_sim"];
 const OCR_TIMEOUT_MS = 30_000;
 const OCR_WORKER_PATH =
@@ -174,28 +175,51 @@ async function getOcrWorker() {
   return ocrWorkerPromise;
 }
 
+interface VisionFields {
+  visionReady?: boolean;
+  base64DataUrl?: string;
+  visualDescription?: string;
+}
+
 function finalizeAttachment(
   file: File,
   content: string,
-  source: "parsed" | "metadata_only"
+  source: "parsed" | "metadata_only" | "vision_analyzed" | "vision_fallback",
+  visionFields?: VisionFields
 ): WorkflowInputAttachment {
   const normalizedContent = normalizeWorkflowAttachmentContent(content);
   const excerpt = buildWorkflowAttachmentExcerpt(normalizedContent);
 
-  return {
+  let excerptStatus: WorkflowInputAttachment["excerptStatus"];
+  if (source === "vision_analyzed" || source === "vision_fallback") {
+    excerptStatus = source;
+  } else if (source === "metadata_only") {
+    excerptStatus = "metadata_only";
+  } else {
+    excerptStatus = excerpt.truncated ? "truncated" : "parsed";
+  }
+
+  const attachment: WorkflowInputAttachment = {
     id: makeAttachmentId(file),
     name: file.name,
     mimeType: file.type || "application/octet-stream",
     size: file.size,
     content: normalizedContent,
     excerpt: excerpt.text,
-    excerptStatus:
-      source === "metadata_only"
-        ? "metadata_only"
-        : excerpt.truncated
-          ? "truncated"
-          : "parsed",
+    excerptStatus,
   };
+
+  if (visionFields?.visionReady !== undefined) {
+    attachment.visionReady = visionFields.visionReady;
+  }
+  if (visionFields?.base64DataUrl) {
+    attachment.base64DataUrl = visionFields.base64DataUrl;
+  }
+  if (visionFields?.visualDescription) {
+    attachment.visualDescription = visionFields.visualDescription;
+  }
+
+  return attachment;
 }
 
 async function parseTextFile(file: File) {
@@ -270,7 +294,144 @@ async function parseSpreadsheetFile(file: File) {
   return finalizeAttachment(file, sections.join("\n\n"), "parsed");
 }
 
-async function parseImageFile(file: File) {
+/**
+ * Compress an image using Canvas API by downsampling proportionally.
+ * Returns a JPEG blob with reduced dimensions and quality.
+ */
+async function compressImage(file: File): Promise<Blob> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Failed to load image for compression."));
+      image.src = objectUrl;
+    });
+
+    // Calculate scale factor to bring the encoded size under the threshold.
+    // A rough heuristic: scale down proportionally based on the ratio of
+    // the file size to the threshold, then apply JPEG quality reduction.
+    const ratio = Math.sqrt(IMAGE_COMPRESS_THRESHOLD / file.size);
+    const targetWidth = Math.max(1, Math.round(img.width * ratio));
+    const targetHeight = Math.max(1, Math.round(img.height * ratio));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      throw new Error("Canvas 2D context is not available.");
+    }
+
+    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        result => {
+          if (result) {
+            resolve(result);
+          } else {
+            reject(new Error("Canvas toBlob returned null."));
+          }
+        },
+        "image/jpeg",
+        0.8
+      );
+    });
+
+    return blob;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
+/**
+ * Read a File and encode it as a Base64 data URL.
+ * If the file exceeds 4MB, compress it first using Canvas downsampling.
+ */
+export async function fileToBase64DataUrl(file: File): Promise<string> {
+  let source: Blob = file;
+  let mimeType = file.type || "application/octet-stream";
+
+  if (file.size > IMAGE_COMPRESS_THRESHOLD) {
+    source = await compressImage(file);
+    mimeType = "image/jpeg"; // compressImage always outputs JPEG
+  }
+
+  const buffer = await source.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const base64 = btoa(binary);
+
+  return `data:${mimeType};base64,${base64}`;
+}
+
+interface VisionApiResult {
+  description: string;
+  elements: string[];
+  textContent: string;
+  rawResponse: string;
+}
+
+/**
+ * POST to /api/vision/analyze to request server-side Vision LLM analysis.
+ * Returns the structured analysis result for a single image.
+ */
+async function requestVisionAnalysis(
+  base64DataUrl: string,
+  name: string
+): Promise<VisionApiResult> {
+  const response = await fetch("/api/vision/analyze", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      images: [{ base64DataUrl, name }],
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Vision API returned ${response.status}`);
+  }
+
+  const data = await response.json();
+  const results: Array<{ name: string; analysis: VisionApiResult }> = data.results || [];
+  const match = results.find(r => r.name === name);
+  if (!match) {
+    throw new Error("Vision API returned no result for this image.");
+  }
+
+  return match.analysis;
+}
+
+/**
+ * Format a VisionAnalysisResult into a human-readable visual description string.
+ */
+function formatVisualContext(result: VisionApiResult): string {
+  const parts: string[] = [];
+
+  if (result.description) {
+    parts.push(result.description);
+  }
+
+  if (result.elements.length > 0) {
+    parts.push("Key elements: " + result.elements.join(", "));
+  }
+
+  if (result.textContent) {
+    parts.push("Text content: " + result.textContent);
+  }
+
+  return parts.join("\n");
+}
+
+/**
+ * OCR-based image parsing — the original fallback path.
+ */
+async function parseImageFileOcr(file: File): Promise<WorkflowInputAttachment> {
   const worker = await withTimeout(getOcrWorker(), OCR_TIMEOUT_MS, "OCR worker setup");
   const result = await withTimeout(
     worker.recognize(file, {
@@ -290,6 +451,71 @@ async function parseImageFile(file: File) {
   }
 
   return finalizeAttachment(file, text, "parsed");
+}
+
+/**
+ * Parse an image file: try Vision LLM analysis first, fall back to OCR on failure.
+ *
+ * When Vision succeeds: visionReady=true, base64DataUrl set, visualDescription set,
+ * excerptStatus="vision_analyzed".
+ * When Vision fails: fall back to OCR, excerptStatus="vision_fallback".
+ *
+ * Requirements: 1.1, 1.4, 4.1, 4.2, 4.5
+ */
+async function parseImageFile(file: File) {
+  // 1. Encode to Base64 Data URL
+  let base64DataUrl: string;
+  try {
+    base64DataUrl = await fileToBase64DataUrl(file);
+  } catch {
+    // Base64 encoding failed — fall back to OCR directly
+    const ocrResult = await parseImageFileOcr(file);
+    ocrResult.excerptStatus = "vision_fallback";
+    return ocrResult;
+  }
+
+  // 2. Try Vision analysis via server API
+  try {
+    const visionResult = await requestVisionAnalysis(base64DataUrl, file.name);
+    const visualDescription = formatVisualContext(visionResult);
+    const content = visualDescription || visionResult.rawResponse || "(no visual description)";
+
+    return finalizeAttachment(file, content, "vision_analyzed", {
+      visionReady: true,
+      base64DataUrl,
+      visualDescription,
+    });
+  } catch (visionError) {
+    console.warn(
+      "[WorkflowAttachments] Vision analysis failed, falling back to OCR:",
+      file.name,
+      visionError
+    );
+  }
+
+  // 3. Fallback to OCR
+  try {
+    const ocrResult = await parseImageFileOcr(file);
+    ocrResult.excerptStatus = "vision_fallback";
+    ocrResult.visionReady = false;
+    ocrResult.base64DataUrl = base64DataUrl;
+    return ocrResult;
+  } catch (ocrError) {
+    console.warn(
+      "[WorkflowAttachments] OCR also failed:",
+      file.name,
+      ocrError
+    );
+    return finalizeAttachment(
+      file,
+      buildMetadataNote(
+        file,
+        ocrError instanceof Error ? ocrError.message : "Vision and OCR both failed."
+      ),
+      "vision_fallback",
+      { visionReady: false, base64DataUrl }
+    );
+  }
 }
 
 async function fileToAttachment(file: File): Promise<WorkflowInputAttachment> {
