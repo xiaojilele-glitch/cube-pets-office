@@ -72,11 +72,11 @@ inclusion: auto
 - [ ] L16 `vector-db-rag-pipeline` — 向量数据库 + RAG 管道（大）
 
 ### 独立可做
-- [ ] L17 `nl-command-center` — 自然语言指挥中心（大）
-- [ ] L18 `agent-autonomy-upgrade` — Agent 自评估 + 竞争执行（大）
-- [ ] L19 `agent-reputation` — Agent 信誉评分系统（中）
-- [ ] L20 `multi-modal-agent` — 语音 + Vision 统一编排（大）⚠️ 依赖 L09 multi-modal-vision
-- [ ] L21 `cost-governance-strategy` — 主动成本治理（中）⚠️ 依赖 L06 cost-observability
+- [x] L17 `nl-command-center` — 自然语言指挥中心 ✅ 已合并 (65 files, +13234)
+- [x] L18 `agent-autonomy-upgrade` — Agent 自评估 + 竞争执行 ✅ 已合并 (28 files, +4691)
+- [x] L19 `agent-reputation` — Agent 信誉评分系统 ✅ 已合并 (28 files, +4360)
+- [x] L20 `multi-modal-agent` — 语音 + Vision 统一编排 ✅ 已合并 (20 files, +2302)
+- [ ] L21 `cost-governance-strategy` — 主动成本治理（中）⚠️ 依赖 L06 cost-observability（未开发）
 
 ## 第三层：Docker 执行链路（严格串行，无法并行）
 
