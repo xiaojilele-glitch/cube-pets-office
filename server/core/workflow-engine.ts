@@ -18,7 +18,10 @@ import {
   generateWorkflowOrganization,
   materializeWorkflowOrganization,
   persistOrganizationDebugLog,
+  skillRegistry,
 } from "./dynamic-organization.js";
+import { SkillActivator } from "./skill-activator.js";
+import { SkillMonitor } from "./skill-monitor.js";
 import { serverRuntime } from "../runtime/server-runtime.js";
 import {
   buildWorkflowDirectiveContext,
@@ -583,9 +586,31 @@ Rules:
           });
 
           try {
+            // Activate skills for this worker's node
+            const workerNode = organization.nodes.find(
+              n => n.agentId === task.worker_id
+            );
+            const skillActivator = new SkillActivator();
+            const skillBindings = workerNode?.skills
+              ? skillRegistry.resolveSkills(
+                  workerNode.skills.map(s => s.id)
+                )
+              : [];
+            const activatedSkills = skillActivator.activateSkills(
+              skillBindings,
+              task.description
+            );
+            const skillPrompt = skillActivator.buildSkillPromptSection(activatedSkills);
+
+            if (activatedSkills.length > 0) {
+              console.log(
+                `[WorkflowEngine] Activated ${activatedSkills.length} skills for ${task.worker_id}: ${activatedSkills.map(s => s.name).join(", ")}`
+              );
+            }
+
             const deliverable = await worker.invoke(
               `Complete the following task for the ${department.label} department.
-
+${skillPrompt}
 Task:
 ${task.description}
 

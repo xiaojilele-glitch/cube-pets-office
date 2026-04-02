@@ -420,9 +420,14 @@ async function startServer() {
   const exportRoutes = (await import("./routes/export.js")).default;
   const telemetryRoutes = (await import("./routes/telemetry.js")).default;
   const costRoutes = (await import("./routes/cost.js")).default;
+  const skillRoutes = (await import("./routes/skills.js")).default;
   const { costTracker } = await import("./core/cost-tracker.js");
 
   costTracker.loadHistory();
+
+  // Seed SKILL_LIBRARY into SkillRegistry on startup
+  const { seedSkills } = await import("./core/skill-seed.js");
+  seedSkills();
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
@@ -432,6 +437,7 @@ async function startServer() {
   app.use("/api/export", exportRoutes);
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/cost", costRoutes);
+  app.use("/api/skills", skillRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());

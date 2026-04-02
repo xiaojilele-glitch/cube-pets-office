@@ -8,6 +8,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import type { MissionRecord } from "../../shared/mission/contracts.js";
+import type {
+  SkillRecord,
+  SkillExecutionMetrics,
+  SkillAuditLog,
+} from "../../shared/skill-contracts.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -128,12 +133,17 @@ interface DatabaseSchema {
   evolution_log: EvolutionLogRow[];
   heartbeat_keywords: HeartbeatKeywordRow[];
   agent_capabilities: AgentCapabilityRow[];
+  skills: SkillRecord[];
+  skill_metrics: SkillExecutionMetrics[];
+  skill_audit_log: SkillAuditLog[];
   _counters: {
     messages: number;
     tasks: number;
     evolution_log: number;
     heartbeat_keywords: number;
     agent_capabilities: number;
+    skill_metrics: number;
+    skill_audit_log: number;
   };
 }
 
@@ -158,12 +168,17 @@ class Database {
       evolution_log: [],
       heartbeat_keywords: [],
       agent_capabilities: [],
+      skills: [],
+      skill_metrics: [],
+      skill_audit_log: [],
       _counters: {
         messages: 0,
         tasks: 0,
         evolution_log: 0,
         heartbeat_keywords: 0,
         agent_capabilities: 0,
+        skill_metrics: 0,
+        skill_audit_log: 0,
       },
     };
   }
@@ -191,6 +206,13 @@ class Database {
     const agentCapabilities = Array.isArray(data.agent_capabilities)
       ? data.agent_capabilities
       : [];
+    const skills = Array.isArray(data.skills) ? data.skills : [];
+    const skillMetrics = Array.isArray(data.skill_metrics)
+      ? data.skill_metrics
+      : [];
+    const skillAuditLog = Array.isArray(data.skill_audit_log)
+      ? data.skill_audit_log
+      : [];
 
     const counters = data._counters || {};
 
@@ -203,6 +225,9 @@ class Database {
       evolution_log: evolutionLog,
       heartbeat_keywords: heartbeatKeywords,
       agent_capabilities: agentCapabilities,
+      skills,
+      skill_metrics: skillMetrics,
+      skill_audit_log: skillAuditLog,
       _counters: {
         messages: Math.max(
           Number(counters.messages) || 0,
@@ -220,6 +245,11 @@ class Database {
         agent_capabilities: Math.max(
           Number(counters.agent_capabilities) || 0,
           this.maxId(agentCapabilities)
+        ),
+        skill_metrics: Number(counters.skill_metrics) || 0,
+        skill_audit_log: Math.max(
+          Number(counters.skill_audit_log) || 0,
+          this.maxId(skillAuditLog)
         ),
       },
     };
@@ -613,6 +643,67 @@ class Database {
     return [...rows].sort(
       (a, b) => b.confidence - a.confidence || b.demo_count - a.demo_count
     );
+  }
+
+  // ============================================================
+  // Skills
+  // ============================================================
+  getSkills(): SkillRecord[] {
+    return this.data.skills;
+  }
+
+  getSkill(id: string, version: string): SkillRecord | undefined {
+    return this.data.skills.find(s => s.id === id && s.version === version);
+  }
+
+  upsertSkill(record: SkillRecord): SkillRecord {
+    const idx = this.data.skills.findIndex(
+      s => s.id === record.id && s.version === record.version
+    );
+    if (idx >= 0) {
+      this.data.skills[idx] = { ...record, updatedAt: this.now() };
+    } else {
+      this.data.skills.push(record);
+    }
+    this.save();
+    return idx >= 0 ? this.data.skills[idx] : record;
+  }
+
+  // ============================================================
+  // Skill Metrics
+  // ============================================================
+  getSkillMetrics(skillId?: string): SkillExecutionMetrics[] {
+    if (skillId) {
+      return this.data.skill_metrics.filter(m => m.skillId === skillId);
+    }
+    return this.data.skill_metrics;
+  }
+
+  createSkillMetric(metric: SkillExecutionMetrics): void {
+    this.data._counters.skill_metrics++;
+    this.data.skill_metrics.push(metric);
+    this.save();
+  }
+
+  // ============================================================
+  // Skill Audit Log
+  // ============================================================
+  getSkillAuditLogs(skillId?: string): SkillAuditLog[] {
+    if (skillId) {
+      return this.data.skill_audit_log.filter(l => l.skillId === skillId);
+    }
+    return this.data.skill_audit_log;
+  }
+
+  createSkillAuditLog(log: Omit<SkillAuditLog, "id">): SkillAuditLog {
+    this.data._counters.skill_audit_log++;
+    const row: SkillAuditLog = {
+      ...log,
+      id: this.data._counters.skill_audit_log,
+    };
+    this.data.skill_audit_log.push(row);
+    this.save();
+    return row;
   }
 
   // ============================================================
