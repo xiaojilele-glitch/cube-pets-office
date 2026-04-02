@@ -1,5 +1,6 @@
 import type { ExecutorEvent } from "../executor/contracts.js";
 import type {
+  MissionDecisionResolved,
   MissionPlanetEdge,
   MissionPlanetOverviewItem,
   MissionRecord,
@@ -16,6 +17,7 @@ export const MISSION_SOCKET_TYPES = {
   planetUpdated: "mission.planet.updated",
   planetEdgeUpdated: "mission.planet.edge.updated",
   executorEvent: "mission.executor.event",
+  decisionSubmitted: "mission.decision.submitted",
 } as const;
 
 export interface MissionSocketSnapshotEvent {
@@ -58,9 +60,19 @@ export interface MissionSocketExecutorEvent {
   event: ExecutorEvent;
 }
 
+export interface MissionSocketDecisionSubmittedEvent {
+  type: typeof MISSION_SOCKET_TYPES.decisionSubmitted;
+  issuedAt: number;
+  missionId: string;
+  decisionId: string;
+  resolved: MissionDecisionResolved;
+  task: MissionRecord;
+}
+
 export type MissionSocketPayload =
   | MissionSocketSnapshotEvent
   | MissionSocketRecordEvent
   | MissionSocketPlanetUpdatedEvent
   | MissionSocketPlanetEdgeUpdatedEvent
-  | MissionSocketExecutorEvent;
+  | MissionSocketExecutorEvent
+  | MissionSocketDecisionSubmittedEvent;

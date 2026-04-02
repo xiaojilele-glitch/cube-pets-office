@@ -77,6 +77,7 @@ export interface FeishuOutboundMessage {
   summary?: string;
   link?: string;
   decision?: FeishuTaskDecisionPrompt;
+  resolvedDecision?: FeishuResolvedDecision;
   card?: FeishuCardPayload;
   presentation?: "auto" | "text" | "card";
 }
@@ -171,6 +172,20 @@ function formatDecision(decision: FeishuTaskDecisionPrompt | undefined): string 
   return lines.join("\n");
 }
 
+function formatDecisionResolvedText(task: FeishuTaskRecord, link?: string): string {
+  const resolved = task.lastResolvedDecision;
+  const choice = resolved?.optionLabel || resolved?.freeText || resolved?.optionId || "已确认";
+  const time = new Date(task.updatedAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
+  return [
+    `任务已决策：${task.title}`,
+    `选择结果：${choice}`,
+    `决策时间：${time}`,
+    link ? `详情：${link}` : undefined,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 function formatWaitingFallbackHint(link?: string): string | undefined {
   if (!link) return undefined;
   return "如果飞书按钮无响应，请打开详情页继续确认。";
@@ -257,7 +272,37 @@ function createDecisionButtonValue(
   };
 }
 
+function resolveDecisionButtonType(
+  decisionType: string | undefined,
+  option: { id: string; label: string; severity?: string },
+  index: number
+): "primary" | "danger" | "default" {
+  const dt = decisionType ?? "custom-action";
+
+  // severity takes highest priority when present
+  if (option.severity === "danger") return "danger";
+
+  if (dt === "escalate") return "danger";
+
+  if (dt === "approve" || dt === "reject") {
+    // First option = approve (green/primary), second = reject (danger)
+    return index === 0 ? "primary" : "danger";
+  }
+
+  return index === 0 ? "primary" : "default";
+}
+
+function resolveCardTemplateForDecision(
+  decisionType: string | undefined,
+  baseTemplate: FeishuCardPayload["header"]["template"]
+): FeishuCardPayload["header"]["template"] {
+  if (decisionType === "escalate") return "red";
+  return baseTemplate;
+}
+
 function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
+  const decisionType = message.decision?.type;
+
   const elements: Array<Record<string, unknown>> = [
     {
       tag: "div",
@@ -284,11 +329,12 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
   }
 
   if (message.decision?.options?.length) {
+    const priorityPrefix = decisionType === "escalate" ? "🔴 " : "";
     elements.push({
       tag: "div",
       text: {
         tag: "lark_md",
-        content: `**待确认**：${message.decision.prompt}\n${message.decision.options
+        content: `${priorityPrefix}**待确认**：${message.decision.prompt}\n${message.decision.options
           .map(
             option =>
               `${option.id}. ${option.label}${option.description ? ` - ${option.description}` : ""}`
@@ -302,9 +348,9 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
         tag: "button",
         text: {
           tag: "plain_text",
-          content: `${option.id}. ${option.label}`,
+          content: option.label,
         },
-        type: index === 0 ? "primary" : "default",
+        type: resolveDecisionButtonType(decisionType, option, index),
         width: "fill",
         behaviors: [
           {
@@ -327,6 +373,19 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
       text: {
         tag: "lark_md",
         content: `**兜底方式**：${waitingFallbackHint}`,
+      },
+    });
+  }
+
+  if (message.resolvedDecision) {
+    const resolved = message.resolvedDecision;
+    const choice = resolved.optionLabel || resolved.freeText || resolved.optionId || "已确认";
+    const time = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
+    elements.push({
+      tag: "div",
+      text: {
+        tag: "lark_md",
+        content: `✅ **已决策**：${choice}\n**决策时间**：${time}`,
       },
     });
   }
@@ -362,6 +421,8 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
     });
   }
 
+  const baseTemplate = cardTemplateForStatus(message.status);
+
   return {
     schema: "2.0",
     config: {
@@ -382,7 +443,7 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
                   ? `任务执行失败：${message.taskId}`
                   : `任务进度更新：${message.taskId}`,
       },
-      template: cardTemplateForStatus(message.status),
+      template: resolveCardTemplateForDecision(decisionType, baseTemplate),
     },
     body: {
       elements,
@@ -574,6 +635,29 @@ export class FeishuProgressBridge {
 
       const delta = task.progress - subscription.lastProgressSent;
       if (delta < this.config.progressThrottlePercent && latest?.type === "log") {
+        return;
+      }
+
+      // Detect decision-resolved transition: was waiting, now running with a resolved decision
+      if (
+        subscription.lastEventType === "waiting" &&
+        task.status === "running" &&
+        task.lastResolvedDecision
+      ) {
+        subscription.lastEventType = latest?.type;
+        subscription.lastProgressSent = task.progress;
+        await this.sendAndTrack(task.id, {
+          kind: "task-progress",
+          target: subscription.target,
+          taskId: task.id,
+          text: formatDecisionResolvedText(task, link),
+          progress: task.progress,
+          status: task.status,
+          stage,
+          detail: latest?.message,
+          link,
+          resolvedDecision: task.lastResolvedDecision,
+        });
         return;
       }
 

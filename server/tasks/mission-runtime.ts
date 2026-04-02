@@ -3,10 +3,13 @@ import {
   MISSION_SOCKET_TYPES,
   type MissionSocketPayload,
   type MissionSocketRecordEvent,
+  type MissionSocketDecisionSubmittedEvent,
 } from '../../shared/mission/socket.js';
 import type {
   MissionArtifact,
   MissionDecision,
+  MissionDecisionResolved,
+  DecisionHistoryEntry,
   MissionExecutorContext,
   MissionEvent,
   MissionEventLevel,
@@ -204,6 +207,26 @@ export class MissionRuntime {
       this.emitMissionUpdate(task);
     }
     return recovered;
+  }
+
+  emitDecisionSubmitted(
+    task: MissionRecord,
+    historyEntry: DecisionHistoryEntry,
+    resolved: MissionDecisionResolved,
+  ): void {
+    const io = getSocketIO();
+    if (!io) return;
+
+    const payload: MissionSocketDecisionSubmittedEvent = {
+      type: MISSION_SOCKET_TYPES.decisionSubmitted,
+      issuedAt: Date.now(),
+      missionId: task.id,
+      decisionId: historyEntry.decisionId,
+      resolved,
+      task,
+    };
+
+    io.emit(MISSION_SOCKET_EVENT, payload);
   }
 
   private emitMissionUpdate(task: MissionRecord | undefined): void {

@@ -19,6 +19,7 @@ export default function TaskDetailPage({
   const selectTask = useTasksStore(state => state.selectTask);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
+  const refresh = useTasksStore(state => state.refresh);
   const detailsById = useTasksStore(state => state.detailsById);
   const selectedTaskId = useTasksStore(state => state.selectedTaskId);
   const decisionNotes = useTasksStore(state => state.decisionNotes);
@@ -95,6 +96,7 @@ export default function TaskDetailPage({
           }}
           onLaunchDecision={handleLaunchDecision}
           launchingPresetId={launchingPresetId}
+          onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId })}
         />
       </div>
     </div>

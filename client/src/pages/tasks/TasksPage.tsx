@@ -320,6 +320,7 @@ export default function TasksPage({
               }}
               onLaunchDecision={handleLaunchDecision}
               launchingPresetId={launchingPresetId}
+              onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId || null })}
               className="min-w-0 xl:h-full xl:min-h-0"
             />
           </main>

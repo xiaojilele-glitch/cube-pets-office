@@ -319,6 +319,7 @@ cube-pets-office/
 | A2A 跨框架协议 | `.kiro/specs/a2a-protocol/` | `shared/a2a-protocol.ts` `server/core/a2a-client.ts` `server/core/a2a-server.ts` `server/core/a2a-adapters/crewai.ts` `server/core/a2a-adapters/langgraph.ts` `server/core/a2a-adapters/claude.ts` `server/routes/a2a.ts` `client/src/components/three/CrossFrameworkParticles.tsx` | 🔲 待开发 |
 | 向量数据库与 RAG 管道 | `.kiro/specs/vector-db-rag-pipeline/` | `server/rag/ingestion/ingestion-pipeline.ts` `server/rag/chunking/chunk-router.ts` `server/rag/embedding/embedding-generator.ts` `server/rag/store/vector-store-adapter.ts` `server/rag/retrieval/rag-retriever.ts` `server/rag/augmentation/rag-pipeline.ts` `server/routes/rag.ts` `shared/rag/contracts.ts` `client/src/components/rag/RAGInfoPanel.tsx` | 🔲 待开发 |
 | 多区域灾难恢复 | `.kiro/specs/multi-region-disaster-recovery/` | `shared/region/contracts.ts` `shared/region/replication.ts` `shared/region/scheduling.ts` `shared/region/load-balancer.ts` `shared/region/monitoring.ts` `server/region/region-manager.ts` `server/region/replication-engine.ts` `server/region/region-scheduler.ts` `server/region/global-load-balancer.ts` `server/region/region-health-monitor.ts` `server/region/migration-tool.ts` `server/routes/region.ts` `client/src/lib/region-store.ts` `client/src/components/region/RegionDashboard.tsx` | 🔲 待开发 |
+| Human-in-the-Loop 决策系统 | `.kiro/specs/human-in-the-loop/` | `shared/mission/contracts.ts` `shared/mission/decision-templates.ts` `server/tasks/mission-decision.ts` `client/src/components/tasks/DecisionPanel.tsx` | ✅ 已完成 |
 
 ## 核心数据流
 

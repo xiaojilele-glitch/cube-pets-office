@@ -1,4 +1,5 @@
 import type {
+  DecisionHistoryEntry,
   MissionEvent,
   MissionDecisionResolved,
   MissionDecisionSubmission,
@@ -8,6 +9,7 @@ import type {
   MissionPlanetOverviewItem,
   MissionRecord,
 } from "./contracts.js";
+import type { DecisionTemplate } from "./decision-templates.js";
 
 export const MISSION_API_ROUTES = {
   createTask: "/api/tasks",
@@ -21,6 +23,8 @@ export const MISSION_API_ROUTES = {
   createPlanetEdge: "/api/planets/edges",
   updatePlanetEdge: "/api/planets/edges/:fromId/:toId",
   deletePlanetEdge: "/api/planets/edges/:fromId/:toId",
+  listDecisionTemplates: "/api/decision-templates",
+  listDecisionHistory: "/api/tasks/:id/decisions",
 } as const;
 
 export interface MissionApiErrorResponse {
@@ -115,4 +119,15 @@ export interface UpsertMissionPlanetEdgeResponse {
 
 export interface DeleteMissionPlanetEdgeResponse {
   ok: true;
+}
+
+export interface ListDecisionTemplatesResponse {
+  ok: true;
+  templates: DecisionTemplate[];
+}
+
+export interface ListDecisionHistoryResponse {
+  ok: true;
+  missionId: string;
+  decisions: DecisionHistoryEntry[];
 }

@@ -34,6 +34,19 @@ export type MissionEventType = (typeof MISSION_EVENT_TYPES)[number];
 export const MISSION_EVENT_LEVELS = ["info", "warn", "error"] as const;
 export type MissionEventLevel = (typeof MISSION_EVENT_LEVELS)[number];
 
+/* ─── Decision Type System ─── */
+
+export const DECISION_TYPES = [
+  'approve',
+  'reject',
+  'request-info',
+  'escalate',
+  'custom-action',
+  'multi-choice',
+] as const;
+
+export type DecisionType = (typeof DECISION_TYPES)[number];
+
 export interface MissionStage {
   key: string;
   label: string;
@@ -57,6 +70,9 @@ export interface MissionDecisionOption {
   id: string;
   label: string;
   description?: string;
+  action?: DecisionType;
+  severity?: 'info' | 'warn' | 'danger';
+  requiresComment?: boolean;
 }
 
 export interface MissionDecision {
@@ -64,6 +80,10 @@ export interface MissionDecision {
   options: MissionDecisionOption[];
   allowFreeText?: boolean;
   placeholder?: string;
+  type?: DecisionType;
+  templateId?: string;
+  payload?: Record<string, unknown>;
+  decisionId?: string;
 }
 
 export interface MissionDecisionSubmission {
@@ -77,6 +97,22 @@ export interface MissionDecisionResolved {
   optionId?: string;
   optionLabel?: string;
   freeText?: string;
+}
+
+/* ─── Decision History ─── */
+
+export interface DecisionHistoryEntry {
+  decisionId: string;
+  type: DecisionType;
+  prompt: string;
+  options: MissionDecisionOption[];
+  templateId?: string;
+  payload?: Record<string, unknown>;
+  resolved: MissionDecisionResolved;
+  submittedBy?: string;
+  submittedAt: number;
+  reason?: string;
+  stageKey?: string;
 }
 
 export const MISSION_CORE_STAGE_BLUEPRINT = [
@@ -174,6 +210,7 @@ export interface MissionRecord {
   agentCrew?: MissionAgentCrewMember[];
   waitingFor?: string;
   decision?: MissionDecision;
+  decisionHistory?: DecisionHistoryEntry[];
   createdAt: number;
   updatedAt: number;
   completedAt?: number;

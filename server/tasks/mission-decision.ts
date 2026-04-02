@@ -1,8 +1,16 @@
 import type {
+  DecisionHistoryEntry,
+  DecisionType,
   MissionDecisionResolved,
   MissionDecisionSubmission,
   MissionRecord,
 } from '../../shared/mission/contracts.js';
+
+export function generateDecisionId(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).slice(2, 6);
+  return `dec_${timestamp}_${random}`;
+}
 
 export interface MissionDecisionRuntime {
   getTask(id: string): MissionRecord | undefined;
@@ -115,6 +123,14 @@ export function submitMissionDecision(
     };
   }
 
+  if (selectedOption?.requiresComment && !freeText) {
+    return {
+      ok: false,
+      statusCode: 400,
+      error: 'This option requires a comment',
+    };
+  }
+
   if (!optionId && !freeText) {
     return {
       ok: false,
@@ -131,7 +147,7 @@ export function submitMissionDecision(
     };
   }
 
-  if (freeText && prompt && prompt.allowFreeText !== true && optionId) {
+  if (freeText && prompt && prompt.allowFreeText !== true && optionId && !selectedOption?.requiresComment) {
     return {
       ok: false,
       statusCode: 400,
@@ -155,14 +171,35 @@ export function submitMissionDecision(
     };
   }
 
+  const resolvedDecision: MissionDecisionResolved = {
+    optionId: selectedOption?.id,
+    optionLabel: selectedOption?.label,
+    freeText,
+  };
+
+  // Build DecisionHistoryEntry and append to decisionHistory
+  const historyEntry: DecisionHistoryEntry = {
+    decisionId: prompt?.decisionId || generateDecisionId(),
+    type: (prompt?.type ?? 'custom-action') as DecisionType,
+    prompt: prompt?.prompt ?? '',
+    options: prompt?.options ?? [],
+    templateId: prompt?.templateId,
+    payload: prompt?.payload,
+    resolved: resolvedDecision,
+    submittedAt: Date.now(),
+    reason: freeText,
+    stageKey: task.currentStageKey,
+  };
+
+  if (!updated.decisionHistory) {
+    updated.decisionHistory = [];
+  }
+  updated.decisionHistory.push(historyEntry);
+
   return {
     ok: true,
     task: updated,
     detail,
-    decision: {
-      optionId: selectedOption?.id,
-      optionLabel: selectedOption?.label,
-      freeText,
-    },
+    decision: resolvedDecision,
   };
 }

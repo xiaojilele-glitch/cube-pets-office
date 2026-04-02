@@ -380,7 +380,7 @@ async function startServer() {
   const { heartbeatScheduler } = await import("./core/heartbeat.js");
   const { sessionStore } = await import("./memory/session-store.js");
   const { missionRuntime } = await import("./tasks/mission-runtime.js");
-  const { createTaskRouter } = await import("./routes/tasks.js");
+  const { createTaskRouter, createDecisionTemplatesRouter } = await import("./routes/tasks.js");
   const { createPlanetRouter } = await import("./routes/planets.js");
   const { createFeishuRouter } = await import("./routes/feishu.js");
   const { buildExecutionPlan } = await import("./core/execution-plan-builder.js");
@@ -433,6 +433,7 @@ async function startServer() {
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/cost", costRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
+  app.use("/api/decision-templates", createDecisionTemplatesRouter());
   app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
 
