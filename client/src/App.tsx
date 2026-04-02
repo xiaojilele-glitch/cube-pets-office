@@ -10,6 +10,7 @@ import { useRecoveryDetection } from "./hooks/useRecoveryDetection";
 import { useAppStore } from "./lib/store";
 import Home from "./pages/Home";
 import { TaskDetailPage, TasksPage } from "./pages/tasks";
+import { ReplayPage } from "./components/replay/ReplayPage";
 
 const routerBase =
   import.meta.env.BASE_URL === "/"
@@ -25,6 +26,9 @@ function Router() {
       </Route>
       <Route path={"/tasks/:taskId"}>
         {params => <TaskDetailRoute taskId={params.taskId} />}
+      </Route>
+      <Route path={"/replay/:missionId"}>
+        {params => <ReplayPage missionId={params.missionId || ''} />}
       </Route>
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, LoaderCircle } from "lucide-react";
+import { ArrowLeft, LoaderCircle, Play } from "lucide-react";
+import { useLocation } from "wouter";
 
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ export default function TaskDetailPage({
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
   );
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     void ensureReady();
@@ -71,6 +73,17 @@ export default function TaskDetailPage({
           <div className="flex items-center gap-2">
             {loading && !detail ? (
               <LoaderCircle className="size-4 animate-spin text-stone-500" />
+            ) : null}
+            {activeTaskId ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full border-stone-200 bg-white/80"
+                onClick={() => setLocation(`/replay/${activeTaskId}`)}
+              >
+                <Play className="size-4" />
+                View Replay
+              </Button>
             ) : null}
             {onBack ? (
               <Button

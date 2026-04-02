@@ -420,9 +420,29 @@ async function startServer() {
   const exportRoutes = (await import("./routes/export.js")).default;
   const telemetryRoutes = (await import("./routes/telemetry.js")).default;
   const costRoutes = (await import("./routes/cost.js")).default;
+  const replayRoutes = (await import("./routes/replay.js")).default;
   const { costTracker } = await import("./core/cost-tracker.js");
 
   costTracker.loadHistory();
+
+  // ── Collaboration Replay: EventCollector + Interceptors (Requirements: 1.3, 1.4, 2.1) ──
+  const { ServerReplayStore } = await import("./replay/replay-store.js");
+  const { EventCollector } = await import("./replay/event-collector.js");
+  const {
+    installMissionInterceptor,
+    installMessageBusInterceptor,
+    installExecutorInterceptor,
+  } = await import("./replay/interceptors.js");
+  const { messageBus } = await import("./core/message-bus.js");
+
+  const replayStore = new ServerReplayStore();
+  const eventCollector = new EventCollector(replayStore);
+
+  installMissionInterceptor(missionRuntime, eventCollector);
+  installMessageBusInterceptor(messageBus, eventCollector);
+
+  // Executor interceptor middleware — mounted before the executor callback handler
+  app.use("/api/executor/events", installExecutorInterceptor(eventCollector));
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
@@ -432,6 +452,7 @@ async function startServer() {
   app.use("/api/export", exportRoutes);
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/cost", costRoutes);
+  app.use("/api/replay", replayRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
