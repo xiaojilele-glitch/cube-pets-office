@@ -12,6 +12,8 @@ import type {
   WorkflowOrganizationNode,
   WorkflowOrganizationSnapshot,
 } from "../../shared/organization-schema.js";
+import type { PhaseAssignment } from "../../shared/role-schema.js";
+import type { ExecutionPlan } from "../../shared/executor/contracts.js";
 import { Agent } from "./agent.js";
 import { getAIConfig } from "./ai-config.js";
 import {
@@ -244,6 +246,153 @@ export class WorkflowEngine {
       this.emit({ type: "workflow_error", workflowId, error: error.message });
       throw error;
     }
+  }
+
+  /** Execution-type role IDs used for allowSelfReview detection */
+  private static readonly EXECUTION_ROLES = new Set(["coder", "writer"]);
+  /** Review-type role IDs used for allowSelfReview detection */
+  private static readonly REVIEW_ROLES = new Set(["reviewer", "qa"]);
+
+  /**
+   * Handle role switching between phases.
+   * Detects agent-role assignment differences and executes role switches.
+   * @see Requirements 5.2, 5.3, 5.4
+   */
+  private async handlePhaseRoleSwitch(
+    workflowId: string,
+    currentStepKey: string,
+    nextStepKey: string,
+    plan: ExecutionPlan
+  ): Promise<void> {
+    const currentStep = plan.steps.find(s => s.key === currentStepKey);
+    const nextStep = plan.steps.find(s => s.key === nextStepKey);
+
+    if (!currentStep?.assignments?.length || !nextStep?.assignments?.length) {
+      return;
+    }
+
+    // Build lookup of current assignments by agentId
+    const currentMap = new Map<string, string>();
+    for (const a of currentStep.assignments) {
+      currentMap.set(a.agentId, a.roleId);
+    }
+
+    // Enforce allowSelfReview constraint (default false)
+    const allAgentIds = [
+      ...new Set([
+        ...currentStep.assignments.map(a => a.agentId),
+        ...nextStep.assignments.map(a => a.agentId),
+      ]),
+    ];
+    const adjustedAssignments = this.enforceAllowSelfReview(
+      nextStep.assignments,
+      currentStep.assignments,
+      allAgentIds,
+      false, // allowSelfReview defaults to false
+    );
+
+    // Detect differences and execute role switches
+    for (const nextAssignment of adjustedAssignments) {
+      const currentRoleId = currentMap.get(nextAssignment.agentId) ?? null;
+
+      // Skip if the agent keeps the same role
+      if (currentRoleId === nextAssignment.roleId) {
+        continue;
+      }
+
+      try {
+        const agentHandle = this.getAgent(nextAssignment.agentId);
+
+        // Only perform role switching on concrete Agent instances (server runtime)
+        if (agentHandle instanceof Agent) {
+          await agentHandle.switchRole(nextAssignment.roleId, workflowId);
+          console.log(
+            `[WorkflowEngine] Phase role switch: agent=${nextAssignment.agentId} ` +
+            `from=${currentRoleId} to=${nextAssignment.roleId} ` +
+            `(${currentStepKey} → ${nextStepKey})`,
+          );
+        }
+      } catch (err) {
+        console.warn(
+          `[WorkflowEngine] Role switch failed for agent ${nextAssignment.agentId}: ` +
+          `${err instanceof Error ? err.message : err}`,
+        );
+        this.recordWorkflowIssue(workflowId, {
+          stage: nextStepKey as Stage,
+          scope: "agent",
+          severity: "warning",
+          agentId: nextAssignment.agentId,
+          message: `Phase role switch failed (${currentRoleId} → ${nextAssignment.roleId}): ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        });
+      }
+    }
+  }
+
+  /**
+   * When allowSelfReview is false (default), prevent an agent from reviewing
+   * its own output when switching from execution role to review role.
+   * @see Requirements 5.3, 5.4
+   */
+  private enforceAllowSelfReview(
+    assignments: PhaseAssignment[],
+    previousAssignments: PhaseAssignment[],
+    allAgentIds: string[],
+    allowSelfReview: boolean
+  ): PhaseAssignment[] {
+    if (allowSelfReview) {
+      return assignments;
+    }
+
+    // Build set of agents that had execution roles in the previous phase
+    const executionAgents = new Set<string>();
+    for (const prev of previousAssignments) {
+      if (WorkflowEngine.EXECUTION_ROLES.has(prev.roleId.toLowerCase())) {
+        executionAgents.add(prev.agentId);
+      }
+    }
+
+    if (executionAgents.size === 0) {
+      return assignments;
+    }
+
+    const result: PhaseAssignment[] = [];
+
+    for (const assignment of assignments) {
+      const isReviewRole = WorkflowEngine.REVIEW_ROLES.has(assignment.roleId.toLowerCase());
+      const wasExecutor = executionAgents.has(assignment.agentId);
+
+      if (isReviewRole && wasExecutor) {
+        // Find an alternative agent that was NOT an executor in the previous phase
+        const alternativeAgentId = allAgentIds.find(
+          id =>
+            id !== assignment.agentId &&
+            !executionAgents.has(id) &&
+            // Ensure the alternative isn't already assigned a review role in this batch
+            !result.some(r => r.agentId === id && r.roleId === assignment.roleId),
+        );
+
+        if (alternativeAgentId) {
+          console.log(
+            `[WorkflowEngine] allowSelfReview=false: reassigning review ` +
+            `from ${assignment.agentId} to ${alternativeAgentId} (role=${assignment.roleId})`,
+          );
+          result.push({ agentId: alternativeAgentId, roleId: assignment.roleId });
+        } else {
+          // No alternative available — keep original assignment with a warning
+          console.warn(
+            `[WorkflowEngine] allowSelfReview=false: no alternative agent available ` +
+            `for review role ${assignment.roleId}, keeping ${assignment.agentId}`,
+          );
+          result.push(assignment);
+        }
+      } else {
+        result.push(assignment);
+      }
+    }
+
+    return result;
   }
 
   private emitStage(workflowId: string, stage: Stage): void {

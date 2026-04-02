@@ -381,4 +381,11 @@ export type AgentEvent =
       summary: string;
       jsonPath: string;
       markdownPath: string;
+    }
+  | {
+      type: "agent.roleChanged";
+      agentId: string;
+      fromRoleId: string | null;
+      toRoleId: string | null;
+      timestamp: string;
     };

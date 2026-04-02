@@ -12,6 +12,7 @@ import type {
 } from "../../shared/mission/contracts.js";
 import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
 import type { ExecutorEvent, ExecutionPlan } from "../../shared/executor/contracts.js";
+import type { RoleSwitchTrace } from "../../shared/role-schema.js";
 import type {
   WorkflowRuntime,
   TaskRecord,
@@ -474,6 +475,37 @@ export class MissionOrchestrator {
     const missionId = this.workflowMissionMap.get(workflowId);
     if (!missionId) return;
     await this.enrichMissionFromWorkflow(missionId, workflowId, completedStage);
+  }
+
+  /**
+   * Record a role switch trace to the Mission event stream.
+   * Uses the "role_switch" MissionEvent type.
+   * @see Requirements 5.5
+   */
+  async recordRoleSwitchTrace(missionId: string, trace: RoleSwitchTrace): Promise<void> {
+    const record = await this.repo.get(missionId);
+    if (!record) {
+      console.warn(`[MissionOrchestrator] Cannot record role switch trace: mission ${missionId} not found`);
+      return;
+    }
+
+    const event = missionEvent(
+      "role_switch",
+      `Agent ${trace.agentId} switched from ${trace.fromRoleId ?? 'none'} to ${trace.toRoleId ?? 'none'}`,
+      {
+        stageKey: trace.phaseId,
+        source: "brain",
+        time: new Date(trace.timestamp).getTime(),
+      },
+    );
+
+    const updated = appendEvent(record, event);
+    await this.persist(updated);
+
+    console.log(
+      `[MissionOrchestrator] Role switch trace recorded: mission=${missionId} ` +
+      `agent=${trace.agentId} from=${trace.fromRoleId} to=${trace.toRoleId} phase=${trace.phaseId}`,
+    );
   }
 
   async startMission(input: StartMissionInput): Promise<StartMissionResult> {

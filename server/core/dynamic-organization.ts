@@ -12,10 +12,12 @@ import type {
   WorkflowOrganizationSnapshot,
   WorkflowSkillBinding,
 } from "../../shared/organization-schema.js";
+import type { RoleTemplate, AuthorityLevel, RoleSource } from "../../shared/role-schema.js";
 import db from "../db/index.js";
 import { writeAgentWorkspaceFile } from "./access-guard.js";
 import { ensureAgentWorkspaces } from "../memory/workspace.js";
 import { registry } from "./registry.js";
+import { roleRegistry } from "./role-registry.js";
 
 type ExecutionMode = WorkflowOrganizationNode["execution"]["mode"];
 type ExecutionStrategy = WorkflowOrganizationNode["execution"]["strategy"];
@@ -973,6 +975,47 @@ function assembleOrganizationSnapshot(
   };
 }
 
+function deriveAuthorityLevel(role: WorkflowOrganizationNode["role"]): AuthorityLevel {
+  switch (role) {
+    case "ceo":
+    case "manager":
+      return "high";
+    case "worker":
+      return "low";
+    default:
+      return "medium";
+  }
+}
+
+function registerRoleTemplatesFromSnapshot(
+  snapshot: WorkflowOrganizationSnapshot
+): void {
+  const source: RoleSource = snapshot.source === "generated" ? "generated" : "predefined";
+  const seen = new Set<string>();
+  const now = new Date().toISOString();
+
+  for (const node of snapshot.nodes) {
+    const roleId = node.role.toLowerCase();
+    if (seen.has(roleId)) continue;
+    seen.add(roleId);
+
+    const template: RoleTemplate = {
+      roleId,
+      roleName: roleId.charAt(0).toUpperCase() + roleId.slice(1),
+      responsibilityPrompt: node.responsibility,
+      requiredSkillIds: node.skills.map(s => s.id),
+      mcpIds: node.mcp.map(m => m.id),
+      defaultModelConfig: { ...node.model },
+      authorityLevel: deriveAuthorityLevel(node.role),
+      source,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    roleRegistry.register(template, 'dynamic-organization');
+  }
+}
+
 export async function generateWorkflowOrganization(options: {
   workflowId: string;
   directive: string;
@@ -1030,6 +1073,8 @@ export async function generateWorkflowOrganization(options: {
     options.model,
     source
   );
+
+  registerRoleTemplatesFromSnapshot(organization);
 
   return {
     organization,

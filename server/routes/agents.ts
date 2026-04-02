@@ -7,6 +7,8 @@ import db from '../db/index.js';
 import { readAgentWorkspaceFile } from '../core/access-guard.js';
 import { sessionStore } from '../memory/session-store.js';
 import { soulStore } from '../memory/soul-store.js';
+import { Agent } from '../core/agent.js';
+import { roleRegistry } from '../core/role-registry.js';
 
 const router = Router();
 
@@ -112,12 +114,78 @@ router.get('/:id/memory/search', (req, res) => {
 
 // GET /api/agents/:id
 router.get('/:id', (req, res) => {
-  const agent = db.getAgent(req.params.id);
-  if (!agent) {
+  const agentRow = db.getAgent(req.params.id);
+  if (!agentRow) {
     return res.status(404).json({ error: 'Agent not found' });
   }
 
-  res.json({ agent });
+  // Build currentRole and roleHistory from Agent role state
+  let currentRole: { roleId: string; roleName: string; loadedAt: string } | null = null;
+  let roleHistory: Array<{
+    fromRole: string | null;
+    toRole: string | null;
+    missionName: string;
+    timestamp: string;
+  }> = [];
+
+  const agentInstance = Agent.fromDB(req.params.id);
+  if (agentInstance) {
+    const currentRoleId = agentInstance.getCurrentRoleId();
+    const roleState = agentInstance.getRoleState();
+
+    if (currentRoleId && roleState.currentRoleLoadedAt) {
+      const template = roleRegistry.get(currentRoleId);
+      currentRole = {
+        roleId: currentRoleId,
+        roleName: template?.roleName ?? currentRoleId,
+        loadedAt: roleState.currentRoleLoadedAt,
+      };
+    }
+
+    // Derive roleHistory from operation log: pair load/unload events into switch records (last 20)
+    const opLog = agentInstance.getRoleOperationLog();
+    const switchRecords: Array<{
+      fromRole: string | null;
+      toRole: string | null;
+      missionName: string;
+      timestamp: string;
+    }> = [];
+
+    for (let i = 0; i < opLog.length; i++) {
+      const entry = opLog[i];
+      if (entry.action === 'load') {
+        // Look back for the preceding unload to determine fromRole
+        let fromRoleId: string | null = null;
+        if (i > 0 && opLog[i - 1].action === 'unload') {
+          fromRoleId = opLog[i - 1].roleId;
+        }
+        const fromTemplate = fromRoleId ? roleRegistry.get(fromRoleId) : null;
+        const toTemplate = roleRegistry.get(entry.roleId);
+        switchRecords.push({
+          fromRole: fromTemplate?.roleName ?? fromRoleId,
+          toRole: toTemplate?.roleName ?? entry.roleId,
+          missionName: entry.triggerSource,
+          timestamp: entry.timestamp,
+        });
+      } else if (entry.action === 'unload') {
+        // Standalone unload (no subsequent load) — record as switch to null
+        const isFollowedByLoad = i + 1 < opLog.length && opLog[i + 1].action === 'load';
+        if (!isFollowedByLoad) {
+          const fromTemplate = roleRegistry.get(entry.roleId);
+          switchRecords.push({
+            fromRole: fromTemplate?.roleName ?? entry.roleId,
+            toRole: null,
+            missionName: entry.triggerSource,
+            timestamp: entry.timestamp,
+          });
+        }
+      }
+    }
+
+    roleHistory = switchRecords.slice(-20);
+  }
+
+  res.json({ agent: agentRow, currentRole, roleHistory });
 });
 
 export default router;

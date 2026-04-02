@@ -15,6 +15,8 @@ import { useAppStore } from '@/lib/store';
 import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
 import { useTelemetryStore } from '@/lib/telemetry-store';
 import { useWorkflowStore } from '@/lib/workflow-store';
+import { useRoleStore } from '@/lib/role-store';
+import { getRoleColor } from '@/components/AgentRolePanel';
 
 type SceneAgentConfig = {
   id: string;
@@ -424,8 +426,12 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
     a => a.type === 'agent_slow' && a.agentId === config.id && !a.resolved
   ) ?? false;
 
+  const agentRoleInfo = useRoleStore(state => state.agentRoles.get(config.id));
+  const currentRoleName = agentRoleInfo?.currentRole?.roleName || null;
+  const roleColor = currentRoleName ? getRoleColor(currentRoleName) : null;
+
   const agentStatus = agentStatuses[config.id] || 'idle';
-  const accent = config.color;
+  const accent = roleColor || config.color;
   const isActive = hovered || selectedPet === config.id;
 
   const handleClick = useCallback(() => {
@@ -510,8 +516,19 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
         </div>
       </Html>
 
+      {currentRoleName && (
+        <Html position={[0, 2.2, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
+          <div
+            className="whitespace-nowrap rounded-full px-2 py-0.5 text-[9px] font-bold text-white shadow-sm transition-all duration-500"
+            style={{ backgroundColor: roleColor || '#8B7355' }}
+          >
+            🎭 {currentRoleName}
+          </div>
+        </Html>
+      )}
+
       {hasSlowAlert && (
-        <Html position={[0, 2.4, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
+        <Html position={[0, currentRoleName ? 2.6 : 2.4, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
           <div className="animate-pulse rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
             ⚠ SLOW
           </div>
@@ -529,13 +546,15 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
           position={[0, 1.3, 0]}
           intensity={0.42}
           color={
-            agentStatus === 'executing'
-              ? '#3B82F6'
-              : agentStatus === 'reviewing'
-                ? '#A855F7'
-                : agentStatus === 'auditing'
-                  ? '#F97316'
-                  : accent
+            roleColor
+              ? roleColor
+              : agentStatus === 'executing'
+                ? '#3B82F6'
+                : agentStatus === 'reviewing'
+                  ? '#A855F7'
+                  : agentStatus === 'auditing'
+                    ? '#F97316'
+                    : accent
           }
           distance={2.6}
           decay={2}

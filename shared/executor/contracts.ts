@@ -1,4 +1,5 @@
 import type { MissionDecision } from "../mission/contracts.js";
+import type { PhaseAssignment } from "../role-schema.js";
 
 export const EXECUTOR_CONTRACT_VERSION = "2026-03-28" as const;
 
@@ -53,6 +54,8 @@ export interface ExecutionPlanStep {
   description: string;
   acceptanceCriteria?: string[];
   dependsOn?: string[];
+  /** Agent-role assignments for this phase (dynamic role system) */
+  assignments?: PhaseAssignment[];
 }
 
 export interface ExecutionPlanJob {
