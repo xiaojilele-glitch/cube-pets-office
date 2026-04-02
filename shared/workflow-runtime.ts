@@ -107,9 +107,13 @@ export interface EvolutionLogInput {
   applied: number;
 }
 
+export type LLMMessageContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string; detail?: "low" | "high" | "auto" } };
+
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | LLMMessageContentPart[];
 }
 
 export interface LLMCallOptions {

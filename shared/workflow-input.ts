@@ -4,7 +4,9 @@ export const MAX_WORKFLOW_ATTACHMENT_EXCERPT_CHARS = 6000;
 export type WorkflowAttachmentExcerptStatus =
   | "parsed"
   | "truncated"
-  | "metadata_only";
+  | "metadata_only"
+  | "vision_analyzed"
+  | "vision_fallback";
 
 export interface WorkflowInputAttachment {
   id: string;
@@ -14,6 +16,9 @@ export interface WorkflowInputAttachment {
   content: string;
   excerpt: string;
   excerptStatus: WorkflowAttachmentExcerptStatus;
+  visionReady?: boolean;
+  base64DataUrl?: string;
+  visualDescription?: string;
 }
 
 function normalizeDirectiveText(value: string) {
@@ -76,13 +81,15 @@ export function normalizeWorkflowAttachment(
   const excerptStatus =
     candidate.excerptStatus === "parsed" ||
     candidate.excerptStatus === "truncated" ||
-    candidate.excerptStatus === "metadata_only"
+    candidate.excerptStatus === "metadata_only" ||
+    candidate.excerptStatus === "vision_analyzed" ||
+    candidate.excerptStatus === "vision_fallback"
       ? candidate.excerptStatus
       : excerpt !== content
         ? "truncated"
         : "parsed";
 
-  return {
+  const result: WorkflowInputAttachment = {
     id:
       typeof candidate.id === "string" && candidate.id.trim()
         ? candidate.id
@@ -97,6 +104,18 @@ export function normalizeWorkflowAttachment(
     excerpt,
     excerptStatus,
   };
+
+  if (typeof candidate.visionReady === "boolean") {
+    result.visionReady = candidate.visionReady;
+  }
+  if (typeof candidate.base64DataUrl === "string" && candidate.base64DataUrl) {
+    result.base64DataUrl = candidate.base64DataUrl;
+  }
+  if (typeof candidate.visualDescription === "string" && candidate.visualDescription) {
+    result.visualDescription = candidate.visualDescription;
+  }
+
+  return result;
 }
 
 export function normalizeWorkflowAttachments(
@@ -143,6 +162,11 @@ export function buildWorkflowDirectiveContext(
       `MIME type: ${attachment.mimeType || "unknown"}`,
       `File size: ${attachment.size} bytes`,
     ];
+
+    if (attachment.visualDescription) {
+      lines.push(`[Vision Analysis] ${attachment.name}`);
+      lines.push(attachment.visualDescription);
+    }
 
     if (attachment.content) {
       lines.push("Full parsed content:");

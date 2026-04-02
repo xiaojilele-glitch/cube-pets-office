@@ -452,6 +452,8 @@ async function startServer() {
   app.use("/api/export", exportRoutes);
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/cost", costRoutes);
+  const visionRoutes = (await import("./routes/vision.js")).default;
+  app.use("/api/vision", visionRoutes);
   app.use("/api/replay", replayRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
   app.use("/api/planets", createPlanetRouter(missionRuntime));
