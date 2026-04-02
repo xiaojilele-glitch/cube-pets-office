@@ -12,6 +12,7 @@ import {
   Database,
   Download,
   FileText,
+  Hand,
   History,
   Loader2,
   Monitor,
@@ -59,6 +60,11 @@ import { useDemoMode } from '@/hooks/useDemoMode';
 import { MemoryTimeline } from '@/components/demo/MemoryTimeline';
 import { EvolutionScoreCard } from '@/components/demo/EvolutionScoreCard';
 import { SessionHistoryTab } from '@/components/SessionHistoryTab';
+import { useAutonomyStore } from '@/lib/autonomy-store';
+import type {
+  AssessmentResult,
+  JudgingScore,
+} from '@shared/autonomy-types';
 
 const wfBadge: Record<string, string> = {
   pending: 'bg-gray-100 text-gray-700',
@@ -998,6 +1004,342 @@ function RoleSwitchTimeline() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Autonomy decision badge colors
+// ---------------------------------------------------------------------------
+
+const decisionBadge: Record<string, string> = {
+  ACCEPT: 'bg-emerald-100 text-emerald-700',
+  ACCEPT_WITH_CAVEAT: 'bg-amber-100 text-amber-700',
+  REQUEST_ASSIST: 'bg-blue-100 text-blue-700',
+  REJECT_AND_REFER: 'bg-red-100 text-red-700',
+};
+
+const competitionStatusBadge: Record<string, string> = {
+  preparing: 'bg-gray-100 text-gray-700',
+  running: 'bg-blue-100 text-blue-700',
+  judging: 'bg-violet-100 text-violet-700',
+  completed: 'bg-emerald-100 text-emerald-700',
+  degraded: 'bg-amber-100 text-amber-700',
+};
+
+const taskforceStatusBadge: Record<string, string> = {
+  recruiting: 'bg-blue-100 text-blue-700',
+  active: 'bg-emerald-100 text-emerald-700',
+  merging: 'bg-violet-100 text-violet-700',
+  dissolved: 'bg-gray-100 text-gray-700',
+};
+
+// ---------------------------------------------------------------------------
+// Autonomy Panels
+// ---------------------------------------------------------------------------
+
+function ScoreBar({ value, color }: { value: number; color: string }) {
+  const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 flex-1 rounded-full bg-[#F0E8E0]">
+        <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className="w-8 text-right text-[9px] tabular-nums text-[#6B5A4A]">{pct}%</span>
+    </div>
+  );
+}
+
+function CollapsiblePanel({
+  title,
+  count,
+  icon,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  count: number;
+  icon: ReactNode;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+      <button type="button" onClick={onToggle} className="flex w-full items-center justify-between gap-2 text-left">
+        <div className="flex items-center gap-2">
+          {icon}
+          <div>
+            <p className="text-sm font-semibold text-[#3A2A1A]">{title}</p>
+            <p className="text-[10px] text-[#8B7355]">{count} items</p>
+          </div>
+        </div>
+        {open ? <ChevronDown className="h-4 w-4 text-[#B08F72]" /> : <ChevronRight className="h-4 w-4 text-[#B08F72]" />}
+      </button>
+      {open ? <div className="mt-3 space-y-2">{children}</div> : null}
+    </div>
+  );
+}
+
+function AgentAssessmentPanel() {
+  const locale = useAppStore(state => state.locale);
+  const assessments = useAutonomyStore(state => state.assessments);
+  const [open, setOpen] = useState(false);
+
+  if (assessments.length === 0) return null;
+
+  // Group by taskId to show allocation process per task
+  const grouped = assessments.reduce<Record<string, AssessmentResult[]>>((acc, a) => {
+    (acc[a.taskId] ||= []).push(a);
+    return acc;
+  }, {});
+
+  return (
+    <CollapsiblePanel
+      title={t(locale, 'Agent 评估分配', 'Agent Assessment')}
+      count={assessments.length}
+      icon={<Brain className="h-4 w-4 text-[#B08F72]" />}
+      open={open}
+      onToggle={() => setOpen(prev => !prev)}
+    >
+      {Object.entries(grouped).map(([taskId, results]) => {
+        const sorted = [...results].sort((a, b) => b.fitnessScore - a.fitnessScore);
+        const best = sorted[0];
+        return (
+          <div key={taskId} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold text-[#3A2A1A]">
+                {t(locale, '任务', 'Task')}: {taskId.slice(0, 12)}
+              </p>
+              <div className="flex items-center gap-1.5">
+                {best ? (
+                  <Pill>
+                    {t(locale, '分配给', 'Assigned to')} {best.agentId.slice(0, 10)}
+                  </Pill>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('autonomy:intervene', { detail: { type: 'assessment', taskId } }));
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DDD0] bg-white px-2 py-0.5 text-[9px] font-medium text-[#6B5A4A] transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
+                >
+                  <Hand className="h-3 w-3" />
+                  {t(locale, '介入', 'Intervene')}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              {sorted.map(result => (
+                <div key={result.agentId} className="rounded-lg bg-white px-3 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-medium text-[#3A2A1A]">{result.agentId.slice(0, 14)}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${decisionBadge[result.decision] || 'bg-gray-100 text-gray-700'}`}>
+                      {result.decision.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  <div className="mt-1.5">
+                    <ScoreBar value={result.fitnessScore} color="bg-[#D4845A]" />
+                  </div>
+                  {result.reason ? (
+                    <p className="mt-1 text-[9px] leading-4 text-[#8B7355]">{result.reason}</p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </CollapsiblePanel>
+  );
+}
+
+function CompetitionResultsPanel() {
+  const locale = useAppStore(state => state.locale);
+  const competitions = useAutonomyStore(state => state.competitions);
+  const [open, setOpen] = useState(false);
+
+  if (competitions.length === 0) return null;
+
+  return (
+    <CollapsiblePanel
+      title={t(locale, '竞争执行结果', 'Competition Results')}
+      count={competitions.length}
+      icon={<Star className="h-4 w-4 text-[#B08F72]" />}
+      open={open}
+      onToggle={() => setOpen(prev => !prev)}
+    >
+      {competitions.map(session => (
+        <div key={session.id} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold text-[#3A2A1A]">
+              {t(locale, '任务', 'Task')}: {session.taskId.slice(0, 12)}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${competitionStatusBadge[session.status] || 'bg-gray-100 text-gray-700'}`}>
+                {session.status}
+              </span>
+              {session.status === 'completed' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('autonomy:intervene', { detail: { type: 'competition', sessionId: session.id } }));
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DDD0] bg-white px-2 py-0.5 text-[9px] font-medium text-[#6B5A4A] transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
+                >
+                  <Hand className="h-3 w-3" />
+                  {t(locale, '介入', 'Intervene')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="mb-2 flex flex-wrap gap-1">
+            {session.contestants.map(c => (
+              <Pill key={c.agentId}>
+                {c.agentId.slice(0, 10)}{c.isExternal ? ' (ext)' : ''}{c.timedOut ? ' ⏱' : ''}
+              </Pill>
+            ))}
+          </div>
+
+          {session.judgingResult ? (
+            <>
+              <div className="overflow-x-auto rounded-lg border border-[#EEE1D3]">
+                <table className="w-full text-[9px]">
+                  <thead>
+                    <tr className="bg-[#F8F4F0] text-[#8B7355]">
+                      <th className="px-2 py-1.5 text-left font-semibold">Agent</th>
+                      <th className="px-2 py-1.5 text-right font-semibold">Corr</th>
+                      <th className="px-2 py-1.5 text-right font-semibold">Qual</th>
+                      <th className="px-2 py-1.5 text-right font-semibold">Eff</th>
+                      <th className="px-2 py-1.5 text-right font-semibold">Nov</th>
+                      <th className="px-2 py-1.5 text-right font-semibold">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {session.judgingResult.scores
+                      .slice()
+                      .sort((a: JudgingScore, b: JudgingScore) => b.totalWeighted - a.totalWeighted)
+                      .map((score: JudgingScore) => {
+                        const isWinner = score.agentId === session.judgingResult!.winnerId;
+                        return (
+                          <tr key={score.agentId} className={isWinner ? 'bg-emerald-50' : ''}>
+                            <td className="px-2 py-1.5 text-left font-medium text-[#3A2A1A]">
+                              {isWinner ? '🏆 ' : ''}{score.agentId.slice(0, 10)}
+                            </td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.correctness * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.quality * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.efficiency * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.novelty * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right font-semibold tabular-nums text-[#3A2A1A]">{(score.totalWeighted * 100).toFixed(0)}</td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+              {session.judgingResult.mergeRequired ? (
+                <div className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[9px] font-medium text-amber-700">
+                  {t(locale, '⚠ 分差 < 5%，需要合并方案', '⚠ Score gap < 5%, merge required')}
+                </div>
+              ) : null}
+              {session.judgingResult.rationaleText ? (
+                <p className="mt-2 text-[9px] leading-4 text-[#8B7355]">{session.judgingResult.rationaleText}</p>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ))}
+    </CollapsiblePanel>
+  );
+}
+
+function TaskforcePanel() {
+  const locale = useAppStore(state => state.locale);
+  const taskforces = useAutonomyStore(state => state.taskforces);
+  const [open, setOpen] = useState(false);
+
+  if (taskforces.length === 0) return null;
+
+  const roleLabel = (role: string) => {
+    switch (role) {
+      case 'lead': return t(locale, '领导', 'Lead');
+      case 'worker': return t(locale, '执行', 'Worker');
+      case 'reviewer': return t(locale, '审查', 'Reviewer');
+      default: return role;
+    }
+  };
+
+  return (
+    <CollapsiblePanel
+      title={t(locale, '临时工作组', 'Taskforce')}
+      count={taskforces.length}
+      icon={<Network className="h-4 w-4 text-[#B08F72]" />}
+      open={open}
+      onToggle={() => setOpen(prev => !prev)}
+    >
+      {taskforces.map(tf => (
+        <div key={tf.taskforceId} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold text-[#3A2A1A]">
+              {tf.taskforceId.slice(0, 14)}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${taskforceStatusBadge[tf.status] || 'bg-gray-100 text-gray-700'}`}>
+                {tf.status}
+              </span>
+              {tf.status !== 'dissolved' ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('autonomy:intervene', { detail: { type: 'taskforce', taskforceId: tf.taskforceId } }));
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DDD0] bg-white px-2 py-0.5 text-[9px] font-medium text-[#6B5A4A] transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
+                >
+                  <Hand className="h-3 w-3" />
+                  {t(locale, '介入', 'Intervene')}
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            {tf.members.map(member => {
+              const isLead = member.agentId === tf.leadAgentId;
+              return (
+                <div
+                  key={member.agentId}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 ${isLead ? 'bg-amber-50 border border-amber-200' : 'bg-white'}`}
+                >
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${member.online ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-medium text-[#3A2A1A]">
+                        {isLead ? '⭐ ' : ''}{member.agentId.slice(0, 14)}
+                      </span>
+                      <span className="rounded-full bg-[#F0E8E0] px-1.5 py-0.5 text-[8px] font-medium text-[#6B5A4A]">
+                        {roleLabel(member.role)}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[8px] text-[#B0A090]">
+                    {member.online ? t(locale, '在线', 'Online') : t(locale, '离线', 'Offline')}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {tf.subTasks.length > 0 ? (
+            <div className="mt-2 rounded-lg bg-[#F8F4F0] px-2.5 py-2">
+              <p className="text-[9px] font-semibold text-[#8B7355]">
+                {t(locale, '子任务', 'Sub-tasks')} · {tf.subTasks.filter(s => s.status === 'done').length}/{tf.subTasks.length}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ))}
+    </CollapsiblePanel>
+  );
+}
+
 function ProgressView() {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
@@ -1461,6 +1803,10 @@ function ProgressView() {
         </div>
 
         <RoleSwitchTimeline />
+
+        <AgentAssessmentPanel />
+        <CompetitionResultsPanel />
+        <TaskforcePanel />
 
         <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
           <button

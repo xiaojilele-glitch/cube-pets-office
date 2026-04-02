@@ -209,6 +209,8 @@ export interface MissionRecord {
   workPackages?: MissionWorkPackage[];
   messageLog?: MissionMessageLogEntry[];
   agentCrew?: MissionAgentCrewMember[];
+  /** Autonomy data: assessments, competitions, and taskforces */
+  autonomy?: import("../autonomy-types.js").AutonomyData;
   waitingFor?: string;
   decision?: MissionDecision;
   decisionHistory?: DecisionHistoryEntry[];

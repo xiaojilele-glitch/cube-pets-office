@@ -10,6 +10,7 @@ import type {
   MissionStage,
   MissionWorkPackage,
 } from "../../shared/mission/contracts.js";
+import type { AutonomyData } from "../../shared/autonomy-types.js";
 import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
 import type { ExecutorEvent, ExecutionPlan } from "../../shared/executor/contracts.js";
 import type { RoleSwitchTrace } from "../../shared/role-schema.js";
@@ -505,6 +506,26 @@ export class MissionOrchestrator {
     console.log(
       `[MissionOrchestrator] Role switch trace recorded: mission=${missionId} ` +
       `agent=${trace.agentId} from=${trace.fromRoleId} to=${trace.toRoleId} phase=${trace.phaseId}`,
+    );
+  }
+
+  /**
+   * Store autonomy data (assessments, competitions, taskforces) on a Mission.
+   * Persists alongside other mission results in the native data source.
+   */
+  async setAutonomyData(missionId: string, data: AutonomyData): Promise<void> {
+    const record = await this.repository.get(missionId);
+    if (!record) {
+      console.warn(`[MissionOrchestrator] Cannot set autonomy data: mission ${missionId} not found`);
+      return;
+    }
+
+    const updated = replaceMission(record, { autonomy: data });
+    await this.persist(updated);
+
+    console.log(
+      `[MissionOrchestrator] Autonomy data stored: mission=${missionId} ` +
+      `assessments=${data.assessments.length} competitions=${data.competitions.length} taskforces=${data.taskforces.length}`,
     );
   }
 

@@ -14,6 +14,11 @@ import type {
 } from "../../shared/organization-schema.js";
 import type { PhaseAssignment } from "../../shared/role-schema.js";
 import type { ExecutionPlan } from "../../shared/executor/contracts.js";
+import type { AutonomyConfig } from "../../shared/autonomy-types.js";
+import type { TaskAllocator } from "./task-allocator.js";
+import type { CompetitionEngine, CompetitionTaskRequest } from "./competition-engine.js";
+import type { TaskforceManager } from "./taskforce-manager.js";
+import type { TaskRequest } from "./self-assessment.js";
 import { Agent } from "./agent.js";
 import { getAIConfig } from "./ai-config.js";
 import {
@@ -103,6 +108,15 @@ async function runWithConcurrencyLimit<T>(
 }
 
 export class WorkflowEngine {
+  /** Optional autonomy configuration — when enabled, activates intelligent task allocation. */
+  autonomyConfig?: AutonomyConfig;
+  /** Intelligent task allocator — used only when autonomyConfig.enabled is true. */
+  taskAllocator?: TaskAllocator;
+  /** Competition engine for high-value tasks — used only when autonomyConfig.enabled is true. */
+  competitionEngine?: CompetitionEngine;
+  /** Taskforce manager for collaborative tasks — used only when autonomyConfig.enabled is true. */
+  taskforceManager?: TaskforceManager;
+
   constructor(private readonly runtime: WorkflowRuntime) {}
 
   protected get repo() {
@@ -654,9 +668,115 @@ Rules:
           const workerNode = workers.find(worker => worker.agentId === task.worker_id);
           if (!workerNode) continue;
 
+          // ─── Autonomy-aware task allocation ────────────────────
+          let assignedWorkerNode = workerNode;
+
+          if (this.autonomyConfig?.enabled && this.taskAllocator) {
+            try {
+              const taskRequest: TaskRequest = {
+                taskId: `${workflowId}-${department.id}-${task.worker_id}-${Date.now()}`,
+                requiredSkills: workerNode.skills.map(s => s.id),
+                requiredSkillWeights: new Map(
+                  workerNode.skills.map(s => [s.id, 1.0]),
+                ),
+              };
+
+              const allocationDecision = await this.taskAllocator.allocateTask(taskRequest);
+
+              // Handle TASKFORCE strategy — form a taskforce when REQUEST_ASSIST
+              if (
+                allocationDecision.strategy === 'TASKFORCE' &&
+                this.taskforceManager
+              ) {
+                try {
+                  const session = await this.taskforceManager.formTaskforce(
+                    taskRequest,
+                    allocationDecision.assignedAgentId,
+                  );
+                  console.log(
+                    `[WorkflowEngine] Taskforce formed: ${session.taskforceId} ` +
+                    `for task ${taskRequest.taskId}, lead=${session.leadAgentId}`,
+                  );
+                } catch (tfErr) {
+                  console.warn(
+                    `[WorkflowEngine] Taskforce formation failed, using allocated agent: ` +
+                    `${tfErr instanceof Error ? tfErr.message : tfErr}`,
+                  );
+                }
+              }
+
+              // Check if competition mode should be triggered
+              if (this.competitionEngine && allocationDecision.assessments.length > 0) {
+                const bestFitness = Math.max(
+                  ...allocationDecision.assessments.map(a => a.fitnessScore),
+                );
+                const competitionTask: CompetitionTaskRequest = {
+                  ...taskRequest,
+                  priority: 'normal',
+                  qualityRequirement: 'normal',
+                  dataSecurityLevel: 'normal',
+                  estimatedDurationMs: 60_000,
+                  manualCompetition: false,
+                  historicalFailRate: 0,
+                  descriptionAmbiguity: 0,
+                };
+
+                if (this.competitionEngine.shouldTrigger(competitionTask, bestFitness)) {
+                  try {
+                    const contestants = this.competitionEngine.selectContestants(
+                      allocationDecision.assessments.map(a => a.agentId),
+                      this.autonomyConfig.competition.defaultContestantCount,
+                    );
+                    if (contestants.length >= 2) {
+                      const deadline = this.competitionEngine.computeDeadline(
+                        competitionTask.estimatedDurationMs,
+                      );
+                      const session = await this.competitionEngine.runCompetition(
+                        competitionTask,
+                        contestants,
+                        deadline,
+                      );
+                      console.log(
+                        `[WorkflowEngine] Competition started: ${session.id} ` +
+                        `for task ${taskRequest.taskId}, contestants=${contestants.length}`,
+                      );
+                    }
+                  } catch (compErr) {
+                    console.warn(
+                      `[WorkflowEngine] Competition failed, using direct allocation: ` +
+                      `${compErr instanceof Error ? compErr.message : compErr}`,
+                    );
+                  }
+                }
+              }
+
+              // Resolve the allocated agent to a worker node (if different)
+              if (allocationDecision.assignedAgentId && allocationDecision.assignedAgentId !== workerNode.agentId) {
+                const alternativeNode = workers.find(
+                  w => w.agentId === allocationDecision.assignedAgentId,
+                );
+                if (alternativeNode) {
+                  assignedWorkerNode = alternativeNode;
+                  console.log(
+                    `[WorkflowEngine] Autonomy re-assigned task from ` +
+                    `${workerNode.agentId} to ${assignedWorkerNode.agentId} ` +
+                    `(strategy=${allocationDecision.strategy})`,
+                  );
+                }
+              }
+            } catch (autonomyErr) {
+              // Autonomy allocation failed — fall back to static assignment
+              console.warn(
+                `[WorkflowEngine] Autonomy allocation failed, using static assignment: ` +
+                `${autonomyErr instanceof Error ? autonomyErr.message : autonomyErr}`,
+              );
+            }
+          }
+          // ─── End autonomy-aware allocation ─────────────────────
+
           const taskRow = this.repo.createTask({
             workflow_id: workflowId,
-            worker_id: workerNode.agentId,
+            worker_id: assignedWorkerNode.agentId,
             manager_id: managerNode.agentId,
             department: department.id,
             description: task.description,
@@ -677,7 +797,7 @@ Rules:
 
           await this.runtime.messageBus.send(
             managerNode.agentId,
-            workerNode.agentId,
+            assignedWorkerNode.agentId,
             task.description,
             workflowId,
             "planning",

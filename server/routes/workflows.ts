@@ -139,11 +139,19 @@ router.get("/:id", (req, res) => {
   const messages = db.getMessagesByWorkflow(req.params.id);
   const report = reportStore.readFinalWorkflowReport(req.params.id);
 
+  // Autonomy data — defaults to empty arrays when not available
+  const autonomy = (wf.results as any)?.autonomy ?? {
+    assessments: [],
+    competitions: [],
+    taskforces: [],
+  };
+
   res.json({
     workflow: wf,
     tasks,
     messages,
     report,
+    results: { autonomy },
   });
 });
 

@@ -6,19 +6,19 @@
 
 ## 任务
 
-- [ ] 1. 共享类型定义与基础工具
-  - [ ] 1.1 创建 `shared/autonomy-types.ts`，定义所有自治能力相关类型：CapabilityProfile、ResourceQuota、TaskHistoryEntry、AssessmentDecision、AssessmentResult、AssessmentWeights、AllocationStrategy、AllocationDecision、CompetitionSession、ContestantEntry、JudgingResult、JudgingScore、CompetitionCost、TaskforceSession、TaskforceMember、RecruitmentManifest、SubTask、TaskforceMessageType、AutonomyConfig、AutonomyData
+- [x] 1. 共享类型定义与基础工具
+  - [x] 1.1 创建 `shared/autonomy-types.ts`，定义所有自治能力相关类型：CapabilityProfile、ResourceQuota、TaskHistoryEntry、AssessmentDecision、AssessmentResult、AssessmentWeights、AllocationStrategy、AllocationDecision、CompetitionSession、ContestantEntry、JudgingResult、JudgingScore、CompetitionCost、TaskforceSession、TaskforceMember、RecruitmentManifest、SubTask、TaskforceMessageType、AutonomyConfig、AutonomyData
     - 类型定义参照设计文档"组件与接口"第 1 节
     - _Requirements: 1.1, 2.2, 2.4, 2.6, 4.1, 5.1, 6.5, 7.7, 8.5_
-  - [ ] 1.2 创建 `shared/ring-buffer.ts`，实现泛型 RingBuffer 类：push、toArray、length、toJSON、fromJSON
+  - [x] 1.2 创建 `shared/ring-buffer.ts`，实现泛型 RingBuffer 类：push、toArray、length、toJSON、fromJSON
     - 固定容量环形缓冲区，支持序列化往返
     - _Requirements: 1.4_
   - [ ]* 1.3 编写 RingBuffer 属性测试
     - **Property 30: RingBuffer 往返一致性**
     - **Validates: Requirements 1.4, 1.8**
 
-- [ ] 2. CapabilityProfileManager 实现
-  - [ ] 2.1 创建 `server/core/capability-profile-manager.ts`，实现 CapabilityProfileManager 类：getProfile、initProfile、updateSkillAfterTask（EMA 公式 alpha=0.1）、incrementLoad、decrementLoad、recalculateConfidence、applySkillDecay、applyCompetitionReward、serialize、deserialize
+- [x] 2. CapabilityProfileManager 实现
+  - [x] 2.1 创建 `server/core/capability-profile-manager.ts`，实现 CapabilityProfileManager 类：getProfile、initProfile、updateSkillAfterTask（EMA 公式 alpha=0.1）、incrementLoad、decrementLoad、recalculateConfidence、applySkillDecay、applyCompetitionReward、serialize、deserialize
     - 内存中维护 Map<string, CapabilityProfile>
     - initProfile 设置 confidenceScore=0.5、needsReview=true
     - 技能衰减公式：skill * (0.95 ^ weeksInactive)
@@ -42,8 +42,8 @@
     - **Property 6: 技能衰减公式正确性**
     - **Validates: Requirements 1.6**
 
-- [ ] 3. SelfAssessment 模块实现
-  - [ ] 3.1 创建 `server/core/self-assessment.ts`，实现 SelfAssessment 类：assess、coarseFilter、computeSkillMatch（加权余弦相似度）、computeFitnessScore、makeDecision、generateReferralList
+- [x] 3. SelfAssessment 模块实现
+  - [x] 3.1 创建 `server/core/self-assessment.ts`，实现 SelfAssessment 类：assess、coarseFilter、computeSkillMatch（加权余弦相似度）、computeFitnessScore、makeDecision、generateReferralList
     - coarseFilter 做 specializationTags 与 requiredSkills 交集检查
     - fitnessScore = w1*skillMatch + w2*(1-loadFactor) + w3*confidence + w4*resource
     - 决策阈值：>=0.8 ACCEPT, 0.6-0.8 CAVEAT, 0.4-0.6 ASSIST, <0.4 REJECT
@@ -65,11 +65,11 @@
     - **Property 11: 推荐列表长度限制**
     - **Validates: Requirements 2.5**
 
-- [ ] 4. Checkpoint - 基础模块验证
+- [x] 4. Checkpoint - 基础模块验证
   - 确保所有测试通过，如有问题请咨询用户。
 
-- [ ] 5. TaskAllocator 实现
-  - [ ] 5.1 创建 `server/core/task-allocator.ts`，实现 TaskAllocator 类：allocateTask、broadcastAssessment（并行评估 + 200ms 超时）、selectBestAgent（优先级排序）、forceAssign（兜底策略）、updateRejectRate（滑动窗口 50 次）、checkRejectRateAlert（60% 阈值）
+- [x] 5. TaskAllocator 实现
+  - [x] 5.1 创建 `server/core/task-allocator.ts`，实现 TaskAllocator 类：allocateTask、broadcastAssessment（并行评估 + 200ms 超时）、selectBestAgent（优先级排序）、forceAssign（兜底策略）、updateRejectRate（滑动窗口 50 次）、checkRejectRateAlert（60% 阈值）
     - 集成 SelfAssessment 和 CapabilityProfileManager
     - 超时未响应视为 REJECT
     - 全部 REJECT 时按推荐频次最高者 FORCE_ASSIGN
@@ -84,13 +84,13 @@
     - **Property 14: 拒绝率滑动窗口告警**
     - **Validates: Requirements 3.5**
 
-- [ ] 6. CompetitionEngine 与 JudgeAgent 实现
-  - [ ] 6.1 创建 `server/core/competition-engine.ts`，实现 CompetitionEngine 类：shouldTrigger（四条件判定）、computeUncertainty、selectContestants（多样性优先）、runCompetition、checkDataSecurity
+- [x] 6. CompetitionEngine 与 JudgeAgent 实现
+  - [x] 6.1 创建 `server/core/competition-engine.ts`，实现 CompetitionEngine 类：shouldTrigger（四条件判定）、computeUncertainty、selectContestants（多样性优先）、runCompetition、checkDataSecurity
     - 触发条件：critical priority / high quality / uncertainty > 0.7 / 手动指定
     - 多样性选择：种子为最高 fitness，后续最大余弦距离且 fitness >= 0.5
     - deadline = min(estimatedDurationMs * 1.5, maxDeadlineMs)
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
-  - [ ] 6.2 创建 `server/core/judge-agent.ts`，实现 JudgeAgent 类：judge、verifyCorrectness、llmReview（匿名评审）、computeEfficiency、computeWeightedScores、checkMergeRequired（差距 < 5%）、onJudgmentOverridden
+  - [x] 6.2 创建 `server/core/judge-agent.ts`，实现 JudgeAgent 类：judge、verifyCorrectness、llmReview（匿名评审）、computeEfficiency、computeWeightedScores、checkMergeRequired（差距 < 5%）、onJudgmentOverridden
     - 四维度权重：correctness 0.35, quality 0.30, efficiency 0.20, novelty 0.15
     - 匿名评审去掉 Agent 标识
     - 第 1 名 rewardDelta=0.05，末位 penaltyDelta=0.03
@@ -124,11 +124,11 @@
     - **Property 23: 合并触发条件**
     - **Validates: Requirements 5.7**
 
-- [ ] 7. Checkpoint - 竞争执行模块验证
+- [x] 7. Checkpoint - 竞争执行模块验证
   - 确保所有测试通过，如有问题请咨询用户。
 
-- [ ] 8. TaskforceManager 实现
-  - [ ] 8.1 创建 `server/core/taskforce-manager.ts`，实现 TaskforceManager 类：formTaskforce、electLead、processApplications、handleHeartbeat、checkOfflineMembers、dissolveTaskforce、getActiveTaskforces
+- [x] 8. TaskforceManager 实现
+  - [x] 8.1 创建 `server/core/taskforce-manager.ts`，实现 TaskforceManager 类：formTaskforce、electLead、processApplications、handleHeartbeat、checkOfflineMembers、dissolveTaskforce、getActiveTaskforces
     - Lead 选举：fitnessScore 最高者
     - 应征条件：fitnessScore >= 0.5 且 loadFactor < 0.8
     - 角色：lead / worker / reviewer，可兼任
@@ -148,8 +148,8 @@
     - **Property 27: 心跳离线检测**
     - **Validates: Requirements 6.7**
 
-- [ ] 9. CostMonitor 实现
-  - [ ] 9.1 创建 `server/core/cost-monitor.ts`，实现 CostMonitor 类：checkCompetitionBudget、recordCompetitionCost、computeROI、getMetrics、isCompetitionDisabled
+- [x] 9. CostMonitor 实现
+  - [x] 9.1 创建 `server/core/cost-monitor.ts`，实现 CostMonitor 类：checkCompetitionBudget、recordCompetitionCost、computeROI、getMetrics、isCompetitionDisabled
     - 预算检查：estimatedTokens > remainingBudget * budgetRatio 时拒绝
     - ROI = winnerQuality / normalEstimate，< 1.0 触发告警
     - Prometheus 指标：assessment_duration_ms、competition_trigger_total、winner_quality_score、taskforce_formation_total、taskforce_duration_seconds
@@ -158,38 +158,38 @@
     - **Property 28: 竞争 ROI 计算与告警**
     - **Validates: Requirements 8.1**
 
-- [ ] 10. Checkpoint - 全部核心模块验证
+- [x] 10. Checkpoint - 全部核心模块验证
   - 确保所有测试通过，如有问题请咨询用户。
 
-- [ ] 11. 工作流引擎集成与全局开关
-  - [ ] 11.1 修改 `server/core/workflow-engine.ts`，在 planning 阶段集成 TaskAllocator：当 autonomy.enabled 为 true 时使用智能分配，否则使用原有静态分配逻辑
+- [x] 11. 工作流引擎集成与全局开关
+  - [x] 11.1 修改 `server/core/workflow-engine.ts`，在 planning 阶段集成 TaskAllocator：当 autonomy.enabled 为 true 时使用智能分配，否则使用原有静态分配逻辑
     - 在 runPlanning 中注入 TaskAllocator
     - 竞争模式触发时调用 CompetitionEngine
     - REQUEST_ASSIST 时调用 TaskforceManager
     - _Requirements: 3.1, 3.3, 4.1, 6.1, 8.5_
-  - [ ] 11.2 修改 `server/core/mission-orchestrator.ts`，集成 autonomy 数据：将 AssessmentResult、CompetitionSession、TaskforceSession 写入 Mission 原生数据源
+  - [x] 11.2 修改 `server/core/mission-orchestrator.ts`，集成 autonomy 数据：将 AssessmentResult、CompetitionSession、TaskforceSession 写入 Mission 原生数据源
     - 扩展 MissionRecord 的 results 字段，添加 autonomy 子结构
     - _Requirements: 1.8, 5.3, 5.6, 6.8_
-  - [ ] 11.3 修改 `server/routes/workflows.ts`，在 GET /api/workflows/:id 响应中添加 results.autonomy 字段，包含 assessments、competitions、taskforces 子结构
+  - [x] 11.3 修改 `server/routes/workflows.ts`，在 GET /api/workflows/:id 响应中添加 results.autonomy 字段，包含 assessments、competitions、taskforces 子结构
     - _Requirements: 7.7_
-  - [ ] 11.4 创建 AutonomyConfig 配置加载逻辑，从 .env 读取 autonomy.enabled 等配置项，支持全局开关
+  - [x] 11.4 创建 AutonomyConfig 配置加载逻辑，从 .env 读取 autonomy.enabled 等配置项，支持全局开关
     - _Requirements: 8.5_
   - [ ]* 11.5 编写全局开关回退属性测试
     - **Property 29: 全局开关回退**
     - **Validates: Requirements 8.5**
 
-- [ ] 12. 前端自治能力状态展示
-  - [ ] 12.1 创建 `client/src/lib/autonomy-store.ts`，实现 Zustand store：管理 assessments、competitions、taskforces 状态，监听 Socket.IO 事件（autonomy_assessment、autonomy_competition、autonomy_taskforce）
+- [x] 12. 前端自治能力状态展示
+  - [x] 12.1 创建 `client/src/lib/autonomy-store.ts`，实现 Zustand store：管理 assessments、competitions、taskforces 状态，监听 Socket.IO 事件（autonomy_assessment、autonomy_competition、autonomy_taskforce）
     - _Requirements: 7.1, 7.2, 7.4, 7.5_
-  - [ ] 12.2 扩展 `client/src/components/WorkflowPanel.tsx`，添加自治能力面板：Agent 分配过程展示（候选列表、fitnessScore、决策结果）、裁判评选雷达图、Taskforce 成员拓扑图
+  - [x] 12.2 扩展 `client/src/components/WorkflowPanel.tsx`，添加自治能力面板：Agent 分配过程展示（候选列表、fitnessScore、决策结果）、裁判评选雷达图、Taskforce 成员拓扑图
     - _Requirements: 7.1, 7.3, 7.4_
-  - [ ] 12.3 扩展 `server/core/socket.ts`，添加 autonomy 相关事件广播：autonomy_assessment（自评估完成）、autonomy_competition_progress（竞争进度）、autonomy_competition_result（评选结果）、autonomy_taskforce_update（工作组状态变更）
+  - [x] 12.3 扩展 `server/core/socket.ts`，添加 autonomy 相关事件广播：autonomy_assessment（自评估完成）、autonomy_competition_progress（竞争进度）、autonomy_competition_result（评选结果）、autonomy_taskforce_update（工作组状态变更）
     - _Requirements: 7.5_
-  - [ ] 12.4 在 WorkflowPanel 的自治决策节点添加"介入"按钮，点击后进入人机协作审批流，允许用户覆盖系统决策
+  - [x] 12.4 在 WorkflowPanel 的自治决策节点添加"介入"按钮，点击后进入人机协作审批流，允许用户覆盖系统决策
     - 复用现有 human-in-the-loop 的 decision 机制
     - _Requirements: 7.6_
 
-- [ ] 13. Final Checkpoint - 全部功能集成验证
+- [x] 13. Final Checkpoint - 全部功能集成验证
   - 确保所有测试通过，如有问题请咨询用户。
 
 ## 备注
