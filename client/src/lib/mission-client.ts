@@ -2,8 +2,11 @@ import {
   MISSION_API_ROUTES,
   type CreateMissionRequest,
   type CreateMissionResponse,
+  type GetMissionPlanetResponse,
+  type GetMissionPlanetInteriorResponse,
   type GetMissionResponse,
   type ListMissionEventsResponse,
+  type ListMissionPlanetsResponse,
   type ListMissionsResponse,
   type SubmitMissionDecisionRequest,
   type SubmitMissionDecisionResponse,
@@ -83,4 +86,21 @@ export async function submitMissionDecision(
     body: JSON.stringify(request),
   });
   return parseJson<SubmitMissionDecisionResponse>(response);
+}
+
+export async function listPlanets(limit = 200): Promise<ListMissionPlanetsResponse> {
+  const response = await fetch(
+    withQuery(MISSION_API_ROUTES.listPlanets, { limit })
+  );
+  return parseJson<ListMissionPlanetsResponse>(response);
+}
+
+export async function getPlanet(id: string): Promise<GetMissionPlanetResponse> {
+  const response = await fetch(routeFor(MISSION_API_ROUTES.getPlanet, { id }));
+  return parseJson<GetMissionPlanetResponse>(response);
+}
+
+export async function getPlanetInterior(id: string): Promise<GetMissionPlanetInteriorResponse> {
+  const response = await fetch(routeFor(MISSION_API_ROUTES.getPlanetInterior, { id }));
+  return parseJson<GetMissionPlanetInteriorResponse>(response);
 }

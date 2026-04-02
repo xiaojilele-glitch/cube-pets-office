@@ -9,6 +9,8 @@ import {
   type MissionArtifact,
   type MissionDecision,
   type MissionEvent,
+  type MissionPlanetInteriorData,
+  type MissionPlanetOverviewItem,
   type MissionRecord,
   type MissionStage,
 } from "@shared/mission/contracts";
@@ -22,8 +24,11 @@ import { io, type Socket } from "socket.io-client";
 import {
   createMission as createMissionRequest,
   getMission,
+  getPlanet,
+  getPlanetInterior,
   listMissionEvents,
   listMissions,
+  listPlanets,
   submitMissionDecision as submitMissionDecisionRequest,
 } from "./mission-client";
 import { useAppStore, type RuntimeMode } from "./store";
@@ -2302,6 +2307,170 @@ function buildMissionSummaryRecord(
   };
 }
 
+/**
+ * Build a MissionTaskSummary from a MissionPlanetOverviewItem and an optional
+ * MissionRecord for enrichment data (workPackages, messageLog, events, etc.).
+ *
+ * This is the "planet-first" counterpart of buildMissionSummaryRecord() and is
+ * used when the tasks-store hydrates from the /api/planets endpoint.
+ */
+export function buildPlanetSummaryRecord(
+  planet: MissionPlanetOverviewItem,
+  mission?: MissionRecord
+): MissionTaskSummary {
+  const workPackages = mission?.workPackages ?? [];
+  const messageLog = mission?.messageLog ?? [];
+  const events = mission?.events ?? [];
+  const artifacts = mission?.artifacts ?? [];
+
+  const taskCount = workPackages.length;
+  const completedTaskCount = workPackages.filter(
+    wp => wp.status === "passed" || wp.status === "verified"
+  ).length;
+  const messageCount = messageLog.length;
+
+  const activeAgentCount = mission
+    ? missionActiveAgentCount(mission)
+    : 0;
+
+  const failureReasons: string[] = [];
+  if (mission) {
+    failureReasons.push(...missionFailureReasons(mission, events));
+  }
+
+  const waitingFor = planet.waitingFor ?? null;
+
+  const currentStageKey = planet.currentStageKey ?? null;
+  const currentStageLabel = planet.currentStageLabel ?? null;
+
+  const summaryText = mission
+    ? missionSummaryText(mission, events, waitingFor)
+    : trimText(planet.summary, 180) || "Mission is progressing through the execution pipeline.";
+
+  const startedAt = mission ? missionStartedAt(mission) : null;
+
+  const lastEvent = events[events.length - 1];
+  const lastMessage = messageLog[messageLog.length - 1];
+
+  return {
+    id: planet.id,
+    title: trimText(planet.title, 76) || "Untitled mission",
+    kind: planet.kind || "general",
+    sourceText: planet.sourceText || planet.title,
+    status: planet.status === "archived" ? "done" : planet.status,
+    workflowStatus: workflowStatusFromMission(
+      planet.status === "archived" ? "done" : planet.status
+    ),
+    progress: clampPercentage(planet.progress),
+    currentStageKey,
+    currentStageLabel,
+    summary: summaryText,
+    waitingFor,
+    createdAt: planet.createdAt,
+    updatedAt: planet.updatedAt,
+    startedAt,
+    completedAt: planet.completedAt ?? null,
+    departmentLabels:
+      planet.tags.length > 0
+        ? planet.tags
+        : planet.kind
+          ? [capitalize(planet.kind.replace(/[_-]/g, " "))]
+          : [],
+    taskCount,
+    completedTaskCount,
+    messageCount,
+    activeAgentCount,
+    attachmentCount: artifacts.length,
+    issueCount: failureReasons.length,
+    hasWarnings:
+      failureReasons.length > 0 ||
+      events.some(event => event.level === "warn"),
+    lastSignal:
+      trimText(lastEvent?.message, 96) ||
+      trimText(lastMessage?.content, 96) ||
+      currentStageLabel ||
+      null,
+  };
+}
+
+/**
+ * Build a MissionTaskDetail from the /api/planets/:id/interior response.
+ * This is the planet-native counterpart of buildMissionDetailRecord —
+ * it derives every field from MissionPlanetInteriorData + MissionRecord,
+ * without touching WorkflowRecord at all.
+ */
+export function buildPlanetDetailRecord(
+  planet: MissionPlanetOverviewItem,
+  interior: MissionPlanetInteriorData,
+  mission: MissionRecord
+): MissionTaskDetail {
+  const summary = buildPlanetSummaryRecord(planet, mission);
+  const events = interior.events ?? [];
+
+  // ── stages: MissionPlanetInteriorStage[] → TaskStageRing[] ──
+  const stages: TaskStageRing[] = interior.stages.map(s => ({
+    key: s.key,
+    label: s.label,
+    status: s.status,
+    progress: s.progress,
+    detail: s.detail || (
+      s.status === 'done' ? 'Completed'
+        : s.status === 'running' ? 'Live stage'
+        : s.status === 'failed' ? 'Blocked'
+        : 'Queued'
+    ),
+    arcStart: s.arcStart,
+    arcEnd: s.arcEnd,
+    midAngle: s.midAngle,
+  }));
+
+  // ── agents: MissionPlanetInteriorAgent[] → TaskInteriorAgent[] ──
+  const agents: TaskInteriorAgent[] = interior.agents.map(a => ({
+    id: a.id,
+    name: a.name,
+    role: a.role,
+    department: a.role === 'orchestrator' ? 'Mission' : capitalize(a.stageLabel || a.stageKey),
+    title: a.currentAction || a.role,
+    status: a.status as InteriorAgentStatus,
+    stageKey: a.stageKey,
+    stageLabel: a.stageLabel,
+    progress: a.progress ?? null,
+    currentAction: a.currentAction,
+    angle: a.angle,
+  }));
+
+  // ── timeline from interior events ──
+  const timeline = buildMissionTimeline(mission, events);
+
+  // ── artifacts from mission ──
+  const artifacts = dedupeArtifacts(buildMissionArtifacts(mission));
+
+  // ── failure reasons ──
+  const failureReasons = Array.from(
+    new Set(missionFailureReasons(mission, events))
+  );
+
+  return {
+    ...summary,
+    workflow: syntheticWorkflowFromMission(mission),
+    tasks: [],
+    messages: [],
+    report: null,
+    organization: null,
+    stages,
+    agents,
+    timeline,
+    artifacts,
+    failureReasons,
+    decisionPresets: buildMissionDecisionPresets(mission.decision),
+    decisionPrompt: mission.decision?.prompt || null,
+    decisionPlaceholder: mission.decision?.placeholder || null,
+    decisionAllowsFreeText: mission.decision?.allowFreeText === true,
+    instanceInfo: buildMissionInstanceInfo(summary, mission),
+    logSummary: buildMissionLogSummary(mission, events),
+  };
+}
+
 function buildMissionDetailRecord(
   summary: MissionTaskSummary,
   mission: MissionRecord,
@@ -2838,6 +3007,139 @@ async function hydrateMissionTaskData(
   });
 }
 
+/**
+ * Planet-native hydration: uses /api/planets endpoints instead of the
+ * multi-request pattern (listMissions + workflow supplement loading).
+ *
+ * Flow:
+ *  1. listPlanets()  → planet overviews (single request for the list view)
+ *  2. listMissions() → MissionRecord[] (for enrichment: workPackages, messageLog, etc.)
+ *  3. buildPlanetSummaryRecord() per planet
+ *  4. For the selected task: getPlanetInterior() + buildPlanetDetailRecord()
+ *  5. For other tasks: build detail from mission data using buildPlanetDetailRecord
+ *     with locally-computed interior data
+ */
+export async function hydratePlanetTaskData(
+  set: (
+    partial:
+      | Partial<TasksStoreState>
+      | ((state: TasksStoreState) => Partial<TasksStoreState>)
+  ) => void,
+  get: () => TasksStoreState,
+  options?: { preferredTaskId?: string | null }
+): Promise<void> {
+  ensureMissionSocket(set, get);
+
+  // ── 1. Fetch planet overviews + mission records in parallel ──
+  const [planetsResponse, missionsResponse] = await Promise.all([
+    listPlanets(200),
+    listMissions(200),
+  ]);
+
+  const planets = planetsResponse.planets;
+  const missionById = new Map<string, MissionRecord>(
+    missionsResponse.tasks.map(m => [m.id, m])
+  );
+
+  // ── 2. Build summaries from planet overviews ──
+  const summaries = planets
+    .map(planet => buildPlanetSummaryRecord(planet, missionById.get(planet.id)))
+    .sort((left, right) => right.updatedAt - left.updatedAt);
+
+  // ── 3. Resolve which task is selected ──
+  const selectedTaskId = resolveSelectedTaskId(
+    summaries,
+    get().selectedTaskId,
+    options?.preferredTaskId
+  );
+
+  // ── 4. For the selected task, fetch interior data via getPlanetInterior ──
+  //    For all other tasks, build detail using locally-computed interior.
+  const detailsById: Record<string, MissionTaskDetail> = {};
+
+  for (const planet of planets) {
+    const mission = missionById.get(planet.id);
+    if (!mission) continue;
+
+    if (planet.id === selectedTaskId) {
+      // Fetch full interior data from the server for the selected task
+      try {
+        const interiorResponse = await getPlanetInterior(planet.id);
+        detailsById[planet.id] = buildPlanetDetailRecord(
+          planet,
+          interiorResponse.interior,
+          mission
+        );
+      } catch (error) {
+        console.warn(
+          `[Tasks] Failed to load planet interior for ${planet.id}, using local computation:`,
+          error
+        );
+        // Fallback: build detail using locally-computed interior stages/agents
+        detailsById[planet.id] = buildLocalPlanetDetail(planet, mission);
+      }
+    } else {
+      // Non-selected tasks: build detail from mission data directly
+      detailsById[planet.id] = buildLocalPlanetDetail(planet, mission);
+    }
+  }
+
+  // ── 5. Update store ──
+  set({
+    ready: true,
+    loading: false,
+    error: null,
+    tasks: summaries,
+    detailsById,
+    selectedTaskId,
+  });
+}
+
+/**
+ * Build a MissionTaskDetail from planet overview + mission record
+ * using locally-computed interior data (no server round-trip).
+ * Used for non-selected tasks and as a fallback when getPlanetInterior fails.
+ */
+function buildLocalPlanetDetail(
+  planet: MissionPlanetOverviewItem,
+  mission: MissionRecord
+): MissionTaskDetail {
+  const stages = buildMissionInteriorStages(mission);
+  const summary = buildPlanetSummaryRecord(planet, mission);
+  const agents = buildMissionInteriorAgents(summary, mission);
+  const events = mission.events ?? [];
+
+  const interior: MissionPlanetInteriorData = {
+    stages: stages.map(s => ({
+      key: s.key,
+      label: s.label,
+      status: s.status,
+      progress: s.progress,
+      detail: s.detail,
+      arcStart: s.arcStart,
+      arcEnd: s.arcEnd,
+      midAngle: s.midAngle,
+    })),
+    agents: agents.map(a => ({
+      id: a.id,
+      name: a.name,
+      role: a.role,
+      sprite: a.role === "orchestrator" ? "cube-brain" : "cube-worker",
+      status: a.status,
+      stageKey: a.stageKey,
+      stageLabel: a.stageLabel ?? a.stageKey,
+      progress: a.progress ?? undefined,
+      currentAction: a.currentAction,
+      angle: a.angle,
+    })),
+    events,
+    summary: mission.summary ?? undefined,
+    waitingFor: mission.waitingFor ?? undefined,
+  };
+
+  return buildPlanetDetailRecord(planet, interior, mission);
+}
+
 async function hydrateTaskData(
   set: (
     partial:
@@ -2850,7 +3152,15 @@ async function hydrateTaskData(
   startTaskStoreWatchers();
 
   if (useAppStore.getState().runtimeMode === "advanced") {
-    await hydrateMissionTaskData(set, get, options);
+    try {
+      await hydratePlanetTaskData(set, get, options);
+    } catch (error) {
+      console.warn(
+        "[Tasks] Planet hydration failed, falling back to mission hydration:",
+        error
+      );
+      await hydrateMissionTaskData(set, get, options);
+    }
     return;
   }
 
