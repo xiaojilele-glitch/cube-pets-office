@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 import {
   MISSION_CORE_STAGE_BLUEPRINT,
+  type DecisionHistoryEntry,
   type MissionArtifact,
   type MissionDecision,
   type MissionEvent,
@@ -10,7 +11,7 @@ import {
   type MissionRecord,
   type MissionStage,
 } from "@shared/mission/contracts";
-import { MISSION_SOCKET_EVENT, type MissionSocketPayload } from "@shared/mission/socket";
+import { MISSION_SOCKET_EVENT, MISSION_SOCKET_TYPES, type MissionSocketPayload } from "@shared/mission/socket";
 import { io, type Socket } from "socket.io-client";
 
 import {
@@ -179,8 +180,10 @@ export interface MissionTaskDetail extends MissionTaskSummary {
   decisionPrompt: string | null;
   decisionPlaceholder: string | null;
   decisionAllowsFreeText: boolean;
+  decision: MissionDecision | null;
   instanceInfo: Array<{ label: string; value: string }>;
   logSummary: Array<{ label: string; value: string }>;
+  decisionHistory: DecisionHistoryEntry[];
 }
 
 interface TasksStoreState {
@@ -900,12 +903,12 @@ function buildDetailRecord(
     decisionPrompt: mission.decision?.prompt || null,
     decisionPlaceholder: mission.decision?.placeholder || null,
     decisionAllowsFreeText: mission.decision?.allowFreeText === true,
+    decision: mission.decision ?? null,
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildMissionLogSummary(mission, mission.events),
+    decisionHistory: mission.decisionHistory ?? [],
   };
-}
-
-/**
+}/**
  * Build a MissionTaskDetail from the /api/planets/:id/interior response.
  * This is the planet-native counterpart of buildMissionDetailRecord —
  * it derives every field from MissionPlanetInteriorData + MissionRecord,
@@ -978,8 +981,10 @@ export function buildPlanetDetailRecord(
     decisionPrompt: mission.decision?.prompt || null,
     decisionPlaceholder: mission.decision?.placeholder || null,
     decisionAllowsFreeText: mission.decision?.allowFreeText === true,
+    decision: mission.decision ?? null,
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildMissionLogSummary(mission, events),
+    decisionHistory: mission.decisionHistory ?? [],
   };
 }
 
@@ -1006,8 +1011,10 @@ function buildMissionDetailRecord(
     decisionPrompt: mission.decision?.prompt || null,
     decisionPlaceholder: mission.decision?.placeholder || null,
     decisionAllowsFreeText: mission.decision?.allowFreeText === true,
+    decision: mission.decision ?? null,
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildNativeLogSummary(mission),
+    decisionHistory: mission.decisionHistory ?? [],
   };
 }
 
@@ -1127,6 +1134,33 @@ function ensureMissionSocket(
     }
 
     if (!("missionId" in payload) || !payload.missionId) {
+      return;
+    }
+
+    // Handle decision submitted: immediately update decisionHistory from the payload
+    if (
+      payload.type === MISSION_SOCKET_TYPES.decisionSubmitted &&
+      "task" in payload &&
+      payload.task
+    ) {
+      const mission = payload.task;
+      const summary = buildSummaryRecord(mission);
+      const detail = buildDetailRecord(mission);
+
+      set(state => {
+        const nextTasks = [
+          ...state.tasks.filter(t => t.id !== mission.id),
+          summary,
+        ].sort((a, b) => b.updatedAt - a.updatedAt);
+
+        return {
+          tasks: nextTasks,
+          detailsById: {
+            ...state.detailsById,
+            [mission.id]: detail,
+          },
+        };
+      });
       return;
     }
 

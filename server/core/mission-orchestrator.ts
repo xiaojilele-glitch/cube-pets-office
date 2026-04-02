@@ -51,8 +51,8 @@ export interface MissionOrchestratorHooks {
     submission: MissionDecisionSubmission,
     resolved: MissionDecisionResolved,
   ):
-    | Promise<{ resumed?: boolean; detail?: string } | void>
-    | { resumed?: boolean; detail?: string }
+    | Promise<{ resumed?: boolean; detail?: string; nextDecision?: MissionDecision } | void>
+    | { resumed?: boolean; detail?: string; nextDecision?: MissionDecision }
     | void;
 }
 
@@ -840,12 +840,15 @@ export class MissionOrchestrator {
     this.runtime.set(missionId, runtimeState);
 
     const hookResult = await this.hooks.onDecisionSubmitted?.(mission, submission, resolved);
+    const nextDecision = hookResult?.nextDecision;
     const resumed = !!hookResult?.resumed;
     const detail =
       hookResult?.detail ||
-      (resumed
-        ? "Decision accepted and mission resumed."
-        : "Decision captured. Waiting for executor resume integration.");
+      (nextDecision
+        ? "Decision accepted. Proceeding to next decision."
+        : resumed
+          ? "Decision accepted and mission resumed."
+          : "Decision captured. Waiting for executor resume integration.");
 
     let next = appendEvent(
       cloneMission(mission),
@@ -857,7 +860,22 @@ export class MissionOrchestrator {
       }),
     );
 
-    if (resumed) {
+    if (nextDecision) {
+      // Multi-step decision chain: transition to the next decision node
+      next = replaceMission(next, {
+        status: "waiting",
+        waitingFor: nextDecision.prompt,
+        decision: nextDecision,
+      });
+      next = appendEvent(
+        next,
+        missionEvent("waiting", `Waiting for next decision: ${nextDecision.prompt}`, {
+          source: "mission-core",
+          stageKey: mission.currentStageKey,
+          progress: mission.progress,
+        }),
+      );
+    } else if (resumed) {
       const resumedStageKey = runtimeState.lastExecutorEvent
         ? resolveMissionStageKey(runtimeState.lastExecutorEvent, mission.currentStageKey)
         : mission.currentStageKey || "execute";

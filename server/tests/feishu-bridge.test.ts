@@ -184,6 +184,257 @@ describe("FeishuProgressBridge", () => {
     expect(sent.map(message => message.kind)).toContain("task-failed");
   });
 
+  it("renders escalate decision with red/danger buttons and red card template", async () => {
+    const sent: FeishuOutboundMessage[] = [];
+    const bridge = new FeishuProgressBridge(
+      {
+        send: async message => {
+          sent.push(message);
+          return { messageId: `om_${sent.length}` };
+        },
+      },
+      { messageFormat: "card" }
+    );
+    bridge.bindTask("task_123", { chatId: "oc_123", source: "feishu" });
+
+    await bridge.handleTaskUpdate(makeTask({ progress: 10 }));
+    await bridge.handleTaskUpdate(
+      makeTask({
+        status: "waiting",
+        progress: 50,
+        waitingFor: "Escalation needed",
+        decision: {
+          prompt: "紧急升级确认",
+          type: "escalate",
+          options: [
+            { id: "1", label: "确认升级" },
+            { id: "2", label: "取消" },
+          ],
+        },
+        events: [
+          { type: "created", message: "Task created", time: Date.now() },
+          { type: "waiting", message: "Escalation needed", time: Date.now() },
+        ],
+      })
+    );
+
+    const waitingMsg = sent.find(m => m.kind === "task-waiting");
+    expect(waitingMsg).toBeDefined();
+    expect(waitingMsg!.card).toBeDefined();
+    expect(waitingMsg!.card!.header.template).toBe("red");
+
+    const buttons = waitingMsg!.card!.body.elements.filter(
+      (el: Record<string, unknown>) => el.tag === "button" && el.behaviors
+    );
+    // All escalate buttons should be "danger"
+    for (const btn of buttons) {
+      if ((btn as any).behaviors?.[0]?.type === "callback") {
+        expect((btn as any).type).toBe("danger");
+      }
+    }
+
+    // Check the prompt has the 🔴 prefix
+    const promptDiv = waitingMsg!.card!.body.elements.find(
+      (el: Record<string, unknown>) =>
+        el.tag === "div" &&
+        (el.text as any)?.content?.includes("待确认")
+    );
+    expect((promptDiv as any).text.content).toContain("🔴");
+  });
+
+  it("renders approve/reject decision with primary/danger button types", async () => {
+    const sent: FeishuOutboundMessage[] = [];
+    const bridge = new FeishuProgressBridge(
+      {
+        send: async message => {
+          sent.push(message);
+          return { messageId: `om_${sent.length}` };
+        },
+      },
+      { messageFormat: "card" }
+    );
+    bridge.bindTask("task_123", { chatId: "oc_123", source: "feishu" });
+
+    await bridge.handleTaskUpdate(makeTask({ progress: 10 }));
+    await bridge.handleTaskUpdate(
+      makeTask({
+        status: "waiting",
+        progress: 60,
+        waitingFor: "Approval needed",
+        decision: {
+          prompt: "请审批执行计划",
+          type: "approve",
+          options: [
+            { id: "approve", label: "批准" },
+            { id: "reject", label: "拒绝" },
+          ],
+        },
+        events: [
+          { type: "created", message: "Task created", time: Date.now() },
+          { type: "waiting", message: "Approval needed", time: Date.now() },
+        ],
+      })
+    );
+
+    const waitingMsg = sent.find(m => m.kind === "task-waiting");
+    expect(waitingMsg!.card).toBeDefined();
+    // approve type should NOT override to red template
+    expect(waitingMsg!.card!.header.template).toBe("orange");
+
+    const callbackButtons = waitingMsg!.card!.body.elements.filter(
+      (el: Record<string, unknown>) =>
+        el.tag === "button" && (el as any).behaviors?.[0]?.type === "callback"
+    );
+    expect(callbackButtons).toHaveLength(2);
+    expect((callbackButtons[0] as any).type).toBe("primary");
+    expect((callbackButtons[1] as any).type).toBe("danger");
+  });
+
+  it("uses option.label as button text instead of id.label format", async () => {
+    const sent: FeishuOutboundMessage[] = [];
+    const bridge = new FeishuProgressBridge(
+      {
+        send: async message => {
+          sent.push(message);
+          return { messageId: `om_${sent.length}` };
+        },
+      },
+      { messageFormat: "card" }
+    );
+    bridge.bindTask("task_123", { chatId: "oc_123", source: "feishu" });
+
+    await bridge.handleTaskUpdate(makeTask({ progress: 10 }));
+    await bridge.handleTaskUpdate(
+      makeTask({
+        status: "waiting",
+        progress: 50,
+        waitingFor: "Choice needed",
+        decision: {
+          prompt: "选择方向",
+          options: [
+            { id: "opt-a", label: "方案 A" },
+            { id: "opt-b", label: "方案 B" },
+          ],
+        },
+        events: [
+          { type: "created", message: "Task created", time: Date.now() },
+          { type: "waiting", message: "Choice needed", time: Date.now() },
+        ],
+      })
+    );
+
+    const waitingMsg = sent.find(m => m.kind === "task-waiting");
+    const callbackButtons = waitingMsg!.card!.body.elements.filter(
+      (el: Record<string, unknown>) =>
+        el.tag === "button" && (el as any).behaviors?.[0]?.type === "callback"
+    );
+    // Button text should be just the label, not "id. label"
+    expect((callbackButtons[0] as any).text.content).toBe("方案 A");
+    expect((callbackButtons[1] as any).text.content).toBe("方案 B");
+  });
+
+  it("sends decision-resolved update with resolvedDecision when transitioning from waiting to running", async () => {
+    const sent: FeishuOutboundMessage[] = [];
+    const bridge = new FeishuProgressBridge({
+      send: async message => {
+        sent.push(message);
+        return { messageId: `om_${sent.length}` };
+      },
+    });
+    bridge.bindTask("task_123", { chatId: "oc_123", source: "feishu" });
+
+    // 1. ack
+    await bridge.handleTaskUpdate(makeTask({ progress: 10 }));
+    // 2. waiting
+    await bridge.handleTaskUpdate(
+      makeTask({
+        status: "waiting",
+        progress: 50,
+        waitingFor: "Need approval",
+        decision: {
+          prompt: "请审批",
+          options: [
+            { id: "1", label: "批准" },
+            { id: "2", label: "拒绝" },
+          ],
+        },
+        events: [
+          { type: "created", message: "Task created", time: Date.now() },
+          { type: "waiting", message: "Need approval", time: Date.now() },
+        ],
+      })
+    );
+    // 3. decision resolved → running
+    await bridge.handleTaskUpdate(
+      makeTask({
+        status: "running",
+        progress: 55,
+        lastResolvedDecision: {
+          optionId: "1",
+          optionLabel: "批准",
+        },
+        events: [
+          { type: "created", message: "Task created", time: Date.now() },
+          { type: "decision", message: "Decision received: 批准", time: Date.now() },
+        ],
+      })
+    );
+
+    expect(sent).toHaveLength(3);
+    const resolvedMsg = sent[2];
+    expect(resolvedMsg.kind).toBe("task-progress");
+    expect(resolvedMsg.text).toContain("任务已决策");
+    expect(resolvedMsg.text).toContain("批准");
+    expect(resolvedMsg.text).toContain("决策时间");
+    expect(resolvedMsg.resolvedDecision).toEqual({
+      optionId: "1",
+      optionLabel: "批准",
+    });
+  });
+
+  it("renders severity=danger option as danger button regardless of decision type", async () => {
+    const sent: FeishuOutboundMessage[] = [];
+    const bridge = new FeishuProgressBridge(
+      {
+        send: async message => {
+          sent.push(message);
+          return { messageId: `om_${sent.length}` };
+        },
+      },
+      { messageFormat: "card" }
+    );
+    bridge.bindTask("task_123", { chatId: "oc_123", source: "feishu" });
+
+    await bridge.handleTaskUpdate(makeTask({ progress: 10 }));
+    await bridge.handleTaskUpdate(
+      makeTask({
+        status: "waiting",
+        progress: 50,
+        waitingFor: "Risk check",
+        decision: {
+          prompt: "风险确认",
+          type: "custom-action",
+          options: [
+            { id: "1", label: "接受风险", severity: "danger" },
+            { id: "2", label: "缓解" },
+          ],
+        },
+        events: [
+          { type: "created", message: "Task created", time: Date.now() },
+          { type: "waiting", message: "Risk check", time: Date.now() },
+        ],
+      })
+    );
+
+    const waitingMsg = sent.find(m => m.kind === "task-waiting");
+    const callbackButtons = waitingMsg!.card!.body.elements.filter(
+      (el: Record<string, unknown>) =>
+        el.tag === "button" && (el as any).behaviors?.[0]?.type === "callback"
+    );
+    expect((callbackButtons[0] as any).type).toBe("danger");
+    expect((callbackButtons[1] as any).type).toBe("default");
+  });
+
   it("serializes progress delivery for the same task", async () => {
     vi.useFakeTimers();
     const sent: Array<{ kind: string; progress: number }> = [];

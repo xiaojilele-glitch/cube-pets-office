@@ -7,8 +7,11 @@ import type {
   MissionInstanceContext,
   MissionRecord,
   MissionStage,
+  DecisionHistoryEntry,
+  DecisionType,
 } from '../../shared/mission/contracts.js';
 import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
+import { generateDecisionId } from './mission-decision.js';
 
 export interface MissionSnapshotStore {
   load(): MissionRecord[];
@@ -365,6 +368,25 @@ export class MissionStore {
     source: MissionEvent['source'] = 'user'
   ): MissionRecord | undefined {
     return this.update(id, task => {
+      // Archive current decision to decisionHistory before clearing
+      if (task.decision) {
+        const entry: DecisionHistoryEntry = {
+          decisionId: task.decision.decisionId || generateDecisionId(),
+          type: (task.decision.type ?? 'custom-action') as DecisionType,
+          prompt: task.decision.prompt,
+          options: task.decision.options,
+          templateId: task.decision.templateId,
+          payload: task.decision.payload,
+          resolved: {}, // resolved info not available here
+          submittedAt: Date.now(),
+          stageKey: task.currentStageKey,
+        };
+        if (!task.decisionHistory) {
+          task.decisionHistory = [];
+        }
+        task.decisionHistory.push(entry);
+      }
+
       task.status = 'running';
       task.waitingFor = undefined;
       task.decision = undefined;

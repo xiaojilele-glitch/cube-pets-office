@@ -22,12 +22,14 @@ export interface FeishuTaskDecisionOption {
   id: string;
   label: string;
   description?: string;
+  severity?: 'info' | 'warn' | 'danger';
 }
 
 export interface FeishuTaskDecisionPrompt {
   prompt: string;
   options: FeishuTaskDecisionOption[];
   allowFreeText?: boolean;
+  type?: string;
 }
 
 export interface FeishuResolvedDecision {

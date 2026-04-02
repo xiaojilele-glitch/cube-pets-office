@@ -8,6 +8,7 @@ import { useViewportTier } from '@/hooks/useViewportTier';
 import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
+import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
@@ -85,6 +86,7 @@ export function Scene3D() {
           <OfficeRoom />
           <PetWorkers />
           <MissionIsland />
+          <WaitingDecisionBubble />
 
           <ContactShadows
             position={[0, 0.01, 0]}

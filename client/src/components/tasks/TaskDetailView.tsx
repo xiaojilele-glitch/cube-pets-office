@@ -7,6 +7,7 @@ import {
   Download,
   FileText,
   FolderKanban,
+  History,
   LoaderCircle,
   Sparkles,
   TimerReset,
@@ -58,6 +59,8 @@ import { cn } from "@/lib/utils";
 
 import { useCostStore } from "@/lib/cost-store";
 
+import { DecisionHistory } from "./DecisionHistory";
+import { DecisionPanel } from "./DecisionPanel";
 import { TaskPlanetInterior } from "./TaskPlanetInterior";
 import {
   artifactActionLabel,
@@ -465,6 +468,7 @@ export function TaskDetailView({
   onDecisionNoteChange,
   onLaunchDecision,
   launchingPresetId,
+  onDecisionSubmitted,
   className,
 }: {
   detail: MissionTaskDetail | null;
@@ -472,6 +476,7 @@ export function TaskDetailView({
   onDecisionNoteChange: (next: string) => void;
   onLaunchDecision: (presetId: string) => void | Promise<void>;
   launchingPresetId?: string | null;
+  onDecisionSubmitted?: () => void;
   className?: string;
 }) {
   const { isDesktop } = useViewportTier();
@@ -581,6 +586,10 @@ export function TaskDetailView({
     (detail.decisionAllowsFreeText
       ? "Optional decision note: add confirmation detail, constraints, or the exact follow-up the mission should respect."
       : "This mission uses structured decision options only.");
+
+  const showStructuredDecisionPanel =
+    detail.status === "waiting" && !!detail.decision;
+  const decisionHistoryEntries = detail.decisionHistory ?? [];
 
   const sourceDirectiveText = detail.sourceText.trim();
   const runtimePreviewRows = [
@@ -1138,12 +1147,16 @@ export function TaskDetailView({
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <div className="shrink-0 rounded-[24px] border border-stone-200/80 bg-white/78 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]">
-          <TabsList className="grid h-auto w-full grid-cols-4 rounded-[18px] bg-stone-100/80 p-1">
+          <TabsList className="grid h-auto w-full grid-cols-5 rounded-[18px] bg-stone-100/80 p-1">
             <TabsTrigger className="rounded-[14px]" value="overview">
               Overview
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="execution">
               Execution
+            </TabsTrigger>
+            <TabsTrigger className="rounded-[14px]" value="decisions">
+              <History className="mr-1.5 size-3.5" />
+              Decisions
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="artifacts">
               Artifacts
@@ -1164,6 +1177,13 @@ export function TaskDetailView({
               <TaskPlanetInterior detail={detail} />
               <div className="self-start space-y-3">
                 {sourceDirectivePanel}
+                {showStructuredDecisionPanel && detail.decision && (
+                  <DecisionPanel
+                    missionId={detail.id}
+                    decision={detail.decision}
+                    onDecisionSubmitted={onDecisionSubmitted}
+                  />
+                )}
                 {decisionPanel}
                 {runtimeSnapshotPanel}
               </div>
@@ -1180,6 +1200,28 @@ export function TaskDetailView({
               {workPackagesPanel}
               {timelinePanel}
             </div>
+          </DetailTabViewport>
+        </TabsContent>
+
+        <TabsContent
+          value="decisions"
+          className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
+        >
+          <DetailTabViewport isDesktop={isDesktop}>
+            <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-stone-900">
+                  <History className="size-4 text-violet-600" />
+                  Decision History
+                </CardTitle>
+                <CardDescription>
+                  Past decisions made during this mission's execution.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <DecisionHistory history={decisionHistoryEntries} />
+              </CardContent>
+            </Card>
           </DetailTabViewport>
         </TabsContent>
 
