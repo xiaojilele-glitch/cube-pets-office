@@ -9,9 +9,11 @@ import {
   Server,
   Settings,
   Sparkles,
+  Terminal,
   Workflow,
   X,
 } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 import { GitHubRepoBadge } from '@/components/GitHubRepoBadge';
 import { useViewportTier } from '@/hooks/useViewportTier';
@@ -21,7 +23,7 @@ import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
-type DockButtonId = 'config' | 'workflow' | 'chat' | 'help';
+type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter';
 
 function getRuntimeNarrative(
   locale: string,
@@ -170,6 +172,7 @@ export function Toolbar() {
   const [showHelp, setShowHelp] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const showGitHubBadge = IS_GITHUB_PAGES;
+  const [location, setLocation] = useLocation();
 
   const dockButtons: Array<{
     id: DockButtonId;
@@ -198,6 +201,13 @@ export function Toolbar() {
       accent: '#A86B4E',
       active: isChatOpen,
       onClick: () => toggleChat(),
+    },
+    {
+      id: 'commandCenter',
+      icon: Terminal,
+      accent: '#6366F1',
+      active: location === '/command-center',
+      onClick: () => setLocation('/command-center'),
     },
     {
       id: 'help',
@@ -382,7 +392,7 @@ export function Toolbar() {
         style={{ pointerEvents: 'auto' }}
       >
         <div className="rounded-[32px] border border-white/60 bg-white/78 px-3 py-2.5 shadow-[0_14px_40px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
-          <div className={`grid gap-2 ${isTablet ? 'grid-cols-4' : 'grid-cols-4'}`}>
+          <div className={`grid gap-2 ${isTablet ? 'grid-cols-5' : 'grid-cols-5'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
               const labels = copy.toolbar.dockButtons[button.id];
