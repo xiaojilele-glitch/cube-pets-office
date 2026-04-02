@@ -3,6 +3,8 @@
  */
 import { Agent } from './agent.js';
 import db from '../db/index.js';
+import type { ReputationProfile } from '../../shared/reputation.js';
+import { reputationService } from './reputation/index.js';
 
 class AgentRegistry {
   private agents: Map<string, Agent> = new Map();
@@ -17,6 +19,8 @@ class AgentRegistry {
       const agent = Agent.fromDB(row.id);
       if (agent) {
         this.agents.set(row.id, agent);
+        // Initialize reputation profile for each agent (idempotent)
+        reputationService.initializeProfile(row.id, false);
       }
     }
     console.log(`[Registry] Loaded ${this.agents.size} agents`);
@@ -87,6 +91,15 @@ class AgentRegistry {
 
   refreshAll(): void {
     this.init();
+  }
+
+  /**
+   * Get agent reputation profile.
+   * Delegates to the database layer.
+   * @see Requirements 1.5, 3.4
+   */
+  getReputation(agentId: string): ReputationProfile | undefined {
+    return db.getReputationProfile(agentId);
   }
 }
 

@@ -16,6 +16,7 @@ import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
 import { useTelemetryStore } from '@/lib/telemetry-store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 import { useRoleStore } from '@/lib/role-store';
+import { useReputationStore } from '@/lib/reputation-store';
 import { getRoleColor } from '@/components/AgentRolePanel';
 
 type SceneAgentConfig = {
@@ -438,6 +439,8 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
   const currentRoleName = agentRoleInfo?.currentRole?.roleName || null;
   const roleColor = currentRoleName ? getRoleColor(currentRoleName) : null;
 
+  const reputationProfile = useReputationStore(state => state.profiles[config.id]);
+
   const agentStatus = agentStatuses[config.id] || 'idle';
   const accent = roleColor || config.color;
   const isActive = hovered || selectedPet === config.id;
@@ -548,6 +551,22 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
         visible={showBubble || selectedPet === config.id || agentStatus !== 'idle'}
         accent={accent}
       />
+
+      {/* Reputation halo: gold for S, silver for A */}
+      {reputationProfile?.grade === 'S' && (
+        <pointLight position={[0, 1.8, 0]} intensity={0.6} color="#FFD700" distance={3} decay={2} />
+      )}
+      {reputationProfile?.grade === 'A' && (
+        <pointLight position={[0, 1.8, 0]} intensity={0.4} color="#C0C0C0" distance={2.5} decay={2} />
+      )}
+      {/* Reputation warning: red pulse for D grade */}
+      {reputationProfile?.grade === 'D' && (
+        <Html position={[0, currentRoleName ? 3.0 : 2.8, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
+          <div className="animate-pulse rounded-full bg-red-700 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-md">
+            ⚠ D
+          </div>
+        </Html>
+      )}
 
       {agentStatus !== 'idle' && (
         <pointLight
