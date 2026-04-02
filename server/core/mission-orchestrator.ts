@@ -1055,7 +1055,7 @@ export class MissionOrchestrator {
       status: mapTaskStatus(task.status),
       score: task.total_score ?? undefined,
       feedback: task.manager_feedback ?? task.meta_audit_feedback ?? undefined,
-      stageKey: undefined,
+      stageKey: undefined as string | undefined,
     }));
   }
 

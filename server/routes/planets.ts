@@ -125,11 +125,11 @@ function withAgentAngles(
     grouped.set(agent.stageKey, list);
   }
 
-  for (const [stageKey, stageAgents] of grouped) {
+  for (const [stageKey, stageAgents] of Array.from(grouped.entries())) {
     const stage = stageMap.get(stageKey);
     if (!stage) continue;
     const step = (stage.arcEnd - stage.arcStart) / (stageAgents.length + 1);
-    stageAgents.forEach((agent, i) => {
+    stageAgents.forEach((agent: MissionPlanetInteriorAgent, i: number) => {
       agent.angle = (stage.arcStart + step * (i + 1)) % 360;
     });
   }
@@ -154,9 +154,9 @@ export function buildPlanetInteriorAgents(
       list.push(wp);
       assignees.set(wp.assignee, list);
     }
-    for (const [name, packages] of assignees) {
-      const activePackage =
-        packages.find((p) => p.status === 'running') ?? packages[0];
+    for (const [name, packages] of Array.from(assignees.entries())) {
+      const activePackage: MissionWorkPackage =
+        packages.find((p: MissionWorkPackage) => p.status === 'running') ?? packages[0];
       const stage = interiorStages.find(
         (s) => s.key === activePackage.stageKey,
       );
@@ -166,8 +166,8 @@ export function buildPlanetInteriorAgents(
         role: 'worker',
         sprite: 'cube-worker',
         status: inferAgentStatus(activePackage.status),
-        stageKey: activePackage.stageKey,
-        stageLabel: stage?.label ?? activePackage.stageKey,
+        stageKey: activePackage.stageKey ?? 'execute',
+        stageLabel: stage?.label ?? activePackage.stageKey ?? 'Execute',
         progress: activePackage.score,
         currentAction: activePackage.deliverable,
         angle: 0,
