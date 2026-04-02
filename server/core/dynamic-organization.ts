@@ -45,6 +45,7 @@ interface RoleTemplate {
   summaryFocus: string[];
   skillIds: string[];
   mcpIds: string[];
+  capabilities?: string[];  // e.g. ["vision", "tts", "stt"] (Req 6.3)
   execution: {
     mode: ExecutionMode;
     strategy: ExecutionStrategy;
@@ -500,23 +501,27 @@ function unique<T>(items: T[]): T[] {
 function inferTaskProfile(directive: string): string {
   const text = directive.toLowerCase();
 
+  // Multimodal keyword detection (Req 6.1)
+  const multimodalKeywords = /语音|朗读|图片|截图|看一下|voice|speak|read\s*aloud|image|screenshot|look\s*at/i;
+  const hasMultimodal = multimodalKeywords.test(text);
+
+  let profile: string;
+
   if (/(mcp|skill|prompt|agent|workflow|orchestrat|connector|tool)/i.test(text)) {
-    return "orchestration";
-  }
-  if (/(code|api|server|frontend|backend|typescript|bug|test|deploy|refactor)/i.test(text)) {
-    return "engineering";
-  }
-  if (/(research|compare|analysis|analyze|benchmark|study|investigate)/i.test(text)) {
-    return "research";
-  }
-  if (/(growth|marketing|content|community|campaign|copy|engagement)/i.test(text)) {
-    return "growth";
-  }
-  if (/(ops|operation|rollout|launch|runbook|support|process)/i.test(text)) {
-    return "operations";
+    profile = "orchestration";
+  } else if (/(code|api|server|frontend|backend|typescript|bug|test|deploy|refactor)/i.test(text)) {
+    profile = "engineering";
+  } else if (/(research|compare|analysis|analyze|benchmark|study|investigate)/i.test(text)) {
+    profile = "research";
+  } else if (/(growth|marketing|content|community|campaign|copy|engagement)/i.test(text)) {
+    profile = "growth";
+  } else if (/(ops|operation|rollout|launch|runbook|support|process)/i.test(text)) {
+    profile = "operations";
+  } else {
+    profile = "general";
   }
 
-  return "general";
+  return hasMultimodal ? `${profile}+multimodal` : profile;
 }
 
 function buildFallbackPlan(directive: string): PlannerOutput {
@@ -619,8 +624,12 @@ function plannerCatalogSummary(): string {
   return Object.values(ROLE_LIBRARY)
     .filter(template => template.role !== "ceo")
     .map(
-      template =>
-        `- ${template.id} (${template.role}): ${template.title}. ${template.responsibility}`
+      template => {
+        const capTag = template.capabilities?.length
+          ? ` [${template.capabilities.join(", ")}]`
+          : "";
+        return `- ${template.id} (${template.role}): ${template.title}. ${template.responsibility}${capTag}`;
+      }
     )
     .join("\n");
 }

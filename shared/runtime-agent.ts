@@ -23,10 +23,17 @@ export interface VisionContext {
   visualDescription: string;
 }
 
+export interface MultimodalContext {
+  visionContexts?: VisionContext[];
+  voiceTranscript?: string;
+  voiceLanguage?: string;
+}
+
 export interface AgentInvokeOptions {
   workflowId?: string;
   stage?: string;
   visionContexts?: VisionContext[];
+  multimodalContext?: MultimodalContext;
 }
 
 export interface RuntimeAgentDependencies {
@@ -86,13 +93,25 @@ Important JSON requirements:
     messages.push({ role: "user", content: item });
   }
 
-  if (options.visionContexts?.length) {
-    for (const vc of options.visionContexts) {
+  // Inject vision contexts (legacy field or from multimodalContext)
+  const visionContexts =
+    options.visionContexts ??
+    options.multimodalContext?.visionContexts;
+  if (visionContexts?.length) {
+    for (const vc of visionContexts) {
       messages.push({
         role: "user",
         content: `[Vision Analysis] ${vc.imageName}\n${vc.visualDescription}`,
       });
     }
+  }
+
+  // Inject voice transcript from multimodalContext (Req 5.2, 5.3)
+  if (options.multimodalContext?.voiceTranscript) {
+    messages.push({
+      role: "user",
+      content: `[Voice Input] ${options.multimodalContext.voiceTranscript}`,
+    });
   }
 
   messages.push({ role: "user", content: prompt });
@@ -113,6 +132,16 @@ export class RuntimeAgent implements AgentHandle {
     context?: string[],
     options: AgentInvokeOptions = {}
   ): Promise<string> {
+    // Emit "listening" when processing voice input (Req 4.1)
+    if (options.multimodalContext?.voiceTranscript) {
+      this.deps.eventEmitter.emit({
+        type: "agent_active",
+        agentId: this.config.id,
+        action: "listening",
+        workflowId: options.workflowId,
+      });
+    }
+
     if (options.visionContexts?.length) {
       this.deps.eventEmitter.emit({
         type: "agent_active",
@@ -147,6 +176,16 @@ export class RuntimeAgent implements AgentHandle {
     }
     const response = await this.deps.llmProvider.call(messages, llmOptions);
 
+    // Emit "speaking" when voice context was provided (Req 4.3)
+    if (options.multimodalContext?.voiceTranscript) {
+      this.deps.eventEmitter.emit({
+        type: "agent_active",
+        agentId: this.config.id,
+        action: "speaking",
+        workflowId: options.workflowId,
+      });
+    }
+
     this.deps.eventEmitter.emit({
       type: "agent_active",
       agentId: this.config.id,
@@ -168,6 +207,16 @@ export class RuntimeAgent implements AgentHandle {
     context?: string[],
     options: AgentInvokeOptions = {}
   ): Promise<T> {
+    // Emit "listening" when processing voice input (Req 4.1)
+    if (options.multimodalContext?.voiceTranscript) {
+      this.deps.eventEmitter.emit({
+        type: "agent_active",
+        agentId: this.config.id,
+        action: "listening",
+        workflowId: options.workflowId,
+      });
+    }
+
     if (options.visionContexts?.length) {
       this.deps.eventEmitter.emit({
         type: "agent_active",
@@ -201,6 +250,16 @@ export class RuntimeAgent implements AgentHandle {
       llmOptions.maxTokens = (llmOptions.maxTokens || 3000) + 1000;
     }
     const result = await this.deps.llmProvider.callJson<T>(messages, llmOptions);
+
+    // Emit "speaking" when voice context was provided (Req 4.3)
+    if (options.multimodalContext?.voiceTranscript) {
+      this.deps.eventEmitter.emit({
+        type: "agent_active",
+        agentId: this.config.id,
+        action: "speaking",
+        workflowId: options.workflowId,
+      });
+    }
 
     this.deps.eventEmitter.emit({
       type: "agent_active",

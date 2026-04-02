@@ -276,11 +276,24 @@ function animateWorker(
       group.rotation.y = baseRotation[1] + Math.sin(time * 0.6) * 0.15;
       group.position.y = basePosition[1] + Math.sin(time * 2) * 0.01;
       break;
+    case 'listening':
+      // "倾听"动画：头部微倾 + 轻微上下浮动
+      group.rotation.z = baseRotation[2] + Math.sin(time * 0.8) * 0.1;
+      group.position.y = basePosition[1] + Math.sin(time * 1.5) * 0.01;
+      break;
+    case 'speaking':
+      // "说话"动画：轻微点头 + 左右摇摆
+      group.rotation.x = baseRotation[0] + Math.sin(time * 3) * 0.06;
+      group.rotation.y = baseRotation[1] + Math.sin(time * 1.5) * 0.08;
+      group.position.y = basePosition[1] + Math.abs(Math.sin(time * 4)) * 0.015;
+      break;
   }
 }
 
 const STATUS_BUBBLES: Record<AppLocale, Record<string, string>> = {
   'zh-CN': {
+    listening: '正在听...\n请说出你的指令。',
+    speaking: '正在说话...\n请稍等，我来念给你听。',
     analyzing_image: '正在看图...\n让我仔细看看这张图。',
     analyzing: '正在分析指令...\n先把重点梳清。',
     planning: '正在规划任务...\n把人放到对的位置。',
@@ -294,6 +307,8 @@ const STATUS_BUBBLES: Record<AppLocale, Record<string, string>> = {
     thinking: '思考中...\n让我组织一下。',
   },
   'en-US': {
+    listening: 'Listening...\nGo ahead, I am all ears.',
+    speaking: 'Speaking...\nHold on, let me read it out.',
     analyzing_image: 'Analyzing image...\nLet me take a closer look.',
     analyzing: 'Analyzing the directive...\nLet me untangle the key points first.',
     planning: 'Planning the task...\nPutting the right people in the right spots.',
