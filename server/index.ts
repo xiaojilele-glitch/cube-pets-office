@@ -466,6 +466,9 @@ async function startServer() {
   app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
 
+  const nlCommandRoutes = (await import("./routes/nl-command.js")).default;
+  app.use("/api/nl-command", nlCommandRoutes);
+
   app.post("/api/executor/events", async (request, response) => {
     const typedRequest = request as RequestWithRawBody;
     if (!verifyExecutorCallbackSignature(typedRequest, response)) return;

@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "entryId": "audit-1775137787821-kbaajr",
+      "operationType": "plan_generated",
+      "operator": "system",
+      "content": "Generated execution plan \"plan-1775137787821-awpa3x\" for command \"cmd-1\" with 1 missions and 1 tasks",
+      "timestamp": 1775137787821,
+      "result": "success",
+      "entityId": "plan-1775137787821-awpa3x",
+      "entityType": "plan",
+      "metadata": {
+        "commandId": "cmd-1",
+        "missionCount": 1,
+        "taskCount": 1,
+        "criticalPathLength": 1,
+        "totalBudget": 100
+      }
+    }
+  ]
+}

@@ -62,6 +62,7 @@ export const messages = {
         workflow: { label: '工作流', sublabel: 'OPS' },
         chat: { label: '对话', sublabel: 'AGENT' },
         help: { label: '帮助', sublabel: 'GUIDE' },
+        commandCenter: { label: '指挥中心', sublabel: 'NL CMD' },
       },
       quickTips: [
         '点击任意 Agent 可高亮角色，并把对话焦点切换到该角色。',
@@ -502,6 +503,7 @@ export const messages = {
         workflow: { label: 'Workflow', sublabel: 'OPS' },
         chat: { label: 'Chat', sublabel: 'AGENT' },
         help: { label: 'Help', sublabel: 'GUIDE' },
+        commandCenter: { label: 'Command', sublabel: 'NL CMD' },
       },
       quickTips: [
         'Click any Agent to highlight it and move chat focus to that role.',

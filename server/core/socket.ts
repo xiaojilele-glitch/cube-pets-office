@@ -7,6 +7,8 @@ import type { AgentEvent } from "../../shared/workflow-runtime.js";
 import type { TelemetrySnapshot } from "../../shared/telemetry.js";
 import type { CostSnapshot, CostAlert } from "../../shared/cost.js";
 import { telemetryStore } from "./telemetry-store.js";
+import { NLCommandSocketEmitter } from "./nl-command/socket-emitter.js";
+import type { EmitFn } from "./nl-command/socket-emitter.js";
 
 let io: SocketIOServer | null = null;
 
@@ -122,4 +124,14 @@ export function emitCostUpdate(snapshot: CostSnapshot): void {
 export function emitCostAlert(alert: CostAlert): void {
   if (!io) return;
   io.emit("cost.alert", alert);
+}
+
+/**
+ * Create an NLCommandSocketEmitter wired to the global Socket.IO instance.
+ * Returns null if Socket.IO has not been initialized yet.
+ */
+export function createNLCommandEmitter(): NLCommandSocketEmitter | null {
+  if (!io) return null;
+  const emitFn: EmitFn = (event, payload) => io!.emit(event, payload);
+  return new NLCommandSocketEmitter(emitFn);
 }

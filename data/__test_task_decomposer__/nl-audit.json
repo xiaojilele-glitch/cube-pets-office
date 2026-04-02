@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "entryId": "audit-1775137787579-cv7ix1",
+      "operationType": "decomposition_completed",
+      "operator": "system",
+      "content": "Decomposed mission \"Refactor payment module\" into 1 tasks with 0 dependencies",
+      "timestamp": 1775137787579,
+      "result": "success",
+      "entityId": "mission-1",
+      "entityType": "mission",
+      "metadata": {
+        "decompositionId": "task-decomp-1775137787578-z7t54j",
+        "taskCount": 1
+      }
+    }
+  ]
+}

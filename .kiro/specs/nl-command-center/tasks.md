@@ -6,8 +6,8 @@
 
 ## 任务
 
-- [ ] 1. 定义共享类型和契约
-  - [ ] 1.1 创建 `shared/nl-command/contracts.ts`，定义所有核心类型
+- [x] 1. 定义共享类型和契约
+  - [x] 1.1 创建 `shared/nl-command/contracts.ts`，定义所有核心类型
     - 包含 StrategicCommand, CommandAnalysis, ClarificationDialog, FinalizedCommand, MissionDecomposition, DecomposedMission, MissionDependency, TaskDecomposition, DecomposedTask, TaskDependency
     - 包含 NLExecutionPlan, PlanTimeline, TimelineEntry, ResourceAllocation, RiskAssessment, CostBudget, ContingencyPlan
     - 包含 PlanApprovalRequest, ApprovalDecision, PlanAdjustment, AdjustmentChange
@@ -16,18 +16,18 @@
     - 包含 PlanTemplate, TemplateVersion, ExecutionMetrics, OptimizationReport
     - 包含 Permission, UserRole, PermissionConfig
     - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1, 7.1, 8.1, 10.1, 16.2, 17.1_
-  - [ ] 1.2 创建 `shared/nl-command/socket.ts`，定义 Socket.IO 事件常量
+  - [x] 1.2 创建 `shared/nl-command/socket.ts`，定义 Socket.IO 事件常量
     - _Requirements: 9.4_
-  - [ ] 1.3 创建 `shared/nl-command/api.ts`，定义 REST API 路由常量和请求/响应类型
+  - [x] 1.3 创建 `shared/nl-command/api.ts`，定义 REST API 路由常量和请求/响应类型
     - _Requirements: 所有 API 相关需求_
-  - [ ] 1.4 创建 `shared/nl-command/index.ts` 模块导出
+  - [x] 1.4 创建 `shared/nl-command/index.ts` 模块导出
   - [ ]* 1.5 编写 StrategicCommand 和 NLExecutionPlan 结构完整性属性测试
     - **Property 1: StrategicCommand 结构完整性**
     - **Property 7: 分解输出结构完整性**
     - **Validates: Requirements 1.1, 3.2, 3.3, 4.2, 4.3**
 
-- [ ] 2. 实现审计链 (Audit Trail)
-  - [ ] 2.1 创建 `server/core/nl-command/audit-trail.ts`
+- [x] 2. 实现审计链 (Audit Trail)
+  - [x] 2.1 创建 `server/core/nl-command/audit-trail.ts`
     - 实现 AuditTrail 类：record(), query(), export()
     - 使用本地 JSON 文件持久化 (`data/nl-audit.json`)
     - 支持按时间范围、操作者、操作类型、实体 ID 过滤
@@ -44,8 +44,8 @@
     - 测试边界条件（空过滤、大量条目）
     - _Requirements: 16.1, 16.2, 16.3, 16.4_
 
-- [ ] 3. 实现权限控制
-  - [ ] 3.1 创建 `server/core/nl-command/permission-guard.ts`
+- [x] 3. 实现权限控制
+  - [x] 3.1 创建 `server/core/nl-command/permission-guard.ts`
     - 实现 PermissionGuard 类：checkPermission(), getPermissions()
     - 定义角色-权限映射（admin/manager/operator/viewer）
     - 支持实体级细粒度权限覆盖
@@ -54,17 +54,17 @@
     - **Property 16: 权限执行正确性**
     - **Validates: Requirements 17.1, 17.2, 17.3**
 
-- [ ] 4. Checkpoint - 基础设施层验证
+- [x] 4. Checkpoint - 基础设施层验证
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. 实现指令解析器 (Command Analyzer)
-  - [ ] 5.1 创建 `server/core/nl-command/command-analyzer.ts`
+- [x] 5. 实现指令解析器 (Command Analyzer)
+  - [x] 5.1 创建 `server/core/nl-command/command-analyzer.ts`
     - 实现 CommandAnalyzer 类：analyze(), generateClarificationQuestions(), updateAnalysis(), finalize()
     - 调用 LLM 解析指令意图、约束、目标
     - 检测歧义并生成澄清问题
     - 集成 AuditTrail 记录操作
     - _Requirements: 1.2, 1.3, 1.4, 2.2, 2.4, 2.5_
-  - [ ] 5.2 创建 `server/core/nl-command/clarification-dialog.ts`
+  - [x] 5.2 创建 `server/core/nl-command/clarification-dialog.ts`
     - 实现 ClarificationDialogManager 类：createDialog(), addAnswer(), isComplete()
     - 支持自由文本和选择式回答
     - 集成 AuditTrail 记录澄清过程
@@ -79,8 +79,8 @@
     - 测试 FinalizedCommand 生成
     - _Requirements: 1.2, 1.3, 2.2, 2.4, 2.5_
 
-- [ ] 6. 实现 Mission 分解器
-  - [ ] 6.1 创建 `server/core/nl-command/mission-decomposer.ts`
+- [x] 6. 实现 Mission 分解器
+  - [x] 6.1 创建 `server/core/nl-command/mission-decomposer.ts`
     - 实现 MissionDecomposer 类：decompose(), generateOrganization()
     - 调用 LLM 生成 Mission 列表
     - 识别依赖关系，生成拓扑排序的执行顺序
@@ -89,13 +89,13 @@
     - 触发动态组织生成
     - 集成 AuditTrail
     - _Requirements: 3.2, 3.3, 3.4, 3.5, 3.6, 14.1, 14.2, 14.3_
-  - [ ] 6.2 创建 `server/core/nl-command/task-decomposer.ts`
+  - [x] 6.2 创建 `server/core/nl-command/task-decomposer.ts`
     - 实现 TaskDecomposer 类：decompose()
     - 调用 LLM 生成 Task 列表
     - 识别依赖关系，生成执行顺序
     - 集成 AuditTrail
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6_
-  - [ ] 6.3 创建 `server/core/nl-command/topo-sort.ts`
+  - [x] 6.3 创建 `server/core/nl-command/topo-sort.ts`
     - 实现通用拓扑排序工具函数
     - 支持循环检测
     - 支持并行分组（同层可并行的节点归为一组）
@@ -109,8 +109,8 @@
     - 测试组织生成触发
     - _Requirements: 3.2, 3.4, 4.2, 4.4, 14.1_
 
-- [ ] 7. 实现执行计划生成器
-  - [ ] 7.1 创建 `server/core/nl-command/execution-plan-generator.ts`
+- [x] 7. 实现执行计划生成器
+  - [x] 7.1 创建 `server/core/nl-command/execution-plan-generator.ts`
     - 实现 ExecutionPlanGenerator 类：generate(), adjustPlan(), computeCriticalPath()
     - 生成时间线（关键路径算法）
     - 生成资源分配
@@ -131,11 +131,11 @@
     - 测试成本预算
     - _Requirements: 5.2, 5.3, 5.5_
 
-- [ ] 8. Checkpoint - 核心服务层验证
+- [x] 8. Checkpoint - 核心服务层验证
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. 实现审批管理器
-  - [ ] 9.1 创建 `server/core/nl-command/plan-approval.ts`
+- [x] 9. 实现审批管理器
+  - [x] 9.1 创建 `server/core/nl-command/plan-approval.ts`
     - 实现 PlanApproval 类：createApprovalRequest(), submitApproval(), isApprovalComplete()
     - 支持多级审批
     - 集成 AuditTrail
@@ -148,8 +148,8 @@
     - 测试拒绝和修改意见
     - _Requirements: 7.2, 7.4, 7.5_
 
-- [ ] 10. 实现动态调整器
-  - [ ] 10.1 创建 `server/core/nl-command/plan-adjustment.ts`
+- [x] 10. 实现动态调整器
+  - [x] 10.1 创建 `server/core/nl-command/plan-adjustment.ts`
     - 实现 PlanAdjustmentManager 类：proposeAdjustment(), applyAdjustment()
     - 实现偏差检测逻辑
     - 集成审批流程
@@ -162,8 +162,8 @@
     - **Property 11: 计划调整更新不变量**
     - **Validates: Requirements 8.5**
 
-- [ ] 11. 实现告警引擎
-  - [ ] 11.1 创建 `server/core/nl-command/alert-engine.ts`
+- [x] 11. 实现告警引擎
+  - [x] 11.1 创建 `server/core/nl-command/alert-engine.ts`
     - 实现 AlertEngine 类：registerRule(), evaluate(), notify()
     - 支持 5 种告警类型
     - 支持自定义规则
@@ -179,8 +179,8 @@
     - 测试去重逻辑
     - _Requirements: 10.1, 10.3, 10.4_
 
-- [ ] 12. 实现决策支持引擎
-  - [ ] 12.1 创建 `server/core/nl-command/decision-support.ts`
+- [x] 12. 实现决策支持引擎
+  - [x] 12.1 创建 `server/core/nl-command/decision-support.ts`
     - 实现 DecisionSupportEngine 类：analyzeRisks(), suggestCostOptimization(), suggestResourceAdjustment(), collectExecutionData(), generateOptimizationReport()
     - 调用 LLM 生成建议
     - 收集执行指标
@@ -192,8 +192,8 @@
     - **Property 23: 计划与实际对比正确性**
     - **Validates: Requirements 13.4**
 
-- [ ] 13. 实现协作和评论
-  - [ ] 13.1 创建 `server/core/nl-command/comment-manager.ts`
+- [x] 13. 实现协作和评论
+  - [x] 13.1 创建 `server/core/nl-command/comment-manager.ts`
     - 实现 CommentManager 类：addComment(), editComment(), getComments(), parseMetions()
     - 支持版本历史
     - 支持 @mention 解析
@@ -207,13 +207,13 @@
     - **Property 15: @mention 解析正确性**
     - **Validates: Requirements 12.2**
 
-- [ ] 14. 实现报告生成和模板
-  - [ ] 14.1 创建 `server/core/nl-command/report-generator.ts`
+- [x] 14. 实现报告生成和模板
+  - [x] 14.1 创建 `server/core/nl-command/report-generator.ts`
     - 实现 ReportGenerator 类：generate(), export(), compare()
     - 支持 Markdown 和 JSON 导出
     - 支持计划与实际对比
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
-  - [ ] 14.2 创建 `server/core/nl-command/template-manager.ts`
+  - [x] 14.2 创建 `server/core/nl-command/template-manager.ts`
     - 实现 TemplateManager 类：save(), load(), list(), update()
     - 支持版本管理
     - _Requirements: 19.3, 19.4, 19.5_
@@ -224,11 +224,11 @@
     - **Property 19: 模板保存/加载往返一致性**
     - **Validates: Requirements 19.3, 19.4**
 
-- [ ] 15. Checkpoint - 服务层完整验证
+- [x] 15. Checkpoint - 服务层完整验证
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. 实现 REST API 路由
-  - [ ] 16.1 创建 `server/routes/nl-command.ts`
+- [x] 16. 实现 REST API 路由
+  - [x] 16.1 创建 `server/routes/nl-command.ts`
     - 实现所有 REST API 端点
     - 指令管理：POST/GET /api/nl-command/commands, GET /api/nl-command/commands/:id
     - 澄清对话：POST /api/nl-command/commands/:id/clarify, GET /api/nl-command/commands/:id/dialog
@@ -241,118 +241,118 @@
     - 审计：GET audit, POST audit/export
     - 集成权限检查中间件
     - _Requirements: 所有 API 相关需求_
-  - [ ] 16.2 在 `server/index.ts` 中注册 nl-command 路由
+  - [x] 16.2 在 `server/index.ts` 中注册 nl-command 路由
     - _Requirements: 所有 API 相关需求_
   - [ ]* 16.3 编写 REST API 路由单元测试
     - 使用 supertest 测试各端点
     - 测试请求验证和错误响应
     - _Requirements: 所有 API 相关需求_
 
-- [ ] 17. 实现 Socket.IO 事件集成
-  - [ ] 17.1 创建 `server/core/nl-command/socket-emitter.ts`
+- [x] 17. 实现 Socket.IO 事件集成
+  - [x] 17.1 创建 `server/core/nl-command/socket-emitter.ts`
     - 实现 NLCommandSocketEmitter 类
     - 封装所有 nl_command_* 事件的发送
     - 集成到各服务组件中
     - _Requirements: 9.4_
-  - [ ] 17.2 在 `server/core/socket.ts` 中注册 nl-command 命名空间事件
+  - [x] 17.2 在 `server/core/socket.ts` 中注册 nl-command 命名空间事件
     - _Requirements: 9.4_
 
-- [ ] 18. 实现指挥中心编排器（串联所有服务）
-  - [ ] 18.1 创建 `server/core/nl-command/orchestrator.ts`
+- [x] 18. 实现指挥中心编排器（串联所有服务）
+  - [x] 18.1 创建 `server/core/nl-command/orchestrator.ts`
     - 实现 NLCommandOrchestrator 类
     - 串联完整流程：指令提交 → 解析 → 澄清 → 分解 → 计划生成 → 审批 → 执行 → 监控
     - 管理 StrategicCommand 生命周期状态机
     - 集成所有子服务
     - _Requirements: 所有需求_
-  - [ ] 18.2 创建 `server/core/nl-command/index.ts` 模块导出和初始化
+  - [x] 18.2 创建 `server/core/nl-command/index.ts` 模块导出和初始化
     - _Requirements: 所有需求_
 
-- [ ] 19. Checkpoint - 服务端完整验证
+- [x] 19. Checkpoint - 服务端完整验证
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 20. 实现前端 Zustand Store
-  - [ ] 20.1 创建 `client/src/lib/nl-command-store.ts`
+- [x] 20. 实现前端 Zustand Store
+  - [x] 20.1 创建 `client/src/lib/nl-command-store.ts`
     - 实现 NLCommandStore（Zustand）
     - 管理指令列表、当前指令、执行计划、告警、评论等状态
     - 封装 REST API 调用
     - 监听 Socket.IO nl_command_* 事件实时更新
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
-  - [ ] 20.2 创建 `client/src/lib/nl-command-client.ts`
+  - [x] 20.2 创建 `client/src/lib/nl-command-client.ts`
     - 封装所有 NL Command REST API 调用
     - _Requirements: 所有 API 相关需求_
   - [ ]* 20.3 编写过滤和排序属性测试
     - **Property 13: 过滤和排序正确性**
     - **Validates: Requirements 9.5**
 
-- [ ] 21. 实现指挥中心主界面
-  - [ ] 21.1 创建 `client/src/pages/nl-command/CommandCenterPage.tsx`
+- [x] 21. 实现指挥中心主界面
+  - [x] 21.1 创建 `client/src/pages/nl-command/CommandCenterPage.tsx`
     - 四区布局：指令输入区、计划展示区、实时监控区、决策支持区
     - 支持全屏模式和多面板布局
     - _Requirements: 18.1, 18.6_
-  - [ ] 21.2 创建 `client/src/components/nl-command/CommandInput.tsx`
+  - [x] 21.2 创建 `client/src/components/nl-command/CommandInput.tsx`
     - 自然语言文本输入组件
     - 支持历史指令自动补全
     - 支持澄清对话交互
     - _Requirements: 18.2, 2.3_
-  - [ ] 21.3 创建 `client/src/components/nl-command/ClarificationPanel.tsx`
+  - [x] 21.3 创建 `client/src/components/nl-command/ClarificationPanel.tsx`
     - 澄清对话面板
     - 支持自由文本和选择式回答
     - _Requirements: 2.3_
 
-- [ ] 22. 实现计划可视化组件
-  - [ ] 22.1 创建 `client/src/components/nl-command/GanttChart.tsx`
+- [x] 22. 实现计划可视化组件
+  - [x] 22.1 创建 `client/src/components/nl-command/GanttChart.tsx`
     - 甘特图组件，展示 Mission/Task 时间线
     - 标记关键路径
     - 支持缩放和拖拽
     - _Requirements: 6.1_
-  - [ ] 22.2 创建 `client/src/components/nl-command/DependencyGraph.tsx`
+  - [x] 22.2 创建 `client/src/components/nl-command/DependencyGraph.tsx`
     - 依赖关系图组件
     - 展示 Mission/Task 之间的依赖关系
     - _Requirements: 6.2_
-  - [ ] 22.3 创建 `client/src/components/nl-command/ResourceChart.tsx`
+  - [x] 22.3 创建 `client/src/components/nl-command/ResourceChart.tsx`
     - 资源分配图组件
     - _Requirements: 6.3_
-  - [ ] 22.4 创建 `client/src/components/nl-command/RiskHeatMap.tsx`
+  - [x] 22.4 创建 `client/src/components/nl-command/RiskHeatMap.tsx`
     - 风险热力图组件
     - _Requirements: 6.4_
-  - [ ] 22.5 创建 `client/src/components/nl-command/CostChart.tsx`
+  - [x] 22.5 创建 `client/src/components/nl-command/CostChart.tsx`
     - 成本分布图组件
     - _Requirements: 6.5_
 
-- [ ] 23. 实现监控和告警前端组件
-  - [ ] 23.1 创建 `client/src/components/nl-command/DashboardMetrics.tsx`
+- [x] 23. 实现监控和告警前端组件
+  - [x] 23.1 创建 `client/src/components/nl-command/DashboardMetrics.tsx`
     - 关键指标卡片（总 Mission 数、完成率、活跃 Task、风险等级）
     - _Requirements: 9.1_
-  - [ ] 23.2 创建 `client/src/components/nl-command/MissionList.tsx`
+  - [x] 23.2 创建 `client/src/components/nl-command/MissionList.tsx`
     - Mission 列表组件，支持过滤和排序
     - 支持钻取查看详情
     - _Requirements: 9.2, 9.5, 9.6_
-  - [ ] 23.3 创建 `client/src/components/nl-command/AlertPanel.tsx`
+  - [x] 23.3 创建 `client/src/components/nl-command/AlertPanel.tsx`
     - 告警面板组件
     - 实时展示告警
     - _Requirements: 10.2_
 
-- [ ] 24. 实现决策支持和协作前端组件
-  - [ ] 24.1 创建 `client/src/components/nl-command/SuggestionPanel.tsx`
+- [x] 24. 实现决策支持和协作前端组件
+  - [x] 24.1 创建 `client/src/components/nl-command/SuggestionPanel.tsx`
     - 决策建议面板
     - 支持一键应用建议
     - _Requirements: 11.4, 18.5_
-  - [ ] 24.2 创建 `client/src/components/nl-command/ApprovalDialog.tsx`
+  - [x] 24.2 创建 `client/src/components/nl-command/ApprovalDialog.tsx`
     - 审批对话框
     - 支持查看完整计划、提交审批意见
     - _Requirements: 7.3, 7.4_
-  - [ ] 24.3 创建 `client/src/components/nl-command/CommentThread.tsx`
+  - [x] 24.3 创建 `client/src/components/nl-command/CommentThread.tsx`
     - 评论线程组件
     - 支持 @mention
     - 支持版本历史查看
     - _Requirements: 12.1, 12.2, 12.3_
 
-- [ ] 25. 实现历史和模板前端组件
-  - [ ] 25.1 创建 `client/src/components/nl-command/HistoryPanel.tsx`
+- [x] 25. 实现历史和模板前端组件
+  - [x] 25.1 创建 `client/src/components/nl-command/HistoryPanel.tsx`
     - 历史指令列表
     - 支持基于历史创建新指令
     - _Requirements: 19.1, 19.2_
-  - [ ] 25.2 创建 `client/src/components/nl-command/TemplateManager.tsx`
+  - [x] 25.2 创建 `client/src/components/nl-command/TemplateManager.tsx`
     - 模板管理组件
     - 支持保存、加载、版本管理
     - _Requirements: 19.3, 19.4, 19.5_
@@ -360,20 +360,20 @@
     - **Property 20: 历史指令克隆产生新 ID**
     - **Validates: Requirements 19.2**
 
-- [ ] 26. 实现报告前端组件
-  - [ ] 26.1 创建 `client/src/components/nl-command/ReportView.tsx`
+- [x] 26. 实现报告前端组件
+  - [x] 26.1 创建 `client/src/components/nl-command/ReportView.tsx`
     - 报告展示组件
     - 支持计划与实际对比视图
     - 支持导出 Markdown/JSON
     - _Requirements: 13.1, 13.2, 13.4, 13.5_
 
-- [ ] 27. 路由集成和导航
-  - [ ] 27.1 在 `client/src/App.tsx` 中添加 `/command-center` 路由
+- [x] 27. 路由集成和导航
+  - [x] 27.1 在 `client/src/App.tsx` 中添加 `/command-center` 路由
     - _Requirements: 18.1_
-  - [ ] 27.2 在 `client/src/components/Toolbar.tsx` 中添加指挥中心入口
+  - [x] 27.2 在 `client/src/components/Toolbar.tsx` 中添加指挥中心入口
     - _Requirements: 18.1_
 
-- [ ] 28. Checkpoint - 前端完整验证
+- [x] 28. Checkpoint - 前端完整验证
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 29. 审计链记录集成测试
@@ -382,7 +382,7 @@
     - **Validates: Requirements 1.4, 2.6, 3.6, 4.6, 7.6, 8.6, 10.5, 12.5, 17.4**
     - 测试所有可审计操作后审计链正确记录
 
-- [ ] 30. 最终 Checkpoint
+- [x] 30. 最终 Checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ## 备注
