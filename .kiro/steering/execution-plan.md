@@ -76,7 +76,7 @@ inclusion: auto
 - [x] L18 `agent-autonomy-upgrade` — Agent 自评估 + 竞争执行 ✅ 已合并 (28 files, +4691)
 - [x] L19 `agent-reputation` — Agent 信誉评分系统 ✅ 已合并 (28 files, +4360)
 - [x] L20 `multi-modal-agent` — 语音 + Vision 统一编排 ✅ 已合并 (20 files, +2302)
-- [ ] L21 `cost-governance-strategy` — 主动成本治理（中）⚠️ 依赖 L06 cost-observability（未开发）
+- [x] L21 `cost-governance-strategy` — 主动成本治理 ✅ 已合并 (10 files, +1850)
 
 ## 第三层：Docker 执行链路（严格串行，无法并行）
 
