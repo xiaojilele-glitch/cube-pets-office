@@ -731,7 +731,6 @@ function buildSummaryRecord(mission: MissionRecord): MissionTaskSummary {
 }
 
 /**
-<<<<<<< HEAD
  * 原生 agent 构建：从 MissionRecord.agentCrew 派生（mission-native 数据源）。
  * 始终包含 mission-core agent。
  */
@@ -800,15 +799,9 @@ function buildNativeLogSummary(
  */
 function buildDetailRecord(
   mission: MissionRecord
-=======
- * Build a MissionTaskSummary from a MissionPlanetOverviewItem and an optional
- * MissionRecord for enrichment data (workPackages, messageLog, events, etc.).
- *
- * This is the "planet-first" counterpart of buildMissionSummaryRecord() and is
- * used when the tasks-store hydrates from the /api/planets endpoint.
- */
-export function buildPlanetSummaryRecord(
-  planet: MissionPlanetOverviewItem,
+): MissionTaskDetail {
+  const summary = buildSummaryRecord(mission);
+  const failureReasons = missionFailureReasons(mission, mission.events);
   mission?: MissionRecord
 ): MissionTaskSummary {
   const workPackages = mission?.workPackages ?? [];
@@ -964,14 +957,7 @@ export function buildPlanetDetailRecord(
   };
 }
 
-function buildMissionDetailRecord(
-  summary: MissionTaskSummary,
-  mission: MissionRecord,
-  supplement: MissionWorkflowSupplement,
-  agents: AgentInfo[],
-  workflowStageCatalog: StageInfo[],
-  events: MissionEvent[]
->>>>>>> feat/L11-mission-native-projection
+/* buildMissionDetailRecord — kept for backward compat, delegates to buildDetailRecord */
 ): MissionTaskDetail {
   const summary = buildSummaryRecord(mission);
   const failureReasons = missionFailureReasons(mission, mission.events);
@@ -1219,8 +1205,6 @@ async function hydrateTaskData(
   });
 }
 
-<<<<<<< HEAD
-=======
 /**
  * Planet-native hydration: uses /api/planets endpoints instead of the
  * multi-request pattern (listMissions + workflow supplement loading).
@@ -1382,7 +1366,6 @@ async function hydrateTaskData(
   await hydrateWorkflowTaskData(set, get, options);
 }
 
->>>>>>> feat/L11-mission-native-projection
 export const useTasksStore = create<TasksStoreState>((set, get) => ({
   ready: false,
   loading: false,

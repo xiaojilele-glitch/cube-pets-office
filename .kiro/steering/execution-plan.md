@@ -59,8 +59,8 @@ inclusion: auto
 ## 第二层：需要服务端，不需要 Docker
 
 ### 并行组 D：技术债清理（应优先，⚠️ C04 必须先完成）
-- [ ] L10 `workflow-decoupling` — tasks-store 从双轨收口到 mission-first（中）
-- [ ] L11 `mission-native-projection` — /api/planets 路由实现 + 前端数据源切换（中）⚠️ 依赖 L10 的目标数据结构
+- [x] L10 `workflow-decoupling` — tasks-store 从双轨收口到 mission-first ✅ 已合并 (17 files, +1027/-2166)
+- [x] L11 `mission-native-projection` — /api/planets 路由实现 + 前端数据源切换 ✅ 已合并 (13 files, +2793)
 
 ### 并行组 E：Agent 能力增强
 - [ ] L12 `plugin-skill-system` — Skill 热插拔体系（中）⚠️ C08 Skill 注册制契约先完成
