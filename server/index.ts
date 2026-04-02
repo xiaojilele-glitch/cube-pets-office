@@ -425,8 +425,7 @@ async function startServer() {
 
   costTracker.loadHistory();
 
-<<<<<<< HEAD
-  // ── Collaboration Replay: EventCollector + Interceptors (Requirements: 1.3, 1.4, 2.1) ──
+  // ── Collaboration Replay ──
   const { ServerReplayStore } = await import("./replay/replay-store.js");
   const { EventCollector } = await import("./replay/event-collector.js");
   const {
@@ -441,13 +440,9 @@ async function startServer() {
 
   installMissionInterceptor(missionRuntime, eventCollector);
   installMessageBusInterceptor(messageBus, eventCollector);
-
-  // Executor interceptor middleware — mounted before the executor callback handler
   app.use("/api/executor/events", installExecutorInterceptor(eventCollector));
 
-  // ---------------------------------------------------------------------------
-  // Knowledge Graph services & routes (L15 knowledge-graph)
-  // ---------------------------------------------------------------------------
+  // ── Knowledge Graph ──
   const { GraphStore } = await import("./knowledge/graph-store.js");
   const { OntologyRegistry } = await import("./knowledge/ontology-registry.js");
   const { KnowledgeReviewQueue } = await import("./knowledge/review-queue.js");
@@ -462,7 +457,6 @@ async function startServer() {
   const queryService = new KnowledgeGraphQuery(graphStore, ontologyRegistry);
   const knowledgeService = new KnowledgeService(queryService, graphStore);
 
-  // Broadcast entity changes via WebSocket
   const { getSocketIO } = await import("./core/socket.js");
   graphStore.onEntityChanged((entity, action) => {
     const io = getSocketIO();
@@ -470,8 +464,8 @@ async function startServer() {
       io.emit("knowledge.entityChanged", { entity, action });
     }
   });
-=======
-  // RAG pipeline (conditional on rag.enabled)
+
+  // ── RAG Pipeline ──
   const { getRAGConfig } = await import("./rag/config.js");
   const ragConfig = getRAGConfig();
   if (ragConfig.enabled) {
@@ -480,7 +474,6 @@ async function startServer() {
     const { createRAGRouter } = await import("./routes/rag.js");
     app.use("/api/rag", createRAGRouter(ragDeps));
   }
->>>>>>> feat/L16-vector-db-rag-pipeline
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
