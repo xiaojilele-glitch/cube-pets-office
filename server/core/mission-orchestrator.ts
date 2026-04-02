@@ -296,6 +296,129 @@ function normalizeExecutorInstance(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Enrichment extraction helpers
+// ---------------------------------------------------------------------------
+
+const VALID_WORK_PACKAGE_STATUSES = new Set([
+  "pending",
+  "running",
+  "passed",
+  "failed",
+  "verified",
+]);
+
+function extractOrganization(
+  event: ExecutorEvent,
+): MissionOrganizationSnapshot | undefined {
+  const raw = (event.payload as Record<string, unknown> | undefined)
+    ?.organization as Record<string, unknown> | undefined;
+  if (!raw || typeof raw !== "object") return undefined;
+
+  const departments = Array.isArray(raw.departments)
+    ? raw.departments.flatMap((d: unknown) => {
+        if (!d || typeof d !== "object") return [];
+        const dept = d as Record<string, unknown>;
+        const key = typeof dept.key === "string" ? dept.key.trim() : "";
+        const label = typeof dept.label === "string" ? dept.label.trim() : "";
+        if (!key || !label) return [];
+        return [
+          {
+            key,
+            label,
+            managerName:
+              typeof dept.managerName === "string"
+                ? dept.managerName.trim() || undefined
+                : undefined,
+          },
+        ];
+      })
+    : [];
+
+  if (departments.length === 0) return undefined;
+
+  return {
+    departments,
+    agentCount:
+      typeof raw.agentCount === "number" && raw.agentCount >= 0
+        ? raw.agentCount
+        : departments.length,
+  };
+}
+
+function extractWorkPackages(
+  event: ExecutorEvent,
+): MissionWorkPackage[] | undefined {
+  const raw = (event.payload as Record<string, unknown> | undefined)
+    ?.workPackages;
+  if (!Array.isArray(raw)) return undefined;
+
+  const packages = raw.flatMap((item: unknown) => {
+    if (!item || typeof item !== "object") return [];
+    const wp = item as Record<string, unknown>;
+    const id = typeof wp.id === "string" ? wp.id.trim() : "";
+    const title = typeof wp.title === "string" ? wp.title.trim() : "";
+    const stageKey = typeof wp.stageKey === "string" ? wp.stageKey.trim() : "";
+    const status = typeof wp.status === "string" ? wp.status.trim() : "";
+    if (!id || !title || !stageKey || !VALID_WORK_PACKAGE_STATUSES.has(status))
+      return [];
+    return [
+      {
+        id,
+        title,
+        assignee:
+          typeof wp.assignee === "string"
+            ? wp.assignee.trim() || undefined
+            : undefined,
+        stageKey,
+        status: status as MissionWorkPackage["status"],
+        score: typeof wp.score === "number" ? wp.score : undefined,
+        deliverable:
+          typeof wp.deliverable === "string"
+            ? wp.deliverable.trim() || undefined
+            : undefined,
+        feedback:
+          typeof wp.feedback === "string"
+            ? wp.feedback.trim() || undefined
+            : undefined,
+      },
+    ];
+  });
+
+  return packages.length > 0 ? packages : undefined;
+}
+
+function extractMessageLog(
+  event: ExecutorEvent,
+): MissionMessageLogEntry[] | undefined {
+  const raw = (event.payload as Record<string, unknown> | undefined)
+    ?.messageLog;
+  if (!Array.isArray(raw)) return undefined;
+
+  const entries = raw.flatMap((item: unknown) => {
+    if (!item || typeof item !== "object") return [];
+    const entry = item as Record<string, unknown>;
+    const sender = typeof entry.sender === "string" ? entry.sender.trim() : "";
+    const content =
+      typeof entry.content === "string" ? entry.content.trim() : "";
+    const time = typeof entry.time === "number" ? entry.time : 0;
+    if (!sender || !content) return [];
+    return [
+      {
+        sender,
+        content,
+        time,
+        stageKey:
+          typeof entry.stageKey === "string"
+            ? entry.stageKey.trim() || undefined
+            : undefined,
+      },
+    ];
+  });
+
+  return entries.length > 0 ? entries : undefined;
+}
+
 class InMemoryMissionRepository implements MissionRepository {
   private readonly records = new Map<string, MissionRecord>();
 
@@ -646,6 +769,21 @@ export class MissionOrchestrator {
       next = replaceMission(next, {
         status: "running",
       });
+    }
+
+    // Enrich MissionRecord when stage completes or mission completes
+    if (event.status === "completed" || this.mapExecutorStatus(event.status) === "done") {
+      const organization = extractOrganization(event);
+      const workPackages = extractWorkPackages(event);
+      const messageLog = extractMessageLog(event);
+
+      if (organization || workPackages || messageLog) {
+        next = replaceMission(next, {
+          ...(organization ? { organization } : {}),
+          ...(workPackages ? { workPackages } : {}),
+          ...(messageLog ? { messageLog } : {}),
+        });
+      }
     }
 
     return this.persist(next);

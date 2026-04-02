@@ -129,3 +129,409 @@ describe('MissionOrchestrator', () => {
     expect(resumed.mission.decision).toBeUndefined();
   });
 });
+
+describe('MissionOrchestrator enrichment', () => {
+  function createExecutorClientStub() {
+    return {
+      dispatchPlan: vi.fn(async () => ({
+        request: { executor: 'lobster', requestId: 'req_1' },
+        response: { jobId: 'job_1', receivedAt: '2026-03-30T10:00:00.000Z' },
+      })),
+    } as any;
+  }
+
+  async function startMission() {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+    });
+    const result = await orchestrator.startMission({
+      title: 'Enrichment test mission',
+      sourceText: 'Test enrichment on stage completion.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+    return { orchestrator, mission: result.mission };
+  }
+
+  it('enriches MissionRecord with organization, workPackages, and messageLog on mission completion', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Mission completed successfully',
+      summary: 'All tasks done',
+      payload: {
+        organization: {
+          departments: [
+            { key: 'eng', label: 'Engineering', managerName: 'Alice' },
+            { key: 'qa', label: 'QA', managerName: 'Bob' },
+          ],
+          agentCount: 5,
+        },
+        workPackages: [
+          {
+            id: 'wp-1',
+            title: 'Build feature',
+            assignee: 'Agent-A',
+            stageKey: 'execute',
+            status: 'passed',
+            score: 95,
+            deliverable: 'Feature implemented',
+          },
+          {
+            id: 'wp-2',
+            title: 'Write tests',
+            assignee: 'Agent-B',
+            stageKey: 'execute',
+            status: 'verified',
+          },
+        ],
+        messageLog: [
+          { sender: 'Agent-A', content: 'Starting work', time: 1000, stageKey: 'execute' },
+          { sender: 'Agent-B', content: 'Tests passing', time: 2000 },
+        ],
+      },
+    });
+
+    expect(completed.status).toBe('done');
+    expect(completed.organization).toEqual({
+      departments: [
+        { key: 'eng', label: 'Engineering', managerName: 'Alice' },
+        { key: 'qa', label: 'QA', managerName: 'Bob' },
+      ],
+      agentCount: 5,
+    });
+    expect(completed.workPackages).toHaveLength(2);
+    expect(completed.workPackages![0]).toMatchObject({
+      id: 'wp-1',
+      title: 'Build feature',
+      status: 'passed',
+      score: 95,
+    });
+    expect(completed.workPackages![1]).toMatchObject({
+      id: 'wp-2',
+      title: 'Write tests',
+      status: 'verified',
+    });
+    expect(completed.messageLog).toHaveLength(2);
+    expect(completed.messageLog![0]).toMatchObject({
+      sender: 'Agent-A',
+      content: 'Starting work',
+      stageKey: 'execute',
+    });
+  });
+
+  it('does not overwrite existing fields when payload has no enrichment data', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {},
+    });
+
+    expect(completed.status).toBe('done');
+    expect(completed.organization).toBeUndefined();
+    expect(completed.workPackages).toBeUndefined();
+    expect(completed.messageLog).toBeUndefined();
+  });
+
+  it('ignores invalid work package entries and keeps valid ones', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {
+        workPackages: [
+          { id: 'wp-1', title: 'Valid', stageKey: 'execute', status: 'passed' },
+          { id: '', title: 'Missing ID', stageKey: 'execute', status: 'passed' },
+          { id: 'wp-3', title: 'Bad status', stageKey: 'execute', status: 'unknown' },
+          null,
+          42,
+        ],
+      },
+    });
+
+    expect(completed.workPackages).toHaveLength(1);
+    expect(completed.workPackages![0].id).toBe('wp-1');
+  });
+
+  it('ignores organization with no valid departments', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {
+        organization: {
+          departments: [{ key: '', label: '' }],
+          agentCount: 0,
+        },
+      },
+    });
+
+    expect(completed.organization).toBeUndefined();
+  });
+
+  it('does not enrich on running/progress events', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const running = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_progress',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.progress',
+      status: 'running',
+      occurredAt: '2026-03-30T10:30:00.000Z',
+      progress: 50,
+      message: 'In progress',
+      payload: {
+        organization: {
+          departments: [{ key: 'eng', label: 'Engineering' }],
+          agentCount: 3,
+        },
+      },
+    });
+
+    expect(running.status).toBe('running');
+    expect(running.organization).toBeUndefined();
+  });
+});
+
+
+
+describe('MissionOrchestrator enrichment', () => {
+  function createEnrichmentExecutorStub() {
+    return {
+      dispatchPlan: vi.fn(async () => ({
+        request: { executor: 'lobster', requestId: 'req_1' },
+        response: { jobId: 'job_1', receivedAt: '2026-03-30T10:00:00.000Z' },
+      })),
+    } as any;
+  }
+
+  async function startMission() {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createEnrichmentExecutorStub(),
+    });
+    const result = await orchestrator.startMission({
+      title: 'Enrichment test mission',
+      sourceText: 'Test enrichment on stage completion.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+    return { orchestrator, mission: result.mission };
+  }
+
+  it('enriches MissionRecord with organization, workPackages, and messageLog on mission completion', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Mission completed successfully',
+      summary: 'All tasks done',
+      payload: {
+        organization: {
+          departments: [
+            { key: 'eng', label: 'Engineering', managerName: 'Alice' },
+            { key: 'qa', label: 'QA', managerName: 'Bob' },
+          ],
+          agentCount: 5,
+        },
+        workPackages: [
+          {
+            id: 'wp-1',
+            title: 'Build feature',
+            assignee: 'Agent-A',
+            stageKey: 'execute',
+            status: 'passed',
+            score: 95,
+            deliverable: 'Feature implemented',
+          },
+          {
+            id: 'wp-2',
+            title: 'Write tests',
+            assignee: 'Agent-B',
+            stageKey: 'execute',
+            status: 'verified',
+          },
+        ],
+        messageLog: [
+          { sender: 'Agent-A', content: 'Starting work', time: 1000, stageKey: 'execute' },
+          { sender: 'Agent-B', content: 'Tests passing', time: 2000 },
+        ],
+      },
+    });
+
+    expect(completed.status).toBe('done');
+    expect(completed.organization).toEqual({
+      departments: [
+        { key: 'eng', label: 'Engineering', managerName: 'Alice' },
+        { key: 'qa', label: 'QA', managerName: 'Bob' },
+      ],
+      agentCount: 5,
+    });
+    expect(completed.workPackages).toHaveLength(2);
+    expect(completed.workPackages![0]).toMatchObject({
+      id: 'wp-1',
+      title: 'Build feature',
+      status: 'passed',
+      score: 95,
+    });
+    expect(completed.workPackages![1]).toMatchObject({
+      id: 'wp-2',
+      title: 'Write tests',
+      status: 'verified',
+    });
+    expect(completed.messageLog).toHaveLength(2);
+    expect(completed.messageLog![0]).toMatchObject({
+      sender: 'Agent-A',
+      content: 'Starting work',
+      stageKey: 'execute',
+    });
+  });
+
+  it('does not overwrite existing fields when payload has no enrichment data', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {},
+    });
+
+    expect(completed.status).toBe('done');
+    expect(completed.organization).toBeUndefined();
+    expect(completed.workPackages).toBeUndefined();
+    expect(completed.messageLog).toBeUndefined();
+  });
+
+  it('ignores invalid work package entries and keeps valid ones', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {
+        workPackages: [
+          { id: 'wp-1', title: 'Valid', stageKey: 'execute', status: 'passed' },
+          { id: '', title: 'Missing ID', stageKey: 'execute', status: 'passed' },
+          { id: 'wp-3', title: 'Bad status', stageKey: 'execute', status: 'unknown' },
+          null,
+          42,
+        ],
+      },
+    });
+
+    expect(completed.workPackages).toHaveLength(1);
+    expect(completed.workPackages![0].id).toBe('wp-1');
+  });
+
+  it('ignores organization with no valid departments', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_complete',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T11:00:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {
+        organization: {
+          departments: [{ key: '', label: '' }],
+          agentCount: 0,
+        },
+      },
+    });
+
+    expect(completed.organization).toBeUndefined();
+  });
+
+  it('does not enrich on running/progress events', async () => {
+    const { orchestrator, mission } = await startMission();
+
+    const running = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_progress',
+      missionId: mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.progress',
+      status: 'running',
+      occurredAt: '2026-03-30T10:30:00.000Z',
+      progress: 50,
+      message: 'In progress',
+      payload: {
+        organization: {
+          departments: [{ key: 'eng', label: 'Engineering' }],
+          agentCount: 3,
+        },
+      },
+    });
+
+    expect(running.status).toBe('running');
+    expect(running.organization).toBeUndefined();
+  });
+});

@@ -381,6 +381,7 @@ async function startServer() {
   const { sessionStore } = await import("./memory/session-store.js");
   const { missionRuntime } = await import("./tasks/mission-runtime.js");
   const { createTaskRouter } = await import("./routes/tasks.js");
+  const { createPlanetRouter } = await import("./routes/planets.js");
   const { createFeishuRouter } = await import("./routes/feishu.js");
   const { buildExecutionPlan } = await import("./core/execution-plan-builder.js");
   const { ExecutorClient } = await import("./core/executor-client.js");
@@ -432,6 +433,7 @@ async function startServer() {
   app.use("/api/telemetry", telemetryRoutes);
   app.use("/api/cost", costRoutes);
   app.use("/api/tasks", createTaskRouter(missionRuntime));
+  app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
 
   app.post("/api/executor/events", async (request, response) => {

@@ -14,7 +14,11 @@
     {
       "missionId": "m-1",
       "title": "Done",
+<<<<<<< HEAD
       "completedAt": 1775090959797,
+=======
+      "completedAt": 1775063534548,
+>>>>>>> feat/L11-mission-native-projection
       "totalTokensIn": 80,
       "totalTokensOut": 80,
       "totalCost": 0.02,

@@ -96,6 +96,33 @@ export interface MissionArtifact {
   description?: string;
 }
 
+export interface MissionOrganizationSnapshot {
+  departments: Array<{
+    key: string;
+    label: string;
+    managerName?: string;
+  }>;
+  agentCount: number;
+}
+
+export interface MissionWorkPackage {
+  id: string;
+  title: string;
+  assignee?: string;
+  stageKey: string;
+  status: 'pending' | 'running' | 'passed' | 'failed' | 'verified';
+  score?: number;
+  deliverable?: string;
+  feedback?: string;
+}
+
+export interface MissionMessageLogEntry {
+  sender: string;
+  content: string;
+  time: number;
+  stageKey?: string;
+}
+
 export interface MissionExecutorContext {
   name: string;
   requestId?: string;
@@ -168,6 +195,9 @@ export interface MissionRecord {
   executor?: MissionExecutorContext;
   instance?: MissionInstanceContext;
   artifacts?: MissionArtifact[];
+  organization?: MissionOrganizationSnapshot;
+  workPackages?: MissionWorkPackage[];
+  messageLog?: MissionMessageLogEntry[];
   waitingFor?: string;
   decision?: MissionDecision;
   createdAt: number;
