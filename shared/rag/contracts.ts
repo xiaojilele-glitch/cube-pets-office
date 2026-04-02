@@ -169,3 +169,140 @@ export interface IVectorStore {
  * - 生产模式：替换为 Milvus/pgvector 适配器，实现 IVectorStore 接口
  * - 两者通过 IVectorStore 接口统一，上层 RAG Pipeline 无感切换
  */
+
+// ===========================================================================
+// RAG 管道数据模型契约（vector-db-rag-pipeline）
+// ===========================================================================
+
+export const RAG_CONTRACT_VERSION = '2025-01-01' as const;
+
+export const SOURCE_TYPES = [
+  'task_result',
+  'code_snippet',
+  'conversation',
+  'mission_log',
+  'document',
+  'architecture_decision',
+  'bug_report',
+] as const;
+
+export type SourceType = (typeof SOURCE_TYPES)[number];
+
+// ---------------------------------------------------------------------------
+// 摄入层类型
+// ---------------------------------------------------------------------------
+
+export interface IngestionPayload {
+  sourceType: SourceType;
+  sourceId: string;
+  projectId: string;
+  content: string;
+  metadata: Record<string, any>;
+  timestamp: string;       // ISO 8601
+  agentId?: string;
+}
+
+// ---------------------------------------------------------------------------
+// 分块层类型
+// ---------------------------------------------------------------------------
+
+export interface ChunkMetadata {
+  // 通用字段
+  ingestedAt: string;
+  lastAccessedAt: string;
+  contentHash: string;
+  // 代码专用字段
+  codeLanguage?: string;
+  functionSignature?: string;
+  imports?: string[];
+  // 对话专用字段
+  turnIndex?: number;
+  speaker?: string;
+}
+
+export interface ChunkRecord {
+  chunkId: string;          // `${sourceType}:${sourceId}:${chunkIndex}`
+  sourceType: SourceType;
+  sourceId: string;
+  projectId: string;
+  chunkIndex: number;
+  content: string;
+  tokenCount: number;
+  metadata: ChunkMetadata;
+}
+
+// ---------------------------------------------------------------------------
+// 检索层类型
+// ---------------------------------------------------------------------------
+
+export interface RetrievalResult {
+  chunkId: string;
+  score: number;
+  content: string;
+  sourceType: SourceType;
+  sourceId: string;
+  metadata: ChunkMetadata;
+  highlight?: string;
+  totalCandidates: number;
+}
+
+// ---------------------------------------------------------------------------
+// 增强层类型
+// ---------------------------------------------------------------------------
+
+export interface RAGAugmentationLog {
+  logId: string;
+  taskId: string;
+  agentId: string;
+  projectId: string;
+  mode: 'auto' | 'on_demand' | 'disabled';
+  retrievedChunkIds: string[];
+  injectedChunkIds: string[];
+  prunedChunkIds: string[];
+  tokenUsage: number;
+  latencyMs: number;
+  timestamp: string;
+}
+
+// ---------------------------------------------------------------------------
+// 摄入失败暂存类型
+// ---------------------------------------------------------------------------
+
+export interface DeadLetterEntry {
+  entryId: string;
+  payload: IngestionPayload;
+  error: string;
+  failedAt: string;
+  retryCount: number;
+  stage: 'clean' | 'chunk' | 'embed' | 'store' | 'metadata';
+}
+
+// ---------------------------------------------------------------------------
+// 反馈层类型
+// ---------------------------------------------------------------------------
+
+export interface FeedbackRecord {
+  feedbackId: string;
+  taskId: string;
+  agentId: string;
+  projectId: string;
+  helpfulChunkIds: string[];
+  irrelevantChunkIds: string[];
+  missingContext?: string;
+  utilizationRate: number;
+  timestamp: string;
+}
+
+// ---------------------------------------------------------------------------
+// 生命周期管理类型
+// ---------------------------------------------------------------------------
+
+export interface LifecycleLog {
+  logId: string;
+  operation: 'archive' | 'delete' | 'orphan_cleanup' | 'promote' | 'purge';
+  affectedCount: number;
+  collection: string;
+  executedAt: string;
+  durationMs: number;
+  details?: Record<string, any>;
+}

@@ -6,42 +6,42 @@
 
 ## 任务
 
-- [ ] 1. 共享类型与配置基础
-  - [ ] 1.1 创建 shared/rag/contracts.ts，定义所有共享类型（SourceType、IngestionPayload、ChunkRecord、ChunkMetadata、RetrievalResult、RAGAugmentationLog、DeadLetterEntry、FeedbackRecord、LifecycleLog）
+- [x] 1. 共享类型与配置基础
+  - [x] 1.1 创建 shared/rag/contracts.ts，定义所有共享类型（SourceType、IngestionPayload、ChunkRecord、ChunkMetadata、RetrievalResult、RAGAugmentationLog、DeadLetterEntry、FeedbackRecord、LifecycleLog）
     - 定义 SOURCE_TYPES 常量数组和 SourceType 类型
     - 定义所有接口和类型导出
     - _Requirements: 1.1, 1.2, 2.2, 4.3_
-  - [ ] 1.2 创建 shared/rag/api.ts，定义 RAG REST API 路由常量和请求/响应类型
+  - [x] 1.2 创建 shared/rag/api.ts，定义 RAG REST API 路由常量和请求/响应类型
     - 定义 RAG_API 路由常量对象
     - 定义 IngestRequest/Response、SearchRequest/Response、FeedbackRequest、HealthResponse、PurgeRequest/Response 类型
     - _Requirements: 1.4, 4.1, 6.5, 8.4_
-  - [ ] 1.3 创建 shared/rag/index.ts 模块导出
-  - [ ] 1.4 创建 server/rag/config.ts，实现 RAG 配置管理
+  - [x] 1.3 创建 shared/rag/index.ts 模块导出
+  - [x] 1.4 创建 server/rag/config.ts，实现 RAG 配置管理
     - 从环境变量和配置文件读取 RAGConfig
     - 支持 rag.enabled 全局开关
     - 支持 rag.chunking 按 sourceType 独立配置
     - _Requirements: 2.5, 8.5_
 
-- [ ] 2. 分块层实现
-  - [ ] 2.1 创建 server/rag/chunking/chunk-router.ts，实现 ChunkRouter 按 sourceType 路由分块策略
+- [x] 2. 分块层实现
+  - [x] 2.1 创建 server/rag/chunking/chunk-router.ts，实现 ChunkRouter 按 sourceType 路由分块策略
     - 实现 Chunker 接口和 ChunkRouter 类
     - 按 sourceType 映射到对应 Chunker 实现
     - _Requirements: 2.1_
-  - [ ] 2.2 创建 server/rag/chunking/sliding-window-chunker.ts，实现滑动窗口分块（task_result/mission_log 使用）
+  - [x] 2.2 创建 server/rag/chunking/sliding-window-chunker.ts，实现滑动窗口分块（task_result/mission_log 使用）
     - 默认 windowSize=512 tokens, overlap=64
     - 确保 chunk tokenCount 在 [64, 1024] 范围内
     - _Requirements: 2.1, 2.4_
-  - [ ] 2.3 创建 server/rag/chunking/code-chunker.ts，实现代码语法感知分块
+  - [x] 2.3 创建 server/rag/chunking/code-chunker.ts，实现代码语法感知分块
     - 按函数/类/import 块边界分割
     - 提取 codeLanguage、functionSignature、imports 元数据
     - _Requirements: 2.1, 2.3_
-  - [ ] 2.4 创建 server/rag/chunking/conversation-chunker.ts，实现对话轮次分块
+  - [x] 2.4 创建 server/rag/chunking/conversation-chunker.ts，实现对话轮次分块
     - 按对话轮次（speaker 切换）分割
     - _Requirements: 2.1_
-  - [ ] 2.5 创建 server/rag/chunking/document-chunker.ts，实现语义段落分块
+  - [x] 2.5 创建 server/rag/chunking/document-chunker.ts，实现语义段落分块
     - 按双换行符分段，再按 token 数合并/分割
     - _Requirements: 2.1_
-  - [ ] 2.6 创建 server/rag/chunking/passthrough-chunker.ts，实现直通分块（architecture_decision 使用）
+  - [x] 2.6 创建 server/rag/chunking/passthrough-chunker.ts，实现直通分块（architecture_decision 使用）
     - 整体作为单个 chunk，不分割
     - _Requirements: 2.1_
   - [ ]* 2.7 编写分块层属性测试
@@ -58,13 +58,13 @@
     - 测试 CodeChunker 的元数据提取
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 3. 嵌入层实现
-  - [ ] 3.1 创建 server/rag/embedding/embedding-provider.ts，定义 EmbeddingProvider 接口和 OpenAI 兼容实现
+- [x] 3. 嵌入层实现
+  - [x] 3.1 创建 server/rag/embedding/embedding-provider.ts，定义 EmbeddingProvider 接口和 OpenAI 兼容实现
     - 实现 EmbeddingProvider 接口（embed、dimension、modelName）
     - 实现 OpenAIEmbeddingProvider，复用现有 llm-client.ts 的 API 调用模式
     - 支持运行时热切换
     - _Requirements: 3.1_
-  - [ ] 3.2 创建 server/rag/embedding/embedding-generator.ts，实现批量嵌入生成
+  - [x] 3.2 创建 server/rag/embedding/embedding-generator.ts，实现批量嵌入生成
     - 实现 generateBatch（batchSize=64）和 generateSingle
     - 批量失败时降级为单条重试
     - _Requirements: 3.1, 3.2_
@@ -72,16 +72,16 @@
     - **Property 8: 嵌入批量失败降级为单条重试**
     - **Validates: Requirements 3.2**
 
-- [ ] 4. 向量存储适配层实现
-  - [ ] 4.1 创建 server/rag/store/vector-store-adapter.ts，定义 VectorStoreAdapter 统一接口
+- [x] 4. 向量存储适配层实现
+  - [x] 4.1 创建 server/rag/store/vector-store-adapter.ts，定义 VectorStoreAdapter 统一接口
     - 定义 createCollection、upsert、search、delete、collectionInfo、healthCheck 方法
     - _Requirements: 3.3_
-  - [ ] 4.2 创建 server/rag/store/qdrant-adapter.ts，实现 Qdrant 适配器
+  - [x] 4.2 创建 server/rag/store/qdrant-adapter.ts，实现 Qdrant 适配器
     - 使用 Qdrant HTTP API
     - 按 projectId 分 collection（rag_{projectId}）
     - 创建 sourceType/agentId/timestamp/codeLanguage 过滤索引
     - _Requirements: 3.3, 3.4_
-  - [ ] 4.3 创建 server/rag/store/metadata-store.ts，实现元数据存储
+  - [x] 4.3 创建 server/rag/store/metadata-store.ts，实现元数据存储
     - 实现 rag_chunk_metadata 表的 CRUD 操作
     - 使用本地 JSON 文件存储（与现有 database.json 模式一致）
     - _Requirements: 3.5_
@@ -91,24 +91,24 @@
     - **Property 10: 向量-元数据同步一致性**
     - **Validates: Requirements 3.5**
 
-- [ ] 5. 摄入管道实现
-  - [ ] 5.1 创建 server/rag/ingestion/dedup-checker.ts，实现幂等去重
+- [x] 5. 摄入管道实现
+  - [x] 5.1 创建 server/rag/ingestion/dedup-checker.ts，实现幂等去重
     - 以 sourceType + sourceId + contentHash 为去重键
     - 使用内存 Map + 持久化 JSON 文件
     - _Requirements: 1.6_
-  - [ ] 5.2 创建 server/rag/ingestion/data-cleaner.ts，实现数据清洗
+  - [x] 5.2 创建 server/rag/ingestion/data-cleaner.ts，实现数据清洗
     - 去除空白、规范化编码、截断超长内容
     - _Requirements: 1.5_
-  - [ ] 5.3 创建 server/rag/ingestion/dead-letter-queue.ts，实现失败暂存队列
+  - [x] 5.3 创建 server/rag/ingestion/dead-letter-queue.ts，实现失败暂存队列
     - 写入本地 JSON 文件
     - 支持查询和重试
     - _Requirements: 1.5_
-  - [ ] 5.4 创建 server/rag/ingestion/ingestion-pipeline.ts，实现摄入管道主流程
+  - [x] 5.4 创建 server/rag/ingestion/ingestion-pipeline.ts，实现摄入管道主流程
     - 串联：DedupCheck → DataCleaner → ChunkRouter → EmbeddingGenerator → VectorStoreAdapter → MetadataStore
     - 任何环节失败写入 DLQ
     - 实现 ingest 和 ingestBatch 方法
     - _Requirements: 1.2, 1.4, 1.5, 1.6_
-  - [ ] 5.5 创建 server/rag/ingestion/event-listener.ts，实现平台事件监听
+  - [x] 5.5 创建 server/rag/ingestion/event-listener.ts，实现平台事件监听
     - 监听 task.completed、mission.finished、code.committed、document.uploaded 事件
     - 将事件数据转换为 IngestionPayload 并调用 ingestion-pipeline
     - _Requirements: 1.3_
@@ -125,20 +125,20 @@
     - 测试去重逻辑的边界情况
     - _Requirements: 1.3, 1.5, 1.6_
 
-- [ ] 6. Checkpoint - 确保摄入链路测试通过
+- [x] 6. Checkpoint - 确保摄入链路测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
-- [ ] 7. 检索层实现
-  - [ ] 7.1 创建 server/rag/retrieval/keyword-searcher.ts，实现关键词检索
+- [x] 7. 检索层实现
+  - [x] 7.1 创建 server/rag/retrieval/keyword-searcher.ts，实现关键词检索
     - 基于元数据表的全文匹配
     - _Requirements: 4.4_
-  - [ ] 7.2 创建 server/rag/retrieval/rrf-merger.ts，实现 RRF 混合合并算法
+  - [x] 7.2 创建 server/rag/retrieval/rrf-merger.ts，实现 RRF 混合合并算法
     - 实现 rrfMerge(semanticResults, keywordResults, k=60)
     - _Requirements: 4.4_
-  - [ ] 7.3 创建 server/rag/retrieval/context-expander.ts，实现上下文扩展
+  - [x] 7.3 创建 server/rag/retrieval/context-expander.ts，实现上下文扩展
     - 根据 chunkIndex 查询前后相邻 chunk
     - _Requirements: 4.5_
-  - [ ] 7.4 创建 server/rag/retrieval/rag-retriever.ts，实现 RAGRetriever 语义检索服务
+  - [x] 7.4 创建 server/rag/retrieval/rag-retriever.ts，实现 RAGRetriever 语义检索服务
     - 实现 search(query, options) 接口
     - 支持 semantic/keyword/hybrid 三种模式
     - 串联：query 向量化 → ANN 搜索 → 关键词搜索 → RRF 合并 → 元数据获取 → 上下文扩展 → 组装 RetrievalResult
@@ -156,17 +156,17 @@
     - _Requirements: 4.4, 4.5_
 
 - [ ] 8. 增强生成管道实现
-  - [ ] 8.1 创建 server/rag/augmentation/reranker.ts，实现 Reranker 接口和三种实现
+  - [x] 8.1 创建 server/rag/augmentation/reranker.ts，实现 Reranker 接口和三种实现
     - NoopReranker（默认）、LLMReranker、CrossEncoderReranker
     - _Requirements: 5.2_
-  - [ ] 8.2 创建 server/rag/augmentation/token-budget-manager.ts，实现 Token 预算控制
+  - [x] 8.2 创建 server/rag/augmentation/token-budget-manager.ts，实现 Token 预算控制
     - 按 score 降序选择 chunk，直到 token 总量达到预算
     - 标记 injected/pruned/below_threshold 状态
     - _Requirements: 5.3, 9.2_
-  - [ ] 8.3 创建 server/rag/augmentation/augmentation-logger.ts，实现增强执行日志
+  - [x] 8.3 创建 server/rag/augmentation/augmentation-logger.ts，实现增强执行日志
     - 写入 rag_augmentation_log
     - _Requirements: 5.6_
-  - [ ] 8.4 创建 server/rag/augmentation/rag-pipeline.ts，实现 RAGPipeline 增强生成管道
+  - [x] 8.4 创建 server/rag/augmentation/rag-pipeline.ts，实现 RAGPipeline 增强生成管道
     - 实现 augment(task, agent) 接口
     - 串联：RAGRetriever.search → Reranker.rerank → TokenBudgetManager.allocate → 组装 ragContext → AugmentationLogger.log
     - 支持 auto/on_demand/disabled 三种模式
@@ -183,19 +183,19 @@
     - **Property 27: Chunk 状态标签互斥完整性**
     - **Validates: Requirements 9.2**
 
-- [ ] 9. Checkpoint - 确保检索与增强链路测试通过
+- [x] 9. Checkpoint - 确保检索与增强链路测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
 - [ ] 10. 反馈与自优化循环实现
-  - [ ] 10.1 创建 server/rag/feedback/feedback-collector.ts，实现反馈收集
+  - [x] 10.1 创建 server/rag/feedback/feedback-collector.ts，实现反馈收集
     - 实现 recordImplicit（计算 utilizationRate）和 recordExplicit
     - 持久化到 rag_feedback 表
     - _Requirements: 6.1, 6.2_
-  - [ ] 10.2 创建 server/rag/feedback/hard-negative-set.ts，实现硬负例集
+  - [x] 10.2 创建 server/rag/feedback/hard-negative-set.ts，实现硬负例集
     - 维护 irrelevant chunk 集合
     - 在检索时降低硬负例的排名权重
     - _Requirements: 6.4_
-  - [ ] 10.3 创建 server/rag/feedback/weight-tuner.ts，实现权重调优和告警
+  - [x] 10.3 创建 server/rag/feedback/weight-tuner.ts，实现权重调优和告警
     - 监控 utilizationRate 趋势
     - 连续低于阈值时发出 RETRIEVAL_GAP_DETECTED 告警
     - _Requirements: 6.3_
@@ -208,11 +208,11 @@
     - **Validates: Requirements 6.3**
 
 - [ ] 11. 生命周期管理实现
-  - [ ] 11.1 创建 server/rag/lifecycle/hot-cold-manager.ts，实现冷热分层
+  - [x] 11.1 创建 server/rag/lifecycle/hot-cold-manager.ts，实现冷热分层
     - 管理 hot/cold collection
     - 检索命中 cold 时自动提升到 hot
     - _Requirements: 7.3_
-  - [ ] 11.2 创建 server/rag/lifecycle/lifecycle-manager.ts，实现生命周期管理器
+  - [x] 11.2 创建 server/rag/lifecycle/lifecycle-manager.ts，实现生命周期管理器
     - 定时任务：归档（hot→cold）、删除（cold 过期）、孤儿清理
     - 维护 ingestedAt/lastAccessedAt 时间戳
     - 批量清理（purge）接口
@@ -227,14 +227,14 @@
     - **Validates: Requirements 7.4**
 
 - [ ] 12. 可观测性与成本治理实现
-  - [ ] 12.1 创建 server/rag/observability/metrics.ts，实现 Prometheus 兼容指标
+  - [x] 12.1 创建 server/rag/observability/metrics.ts，实现 Prometheus 兼容指标
     - 暴露 ingestion/retrieval/augmentation/vector_count/embedding_cost 指标
     - _Requirements: 8.1_
-  - [ ] 12.2 创建 server/rag/observability/quota-manager.ts，实现项目级配额管理
+  - [x] 12.2 创建 server/rag/observability/quota-manager.ts，实现项目级配额管理
     - 按 projectId 检查最大向量数量和每日嵌入 token 消耗
     - 超限时拒绝摄入
     - _Requirements: 8.2_
-  - [ ] 12.3 创建 server/rag/observability/health-checker.ts，实现健康检查
+  - [x] 12.3 创建 server/rag/observability/health-checker.ts，实现健康检查
     - 检查向量数据库连接、Embedding 模型可用性、collection 状态、DLQ 积压
     - _Requirements: 8.4_
   - [ ]* 12.4 编写可观测性属性测试
@@ -245,11 +245,11 @@
     - **Property 26: 全局开关行为**
     - **Validates: Requirements 8.5**
 
-- [ ] 13. Checkpoint - 确保反馈/生命周期/可观测性测试通过
+- [x] 13. Checkpoint - 确保反馈/生命周期/可观测性测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
 - [ ] 14. REST API 路由与集成
-  - [ ] 14.1 创建 server/routes/rag.ts，实现所有 RAG REST API 路由
+  - [x] 14.1 创建 server/routes/rag.ts，实现所有 RAG REST API 路由
     - POST /api/rag/ingest - 手动摄入
     - POST /api/rag/ingest/batch - 批量摄入
     - POST /api/rag/search - 语义检索
@@ -264,14 +264,14 @@
     - POST /api/admin/rag/dlq/:entryId/retry - DLQ 重试
     - GET /api/admin/rag/metrics - 指标查询
     - _Requirements: 1.4, 3.6, 4.1, 6.5, 7.4, 8.4, 8.5, 9.6_
-  - [ ] 14.2 在 server/index.ts 中注册 RAG 路由
+  - [x] 14.2 在 server/index.ts 中注册 RAG 路由
     - 导入并挂载 rag 路由
     - 根据 rag.enabled 配置决定是否启用
     - _Requirements: 8.5_
-  - [ ] 14.3 创建 server/rag/index.ts 模块入口，导出所有公共接口
+  - [x] 14.3 创建 server/rag/index.ts 模块入口，导出所有公共接口
     - 初始化 RAG 管道各组件
     - 提供 initRAG() 启动函数
-  - [ ] 14.4 在 server/core/agent.ts 中集成 RAG 增强钩子
+  - [x] 14.4 在 server/core/agent.ts 中集成 RAG 增强钩子
     - 在 invoke() 方法中增加 RAG 上下文注入
     - 根据注入模式（auto/on_demand/disabled）控制行为
     - _Requirements: 5.1, 5.5_
@@ -281,32 +281,32 @@
     - _Requirements: 1.4, 4.1, 8.4_
 
 - [ ] 15. 前端 RAG 展示组件
-  - [ ] 15.1 创建 client/src/lib/rag-store.ts，实现 RAG 前端状态管理（Zustand）
+  - [x] 15.1 创建 client/src/lib/rag-store.ts，实现 RAG 前端状态管理（Zustand）
     - 管理 RAG 数据获取、缓存、反馈提交状态
     - 调用 GET /api/workflows/:id/tasks/:taskId/rag 获取数据
     - _Requirements: 9.6_
-  - [ ] 15.2 创建 client/src/components/rag/RAGInfoPanel.tsx，实现 RAG 增强信息区块
+  - [x] 15.2 创建 client/src/components/rag/RAGInfoPanel.tsx，实现 RAG 增强信息区块
     - 展示检索到的 chunk 列表、来源、相关度评分、token 数量
     - 为每个 chunk 显示状态标签（injected/pruned/below_threshold）
     - _Requirements: 9.1, 9.2_
-  - [ ] 15.3 创建 client/src/components/rag/RAGDebugPanel.tsx，实现检索调试面板
+  - [x] 15.3 创建 client/src/components/rag/RAGDebugPanel.tsx，实现检索调试面板
     - 展示完整检索流程耗时分解
     - 展示候选数量、最终注入数量
     - _Requirements: 9.3_
-  - [ ] 15.4 创建 client/src/components/rag/RAGFeedback.tsx，实现反馈提交组件
+  - [x] 15.4 创建 client/src/components/rag/RAGFeedback.tsx，实现反馈提交组件
     - helpful/irrelevant 标记按钮
     - 缺失上下文描述输入框
     - 调用 POST /api/rag/feedback 提交
     - _Requirements: 9.5_
-  - [ ] 15.5 在任务详情页（TaskDetailView.tsx）中集成 RAG 组件
+  - [x] 15.5 在任务详情页（TaskDetailView.tsx）中集成 RAG 组件
     - 在 Overview tab 中嵌入 RAGInfoPanel
     - 添加 RAG Debug 展开面板
     - _Requirements: 9.1_
-  - [ ] 15.6 在 3D 场景 TelemetryOverlay 中集成 RAG 遥测数据
+  - [x] 15.6 在 3D 场景 TelemetryOverlay 中集成 RAG 遥测数据
     - 展示检索延迟、命中率、token 消耗
     - _Requirements: 9.4_
 
-- [ ] 16. 最终 Checkpoint - 确保全部测试通过
+- [x] 16. 最终 Checkpoint - 确保全部测试通过
   - 确保所有测试通过，如有问题请向用户确认。
   - 验证摄入→分块→嵌入→索引→检索→增强完整链路
   - 验证前端组件渲染正确

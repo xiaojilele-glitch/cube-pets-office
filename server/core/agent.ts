@@ -18,6 +18,7 @@ import { callLLM, callLLMJson } from "./llm-client.js";
 import { messageBus } from "./message-bus.js";
 import { emitEvent } from "./socket.js";
 import { telemetryStore } from "./telemetry-store.js";
+import { getRAGConfig } from "../rag/config.js";
 
 export interface AgentConfig {
   id: string;
@@ -140,6 +141,49 @@ export class Agent extends RuntimeAgent {
   ): string | null {
     this.ensureWorkspace();
     return readAgentWorkspaceFile(this.config.id, filename, scope);
+  }
+
+  /**
+   * RAG 增强钩子：在 invoke 前注入检索到的上下文。
+   * 根据 rag.augmentation.mode 控制行为（auto/on_demand/disabled）。
+   */
+  async invokeWithRAG(
+    prompt: string,
+    context?: string[],
+    options: AgentInvokeOptions & { projectId?: string; taskId?: string } = {}
+  ): Promise<string> {
+    const ragConfig = getRAGConfig();
+    if (!ragConfig.enabled || ragConfig.augmentation.mode === 'disabled') {
+      return this.invoke(prompt, context, options);
+    }
+
+    try {
+      const { initRAG } = await import("../rag/index.js");
+      const deps = initRAG();
+      const result = await deps.ragPipeline.augment(
+        {
+          taskId: options.taskId ?? '',
+          projectId: options.projectId ?? '',
+          directive: prompt,
+        },
+        {
+          agentId: this.config.id,
+          role: this.config.role,
+        }
+      );
+
+      if (result.injectedChunks.length > 0) {
+        const ragContext = result.injectedChunks.map(c =>
+          `[${c.sourceType}:${c.sourceId}] ${c.content}`
+        ).join('\n---\n');
+        const augmentedContext = [...(context ?? []), `\n<RAG Context>\n${ragContext}\n</RAG Context>`];
+        return this.invoke(prompt, augmentedContext, options);
+      }
+    } catch {
+      // RAG failure — fall through to normal invoke
+    }
+
+    return this.invoke(prompt, context, options);
   }
 }
 

@@ -424,6 +424,16 @@ async function startServer() {
 
   costTracker.loadHistory();
 
+  // RAG pipeline (conditional on rag.enabled)
+  const { getRAGConfig } = await import("./rag/config.js");
+  const ragConfig = getRAGConfig();
+  if (ragConfig.enabled) {
+    const { initRAG } = await import("./rag/index.js");
+    const ragDeps = initRAG();
+    const { createRAGRouter } = await import("./routes/rag.js");
+    app.use("/api/rag", createRAGRouter(ragDeps));
+  }
+
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
   app.use("/api/reports", reportRoutes);

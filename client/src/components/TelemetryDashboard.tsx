@@ -301,6 +301,42 @@ function AlertsSection({ snapshot }: { snapshot: TelemetrySnapshot }) {
 }
 
 // ---------------------------------------------------------------------------
+// RAG Telemetry Card
+// ---------------------------------------------------------------------------
+
+function RAGTelemetryCard() {
+  return (
+    <Card className="rounded-2xl border-[#e5d5c5] bg-white/90">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-xs font-semibold text-[#3A2A1A]">
+          <Zap className="h-3.5 w-3.5 text-purple-500" />
+          RAG Pipeline
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 text-xs text-[#6B5A4A]">
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-lg bg-[#faf5ef] p-2 text-center">
+            <div className="text-[10px] text-[#6B5A4A]/70">Retrieval</div>
+            <div className="font-mono text-sm font-semibold">—</div>
+          </div>
+          <div className="rounded-lg bg-[#faf5ef] p-2 text-center">
+            <div className="text-[10px] text-[#6B5A4A]/70">Hit Rate</div>
+            <div className="font-mono text-sm font-semibold">—</div>
+          </div>
+          <div className="rounded-lg bg-[#faf5ef] p-2 text-center">
+            <div className="text-[10px] text-[#6B5A4A]/70">Tokens</div>
+            <div className="font-mono text-sm font-semibold">—</div>
+          </div>
+        </div>
+        <p className="text-[10px] text-[#6B5A4A]/50">
+          RAG metrics available when pipeline is enabled
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 
@@ -351,6 +387,9 @@ export function TelemetryDashboard() {
                 </>
               )}
               <HistoryTrendChart history={history} />
+
+              {/* RAG Telemetry */}
+              <RAGTelemetryCard />
             </div>
           </ScrollArea>
         </motion.div>
