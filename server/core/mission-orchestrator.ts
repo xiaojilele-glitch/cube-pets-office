@@ -483,7 +483,7 @@ export class MissionOrchestrator {
    * @see Requirements 5.5
    */
   async recordRoleSwitchTrace(missionId: string, trace: RoleSwitchTrace): Promise<void> {
-    const record = await this.repo.get(missionId);
+    const record = await this.repository.get(missionId);
     if (!record) {
       console.warn(`[MissionOrchestrator] Cannot record role switch trace: mission ${missionId} not found`);
       return;

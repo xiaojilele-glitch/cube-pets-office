@@ -41,7 +41,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   const timeline = useReplayStore((s) => s.timeline);
   const [format, setFormat] = useState<ExportFormat>('json');
   const [reportFormat, setReportFormat] = useState<ReportFormat>('html');
-  const [sections, setSections] = useState<Set<ReportSection>>(new Set(['summary', 'events']));
+  const [sections, setSections] = useState<Set<ReportSection>>(new Set<ReportSection>(['summary', 'events']));
   const [tab, setTab] = useState<'data' | 'report'>('data');
 
   const toggleSection = useCallback((id: ReportSection) => {

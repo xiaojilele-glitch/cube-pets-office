@@ -78,7 +78,7 @@ export class PerformanceAnalyzer {
     // ── Stage metrics ──
     const stageMap = groupByStage(events);
     const stageDurations: Array<{ stageKey: string; duration: number }> = [];
-    for (const [key, stageEvents] of stageMap) {
+    for (const [key, stageEvents] of Array.from(stageMap.entries())) {
       stageDurations.push({ stageKey: key, duration: stageDuration(stageEvents) });
     }
 
@@ -130,7 +130,7 @@ export class PerformanceAnalyzer {
   detectBottlenecks(timeline: ExecutionTimeline): Bottleneck[] {
     const stageMap = groupByStage(timeline.events);
     const stages: Array<{ stageKey: string; duration: number }> = [];
-    for (const [key, stageEvents] of stageMap) {
+    for (const [key, stageEvents] of Array.from(stageMap.entries())) {
       stages.push({ stageKey: key, duration: stageDuration(stageEvents) });
     }
 
@@ -188,7 +188,7 @@ export class PerformanceAnalyzer {
           if (e.timestamp > existing.last) existing.last = e.timestamp;
         }
       }
-      for (const [, range] of agentRange) {
+      for (const [, range] of Array.from(agentRange.entries())) {
         points.push({ time: range.first, delta: 1 });
         points.push({ time: range.last, delta: -1 });
       }

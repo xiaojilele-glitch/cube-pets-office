@@ -281,12 +281,10 @@ export class WorkflowEngine {
     }
 
     // Enforce allowSelfReview constraint (default false)
-    const allAgentIds = [
-      ...new Set([
-        ...currentStep.assignments.map(a => a.agentId),
-        ...nextStep.assignments.map(a => a.agentId),
-      ]),
-    ];
+    const allAgentIds = Array.from(new Set([
+      ...currentStep.assignments.map(a => a.agentId),
+      ...nextStep.assignments.map(a => a.agentId),
+    ]));
     const adjustedAssignments = this.enforceAllowSelfReview(
       nextStep.assignments,
       currentStep.assignments,

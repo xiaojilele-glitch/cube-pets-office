@@ -95,23 +95,23 @@ export class ReplayComparison {
     const onlyInB: ReplayEventType[] = [];
     const common: ReplayEventType[] = [];
 
-    for (const t of typesA) {
+    for (const t of Array.from(typesA)) {
       if (typesB.has(t)) {
         common.push(t);
       } else {
         onlyInA.push(t);
       }
     }
-    for (const t of typesB) {
+    for (const t of Array.from(typesB)) {
       if (!typesA.has(t)) {
         onlyInB.push(t);
       }
     }
 
     // Count diff: B count - A count for all types in union
-    const allTypes = new Set([...typesA, ...typesB]);
+    const allTypes = new Set([...Array.from(typesA), ...Array.from(typesB)]);
     const countDiff: Record<string, number> = {};
-    for (const t of allTypes) {
+    for (const t of Array.from(allTypes)) {
       countDiff[t] = (countsB.get(t) ?? 0) - (countsA.get(t) ?? 0);
     }
 

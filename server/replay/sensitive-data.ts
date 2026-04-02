@@ -67,7 +67,7 @@ export function generateEncryptionKey(): Buffer {
  * Masking patterns — order matters: more specific patterns first.
  * Each entry: [regex, replacement string].
  */
-const MASKING_PATTERNS: Array<[RegExp, string]> = [
+const MASKING_PATTERNS: Array<[RegExp, string | ((match: string) => string)]> = [
   // Passwords: password=xxx, pwd=xxx, passwd=xxx (in query strings, JSON, etc.)
   [/(?<=(password|passwd|pwd)["']?\s*[=:]\s*["']?)[^\s"',}&]+/gi, '***'],
 
@@ -114,7 +114,7 @@ export function maskSensitiveData(text: string): string {
     if (typeof replacement === 'string') {
       result = result.replace(pattern, replacement);
     } else {
-      result = result.replace(pattern, replacement as (match: string) => string);
+      result = result.replace(pattern, replacement);
     }
   }
   return result;

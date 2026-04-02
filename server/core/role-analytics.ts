@@ -219,10 +219,9 @@ class RoleAnalyticsService {
    * Uses roleRegistry to resolve roleName.
    */
   getRoleUsageSummary(): RoleUsageSummary[] {
-    const roleIds = new Set<string>([
-      ...Object.keys(this.roleLoadCounts),
-      ...Object.keys(this.roleActiveDurations),
-    ]);
+    const roleIds = new Set<string>(
+      [...Object.keys(this.roleLoadCounts), ...Object.keys(this.roleActiveDurations)]
+    );
 
     const avgMatchScore = this.matchScoreHistogram.length > 0
       ? this.matchScoreHistogram.reduce((sum, s) => sum + s, 0) / this.matchScoreHistogram.length
@@ -230,7 +229,7 @@ class RoleAnalyticsService {
 
     const summaries: RoleUsageSummary[] = [];
 
-    for (const roleId of roleIds) {
+    for (const roleId of Array.from(roleIds)) {
       const template = this._registry.get(roleId);
       summaries.push({
         roleId,

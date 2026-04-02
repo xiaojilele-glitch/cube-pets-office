@@ -114,7 +114,7 @@ class RoleRegistry {
   private resolveRecursive(roleId: string, visited: Set<string>): RoleTemplate {
     if (visited.has(roleId)) {
       throw new Error(
-        `[RoleRegistry] Circular inheritance detected: ${[...visited, roleId].join(' -> ')}`
+        `[RoleRegistry] Circular inheritance detected: ${[...Array.from(visited), roleId].join(' -> ')}`
       );
     }
 
@@ -133,8 +133,8 @@ class RoleRegistry {
     return {
       ...template,
       responsibilityPrompt: parent.responsibilityPrompt + '\n\n' + template.responsibilityPrompt,
-      requiredSkillIds: [...new Set([...parent.requiredSkillIds, ...template.requiredSkillIds])],
-      mcpIds: [...new Set([...parent.mcpIds, ...template.mcpIds])],
+      requiredSkillIds: Array.from(new Set([...parent.requiredSkillIds, ...template.requiredSkillIds])),
+      mcpIds: Array.from(new Set([...parent.mcpIds, ...template.mcpIds])),
     };
   }
 
