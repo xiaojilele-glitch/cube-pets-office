@@ -58,6 +58,9 @@ import type { MissionTaskDetail, TaskArtifact } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
 import { useCostStore } from "@/lib/cost-store";
+import { useRAGStore } from "@/lib/rag-store";
+import { RAGInfoPanel } from "@/components/rag/RAGInfoPanel";
+import { RAGDebugPanel } from "@/components/rag/RAGDebugPanel";
 
 import { DecisionHistory } from "./DecisionHistory";
 import { DecisionPanel } from "./DecisionPanel";
@@ -1186,6 +1189,19 @@ export function TaskDetailView({
                 )}
                 {decisionPanel}
                 {runtimeSnapshotPanel}
+                {/* RAG Augmentation Info */}
+                <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+                  <CardHeader className="space-y-1 pb-3">
+                    <CardTitle className="flex items-center gap-2 text-stone-900">
+                      <Sparkles className="size-4 text-stone-600" />
+                      RAG Context
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <RAGInfoPanel logs={useRAGStore.getState().taskData[detail.id]?.logs ?? []} />
+                    <RAGDebugPanel logs={useRAGStore.getState().taskData[detail.id]?.logs ?? []} />
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </DetailTabViewport>

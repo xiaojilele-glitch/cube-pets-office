@@ -68,8 +68,8 @@ inclusion: auto
 - [x] L14 `human-in-the-loop` — 通用审批流 + 决策链 ✅ 已合并 (29 files, +2309)
 
 ### 并行组 F：记忆系统升级（⚠️ C03 + C07 必须先完成）
-- [ ] L15 `knowledge-graph` — 结构化知识图谱层（大）
-- [ ] L16 `vector-db-rag-pipeline` — 向量数据库 + RAG 管道（大）
+- [x] L15 `knowledge-graph` — 结构化知识图谱层 ✅ 已合并 (43 files, +13786)
+- [x] L16 `vector-db-rag-pipeline` — 向量数据库 + RAG 管道 ✅ 已合并 (60 files, +8916)
 
 ### 独立可做
 - [x] L17 `nl-command-center` — 自然语言指挥中心 ✅ 已合并 (65 files, +13234)

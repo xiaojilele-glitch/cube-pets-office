@@ -425,7 +425,7 @@ async function startServer() {
 
   costTracker.loadHistory();
 
-  // ── Collaboration Replay: EventCollector + Interceptors (Requirements: 1.3, 1.4, 2.1) ──
+  // ── Collaboration Replay ──
   const { ServerReplayStore } = await import("./replay/replay-store.js");
   const { EventCollector } = await import("./replay/event-collector.js");
   const {
@@ -440,9 +440,40 @@ async function startServer() {
 
   installMissionInterceptor(missionRuntime, eventCollector);
   installMessageBusInterceptor(messageBus, eventCollector);
-
-  // Executor interceptor middleware — mounted before the executor callback handler
   app.use("/api/executor/events", installExecutorInterceptor(eventCollector));
+
+  // ── Knowledge Graph ──
+  const { GraphStore } = await import("./knowledge/graph-store.js");
+  const { OntologyRegistry } = await import("./knowledge/ontology-registry.js");
+  const { KnowledgeReviewQueue } = await import("./knowledge/review-queue.js");
+  const { KnowledgeGraphQuery } = await import("./knowledge/query-service.js");
+  const { KnowledgeService } = await import("./knowledge/knowledge-service.js");
+  const { createKnowledgeRouter } = await import("./routes/knowledge.js");
+  const { createKnowledgeAdminRouter } = await import("./routes/knowledge-admin.js");
+
+  const graphStore = new GraphStore();
+  const ontologyRegistry = new OntologyRegistry();
+  const reviewQueue = new KnowledgeReviewQueue(graphStore);
+  const queryService = new KnowledgeGraphQuery(graphStore, ontologyRegistry);
+  const knowledgeService = new KnowledgeService(queryService, graphStore);
+
+  const { getSocketIO } = await import("./core/socket.js");
+  graphStore.onEntityChanged((entity, action) => {
+    const io = getSocketIO();
+    if (io) {
+      io.emit("knowledge.entityChanged", { entity, action });
+    }
+  });
+
+  // ── RAG Pipeline ──
+  const { getRAGConfig } = await import("./rag/config.js");
+  const ragConfig = getRAGConfig();
+  if (ragConfig.enabled) {
+    const { initRAG } = await import("./rag/index.js");
+    const ragDeps = initRAG();
+    const { createRAGRouter } = await import("./routes/rag.js");
+    app.use("/api/rag", createRAGRouter(ragDeps));
+  }
 
   app.use("/api/agents", agentRoutes);
   app.use("/api/chat", chatRoutes);
@@ -469,6 +500,8 @@ async function startServer() {
   app.use("/api/decision-templates", createDecisionTemplatesRouter());
   app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
+  app.use("/api/knowledge", createKnowledgeRouter({ graphStore, reviewQueue, knowledgeService }));
+  app.use("/api/admin/knowledge", createKnowledgeAdminRouter({ graphStore, ontologyRegistry, reviewQueue }));
 
   const nlCommandRoutes = (await import("./routes/nl-command.js")).default;
   app.use("/api/nl-command", nlCommandRoutes);
