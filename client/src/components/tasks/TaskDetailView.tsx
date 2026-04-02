@@ -54,7 +54,6 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { MissionTaskDetail, TaskArtifact } from "@/lib/tasks-store";
-import { useWorkflowStore } from "@/lib/workflow-store";
 import { cn } from "@/lib/utils";
 
 import { useCostStore } from "@/lib/cost-store";
@@ -476,12 +475,6 @@ export function TaskDetailView({
   className?: string;
 }) {
   const { isDesktop } = useViewportTier();
-  const downloadWorkflowReport = useWorkflowStore(
-    state => state.downloadWorkflowReport
-  );
-  const downloadDepartmentReport = useWorkflowStore(
-    state => state.downloadDepartmentReport
-  );
   const [downloadingArtifactId, setDownloadingArtifactId] = useState<
     string | null
   >(null);
@@ -540,7 +533,7 @@ export function TaskDetailView({
     }
 
     if (
-      !artifact.workflowId ||
+      !artifact.href ||
       (artifact.format !== "json" && artifact.format !== "md")
     ) {
       return;
@@ -548,16 +541,26 @@ export function TaskDetailView({
 
     setDownloadingArtifactId(artifact.id);
     try {
-      if (artifact.downloadKind === "department" && artifact.managerId) {
-        await downloadDepartmentReport(
-          artifact.workflowId,
-          artifact.managerId,
-          artifact.format
-        );
+      const response = await fetch(artifact.href);
+      if (!response.ok) {
+        console.warn(`Failed to download artifact: ${response.status}`);
         return;
       }
-
-      await downloadWorkflowReport(artifact.workflowId, artifact.format);
+      const blob = await response.blob();
+      const disposition = response.headers.get("content-disposition");
+      const filenameMatch = disposition?.match(/filename="?([^"]+)"?/i);
+      const filename =
+        filenameMatch?.[1] ||
+        artifact.filename ||
+        `${artifact.title}.${artifact.format}`;
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } finally {
       setDownloadingArtifactId(null);
     }
@@ -742,7 +745,7 @@ export function TaskDetailView({
           })
         ) : (
           <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            The workflow has not emitted work packages yet.
+            The mission has not emitted work packages yet.
           </div>
         )}
       </CardContent>
@@ -757,7 +760,7 @@ export function TaskDetailView({
           Timeline
         </CardTitle>
         <CardDescription>
-          Workflow events, task transitions, and the latest coordination
+          Mission events, task transitions, and the latest coordination
           messages.
         </CardDescription>
       </CardHeader>
@@ -924,7 +927,7 @@ export function TaskDetailView({
           Artifacts
         </CardTitle>
         <CardDescription>
-          Workflow reports, department summaries, and captured input
+          Mission reports, department summaries, and captured input
           attachments.
         </CardDescription>
       </CardHeader>
@@ -980,7 +983,7 @@ export function TaskDetailView({
                   disabled={
                     downloadingArtifactId === artifact.id ||
                     (artifact.downloadKind === "external" && !artifact.href) ||
-                    (!artifact.workflowId &&
+                    (!artifact.href &&
                       artifact.downloadKind !== "attachment" &&
                       artifact.downloadKind !== "external")
                   }
@@ -997,7 +1000,7 @@ export function TaskDetailView({
           ))
         ) : (
           <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            No artifacts are linked to this workflow yet.
+            No artifacts are linked to this mission yet.
           </div>
         )}
       </CardContent>

@@ -1,13 +1,24 @@
 import type {
+  MissionAgentCrewMember,
   MissionDecision,
   MissionDecisionResolved,
   MissionDecisionSubmission,
   MissionEvent,
+  MissionMessageLogEntry,
+  MissionOrganizationSnapshot,
   MissionRecord,
   MissionStage,
+  MissionWorkPackage,
 } from "../../shared/mission/contracts.js";
 import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
 import type { ExecutorEvent, ExecutionPlan } from "../../shared/executor/contracts.js";
+import type {
+  WorkflowRuntime,
+  TaskRecord,
+  MessageRecord,
+  AgentRecord,
+} from "../../shared/workflow-runtime.js";
+import type { WorkflowOrganizationSnapshot } from "../../shared/organization-schema.js";
 import {
   ExecutionPlanBuilder,
   type ExecutionPlanBuildInput,
@@ -67,6 +78,7 @@ export interface MissionOrchestratorOptions {
   repository?: MissionRepository;
   planBuilder?: ExecutionPlanBuilder;
   hooks?: MissionOrchestratorHooks;
+  workflowRuntime?: WorkflowRuntime;
 }
 
 interface MissionRuntimeState {
@@ -311,12 +323,34 @@ export class MissionOrchestrator {
   private readonly planBuilder: ExecutionPlanBuilder;
   private readonly executorClient: ExecutorClient;
   private readonly hooks: MissionOrchestratorHooks;
+  private readonly workflowRuntime?: WorkflowRuntime;
+  /** Maps workflowId → missionId so stage-completion callbacks can find the mission. */
+  private readonly workflowMissionMap = new Map<string, string>();
 
   constructor(options: MissionOrchestratorOptions) {
     this.repository = options.repository || new InMemoryMissionRepository();
     this.planBuilder = options.planBuilder || new ExecutionPlanBuilder();
     this.executorClient = options.executorClient;
     this.hooks = options.hooks || {};
+    this.workflowRuntime = options.workflowRuntime;
+  }
+
+  /**
+   * Register a link between a workflowId and a missionId.
+   * This allows the stage-completion callback to look up the mission.
+   */
+  registerWorkflowMissionLink(workflowId: string, missionId: string): void {
+    this.workflowMissionMap.set(workflowId, missionId);
+  }
+
+  /**
+   * Handle a workflow stage completion event.
+   * Looks up the missionId from the workflowMissionMap and calls enrichMissionFromWorkflow.
+   */
+  async handleStageCompleted(workflowId: string, completedStage: string): Promise<void> {
+    const missionId = this.workflowMissionMap.get(workflowId);
+    if (!missionId) return;
+    await this.enrichMissionFromWorkflow(missionId, workflowId, completedStage);
   }
 
   async startMission(input: StartMissionInput): Promise<StartMissionResult> {
@@ -781,5 +815,154 @@ export class MissionOrchestrator {
       optionLabel: selected?.label,
       freeText: submission.freeText?.trim() || undefined,
     };
+  }
+
+  /* ─── Workflow → Mission enrichment (workflow-decoupling) ─── */
+
+  /**
+   * Enrich a MissionRecord with data extracted from the corresponding workflow
+   * after a stage completes. Called by the stage-completion callback (Task 4.2).
+   */
+  async enrichMissionFromWorkflow(
+    missionId: string,
+    workflowId: string,
+    completedStage: string,
+  ): Promise<void> {
+    if (!this.workflowRuntime) return;
+
+    const workflow = this.workflowRuntime.workflowRepo.getWorkflow(workflowId);
+    if (!workflow) return;
+
+    const updates: Partial<MissionRecord> = {};
+
+    // planning/direction 阶段完成后：填充 organization 和 agentCrew
+    if (completedStage === "planning" || completedStage === "direction") {
+      updates.organization = this.extractOrganization(workflowId);
+      updates.agentCrew = this.extractAgentCrew(workflowId);
+    }
+
+    // execution/review/revision/verify 阶段完成后：填充 workPackages
+    if (["execution", "review", "revision", "verify"].includes(completedStage)) {
+      try {
+        updates.workPackages = this.extractWorkPackages(workflowId);
+      } catch (err) {
+        console.warn(
+          `[MissionOrchestrator] extractWorkPackages failed for workflow ${workflowId}:`,
+          err instanceof Error ? err.message : err,
+        );
+        // workPackages 保持上一次值 — 不写入 updates
+      }
+    }
+
+    // 每个阶段完成后：更新 messageLog（最近 50 条）
+    updates.messageLog = this.extractMessageLog(workflowId, 50);
+
+    const mission = await Promise.resolve(this.repository.get(missionId));
+    if (!mission) return;
+
+    await this.persist(replaceMission(mission, updates));
+  }
+
+  private extractOrganization(
+    workflowId: string,
+  ): MissionOrganizationSnapshot | undefined {
+    const workflow = this.workflowRuntime!.workflowRepo.getWorkflow(workflowId);
+    const orgSnapshot = workflow?.results?.organization as
+      | WorkflowOrganizationSnapshot
+      | undefined;
+
+    if (!orgSnapshot?.departments?.length) return undefined;
+
+    return {
+      departments: orgSnapshot.departments.map((dept) => {
+        const managerNode = orgSnapshot.nodes?.find(
+          (n) => n.id === dept.managerNodeId,
+        );
+        return {
+          key: dept.id,
+          label: dept.label,
+          managerName: managerNode?.name,
+        };
+      }),
+      agentCount: orgSnapshot.nodes?.length ?? 0,
+    };
+  }
+
+  private extractAgentCrew(workflowId: string): MissionAgentCrewMember[] {
+    const workflow = this.workflowRuntime!.workflowRepo.getWorkflow(workflowId);
+    const orgSnapshot = workflow?.results?.organization as
+      | WorkflowOrganizationSnapshot
+      | undefined;
+
+    if (!orgSnapshot?.nodes?.length) return [];
+
+    return orgSnapshot.nodes.map((node): MissionAgentCrewMember => ({
+      id: node.agentId,
+      name: node.name,
+      role: node.role,
+      department: node.departmentLabel,
+      status: "idle",
+    }));
+  }
+
+  private extractWorkPackages(workflowId: string): MissionWorkPackage[] {
+    const tasks: TaskRecord[] =
+      this.workflowRuntime!.workflowRepo.getTasksByWorkflow(workflowId);
+
+    return tasks.map((task): MissionWorkPackage => ({
+      id: String(task.id),
+      workerId: task.worker_id,
+      description: task.description,
+      deliverable: task.deliverable_v3 ?? task.deliverable_v2 ?? task.deliverable ?? undefined,
+      status: mapTaskStatus(task.status),
+      score: task.total_score ?? undefined,
+      feedback: task.manager_feedback ?? task.meta_audit_feedback ?? undefined,
+      stageKey: undefined,
+    }));
+  }
+
+  private extractMessageLog(
+    workflowId: string,
+    limit: number,
+  ): MissionMessageLogEntry[] {
+    const messages: MessageRecord[] =
+      this.workflowRuntime!.workflowRepo.getMessagesByWorkflow(workflowId);
+
+    if (!messages.length) return [];
+
+    // Sort by created_at descending, take the most recent `limit`, then reverse to chronological
+    const sorted = [...messages].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    const recent = sorted.slice(0, limit).reverse();
+
+    return recent.map((msg): MissionMessageLogEntry => ({
+      sender: msg.from_agent,
+      content:
+        msg.content.length > 500
+          ? msg.content.slice(0, 497) + "..."
+          : msg.content,
+      time: new Date(msg.created_at).getTime(),
+      stageKey: msg.stage || undefined,
+    }));
+  }
+}
+
+/** Map workflow TaskRecord.status string to MissionWorkPackage status union. */
+export function mapTaskStatus(
+  status: string,
+): MissionWorkPackage["status"] {
+  switch (status) {
+    case "passed":
+      return "passed";
+    case "failed":
+      return "failed";
+    case "verified":
+      return "verified";
+    case "running":
+    case "in_progress":
+      return "running";
+    default:
+      return "pending";
   }
 }

@@ -386,6 +386,12 @@ async function startServer() {
   const { ExecutorClient } = await import("./core/executor-client.js");
   const { EXECUTOR_API_ROUTES } = await import("../shared/executor/api.js");
 
+  // Wire up workflow → mission enrichment bridge (workflow-decoupling Task 4.2)
+  const { serverRuntime, setOnStageCompleted } = await import("./runtime/server-runtime.js");
+  const { initEnrichmentBridge, onWorkflowStageCompleted } = await import("./core/mission-enrichment-bridge.js");
+  initEnrichmentBridge(missionRuntime, serverRuntime.workflowRepo);
+  setOnStageCompleted(onWorkflowStageCompleted);
+
   for (const workflow of db.getWorkflows()) {
     if (workflow.status === "running") {
       db.updateWorkflow(workflow.id, {

@@ -177,6 +177,7 @@ export interface RuntimeDownloadPayload {
 
 export type RuntimeEvent =
   | { type: "stage_change"; workflowId: string; stage: string }
+  | { type: "stage_complete"; workflowId: string; stage: string }
   | {
       type: "agent_active";
       workflowId?: string;

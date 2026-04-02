@@ -60,3 +60,13 @@ export const serverRuntime: WorkflowRuntime = {
   messageBus,
   evolutionService,
 };
+
+/**
+ * Late-bind the onStageCompleted callback after both the workflow engine
+ * and mission system are initialised (avoids circular dependency).
+ */
+export function setOnStageCompleted(
+  cb: (workflowId: string, completedStage: string) => void | Promise<void>,
+): void {
+  serverRuntime.onStageCompleted = cb;
+}

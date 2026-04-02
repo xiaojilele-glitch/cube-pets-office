@@ -7,7 +7,11 @@
  * mission-native-projection 的 /api/planets 路由设计依赖此结构。
  */
 
-import type { AgentRole } from "../workflow-runtime.js";
+// ---------------------------------------------------------------------------
+// Mission 域自有角色类型（解耦自 workflow-runtime 的 AgentRole）
+// ---------------------------------------------------------------------------
+
+export type MissionAgentRole = "ceo" | "manager" | "worker";
 
 // ---------------------------------------------------------------------------
 // 组织快照（精简版，不含完整 skills/mcp/model 配置）
@@ -37,7 +41,7 @@ export interface MissionOrganizationSnapshot {
 export interface MissionAgentCrewMember {
   agentId: string;
   name: string;
-  role: AgentRole;
+  role: MissionAgentRole;
   department: string;
   departmentLabel: string;
   title: string;

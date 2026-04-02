@@ -118,7 +118,7 @@ export function artifactActionLabel(artifact: TaskArtifact): string {
   if (artifact.downloadKind === "external") {
     return artifact.kind === "url" ? "Open link" : "Open artifact";
   }
-  if (!artifact.workflowId) return "View metadata";
+  if (!artifact.href && artifact.downloadKind !== "workflow" && artifact.downloadKind !== "department") return "View metadata";
   if (artifact.format === "md") return "Download markdown";
   return "Download report";
 }

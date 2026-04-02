@@ -117,6 +117,43 @@ export interface MissionInstanceContext {
   host?: string;
 }
 
+/* ─── Mission Enrichment Types (workflow-decoupling) ─── */
+
+export interface MissionOrganizationSnapshot {
+  departments: Array<{
+    key: string;
+    label: string;
+    managerName?: string;
+  }>;
+  agentCount: number;
+}
+
+export interface MissionWorkPackage {
+  id: string;
+  workerId: string;
+  description: string;
+  deliverable?: string;
+  status: "pending" | "running" | "passed" | "failed" | "verified";
+  score?: number;
+  feedback?: string;
+  stageKey?: string;
+}
+
+export interface MissionMessageLogEntry {
+  sender: string;
+  content: string;
+  time: number;
+  stageKey?: string;
+}
+
+export interface MissionAgentCrewMember {
+  id: string;
+  name: string;
+  role: "ceo" | "manager" | "worker";
+  department?: string;
+  status: "idle" | "working" | "thinking" | "done" | "error";
+}
+
 export interface MissionRecord {
   id: string;
   kind: string;
@@ -137,6 +174,10 @@ export interface MissionRecord {
   updatedAt: number;
   completedAt?: number;
   events: MissionEvent[];
+  organization?: MissionOrganizationSnapshot;
+  workPackages?: MissionWorkPackage[];
+  messageLog?: MissionMessageLogEntry[];
+  agentCrew?: MissionAgentCrewMember[];
 }
 
 export interface MissionPosition {

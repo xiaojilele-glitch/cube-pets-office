@@ -325,10 +325,13 @@ export interface WorkflowRuntime {
   agentDirectory: AgentDirectory;
   messageBus: RuntimeMessageBus;
   evolutionService: EvolutionService;
+  /** Called after a workflow stage completes. Used by MissionOrchestrator to enrich MissionRecord. */
+  onStageCompleted?(workflowId: string, completedStage: string): void | Promise<void>;
 }
 
 export type AgentEvent =
   | { type: "stage_change"; workflowId: string; stage: string }
+  | { type: "stage_complete"; workflowId: string; stage: string }
   | {
       type: "agent_active";
       agentId: string;

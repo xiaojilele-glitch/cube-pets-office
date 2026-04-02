@@ -165,15 +165,34 @@ export class WorkflowEngine {
   private async runPipeline(workflowId: string, directive: string): Promise<void> {
     try {
       const organization = await this.runDirection(workflowId, directive);
+      await this.emitStageCompleted(workflowId, "direction");
+
       await this.runPlanning(workflowId, organization);
+      await this.emitStageCompleted(workflowId, "planning");
+
       await this.runExecution(workflowId, organization);
+      await this.emitStageCompleted(workflowId, "execution");
+
       await this.runReview(workflowId, organization);
+      await this.emitStageCompleted(workflowId, "review");
+
       await this.runMetaAudit(workflowId, organization);
+      await this.emitStageCompleted(workflowId, "meta_audit");
+
       await this.runRevision(workflowId);
+      await this.emitStageCompleted(workflowId, "revision");
+
       await this.runVerify(workflowId);
+      await this.emitStageCompleted(workflowId, "verify");
+
       await this.runSummary(workflowId, organization);
+      await this.emitStageCompleted(workflowId, "summary");
+
       await this.runFeedback(workflowId, organization);
+      await this.emitStageCompleted(workflowId, "feedback");
+
       await this.runEvolution(workflowId);
+      await this.emitStageCompleted(workflowId, "evolution");
 
       let finalStatus = this.getCompletionStatus(workflowId);
       this.repo.updateWorkflow(workflowId, {
@@ -230,6 +249,22 @@ export class WorkflowEngine {
   private emitStage(workflowId: string, stage: Stage): void {
     this.repo.updateWorkflow(workflowId, { current_stage: stage });
     this.emit({ type: "stage_change", workflowId, stage });
+  }
+
+  /**
+   * Emit a stage_complete event and invoke the optional onStageCompleted callback.
+   * Called from runPipeline after each stage finishes successfully.
+   */
+  private async emitStageCompleted(workflowId: string, completedStage: string): Promise<void> {
+    this.emit({ type: "stage_complete", workflowId, stage: completedStage });
+    try {
+      await this.runtime.onStageCompleted?.(workflowId, completedStage);
+    } catch (err) {
+      console.warn(
+        `[WorkflowEngine] onStageCompleted callback failed for ${workflowId}/${completedStage}:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
 
   private recordWorkflowIssue(

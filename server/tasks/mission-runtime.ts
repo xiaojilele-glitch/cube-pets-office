@@ -92,6 +92,24 @@ export class MissionRuntime {
     return task;
   }
 
+  /**
+   * Apply enrichment fields (organization, workPackages, messageLog, agentCrew)
+   * to a mission and emit the Socket broadcast so the frontend receives the update.
+   */
+  patchEnrichment(
+    id: string,
+    enrichment: Partial<Pick<MissionRecord, 'organization' | 'workPackages' | 'messageLog' | 'agentCrew'>>,
+  ): MissionRecord | undefined {
+    const task = this.store.update(id, (record) => {
+      if (enrichment.organization !== undefined) record.organization = enrichment.organization;
+      if (enrichment.workPackages !== undefined) record.workPackages = enrichment.workPackages;
+      if (enrichment.messageLog !== undefined) record.messageLog = enrichment.messageLog;
+      if (enrichment.agentCrew !== undefined) record.agentCrew = enrichment.agentCrew;
+    });
+    this.emitMissionUpdate(task);
+    return task;
+  }
+
   markMissionRunning(
     id: string,
     stageKey?: string,
