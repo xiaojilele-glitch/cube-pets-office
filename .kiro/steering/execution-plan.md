@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description: 
- * @LastEditTime: 2026-04-02 15:43:17
+ * @LastEditTime: 2026-04-02 15:50:06
  * @LastEditors: wangchunji
 -->
 ---
@@ -53,8 +53,8 @@ inclusion: auto
 - [x] L07 `state-persistence-recovery` — 浏览器端长任务恢复 ✅ 已合并 (30 files, +4639)
 
 ### 独立可做
-- [ ] L08 `collaboration-replay` — Mission 执行过程录制与回放（中）
-- [ ] L09 `multi-modal-vision` — 图片理解能力，前端附件扩展（中）
+- [x] L08 `collaboration-replay` — Mission 执行过程录制与回放 ✅ 已合并 (52 files, +8291)
+- [x] L09 `multi-modal-vision` — 图片理解能力，前端附件扩展 ✅ 已合并 (19 files, +1478)
 
 ## 第二层：需要服务端，不需要 Docker
 
@@ -63,9 +63,9 @@ inclusion: auto
 - [x] L11 `mission-native-projection` — /api/planets 路由实现 + 前端数据源切换 ✅ 已合并 (13 files, +2793)
 
 ### 并行组 E：Agent 能力增强
-- [ ] L12 `plugin-skill-system` — Skill 热插拔体系（中）⚠️ C08 Skill 注册制契约先完成
-- [ ] L13 `dynamic-role-system` — Agent 运行时角色切换（中）
-- [ ] L14 `human-in-the-loop` — 通用审批流 + 决策链（中）
+- [x] L12 `plugin-skill-system` — Skill 热插拔体系 ✅ 已合并 (16 files, +1273)
+- [x] L13 `dynamic-role-system` — Agent 运行时角色切换 ✅ 已合并 (29 files, +4961)
+- [x] L14 `human-in-the-loop` — 通用审批流 + 决策链 ✅ 已合并 (29 files, +2309)
 
 ### 并行组 F：记忆系统升级（⚠️ C03 + C07 必须先完成）
 - [ ] L15 `knowledge-graph` — 结构化知识图谱层（大）
