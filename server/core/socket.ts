@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from "socket.io";
 import type { AgentEvent } from "../../shared/workflow-runtime.js";
 import type { TelemetrySnapshot } from "../../shared/telemetry.js";
 import type { CostSnapshot, CostAlert } from "../../shared/cost.js";
+import type { AssessmentResult, CompetitionSession, TaskforceSession } from "../../shared/autonomy-types.js";
 import { telemetryStore } from "./telemetry-store.js";
 
 let io: SocketIOServer | null = null;
@@ -122,4 +123,49 @@ export function emitCostUpdate(snapshot: CostSnapshot): void {
 export function emitCostAlert(alert: CostAlert): void {
   if (!io) return;
   io.emit("cost.alert", alert);
+}
+
+// ---------------------------------------------------------------------------
+// Autonomy event broadcasts
+// ---------------------------------------------------------------------------
+
+/**
+ * Broadcast autonomy assessment result (self-assessment completed).
+ */
+export function broadcastAutonomyAssessment(result: AssessmentResult): void {
+  if (!io) return;
+  io.emit("autonomy_assessment", result);
+}
+
+/**
+ * Broadcast autonomy competition progress (real-time updates).
+ */
+export function broadcastAutonomyCompetitionProgress(session: CompetitionSession): void {
+  if (!io) return;
+  io.emit("autonomy_competition_progress", session);
+}
+
+/**
+ * Broadcast autonomy competition result (judging completed).
+ */
+export function broadcastAutonomyCompetitionResult(session: CompetitionSession): void {
+  if (!io) return;
+  io.emit("autonomy_competition_result", session);
+}
+
+/**
+ * Broadcast autonomy taskforce update (formation, status change, dissolution).
+ */
+export function broadcastAutonomyTaskforceUpdate(session: TaskforceSession): void {
+  if (!io) return;
+  io.emit("autonomy_taskforce_update", session);
+}
+
+/**
+ * Convenience broadcast for competition events (covers both progress and result).
+ * The client autonomy-store listens to this event.
+ */
+export function broadcastAutonomyCompetition(session: CompetitionSession): void {
+  if (!io) return;
+  io.emit("autonomy_competition", session);
 }
