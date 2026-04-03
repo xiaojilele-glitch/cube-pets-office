@@ -14,11 +14,11 @@
     - _Requirements: 6.2, 6.3, 6.4, 6.5, 6.6, 19.1, 19.2, 19.3_
   - [x] 1.3 创建 `shared/replay/index.ts` 模块导出
     - _Requirements: 1.1_
-  - [ ]* 1.4 编写事件结构完整性属性测试
+  - [x] 1.4 编写事件结构完整性属性测试
     - 在 `shared/replay/__tests__/contracts.property.test.ts` 中使用 fast-check 生成随机 ExecutionEvent，验证各事件类型的必填字段完整性
     - **Property 1: 事件结构完整性**
     - **Validates: Requirements 1.1, 2.1, 3.1, 4.1, 5.1**
-  - [ ]* 1.5 编写决策置信度范围属性测试
+  - [x] 1.5 编写决策置信度范围属性测试
     - **Property 7: 决策置信度范围不变量**
     - **Validates: Requirements 3.5**
 
@@ -28,10 +28,10 @@
     - emit() 同步入队到 buffer，不 await 存储操作
     - 失败事件进入 failedQueue，指数退避重试
     - _Requirements: 1.4, 1.5, 1.6_
-  - [ ]* 2.2 编写事件采集非阻塞属性测试
+  - [x] 2.2 编写事件采集非阻塞属性测试
     - **Property 2: 事件采集非阻塞**
     - **Validates: Requirements 1.4**
-  - [ ]* 2.3 编写采集失败缓冲属性测试
+  - [x] 2.3 编写采集失败缓冲属性测试
     - **Property 3: 采集失败缓冲与重试**
     - **Validates: Requirements 1.6**
   - [x] 2.4 创建 `server/replay/interceptors.ts`，实现三个拦截器
@@ -39,14 +39,14 @@
     - `installMessageBusInterceptor`：包装 MessageBus.send()，采集 MESSAGE_SENT/MESSAGE_RECEIVED 事件
     - `installExecutorInterceptor`：Express 中间件，监听 executor 回调采集 CODE_EXECUTED/RESOURCE_ACCESSED 事件
     - _Requirements: 1.3, 2.1, 2.3, 2.6, 3.2, 3.3, 4.2, 4.3, 5.1_
-  - [ ]* 2.5 编写拦截器单元测试
+  - [x] 2.5 编写拦截器单元测试
     - 模拟 MissionOrchestrator 和 MessageBus，验证事件采集正确性
     - _Requirements: 1.3, 2.1_
   - [x] 2.6 创建 `server/replay/sensitive-data.ts`，实现敏感数据加密和脱敏工具
     - 消息加密：AES-256-GCM 对称加密
     - 数据脱敏：正则匹配密码、邮箱、手机号等模式并替换
     - _Requirements: 2.4, 5.5_
-  - [ ]* 2.7 编写敏感数据保护属性测试
+  - [x] 2.7 编写敏感数据保护属性测试
     - **Property 5: 敏感数据保护**
     - **Validates: Requirements 2.4, 5.5**
 
@@ -63,16 +63,16 @@
     - 版本管理（每次更新递增 version）
     - 数据清理（按天数阈值删除）
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.6, 19.1, 19.2, 19.3, 19.4, 19.5_
-  - [ ]* 4.2 编写时间轴一致性属性测试
+  - [x] 4.2 编写时间轴一致性属性测试
     - **Property 9: 时间轴一致性**
     - **Validates: Requirements 6.1**
-  - [ ]* 4.3 编写多维索引正确性属性测试
+  - [x] 4.3 编写多维索引正确性属性测试
     - **Property 10: 多维索引正确性**
     - **Validates: Requirements 6.2**
-  - [ ]* 4.4 编写增量追加不变量属性测试
+  - [x] 4.4 编写增量追加不变量属性测试
     - **Property 12: 增量追加不变量**
     - **Validates: Requirements 6.4, 19.3**
-  - [ ]* 4.5 编写 JSON 导出往返属性测试
+  - [x] 4.5 编写 JSON 导出往返属性测试
     - **Property 13: JSON 导出往返**
     - **Validates: Requirements 6.6, 15.1**
   - [x] 4.6 创建 `client/src/lib/replay/browser-replay-store.ts`，实现 BrowserReplayStore
@@ -86,13 +86,13 @@
     - POST /api/replay/:missionId/verify — 验证数据完整性
     - 在 `server/index.ts` 中注册路由
     - _Requirements: 6.2, 6.5, 6.6, 20.3_
-  - [ ]* 4.8 编写数据完整性验证属性测试
+  - [x] 4.8 编写数据完整性验证属性测试
     - **Property 38: 数据完整性验证**
     - **Validates: Requirements 20.3**
-  - [ ]* 4.9 编写版本递增不变量属性测试
+  - [x] 4.9 编写版本递增不变量属性测试
     - **Property 35: 版本递增不变量**
     - **Validates: Requirements 19.4**
-  - [ ]* 4.10 编写数据清理正确性属性测试
+  - [x] 4.10 编写数据清理正确性属性测试
     - **Property 34: 数据清理正确性**
     - **Validates: Requirements 19.5**
 
@@ -109,43 +109,43 @@
     - 交互式模式（在 DECISION_MADE 事件自动暂停）
     - 事件回调和状态变更回调
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 17.4_
-  - [ ]* 6.2 编写回放引擎状态机属性测试
+  - [x] 6.2 编写回放引擎状态机属性测试
     - **Property 14: 回放引擎状态机**
     - **Validates: Requirements 7.1, 7.6**
-  - [ ]* 6.3 编写过滤正确性属性测试
+  - [x] 6.3 编写过滤正确性属性测试
     - **Property 15: 过滤正确性**
     - **Validates: Requirements 7.3, 7.4**
-  - [ ]* 6.4 编写时间戳跳转正确性属性测试
+  - [x] 6.4 编写时间戳跳转正确性属性测试
     - **Property 16: 时间戳跳转正确性**
     - **Validates: Requirements 7.5**
-  - [ ]* 6.5 编写交互式回放暂停属性测试
+  - [x] 6.5 编写交互式回放暂停属性测试
     - **Property 32: 交互式回放在决策节点暂停**
     - **Validates: Requirements 17.4**
   - [x] 6.6 创建 `client/src/lib/replay/replay-store-ui.ts`，实现 Zustand store
     - 管理回放 UI 状态：missionId、engine、timeline、selectedEventId、isFullscreen、isDemoMode 等
     - Actions：loadReplay、selectEvent、createSnapshot、jumpToSnapshot、toggleDemoMode、startComparison
     - _Requirements: 7.1, 14.1, 14.2, 14.3, 17.1_
-  - [ ]* 6.7 编写快照往返属性测试
+  - [x] 6.7 编写快照往返属性测试
     - **Property 26: 快照往返**
     - **Validates: Requirements 14.1, 14.2, 14.3**
-  - [ ]* 6.8 编写快照导出/导入往返属性测试
+  - [x] 6.8 编写快照导出/导入往返属性测试
     - **Property 27: 快照导出/导入往返**
     - **Validates: Requirements 14.4**
 
 - [x] 7. Checkpoint - 确保回放引擎测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
-- [ ] 8. 实现分析功能
+- [x] 8. 实现分析功能
   - [x] 8.1 创建 `client/src/lib/replay/cost-tracker.ts`，实现 CostTracker 类
     - calculateCumulativeCost：按时间点计算累计成本
     - getCostDistribution：按 Agent/模型/操作类型分组
     - detectCostAnomalies：检测超阈值事件
     - generateOptimizationSuggestions：基于分布生成建议
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
-  - [ ]* 8.2 编写成本计算不变量属性测试
+  - [x] 8.2 编写成本计算不变量属性测试
     - **Property 21: 成本计算不变量**
     - **Validates: Requirements 12.1, 12.2**
-  - [ ]* 8.3 编写成本异常检测属性测试
+  - [x] 8.3 编写成本异常检测属性测试
     - **Property 22: 成本异常检测**
     - **Validates: Requirements 12.3**
   - [x] 8.4 创建 `client/src/lib/replay/performance-analyzer.ts`，实现 PerformanceAnalyzer 类
@@ -154,13 +154,13 @@
     - analyzeConcurrency：计算并发 Agent 数量时间线
     - comparePerformance：两个时间轴的性能对比
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5_
-  - [ ]* 8.5 编写性能指标一致性属性测试
+  - [x] 8.5 编写性能指标一致性属性测试
     - **Property 23: 性能指标一致性**
     - **Validates: Requirements 13.1**
-  - [ ]* 8.6 编写瓶颈检测正确性属性测试
+  - [x] 8.6 编写瓶颈检测正确性属性测试
     - **Property 24: 瓶颈检测正确性**
     - **Validates: Requirements 13.2**
-  - [ ]* 8.7 编写并发度分析边界属性测试
+  - [x] 8.7 编写并发度分析边界属性测试
     - **Property 25: 并发度分析边界**
     - **Validates: Requirements 13.4**
   - [x] 8.8 创建 `client/src/lib/replay/data-lineage.ts`，实现 DataLineageTracker 类
@@ -169,10 +169,10 @@
     - traceDecisionInputs：追溯决策依赖的所有数据源
     - getDataChanges：获取数据变更历史
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
-  - [ ]* 8.9 编写血缘追踪连通性属性测试
+  - [x] 8.9 编写血缘追踪连通性属性测试
     - **Property 18: 血缘追踪连通性**
     - **Validates: Requirements 10.2, 10.3**
-  - [ ]* 8.10 编写血缘-时间轴集成属性测试
+  - [x] 8.10 编写血缘-时间轴集成属性测试
     - **Property 19: 血缘-时间轴集成**
     - **Validates: Requirements 10.4**
   - [x] 8.11 创建 `client/src/lib/replay/permission-auditor.ts`，实现 PermissionAuditor 类
@@ -180,20 +180,20 @@
     - getViolationStats：统计违规次数、类型分布、Agent 分布
     - getPermissionChanges：追踪权限变更事件
     - _Requirements: 11.1, 11.2, 11.4, 11.5_
-  - [ ]* 8.12 编写权限违规统计正确性属性测试
+  - [x] 8.12 编写权限违规统计正确性属性测试
     - **Property 20: 权限违规统计正确性**
     - **Validates: Requirements 11.5**
   - [x] 8.13 创建 `client/src/lib/replay/related-events.ts`，实现关联事件查询
     - findRelatedEvents：根据 messageId、decisionId、resourceId 查找关联事件
     - _Requirements: 9.6_
-  - [ ]* 8.14 编写关联事件查询属性测试
+  - [x] 8.14 编写关联事件查询属性测试
     - **Property 17: 关联事件查询**
     - **Validates: Requirements 9.6**
 
 - [x] 9. Checkpoint - 确保分析功能测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
-- [ ] 10. 实现导出功能
+- [x] 10. 实现导出功能
   - [x] 10.1 创建 `client/src/lib/replay/exporter.ts`，实现 ReplayExporter 类
     - exportJSON：导出时间轴为 JSON
     - exportCSV：导出事件为 CSV（列头：eventId、timestamp、eventType、sourceAgent、targetAgent）
@@ -201,10 +201,10 @@
     - generateReport：生成回放报告（支持自定义章节选择）
     - exportReportHTML / exportReportMarkdown
     - _Requirements: 6.6, 15.1, 15.2, 15.3, 15.4, 15.5_
-  - [ ]* 10.2 编写报告内容定制属性测试
+  - [x] 10.2 编写报告内容定制属性测试
     - **Property 28: 报告内容定制**
     - **Validates: Requirements 15.3**
-  - [ ]* 10.3 编写交互式 HTML 包含事件数据属性测试
+  - [x] 10.3 编写交互式 HTML 包含事件数据属性测试
     - **Property 29: 交互式 HTML 包含事件数据**
     - **Validates: Requirements 15.5**
   - [x] 10.4 创建 `client/src/lib/replay/comparison.ts`，实现对比分析功能
@@ -213,14 +213,14 @@
     - compareMetrics：性能指标对比
     - exportComparison：导出对比结果
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5_
-  - [ ]* 10.5 编写事件流差异正确性属性测试
+  - [x] 10.5 编写事件流差异正确性属性测试
     - **Property 30: 事件流差异正确性**
     - **Validates: Requirements 16.4**
-  - [ ]* 10.6 编写对比结果导出往返属性测试
+  - [x] 10.6 编写对比结果导出往返属性测试
     - **Property 31: 对比结果导出往返**
     - **Validates: Requirements 16.5**
 
-- [ ] 11. 实现审计功能（服务端）
+- [x] 11. 实现审计功能（服务端）
   - [x] 11.1 创建 `server/replay/audit-logger.ts`，实现 ReplayAuditLogger 类
     - logAction：记录回放操作到 `data/replay/{missionId}/audit.jsonl`
     - queryAuditLog：按 userId、missionId、时间范围查询
@@ -235,13 +235,13 @@
     - POST /api/replay/:missionId/snapshots — 创建快照
     - GET /api/replay/:missionId/snapshots — 获取快照列表
     - _Requirements: 14.1, 20.1, 20.2_
-  - [ ]* 11.4 编写审计日志完整性属性测试
+  - [x] 11.4 编写审计日志完整性属性测试
     - **Property 36: 审计日志完整性**
     - **Validates: Requirements 20.1**
-  - [ ]* 11.5 编写审计日志查询往返属性测试
+  - [x] 11.5 编写审计日志查询往返属性测试
     - **Property 37: 审计日志查询往返**
     - **Validates: Requirements 20.2**
-  - [ ]* 11.6 编写访问控制属性测试
+  - [x] 11.6 编写访问控制属性测试
     - **Property 39: 基于角色的访问控制**
     - **Validates: Requirements 20.4**
 

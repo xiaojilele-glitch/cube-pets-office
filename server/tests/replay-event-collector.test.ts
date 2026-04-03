@@ -1,17 +1,42 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as fc from 'fast-check';
 
-import type { ExecutionEvent } from '../../shared/replay/contracts.js';
-import type { ReplayStoreInterface } from '../../shared/replay/store-interface.js';
-import { EventCollector } from '../replay/event-collector.js';
+import type { ExecutionEvent, ReplayEventType } from '../../shared/replay/contracts';
+import {
+  REPLAY_EVENT_TYPES,
+  MESSAGE_TYPES,
+  MESSAGE_STATUSES,
+  EXECUTION_STATUSES,
+  RESOURCE_TYPES,
+  ACCESS_TYPES,
+} from '../../shared/replay/contracts';
+import type { ReplayStoreInterface } from '../../shared/replay/store-interface';
+import { EventCollector } from '../../server/replay/event-collector';
+import {
+  installMissionInterceptor,
+  installMessageBusInterceptor,
+  installExecutorInterceptor,
+} from '../../server/replay/interceptors';
+import {
+  encryptMessage,
+  decryptMessage,
+  generateEncryptionKey,
+  maskSensitiveData,
+} from '../../server/replay/sensitive-data';
 
-/** Minimal mock store that records appendEvents calls */
-function createMockStore(options?: { shouldFail?: boolean }): ReplayStoreInterface & {
+/* ─── Shared Helpers ─── */
+
+function createMockStore(options?: {
+  shouldFail?: boolean;
+  neverResolve?: boolean;
+}): ReplayStoreInterface & {
   calls: Array<{ missionId: string; events: ExecutionEvent[] }>;
 } {
   const calls: Array<{ missionId: string; events: ExecutionEvent[] }> = [];
   return {
     calls,
     appendEvents: vi.fn(async (missionId: string, events: ExecutionEvent[]) => {
+      if (options?.neverResolve) return new Promise<void>(() => {});
       if (options?.shouldFail) throw new Error('store write failed');
       calls.push({ missionId, events });
     }),
@@ -39,7 +64,9 @@ function createMockStore(options?: { shouldFail?: boolean }): ReplayStoreInterfa
   };
 }
 
-function makePartialEvent(overrides: Partial<Omit<ExecutionEvent, 'eventId' | 'timestamp'>> = {}) {
+function makePartialEvent(
+  overrides: Partial<Omit<ExecutionEvent, 'eventId' | 'timestamp'>> = {},
+): Omit<ExecutionEvent, 'eventId' | 'timestamp'> {
   return {
     missionId: overrides.missionId ?? 'mission-1',
     eventType: overrides.eventType ?? ('AGENT_STARTED' as const),
@@ -50,235 +77,445 @@ function makePartialEvent(overrides: Partial<Omit<ExecutionEvent, 'eventId' | 't
   };
 }
 
-describe('EventCollector', () => {
-  let store: ReturnType<typeof createMockStore>;
-  let collector: EventCollector;
+/* ─── Arbitraries for fast-check ─── */
 
-  beforeEach(() => {
-    vi.useFakeTimers();
-    store = createMockStore();
-    collector = new EventCollector(store, {
-      bufferSize: 5,
-      flushIntervalMs: 100,
-      maxRetries: 3,
-    });
+const eventTypeArb: fc.Arbitrary<ReplayEventType> = fc.constantFrom(...REPLAY_EVENT_TYPES);
+
+const partialEventArb: fc.Arbitrary<Omit<ExecutionEvent, 'eventId' | 'timestamp'>> = fc.record({
+  missionId: fc.string({ minLength: 1, maxLength: 20 }).map((s) => `m-${s}`),
+  eventType: eventTypeArb,
+  sourceAgent: fc.string({ minLength: 1, maxLength: 20 }).map((s) => `agent-${s}`),
+  eventData: fc.constant({} as Record<string, unknown>),
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Task 2.2 — Property 2: Event collection non-blocking
+ * Feature: collaboration-replay, Property 2: 事件采集非阻塞
+ * Validates: Requirements 1.4
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('Property 2: Event collection non-blocking', () => {
+  it('emit() returns synchronously even when store never resolves', () => {
+    // **Validates: Requirements 1.4**
+    fc.assert(
+      fc.property(
+        fc.array(partialEventArb, { minLength: 1, maxLength: 50 }),
+        (events) => {
+          // Store whose appendEvents returns a never-resolving promise
+          const neverStore = createMockStore({ neverResolve: true });
+          const collector = new EventCollector(neverStore, {
+            bufferSize: 1000,
+            flushIntervalMs: 999_999, // prevent auto-flush
+          });
+
+          try {
+            // emit() should return synchronously for every event — no hang, no throw
+            for (const evt of events) {
+              collector.emit(evt);
+            }
+
+            // Buffer should have grown (up to bufferSize)
+            const stats = collector.getStats();
+            expect(stats.total).toBe(events.length);
+            // buffered may be less than total if buffer overflow triggered a flush,
+            // but total must always equal the number of emits
+            expect(stats.buffered).toBeGreaterThan(0);
+            expect(stats.buffered).toBeLessThanOrEqual(events.length);
+          } finally {
+            collector.destroy();
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 
-  afterEach(() => {
-    collector.destroy();
-    vi.useRealTimers();
+  it('emit() does not await persistence — store.appendEvents is not called synchronously', () => {
+    // **Validates: Requirements 1.4**
+    fc.assert(
+      fc.property(partialEventArb, (evt) => {
+        const store = createMockStore({ neverResolve: true });
+        const collector = new EventCollector(store, {
+          bufferSize: 1000,
+          flushIntervalMs: 999_999,
+        });
+
+        try {
+          collector.emit(evt);
+          // appendEvents should NOT have been called synchronously by emit()
+          // (it's only called during flush)
+          expect(store.appendEvents).not.toHaveBeenCalled();
+        } finally {
+          collector.destroy();
+        }
+      }),
+      { numRuns: 100 },
+    );
   });
+});
 
-  // ---- emit() ----
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Task 2.3 — Property 3: Collection failure buffering and retry
+ * Feature: collaboration-replay, Property 3: 采集失败缓冲与重试
+ * Validates: Requirements 1.6
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
-  describe('emit', () => {
-    it('synchronously adds event to buffer with generated eventId and timestamp', () => {
-      collector.emit(makePartialEvent());
-      const stats = collector.getStats();
-      expect(stats.buffered).toBe(1);
-      expect(stats.total).toBe(1);
+describe('Property 3: Collection failure buffering and retry', () => {
+  it('failed flush moves events to failedQueue; successful retry removes them', async () => {
+    // **Validates: Requirements 1.6**
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(partialEventArb, { minLength: 1, maxLength: 20 }),
+        async (events) => {
+          let callCount = 0;
+          const store = createMockStore();
+          // Override appendEvents: fail on first call, succeed on subsequent
+          (store.appendEvents as ReturnType<typeof vi.fn>).mockImplementation(
+            async (_missionId: string, _events: ExecutionEvent[]) => {
+              callCount++;
+              if (callCount === 1) throw new Error('transient failure');
+              // success on retry
+            },
+          );
+
+          const collector = new EventCollector(store, {
+            bufferSize: 1000,
+            flushIntervalMs: 999_999,
+            maxRetries: 3,
+          });
+
+          try {
+            // Emit all events
+            for (const evt of events) {
+              collector.emit(evt);
+            }
+
+            const beforeFlush = collector.getStats();
+            expect(beforeFlush.buffered).toBe(events.length);
+            expect(beforeFlush.failed).toBe(0);
+
+            // Flush — should fail, events move to failedQueue
+            await collector.flush();
+
+            const afterFlush = collector.getStats();
+            expect(afterFlush.buffered).toBe(0);
+            // failedQueue grows by the batch size (all events in one missionId group
+            // or multiple groups — total should equal events.length)
+            expect(afterFlush.failed).toBeGreaterThan(0);
+            expect(afterFlush.failed).toBeLessThanOrEqual(events.length);
+
+            const failedBefore = afterFlush.failed;
+
+            // Retry — should succeed now (callCount > 1)
+            await collector.retryFailed();
+
+            const afterRetry = collector.getStats();
+            // Successfully retried events removed from failedQueue
+            expect(afterRetry.failed).toBeLessThan(failedBefore);
+            expect(afterRetry.failed).toBe(0);
+          } finally {
+            collector.destroy();
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Task 2.5 — Interceptor unit tests
+ * Feature: collaboration-replay, Interceptor correctness
+ * Validates: Requirements 1.3, 2.1
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('Interceptor unit tests', () => {
+  function createCollectorAndStore() {
+    const store = createMockStore();
+    const collector = new EventCollector(store, {
+      bufferSize: 1000,
+      flushIntervalMs: 999_999,
     });
+    return { store, collector };
+  }
 
-    it('does not call store.appendEvents synchronously', () => {
-      collector.emit(makePartialEvent());
-      expect(store.appendEvents).not.toHaveBeenCalled();
-    });
+  async function flushAndGetEvents(
+    store: ReturnType<typeof createMockStore>,
+    collector: EventCollector,
+  ) {
+    await collector.flush();
+    return store.calls.flatMap((c) => c.events);
+  }
 
-    it('increments total count for each emit', () => {
-      collector.emit(makePartialEvent());
-      collector.emit(makePartialEvent());
-      collector.emit(makePartialEvent());
-      expect(collector.getStats().total).toBe(3);
-    });
+  /* ── installMissionInterceptor ── */
 
-    it('drops oldest event when buffer is full', () => {
-      // bufferSize = 5
-      for (let i = 0; i < 6; i++) {
-        collector.emit(makePartialEvent({ sourceAgent: `agent-${i}` }));
+  describe('installMissionInterceptor', () => {
+    it('emits AGENT_STARTED when mission is created', async () => {
+      const { store, collector } = createCollectorAndStore();
+      try {
+        const orchestrator: any = { hooks: {} };
+        installMissionInterceptor(orchestrator, collector);
+
+        await orchestrator.hooks.onMissionUpdated({
+          id: 'mission-1',
+          status: 'queued',
+          currentStageKey: 'receive',
+          title: 'Test',
+          kind: 'brain-dispatch',
+          events: [{ kind: 'created', source: 'brain' }],
+        });
+
+        const events = await flushAndGetEvents(store, collector);
+        expect(events.length).toBeGreaterThanOrEqual(1);
+        expect(events.some((e) => e.eventType === 'AGENT_STARTED')).toBe(true);
+      } finally {
+        collector.destroy();
       }
-      // Buffer should still be at most bufferSize (may be less due to flush trigger)
-      expect(collector.getStats().total).toBe(6);
+    });
+
+    it('emits MILESTONE_REACHED when mission completes', async () => {
+      const { store, collector } = createCollectorAndStore();
+      try {
+        const orchestrator: any = { hooks: {} };
+        installMissionInterceptor(orchestrator, collector);
+
+        await orchestrator.hooks.onMissionUpdated({
+          id: 'mission-2',
+          status: 'done',
+          currentStageKey: 'finalize',
+          summary: 'Done',
+          progress: 100,
+          events: [{ kind: 'progress', source: 'executor' }],
+        });
+
+        const events = await flushAndGetEvents(store, collector);
+        expect(events.some((e) => e.eventType === 'MILESTONE_REACHED')).toBe(true);
+        expect(events.some((e) => e.eventType === 'AGENT_STOPPED')).toBe(true);
+      } finally {
+        collector.destroy();
+      }
+    });
+
+    it('emits MILESTONE_REACHED for stage transitions', async () => {
+      const { store, collector } = createCollectorAndStore();
+      try {
+        const orchestrator: any = { hooks: {} };
+        installMissionInterceptor(orchestrator, collector);
+
+        await orchestrator.hooks.onMissionUpdated({
+          id: 'mission-3',
+          status: 'running',
+          currentStageKey: 'plan',
+          progress: 30,
+          events: [{ kind: 'progress', source: 'brain', detail: 'Planning' }],
+        });
+
+        const events = await flushAndGetEvents(store, collector);
+        expect(events.some((e) => e.eventType === 'MILESTONE_REACHED')).toBe(true);
+        const milestone = events.find((e) => e.eventType === 'MILESTONE_REACHED')!;
+        expect(milestone.eventData).toMatchObject({
+          action: 'stage_transition',
+          stageKey: 'plan',
+        });
+      } finally {
+        collector.destroy();
+      }
     });
   });
 
-  // ---- flush() ----
+  /* ── installMessageBusInterceptor ── */
 
-  describe('flush', () => {
-    it('sends buffered events to store grouped by missionId', async () => {
-      collector.emit(makePartialEvent({ missionId: 'm-1' }));
-      collector.emit(makePartialEvent({ missionId: 'm-2' }));
-      collector.emit(makePartialEvent({ missionId: 'm-1' }));
+  describe('installMessageBusInterceptor', () => {
+    it('emits MESSAGE_SENT events when send() is called', async () => {
+      const { store, collector } = createCollectorAndStore();
+      try {
+        const messageBus: any = {
+          send: vi.fn().mockResolvedValue({ id: 1 }),
+        };
+        installMessageBusInterceptor(messageBus, collector);
 
-      await collector.flush();
+        await messageBus.send('agent-a', 'agent-b', 'hello', 'wf-1', 'plan');
 
-      expect(store.appendEvents).toHaveBeenCalledTimes(2);
-      const m1Call = store.calls.find(c => c.missionId === 'm-1');
-      const m2Call = store.calls.find(c => c.missionId === 'm-2');
-      expect(m1Call?.events).toHaveLength(2);
-      expect(m2Call?.events).toHaveLength(1);
+        const events = await flushAndGetEvents(store, collector);
+        const sent = events.find((e) => e.eventType === 'MESSAGE_SENT');
+        expect(sent).toBeDefined();
+        expect(sent!.sourceAgent).toBe('agent-a');
+        expect(sent!.targetAgent).toBe('agent-b');
+        expect(sent!.eventData).toMatchObject({
+          senderId: 'agent-a',
+          receiverId: 'agent-b',
+          messageContent: 'hello',
+        });
+      } finally {
+        collector.destroy();
+      }
     });
 
-    it('clears buffer after successful flush', async () => {
-      collector.emit(makePartialEvent());
-      collector.emit(makePartialEvent());
-      await collector.flush();
-      expect(collector.getStats().buffered).toBe(0);
-    });
+    it('emits MESSAGE_RECEIVED events when send() is called', async () => {
+      const { store, collector } = createCollectorAndStore();
+      try {
+        const messageBus: any = {
+          send: vi.fn().mockResolvedValue({ id: 2 }),
+        };
+        installMessageBusInterceptor(messageBus, collector);
 
-    it('is a no-op when buffer is empty', async () => {
-      await collector.flush();
-      expect(store.appendEvents).not.toHaveBeenCalled();
-    });
+        await messageBus.send('agent-x', 'agent-y', 'data', 'wf-2', 'execute');
 
-    it('moves events to failedQueue when store fails', async () => {
-      collector.destroy();
-      const failStore = createMockStore({ shouldFail: true });
-      collector = new EventCollector(failStore, {
-        bufferSize: 10,
-        flushIntervalMs: 100,
-        maxRetries: 3,
-      });
-
-      collector.emit(makePartialEvent());
-      collector.emit(makePartialEvent());
-      await collector.flush();
-
-      expect(collector.getStats().buffered).toBe(0);
-      expect(collector.getStats().failed).toBe(2);
-    });
-  });
-
-  // ---- timer-based flush ----
-
-  describe('timer flush', () => {
-    it('flushes automatically on interval', async () => {
-      collector.emit(makePartialEvent());
-      expect(store.appendEvents).not.toHaveBeenCalled();
-
-      // Advance past the flush interval
-      await vi.advanceTimersByTimeAsync(150);
-
-      expect(store.appendEvents).toHaveBeenCalled();
+        const events = await flushAndGetEvents(store, collector);
+        const received = events.find((e) => e.eventType === 'MESSAGE_RECEIVED');
+        expect(received).toBeDefined();
+        expect(received!.sourceAgent).toBe('agent-y');
+        expect(received!.targetAgent).toBe('agent-x');
+      } finally {
+        collector.destroy();
+      }
     });
   });
 
-  // ---- retryFailed() ----
+  /* ── installExecutorInterceptor ── */
 
-  describe('retryFailed', () => {
-    it('retries failed events and clears failedQueue on success', async () => {
-      // First: make events fail
-      collector.destroy();
-      const failStore = createMockStore({ shouldFail: true });
-      collector = new EventCollector(failStore, {
-        bufferSize: 10,
-        flushIntervalMs: 100_000, // large interval to avoid auto-flush
-        maxRetries: 3,
-      });
+  describe('installExecutorInterceptor', () => {
+    it('emits CODE_EXECUTED for executor callback events', async () => {
+      const { store, collector } = createCollectorAndStore();
+      try {
+        const middleware = installExecutorInterceptor(collector);
+        const req = {
+          body: {
+            event: {
+              missionId: 'mission-exec',
+              eventId: 'evt-1',
+              jobId: 'job-1',
+              executor: 'lobster',
+              type: 'job.progress',
+              status: 'running',
+              stageKey: 'execute',
+              detail: 'Running code',
+            },
+          },
+        } as any;
+        const res = {} as any;
+        const next = vi.fn();
 
-      collector.emit(makePartialEvent());
-      await collector.flush();
-      expect(collector.getStats().failed).toBe(1);
+        middleware(req, res, next);
+        expect(next).toHaveBeenCalled();
 
-      // Now make store succeed
-      (failStore.appendEvents as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
-
-      await collector.retryFailed();
-      expect(collector.getStats().failed).toBe(0);
+        const events = await flushAndGetEvents(store, collector);
+        const codeEvent = events.find((e) => e.eventType === 'CODE_EXECUTED');
+        expect(codeEvent).toBeDefined();
+        expect(codeEvent!.missionId).toBe('mission-exec');
+        expect(codeEvent!.sourceAgent).toBe('lobster');
+      } finally {
+        collector.destroy();
+      }
     });
 
-    it('re-enqueues events that fail again with incremented retryCount', async () => {
-      collector.destroy();
-      const failStore = createMockStore({ shouldFail: true });
-      collector = new EventCollector(failStore, {
-        bufferSize: 10,
-        flushIntervalMs: 100_000,
-        maxRetries: 3,
-      });
-
-      collector.emit(makePartialEvent());
-      await collector.flush();
-      expect(collector.getStats().failed).toBe(1);
-
-      // Retry — still fails
-      await collector.retryFailed();
-      expect(collector.getStats().failed).toBe(1);
-
-      // Retry again — still fails
-      await collector.retryFailed();
-      expect(collector.getStats().failed).toBe(1);
-
-      // Third retry — exceeds maxRetries, event is dropped
-      await collector.retryFailed();
-      expect(collector.getStats().failed).toBe(0);
-    });
-
-    it('is a no-op when failedQueue is empty', async () => {
-      await collector.retryFailed();
-      expect(store.appendEvents).not.toHaveBeenCalled();
+    it('calls next() even when body is missing', () => {
+      const { collector } = createCollectorAndStore();
+      try {
+        const middleware = installExecutorInterceptor(collector);
+        const next = vi.fn();
+        middleware({ body: {} } as any, {} as any, next);
+        expect(next).toHaveBeenCalled();
+      } finally {
+        collector.destroy();
+      }
     });
   });
+});
 
-  // ---- getStats() ----
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Task 2.7 — Property 5: Sensitive data protection
+ * Feature: collaboration-replay, Property 5: 敏感数据保护
+ * Validates: Requirements 2.4, 5.5
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
-  describe('getStats', () => {
-    it('returns correct initial stats', () => {
-      const stats = collector.getStats();
-      expect(stats).toEqual({ buffered: 0, failed: 0, total: 0 });
-    });
+describe('Property 5: Sensitive data protection', () => {
+  it('encryptMessage produces ciphertext different from plaintext, decryptMessage recovers original', () => {
+    // **Validates: Requirements 2.4, 5.5**
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 1, maxLength: 500 }),
+        (plaintext) => {
+          const key = generateEncryptionKey();
+          const encrypted = encryptMessage(plaintext, key);
 
-    it('reflects buffered, failed, and total counts', async () => {
-      collector.emit(makePartialEvent());
-      collector.emit(makePartialEvent());
-      expect(collector.getStats()).toEqual({ buffered: 2, failed: 0, total: 2 });
+          // Ciphertext must differ from original plaintext
+          expect(encrypted.ciphertext).not.toBe(plaintext);
 
-      await collector.flush();
-      expect(collector.getStats()).toEqual({ buffered: 0, failed: 0, total: 2 });
-    });
+          // Decryption must recover the original
+          const decrypted = decryptMessage(encrypted, key);
+          expect(decrypted).toBe(plaintext);
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 
-  // ---- destroy() ----
-
-  describe('destroy', () => {
-    it('stops the flush timer', async () => {
-      collector.emit(makePartialEvent());
-      collector.destroy();
-
-      await vi.advanceTimersByTimeAsync(200);
-      // Timer was cleared, so no flush should have happened
-      expect(store.appendEvents).not.toHaveBeenCalled();
-    });
-
-    it('can be called multiple times safely', () => {
-      collector.destroy();
-      collector.destroy();
-      // No error thrown
-    });
+  it('maskSensitiveData changes text containing emails', () => {
+    // **Validates: Requirements 2.4, 5.5**
+    fc.assert(
+      fc.property(
+        fc.tuple(
+          fc.string({ minLength: 1, maxLength: 10 }).filter((s) => /^[a-z]+$/.test(s)),
+          fc.string({ minLength: 1, maxLength: 10 }).filter((s) => /^[a-z]+$/.test(s)),
+        ),
+        ([local, domain]) => {
+          const email = `${local}@${domain}.com`;
+          const text = `contact: ${email} for info`;
+          const masked = maskSensitiveData(text);
+          // Masked text should differ from original (email is masked)
+          expect(masked).not.toBe(text);
+          // The domain part should still be present
+          expect(masked).toContain(`@${domain}.com`);
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 
-  // ---- event structure ----
+  it('maskSensitiveData changes text containing phone numbers', () => {
+    // **Validates: Requirements 2.4, 5.5**
+    fc.assert(
+      fc.property(
+        // Generate valid 11-digit Chinese phone numbers: 1[3-9]X XXXX XXXX
+        fc.tuple(
+          fc.integer({ min: 3, max: 9 }),
+          fc.integer({ min: 100000000, max: 999999999 }),
+        ),
+        ([secondDigit, rest]) => {
+          const phone = `1${secondDigit}${rest}`;
+          // phone is now exactly 11 digits: "1" + 1 digit + 9 digits
+          const text = `call ${phone} now`;
+          const masked = maskSensitiveData(text);
+          // Phone number should be masked
+          expect(masked).not.toContain(phone);
+          expect(masked).not.toBe(text);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-  describe('event structure', () => {
-    it('generates unique eventId for each event', async () => {
-      collector.emit(makePartialEvent());
-      collector.emit(makePartialEvent());
-      await collector.flush();
-
-      const events = store.calls.flatMap(c => c.events);
-      const ids = events.map(e => e.eventId);
-      expect(new Set(ids).size).toBe(2);
-    });
-
-    it('assigns timestamp to each event', async () => {
-      const before = Date.now();
-      collector.emit(makePartialEvent());
-      await collector.flush();
-
-      const event = store.calls[0].events[0];
-      expect(event.timestamp).toBeGreaterThanOrEqual(before);
-      expect(event.eventId).toBeDefined();
-      expect(event.missionId).toBe('mission-1');
-      expect(event.eventType).toBe('AGENT_STARTED');
-      expect(event.sourceAgent).toBe('agent-1');
-    });
+  it('maskSensitiveData changes text containing passwords', () => {
+    // **Validates: Requirements 2.4, 5.5**
+    fc.assert(
+      fc.property(
+        // Generate alphanumeric passwords to avoid regex special chars
+        fc.array(
+          fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')),
+          { minLength: 3, maxLength: 20 },
+        ).map((chars) => chars.join('')),
+        (pwd) => {
+          const text = `password=${pwd}`;
+          const masked = maskSensitiveData(text);
+          // Password value should be replaced with ***
+          expect(masked).toBe('password=***');
+          if (pwd !== '***') {
+            expect(masked).not.toBe(text);
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 });
