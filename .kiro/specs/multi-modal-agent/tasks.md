@@ -22,10 +22,10 @@
     - 在 STATUS_BUBBLES 的 zh-CN 和 en-US 中新增 listening 和 speaking 文案
     - 在 animateWorker 中新增 'listening' 和 'speaking' 动画 case
     - _Requirements: 4.2, 4.4_
-  - [ ]* 1.4 编写语音状态气泡文案完整性属性测试
+  - [x] 1.4 编写语音状态气泡文案完整性属性测试
     - **Property 6: 语音状态气泡文案完整性**
     - **Validates: Requirements 4.2, 4.4**
-  - [ ]* 1.5 编写 MultimodalContext 序列化 round-trip 属性测试
+  - [x] 1.5 编写 MultimodalContext 序列化 round-trip 属性测试
     - **Property 4: MultimodalContext 序列化 round-trip**
     - **Validates: Requirements 5.4**
 
@@ -36,7 +36,7 @@
     - 导出 `VoiceConfig` 接口
     - 当 TTS_API_URL + TTS_API_KEY 均存在时 tts.available = true，否则 false；STT 同理
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
-  - [ ]* 2.2 编写 Voice 配置解析与可用性标记属性测试
+  - [x] 2.2 编写 Voice 配置解析与可用性标记属性测试
     - **Property 1: Voice 配置解析与可用性标记**
     - **Validates: Requirements 7.1, 7.2, 7.3, 7.4**
   - [x] 2.3 实现 synthesizeSpeech 和 recognizeSpeech 函数
@@ -52,7 +52,7 @@
     - 未配置时返回 501，服务失败返回 503
     - 在 `server/index.ts` 中注册路由
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
-  - [ ]* 2.5 编写 Voice API 服务失败返回 503 属性测试
+  - [x] 2.5 编写 Voice API 服务失败返回 503 属性测试
     - **Property 10: Voice API 服务失败返回 503**
     - **Validates: Requirements 8.3**
 
@@ -69,7 +69,7 @@
     - 实现 `createServerTTSEngine(apiUrl)`：POST /api/voice/tts + AudioContext 播放
     - 实现 `createTTSEngine(config)`：根据 VoiceConfig 选择实现，服务端不可用时回退到浏览器
     - _Requirements: 1.1, 1.2, 1.3, 1.5, 1.6_
-  - [ ]* 4.2 编写语音引擎错误恢复属性测试（TTS 部分）
+  - [x] 4.2 编写语音引擎错误恢复属性测试（TTS 部分）
     - **Property 7: 语音引擎错误恢复**
     - **Validates: Requirements 1.5, 2.7**
 
@@ -91,10 +91,10 @@
       - 如有 voiceTranscript，注入 "[Voice Input] {transcript}" 消息
     - 确保顺序：visionContexts → voiceTranscript → user prompt
     - _Requirements: 5.2, 5.3_
-  - [ ]* 6.2 编写语音转录文本注入格式属性测试
+  - [x] 6.2 编写语音转录文本注入格式属性测试
     - **Property 2: 语音转录文本注入格式**
     - **Validates: Requirements 5.2**
-  - [ ]* 6.3 编写多模态消息序列排序属性测试
+  - [x] 6.3 编写多模态消息序列排序属性测试
     - **Property 3: 多模态消息序列排序**
     - **Validates: Requirements 5.3**
   - [x] 6.4 修改 RuntimeAgent.invoke 发出 listening/speaking 事件
@@ -125,7 +125,7 @@
     - TTS 开启时，每条 Agent 回复旁显示播放/停止按钮
     - 播放中按钮变为停止按钮并显示进度指示
     - _Requirements: 3.3, 3.5_
-  - [ ]* 8.4 编写语音能力检测驱动 UI 可见性属性测试
+  - [x] 8.4 编写语音能力检测驱动 UI 可见性属性测试
     - **Property 5: 语音能力检测驱动 UI 可见性**
     - **Validates: Requirements 3.6, 3.7**
 
@@ -141,14 +141,14 @@
     - 在 inferTaskProfile 中检测"语音""朗读""图片""截图""看一下"等关键词
     - 输出中标记多模态需求
     - _Requirements: 6.1_
-  - [ ]* 10.2 编写多模态关键词检测属性测试
+  - [x] 10.2 编写多模态关键词检测属性测试
     - **Property 8: 多模态关键词检测**
     - **Validates: Requirements 6.1**
   - [x] 10.3 扩展 buildPlannerPrompt 包含 Agent 能力标签
     - 修改 `server/core/dynamic-organization.ts`
     - 在 plannerCatalogSummary 中为每个 Agent 附加 capabilities 标签信息
     - _Requirements: 6.3_
-  - [ ]* 10.4 编写 Planner Prompt 包含能力标签属性测试
+  - [x] 10.4 编写 Planner Prompt 包含能力标签属性测试
     - **Property 9: Planner Prompt 包含能力标签**
     - **Validates: Requirements 6.3**
 
