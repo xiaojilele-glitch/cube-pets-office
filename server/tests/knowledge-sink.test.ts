@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import * as fc from "fast-check";
 
 import { GraphStore } from "../knowledge/graph-store.js";
 import { OntologyRegistry } from "../knowledge/ontology-registry.js";
@@ -7,6 +8,7 @@ import {
   type AgentSinkLLMProvider,
   type TaskCompletionOutput,
 } from "../knowledge/agent-sink.js";
+import { KnowledgeReviewQueue } from "../knowledge/review-queue.js";
 import type {
   DecisionPayload,
   RulePayload,
@@ -680,5 +682,441 @@ describe("AgentKnowledgeSink", () => {
       // 1 low-confidence entity + 1 low-confidence relation
       expect(summary.pendingReviewCount).toBe(2);
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // Feature: knowledge-graph, Property 8: ArchitectureDecision 必填字段验证
+  // Validates: Requirements 3.4
+  //
+  // For any DecisionPayload missing at least one of the required fields
+  // (context, decision, alternatives, consequences),
+  // AgentKnowledgeSink.recordDecision() SHALL reject the write and return
+  // an error.
+  // -------------------------------------------------------------------------
+
+  describe("Property 8: ArchitectureDecision 必填字段验证", () => {
+    // Generator for a valid base payload (all required fields present)
+    const validPayloadArb = fc.record({
+      context: fc.string({ minLength: 1 }),
+      decision: fc.string({ minLength: 1 }),
+      alternatives: fc.array(fc.string({ minLength: 1 }), { minLength: 1 }),
+      consequences: fc.string({ minLength: 1 }),
+      projectId: fc.constant(TEST_PROJECT),
+    });
+
+    // The four required fields that can be individually invalidated
+    const requiredFields = [
+      "context",
+      "decision",
+      "alternatives",
+      "consequences",
+    ] as const;
+
+    // Generator that picks a non-empty subset of required fields to invalidate
+    const fieldsToInvalidateArb = fc
+      .subarray(requiredFields as unknown as string[], { minLength: 1 })
+      .filter((arr) => arr.length > 0);
+
+    // Generator for an invalid value for a given field
+    const invalidValueForField = (field: string) => {
+      if (field === "alternatives") {
+        // alternatives: empty array, non-array, undefined, or null
+        return fc.oneof(
+          fc.constant([]),
+          fc.constant(undefined),
+          fc.constant(null),
+        );
+      }
+      // string fields: empty string, undefined, or null
+      return fc.oneof(
+        fc.constant(""),
+        fc.constant(undefined),
+        fc.constant(null),
+      );
+    };
+
+    it(
+      "rejects when any combination of required fields is missing/invalid (Validates: Requirements 3.4)",
+      () => {
+        fc.assert(
+          fc.property(
+            validPayloadArb,
+            fieldsToInvalidateArb,
+            fc.integer({ min: 0, max: 2 }), // index to pick invalid value variant
+            (basePayload, fieldsToBreak, _seed) => {
+              // Build a payload with selected fields invalidated
+              const broken: Record<string, unknown> = { ...basePayload };
+
+              for (const field of fieldsToBreak) {
+                if (field === "alternatives") {
+                  broken[field] = [];
+                } else {
+                  broken[field] = "";
+                }
+              }
+
+              // recordDecision must throw for the broken payload
+              expect(() =>
+                sink.recordDecision(broken as DecisionPayload),
+              ).toThrow(/Missing required fields/);
+
+              // Verify the error message mentions each broken field
+              try {
+                sink.recordDecision(broken as DecisionPayload);
+              } catch (e: any) {
+                for (const field of fieldsToBreak) {
+                  expect(e.message).toContain(field);
+                }
+              }
+            },
+          ),
+          { numRuns: 100 },
+        );
+      },
+    );
+
+    it(
+      "accepts when all required fields are present and valid (Validates: Requirements 3.4)",
+      () => {
+        fc.assert(
+          fc.property(validPayloadArb, (payload) => {
+            // Should NOT throw when all fields are valid
+            const entity = sink.recordDecision(payload as DecisionPayload);
+            expect(entity).toBeDefined();
+            expect(entity.entityType).toBe("ArchitectureDecision");
+            expect(entity.status).toBe("active");
+            // Verify the extended attributes match the input
+            expect(entity.extendedAttributes.context).toBe(payload.context);
+            expect(entity.extendedAttributes.decision).toBe(payload.decision);
+            expect(entity.extendedAttributes.alternatives).toEqual(
+              payload.alternatives,
+            );
+            expect(entity.extendedAttributes.consequences).toBe(
+              payload.consequences,
+            );
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Feature: knowledge-graph, Property 9: 低置信度实体进入审核队列
+  // Validates: Requirements 3.3, 7.1
+  //
+  // For any entity with confidence < 0.5 or needsReview: true, the entity
+  // SHALL appear in the KnowledgeReviewQueue, and SHALL NOT be included in
+  // default graph query results (unless explicitly querying the review queue).
+  // -------------------------------------------------------------------------
+
+  describe("Property 9: 低置信度实体进入审核队列", () => {
+    /**
+     * Generator for a confidence value in [0.0, 1.0].
+     * We use double() constrained to this range.
+     */
+    const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true });
+
+    /**
+     * Generator for a valid entity type from the core ontology.
+     */
+    const entityTypeArb = fc.constantFrom(
+      "CodeModule",
+      "API",
+      "BusinessRule",
+      "ArchitectureDecision",
+      "TechStack",
+      "Agent",
+      "Role",
+      "Mission",
+      "Bug",
+      "Config",
+    );
+
+    /**
+     * Generator for a non-empty entity name.
+     */
+    const entityNameArb = fc.string({ minLength: 1, maxLength: 50 }).filter(
+      (s) => s.trim().length > 0,
+    );
+
+    it(
+      "entities with confidence < 0.5 from passive extraction appear in review queue and are marked needsReview (Validates: Requirements 3.3, 7.1)",
+      async () => {
+        await fc.assert(
+          fc.asyncProperty(
+            confidenceArb,
+            entityTypeArb,
+            entityNameArb,
+            async (confidence, entityType, entityName) => {
+              // Fresh instances per iteration to avoid cross-contamination
+              const gs = new GraphStore();
+              const or = new OntologyRegistry();
+              const rq = new KnowledgeReviewQueue(gs);
+              const s = new AgentKnowledgeSink(gs, or, rq);
+
+              const isLowConfidence = confidence < 0.5;
+
+              // Build an LLM response that returns a single entity with the
+              // generated confidence value
+              const llmResponse = JSON.stringify({
+                entities: [
+                  {
+                    entityType,
+                    name: entityName,
+                    description: `Test entity: ${entityName}`,
+                    confidence,
+                  },
+                ],
+                relations: [],
+              });
+
+              s.llmProvider = {
+                generate: async () => llmResponse,
+              };
+
+              const summary = await s.extractFromTaskCompletion({
+                taskId: "task-prop9",
+                missionId: "mission-prop9",
+                agentId: "agent-prop9",
+                projectId: TEST_PROJECT,
+                output: "Some task output for extraction",
+              });
+
+              // Find the created entity in the graph
+              const entities = gs.findEntities({
+                projectId: TEST_PROJECT,
+                entityType,
+                name: entityName,
+              });
+              const created = entities.find((e) => e.name === entityName);
+              expect(created).toBeDefined();
+
+              if (isLowConfidence) {
+                // Low confidence → needsReview must be true
+                expect(created!.needsReview).toBe(true);
+
+                // Must appear in the review queue
+                const queue = rq.getQueue({ projectId: TEST_PROJECT });
+                const inQueue = queue.find(
+                  (e) => e.entityId === created!.entityId,
+                );
+                expect(inQueue).toBeDefined();
+
+                // pendingReviewCount must be >= 1
+                expect(summary.pendingReviewCount).toBeGreaterThanOrEqual(1);
+              } else {
+                // High confidence → needsReview must be false
+                expect(created!.needsReview).toBe(false);
+
+                // Must NOT appear in the review queue
+                const queue = rq.getQueue({ projectId: TEST_PROJECT });
+                const inQueue = queue.find(
+                  (e) => e.entityId === created!.entityId,
+                );
+                expect(inQueue).toBeUndefined();
+              }
+            },
+          ),
+          { numRuns: 100 },
+        );
+      },
+    );
+
+    it(
+      "directly created entities with needsReview: true appear in review queue regardless of confidence (Validates: Requirements 7.1)",
+    
+      () => {
+        fc.assert(
+          fc.property(
+            confidenceArb,
+            entityTypeArb,
+            entityNameArb,
+            fc.boolean(),
+            (confidence, entityType, entityName, needsReview) => {
+              const gs = new GraphStore();
+              const rq = new KnowledgeReviewQueue(gs);
+
+              // Directly create an entity in the graph store
+              const entity = gs.createEntity({
+                entityType,
+                name: entityName,
+                description: `Direct entity: ${entityName}`,
+                source: "agent_extracted",
+                confidence,
+                projectId: TEST_PROJECT,
+                needsReview,
+                linkedMemoryIds: [],
+                extendedAttributes: {},
+              });
+
+              const queue = rq.getQueue({ projectId: TEST_PROJECT });
+              const inQueue = queue.find(
+                (e) => e.entityId === entity.entityId,
+              );
+
+              const shouldBeInQueue = confidence < 0.5 || needsReview;
+
+              if (shouldBeInQueue) {
+                // Entity must appear in the review queue
+                expect(inQueue).toBeDefined();
+              } else {
+                // Entity must NOT appear in the review queue
+                expect(inQueue).toBeUndefined();
+              }
+            },
+          ),
+          { numRuns: 100 },
+        );
+      },
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Feature: knowledge-graph, Property 10: 知识写入自动关系建立
+  // Validates: Requirements 3.5
+  //
+  // For any entity written to the graph with a missionId and agentId, the
+  // GraphStore SHALL contain EXECUTED_BY relation linking the entity to the
+  // Mission, and KNOWS_ABOUT relation linking the Agent to the entity,
+  // without explicit specification by the caller.
+  // -------------------------------------------------------------------------
+
+  describe("Property 10: 知识写入自动关系建立", () => {
+    /**
+     * Generator for a non-empty identifier string (missionId / agentId).
+     */
+    const idArb = fc
+      .string({ minLength: 1, maxLength: 40 })
+      .filter((s) => s.trim().length > 0);
+
+    /**
+     * Generator that picks one of the three write methods to exercise.
+     */
+    const writeMethodArb = fc.constantFrom(
+      "recordDecision" as const,
+      "recordRule" as const,
+      "recordBugfix" as const,
+    );
+
+    /**
+     * Helper: invoke the chosen write method with the given missionId and agentId,
+     * returning the created entity.
+     */
+    function writeEntity(
+      s: AgentKnowledgeSink,
+      method: "recordDecision" | "recordRule" | "recordBugfix",
+      missionId: string,
+      agentId: string,
+    ) {
+      switch (method) {
+        case "recordDecision":
+          return s.recordDecision(
+            makeDecisionPayload({ missionId, agentId }),
+          );
+        case "recordRule":
+          return s.recordRule(makeRulePayload({ missionId, agentId }));
+        case "recordBugfix":
+          return s.recordBugfix(makeBugfixPayload({ missionId, agentId }));
+      }
+    }
+
+    it(
+      "creates EXECUTED_BY and KNOWS_ABOUT relations automatically for any write with missionId and agentId (Validates: Requirements 3.5)",
+      () => {
+        fc.assert(
+          fc.property(
+            writeMethodArb,
+            idArb,
+            idArb,
+            (method, missionId, agentId) => {
+              // Fresh instances per iteration to avoid cross-contamination
+              const gs = new GraphStore();
+              const or = new OntologyRegistry();
+              const s = new AgentKnowledgeSink(gs, or);
+
+              const entity = writeEntity(s, method, missionId, agentId);
+
+              // --- EXECUTED_BY: entity → Mission ---
+              const executedByRels = gs
+                .findRelations({ projectId: TEST_PROJECT })
+                .filter(
+                  (r) =>
+                    r.relationType === "EXECUTED_BY" &&
+                    r.sourceEntityId === entity.entityId,
+                );
+
+              expect(executedByRels).toHaveLength(1);
+
+              // The target must be a Mission entity with the correct name
+              const missionTarget = gs.getEntity(
+                executedByRels[0].targetEntityId,
+              );
+              expect(missionTarget).toBeDefined();
+              expect(missionTarget!.entityType).toBe("Mission");
+              expect(missionTarget!.name).toBe(missionId);
+
+              // --- KNOWS_ABOUT: Agent → entity ---
+              const knowsAboutRels = gs
+                .findRelations({ projectId: TEST_PROJECT })
+                .filter(
+                  (r) =>
+                    r.relationType === "KNOWS_ABOUT" &&
+                    r.targetEntityId === entity.entityId,
+                );
+
+              expect(knowsAboutRels).toHaveLength(1);
+
+              // The source must be an Agent entity with the correct name
+              const agentSource = gs.getEntity(
+                knowsAboutRels[0].sourceEntityId,
+              );
+              expect(agentSource).toBeDefined();
+              expect(agentSource!.entityType).toBe("Agent");
+              expect(agentSource!.name).toBe(agentId);
+            },
+          ),
+          { numRuns: 100 },
+        );
+      },
+    );
+
+    it(
+      "does NOT create EXECUTED_BY or KNOWS_ABOUT when missionId/agentId are absent (Validates: Requirements 3.5)",
+      () => {
+        fc.assert(
+          fc.property(writeMethodArb, (method) => {
+            const gs = new GraphStore();
+            const or = new OntologyRegistry();
+            const s = new AgentKnowledgeSink(gs, or);
+
+            // Write without missionId or agentId
+            let entity;
+            switch (method) {
+              case "recordDecision":
+                entity = s.recordDecision(makeDecisionPayload());
+                break;
+              case "recordRule":
+                entity = s.recordRule(makeRulePayload());
+                break;
+              case "recordBugfix":
+                entity = s.recordBugfix(makeBugfixPayload());
+                break;
+            }
+
+            const autoRels = gs
+              .findRelations({ projectId: TEST_PROJECT })
+              .filter(
+                (r) =>
+                  r.relationType === "EXECUTED_BY" ||
+                  r.relationType === "KNOWS_ABOUT",
+              );
+
+            expect(autoRels).toHaveLength(0);
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
   });
 });

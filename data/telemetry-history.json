@@ -1,4 +1,121 @@
 {
   "version": 1,
-  "missions": []
+  "missions": [
+    {
+      "missionId": "Gu;a`6)",
+      "title": ".NO8p{M",
+      "completedAt": 1514910196332,
+      "totalTokensIn": 2320822,
+      "totalTokensOut": 7311198,
+      "totalCost": 2.4528975516469295e-130,
+      "totalCalls": 14132,
+      "topAgents": [
+        {
+          "agentId": "DS=8~l7C)T\"X",
+          "agentName": "~aV(!L>",
+          "avgDurationMs": 1.1383473293923658e-33,
+          "callCount": 9651
+        },
+        {
+          "agentId": "FH* 3lid",
+          "agentName": "(6>l*T",
+          "avgDurationMs": 7.3773469020823e-25,
+          "callCount": 2878
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "KGA+fT&N",
+          "stageLabel": "[$\\}",
+          "durationMs": 0.0000016555907160088658
+        }
+      ]
+    },
+    {
+      "missionId": "(Z/32X:ABU",
+      "title": "SQ)A'",
+      "completedAt": 1723527634177,
+      "totalTokensIn": 4957957,
+      "totalTokensOut": 9411435,
+      "totalCost": 3.697427355961613e-217,
+      "totalCalls": 44355,
+      "topAgents": [],
+      "stageTimings": []
+    },
+    {
+      "missionId": "$.Si",
+      "title": "L",
+      "completedAt": 177725670387,
+      "totalTokensIn": 3475993,
+      "totalTokensOut": 8573165,
+      "totalCost": 9.877806612808915e-51,
+      "totalCalls": 1732,
+      "topAgents": [
+        {
+          "agentId": "(2r%jvQ]%-[",
+          "agentName": "y'W[yl%/+Bc7",
+          "avgDurationMs": 1.370239766828688e-261,
+          "callCount": 1373
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "zW-xMD,Z5l",
+          "stageLabel": "DkH-m\\[=Sy>W",
+          "durationMs": 1.49234676866051e-51
+        },
+        {
+          "stageKey": "p\"",
+          "stageLabel": "<0TP",
+          "durationMs": 2.765265686556676e-266
+        },
+        {
+          "stageKey": "}RY0z",
+          "stageLabel": "\"D*!Z{h':=\\+",
+          "durationMs": 3.495257805270861e-153
+        },
+        {
+          "stageKey": "6",
+          "stageLabel": "m7yR}Ph>v",
+          "durationMs": 2.8810837655145622e-179
+        }
+      ]
+    },
+    {
+      "missionId": "%",
+      "title": "P",
+      "completedAt": 1425250807889,
+      "totalTokensIn": 8116668,
+      "totalTokensOut": 5843549,
+      "totalCost": 1.473065368834383e-171,
+      "totalCalls": 39002,
+      "topAgents": [
+        {
+          "agentId": "-",
+          "agentName": ",>.Z(^Yk!",
+          "avgDurationMs": 7.73292894629239e-170,
+          "callCount": 5327
+        },
+        {
+          "agentId": "c<3/b<~ ",
+          "agentName": "J(~2",
+          "avgDurationMs": 3.698359084669457e-98,
+          "callCount": 2543
+        },
+        {
+          "agentId": "V&Yj",
+          "agentName": "!-J,QmfzZsy;",
+          "avgDurationMs": 3.6190895047965256e-184,
+          "callCount": 8079
+        },
+        {
+          "agentId": "ymW5Mh",
+          "agentName": "[FIypEejq'",
+          "avgDurationMs": 7.988578174466572e-198,
+          "callCount": 4547
+        }
+      ],
+      "stageTimings": []
+    }
+  ]
 }

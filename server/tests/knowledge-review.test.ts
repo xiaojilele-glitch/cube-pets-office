@@ -298,3 +298,91 @@ describe("checkBacklogAlert", () => {
     expect(queue.checkBacklogAlert()).toBe(false);
   });
 });
+
+// -------------------------------------------------------------------------
+// Property-Based Tests
+// -------------------------------------------------------------------------
+
+import fc from "fast-check";
+
+describe("Feature: knowledge-graph, Property 21: 审核操作置信度调整", () => {
+  /**
+   * Validates: Requirements 7.2, 7.3
+   *
+   * For any review action "approve" by a human reviewer, the entity confidence
+   * SHALL become max(currentConfidence, 0.8); for any review action "approve"
+   * by a trusted Agent, the confidence SHALL become max(currentConfidence, 0.7);
+   * for any review action "reject", the entity status SHALL become "archived".
+   */
+
+  const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true });
+
+  const reviewerIdArb = fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0);
+
+  it("human approve sets confidence to max(currentConfidence, 0.8)", () => {
+    fc.assert(
+      fc.property(confidenceArb, reviewerIdArb, (confidence, reviewerId) => {
+        const entity = makeEntity(store, { confidence, needsReview: true });
+
+        const action: ReviewAction = {
+          action: "approve",
+          reviewedBy: reviewerId,
+          reviewerType: "human",
+        };
+
+        const updated = queue.review(entity.entityId, action);
+
+        expect(updated.confidence).toBeCloseTo(Math.max(confidence, 0.8), 10);
+        expect(updated.needsReview).toBe(false);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it("agent approve sets confidence to max(currentConfidence, 0.7)", () => {
+    fc.assert(
+      fc.property(confidenceArb, reviewerIdArb, (confidence, reviewerId) => {
+        const entity = makeEntity(store, { confidence, needsReview: true });
+
+        const action: ReviewAction = {
+          action: "approve",
+          reviewedBy: reviewerId,
+          reviewerType: "agent",
+        };
+
+        const updated = queue.review(entity.entityId, action);
+
+        expect(updated.confidence).toBeCloseTo(Math.max(confidence, 0.7), 10);
+        expect(updated.needsReview).toBe(false);
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it("reject sets entity status to archived", () => {
+    fc.assert(
+      fc.property(
+        confidenceArb,
+        reviewerIdArb,
+        fc.constantFrom("human" as const, "agent" as const),
+        fc.option(fc.string({ minLength: 1, maxLength: 100 }), { nil: undefined }),
+        (confidence, reviewerId, reviewerType, rejectionReason) => {
+          const entity = makeEntity(store, { confidence, needsReview: true });
+
+          const action: ReviewAction = {
+            action: "reject",
+            reviewedBy: reviewerId,
+            reviewerType,
+            rejectionReason,
+          };
+
+          const updated = queue.review(entity.entityId, action);
+
+          expect(updated.status).toBe("archived");
+          expect(updated.needsReview).toBe(false);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});

@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import fc from "fast-check";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -360,7 +361,7 @@ describe("OntologyRegistry", () => {
     });
 
     it("handles missing ontology file gracefully", () => {
-      // No file exists — should not throw
+      // No file exists 鈥?should not throw
       const registry = new OntologyRegistry();
       expect(registry.getEntityTypes().length).toBe(10);
       expect(registry.getRelationTypes().length).toBe(11);
@@ -377,4 +378,193 @@ describe("OntologyRegistry", () => {
       expect(registry.getRelationTypes().length).toBe(11);
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Property-Based Tests
+  // -------------------------------------------------------------------------
+
+  describe("Feature: knowledge-graph, Property 3: 鑷畾涔夌被鍨嬫敞鍐屽線杩斾竴鑷存€?, () => {
+    /**
+     * Validates: Requirements 1.5, 1.6
+     *
+     * For any custom entity type name registered via OntologyRegistry.registerEntityType(),
+     * the type SHALL appear in OntologyRegistry.getEntityTypes() with source marked as "custom",
+     * and the total count of returned types SHALL equal the core types count plus the number
+     * of registered custom types.
+     */
+    it("registered custom entity types appear in getEntityTypes() with source 'custom' and correct total count", () => {
+      const CORE_ENTITY_COUNT = 10;
+
+      // Generate unique custom type names that don't collide with core types
+      const coreNames = new Set([
+        "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
+        "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+      ]);
+
+      const customTypeNameArb = fc.string({ minLength: 1, maxLength: 50 })
+        .filter((s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s) && !coreNames.has(s));
+
+      const customTypeArb = fc.record({
+        name: customTypeNameArb,
+        description: fc.string({ minLength: 0, maxLength: 100 }),
+        extendedAttributes: fc.array(fc.string({ minLength: 1, maxLength: 30 }), { maxLength: 5 }),
+      });
+
+      fc.assert(
+        fc.property(
+          fc.uniqueArray(customTypeArb, {
+            minLength: 1,
+            maxLength: 10,
+            selector: (t) => t.name,
+          }),
+          (customTypes) => {
+            cleanupOntologyFile();
+            const registry = new OntologyRegistry();
+
+            // Register all custom types
+            for (const ct of customTypes) {
+              registry.registerEntityType(ct);
+            }
+
+            const allTypes = registry.getEntityTypes();
+
+            // 1) Total count = core count + unique custom count
+            expect(allTypes.length).toBe(CORE_ENTITY_COUNT + customTypes.length);
+
+            // 2) Each registered custom type appears with source "custom"
+            for (const ct of customTypes) {
+              const found = allTypes.find((t) => t.name === ct.name);
+              expect(found).toBeDefined();
+              expect(found!.source).toBe("custom");
+              expect(found!.description).toBe(ct.description);
+              expect(found!.extendedAttributes).toEqual(ct.extendedAttributes);
+              expect(found!.registeredAt).toBeTruthy();
+            }
+
+            // 3) Core types are still present and unchanged
+            const coreTypes = allTypes.filter((t) => t.source === "core");
+            expect(coreTypes.length).toBe(CORE_ENTITY_COUNT);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Property 4: 鏈綋鍙樻洿浜嬩欢瑙﹀彂
+  // -------------------------------------------------------------------------
+
+  describe("Feature: knowledge-graph, Property 4: 鏈綋鍙樻洿浜嬩欢瑙﹀彂", () => {
+    /**
+     * Validates: Requirements 1.7
+     *
+     * For any call to registerEntityType() or registerRelationType(),
+     * the OntologyRegistry SHALL emit exactly one "ontology.changed" event.
+     */
+
+    const coreEntityNames = new Set([
+      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
+      "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+    ]);
+    const coreRelationNames = new Set([
+      "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
+      "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY",
+      "KNOWS_ABOUT",
+    ]);
+
+    const identifierArb = fc.string({ minLength: 1, maxLength: 40 })
+      .filter((s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s));
+
+    const customEntityNameArb = identifierArb.filter((s) => !coreEntityNames.has(s));
+    const customRelationNameArb = identifierArb
+      .map((s) => s.toUpperCase())
+      .filter((s) => !coreRelationNames.has(s));
+
+    const entityDefArb = fc.record({
+      name: customEntityNameArb,
+      description: fc.string({ maxLength: 60 }),
+      extendedAttributes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 4 }),
+    });
+
+    const relationDefArb = fc.record({
+      name: customRelationNameArb,
+      description: fc.string({ maxLength: 60 }),
+      sourceEntityTypes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 3 }),
+      targetEntityTypes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 3 }),
+    });
+
+    // Model a sequence of register operations, each tagged with its kind
+    const operationArb = fc.oneof(
+      entityDefArb.map((def) => ({ kind: "entity" as const, def })),
+      relationDefArb.map((def) => ({ kind: "relation" as const, def })),
+    );
+
+    it("each registerEntityType() or registerRelationType() call emits exactly one change event", () => {
+      fc.assert(
+        fc.property(
+          fc.array(operationArb, { minLength: 1, maxLength: 15 }),
+          (operations) => {
+            cleanupOntologyFile();
+            const registry = new OntologyRegistry();
+            const listener = vi.fn();
+            registry.onChange(listener);
+
+            for (let i = 0; i < operations.length; i++) {
+              const op = operations[i];
+              const callsBefore = listener.mock.calls.length;
+
+              if (op.kind === "entity") {
+                registry.registerEntityType(op.def);
+              } else {
+                registry.registerRelationType(op.def);
+              }
+
+              // Exactly one new call per registration
+              expect(listener.mock.calls.length).toBe(callsBefore + 1);
+            }
+
+            // Total events == total operations
+            expect(listener).toHaveBeenCalledTimes(operations.length);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+
+    it("unsubscribed listeners receive zero events after unsubscribe", () => {
+      fc.assert(
+        fc.property(
+          fc.array(operationArb, { minLength: 1, maxLength: 10 }),
+          fc.integer({ min: 0, max: 9 }),
+          (operations, unsubAfterRaw) => {
+            cleanupOntologyFile();
+            const registry = new OntologyRegistry();
+            const listener = vi.fn();
+            const unsub = registry.onChange(listener);
+
+            const unsubAfter = Math.min(unsubAfterRaw, operations.length);
+
+            for (let i = 0; i < operations.length; i++) {
+              if (i === unsubAfter) unsub();
+
+              const op = operations[i];
+              if (op.kind === "entity") {
+                registry.registerEntityType(op.def);
+              } else {
+                registry.registerRelationType(op.def);
+              }
+            }
+
+            // Listener should have been called exactly `unsubAfter` times
+            expect(listener).toHaveBeenCalledTimes(unsubAfter);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+  });
 });
+
+// Inside the main describe, but we need to close and reopen 鈥?actually let's insert before the final closing
+

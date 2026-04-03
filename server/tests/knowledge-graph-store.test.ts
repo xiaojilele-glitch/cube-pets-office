@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+﻿import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import fc from "fast-check";
 import fs from "fs";
 import path from "path";
 import os from "os";
@@ -625,7 +626,7 @@ describe("GraphStore", () => {
       const listener = vi.fn();
       store.onEntityChanged(listener);
 
-      // First merge → creates
+      // First merge 鈫?creates
       store.mergeEntity({
         entityType: "CodeModule",
         projectId: TEST_PROJECT,
@@ -635,7 +636,7 @@ describe("GraphStore", () => {
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener.mock.calls[0][1]).toBe("created");
 
-      // Second merge → updates
+      // Second merge 鈫?updates
       store.mergeEntity({
         entityType: "CodeModule",
         projectId: TEST_PROJECT,
@@ -750,7 +751,7 @@ describe("GraphStore", () => {
       store.createRelation(makeRelationInput(b.entityId, c.entityId));
       store.createRelation(makeRelationInput(c.entityId, a.entityId));
 
-      // Should not hang — depth=10 is way more than the cycle length
+      // Should not hang 鈥?depth=10 is way more than the cycle length
       const result = store.getNeighbors(a.entityId, undefined, 10);
       expect(result.entities).toHaveLength(2);
       const names = result.entities.map((e) => e.name).sort();
@@ -882,7 +883,7 @@ describe("GraphStore", () => {
       store.createRelation(makeRelationInput(a.entityId, b.entityId));
       store.createRelation(makeRelationInput(b.entityId, c.entityId));
 
-      // Only request A and B — relation B->C should be excluded
+      // Only request A and B 鈥?relation B->C should be excluded
       const sub = store.getSubgraph([a.entityId, b.entityId]);
       expect(sub.entities).toHaveLength(2);
       expect(sub.relations).toHaveLength(1);
@@ -915,7 +916,7 @@ describe("GraphStore", () => {
   // -------------------------------------------------------------------------
 
   describe("enforceStatusTransition", () => {
-    it("allows active → deprecated", () => {
+    it("allows active 鈫?deprecated", () => {
       const entity = store.createEntity(makeEntityInput());
       expect(entity.status).toBe("active");
 
@@ -925,7 +926,7 @@ describe("GraphStore", () => {
       expect(updated.status).toBe("deprecated");
     });
 
-    it("allows deprecated → archived", () => {
+    it("allows deprecated 鈫?archived", () => {
       const entity = store.createEntity(makeEntityInput());
       store.updateEntity(entity.entityId, { status: "deprecated" });
 
@@ -935,7 +936,7 @@ describe("GraphStore", () => {
       expect(updated.status).toBe("archived");
     });
 
-    it("allows archived → active (manual restoration)", () => {
+    it("allows archived 鈫?active (manual restoration)", () => {
       const entity = store.createEntity(makeEntityInput());
       store.updateEntity(entity.entityId, { status: "deprecated" });
       store.updateEntity(entity.entityId, { status: "archived" });
@@ -946,14 +947,14 @@ describe("GraphStore", () => {
       expect(updated.status).toBe("active");
     });
 
-    it("throws on invalid transition: active → archived", () => {
+    it("throws on invalid transition: active 鈫?archived", () => {
       const entity = store.createEntity(makeEntityInput());
       expect(() =>
         store.enforceStatusTransition(entity.entityId, "archived", "skip", "manual"),
       ).toThrow(/Invalid status transition.*active.*archived/);
     });
 
-    it("throws on invalid transition: deprecated → active", () => {
+    it("throws on invalid transition: deprecated 鈫?active", () => {
       const entity = store.createEntity(makeEntityInput());
       store.updateEntity(entity.entityId, { status: "deprecated" });
 
@@ -962,7 +963,7 @@ describe("GraphStore", () => {
       ).toThrow(/Invalid status transition.*deprecated.*active/);
     });
 
-    it("throws on invalid transition: archived → deprecated", () => {
+    it("throws on invalid transition: archived 鈫?deprecated", () => {
       const entity = store.createEntity(makeEntityInput());
       store.updateEntity(entity.entityId, { status: "deprecated" });
       store.updateEntity(entity.entityId, { status: "archived" });
@@ -1018,12 +1019,1307 @@ describe("GraphStore", () => {
     });
 
     it("does not write log when no lifecycleLog is available", () => {
-      // store.lifecycleLog is undefined, no param passed — should not throw
+      // store.lifecycleLog is undefined, no param passed 鈥?should not throw
       const entity = store.createEntity(makeEntityInput());
       const updated = store.enforceStatusTransition(
         entity.entityId, "deprecated", "silent", "manual",
       );
       expect(updated.status).toBe("deprecated");
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // Property 1: 瀹炰綋鍒涘缓灞炴€у畬鏁存€?
+  // -------------------------------------------------------------------------
+
+  describe("Feature: knowledge-graph, Property 1: 瀹炰綋鍒涘缓灞炴€у畬鏁存€?, () => {
+    /**
+     * Validates: Requirements 1.3
+     *
+     * For any entity creation input with valid entityType, name, and projectId,
+     * the created Entity SHALL contain all common attributes (entityId, entityType,
+     * name, description, createdAt, updatedAt, source, confidence, projectId) with
+     * non-null values, and entityId SHALL be globally unique.
+     */
+
+    const entitySourceArb = fc.constantFrom(
+      "agent_extracted" as const,
+      "user_defined" as const,
+      "code_analysis" as const,
+      "llm_inferred" as const,
+    );
+
+    const entityTypeArb = fc.constantFrom(
+      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
+      "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+    );
+
+    const entityInputArb = fc.record({
+      entityType: entityTypeArb,
+      name: fc.string({ minLength: 1, maxLength: 100 }),
+      description: fc.string({ minLength: 0, maxLength: 200 }),
+      source: entitySourceArb,
+      confidence: fc.double({ min: 0, max: 1, noNaN: true }),
+      projectId: fc.string({ minLength: 1, maxLength: 50 }).filter((s) => /^[A-Za-z0-9_-]+$/.test(s)),
+      needsReview: fc.boolean(),
+      linkedMemoryIds: fc.array(fc.uuid(), { maxLength: 3 }),
+      extendedAttributes: fc.constant({} as Record<string, unknown>),
+    });
+
+    it("created entity contains all common attributes with non-null values", () => {
+      fc.assert(
+        fc.property(entityInputArb, (input) => {
+          const entity = store.createEntity(input);
+
+          // All common attributes must be non-null and defined
+          expect(entity.entityId).not.toBeNull();
+          expect(entity.entityId).toBeDefined();
+          expect(entity.entityId.length).toBeGreaterThan(0);
+
+          expect(entity.entityType).toBe(input.entityType);
+          expect(entity.entityType).not.toBeNull();
+
+          expect(entity.name).toBe(input.name);
+          expect(entity.name).not.toBeNull();
+
+          expect(entity.description).toBe(input.description);
+          expect(entity.description).not.toBeNull();
+
+          expect(entity.createdAt).not.toBeNull();
+          expect(entity.createdAt).toBeDefined();
+          expect(entity.createdAt.length).toBeGreaterThan(0);
+          // Must be valid ISO 8601
+          expect(new Date(entity.createdAt).toISOString()).toBe(entity.createdAt);
+
+          expect(entity.updatedAt).not.toBeNull();
+          expect(entity.updatedAt).toBeDefined();
+          expect(entity.updatedAt.length).toBeGreaterThan(0);
+          expect(new Date(entity.updatedAt).toISOString()).toBe(entity.updatedAt);
+
+          expect(entity.source).not.toBeNull();
+          expect(["agent_extracted", "user_defined", "code_analysis", "llm_inferred"]).toContain(entity.source);
+
+          expect(entity.confidence).not.toBeNull();
+          expect(entity.confidence).toBeDefined();
+          expect(entity.confidence).toBeGreaterThanOrEqual(0);
+          expect(entity.confidence).toBeLessThanOrEqual(1);
+
+          // user_defined source forces confidence to 1.0
+          if (input.source === "user_defined") {
+            expect(entity.confidence).toBe(1.0);
+          }
+
+          expect(entity.projectId).toBe(input.projectId);
+          expect(entity.projectId).not.toBeNull();
+
+          // Auto-assigned fields
+          expect(entity.status).toBe("active");
+        }),
+        { numRuns: 20 },
+      );
+    });
+
+    it("entityId is globally unique across all created entities", () => {
+      fc.assert(
+        fc.property(
+          fc.array(entityInputArb, { minLength: 2, maxLength: 20 }),
+          (inputs) => {
+            const entities = inputs.map((input) => store.createEntity(input));
+            const ids = entities.map((e) => e.entityId);
+            const uniqueIds = new Set(ids);
+
+            // All IDs must be unique
+            expect(uniqueIds.size).toBe(ids.length);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Property 2: 鍏崇郴鍒涘缓灞炴€у畬鏁存€?
+  // -------------------------------------------------------------------------
+
+  describe("Feature: knowledge-graph, Property 2: 鍏崇郴鍒涘缓灞炴€у畬鏁存€?, () => {
+    /**
+     * Validates: Requirements 1.4
+     *
+     * For any relation creation input with valid relationType, sourceEntityId,
+     * and targetEntityId, the created Relation SHALL contain all common attributes
+     * (relationId, relationType, sourceEntityId, targetEntityId, weight, evidence,
+     * createdAt, source) with non-null values.
+     */
+
+    const relationSourceArb = fc.constantFrom(
+      "agent_extracted" as const,
+      "user_defined" as const,
+      "code_analysis" as const,
+      "llm_inferred" as const,
+    );
+
+    const relationTypeArb = fc.constantFrom(
+      "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
+      "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY", "KNOWS_ABOUT",
+    );
+
+    it("created relation contains all common attributes with non-null values", () => {
+      // Pre-create a pair of entities that all iterations will reference
+      const sourceEntity = store.createEntity(makeEntityInput({ name: "PropSource" }));
+      const targetEntity = store.createEntity(makeEntityInput({ name: "PropTarget" }));
+
+      const relationInputArb = fc.record({
+        relationType: relationTypeArb,
+        sourceEntityId: fc.constant(sourceEntity.entityId),
+        targetEntityId: fc.constant(targetEntity.entityId),
+        weight: fc.double({ min: 0, max: 1, noNaN: true }),
+        evidence: fc.string({ minLength: 1, maxLength: 200 }),
+        source: relationSourceArb,
+        confidence: fc.double({ min: 0, max: 1, noNaN: true }),
+        needsReview: fc.boolean(),
+      });
+
+      fc.assert(
+        fc.property(relationInputArb, (input) => {
+          const relation = store.createRelation(input);
+
+          // relationId: non-null, defined, non-empty
+          expect(relation.relationId).not.toBeNull();
+          expect(relation.relationId).toBeDefined();
+          expect(relation.relationId.length).toBeGreaterThan(0);
+
+          // relationType: matches input, non-null
+          expect(relation.relationType).toBe(input.relationType);
+          expect(relation.relationType).not.toBeNull();
+
+          // sourceEntityId: matches input, non-null
+          expect(relation.sourceEntityId).toBe(input.sourceEntityId);
+          expect(relation.sourceEntityId).not.toBeNull();
+
+          // targetEntityId: matches input, non-null
+          expect(relation.targetEntityId).toBe(input.targetEntityId);
+          expect(relation.targetEntityId).not.toBeNull();
+
+          // weight: non-null, within [0, 1]
+          expect(relation.weight).not.toBeNull();
+          expect(relation.weight).toBeDefined();
+          expect(relation.weight).toBeGreaterThanOrEqual(0);
+          expect(relation.weight).toBeLessThanOrEqual(1);
+
+          // evidence: non-null, matches input
+          expect(relation.evidence).not.toBeNull();
+          expect(relation.evidence).toBeDefined();
+          expect(relation.evidence).toBe(input.evidence);
+
+          // createdAt: non-null, valid ISO 8601
+          expect(relation.createdAt).not.toBeNull();
+          expect(relation.createdAt).toBeDefined();
+          expect(relation.createdAt.length).toBeGreaterThan(0);
+          expect(new Date(relation.createdAt).toISOString()).toBe(relation.createdAt);
+
+          // source: non-null, valid enum value
+          expect(relation.source).not.toBeNull();
+          expect(relation.source).toBeDefined();
+          expect(["agent_extracted", "user_defined", "code_analysis", "llm_inferred"]).toContain(relation.source);
+        }),
+        { numRuns: 20 },
+      );
+    });
+
+    it("relationId is globally unique across all created relations", () => {
+      const sourceEntity = store.createEntity(makeEntityInput({ name: "UniqueRelSource" }));
+      const targetEntity = store.createEntity(makeEntityInput({ name: "UniqueRelTarget" }));
+
+      const relationInputArb = fc.record({
+        relationType: relationTypeArb,
+        sourceEntityId: fc.constant(sourceEntity.entityId),
+        targetEntityId: fc.constant(targetEntity.entityId),
+        weight: fc.double({ min: 0, max: 1, noNaN: true }),
+        evidence: fc.string({ minLength: 1, maxLength: 200 }),
+        source: relationSourceArb,
+        confidence: fc.double({ min: 0, max: 1, noNaN: true }),
+        needsReview: fc.boolean(),
+      });
+
+      fc.assert(
+        fc.property(
+          fc.array(relationInputArb, { minLength: 2, maxLength: 20 }),
+          (inputs) => {
+            const relations = inputs.map((input) => store.createRelation(input));
+            const ids = relations.map((r) => r.relationId);
+            const uniqueIds = new Set(ids);
+
+            // All relation IDs must be unique
+            expect(uniqueIds.size).toBe(ids.length);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Property 7: 瀹炰綋鍘婚噸鍞竴閿笉鍙橀噺
+  // -------------------------------------------------------------------------
+
+  describe("Feature: knowledge-graph, Property 7: 瀹炰綋鍘婚噸鍞竴閿笉鍙橀噺", () => {
+    /**
+     * Validates: Requirements 2.6
+     *
+     * For any two entities with identical (entityType, projectId, filePath, name)
+     * written to the graph, the graph SHALL contain exactly one entity for that
+     * unique key, and the retained entity SHALL have the higher confidence value
+     * for conflicting attributes.
+     */
+
+    const entityTypeArb = fc.constantFrom(
+      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
+      "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+    );
+
+    // Generate a safe projectId (alphanumeric + dash/underscore)
+    const projectIdArb = fc
+      .string({ minLength: 1, maxLength: 30 })
+      .filter((s) => /^[A-Za-z0-9_-]+$/.test(s));
+
+    // Generate a safe filePath
+    const filePathArb = fc
+      .array(fc.stringMatching(/^[a-z][a-z0-9]{0,9}$/), { minLength: 1, maxLength: 4 })
+      .map((parts) => parts.join("/") + ".ts");
+
+    // Generate a non-empty name
+    const nameArb = fc.string({ minLength: 1, maxLength: 50 });
+
+    // Confidence in valid range
+    const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true });
+
+    it("mergeEntity with identical unique key produces exactly one entity", () => {
+      // Exclude user_defined source since createEntity overrides confidence to 1.0
+      // for that source, which is a separate invariant (Requirement 1.3)
+      const nonUserSourceArb = fc.constantFrom(
+        "agent_extracted" as const,
+        "code_analysis" as const,
+        "llm_inferred" as const,
+      );
+
+      fc.assert(
+        fc.property(
+          entityTypeArb,
+          projectIdArb,
+          filePathArb,
+          nameArb,
+          confidenceArb,
+          confidenceArb,
+          nonUserSourceArb,
+          nonUserSourceArb,
+          (entityType, projectId, filePath, name, conf1, conf2, source1, source2) => {
+            // Fresh store per iteration to avoid cross-contamination
+            const localStore = new GraphStore();
+
+            // First write
+            localStore.mergeEntity({
+              entityType,
+              projectId,
+              name,
+              description: "first",
+              source: source1,
+              confidence: conf1,
+              extendedAttributes: { filePath },
+            });
+
+            // Second write with same unique key
+            localStore.mergeEntity({
+              entityType,
+              projectId,
+              name,
+              description: "second",
+              source: source2,
+              confidence: conf2,
+              extendedAttributes: { filePath },
+            });
+
+            // Exactly one entity for this unique key
+            const all = localStore.getAllEntities(projectId);
+            const matches = all.filter(
+              (e) =>
+                e.entityType === entityType &&
+                e.name === name &&
+                (e.extendedAttributes as Record<string, unknown>)?.filePath === filePath,
+            );
+            expect(matches).toHaveLength(1);
+
+            // Retained entity has the higher confidence
+            const retained = matches[0];
+            expect(retained.confidence).toBeGreaterThanOrEqual(conf1);
+            expect(retained.confidence).toBeGreaterThanOrEqual(conf2);
+            expect(retained.confidence).toBe(Math.max(conf1, conf2));
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+
+    it("multiple merges with same key always converge to max confidence", () => {
+      fc.assert(
+        fc.property(
+          entityTypeArb,
+          projectIdArb,
+          filePathArb,
+          nameArb,
+          fc.array(confidenceArb, { minLength: 2, maxLength: 10 }),
+          (entityType, projectId, filePath, name, confidences) => {
+            const localStore = new GraphStore();
+
+            for (const conf of confidences) {
+              localStore.mergeEntity({
+                entityType,
+                projectId,
+                name,
+                source: "code_analysis",
+                confidence: conf,
+                extendedAttributes: { filePath },
+              });
+            }
+
+            const all = localStore.getAllEntities(projectId);
+            const matches = all.filter(
+              (e) =>
+                e.entityType === entityType &&
+                e.name === name &&
+                (e.extendedAttributes as Record<string, unknown>)?.filePath === filePath,
+            );
+
+            // Still exactly one entity
+            expect(matches).toHaveLength(1);
+
+            // Confidence is the max of all written values
+            const expectedMax = Math.max(...confidences);
+            expect(matches[0].confidence).toBe(expectedMax);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+
+    it("different unique keys produce separate entities", () => {
+      fc.assert(
+        fc.property(
+          projectIdArb,
+          nameArb,
+          filePathArb,
+          filePathArb,
+          confidenceArb,
+          (projectId, name, filePath1, filePath2) => {
+            // Skip when filePaths are identical 鈥?that's the same unique key
+            fc.pre(filePath1 !== filePath2);
+
+            const localStore = new GraphStore();
+
+            localStore.mergeEntity({
+              entityType: "CodeModule",
+              projectId,
+              name,
+              source: "code_analysis",
+              confidence: 0.8,
+              extendedAttributes: { filePath: filePath1 },
+            });
+
+            localStore.mergeEntity({
+              entityType: "CodeModule",
+              projectId,
+              name,
+              source: "code_analysis",
+              confidence: 0.8,
+              extendedAttributes: { filePath: filePath2 },
+            });
+
+            const all = localStore.getAllEntities(projectId);
+            const matches = all.filter(
+              (e) => e.entityType === "CodeModule" && e.name === name,
+            );
+
+            // Two distinct entities because filePaths differ
+            expect(matches).toHaveLength(2);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Property 12: 椤圭洰闅旂涓嶅彉閲?
+  // -------------------------------------------------------------------------
+
+  describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?, () => {
+    /**
+     * Validates: Requirements 4.5
+     *
+     * For any graph query with projectId A, the returned entities and relations
+     * SHALL exclusively belong to projectId A; no entity or relation with a
+     * different projectId SHALL appear in the results.
+     */
+
+    const entityTypeArb = fc.constantFrom(
+      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
+      "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+    );
+
+    const entitySourceArb = fc.constantFrom(
+      "agent_extracted" as const,
+      "user_defined" as const,
+      "code_analysis" as const,
+      "llm_inferred" as const,
+    );
+
+    // Use a unique prefix to avoid collisions with disk data from other tests
+    const projectIdArb = fc
+      .stringMatching(/^[a-zA-Z][A-Za-z0-9]{2,10}$/)
+      .map((s) => `iso12-${s}`);
+
+    const nameArb = fc.string({ minLength: 1, maxLength: 50 });
+
+    const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true });
+
+    const relationTypeArb = fc.constantFrom(
+      "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
+      "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY", "KNOWS_ABOUT",
+    );
+
+    it("findEntities returns only entities belonging to the queried projectId", () => {
+      fc.assert(
+        fc.property(
+          projectIdArb,
+          projectIdArb,
+          fc.array(
+            fc.record({
+              entityType: entityTypeArb,
+              name: nameArb,
+              source: entitySourceArb,
+              confidence: confidenceArb,
+            }),
+            { minLength: 1, maxLength: 5 },
+          ),
+          fc.array(
+            fc.record({
+              entityType: entityTypeArb,
+              name: nameArb,
+              source: entitySourceArb,
+              confidence: confidenceArb,
+            }),
+            { minLength: 1, maxLength: 5 },
+          ),
+          (projectA, projectB, entitiesA, entitiesB) => {
+            fc.pre(projectA !== projectB);
+
+            const localStore = new GraphStore();
+
+            // Create entities in project A
+            for (const input of entitiesA) {
+              localStore.createEntity({
+                ...input,
+                description: "entity in project A",
+                projectId: projectA,
+                needsReview: false,
+                linkedMemoryIds: [],
+                extendedAttributes: {},
+              });
+            }
+
+            // Create entities in project B
+            for (const input of entitiesB) {
+              localStore.createEntity({
+                ...input,
+                description: "entity in project B",
+                projectId: projectB,
+                needsReview: false,
+                linkedMemoryIds: [],
+                extendedAttributes: {},
+              });
+            }
+
+            // Query project A 鈥?every returned entity must belong to project A
+            const resultsA = localStore.findEntities({ projectId: projectA });
+            for (const entity of resultsA) {
+              expect(entity.projectId).toBe(projectA);
+            }
+            // Must contain at least the entities we just created
+            expect(resultsA.length).toBeGreaterThanOrEqual(entitiesA.length);
+
+            // Query project B 鈥?every returned entity must belong to project B
+            const resultsB = localStore.findEntities({ projectId: projectB });
+            for (const entity of resultsB) {
+              expect(entity.projectId).toBe(projectB);
+            }
+            expect(resultsB.length).toBeGreaterThanOrEqual(entitiesB.length);
+
+            // Cross-check: no entity from project B appears in project A results
+            const idsB = new Set(resultsB.map((e) => e.entityId));
+            for (const entity of resultsA) {
+              expect(idsB.has(entity.entityId)).toBe(false);
+            }
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+
+    it("findRelations with projectId returns only relations from that project", () => {
+      fc.assert(
+        fc.property(
+          projectIdArb,
+          projectIdArb,
+          relationTypeArb,
+          relationTypeArb,
+          (projectA, projectB, relTypeA, relTypeB) => {
+            fc.pre(projectA !== projectB);
+
+            const localStore = new GraphStore();
+
+            // Create entities and relations in project A
+            const a1 = localStore.createEntity({
+              entityType: "CodeModule",
+              name: "ModA1",
+              description: "",
+              source: "code_analysis",
+              confidence: 0.8,
+              projectId: projectA,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            const a2 = localStore.createEntity({
+              entityType: "CodeModule",
+              name: "ModA2",
+              description: "",
+              source: "code_analysis",
+              confidence: 0.8,
+              projectId: projectA,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            localStore.createRelation({
+              relationType: relTypeA,
+              sourceEntityId: a1.entityId,
+              targetEntityId: a2.entityId,
+              weight: 0.9,
+              evidence: "test",
+              source: "code_analysis",
+              confidence: 0.8,
+              needsReview: false,
+            });
+
+            // Create entities and relations in project B
+            const b1 = localStore.createEntity({
+              entityType: "API",
+              name: "ModB1",
+              description: "",
+              source: "code_analysis",
+              confidence: 0.7,
+              projectId: projectB,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            const b2 = localStore.createEntity({
+              entityType: "API",
+              name: "ModB2",
+              description: "",
+              source: "code_analysis",
+              confidence: 0.7,
+              projectId: projectB,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            localStore.createRelation({
+              relationType: relTypeB,
+              sourceEntityId: b1.entityId,
+              targetEntityId: b2.entityId,
+              weight: 0.8,
+              evidence: "test",
+              source: "code_analysis",
+              confidence: 0.7,
+              needsReview: false,
+            });
+
+            // Query relations for project A 鈥?all must reference project A entities
+            const relationsA = localStore.findRelations({ projectId: projectA });
+            expect(relationsA.length).toBeGreaterThanOrEqual(1);
+            const entityIdsA = new Set(
+              localStore.findEntities({ projectId: projectA }).map((e) => e.entityId),
+            );
+            for (const rel of relationsA) {
+              expect(
+                entityIdsA.has(rel.sourceEntityId) && entityIdsA.has(rel.targetEntityId),
+              ).toBe(true);
+            }
+
+            // Query relations for project B 鈥?all must reference project B entities
+            const relationsB = localStore.findRelations({ projectId: projectB });
+            expect(relationsB.length).toBeGreaterThanOrEqual(1);
+            const entityIdsB = new Set(
+              localStore.findEntities({ projectId: projectB }).map((e) => e.entityId),
+            );
+            for (const rel of relationsB) {
+              expect(
+                entityIdsB.has(rel.sourceEntityId) && entityIdsB.has(rel.targetEntityId),
+              ).toBe(true);
+            }
+
+            // Cross-check: no relation from project B appears in project A results
+            const relIdsB = new Set(relationsB.map((r) => r.relationId));
+            for (const rel of relationsA) {
+              expect(relIdsB.has(rel.relationId)).toBe(false);
+            }
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+
+    it("findEntities with additional filters still enforces project isolation", () => {
+      fc.assert(
+        fc.property(
+          projectIdArb,
+          projectIdArb,
+          entityTypeArb,
+          (projectA, projectB, sharedType) => {
+            fc.pre(projectA !== projectB);
+
+            const localStore = new GraphStore();
+
+            // Create entities of the same type and name in both projects
+            localStore.createEntity({
+              entityType: sharedType,
+              name: "SharedName",
+              description: "in A",
+              source: "code_analysis",
+              confidence: 0.9,
+              projectId: projectA,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            localStore.createEntity({
+              entityType: sharedType,
+              name: "SharedName",
+              description: "in B",
+              source: "code_analysis",
+              confidence: 0.9,
+              projectId: projectB,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+
+            // Query with entityType filter 鈥?must still isolate by project
+            const results = localStore.findEntities({
+              projectId: projectA,
+              entityType: sharedType,
+            });
+            for (const entity of results) {
+              expect(entity.projectId).toBe(projectA);
+            }
+            expect(results.length).toBeGreaterThanOrEqual(1);
+
+            // Query with name filter 鈥?must still isolate by project
+            const nameResults = localStore.findEntities({
+              projectId: projectA,
+              name: "SharedName",
+            });
+            for (const entity of nameResults) {
+              expect(entity.projectId).toBe(projectA);
+            }
+            expect(nameResults.length).toBeGreaterThanOrEqual(1);
+
+            // Verify none of project B's entities leaked into project A results
+            const bEntities = localStore.findEntities({ projectId: projectB });
+            const bIds = new Set(bEntities.map((e) => e.entityId));
+            for (const entity of results) {
+              expect(bIds.has(entity.entityId)).toBe(false);
+            }
+          },
+        ),
+        { numRuns: 20 },
+      );
+    });
+  });
+});
+
+// -------------------------------------------------------------------------
+// Property 12: 椤圭洰闅旂涓嶅彉閲?
+// -------------------------------------------------------------------------
+
+describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?, () => {
+  /**
+   * Validates: Requirements 4.5
+   *
+   * For any graph query with projectId A, the returned entities and relations
+   * SHALL exclusively belong to projectId A; no entity or relation with a
+   * different projectId SHALL appear in the results.
+   */
+
+  const entityTypeArb = fc.constantFrom(
+    "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
+    "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+  );
+
+  const entitySourceArb = fc.constantFrom(
+    "agent_extracted" as const,
+    "user_defined" as const,
+    "code_analysis" as const,
+    "llm_inferred" as const,
+  );
+
+  // Generate safe projectIds that are distinct and filesystem-safe
+  const projectIdArb = fc
+    .string({ minLength: 1, maxLength: 20 })
+    .filter((s) => /^[a-zA-Z][A-Za-z0-9_-]*$/.test(s));
+
+  const nameArb = fc.string({ minLength: 1, maxLength: 50 });
+
+  const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true });
+
+  const relationTypeArb = fc.constantFrom(
+    "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
+    "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY", "KNOWS_ABOUT",
+  );
+
+  it("findEntities returns only entities belonging to the queried projectId", () => {
+    fc.assert(
+      fc.property(
+        projectIdArb,
+        projectIdArb,
+        fc.array(
+          fc.record({
+            entityType: entityTypeArb,
+            name: nameArb,
+            source: entitySourceArb,
+            confidence: confidenceArb,
+          }),
+          { minLength: 1, maxLength: 5 },
+        ),
+        fc.array(
+          fc.record({
+            entityType: entityTypeArb,
+            name: nameArb,
+            source: entitySourceArb,
+            confidence: confidenceArb,
+          }),
+          { minLength: 1, maxLength: 5 },
+        ),
+        (projectA, projectB, entitiesA, entitiesB) => {
+          // Ensure distinct project IDs
+          fc.pre(projectA !== projectB);
+
+          const localStore = new GraphStore();
+
+          // Create entities in project A
+          for (const input of entitiesA) {
+            localStore.createEntity({
+              ...input,
+              description: "entity in project A",
+              projectId: projectA,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+          }
+
+          // Create entities in project B
+          for (const input of entitiesB) {
+            localStore.createEntity({
+              ...input,
+              description: "entity in project B",
+              projectId: projectB,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+          }
+
+          // Query project A 鈥?every returned entity must belong to project A
+          const resultsA = localStore.findEntities({ projectId: projectA });
+          for (const entity of resultsA) {
+            expect(entity.projectId).toBe(projectA);
+          }
+          // Must contain at least the entities we just created
+          expect(resultsA.length).toBeGreaterThanOrEqual(entitiesA.length);
+
+          // Query project B 鈥?every returned entity must belong to project B
+          const resultsB = localStore.findEntities({ projectId: projectB });
+          for (const entity of resultsB) {
+            expect(entity.projectId).toBe(projectB);
+          }
+          expect(resultsB.length).toBeGreaterThanOrEqual(entitiesB.length);
+
+          // Cross-check: no entity from project B appears in project A results
+          const idsB = new Set(resultsB.map((e) => e.entityId));
+          for (const entity of resultsA) {
+            expect(idsB.has(entity.entityId)).toBe(false);
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("findRelations with projectId returns only relations from that project", () => {
+    fc.assert(
+      fc.property(
+        projectIdArb,
+        projectIdArb,
+        relationTypeArb,
+        relationTypeArb,
+        (projectA, projectB, relTypeA, relTypeB) => {
+          fc.pre(projectA !== projectB);
+
+          const localStore = new GraphStore();
+
+          // Create entities and relations in project A
+          const a1 = localStore.createEntity({
+            entityType: "CodeModule",
+            name: "ModA1",
+            description: "",
+            source: "code_analysis",
+            confidence: 0.8,
+            projectId: projectA,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+          const a2 = localStore.createEntity({
+            entityType: "CodeModule",
+            name: "ModA2",
+            description: "",
+            source: "code_analysis",
+            confidence: 0.8,
+            projectId: projectA,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+          localStore.createRelation({
+            relationType: relTypeA,
+            sourceEntityId: a1.entityId,
+            targetEntityId: a2.entityId,
+            weight: 0.9,
+            evidence: "test",
+            source: "code_analysis",
+            confidence: 0.8,
+            needsReview: false,
+          });
+
+          // Create entities and relations in project B
+          const b1 = localStore.createEntity({
+            entityType: "API",
+            name: "ModB1",
+            description: "",
+            source: "code_analysis",
+            confidence: 0.7,
+            projectId: projectB,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+          const b2 = localStore.createEntity({
+            entityType: "API",
+            name: "ModB2",
+            description: "",
+            source: "code_analysis",
+            confidence: 0.7,
+            projectId: projectB,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+          localStore.createRelation({
+            relationType: relTypeB,
+            sourceEntityId: b1.entityId,
+            targetEntityId: b2.entityId,
+            weight: 0.8,
+            evidence: "test",
+            source: "code_analysis",
+            confidence: 0.7,
+            needsReview: false,
+          });
+
+          // Query relations for project A
+          const relationsA = localStore.findRelations({ projectId: projectA });
+          expect(relationsA.length).toBe(1);
+          // All returned relations must reference entities in project A
+          const entityIdsA = new Set(
+            localStore.findEntities({ projectId: projectA }).map((e) => e.entityId),
+          );
+          for (const rel of relationsA) {
+            expect(
+              entityIdsA.has(rel.sourceEntityId) && entityIdsA.has(rel.targetEntityId),
+            ).toBe(true);
+          }
+
+          // Query relations for project B
+          const relationsB = localStore.findRelations({ projectId: projectB });
+          expect(relationsB.length).toBe(1);
+          const entityIdsB = new Set(
+            localStore.findEntities({ projectId: projectB }).map((e) => e.entityId),
+          );
+          for (const rel of relationsB) {
+            expect(
+              entityIdsB.has(rel.sourceEntityId) && entityIdsB.has(rel.targetEntityId),
+            ).toBe(true);
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("findEntities with additional filters still enforces project isolation", () => {
+    fc.assert(
+      fc.property(
+        projectIdArb,
+        projectIdArb,
+        entityTypeArb,
+        (projectA, projectB, sharedType) => {
+          fc.pre(projectA !== projectB);
+
+          const localStore = new GraphStore();
+
+          // Create entities of the same type and name in both projects
+          localStore.createEntity({
+            entityType: sharedType,
+            name: "SharedName",
+            description: "in A",
+            source: "code_analysis",
+            confidence: 0.9,
+            projectId: projectA,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+          localStore.createEntity({
+            entityType: sharedType,
+            name: "SharedName",
+            description: "in B",
+            source: "code_analysis",
+            confidence: 0.9,
+            projectId: projectB,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+
+          // Query with entityType filter 鈥?must still isolate by project
+          const results = localStore.findEntities({
+            projectId: projectA,
+            entityType: sharedType,
+          });
+          for (const entity of results) {
+            expect(entity.projectId).toBe(projectA);
+          }
+          expect(results.length).toBeGreaterThanOrEqual(1);
+
+          // Query with name filter 鈥?must still isolate by project
+          const nameResults = localStore.findEntities({
+            projectId: projectA,
+            name: "SharedName",
+          });
+          for (const entity of nameResults) {
+            expect(entity.projectId).toBe(projectA);
+          }
+          expect(nameResults.length).toBeGreaterThanOrEqual(1);
+
+          // Verify none of project B's entities leaked into project A results
+          const bEntities = localStore.findEntities({ projectId: projectB });
+          const bIds = new Set(bEntities.map((e) => e.entityId));
+          for (const entity of results) {
+            expect(bIds.has(entity.entityId)).toBe(false);
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+});
+
+
+// -------------------------------------------------------------------------
+// Property 13: 鍥鹃亶鍘嗘繁搴︾害鏉?
+// -------------------------------------------------------------------------
+
+describe("Feature: knowledge-graph, Property 13: 鍥鹃亶鍘嗘繁搴︾害鏉?, () => {
+  /**
+   * Validates: Requirements 4.1
+   *
+   * For any getNeighbors(entityId, relationTypes, depth=N) query, all returned
+   * entities SHALL be reachable from the source entity within N hops through
+   * the specified relation types.
+   */
+
+  const relationTypeArb = fc.constantFrom(
+    "DEPENDS_ON", "CALLS", "IMPLEMENTS", "USES", "BELONGS_TO",
+  );
+
+  /**
+   * Helper: build a linear chain of entities connected by relations.
+   * Returns { entities, relations } where entities[0] is the head.
+   * Chain: E0 --rel--> E1 --rel--> E2 --rel--> ... --rel--> E(chainLength-1)
+   */
+  function buildChain(
+    store: GraphStore,
+    chainLength: number,
+    relationType: string,
+    projectId: string,
+  ) {
+    const entities: ReturnType<GraphStore["createEntity"]>[] = [];
+    const relations: ReturnType<GraphStore["createRelation"]>[] = [];
+
+    for (let i = 0; i < chainLength; i++) {
+      entities.push(
+        store.createEntity({
+          entityType: "CodeModule",
+          name: `Chain_${i}`,
+          description: `node ${i}`,
+          source: "code_analysis",
+          confidence: 0.8,
+          projectId,
+          needsReview: false,
+          linkedMemoryIds: [],
+          extendedAttributes: {},
+        }),
+      );
+    }
+
+    for (let i = 0; i < chainLength - 1; i++) {
+      relations.push(
+        store.createRelation({
+          relationType,
+          sourceEntityId: entities[i].entityId,
+          targetEntityId: entities[i + 1].entityId,
+          weight: 0.9,
+          evidence: `chain link ${i}->${i + 1}`,
+          source: "code_analysis",
+          confidence: 0.8,
+          needsReview: false,
+        }),
+      );
+    }
+
+    return { entities, relations };
+  }
+
+  /**
+   * Helper: BFS reachability check 鈥?returns the set of entity IDs reachable
+   * from `startId` within `maxHops` hops, traversing only the given relation types.
+   * Mirrors the bidirectional traversal logic in GraphStore.getNeighbors.
+   */
+  function bfsReachable(
+    startId: string,
+    maxHops: number,
+    allRelations: Array<{ sourceEntityId: string; targetEntityId: string; relationType: string }>,
+    filterRelTypes?: string[],
+  ): Set<string> {
+    const visited = new Set<string>();
+    visited.add(startId);
+    let frontier = [startId];
+
+    for (let hop = 0; hop < maxHops && frontier.length > 0; hop++) {
+      const next: string[] = [];
+      for (const current of frontier) {
+        for (const rel of allRelations) {
+          if (filterRelTypes && !filterRelTypes.includes(rel.relationType)) continue;
+          let neighbor: string | null = null;
+          if (rel.sourceEntityId === current) neighbor = rel.targetEntityId;
+          else if (rel.targetEntityId === current) neighbor = rel.sourceEntityId;
+          if (neighbor !== null && !visited.has(neighbor)) {
+            visited.add(neighbor);
+            next.push(neighbor);
+          }
+        }
+      }
+      frontier = next;
+    }
+
+    return visited;
+  }
+
+  it("all returned entities are reachable within N hops on a linear chain", () => {
+    fc.assert(
+      fc.property(
+        // chainLength: 3..8 nodes, depth: 1..7
+        fc.integer({ min: 3, max: 8 }),
+        fc.integer({ min: 1, max: 7 }),
+        relationTypeArb,
+        (chainLength, depth, relationType) => {
+          const localStore = new GraphStore();
+          const projectId = "prop13-chain";
+
+          const { entities } = buildChain(localStore, chainLength, relationType, projectId);
+          const startId = entities[0].entityId;
+
+          const result = localStore.getNeighbors(startId, [relationType], depth);
+
+          // Compute expected reachable set via independent BFS
+          const allRels = localStore.getAllRelations(projectId);
+          const reachable = bfsReachable(startId, depth, allRels, [relationType]);
+
+          // Every returned entity must be in the reachable set
+          for (const entity of result.entities) {
+            expect(reachable.has(entity.entityId)).toBe(true);
+          }
+
+          // The number of returned entities should match reachable minus the start node
+          const expectedCount = Math.min(depth, chainLength - 1);
+          expect(result.entities.length).toBe(expectedCount);
+
+          // No entity beyond depth N should appear
+          for (const entity of result.entities) {
+            const idx = entities.findIndex((e) => e.entityId === entity.entityId);
+            expect(idx).toBeGreaterThan(0);
+            expect(idx).toBeLessThanOrEqual(depth);
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("depth constraint holds with relation type filtering", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 4, max: 7 }),
+        fc.integer({ min: 1, max: 3 }),
+        (chainLength, depth) => {
+          const localStore = new GraphStore();
+          const projectId = "prop13-filter";
+
+          // Build a chain with DEPENDS_ON
+          const { entities } = buildChain(localStore, chainLength, "DEPENDS_ON", projectId);
+
+          // Add a branch from entities[0] via CALLS to an extra node
+          const extraNode = localStore.createEntity({
+            entityType: "API",
+            name: "ExtraBranch",
+            description: "extra",
+            source: "code_analysis",
+            confidence: 0.8,
+            projectId,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+          localStore.createRelation({
+            relationType: "CALLS",
+            sourceEntityId: entities[0].entityId,
+            targetEntityId: extraNode.entityId,
+            weight: 0.9,
+            evidence: "branch",
+            source: "code_analysis",
+            confidence: 0.8,
+            needsReview: false,
+          });
+
+          // Query with only DEPENDS_ON 鈥?extra node should NOT appear
+          const result = localStore.getNeighbors(entities[0].entityId, ["DEPENDS_ON"], depth);
+
+          const returnedIds = new Set(result.entities.map((e) => e.entityId));
+          expect(returnedIds.has(extraNode.entityId)).toBe(false);
+
+          // All returned entities must be within depth hops via DEPENDS_ON
+          for (const entity of result.entities) {
+            const idx = entities.findIndex((e) => e.entityId === entity.entityId);
+            expect(idx).toBeGreaterThan(0);
+            expect(idx).toBeLessThanOrEqual(depth);
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("depth constraint holds on graphs with cycles", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 3, max: 6 }),
+        fc.integer({ min: 1, max: 5 }),
+        relationTypeArb,
+        (ringSize, depth, relationType) => {
+          const localStore = new GraphStore();
+          const projectId = "prop13-cycle";
+
+          // Build a ring: E0 -> E1 -> ... -> E(n-1) -> E0
+          const entities: ReturnType<GraphStore["createEntity"]>[] = [];
+          for (let i = 0; i < ringSize; i++) {
+            entities.push(
+              localStore.createEntity({
+                entityType: "CodeModule",
+                name: `Ring_${i}`,
+                description: `ring node ${i}`,
+                source: "code_analysis",
+                confidence: 0.8,
+                projectId,
+                needsReview: false,
+                linkedMemoryIds: [],
+                extendedAttributes: {},
+              }),
+            );
+          }
+          for (let i = 0; i < ringSize; i++) {
+            localStore.createRelation({
+              relationType,
+              sourceEntityId: entities[i].entityId,
+              targetEntityId: entities[(i + 1) % ringSize].entityId,
+              weight: 0.9,
+              evidence: `ring ${i}->${(i + 1) % ringSize}`,
+              source: "code_analysis",
+              confidence: 0.8,
+              needsReview: false,
+            });
+          }
+
+          const startId = entities[0].entityId;
+          const result = localStore.getNeighbors(startId, [relationType], depth);
+
+          // Independent BFS to compute reachable set
+          const allRels = localStore.getAllRelations(projectId);
+          const reachable = bfsReachable(startId, depth, allRels, [relationType]);
+
+          // Every returned entity must be in the reachable set (excluding start)
+          for (const entity of result.entities) {
+            expect(reachable.has(entity.entityId)).toBe(true);
+          }
+
+          // Returned count should equal reachable minus start
+          expect(result.entities.length).toBe(reachable.size - 1);
+
+          // Returned count must not exceed min(depth * 2, ringSize - 1)
+          // because bidirectional traversal can reach at most depth hops in each direction
+          expect(result.entities.length).toBeLessThanOrEqual(ringSize - 1);
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("depth=0 returns no neighbors", () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 2, max: 5 }),
+        relationTypeArb,
+        (chainLength, relationType) => {
+          const localStore = new GraphStore();
+          const projectId = "prop13-zero";
+
+          const { entities } = buildChain(localStore, chainLength, relationType, projectId);
+          const result = localStore.getNeighbors(entities[0].entityId, [relationType], 0);
+
+          expect(result.entities).toHaveLength(0);
+          expect(result.relations).toHaveLength(0);
+        },
+      ),
+      { numRuns: 20 },
+    );
   });
 });

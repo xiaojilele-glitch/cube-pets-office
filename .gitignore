@@ -107,6 +107,7 @@ temp/
 data/database.json
 data/ai-config.json
 data/progress.md
+data/knowledge/
 
 # Runtime agent memory / session artifacts
 data/agents/*/sessions/
