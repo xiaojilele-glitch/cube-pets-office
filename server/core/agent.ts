@@ -27,18 +27,15 @@ import { callLLM, callLLMJson } from "./llm-client.js";
 import { messageBus } from "./message-bus.js";
 import { emitEvent } from "./socket.js";
 import { telemetryStore } from "./telemetry-store.js";
-<<<<<<< HEAD
 import { roleRegistry } from "./role-registry.js";
 import { roleConstraintValidator } from "./role-constraint-validator.js";
+import { getRAGConfig } from "../rag/config.js";
 
 const __agent_filename = fileURLToPath(import.meta.url);
 const __agent_dirname = dirname(__agent_filename);
 const DATA_ROOT = resolve(__agent_dirname, '../../data/agents');
 
 const MAX_OPERATION_LOG = 200;
-=======
-import { getRAGConfig } from "../rag/config.js";
->>>>>>> feat/L16-vector-db-rag-pipeline
 
 export interface AgentConfig {
   id: string;

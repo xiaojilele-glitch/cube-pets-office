@@ -39,7 +39,7 @@ export class SkillActivator {
       name: binding.resolvedSkill.name,
       resolvedPrompt: binding.resolvedSkill.prompt.replace(
         /\{context\}/g,
-        taskContext
+        () => taskContext
       ),
       priority: binding.config?.priority ?? 0,
       mcpBindings: binding.mcpBindings,
