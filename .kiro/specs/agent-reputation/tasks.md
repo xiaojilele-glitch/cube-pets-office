@@ -16,7 +16,7 @@
     - 新增 _counters 中的 reputation_events 和 reputation_audit_log 计数器
     - 实现 CRUD 方法：getReputationProfile、upsertReputationProfile、createReputationEvent、getReputationEvents、createAuditEntry、getAuditEntries
     - _Requirements: 1.1, 2.5, 7.5_
-  - [ ]* 1.3 编写属性测试：信誉分整数范围不变量
+  - [x] 1.3 编写属性测试：信誉分整数范围不变量
     - **Property 1: 信誉分整数范围不变量**
     - **Validates: Requirements 1.1, 1.6**
 
@@ -28,13 +28,13 @@
     - 实现 clampDeltas(deltas, maxDelta) 变动幅度限制
     - 实现 computeOverallScore(dimensions, weights) 加权综合分计算
     - _Requirements: 1.2, 2.2, 2.4_
-  - [ ]* 2.2 编写属性测试：加权综合分公式
+  - [x] 2.2 编写属性测试：加权综合分公式
     - **Property 2: 加权综合分公式**
     - **Validates: Requirements 1.2**
-  - [ ]* 2.3 编写属性测试：维度更新公式正确性
+  - [x] 2.3 编写属性测试：维度更新公式正确性
     - **Property 3: 维度更新公式正确性**
     - **Validates: Requirements 2.2**
-  - [ ]* 2.4 编写属性测试：单次更新变动幅度限制
+  - [x] 2.4 编写属性测试：单次更新变动幅度限制
     - **Property 4: 单次更新变动幅度限制**
     - **Validates: Requirements 2.4**
 
@@ -48,13 +48,13 @@
     - 实现 evaluateExternalUpgrade(profile) 外部 Agent 升级判定
     - 实现 evaluateGradeChange(oldGrade, newGrade, agentId, taskId) 等级变更事件生成
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
-  - [ ]* 4.2 编写属性测试：信誉等级与信任层级映射一致性
+  - [x] 4.2 编写属性测试：信誉等级与信任层级映射一致性
     - **Property 11: 信誉等级与信任层级映射一致性**
     - **Validates: Requirements 5.1, 5.2**
-  - [ ]* 4.3 编写属性测试：外部 Agent 信任层级升级
+  - [x] 4.3 编写属性测试：外部 Agent 信任层级升级
     - **Property 12: 外部 Agent 信任层级升级**
     - **Validates: Requirements 5.3**
-  - [ ]* 4.4 编写属性测试：信誉等级降级事件
+  - [x] 4.4 编写属性测试：信誉等级降级事件
     - **Property 13: 信誉等级降级事件**
     - **Validates: Requirements 5.4**
 
@@ -65,16 +65,16 @@
     - 实现 checkCollabCollusion(taskforceRatings) 互评串通检测
     - 实现 getProbationDamping(profile) probation 阻尼系数
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
-  - [ ]* 5.2 编写属性测试：异常波动检测
+  - [x] 5.2 编写属性测试：异常波动检测
     - **Property 16: 异常波动检测**
     - **Validates: Requirements 7.1**
-  - [ ]* 5.3 编写属性测试：刷分模式检测
+  - [x] 5.3 编写属性测试：刷分模式检测
     - **Property 17: 刷分模式检测**
     - **Validates: Requirements 7.2**
-  - [ ]* 5.4 编写属性测试：互评串通检测
+  - [x] 5.4 编写属性测试：互评串通检测
     - **Property 18: 互评串通检测**
     - **Validates: Requirements 7.3**
-  - [ ]* 5.5 编写属性测试：Probation 阶段正向更新阻尼
+  - [x] 5.5 编写属性测试：Probation 阶段正向更新阻尼
     - **Property 19: Probation 阶段正向更新阻尼**
     - **Validates: Requirements 7.4**
 
@@ -90,13 +90,13 @@
     - 实现 getLeaderboard(options)
     - 实现 initializeProfile(agentId, isExternal) 初始化信誉档案
     - _Requirements: 1.3, 1.4, 1.5, 2.1, 2.3, 2.5, 3.1, 3.2, 3.4_
-  - [ ]* 7.2 编写属性测试：信誉变更事件完整性
+  - [x] 7.2 编写属性测试：信誉变更事件完整性
     - **Property 5: 信誉变更事件完整性**
     - **Validates: Requirements 2.5, 6.5**
-  - [ ]* 7.3 编写属性测试：角色信誉与整体信誉并行更新
+  - [x] 7.3 编写属性测试：角色信誉与整体信誉并行更新
     - **Property 6: 角色信誉与整体信誉并行更新**
     - **Validates: Requirements 3.2**
-  - [ ]* 7.4 编写属性测试：低置信度标记
+  - [x] 7.4 编写属性测试：低置信度标记
     - **Property 7: 低置信度标记**
     - **Validates: Requirements 3.3**
 
@@ -112,10 +112,10 @@
     - 连续 N 次高质量任务后提升 alpha 值
     - 连续记录断裂后恢复正常 alpha
     - _Requirements: 6.4_
-  - [ ]* 8.3 编写属性测试：不活跃衰减规则
+  - [x] 8.3 编写属性测试：不活跃衰减规则
     - **Property 14: 不活跃衰减规则**
     - **Validates: Requirements 6.1, 6.2, 6.3**
-  - [ ]* 8.4 编写属性测试：连胜加速机制
+  - [x] 8.4 编写属性测试：连胜加速机制
     - **Property 15: 连胜加速机制**
     - **Validates: Requirements 6.4**
 
@@ -134,13 +134,13 @@
     - 在分配日志中记录 fitnessScore、reputationFactor、assignmentScore 和排名
     - 在 task.completed 事件处理中调用 ReputationService.handleTaskCompleted
     - _Requirements: 4.1, 4.5, 2.3_
-  - [ ]* 10.3 编写属性测试：任务分配得分公式
+  - [x] 10.3 编写属性测试：任务分配得分公式
     - **Property 8: 任务分配得分公式**
     - **Validates: Requirements 4.1**
-  - [ ]* 10.4 编写属性测试：角色信誉替代与低置信度回退
+  - [x] 10.4 编写属性测试：角色信誉替代与低置信度回退
     - **Property 9: 角色信誉替代与低置信度回退**
     - **Validates: Requirements 4.2**
-  - [ ]* 10.5 编写属性测试：信誉阈值过滤
+  - [x] 10.5 编写属性测试：信誉阈值过滤
     - **Property 10: 信誉阈值过滤**
     - **Validates: Requirements 4.3, 4.4**
 
@@ -166,7 +166,7 @@
   - [x] 12.3 在 server/index.ts 中注册信誉路由
     - 挂载 /api/agents/:id/reputation 和 /api/admin/reputation/* 路由
     - _Requirements: 9.6_
-  - [ ]* 12.4 编写属性测试：排行榜排序正确性
+  - [x] 12.4 编写属性测试：排行榜排序正确性
     - **Property 20: 排行榜排序正确性**
     - **Validates: Requirements 8.4**
 
