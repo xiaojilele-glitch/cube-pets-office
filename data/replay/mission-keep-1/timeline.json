@@ -1,0 +1,27 @@
+{
+  "missionId": "mission-keep-1",
+  "startTime": 1775206558657,
+  "endTime": 1775206558657,
+  "totalDuration": 0,
+  "eventCount": 1,
+  "indices": {
+    "byTime": {
+      "1775206558000": [
+        0
+      ]
+    },
+    "byAgent": {
+      "agent-1": [
+        0
+      ]
+    },
+    "byType": {
+      "AGENT_STARTED": [
+        0
+      ]
+    },
+    "byResource": {}
+  },
+  "version": 1,
+  "checksum": "4a5a8b897ebd88974dc98c63abe4dbe07524c3ca854e62f0aed247c290970b53"
+}
