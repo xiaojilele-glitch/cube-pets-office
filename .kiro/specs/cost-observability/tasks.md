@@ -10,10 +10,10 @@
   - [x] 1.1 创建 `shared/cost.ts`，定义所有成本相关 TypeScript 接口（CostRecord、CostSnapshot、Budget、DowngradePolicy、CostAlert、AgentCostSummary、MissionCostSummary、ModelPricing）和常量（PRICING_TABLE、DEFAULT_PRICING、DEFAULT_BUDGET、DEFAULT_DOWNGRADE_POLICY）
     - 实现 `estimateCost(model, tokensIn, tokensOut)` 纯函数
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 13.1_
-  - [ ]* 1.2 编写 estimateCost 属性测试
+  - [x] 1.2 编写 estimateCost 属性测试
     - **Property 2: estimateCost 纯函数正确性**
     - **Validates: Requirements 2.3, 2.4**
-  - [ ]* 1.3 编写成本类型 JSON 往返属性测试
+  - [x] 1.3 编写成本类型 JSON 往返属性测试
     - **Property 12: 成本类型 JSON 往返一致性**
     - **Validates: Requirements 13.3**
 
@@ -28,13 +28,13 @@
     - 实现 `getHistory()` 历史列表
     - 导出 `costTracker` 单例
     - _Requirements: 1.1, 1.2, 1.3, 3.1, 3.2, 3.3, 3.4, 3.5_
-  - [ ]* 2.2 编写 CostRecord 完整性属性测试
+  - [x] 2.2 编写 CostRecord 完整性属性测试
     - **Property 1: CostRecord 完整性**
     - **Validates: Requirements 1.1, 1.2, 1.3**
-  - [ ]* 2.3 编写聚合指标不变量属性测试
+  - [x] 2.3 编写聚合指标不变量属性测试
     - **Property 3: 聚合指标不变量**
     - **Validates: Requirements 3.1, 3.2, 3.3**
-  - [ ]* 2.4 编写历史缓冲区有界性属性测试
+  - [x] 2.4 编写历史缓冲区有界性属性测试
     - **Property 4: 历史缓冲区有界性**
     - **Validates: Requirements 3.4, 3.5**
 
@@ -46,13 +46,13 @@
     - 每次 `recordCall` 后自动调用 `checkAlerts()`
     - `setBudget` 后立即重新评估预警状态
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
-  - [ ]* 3.2 编写阈值预警生成属性测试
+  - [x] 3.2 编写阈值预警生成属性测试
     - **Property 5: 阈值预警生成**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5**
-  - [ ]* 3.3 编写预算百分比正确性属性测试
+  - [x] 3.3 编写预算百分比正确性属性测试
     - **Property 6: 预算百分比正确性**
     - **Validates: Requirements 4.6**
-  - [ ]* 3.4 编写预算更新触发预警重评估属性测试
+  - [x] 3.4 编写预算更新触发预警重评估属性测试
     - **Property 8: 预算更新触发预警重评估**
     - **Validates: Requirements 6.4**
 
@@ -64,7 +64,7 @@
     - 实现 `manualReleaseDegradation()` 手动解除降级
     - 实现降级状态机（none → soft → hard → none）
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
-  - [ ]* 4.2 编写降级模型切换与恢复属性测试
+  - [x] 4.2 编写降级模型切换与恢复属性测试
     - **Property 7: 降级模型切换与恢复**
     - **Validates: Requirements 5.2, 5.3, 5.4**
 
@@ -77,7 +77,7 @@
     - 实现 `loadHistory()` 启动时加载历史数据
     - 文件损坏或不存在时以空历史启动并记录 console.warn
     - _Requirements: 11.1, 11.2, 11.3_
-  - [ ]* 6.2 编写历史持久化往返一致性属性测试
+  - [x] 6.2 编写历史持久化往返一致性属性测试
     - **Property 10: 历史持久化往返一致性**
     - **Validates: Requirements 11.1, 11.2**
 
@@ -100,7 +100,7 @@
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
   - [x] 8.2 在 `server/index.ts` 中注册成本路由
     - _Requirements: 6.1_
-  - [ ]* 8.3 编写成本 REST API 单元测试
+  - [x] 8.3 编写成本 REST API 单元测试
     - 测试各端点响应格式、零值快照、预算更新
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
@@ -111,7 +111,7 @@
     - 新客户端连接时发送当前快照
     - 在 CostTracker.recordCall 中触发广播
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
-  - [ ]* 9.2 编写 Socket 广播节流上界属性测试
+  - [x] 9.2 编写 Socket 广播节流上界属性测试
     - **Property 9: Socket 广播节流上界**
     - **Validates: Requirements 7.2**
 
@@ -163,7 +163,7 @@
     - 页面加载时从 IndexedDB 恢复
     - 与 cost-store.ts 集成，纯前端模式下使用 IndexedDB 数据源
     - _Requirements: 12.1, 12.2, 12.3_
-  - [ ]* 15.2 编写 IndexedDB 往返一致性属性测试
+  - [x] 15.2 编写 IndexedDB 往返一致性属性测试
     - **Property 11: IndexedDB 往返一致性**
     - **Validates: Requirements 12.2, 12.3**
 
