@@ -21,7 +21,7 @@
   - [x] 1.3 创建 `shared/nl-command/api.ts`，定义 REST API 路由常量和请求/响应类型
     - _Requirements: 所有 API 相关需求_
   - [x] 1.4 创建 `shared/nl-command/index.ts` 模块导出
-  - [ ]* 1.5 编写 StrategicCommand 和 NLExecutionPlan 结构完整性属性测试
+  - [x] 1.5 编写 StrategicCommand 和 NLExecutionPlan 结构完整性属性测试
     - **Property 1: StrategicCommand 结构完整性**
     - **Property 7: 分解输出结构完整性**
     - **Validates: Requirements 1.1, 3.2, 3.3, 4.2, 4.3**
@@ -33,13 +33,13 @@
     - 支持按时间范围、操作者、操作类型、实体 ID 过滤
     - 支持 JSON 导出
     - _Requirements: 16.1, 16.2, 16.3, 16.4_
-  - [ ]* 2.2 编写审计查询过滤属性测试
+  - [x] 2.2 编写审计查询过滤属性测试
     - **Property 17: 审计查询过滤正确性**
     - **Validates: Requirements 16.1, 16.3**
-  - [ ]* 2.3 编写审计导出 JSON 往返属性测试
+  - [x] 2.3 编写审计导出 JSON 往返属性测试
     - **Property 18: 审计导出 JSON 往返一致性**
     - **Validates: Requirements 16.4**
-  - [ ]* 2.4 编写审计链单元测试
+  - [x] 2.4 编写审计链单元测试
     - 测试 record/query/export 基本功能
     - 测试边界条件（空过滤、大量条目）
     - _Requirements: 16.1, 16.2, 16.3, 16.4_
@@ -50,7 +50,7 @@
     - 定义角色-权限映射（admin/manager/operator/viewer）
     - 支持实体级细粒度权限覆盖
     - _Requirements: 17.1, 17.2, 17.3_
-  - [ ]* 3.2 编写权限执行属性测试
+  - [x] 3.2 编写权限执行属性测试
     - **Property 16: 权限执行正确性**
     - **Validates: Requirements 17.1, 17.2, 17.3**
 
@@ -69,11 +69,11 @@
     - 支持自由文本和选择式回答
     - 集成 AuditTrail 记录澄清过程
     - _Requirements: 2.1, 2.3, 2.6_
-  - [ ]* 5.3 编写澄清对话属性测试
+  - [x] 5.3 编写澄清对话属性测试
     - **Property 4: 澄清对话接受两种回答类型**
     - **Property 5: 澄清更新分析并最终确认**
     - **Validates: Requirements 2.3, 2.4, 2.5**
-  - [ ]* 5.4 编写指令解析器单元测试
+  - [x] 5.4 编写指令解析器单元测试
     - Mock LLM 测试解析结构
     - 测试澄清问题生成
     - 测试 FinalizedCommand 生成
@@ -100,10 +100,10 @@
     - 支持循环检测
     - 支持并行分组（同层可并行的节点归为一组）
     - _Requirements: 3.5, 4.5_
-  - [ ]* 6.4 编写拓扑排序属性测试
+  - [x] 6.4 编写拓扑排序属性测试
     - **Property 6: 分解执行顺序拓扑排序正确性**
     - **Validates: Requirements 3.4, 3.5, 4.4, 4.5**
-  - [ ]* 6.5 编写分解器单元测试
+  - [x] 6.5 编写分解器单元测试
     - Mock LLM 测试分解逻辑
     - 测试循环依赖检测
     - 测试组织生成触发
@@ -119,13 +119,13 @@
     - 生成应急计划
     - 集成 AuditTrail
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 15.1, 15.2_
-  - [ ]* 7.2 编写成本预算求和属性测试
+  - [x] 7.2 编写成本预算求和属性测试
     - **Property 8: 成本预算求和不变量**
     - **Validates: Requirements 5.5, 15.5**
-  - [ ]* 7.3 编写关键路径属性测试
+  - [x] 7.3 编写关键路径属性测试
     - **Property 9: 时间线关键路径有效性**
     - **Validates: Requirements 5.2**
-  - [ ]* 7.4 编写执行计划生成器单元测试
+  - [x] 7.4 编写执行计划生成器单元测试
     - 测试时间线计算
     - 测试资源分配
     - 测试成本预算
@@ -140,10 +140,10 @@
     - 支持多级审批
     - 集成 AuditTrail
     - _Requirements: 7.1, 7.2, 7.4, 7.5, 7.6_
-  - [ ]* 9.2 编写审批工作流属性测试
+  - [x] 9.2 编写审批工作流属性测试
     - **Property 10: 审批工作流完整性**
     - **Validates: Requirements 7.2, 7.5, 8.4, 11.5, 15.3**
-  - [ ]* 9.3 编写审批管理器单元测试
+  - [x] 9.3 编写审批管理器单元测试
     - 测试多级审批流程
     - 测试拒绝和修改意见
     - _Requirements: 7.2, 7.4, 7.5_
@@ -155,10 +155,10 @@
     - 集成审批流程
     - 集成 AuditTrail
     - _Requirements: 8.1, 8.2, 8.3, 8.5, 8.6_
-  - [ ]* 10.2 编写偏差检测属性测试
+  - [x] 10.2 编写偏差检测属性测试
     - **Property 24: 偏差检测正确性**
     - **Validates: Requirements 8.2**
-  - [ ]* 10.3 编写计划调整属性测试
+  - [x] 10.3 编写计划调整属性测试
     - **Property 11: 计划调整更新不变量**
     - **Validates: Requirements 8.5**
 
@@ -171,10 +171,10 @@
     - 通过 Socket.IO 推送
     - 集成 AuditTrail
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
-  - [ ]* 11.2 编写告警规则评估属性测试
+  - [x] 11.2 编写告警规则评估属性测试
     - **Property 12: 告警规则评估正确性**
     - **Validates: Requirements 10.3, 10.4**
-  - [ ]* 11.3 编写告警引擎单元测试
+  - [x] 11.3 编写告警引擎单元测试
     - 测试规则注册和评估
     - 测试去重逻辑
     - _Requirements: 10.1, 10.3, 10.4_
@@ -185,10 +185,10 @@
     - 调用 LLM 生成建议
     - 收集执行指标
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 20.1, 20.2, 20.5_
-  - [ ]* 12.2 编写执行指标收集属性测试
+  - [x] 12.2 编写执行指标收集属性测试
     - **Property 21: 执行指标收集与偏差计算**
     - **Validates: Requirements 20.1, 20.2**
-  - [ ]* 12.3 编写成本对比属性测试
+  - [x] 12.3 编写成本对比属性测试
     - **Property 23: 计划与实际对比正确性**
     - **Validates: Requirements 13.4**
 
@@ -200,10 +200,10 @@
     - 集成权限控制
     - 集成 AuditTrail
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
-  - [ ]* 13.2 编写评论 CRUD 属性测试
+  - [x] 13.2 编写评论 CRUD 属性测试
     - **Property 14: 评论 CRUD 与版本历史**
     - **Validates: Requirements 12.1, 12.3**
-  - [ ]* 13.3 编写 @mention 解析属性测试
+  - [x] 13.3 编写 @mention 解析属性测试
     - **Property 15: @mention 解析正确性**
     - **Validates: Requirements 12.2**
 
@@ -217,10 +217,10 @@
     - 实现 TemplateManager 类：save(), load(), list(), update()
     - 支持版本管理
     - _Requirements: 19.3, 19.4, 19.5_
-  - [ ]* 14.3 编写报告结构属性测试
+  - [x] 14.3 编写报告结构属性测试
     - **Property 22: 报告结构完整性与格式正确性**
     - **Validates: Requirements 13.1, 13.2**
-  - [ ]* 14.4 编写模板往返属性测试
+  - [x] 14.4 编写模板往返属性测试
     - **Property 19: 模板保存/加载往返一致性**
     - **Validates: Requirements 19.3, 19.4**
 
@@ -243,7 +243,7 @@
     - _Requirements: 所有 API 相关需求_
   - [x] 16.2 在 `server/index.ts` 中注册 nl-command 路由
     - _Requirements: 所有 API 相关需求_
-  - [ ]* 16.3 编写 REST API 路由单元测试
+  - [x] 16.3 编写 REST API 路由单元测试
     - 使用 supertest 测试各端点
     - 测试请求验证和错误响应
     - _Requirements: 所有 API 相关需求_
@@ -280,7 +280,7 @@
   - [x] 20.2 创建 `client/src/lib/nl-command-client.ts`
     - 封装所有 NL Command REST API 调用
     - _Requirements: 所有 API 相关需求_
-  - [ ]* 20.3 编写过滤和排序属性测试
+  - [x] 20.3 编写过滤和排序属性测试
     - **Property 13: 过滤和排序正确性**
     - **Validates: Requirements 9.5**
 
@@ -356,7 +356,7 @@
     - 模板管理组件
     - 支持保存、加载、版本管理
     - _Requirements: 19.3, 19.4, 19.5_
-  - [ ]* 25.3 编写历史克隆属性测试
+  - [x] 25.3 编写历史克隆属性测试
     - **Property 20: 历史指令克隆产生新 ID**
     - **Validates: Requirements 19.2**
 
@@ -377,7 +377,7 @@
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 29. 审计链记录集成测试
-  - [ ]* 29.1 编写审计链记录属性测试
+  - [x] 29.1 编写审计链记录属性测试
     - **Property 3: 审计链记录不变量**
     - **Validates: Requirements 1.4, 2.6, 3.6, 4.6, 7.6, 8.6, 10.5, 12.5, 17.4**
     - 测试所有可审计操作后审计链正确记录

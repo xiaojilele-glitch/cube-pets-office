@@ -1,0 +1,3311 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "entryId": "audit-1775237245567-lfnqi9",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-71698098",
+      "timestamp": 1775237245567,
+      "result": "success",
+      "entityId": "cmd-2cde11d4",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-71698098",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245568-owaz7c",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245568,
+      "result": "success",
+      "entityId": "cmd-6215b9d3",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245568-37rh2d",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245568-xmiehu",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-656721d6",
+      "timestamp": 1775237245568,
+      "result": "success",
+      "entityId": "cmd-9b635c29",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-656721d6",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245573-upu5d4",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245573,
+      "result": "success",
+      "entityId": "cmd-2cde11d4",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245575-08zs9q",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-07bff37c",
+      "timestamp": 1775237245575,
+      "result": "success",
+      "entityId": "cmd-6215b9d3",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-07bff37c",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245580-r07gda",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-3669344a",
+      "timestamp": 1775237245580,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-3669344a",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245583-2wjhsz",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245583,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245583-n4be7t",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245584-79q2yq",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245584,
+      "result": "success",
+      "entityId": "cmd-320d7993",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245584-vgrvam",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245586-df9853",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-fffffffd (free-text)",
+      "timestamp": 1775237245586,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245583-n4be7t",
+        "questionId": "q-fffffffd",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245588-bqgk13",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000002",
+      "timestamp": 1775237245588,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000002",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245593-ranifj",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-8301d7ad",
+      "timestamp": 1775237245593,
+      "result": "success",
+      "entityId": "cmd-320d7993",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-8301d7ad",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245595-k8jft7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fffffffd",
+      "timestamp": 1775237245595,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fffffffd",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245596-okorza",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-03dfdbd8 (selection)",
+      "timestamp": 1775237245596,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245583-n4be7t",
+        "questionId": "q-03dfdbd8",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245599-wwe30k",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-03dfdbd8",
+      "timestamp": 1775237245599,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-03dfdbd8",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245601-2itt5z",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 5 questions",
+      "timestamp": 1775237245601,
+      "result": "success",
+      "entityId": "cmd-dd57baf2",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245601-g1mztk",
+        "questionCount": 5
+      }
+    },
+    {
+      "entryId": "audit-1775237245602-tclleh",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-39205039",
+      "timestamp": 1775237245602,
+      "result": "success",
+      "entityId": "cmd-00000003",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-39205039",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245604-q64x3h",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-20b331c7 (selection)",
+      "timestamp": 1775237245604,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245583-n4be7t",
+        "questionId": "q-20b331c7",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245609-j9459m",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-40aef678",
+      "timestamp": 1775237245609,
+      "result": "success",
+      "entityId": "cmd-dd57baf2",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-40aef678",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245609-4rie5l",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-df86bfca",
+      "timestamp": 1775237245609,
+      "result": "success",
+      "entityId": "cmd-00000003",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-df86bfca",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245610-tr5hfg",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-20b331c7",
+      "timestamp": 1775237245610,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-20b331c7",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245612-1ltb6e",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-aaa5a17e",
+      "timestamp": 1775237245612,
+      "result": "success",
+      "entityId": "cmd-00000003",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-aaa5a17e",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245613-f6ncfa",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245613,
+      "result": "success",
+      "entityId": "cmd-fbfcb9e9",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245619-ei23xr",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245619,
+      "result": "success",
+      "entityId": "cmd-3b53dc5e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245619-xnsd6q",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245619-i45g9w",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-30adf490",
+      "timestamp": 1775237245619,
+      "result": "success",
+      "entityId": "cmd-00000003",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-30adf490",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245623-r1s5r9",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-2f9aea33",
+      "timestamp": 1775237245623,
+      "result": "success",
+      "entityId": "cmd-3b53dc5e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-2f9aea33",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245624-ott8l5",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245624,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245624-2m9pob",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245626-ru443l",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-fffffff4 (selection)",
+      "timestamp": 1775237245626,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245624-2m9pob",
+        "questionId": "q-fffffff4",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245630-7k4a6h",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0000000b",
+      "timestamp": 1775237245630,
+      "result": "success",
+      "entityId": "cmd-ffffffe1",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0000000b",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245632-ts2pic",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fffffff4",
+      "timestamp": 1775237245632,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fffffff4",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245634-brjth2",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 5 questions",
+      "timestamp": 1775237245634,
+      "result": "success",
+      "entityId": "cmd-8bb168ca",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245634-afxers",
+        "questionCount": 5
+      }
+    },
+    {
+      "entryId": "audit-1775237245650-we97cj",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-cc2c9c60 (free-text)",
+      "timestamp": 1775237245650,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245624-2m9pob",
+        "questionId": "q-cc2c9c60",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245655-9bz2w1",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ffffffe1",
+      "timestamp": 1775237245655,
+      "result": "success",
+      "entityId": "cmd-ffffffe1",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ffffffe1",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245661-03aqr7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-e07db97f",
+      "timestamp": 1775237245661,
+      "result": "success",
+      "entityId": "cmd-8bb168ca",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-e07db97f",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245662-21pfii",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-cc2c9c60",
+      "timestamp": 1775237245662,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-cc2c9c60",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245671-g616c2",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000017",
+      "timestamp": 1775237245671,
+      "result": "success",
+      "entityId": "cmd-ffffffe1",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000017",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245674-k3b5po",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-fffffff7 (selection)",
+      "timestamp": 1775237245674,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245624-2m9pob",
+        "questionId": "q-fffffff7",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245678-iwvetv",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ffffffed",
+      "timestamp": 1775237245678,
+      "result": "success",
+      "entityId": "cmd-ffffffe1",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ffffffed",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245682-s2h0y0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fffffff7",
+      "timestamp": 1775237245682,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fffffff7",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245683-zihvqs",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245683,
+      "result": "success",
+      "entityId": "cmd-eccc4284",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245683-m9hohw",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245688-azpyqw",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245688,
+      "result": "success",
+      "entityId": "cmd-93f749d4",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245691-14t408",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7289505b",
+      "timestamp": 1775237245691,
+      "result": "success",
+      "entityId": "cmd-eccc4284",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7289505b",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245694-b44eey",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-afe27cab",
+      "timestamp": 1775237245694,
+      "result": "success",
+      "entityId": "cmd-f20c7f16",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-afe27cab",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245697-k4j7iz",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245697,
+      "result": "success",
+      "entityId": "cmd-0000001e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245697-ohzzav",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245698-2je0ib",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245698,
+      "result": "success",
+      "entityId": "cmd-fffffff4",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245698-08j13b",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245700-192zx5",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7a0be8a8",
+      "timestamp": 1775237245700,
+      "result": "success",
+      "entityId": "cmd-f20c7f16",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7a0be8a8",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245704-57pv95",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-00000005 (selection)",
+      "timestamp": 1775237245704,
+      "result": "success",
+      "entityId": "cmd-0000001e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245697-ohzzav",
+        "questionId": "q-00000005",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245706-unbqgc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-03f2c03e",
+      "timestamp": 1775237245706,
+      "result": "success",
+      "entityId": "cmd-fffffff4",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-03f2c03e",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245707-6i29fo",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000005",
+      "timestamp": 1775237245707,
+      "result": "success",
+      "entityId": "cmd-0000001e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000005",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245709-gqk2h4",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245709,
+      "result": "success",
+      "entityId": "cmd-0000001e",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245710-xwff9l",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-8be5eb10",
+      "timestamp": 1775237245710,
+      "result": "success",
+      "entityId": "cmd-a4264dbb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-8be5eb10",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245713-gkbpmr",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 4 questions",
+      "timestamp": 1775237245713,
+      "result": "success",
+      "entityId": "cmd-23fd2cff",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245713-waijar",
+        "questionCount": 4
+      }
+    },
+    {
+      "entryId": "audit-1775237245716-lgs0yt",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000000",
+      "timestamp": 1775237245716,
+      "result": "success",
+      "entityId": "cmd-a4264dbb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000000",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245719-yomkst",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000000",
+      "timestamp": 1775237245719,
+      "result": "success",
+      "entityId": "cmd-23fd2cff",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000000",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245721-3dfyef",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245721,
+      "result": "success",
+      "entityId": "cmd-ffffffe7",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245721-jfc9a5",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245722-c5z773",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000006",
+      "timestamp": 1775237245722,
+      "result": "success",
+      "entityId": "cmd-a4264dbb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000006",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245723-2nde8a",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-ffffffec (selection)",
+      "timestamp": 1775237245723,
+      "result": "success",
+      "entityId": "cmd-ffffffe7",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245721-jfc9a5",
+        "questionId": "q-ffffffec",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245725-che9kx",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ffffffec",
+      "timestamp": 1775237245725,
+      "result": "success",
+      "entityId": "cmd-ffffffe7",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ffffffec",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245727-rtgy0c",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245727,
+      "result": "success",
+      "entityId": "cmd-7981e498",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245727-7k2j82",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245729-6aijqs",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-d2e5b5f3 (selection)",
+      "timestamp": 1775237245729,
+      "result": "success",
+      "entityId": "cmd-ffffffe7",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245721-jfc9a5",
+        "questionId": "q-d2e5b5f3",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245732-23ujg3",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-f3031bdd",
+      "timestamp": 1775237245732,
+      "result": "success",
+      "entityId": "cmd-7981e498",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-f3031bdd",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245734-4nylhz",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-3e6fc279",
+      "timestamp": 1775237245734,
+      "result": "success",
+      "entityId": "cmd-62d4c79e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-3e6fc279",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245735-fzycyn",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-d2e5b5f3",
+      "timestamp": 1775237245735,
+      "result": "success",
+      "entityId": "cmd-ffffffe7",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-d2e5b5f3",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245736-gwxyca",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fffffff5",
+      "timestamp": 1775237245736,
+      "result": "success",
+      "entityId": "cmd-62d4c79e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fffffff5",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245737-32rojb",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245737,
+      "result": "success",
+      "entityId": "cmd-ffffffe7",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245740-jha8jt",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245740,
+      "result": "success",
+      "entityId": "cmd-ffffffe8",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245740-8e46e3",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245745-k74vep",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ca8844da",
+      "timestamp": 1775237245745,
+      "result": "success",
+      "entityId": "cmd-ffffffe8",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ca8844da",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245747-jzua3z",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245747,
+      "result": "success",
+      "entityId": "cmd-0000001c",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245747-hv9cs7",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245748-2da0fh",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-eec6cd14",
+      "timestamp": 1775237245748,
+      "result": "success",
+      "entityId": "cmd-70173c44",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-eec6cd14",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245749-05v2al",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-0eb961db (free-text)",
+      "timestamp": 1775237245749,
+      "result": "success",
+      "entityId": "cmd-0000001c",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245747-hv9cs7",
+        "questionId": "q-0eb961db",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245750-x2kda2",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-c696bad8",
+      "timestamp": 1775237245750,
+      "result": "success",
+      "entityId": "cmd-70173c44",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-c696bad8",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245752-bxv4uo",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0eb961db",
+      "timestamp": 1775237245752,
+      "result": "success",
+      "entityId": "cmd-0000001c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0eb961db",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245753-wv0qr1",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245753,
+      "result": "success",
+      "entityId": "cmd-f2dca3bd",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245753-s21se0",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245758-6bmpu9",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245758,
+      "result": "success",
+      "entityId": "cmd-0000001c",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245759-ivaoas",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00993f59",
+      "timestamp": 1775237245759,
+      "result": "success",
+      "entityId": "cmd-f2dca3bd",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00993f59",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245760-xxqhim",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-37fb3801",
+      "timestamp": 1775237245760,
+      "result": "success",
+      "entityId": "cmd-26007eba",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-37fb3801",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245763-csa1gx",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245763,
+      "result": "success",
+      "entityId": "cmd-00000011",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245763-vgdk1j",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245764-b3mrld",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 4 questions",
+      "timestamp": 1775237245764,
+      "result": "success",
+      "entityId": "cmd-8cc8d3d0",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245764-5exv2t",
+        "questionCount": 4
+      }
+    },
+    {
+      "entryId": "audit-1775237245765-ma0yjc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0c33488b",
+      "timestamp": 1775237245765,
+      "result": "success",
+      "entityId": "cmd-26007eba",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0c33488b",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245767-qeuay5",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-254bf29f (free-text)",
+      "timestamp": 1775237245767,
+      "result": "success",
+      "entityId": "cmd-00000011",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245763-vgdk1j",
+        "questionId": "q-254bf29f",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245769-s6axp0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000003",
+      "timestamp": 1775237245769,
+      "result": "success",
+      "entityId": "cmd-8cc8d3d0",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000003",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245770-retbp0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-9d9dcec1",
+      "timestamp": 1775237245770,
+      "result": "success",
+      "entityId": "cmd-26007eba",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-9d9dcec1",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245772-3c0i1t",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-254bf29f",
+      "timestamp": 1775237245772,
+      "result": "success",
+      "entityId": "cmd-00000011",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-254bf29f",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245773-n2o2at",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-53420213 (free-text)",
+      "timestamp": 1775237245773,
+      "result": "success",
+      "entityId": "cmd-00000011",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245763-vgdk1j",
+        "questionId": "q-53420213",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245774-dc5luc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7ace578e",
+      "timestamp": 1775237245774,
+      "result": "success",
+      "entityId": "cmd-26007eba",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7ace578e",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245775-zgpsf1",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-53420213",
+      "timestamp": 1775237245775,
+      "result": "success",
+      "entityId": "cmd-00000011",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-53420213",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245776-gkrxzo",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245776,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245776-v0ga1r",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245778-i9n9xk",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245778,
+      "result": "success",
+      "entityId": "cmd-00000011",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245779-5o2hgr",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-18e3c09b",
+      "timestamp": 1775237245779,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-18e3c09b",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245780-bj0x1q",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7c9146fa",
+      "timestamp": 1775237245780,
+      "result": "success",
+      "entityId": "cmd-8e9f7bef",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7c9146fa",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245782-9xywaw",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-9134d296",
+      "timestamp": 1775237245782,
+      "result": "success",
+      "entityId": "cmd-8e9f7bef",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-9134d296",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245783-ut151t",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245783,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245783-4rfj11",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245784-e46kly",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245784,
+      "result": "success",
+      "entityId": "cmd-f14e2f8e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245784-bt690q",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245785-tougjh",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-2a37cee6 (free-text)",
+      "timestamp": 1775237245785,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245783-4rfj11",
+        "questionId": "q-2a37cee6",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245786-vz550w",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-b72a6ad6",
+      "timestamp": 1775237245786,
+      "result": "success",
+      "entityId": "cmd-8e9f7bef",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-b72a6ad6",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245787-0bpbk3",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-9f161910",
+      "timestamp": 1775237245787,
+      "result": "success",
+      "entityId": "cmd-f14e2f8e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-9f161910",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245788-kx6aff",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-2a37cee6",
+      "timestamp": 1775237245788,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-2a37cee6",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245789-teh299",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-f9d65f01",
+      "timestamp": 1775237245789,
+      "result": "success",
+      "entityId": "cmd-8e9f7bef",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-f9d65f01",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245790-n6cqrw",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-0000000c (free-text)",
+      "timestamp": 1775237245790,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245783-4rfj11",
+        "questionId": "q-0000000c",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245791-ibuiwt",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0000000c",
+      "timestamp": 1775237245791,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0000000c",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245792-4t015t",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 5 questions",
+      "timestamp": 1775237245792,
+      "result": "success",
+      "entityId": "cmd-0f806025",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245792-s6izy8",
+        "questionCount": 5
+      }
+    },
+    {
+      "entryId": "audit-1775237245794-zyia8i",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-ffffffe0 (selection)",
+      "timestamp": 1775237245794,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245783-4rfj11",
+        "questionId": "q-ffffffe0",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245795-yhe108",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-620d387f",
+      "timestamp": 1775237245795,
+      "result": "success",
+      "entityId": "cmd-0f806025",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-620d387f",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245796-yr2lbq",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-c50e249b",
+      "timestamp": 1775237245796,
+      "result": "success",
+      "entityId": "cmd-ffffffec",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-c50e249b",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245797-v4yhid",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ffffffe0",
+      "timestamp": 1775237245797,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ffffffe0",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245798-6k3rq3",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-74d2876a",
+      "timestamp": 1775237245798,
+      "result": "success",
+      "entityId": "cmd-ffffffec",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-74d2876a",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245800-n4og0o",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245800,
+      "result": "success",
+      "entityId": "cmd-551e8db6",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245801-jqx5z8",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-a25a912c",
+      "timestamp": 1775237245801,
+      "result": "success",
+      "entityId": "cmd-ffffffec",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-a25a912c",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245802-g8mkfq",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-94ed7a00",
+      "timestamp": 1775237245802,
+      "result": "success",
+      "entityId": "cmd-ffffffec",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-94ed7a00",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245803-ipj772",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245803,
+      "result": "success",
+      "entityId": "cmd-adea9c20",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245803-nn0k0r",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245804-wdm1rm",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-ec7db234 (selection)",
+      "timestamp": 1775237245804,
+      "result": "success",
+      "entityId": "cmd-adea9c20",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245803-nn0k0r",
+        "questionId": "q-ec7db234",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245805-6n9u0f",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fb832ca0",
+      "timestamp": 1775237245805,
+      "result": "success",
+      "entityId": "cmd-ffffffec",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fb832ca0",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245806-cg1qu7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ec7db234",
+      "timestamp": 1775237245806,
+      "result": "success",
+      "entityId": "cmd-adea9c20",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ec7db234",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245808-grgfhn",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-8d3f3e64 (free-text)",
+      "timestamp": 1775237245808,
+      "result": "success",
+      "entityId": "cmd-adea9c20",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245803-nn0k0r",
+        "questionId": "q-8d3f3e64",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245809-ldy8eh",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-8d3f3e64",
+      "timestamp": 1775237245809,
+      "result": "success",
+      "entityId": "cmd-adea9c20",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-8d3f3e64",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245810-xuwxqw",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-78c99739",
+      "timestamp": 1775237245810,
+      "result": "success",
+      "entityId": "cmd-1e5daf27",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-78c99739",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245812-gz67s4",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245812,
+      "result": "success",
+      "entityId": "cmd-adea9c20",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245813-2nxhy0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-58044215",
+      "timestamp": 1775237245813,
+      "result": "success",
+      "entityId": "cmd-1e5daf27",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-58044215",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245814-y5b5fp",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-dd169d75",
+      "timestamp": 1775237245814,
+      "result": "success",
+      "entityId": "cmd-1e5daf27",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-dd169d75",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245816-9ouhmm",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245816,
+      "result": "success",
+      "entityId": "cmd-00000013",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245816-8l2or7",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245817-1ceqnd",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0f7bc720",
+      "timestamp": 1775237245817,
+      "result": "success",
+      "entityId": "cmd-1e5daf27",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0f7bc720",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245818-194r0w",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-fea52c3e (selection)",
+      "timestamp": 1775237245818,
+      "result": "success",
+      "entityId": "cmd-00000013",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245816-8l2or7",
+        "questionId": "q-fea52c3e",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245820-3c7mj9",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-bf29e305",
+      "timestamp": 1775237245820,
+      "result": "success",
+      "entityId": "cmd-1e5daf27",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-bf29e305",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245821-vuux70",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fea52c3e",
+      "timestamp": 1775237245821,
+      "result": "success",
+      "entityId": "cmd-00000013",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fea52c3e",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245822-6ipwgt",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245822,
+      "result": "success",
+      "entityId": "cmd-00000013",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245824-7u0r8f",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-519b1107",
+      "timestamp": 1775237245824,
+      "result": "success",
+      "entityId": "cmd-ad691f48",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-519b1107",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245825-07ha94",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237245825,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245825-oi1v2a",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237245827-tfeenj",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-c27a0d02",
+      "timestamp": 1775237245827,
+      "result": "success",
+      "entityId": "cmd-ad691f48",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-c27a0d02",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245828-vpegno",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-83597cb7 (free-text)",
+      "timestamp": 1775237245828,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245825-oi1v2a",
+        "questionId": "q-83597cb7",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245830-1uzpkk",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-83597cb7",
+      "timestamp": 1775237245830,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-83597cb7",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245831-pjwm4f",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-7ff043f3 (selection)",
+      "timestamp": 1775237245831,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245825-oi1v2a",
+        "questionId": "q-7ff043f3",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245832-tnahdf",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ce8928e4",
+      "timestamp": 1775237245832,
+      "result": "success",
+      "entityId": "cmd-e5db544c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ce8928e4",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245834-65y0hd",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7ff043f3",
+      "timestamp": 1775237245834,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7ff043f3",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245835-5u1yls",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-ffffffe4 (selection)",
+      "timestamp": 1775237245835,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245825-oi1v2a",
+        "questionId": "q-ffffffe4",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245836-wq4e9z",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-191d1ea0",
+      "timestamp": 1775237245836,
+      "result": "success",
+      "entityId": "cmd-e5db544c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-191d1ea0",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245838-6168fj",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ffffffe4",
+      "timestamp": 1775237245838,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ffffffe4",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245839-ugizg2",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-f491aa3b",
+      "timestamp": 1775237245839,
+      "result": "success",
+      "entityId": "cmd-e5db544c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-f491aa3b",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245840-n6ftzp",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245840,
+      "result": "success",
+      "entityId": "cmd-0000001f",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245842-w9clhx",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-4ffd74a9",
+      "timestamp": 1775237245842,
+      "result": "success",
+      "entityId": "cmd-000f93b6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-4ffd74a9",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245843-it2c04",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 1 questions",
+      "timestamp": 1775237245843,
+      "result": "success",
+      "entityId": "cmd-00000010",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245843-yyd7qh",
+        "questionCount": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245845-j95h6x",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-ebd31825 (selection)",
+      "timestamp": 1775237245845,
+      "result": "success",
+      "entityId": "cmd-00000010",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245843-yyd7qh",
+        "questionId": "q-ebd31825",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245846-rffn4e",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-9597d3b0",
+      "timestamp": 1775237245846,
+      "result": "success",
+      "entityId": "cmd-000f93b6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-9597d3b0",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245847-nrz6s7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ebd31825",
+      "timestamp": 1775237245847,
+      "result": "success",
+      "entityId": "cmd-00000010",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ebd31825",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245848-dfw25p",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-8ad35a21",
+      "timestamp": 1775237245848,
+      "result": "success",
+      "entityId": "cmd-000f93b6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-8ad35a21",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245850-91kxur",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245850,
+      "result": "success",
+      "entityId": "cmd-00000010",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245851-x98tfq",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-5b2c6e37",
+      "timestamp": 1775237245851,
+      "result": "success",
+      "entityId": "cmd-000f93b6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-5b2c6e37",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245853-0ieamm",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-711e2db7",
+      "timestamp": 1775237245853,
+      "result": "success",
+      "entityId": "cmd-000f93b6",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-711e2db7",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245854-qk0fxs",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 5 questions",
+      "timestamp": 1775237245854,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245854-7kf0ki",
+        "questionCount": 5
+      }
+    },
+    {
+      "entryId": "audit-1775237245858-9asvqy",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-0a377944 (selection)",
+      "timestamp": 1775237245858,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245854-7kf0ki",
+        "questionId": "q-0a377944",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245863-gmw7j0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0a377944",
+      "timestamp": 1775237245863,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0a377944",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245864-z07688",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-e8e4e171",
+      "timestamp": 1775237245864,
+      "result": "success",
+      "entityId": "cmd-00000003",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-e8e4e171",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245869-ce5hpz",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-33dd4317 (selection)",
+      "timestamp": 1775237245869,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245854-7kf0ki",
+        "questionId": "q-33dd4317",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245872-zekj77",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-3353b781",
+      "timestamp": 1775237245872,
+      "result": "success",
+      "entityId": "cmd-00000003",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-3353b781",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245873-i7rbpx",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-33dd4317",
+      "timestamp": 1775237245873,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-33dd4317",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245877-b1etck",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-8264271a (selection)",
+      "timestamp": 1775237245877,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245854-7kf0ki",
+        "questionId": "q-8264271a",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245879-1kbww6",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-8264271a",
+      "timestamp": 1775237245879,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-8264271a",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245881-83nn7x",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-4b1c2146 (selection)",
+      "timestamp": 1775237245881,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245854-7kf0ki",
+        "questionId": "q-4b1c2146",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245886-k9by7n",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-0000000b",
+      "timestamp": 1775237245886,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-0000000b",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245887-6pmlp6",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-4b1c2146",
+      "timestamp": 1775237245887,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-4b1c2146",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245890-rlx9cd",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-696c50b4",
+      "timestamp": 1775237245890,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-696c50b4",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245892-lbky3d",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-80c03582 (free-text)",
+      "timestamp": 1775237245892,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245854-7kf0ki",
+        "questionId": "q-80c03582",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245894-k2ib31",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-fffffff6",
+      "timestamp": 1775237245894,
+      "result": "success",
+      "entityId": "cmd-ffffffeb",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-fffffff6",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245898-v6vxb4",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-80c03582",
+      "timestamp": 1775237245898,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-80c03582",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245901-vvtm56",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245901,
+      "result": "success",
+      "entityId": "cmd-a36a0a1e",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245907-hfv2m9",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ffffffe3",
+      "timestamp": 1775237245907,
+      "result": "success",
+      "entityId": "cmd-75357f53",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ffffffe3",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245911-lbphor",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245911,
+      "result": "success",
+      "entityId": "cmd-9d02bf95",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245911-dwyauq",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245912-7nhdms",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-ea2e035e",
+      "timestamp": 1775237245912,
+      "result": "success",
+      "entityId": "cmd-75357f53",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-ea2e035e",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245915-dw6rho",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-5dc82666 (selection)",
+      "timestamp": 1775237245915,
+      "result": "success",
+      "entityId": "cmd-9d02bf95",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245911-dwyauq",
+        "questionId": "q-5dc82666",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245917-4pbyt5",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-5dc82666",
+      "timestamp": 1775237245917,
+      "result": "success",
+      "entityId": "cmd-9d02bf95",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-5dc82666",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245918-hf1jer",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-442598de (selection)",
+      "timestamp": 1775237245918,
+      "result": "success",
+      "entityId": "cmd-9d02bf95",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245911-dwyauq",
+        "questionId": "q-442598de",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245920-4e1go0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-62cc7f13",
+      "timestamp": 1775237245920,
+      "result": "success",
+      "entityId": "cmd-5b7c1d93",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-62cc7f13",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245922-cp83sd",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-442598de",
+      "timestamp": 1775237245922,
+      "result": "success",
+      "entityId": "cmd-9d02bf95",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-442598de",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245924-gtn1py",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-3ae61010",
+      "timestamp": 1775237245924,
+      "result": "success",
+      "entityId": "cmd-5b7c1d93",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-3ae61010",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245925-rxs6d5",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245925,
+      "result": "success",
+      "entityId": "cmd-9d02bf95",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245929-6bmqnq",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-f3208665",
+      "timestamp": 1775237245929,
+      "result": "success",
+      "entityId": "cmd-5b7c1d93",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-f3208665",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245932-cd3ird",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-f20b347e",
+      "timestamp": 1775237245932,
+      "result": "success",
+      "entityId": "cmd-5b7c1d93",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-f20b347e",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245934-a8xvbe",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 4 questions",
+      "timestamp": 1775237245934,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245934-8xrpzs",
+        "questionCount": 4
+      }
+    },
+    {
+      "entryId": "audit-1775237245936-2bf40m",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-dc3298cf (selection)",
+      "timestamp": 1775237245936,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245934-8xrpzs",
+        "questionId": "q-dc3298cf",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245937-5owy0n",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-49a91769",
+      "timestamp": 1775237245937,
+      "result": "success",
+      "entityId": "cmd-5b7c1d93",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-49a91769",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245938-d9j1wb",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-dc3298cf",
+      "timestamp": 1775237245938,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-dc3298cf",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245940-6m6hf9",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-afb26364 (free-text)",
+      "timestamp": 1775237245940,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245934-8xrpzs",
+        "questionId": "q-afb26364",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245941-pkla09",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-afb26364",
+      "timestamp": 1775237245942,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-afb26364",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245944-z02mk7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-5039f904",
+      "timestamp": 1775237245944,
+      "result": "success",
+      "entityId": "cmd-0000000c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-5039f904",
+        "newConfidence": 0.55
+      }
+    },
+    {
+      "entryId": "audit-1775237245946-8kaixf",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-cd8686ea (selection)",
+      "timestamp": 1775237245946,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245934-8xrpzs",
+        "questionId": "q-cd8686ea",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245948-378wfa",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-6e4d9a4c",
+      "timestamp": 1775237245948,
+      "result": "success",
+      "entityId": "cmd-0000000c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-6e4d9a4c",
+        "newConfidence": 0.7000000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245951-oqgu4j",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-cd8686ea",
+      "timestamp": 1775237245951,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-cd8686ea",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245952-dalwz6",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-992998c0 (selection)",
+      "timestamp": 1775237245952,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245934-8xrpzs",
+        "questionId": "q-992998c0",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245953-rli1vc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-63283172",
+      "timestamp": 1775237245953,
+      "result": "success",
+      "entityId": "cmd-0000000c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-63283172",
+        "newConfidence": 0.8500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245954-d6jzfc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-992998c0",
+      "timestamp": 1775237245954,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-992998c0",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245955-vlp4p7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-6a792c74",
+      "timestamp": 1775237245955,
+      "result": "success",
+      "entityId": "cmd-0000000c",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-6a792c74",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245957-z3fm90",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245957,
+      "result": "success",
+      "entityId": "cmd-5032142e",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245958-ntkl71",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245958,
+      "result": "success",
+      "entityId": "cmd-960a4bf2",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245958-3oco9j",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245960-bkz4hb",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-f80c3927 (selection)",
+      "timestamp": 1775237245960,
+      "result": "success",
+      "entityId": "cmd-960a4bf2",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245958-3oco9j",
+        "questionId": "q-f80c3927",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245961-mltr2c",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-f80c3927",
+      "timestamp": 1775237245961,
+      "result": "success",
+      "entityId": "cmd-960a4bf2",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-f80c3927",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245963-8ymgcj",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-80c295b6 (free-text)",
+      "timestamp": 1775237245963,
+      "result": "success",
+      "entityId": "cmd-960a4bf2",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245958-3oco9j",
+        "questionId": "q-80c295b6",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245964-nhcdia",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-80c295b6",
+      "timestamp": 1775237245964,
+      "result": "success",
+      "entityId": "cmd-960a4bf2",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-80c295b6",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245965-pbysa6",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245965,
+      "result": "success",
+      "entityId": "cmd-960a4bf2",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245967-2nqbbz",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 5 questions",
+      "timestamp": 1775237245967,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245967-nfx8bs",
+        "questionCount": 5
+      }
+    },
+    {
+      "entryId": "audit-1775237245969-p7tas6",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-47c3aac3 (selection)",
+      "timestamp": 1775237245969,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245967-nfx8bs",
+        "questionId": "q-47c3aac3",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245970-d9z99x",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-47c3aac3",
+      "timestamp": 1775237245970,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-47c3aac3",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237245972-om146s",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-a27de0f2 (free-text)",
+      "timestamp": 1775237245972,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245967-nfx8bs",
+        "questionId": "q-a27de0f2",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237245973-8h3qc7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-a27de0f2",
+      "timestamp": 1775237245973,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-a27de0f2",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237245974-3zbbzy",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-771a39d1 (selection)",
+      "timestamp": 1775237245974,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245967-nfx8bs",
+        "questionId": "q-771a39d1",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245975-9nhxfc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-771a39d1",
+      "timestamp": 1775237245975,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-771a39d1",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237245977-w16e6f",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-9246db7a (selection)",
+      "timestamp": 1775237245977,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245967-nfx8bs",
+        "questionId": "q-9246db7a",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245978-jflz9x",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-9246db7a",
+      "timestamp": 1775237245978,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-9246db7a",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245980-xhpc48",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-21501ee8 (selection)",
+      "timestamp": 1775237245980,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245967-nfx8bs",
+        "questionId": "q-21501ee8",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237245982-d09aws",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-21501ee8",
+      "timestamp": 1775237245982,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-21501ee8",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237245984-lwi4lz",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237245984,
+      "result": "success",
+      "entityId": "cmd-0000000e",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237245987-l7ymzf",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 2 questions",
+      "timestamp": 1775237245987,
+      "result": "success",
+      "entityId": "cmd-fffffffd",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245987-epshjp",
+        "questionCount": 2
+      }
+    },
+    {
+      "entryId": "audit-1775237245989-mkc7hq",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-b05f9acd (free-text)",
+      "timestamp": 1775237245989,
+      "result": "success",
+      "entityId": "cmd-fffffffd",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245987-epshjp",
+        "questionId": "q-b05f9acd",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237246000-hah6jj",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-b05f9acd",
+      "timestamp": 1775237246000,
+      "result": "success",
+      "entityId": "cmd-fffffffd",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-b05f9acd",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237246001-ubyd14",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-75ffe44a (free-text)",
+      "timestamp": 1775237246001,
+      "result": "success",
+      "entityId": "cmd-fffffffd",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237245987-epshjp",
+        "questionId": "q-75ffe44a",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237246003-f6c8r7",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-75ffe44a",
+      "timestamp": 1775237246003,
+      "result": "success",
+      "entityId": "cmd-fffffffd",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-75ffe44a",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237246005-vm48w3",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237246005,
+      "result": "success",
+      "entityId": "cmd-fffffffd",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237246007-405p47",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 3 questions",
+      "timestamp": 1775237246007,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246007-11v3uu",
+        "questionCount": 3
+      }
+    },
+    {
+      "entryId": "audit-1775237246009-wbk2lr",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-6e972327 (free-text)",
+      "timestamp": 1775237246009,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246007-11v3uu",
+        "questionId": "q-6e972327",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237246011-07c043",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-6e972327",
+      "timestamp": 1775237246011,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-6e972327",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237246014-m4pagh",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-00000012 (selection)",
+      "timestamp": 1775237246014,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246007-11v3uu",
+        "questionId": "q-00000012",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237246015-ir7je4",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-00000012",
+      "timestamp": 1775237246015,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-00000012",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237246017-g644dk",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-2265d24c (free-text)",
+      "timestamp": 1775237246017,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246007-11v3uu",
+        "questionId": "q-2265d24c",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237246018-czpb6t",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-2265d24c",
+      "timestamp": 1775237246018,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-2265d24c",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237246019-397qs5",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237246019,
+      "result": "success",
+      "entityId": "cmd-64d1dce5",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    },
+    {
+      "entryId": "audit-1775237246022-su1fpi",
+      "operationType": "clarification_question",
+      "operator": "system",
+      "content": "Created clarification dialog with 5 questions",
+      "timestamp": 1775237246022,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246022-8dhlze",
+        "questionCount": 5
+      }
+    },
+    {
+      "entryId": "audit-1775237246023-t5ifcg",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-e09beced (free-text)",
+      "timestamp": 1775237246023,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246022-8dhlze",
+        "questionId": "q-e09beced",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237246025-6h2oxc",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-e09beced",
+      "timestamp": 1775237246025,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-e09beced",
+        "newConfidence": 0.65
+      }
+    },
+    {
+      "entryId": "audit-1775237246026-5jc5xk",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-7cfe0ac2 (selection)",
+      "timestamp": 1775237246026,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246022-8dhlze",
+        "questionId": "q-7cfe0ac2",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237246028-vhq25w",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7cfe0ac2",
+      "timestamp": 1775237246028,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7cfe0ac2",
+        "newConfidence": 0.8
+      }
+    },
+    {
+      "entryId": "audit-1775237246030-d8wlfp",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-9803aeeb (selection)",
+      "timestamp": 1775237246030,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246022-8dhlze",
+        "questionId": "q-9803aeeb",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237246032-b6hpp0",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-9803aeeb",
+      "timestamp": 1775237246032,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-9803aeeb",
+        "newConfidence": 0.9500000000000001
+      }
+    },
+    {
+      "entryId": "audit-1775237246034-mc8cvp",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-7b7a8fb2 (free-text)",
+      "timestamp": 1775237246034,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246022-8dhlze",
+        "questionId": "q-7b7a8fb2",
+        "answerType": "free_text"
+      }
+    },
+    {
+      "entryId": "audit-1775237246036-ojakfn",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-7b7a8fb2",
+      "timestamp": 1775237246036,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-7b7a8fb2",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237246047-shvuyk",
+      "operationType": "clarification_answer",
+      "operator": "user",
+      "content": "Answered question q-253d10f4 (selection)",
+      "timestamp": 1775237246047,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "dialogId": "dialog-1775237246022-8dhlze",
+        "questionId": "q-253d10f4",
+        "answerType": "selection"
+      }
+    },
+    {
+      "entryId": "audit-1775237246055-x135u1",
+      "operationType": "clarification_answer",
+      "operator": "user-1",
+      "content": "Updated analysis with clarification answer for question q-253d10f4",
+      "timestamp": 1775237246055,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "questionId": "q-253d10f4",
+        "newConfidence": 1
+      }
+    },
+    {
+      "entryId": "audit-1775237246057-kvbkkg",
+      "operationType": "command_finalized",
+      "operator": "user-1",
+      "content": "Finalized command: \"Refined: Original command: \"Refactor th\"",
+      "timestamp": 1775237246057,
+      "result": "success",
+      "entityId": "cmd-fffffffe",
+      "entityType": "command",
+      "metadata": {
+        "refinedText": "Refined: Original command: \"Refactor th"
+      }
+    }
+  ]
+}
