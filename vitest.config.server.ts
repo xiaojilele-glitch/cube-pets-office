@@ -13,6 +13,7 @@ export default defineConfig({
       "server/tests/**/*.test.ts",
       "shared/**/*.test.ts",
       "client/src/lib/replay/__tests__/**/*.test.ts",
+      "client/src/runtime/demo-data/__tests__/**/*.test.ts",
     ],
   },
 });

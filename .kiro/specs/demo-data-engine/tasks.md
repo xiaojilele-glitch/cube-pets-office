@@ -21,13 +21,13 @@
     - 验证失败时抛出包含字段路径的描述性错误
     - _Requirements: 2.2, 2.3, 2.5, 2.6_
 
-  - [ ]* 2.2 编写序列化 round-trip 属性测试
+  - [x] 2.2 编写序列化 round-trip 属性测试
     - 创建 `client/src/runtime/demo-data/__tests__/serializer.property.test.ts`
     - 构建 DemoDataBundle 的 fast-check Arbitrary 生成器
     - **Property 1: 序列化 Round-Trip 一致性**
     - **Validates: Requirements 2.2, 2.3, 2.4**
 
-  - [ ]* 2.3 编写序列化器单元测试
+  - [x] 2.3 编写序列化器单元测试
     - 创建 `client/src/runtime/demo-data/__tests__/serializer.test.ts`
     - 测试空字符串、null、部分字段缺失、version 不匹配等边界情况
     - **Validates: Requirements 2.6**
@@ -88,8 +88,8 @@
     - 导出 DEMO_BUNDLE 常量
     - _Requirements: 1.8_
 
-- [ ] 6. 数据完整性验证
-  - [ ]* 6.1 编写数据完整性单元测试
+- [x] 6. 数据完整性验证
+  - [x] 6.1 编写数据完整性单元测试
     - 创建 `client/src/runtime/demo-data/__tests__/bundle.test.ts`
     - 验证 DEMO_BUNDLE 覆盖全部 10 个工作流阶段
     - 验证组织快照包含 1 CEO、2 Manager、4 Worker
@@ -99,15 +99,15 @@
     - 验证进化日志包含评分变化和补丁内容
     - _Requirements: 1.1, 1.2, 1.4, 1.5, 1.6, 1.7_
 
-  - [ ]* 6.2 编写事件序列时间戳属性测试
+  - [x] 6.2 编写事件序列时间戳属性测试
     - **Property 2: 事件序列时间戳单调递增**
     - **Validates: Requirements 1.3**
 
-  - [ ]* 6.3 编写序列化输出格式属性测试
+  - [x] 6.3 编写序列化输出格式属性测试
     - **Property 3: 序列化输出为格式化 JSON**
     - **Validates: Requirements 2.5**
 
-  - [ ]* 6.4 编写反序列化错误处理属性测试
+  - [x] 6.4 编写反序列化错误处理属性测试
     - **Property 4: 反序列化无效输入产生描述性错误**
     - **Validates: Requirements 2.6**
 
