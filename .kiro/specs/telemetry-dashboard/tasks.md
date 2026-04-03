@@ -13,7 +13,7 @@
     - 导出默认预算常量 `DEFAULT_BUDGET: TelemetryBudget`
     - _Requirements: 10.1, 10.2, 10.3_
 
-  - [ ]* 1.2 编写 Property 11 属性测试：遥测类型 JSON 往返一致性
+  - [x] 1.2 编写 Property 11 属性测试：遥测类型 JSON 往返一致性
     - **Property 11: 遥测类型 JSON 往返一致性**
     - 使用 fast-check 生成随机 TelemetrySnapshot，验证 `JSON.parse(JSON.stringify(snapshot))` 深度相等
     - **Validates: Requirements 10.3**
@@ -31,27 +31,27 @@
     - 导出单例 `telemetryStore`
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2, 3.1, 3.2, 3.3, 3.4, 3.5, 8.1, 8.2_
 
-  - [ ]* 2.2 编写 Property 4 属性测试：聚合指标不变量
+  - [x] 2.2 编写 Property 4 属性测试：聚合指标不变量
     - **Property 4: 聚合指标不变量**
     - 使用 fast-check 生成随机 LLMCallRecord 序列，验证 snapshot 中的 totalTokensIn/Out/Cost/Calls 等于各记录之和
     - **Validates: Requirements 3.1**
 
-  - [ ]* 2.3 编写 Property 3 属性测试：滑动窗口平均值正确性
+  - [x] 2.3 编写 Property 3 属性测试：滑动窗口平均值正确性
     - **Property 3: 滑动窗口平均值正确性**
     - 生成随机长度的 AgentTimingRecord 序列，验证平均值等于最近 min(N, 20) 条的算术平均
     - **Validates: Requirements 2.2**
 
-  - [ ]* 2.4 编写 Property 5 属性测试：历史缓冲区有界性
+  - [x] 2.4 编写 Property 5 属性测试：历史缓冲区有界性
     - **Property 5: 历史缓冲区有界性**
     - 生成随机次数的 finalizeMission 调用，验证 history 长度为 min(N, 10)
     - **Validates: Requirements 3.2**
 
-  - [ ]* 2.5 编写 Property 6 属性测试：历史持久化往返一致性
+  - [x] 2.5 编写 Property 6 属性测试：历史持久化往返一致性
     - **Property 6: 历史持久化往返一致性**
     - 生成随机 MissionTelemetrySummary 列表，验证 persistHistory → loadHistory 往返一致
     - **Validates: Requirements 3.3, 3.4**
 
-  - [ ]* 2.6 编写 Property 8 和 Property 9 属性测试：预警生成
+  - [x] 2.6 编写 Property 8 和 Property 9 属性测试：预警生成
     - **Property 8: Agent 响应过慢预警生成**
     - 生成随机计时序列，当滑动窗口平均 > 30000ms 时验证 alert 存在
     - **Property 9: Token 超预算预警生成**
@@ -73,7 +73,7 @@
     - 需要通过某种方式传递当前 agentId（可在 Agent 构造时绑定）
     - _Requirements: 2.1_
 
-  - [ ]* 4.3 编写 Property 1 和 Property 2 属性测试：调用记录完整性
+  - [x] 4.3 编写 Property 1 和 Property 2 属性测试：调用记录完整性
     - **Property 1: LLM 调用记录完整性**
     - **Property 2: Agent 计时记录完整性**
     - 验证 recordLLMCall 和 recordAgentTiming 产生的记录包含所有必填字段
@@ -96,7 +96,7 @@
   - [x] 5.4 在 TelemetryStore 的 recordLLMCall 和 recordAgentTiming 中调用 emitTelemetryUpdate
     - _Requirements: 5.1_
 
-  - [ ]* 5.5 编写 Property 7 属性测试：Socket 广播节流上界
+  - [x] 5.5 编写 Property 7 属性测试：Socket 广播节流上界
     - **Property 7: Socket 广播节流上界**
     - 模拟快速连续更新，验证广播次数不超过 ceil(T / 500) + 1
     - **Validates: Requirements 5.2**
@@ -143,7 +143,7 @@
     - 调用前后记录时间，构造 LLMCallRecord 写入前端 telemetry store
     - _Requirements: 9.1_
 
-  - [ ]* 8.3 编写 Property 10 属性测试：IndexedDB 往返一致性
+  - [x] 8.3 编写 Property 10 属性测试：IndexedDB 往返一致性
     - **Property 10: IndexedDB 往返一致性**
     - 生成随机 TelemetrySnapshot，验证 IndexedDB 写入后读取等价
     - **Validates: Requirements 9.2, 9.3**
