@@ -366,7 +366,7 @@ describe('buildPlanetInteriorAgents', () => {
 });
 
 
-/* ─── Route-level tests for GET /api/planets/:id ─── */
+/* ─── Route-level tests for GET /api/planets ─── */
 
 import type { AddressInfo } from 'node:net';
 import express from 'express';
@@ -374,6 +374,133 @@ import { afterEach, beforeEach } from 'vitest';
 import { createPlanetRouter } from '../routes/planets.js';
 import { MissionRuntime } from '../tasks/mission-runtime.js';
 import { MissionStore } from '../tasks/mission-store.js';
+
+describe('GET /api/planets', () => {
+  let runtime: MissionRuntime;
+  let server: ReturnType<express.Express['listen']> | null = null;
+  let baseUrl = '';
+
+  beforeEach(async () => {
+    runtime = new MissionRuntime({
+      store: new MissionStore(),
+      autoRecover: false,
+    });
+
+    const app = express();
+    app.use(express.json());
+    app.use('/api/planets', createPlanetRouter(runtime));
+
+    server = await new Promise<ReturnType<typeof app.listen>>((resolve) => {
+      const instance = app.listen(0, () => resolve(instance));
+    });
+
+    const { port } = server.address() as AddressInfo;
+    baseUrl = `http://127.0.0.1:${port}`;
+  });
+
+  afterEach(async () => {
+    await new Promise<void>((resolve, reject) => {
+      if (!server) { resolve(); return; }
+      server.close((err) => (err ? reject(err) : resolve()));
+    });
+    server = null;
+  });
+
+  it('returns empty planets array when no missions exist', async () => {
+    const response = await fetch(`${baseUrl}/api/planets`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.planets).toEqual([]);
+    expect(body.edges).toEqual([]);
+  });
+
+  it('returns planet overviews for existing missions', async () => {
+    runtime.createTask({
+      kind: 'chat',
+      title: 'Planet A',
+      stageLabels: [{ key: 'receive', label: 'Receive task' }],
+    });
+    runtime.createTask({
+      kind: 'chat',
+      title: 'Planet B',
+      stageLabels: [
+        { key: 'receive', label: 'Receive task' },
+        { key: 'execute', label: 'Run execution' },
+      ],
+    });
+
+    const response = await fetch(`${baseUrl}/api/planets`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.planets).toHaveLength(2);
+    expect(body.planets[0].title).toBeDefined();
+    expect(body.planets[1].title).toBeDefined();
+  });
+
+  it('respects limit query parameter', async () => {
+    for (let i = 0; i < 5; i++) {
+      runtime.createTask({
+        kind: 'chat',
+        title: `Planet ${i}`,
+        stageLabels: [{ key: 'receive', label: 'Receive task' }],
+      });
+    }
+
+    const response = await fetch(`${baseUrl}/api/planets?limit=3`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.planets.length).toBeLessThanOrEqual(3);
+  });
+
+  it('uses default limit for invalid limit parameter', async () => {
+    runtime.createTask({
+      kind: 'chat',
+      title: 'Planet X',
+      stageLabels: [{ key: 'receive', label: 'Receive task' }],
+    });
+
+    const response = await fetch(`${baseUrl}/api/planets?limit=abc`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.planets).toHaveLength(1);
+  });
+
+  it('planet overview contains expected fields', async () => {
+    const task = runtime.createTask({
+      kind: 'chat',
+      title: 'Field check',
+      sourceText: 'Testing fields',
+      stageLabels: [
+        { key: 'receive', label: 'Receive task' },
+        { key: 'execute', label: 'Run execution' },
+      ],
+    });
+
+    const response = await fetch(`${baseUrl}/api/planets`);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    const planet = body.planets[0];
+    expect(planet.id).toBe(task.id);
+    expect(planet.title).toBe('Field check');
+    expect(planet.sourceText).toBe('Testing fields');
+    expect(planet.status).toBe('queued');
+    expect(planet.complexity).toBe(2);
+    expect(planet.radius).toBe(40);
+    expect(planet.taskUrl).toBe(`/tasks/${task.id}`);
+    expect(planet.tags).toEqual([]);
+  });
+});
+
+
+/* ─── Route-level tests for GET /api/planets/:id ─── */
 
 describe('GET /api/planets/:id', () => {
   let runtime: MissionRuntime;

@@ -12,7 +12,7 @@
     - 在 MissionRecord 接口中添加 organization?、workPackages?、messageLog? 可选字段
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ]* 1.2 编写 MissionRecord 扩展字段的属性测试
+  - [x] 1.2 编写 MissionRecord 扩展字段的属性测试
     - **Property 6: 阶段状态转换合法性**
     - **Validates: Requirements 3.5**
 
@@ -27,7 +27,7 @@
     - 确保 360 度均匀分配
     - _Requirements: 2.5_
 
-  - [ ]* 2.3 编写环形几何计算的属性测试
+  - [x] 2.3 编写环形几何计算的属性测试
     - **Property 3: 环形可视化几何不变量**
     - **Validates: Requirements 2.5**
 
@@ -37,7 +37,7 @@
     - 使用 withAgentAngles 计算角度
     - _Requirements: 2.6_
 
-  - [ ]* 2.5 编写 agent 推断的属性测试
+  - [x] 2.5 编写 agent 推断的属性测试
     - **Property 4: Agent 可视化有效性**
     - **Validates: Requirements 2.6**
 
@@ -61,7 +61,7 @@
     - 导入 createPlanetRouter 并挂载到 app.use('/api/planets', ...)
     - _Requirements: 2.1_
 
-  - [ ]* 3.5 编写 /api/planets 路由的单元测试
+  - [x] 3.5 编写 /api/planets 路由的单元测试
     - 参照 server/tests/mission-routes.test.ts 的模式
     - 测试三个端点的正常响应和 404 场景
     - _Requirements: 2.1, 2.2, 2.3_
@@ -75,7 +75,7 @@
     - 使用 replaceMission() 更新 MissionRecord
     - _Requirements: 3.4, 3.5_
 
-  - [ ]* 5.2 编写丰富化逻辑的属性测试
+  - [x] 5.2 编写丰富化逻辑的属性测试
     - **Property 5: 阶段完成时数据丰富化**
     - **Validates: Requirements 3.4**
 
@@ -97,11 +97,11 @@
     - 构建 timeline、artifacts、decisionPresets
     - _Requirements: 1.2_
 
-  - [ ]* 7.3 编写摘要构建器的属性测试
+  - [x] 7.3 编写摘要构建器的属性测试
     - **Property 1: Mission 原生摘要完整性**
     - **Validates: Requirements 1.1, 1.4, 1.5**
 
-  - [ ]* 7.4 编写详情构建器的属性测试
+  - [x] 7.4 编写详情构建器的属性测试
     - **Property 2: Mission 原生详情完整性**
     - **Validates: Requirements 1.2**
 
@@ -124,7 +124,7 @@
     - 确保 MissionTaskDetail 的 stages、agents 字段与 TaskPlanetInterior 组件兼容
     - _Requirements: 1.4_
 
-  - [ ]* 9.2 编写端到端集成测试
+  - [x] 9.2 编写端到端集成测试
     - 创建 mission → 通过 /api/planets 获取 → 验证 tasks-store 输出
     - _Requirements: 1.1, 1.2, 2.1, 4.2_
 

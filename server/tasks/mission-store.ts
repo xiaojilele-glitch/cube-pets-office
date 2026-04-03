@@ -53,6 +53,31 @@ function createMissionId(createdAt: number): string {
     .slice(2, 8)}`;
 }
 
+/**
+ * Enforce legal stage status transitions per the design spec:
+ *   pending → running
+ *   running → done | failed
+ *   done → (terminal)
+ *   failed → (terminal)
+ */
+function isLegalStageTransition(
+  from: MissionStage['status'],
+  to: MissionStage['status'],
+): boolean {
+  if (from === to) return true;
+  switch (from) {
+    case 'pending':
+      return to === 'running';
+    case 'running':
+      return to === 'done' || to === 'failed';
+    case 'done':
+    case 'failed':
+      return false;
+    default:
+      return false;
+  }
+}
+
 export class MissionStore {
   private readonly missions: Map<string, MissionRecord>;
 
@@ -212,6 +237,15 @@ export class MissionStore {
     return this.update(id, task => {
       const stage = task.stages.find(item => item.key === stageKey);
       if (!stage) return;
+
+      // Enforce legal stage status transitions:
+      //   pending → running
+      //   running → done | failed
+      //   done → (terminal, no transitions)
+      //   failed → (terminal, no transitions)
+      if (patch.status !== undefined && patch.status !== stage.status) {
+        if (!isLegalStageTransition(stage.status, patch.status)) return;
+      }
 
       Object.assign(stage, patch);
 
