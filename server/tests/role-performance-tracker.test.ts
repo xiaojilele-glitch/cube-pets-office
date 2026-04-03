@@ -112,6 +112,11 @@ describe('RolePerformanceTracker', () => {
   // ── Ring Buffer ────────────────────────────────────────────────
 
   describe('Ring Buffer (recentTasks max 50)', () => {
+    it('boundary: 0 tasks — no record exists', () => {
+      const record = tracker.getPerformance('a', 'r');
+      expect(record).toBeUndefined();
+    });
+
     it('keeps all tasks when under 50', () => {
       for (let i = 0; i < 30; i++) {
         tracker.updateOnTaskComplete('a', 'r', makeTaskResult({ taskId: `t-${i}` }));
@@ -127,6 +132,18 @@ describe('RolePerformanceTracker', () => {
       const record = tracker.getPerformance('a', 'r') as RolePerformanceRecord;
       expect(record.recentTasks).toHaveLength(50);
       expect(record.totalTasks).toBe(55);
+    });
+
+    it('boundary: exactly 51 tasks — oldest entry is removed', () => {
+      for (let i = 0; i < 51; i++) {
+        tracker.updateOnTaskComplete('a', 'r', makeTaskResult({ taskId: `t-${i}` }));
+      }
+      const record = tracker.getPerformance('a', 'r') as RolePerformanceRecord;
+      expect(record.recentTasks).toHaveLength(50);
+      expect(record.totalTasks).toBe(51);
+      // t-0 should have been evicted, t-1 is now the oldest
+      expect(record.recentTasks[0].taskId).toBe('t-1');
+      expect(record.recentTasks[49].taskId).toBe('t-50');
     });
 
     it('removes oldest entries when exceeding 50', () => {

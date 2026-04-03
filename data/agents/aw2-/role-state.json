@@ -1,0 +1,16 @@
+{
+  "currentRoleId": "c2a-zblen",
+  "currentRoleLoadedAt": "2026-04-03T12:40:12.549Z",
+  "roleLoadPolicy": "merge",
+  "lastRoleSwitchAt": "2026-04-03T12:40:12.549Z",
+  "roleSwitchCooldownMs": 60000,
+  "operationLog": [
+    {
+      "agentId": "aw2-",
+      "roleId": "c2a-zblen",
+      "action": "load",
+      "timestamp": "2026-04-03T12:40:12.549Z",
+      "triggerSource": "test-mission"
+    }
+  ]
+}

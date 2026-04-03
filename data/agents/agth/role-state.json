@@ -1,0 +1,16 @@
+{
+  "currentRoleId": "o206",
+  "currentRoleLoadedAt": "2026-04-03T12:40:12.259Z",
+  "roleLoadPolicy": "merge",
+  "lastRoleSwitchAt": "2026-04-03T12:40:12.259Z",
+  "roleSwitchCooldownMs": 60000,
+  "operationLog": [
+    {
+      "agentId": "agth",
+      "roleId": "o206",
+      "action": "load",
+      "timestamp": "2026-04-03T12:40:12.259Z",
+      "triggerSource": "test-mission"
+    }
+  ]
+}

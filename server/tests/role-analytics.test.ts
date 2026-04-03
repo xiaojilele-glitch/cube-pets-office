@@ -142,6 +142,52 @@ describe('RoleAnalyticsService', () => {
       expect(unusedAlerts.some((a) => a.detail.includes('role-old'))).toBe(true);
     });
 
+    it('triggers alert when role was loaded exactly 7 days + 1ms ago', () => {
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      // Load happened exactly 7 days + 1ms ago
+      const loadTime = new Date(currentTime.getTime() - sevenDaysMs - 1);
+      const analyticsEdge = new RoleAnalyticsService(
+        resolve(TEST_STORE_DIR, 'unused-edge.json'),
+        () => loadTime,
+        registry,
+      );
+      analyticsEdge.recordRoleLoad('role-edge');
+
+      // Check alerts at current time (7 days + 1ms later)
+      const analyticsNow = new RoleAnalyticsService(
+        resolve(TEST_STORE_DIR, 'unused-edge.json'),
+        () => currentTime,
+      );
+      const alerts = analyticsNow.checkAlerts();
+      const unusedAlerts = alerts.filter(
+        (a) => a.type === 'ROLE_UNUSED' && a.detail.includes('role-edge'),
+      );
+      expect(unusedAlerts).toHaveLength(1);
+    });
+
+    it('does NOT trigger alert at exactly 7 days (boundary)', () => {
+      const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+      // Load happened exactly 7 days ago (not exceeding)
+      const loadTime = new Date(currentTime.getTime() - sevenDaysMs);
+      const analyticsBoundary = new RoleAnalyticsService(
+        resolve(TEST_STORE_DIR, 'unused-boundary.json'),
+        () => loadTime,
+        registry,
+      );
+      analyticsBoundary.recordRoleLoad('role-boundary');
+
+      // Check alerts at current time (exactly 7 days later)
+      const analyticsNow = new RoleAnalyticsService(
+        resolve(TEST_STORE_DIR, 'unused-boundary.json'),
+        () => currentTime,
+      );
+      const alerts = analyticsNow.checkAlerts();
+      const unusedAlerts = alerts.filter(
+        (a) => a.type === 'ROLE_UNUSED' && a.detail.includes('role-boundary'),
+      );
+      expect(unusedAlerts).toHaveLength(0);
+    });
+
     it('does NOT trigger alert when role was loaded within 7 days', () => {
       analytics.recordRoleLoad('role-recent');
       const alerts = analytics.checkAlerts();

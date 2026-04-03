@@ -1,0 +1,30 @@
+{
+  "currentRoleId": "cx-e28l",
+  "currentRoleLoadedAt": "2026-04-03T13:36:25.574Z",
+  "roleLoadPolicy": "merge",
+  "lastRoleSwitchAt": "2026-04-03T13:36:25.574Z",
+  "roleSwitchCooldownMs": 0,
+  "operationLog": [
+    {
+      "agentId": "agy62",
+      "roleId": "rca",
+      "action": "load",
+      "timestamp": "2026-04-03T13:36:25.090Z",
+      "triggerSource": "setup"
+    },
+    {
+      "agentId": "agy62",
+      "roleId": "rca",
+      "action": "unload",
+      "timestamp": "2026-04-03T13:36:25.092Z",
+      "triggerSource": "phase-transition"
+    },
+    {
+      "agentId": "agy62",
+      "roleId": "cx-e28l",
+      "action": "load",
+      "timestamp": "2026-04-03T13:36:25.574Z",
+      "triggerSource": "phase-transition"
+    }
+  ]
+}

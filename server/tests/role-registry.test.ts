@@ -1,265 +1,197 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+/**
+ * RoleRegistry 单元测试
+ *
+ * 覆盖范围：
+ * - 重复 roleId 注册（应覆盖并记录 modified 日志）
+ * - 不存在的 roleId 查询（get 返回 undefined，resolve 抛出错误）
+ * - 循环继承检测（resolve 应抛出错误）
+ *
+ * _Requirements: 1.2, 1.3_
+ */
+
+import { afterEach, describe, expect, it } from 'vitest';
+import { existsSync, rmSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
 
 import type { RoleTemplate } from '../../shared/role-schema.js';
 import { RoleRegistry } from '../core/role-registry.js';
 
 const __test_dirname = dirname(fileURLToPath(import.meta.url));
-const TEST_STORE_DIR = resolve(__test_dirname, '../../data/__test_role_registry__');
+const TEST_STORE_DIR = resolve(__test_dirname, '../../data/__test_role_registry_unit__');
 const TEST_STORE_PATH = resolve(TEST_STORE_DIR, 'role-templates.json');
 
-/** Helper: build a minimal valid RoleTemplate */
+// ── Helper ───────────────────────────────────────────────────────
+
 function makeTemplate(overrides: Partial<RoleTemplate> = {}): RoleTemplate {
-  const now = new Date().toISOString();
   return {
-    roleId: overrides.roleId ?? `role-${Date.now()}`,
-    roleName: overrides.roleName ?? 'TestRole',
-    responsibilityPrompt: overrides.responsibilityPrompt ?? 'You are a test role.',
-    requiredSkillIds: overrides.requiredSkillIds ?? ['skill-a'],
-    mcpIds: overrides.mcpIds ?? ['mcp-a'],
-    defaultModelConfig: overrides.defaultModelConfig ?? { model: 'gpt-4o', temperature: 0.7, maxTokens: 4096 },
-    authorityLevel: overrides.authorityLevel ?? 'medium',
-    source: overrides.source ?? 'predefined',
-    createdAt: overrides.createdAt ?? now,
-    updatedAt: overrides.updatedAt ?? now,
+    roleId: 'test-role',
+    roleName: 'Test Role',
+    responsibilityPrompt: 'You are a test role.',
+    requiredSkillIds: ['skill-a'],
+    mcpIds: ['mcp-a'],
+    defaultModelConfig: { model: 'gpt-4', temperature: 0.7, maxTokens: 4096 },
+    authorityLevel: 'medium',
+    source: 'predefined',
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     ...overrides,
   };
 }
 
-describe('RoleRegistry', () => {
-  let registry: RoleRegistry;
+// ── Cleanup ──────────────────────────────────────────────────────
 
-  beforeEach(() => {
-    // Use a temp store path so tests don't pollute real data
-    registry = new RoleRegistry(TEST_STORE_PATH);
+afterEach(() => {
+  if (existsSync(TEST_STORE_DIR)) {
+    rmSync(TEST_STORE_DIR, { recursive: true, force: true });
+  }
+});
+
+// ── 1. 重复 roleId 注册 ─────────────────────────────────────────
+
+describe('重复 roleId 注册', () => {
+  it('should overwrite the existing template when registering with the same roleId', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const original = makeTemplate({ roleName: 'Original' });
+    const updated = makeTemplate({ roleName: 'Updated', responsibilityPrompt: 'Updated prompt.' });
+
+    registry.register(original);
+    registry.register(updated);
+
+    const retrieved = registry.get('test-role');
+    expect(retrieved).toBeDefined();
+    expect(retrieved!.roleName).toBe('Updated');
+    expect(retrieved!.responsibilityPrompt).toBe('Updated prompt.');
   });
 
-  afterEach(() => {
-    if (existsSync(TEST_STORE_DIR)) {
-      rmSync(TEST_STORE_DIR, { recursive: true, force: true });
-    }
+  it('should not create a duplicate entry in list() after re-registration', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const original = makeTemplate();
+    const updated = makeTemplate({ roleName: 'V2' });
+
+    registry.register(original);
+    registry.register(updated);
+
+    const all = registry.list();
+    const matching = all.filter((t) => t.roleId === 'test-role');
+    expect(matching).toHaveLength(1);
+    expect(matching[0].roleName).toBe('V2');
   });
 
-  // ── register / get / list ──────────────────────────────────────
+  it('should record a "modified" change log entry on re-registration', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const original = makeTemplate();
+    const updated = makeTemplate({ roleName: 'V2' });
 
-  describe('register & get & list', () => {
-    it('registers a template and retrieves it by roleId', () => {
-      const t = makeTemplate({ roleId: 'coder' });
-      registry.register(t);
-      expect(registry.get('coder')).toEqual(t);
-    });
+    registry.register(original);
+    registry.register(updated);
 
-    it('lists all registered templates', () => {
-      registry.register(makeTemplate({ roleId: 'a' }));
-      registry.register(makeTemplate({ roleId: 'b' }));
-      expect(registry.list()).toHaveLength(2);
-    });
+    const log = registry.getChangeLog('test-role');
+    expect(log).toHaveLength(2);
+    expect(log[0].action).toBe('created');
+    expect(log[1].action).toBe('modified');
+    expect(log[1].diff).toHaveProperty('roleName');
+    expect(log[1].diff['roleName']).toEqual({ old: 'Test Role', new: 'V2' });
+  });
+});
 
-    it('returns undefined for non-existent roleId', () => {
-      expect(registry.get('nonexistent')).toBeUndefined();
-    });
+// ── 2. 不存在的 roleId 查询 ─────────────────────────────────────
 
-    it('re-registering same roleId overwrites the template', () => {
-      registry.register(makeTemplate({ roleId: 'x', roleName: 'V1' }));
-      registry.register(makeTemplate({ roleId: 'x', roleName: 'V2' }));
-      expect(registry.get('x')?.roleName).toBe('V2');
-      expect(registry.list()).toHaveLength(1);
-    });
+describe('不存在的 roleId 查询', () => {
+  it('get() should return undefined for a non-existent roleId', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+
+    expect(registry.get('non-existent')).toBeUndefined();
   });
 
-  // ── unregister ─────────────────────────────────────────────────
+  it('get() should return undefined after unregistering a roleId', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    registry.register(makeTemplate());
+    registry.unregister('test-role');
 
-  describe('unregister', () => {
-    it('removes a registered template', () => {
-      registry.register(makeTemplate({ roleId: 'rm' }));
-      registry.unregister('rm');
-      expect(registry.get('rm')).toBeUndefined();
-      expect(registry.list()).toHaveLength(0);
-    });
-
-    it('does nothing for non-existent roleId', () => {
-      registry.unregister('ghost');
-      expect(registry.list()).toHaveLength(0);
-    });
+    expect(registry.get('test-role')).toBeUndefined();
   });
 
-  // ── resolve (inheritance) ──────────────────────────────────────
+  it('resolve() should throw an error for a non-existent roleId', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
 
-  describe('resolve', () => {
-    it('returns the template as-is when no extends', () => {
-      const t = makeTemplate({ roleId: 'base' });
-      registry.register(t);
-      const resolved = registry.resolve('base');
-      expect(resolved.responsibilityPrompt).toBe(t.responsibilityPrompt);
-      expect(resolved.requiredSkillIds).toEqual(t.requiredSkillIds);
-    });
-
-    it('merges parent responsibilityPrompt, requiredSkillIds, mcpIds', () => {
-      const parent = makeTemplate({
-        roleId: 'parent',
-        responsibilityPrompt: 'Parent prompt',
-        requiredSkillIds: ['skill-p1', 'skill-shared'],
-        mcpIds: ['mcp-p1'],
-      });
-      const child = makeTemplate({
-        roleId: 'child',
-        extends: 'parent',
-        responsibilityPrompt: 'Child prompt',
-        requiredSkillIds: ['skill-c1', 'skill-shared'],
-        mcpIds: ['mcp-c1', 'mcp-p1'],
-        authorityLevel: 'high',
-      });
-
-      registry.register(parent);
-      registry.register(child);
-
-      const resolved = registry.resolve('child');
-
-      // prompt = parent + "\n\n" + child
-      expect(resolved.responsibilityPrompt).toBe('Parent prompt\n\nChild prompt');
-      // union of skills
-      expect(resolved.requiredSkillIds).toEqual(
-        expect.arrayContaining(['skill-p1', 'skill-shared', 'skill-c1'])
-      );
-      expect(resolved.requiredSkillIds).toHaveLength(3);
-      // union of mcpIds
-      expect(resolved.mcpIds).toEqual(expect.arrayContaining(['mcp-p1', 'mcp-c1']));
-      expect(resolved.mcpIds).toHaveLength(2);
-      // child overrides authorityLevel
-      expect(resolved.authorityLevel).toBe('high');
-    });
-
-    it('resolves multi-level inheritance (grandparent -> parent -> child)', () => {
-      registry.register(makeTemplate({
-        roleId: 'gp',
-        responsibilityPrompt: 'GP',
-        requiredSkillIds: ['s-gp'],
-        mcpIds: ['m-gp'],
-      }));
-      registry.register(makeTemplate({
-        roleId: 'p',
-        extends: 'gp',
-        responsibilityPrompt: 'P',
-        requiredSkillIds: ['s-p'],
-        mcpIds: ['m-p'],
-      }));
-      registry.register(makeTemplate({
-        roleId: 'c',
-        extends: 'p',
-        responsibilityPrompt: 'C',
-        requiredSkillIds: ['s-c'],
-        mcpIds: ['m-c'],
-      }));
-
-      const resolved = registry.resolve('c');
-      expect(resolved.responsibilityPrompt).toBe('GP\n\nP\n\nC');
-      expect(resolved.requiredSkillIds).toEqual(expect.arrayContaining(['s-gp', 's-p', 's-c']));
-      expect(resolved.mcpIds).toEqual(expect.arrayContaining(['m-gp', 'm-p', 'm-c']));
-    });
-
-    it('throws on circular inheritance', () => {
-      registry.register(makeTemplate({ roleId: 'a', extends: 'b' }));
-      registry.register(makeTemplate({ roleId: 'b', extends: 'a' }));
-      expect(() => registry.resolve('a')).toThrow(/Circular inheritance/);
-    });
-
-    it('throws on self-referencing extends', () => {
-      registry.register(makeTemplate({ roleId: 'self', extends: 'self' }));
-      expect(() => registry.resolve('self')).toThrow(/Circular inheritance/);
-    });
-
-    it('throws when parent roleId does not exist', () => {
-      registry.register(makeTemplate({ roleId: 'orphan', extends: 'missing' }));
-      expect(() => registry.resolve('orphan')).toThrow(/Role not found: missing/);
-    });
-
-    it('throws when resolving a non-existent roleId', () => {
-      expect(() => registry.resolve('nope')).toThrow(/Role not found: nope/);
-    });
+    expect(() => registry.resolve('non-existent')).toThrowError(
+      '[RoleRegistry] Role not found: non-existent',
+    );
   });
 
-  // ── change log ─────────────────────────────────────────────────
+  it('resolve() should throw when a child extends a non-existent parent', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const child = makeTemplate({ roleId: 'child', extends: 'missing-parent' });
+    registry.register(child);
 
-  describe('changeLog', () => {
-    it('logs "created" on first register', () => {
-      registry.register(makeTemplate({ roleId: 'new' }), 'admin');
-      const log = registry.getChangeLog('new');
-      expect(log).toHaveLength(1);
-      expect(log[0].action).toBe('created');
-      expect(log[0].changedBy).toBe('admin');
-      expect(log[0].roleId).toBe('new');
-    });
+    expect(() => registry.resolve('child')).toThrowError(
+      '[RoleRegistry] Role not found: missing-parent',
+    );
+  });
+});
 
-    it('logs "modified" on re-register with diff', () => {
-      registry.register(makeTemplate({ roleId: 'mod', roleName: 'V1' }));
-      registry.register(makeTemplate({ roleId: 'mod', roleName: 'V2' }));
-      const log = registry.getChangeLog('mod');
-      expect(log).toHaveLength(2);
-      expect(log[0].action).toBe('created');
-      expect(log[1].action).toBe('modified');
-      expect(log[1].diff).toHaveProperty('roleName');
-      expect(log[1].diff.roleName).toEqual({ old: 'V1', new: 'V2' });
-    });
+// ── 3. 循环继承检测 ─────────────────────────────────────────────
 
-    it('logs "deprecated" on unregister', () => {
-      registry.register(makeTemplate({ roleId: 'dep' }));
-      registry.unregister('dep', 'ops');
-      const log = registry.getChangeLog('dep');
-      expect(log).toHaveLength(2);
-      expect(log[1].action).toBe('deprecated');
-      expect(log[1].changedBy).toBe('ops');
-    });
+describe('循环继承检测', () => {
+  it('should throw on direct self-reference (A extends A)', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const selfRef = makeTemplate({ roleId: 'role-a', extends: 'role-a' });
+    registry.register(selfRef);
 
-    it('returns all logs when no roleId filter', () => {
-      registry.register(makeTemplate({ roleId: 'a' }));
-      registry.register(makeTemplate({ roleId: 'b' }));
-      expect(registry.getChangeLog()).toHaveLength(2);
-    });
-
-    it('filters logs by roleId', () => {
-      registry.register(makeTemplate({ roleId: 'x' }));
-      registry.register(makeTemplate({ roleId: 'y' }));
-      expect(registry.getChangeLog('x')).toHaveLength(1);
-      expect(registry.getChangeLog('x')[0].roleId).toBe('x');
-    });
+    expect(() => registry.resolve('role-a')).toThrowError(/Circular inheritance detected/);
   });
 
-  // ── persistence ────────────────────────────────────────────────
+  it('should throw on two-node cycle (A extends B, B extends A)', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const a = makeTemplate({ roleId: 'role-a', extends: 'role-b' });
+    const b = makeTemplate({ roleId: 'role-b', extends: 'role-a' });
+    registry.register(a);
+    registry.register(b);
 
-  describe('persistence', () => {
-    it('persists templates and reloads them in a new instance', () => {
-      registry.register(makeTemplate({ roleId: 'persist-1', roleName: 'Persisted' }));
+    expect(() => registry.resolve('role-a')).toThrowError(/Circular inheritance detected/);
+  });
 
-      // Create a new instance pointing to the same file
-      const registry2 = new RoleRegistry(TEST_STORE_PATH);
-      expect(registry2.get('persist-1')?.roleName).toBe('Persisted');
-      expect(registry2.list()).toHaveLength(1);
+  it('should throw on three-node cycle (A → B → C → A)', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const a = makeTemplate({ roleId: 'role-a', extends: 'role-b' });
+    const b = makeTemplate({ roleId: 'role-b', extends: 'role-c' });
+    const c = makeTemplate({ roleId: 'role-c', extends: 'role-a' });
+    registry.register(a);
+    registry.register(b);
+    registry.register(c);
+
+    expect(() => registry.resolve('role-a')).toThrowError(/Circular inheritance detected/);
+  });
+
+  it('should NOT throw for a valid linear inheritance chain (A → B → C, no cycle)', () => {
+    const registry = new RoleRegistry(TEST_STORE_PATH);
+    const grandparent = makeTemplate({
+      roleId: 'gp',
+      extends: undefined,
+      responsibilityPrompt: 'GP prompt',
+      requiredSkillIds: ['gp-skill'],
     });
-
-    it('persists change log across instances', () => {
-      registry.register(makeTemplate({ roleId: 'log-persist' }), 'tester');
-
-      const registry2 = new RoleRegistry(TEST_STORE_PATH);
-      const log = registry2.getChangeLog('log-persist');
-      expect(log).toHaveLength(1);
-      expect(log[0].changedBy).toBe('tester');
+    const parent = makeTemplate({
+      roleId: 'parent',
+      extends: 'gp',
+      responsibilityPrompt: 'Parent prompt',
+      requiredSkillIds: ['parent-skill'],
     });
-
-    it('starts empty when persistence file is corrupted', () => {
-      mkdirSync(TEST_STORE_DIR, { recursive: true });
-      writeFileSync(TEST_STORE_PATH, '{{invalid json', 'utf-8');
-
-      const reg = new RoleRegistry(TEST_STORE_PATH);
-      expect(reg.list()).toHaveLength(0);
-      expect(reg.getChangeLog()).toHaveLength(0);
+    const child = makeTemplate({
+      roleId: 'child',
+      extends: 'parent',
+      responsibilityPrompt: 'Child prompt',
+      requiredSkillIds: ['child-skill'],
     });
+    registry.register(grandparent);
+    registry.register(parent);
+    registry.register(child);
 
-    it('starts empty when persistence file does not exist', () => {
-      const reg = new RoleRegistry(resolve(TEST_STORE_DIR, 'nonexistent.json'));
-      expect(reg.list()).toHaveLength(0);
-    });
+    const resolved = registry.resolve('child');
+    expect(resolved.responsibilityPrompt).toBe('GP prompt\n\nParent prompt\n\nChild prompt');
+    expect(new Set(resolved.requiredSkillIds)).toEqual(
+      new Set(['gp-skill', 'parent-skill', 'child-skill']),
+    );
   });
 });

@@ -27,18 +27,15 @@ import { callLLM, callLLMJson } from "./llm-client.js";
 import { messageBus } from "./message-bus.js";
 import { emitEvent } from "./socket.js";
 import { telemetryStore } from "./telemetry-store.js";
-<<<<<<< HEAD
 import { roleRegistry } from "./role-registry.js";
 import { roleConstraintValidator } from "./role-constraint-validator.js";
+import { getRAGConfig } from "../rag/config.js";
 
 const __agent_filename = fileURLToPath(import.meta.url);
 const __agent_dirname = dirname(__agent_filename);
 const DATA_ROOT = resolve(__agent_dirname, '../../data/agents');
 
 const MAX_OPERATION_LOG = 200;
-=======
-import { getRAGConfig } from "../rag/config.js";
->>>>>>> feat/L16-vector-db-rag-pipeline
 
 export interface AgentConfig {
   id: string;
@@ -63,6 +60,10 @@ export interface AgentRoleState {
   loadedSkillIds: string[];
   /** Conceptual: MCP IDs loaded by the current role */
   loadedMcpIds: string[];
+  /** Effective model config after applying roleLoadPolicy merge */
+  effectiveModelConfig: WorkflowNodeModelConfig | null;
+  /** Agent's own base model config (full) for merge calculations */
+  baseFullModelConfig: WorkflowNodeModelConfig | null;
 }
 
 /** Persistence file schema */
@@ -87,6 +88,8 @@ function defaultRoleState(soulMd: string, model: string): AgentRoleState {
     operationLog: [],
     loadedSkillIds: [],
     loadedMcpIds: [],
+    effectiveModelConfig: null,
+    baseFullModelConfig: null,
   };
 }
 
@@ -113,6 +116,8 @@ function loadRoleStateFromDisk(agentId: string, soulMd: string, model: string): 
       operationLog: Array.isArray(parsed.operationLog) ? parsed.operationLog : [],
       loadedSkillIds: [],
       loadedMcpIds: [],
+      effectiveModelConfig: null,
+      baseFullModelConfig: null,
     };
   } catch {
     console.warn(`[Agent] Role state file corrupted for ${agentId}, using defaults`);
@@ -324,6 +329,7 @@ export class Agent extends RuntimeAgent {
     // 4. Clear role state
     this.roleState.currentRoleId = null;
     this.roleState.currentRoleLoadedAt = null;
+    this.roleState.effectiveModelConfig = null;
 
     // 5. Record operation log
     this.appendOperationLog({
@@ -406,23 +412,37 @@ export class Agent extends RuntimeAgent {
   /**
    * Apply model config based on roleLoadPolicy.
    *
-   * - "override": replace agent model with role's defaultModelConfig.model
+   * - "override": replace agent model config entirely with role's defaultModelConfig
    * - "prefer_agent": keep agent's own model config
-   * - "merge": use lower temperature, higher maxTokens (conceptual — we store model string)
+   * - "merge": use lower temperature and higher maxTokens from both configs
    */
   private applyModelConfig(roleModelConfig: WorkflowNodeModelConfig): void {
+    const agentBaseConfig = this.roleState.baseFullModelConfig;
+
     switch (this.roleState.roleLoadPolicy) {
       case 'override':
         this.config.model = roleModelConfig.model;
+        this.roleState.effectiveModelConfig = { ...roleModelConfig };
         break;
       case 'prefer_agent':
-        // Keep agent's own config — no change
+        // Keep agent's own config — no change to config.model
+        if (agentBaseConfig) {
+          this.roleState.effectiveModelConfig = { ...agentBaseConfig };
+        } else {
+          this.roleState.effectiveModelConfig = null;
+        }
         break;
       case 'merge':
-        // For the model string, prefer the role's model if agent has default
-        // The merge semantics (lower temp, higher maxTokens) apply at invoke time
-        // through the RuntimeAgent's LLM call options. Here we store the role model.
         this.config.model = roleModelConfig.model;
+        if (agentBaseConfig) {
+          this.roleState.effectiveModelConfig = {
+            model: roleModelConfig.model,
+            temperature: Math.min(agentBaseConfig.temperature, roleModelConfig.temperature),
+            maxTokens: Math.max(agentBaseConfig.maxTokens, roleModelConfig.maxTokens),
+          };
+        } else {
+          this.roleState.effectiveModelConfig = { ...roleModelConfig };
+        }
         break;
     }
   }

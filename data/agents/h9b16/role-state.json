@@ -1,0 +1,30 @@
+{
+  "currentRoleId": "wk----3--",
+  "currentRoleLoadedAt": "2026-04-03T13:36:25.694Z",
+  "roleLoadPolicy": "merge",
+  "lastRoleSwitchAt": "2026-04-03T13:36:25.694Z",
+  "roleSwitchCooldownMs": 0,
+  "operationLog": [
+    {
+      "agentId": "h9b16",
+      "roleId": "f93",
+      "action": "load",
+      "timestamp": "2026-04-03T13:36:25.072Z",
+      "triggerSource": "setup"
+    },
+    {
+      "agentId": "h9b16",
+      "roleId": "f93",
+      "action": "unload",
+      "timestamp": "2026-04-03T13:36:25.640Z",
+      "triggerSource": "phase-transition"
+    },
+    {
+      "agentId": "h9b16",
+      "roleId": "wk----3--",
+      "action": "load",
+      "timestamp": "2026-04-03T13:36:25.694Z",
+      "triggerSource": "phase-transition"
+    }
+  ]
+}

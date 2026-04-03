@@ -20,16 +20,16 @@
     - 实现变更日志记录（changedBy、changedAt、diff）
     - 持久化到 `data/role-templates.json`
     - _Requirements: 1.2, 1.3, 1.4, 1.5_
-  - [ ]* 2.2 编写 RoleRegistry 属性测试
+  - [x] 2.2 编写 RoleRegistry 属性测试
     - **Property 1: 角色模板注册/查询往返一致性**
     - **Validates: Requirements 1.2**
-  - [ ]* 2.3 编写 RoleRegistry 继承解析属性测试
+  - [x] 2.3 编写 RoleRegistry 继承解析属性测试
     - **Property 2: 角色继承解析正确性**
     - **Validates: Requirements 1.3**
-  - [ ]* 2.4 编写 RoleRegistry 变更日志属性测试
+  - [x] 2.4 编写 RoleRegistry 变更日志属性测试
     - **Property 3: 角色模板变更日志完整性**
     - **Validates: Requirements 1.4, 1.5**
-  - [ ]* 2.5 编写 RoleRegistry 单元测试
+  - [x] 2.5 编写 RoleRegistry 单元测试
     - 测试重复 roleId 注册、不存在的 roleId 查询、循环继承检测
     - _Requirements: 1.2, 1.3_
 
@@ -39,10 +39,10 @@
     - 按优先级校验：AGENT_BUSY → COOLDOWN_ACTIVE → ROLE_SWITCH_DENIED → AUTHORITY_APPROVAL_REQUIRED
     - 校验失败时记录调试日志
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
-  - [ ]* 3.2 编写约束校验属性测试
+  - [x] 3.2 编写约束校验属性测试
     - **Property 15: 角色切换约束校验**
     - **Validates: Requirements 6.1, 6.2, 6.3, 6.4**
-  - [ ]* 3.3 编写约束校验单元测试
+  - [x] 3.3 编写约束校验单元测试
     - 测试各约束错误码的具体触发场景和边界条件
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
@@ -56,19 +56,19 @@
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
   - [x] 4.2 修改 `shared/runtime-agent.ts`，扩展 RuntimeAgentConfig 新增 currentRoleId 可选字段
     - _Requirements: 2.1_
-  - [ ]* 4.3 编写 loadRole 状态正确性属性测试
+  - [x] 4.3 编写 loadRole 状态正确性属性测试
     - **Property 4: loadRole 后 Agent 状态正确性**
     - **Validates: Requirements 2.1**
-  - [ ]* 4.4 编写 unloadRole 状态恢复属性测试
+  - [x] 4.4 编写 unloadRole 状态恢复属性测试
     - **Property 5: unloadRole 后 Agent 状态恢复**
     - **Validates: Requirements 2.2**
-  - [ ]* 4.5 编写角色切换回滚属性测试
+  - [x] 4.5 编写角色切换回滚属性测试
     - **Property 6: 角色切换失败回滚**
     - **Validates: Requirements 2.3**
-  - [ ]* 4.6 编写 roleLoadPolicy 属性测试
+  - [x] 4.6 编写 roleLoadPolicy 属性测试
     - **Property 7: roleLoadPolicy 模型配置合并**
     - **Validates: Requirements 2.4**
-  - [ ]* 4.7 编写角色操作日志属性测试
+  - [x] 4.7 编写角色操作日志属性测试
     - **Property 8: 角色操作日志完整性**
     - **Validates: Requirements 2.5, 5.5, 6.5**
 
@@ -83,13 +83,13 @@
     - 实现 getPerformance(agentId, roleId?) 查询，支持按 roleId 过滤
     - 同步更新 Agent 整体 CapabilityProfile
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
-  - [ ]* 6.2 编写绩效更新属性测试
+  - [x] 6.2 编写绩效更新属性测试
     - **Property 11: 任务完成更新绩效记录**
     - **Validates: Requirements 4.2, 4.3, 4.4**
-  - [ ]* 6.3 编写绩效过滤属性测试
+  - [x] 6.3 编写绩效过滤属性测试
     - **Property 12: 绩效历史按 roleId 过滤**
     - **Validates: Requirements 4.5**
-  - [ ]* 6.4 编写绩效追踪器单元测试
+  - [x] 6.4 编写绩效追踪器单元测试
     - 测试 Ring Buffer 边界（0/1/50/51 条）、分数 clamp、lowConfidence 阈值
     - _Requirements: 4.2, 4.3, 4.4_
 
@@ -101,13 +101,13 @@
     - 当 task.requiredRole 存在时跳过推断，仅在该角色范围内匹配
     - 记录匹配结果到 ExecutionPlan 调试日志
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
-  - [ ]* 7.2 编写评分计算属性测试
+  - [x] 7.2 编写评分计算属性测试
     - **Property 9: roleMatchScore 加权计算正确性**
     - **Validates: Requirements 3.1, 3.2, 4.4**
-  - [ ]* 7.3 编写 requiredRole 约束属性测试
+  - [x] 7.3 编写 requiredRole 约束属性测试
     - **Property 10: requiredRole 约束匹配范围**
     - **Validates: Requirements 3.4**
-  - [ ]* 7.4 编写 RoleMatcher 单元测试
+  - [x] 7.4 编写 RoleMatcher 单元测试
     - 测试空候选列表、所有 Agent 低分、LLM 推断失败降级
     - _Requirements: 3.1, 3.3_
 
@@ -123,10 +123,10 @@
   - [x] 8.3 修改 `server/core/mission-orchestrator.ts`，记录角色切换轨迹到 Mission 事件流
     - 使用 MissionEvent 结构记录 agentId、fromRoleId、toRoleId、phaseId、timestamp
     - _Requirements: 5.5_
-  - [ ]* 8.4 编写阶段切换角色切换属性测试
+  - [x] 8.4 编写阶段切换角色切换属性测试
     - **Property 13: 阶段切换自动角色切换**
     - **Validates: Requirements 5.1, 5.2**
-  - [ ]* 8.5 编写 allowSelfReview 约束属性测试
+  - [x] 8.5 编写 allowSelfReview 约束属性测试
     - **Property 14: allowSelfReview 约束**
     - **Validates: Requirements 5.3, 5.4**
 
@@ -141,13 +141,13 @@
     - 实现 getRoleUsageSummary() 和 getAgentRoleDistribution()
     - 持久化到 `data/role-analytics.json`
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
-  - [ ]* 10.2 编写 ROLE_UNUSED 告警属性测试
+  - [x] 10.2 编写 ROLE_UNUSED 告警属性测试
     - **Property 16: ROLE_UNUSED 告警触发**
     - **Validates: Requirements 7.3**
-  - [ ]* 10.3 编写 AGENT_ROLE_THRASHING 告警属性测试
+  - [x] 10.3 编写 AGENT_ROLE_THRASHING 告警属性测试
     - **Property 17: AGENT_ROLE_THRASHING 告警触发**
     - **Validates: Requirements 7.4**
-  - [ ]* 10.4 编写分析服务单元测试
+  - [x] 10.4 编写分析服务单元测试
     - 测试告警阈值边界（第 7 天、第 20 次切换）
     - _Requirements: 7.3, 7.4_
 
@@ -161,7 +161,7 @@
   - [x] 11.3 扩展 Socket.IO 事件，新增 agent.roleChanged 事件推送
     - 在 agent.loadRole/unloadRole 中触发，包含 agentId、fromRoleId、toRoleId、timestamp
     - _Requirements: 8.5_
-  - [ ]* 11.4 编写 API 角色状态响应属性测试
+  - [x] 11.4 编写 API 角色状态响应属性测试
     - **Property 18: API 角色状态响应正确性**
     - **Validates: Requirements 8.1, 8.5**
 

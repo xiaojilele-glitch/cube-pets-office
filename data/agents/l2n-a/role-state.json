@@ -1,0 +1,16 @@
+{
+  "currentRoleId": "sca",
+  "currentRoleLoadedAt": "2026-04-03T12:40:12.831Z",
+  "roleLoadPolicy": "merge",
+  "lastRoleSwitchAt": "2026-04-03T12:40:12.831Z",
+  "roleSwitchCooldownMs": 60000,
+  "operationLog": [
+    {
+      "agentId": "l2n-a",
+      "roleId": "sca",
+      "action": "load",
+      "timestamp": "2026-04-03T12:40:12.831Z",
+      "triggerSource": "test-mission"
+    }
+  ]
+}
