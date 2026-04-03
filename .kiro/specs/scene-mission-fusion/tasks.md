@@ -33,31 +33,31 @@
     - 返回按时间降序排列的最近 10 条事件
     - _需求: 3.3_
 
-  - [ ]* 1.6 编写 `selectDisplayMission` 的属性测试
+  - [x] 1.6 编写 `selectDisplayMission` 的属性测试
     - **Property 1: Mission 选择优先级**
     - 使用 fast-check 生成随机 MissionTaskSummary 数组
     - 验证 running > waiting > 最近创建的优先级规则
     - **验证: 需求 1.3, 4.2**
 
-  - [ ]* 1.7 编写 `truncateTitle` 的属性测试
+  - [x] 1.7 编写 `truncateTitle` 的属性测试
     - **Property 2: 标题截断保持前缀不变**
     - 使用 fast-check 生成随机 Unicode 字符串
     - 验证结果长度约束和前缀保持
     - **验证: 需求 2.2**
 
-  - [ ]* 1.8 编写 `extractActiveAgents` 的属性测试
+  - [x] 1.8 编写 `extractActiveAgents` 的属性测试
     - **Property 3: 活跃 Agent 提取上限与过滤**
     - 使用 fast-check 生成随机 Agent 列表
     - 验证数量上限和状态过滤
     - **验证: 需求 2.3**
 
-  - [ ]* 1.9 编写 `sliceRecentEvents` 的属性测试
+  - [x] 1.9 编写 `sliceRecentEvents` 的属性测试
     - **Property 4: 时间线事件截断**
     - 使用 fast-check 生成随机事件列表
     - 验证数量上限和时间排序
     - **验证: 需求 3.3**
 
-  - [ ]* 1.10 编写 `getIslandScale` 的属性测试
+  - [x] 1.10 编写 `getIslandScale` 的属性测试
     - **Property 5: 视口缩放映射**
     - 使用 fast-check 生成随机视口宽度
     - 验证缩放值与档位的对应关系
@@ -75,7 +75,7 @@
     - 使用 task-helpers.ts 中的现有辅助函数
     - _需求: 2.1, 2.2, 2.3, 2.5, 2.6, 5.3_
 
-  - [ ]* 3.2 编写 MissionMiniView 单元测试
+  - [x] 3.2 编写 MissionMiniView 单元测试
     - 测试空闲态渲染（mission === null 时显示空闲消息）
     - 测试活跃态渲染（标题、进度、Agent 头像存在性）
     - 测试 onExpand 和 onCreateMission 回调触发
@@ -99,7 +99,7 @@
     - 淡入 + 缩放进入动画（Tailwind animate-in）
     - _需求: 3.1, 3.2, 3.3, 3.4, 3.5, 5.3_
 
-  - [ ]* 5.2 编写 MissionDetailOverlay 单元测试
+  - [x] 5.2 编写 MissionDetailOverlay 单元测试
     - 测试关闭按钮触发 onClose
     - 测试 Escape 键触发 onClose
     - 测试"查看完整详情"按钮触发 onNavigateToDetail
