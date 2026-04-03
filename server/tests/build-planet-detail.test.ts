@@ -65,6 +65,13 @@ function makeMission(overrides: Partial<MissionRecord> = {}): MissionRecord {
       { key: 'finalize', label: 'Finalize mission', status: 'pending' },
     ],
     summary: 'In progress',
+    organization: {
+      departments: [
+        { key: 'eng', label: 'Engineering' },
+        { key: 'design', label: 'Design' },
+      ],
+      agentCount: 4,
+    },
     createdAt: 1000,
     updatedAt: 2000,
     events: [],
