@@ -16,7 +16,7 @@
     - 异常处理：事件回调抛出异常时捕获，调用 onError，状态转为 failed
     - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.6, 3.7_
 
-  - [ ]* 1.2 编写 DemoPlaybackEngine 属性测试
+  - [x] 1.2 编写 DemoPlaybackEngine 属性测试
     - 创建 `client/src/runtime/demo-playback/__tests__/engine.property.test.ts`
     - 构建 DemoTimedEvent 序列的 fast-check Arbitrary 生成器
     - **Property 1: 事件按时间戳顺序发射**
@@ -26,7 +26,7 @@
     - **Property 3: 异常导致 failed 状态转换**
     - **Validates: Requirements 3.7**
 
-  - [ ]* 1.3 编写 DemoPlaybackEngine 单元测试
+  - [x] 1.3 编写 DemoPlaybackEngine 单元测试
     - 创建 `client/src/runtime/demo-playback/__tests__/engine.test.ts`
     - 测试 start() 后状态转为 playing
     - 测试所有事件播放完毕后状态转为 completed
@@ -48,12 +48,12 @@
     - 实现 cleanup()：移除 demo mission，恢复 selectedTaskId，重置 demo-store
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ]* 2.3 编写 Store 集成属性测试
+  - [x] 2.3 编写 Store 集成属性测试
     - 创建 `client/src/runtime/demo-playback/__tests__/store-adapter.property.test.ts`
     - **Property 4: Demo 退出恢复 Store 状态**
     - **Validates: Requirements 4.5**
 
-  - [ ]* 2.4 编写 Store 集成单元测试
+  - [x] 2.4 编写 Store 集成单元测试
     - 创建 `client/src/runtime/demo-playback/__tests__/store-adapter.test.ts`
     - 测试 initializeDemoMission 创建的 MissionRecord 的 kind 为 "demo"
     - 测试 demo mission 被设置为当前选中任务
@@ -89,7 +89,7 @@
     - 数值从 oldScore 到 newScore 的平滑过渡动画（CSS transition）
     - _Requirements: 7.5, 7.6_
 
-  - [ ]* 4.5 编写展示组件属性测试
+  - [x] 4.5 编写展示组件属性测试
     - 创建 `client/src/components/demo/__tests__/MemoryTimeline.property.test.ts`
     - **Property 5: 记忆时间线条目包含完整标注**
     - **Validates: Requirements 7.4**

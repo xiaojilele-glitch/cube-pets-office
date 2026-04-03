@@ -101,16 +101,13 @@ export class DemoStoreAdapter {
   cleanup(): void {
     try {
       // Restore previous task selection
-      if (this.previousTaskId !== null) {
-        useTasksStore.getState().selectTask(this.previousTaskId);
-      }
+      useTasksStore.getState().selectTask(this.previousTaskId);
 
-      // Remove demo task from the task list if it exists
-      if (this.demoTaskId) {
-        const state = useTasksStore.getState();
-        if (state.selectedTaskId === this.demoTaskId) {
-          state.selectTask(this.previousTaskId);
-        }
+      // Remove demo tasks from the task list
+      const currentTasks = useTasksStore.getState().tasks;
+      const filtered = currentTasks.filter((t) => t.kind !== "demo");
+      if (filtered.length !== currentTasks.length) {
+        useTasksStore.setState({ tasks: filtered });
       }
     } catch (err) {
       console.warn("[DemoStoreAdapter] Cleanup error:", err);
