@@ -135,3 +135,30 @@ export function createNLCommandEmitter(): NLCommandSocketEmitter | null {
   const emitFn: EmitFn = (event, payload) => io!.emit(event, payload);
   return new NLCommandSocketEmitter(emitFn);
 }
+
+/**
+ * Broadcast reputation.changed event.
+ */
+export function emitReputationChanged(payload: {
+  agentId: string;
+  oldScore: number;
+  newScore: number;
+  grade: string;
+  dimensionDeltas: Record<string, number>;
+}): void {
+  if (!io) return;
+  io.emit('reputation.changed', payload);
+}
+
+/**
+ * Broadcast reputation.trustTierChanged event.
+ */
+export function emitTrustTierChanged(payload: {
+  agentId: string;
+  oldTier: string;
+  newTier: string;
+  reason: string;
+}): void {
+  if (!io) return;
+  io.emit('reputation.trustTierChanged', payload);
+}
