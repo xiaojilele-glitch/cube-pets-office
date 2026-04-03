@@ -13,7 +13,7 @@
   - [x] 1.2 创建 `shared/ring-buffer.ts`，实现泛型 RingBuffer 类：push、toArray、length、toJSON、fromJSON
     - 固定容量环形缓冲区，支持序列化往返
     - _Requirements: 1.4_
-  - [ ]* 1.3 编写 RingBuffer 属性测试
+  - [x] 1.3 编写 RingBuffer 属性测试
     - **Property 30: RingBuffer 往返一致性**
     - **Validates: Requirements 1.4, 1.8**
 
@@ -23,22 +23,22 @@
     - initProfile 设置 confidenceScore=0.5、needsReview=true
     - 技能衰减公式：skill * (0.95 ^ weeksInactive)
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
-  - [ ]* 2.2 编写 CapabilityProfile 结构完整性属性测试
+  - [x] 2.2 编写 CapabilityProfile 结构完整性属性测试
     - **Property 1: CapabilityProfile 结构完整性**
     - **Validates: Requirements 1.1, 1.7**
-  - [ ]* 2.3 编写 EMA 技能更新属性测试
+  - [x] 2.3 编写 EMA 技能更新属性测试
     - **Property 2: EMA 技能更新公式正确性**
     - **Validates: Requirements 1.2**
-  - [ ]* 2.4 编写 loadFactor 不变量属性测试
+  - [x] 2.4 编写 loadFactor 不变量属性测试
     - **Property 3: loadFactor 不变量**
     - **Validates: Requirements 1.3**
-  - [ ]* 2.5 编写 confidenceScore RingBuffer 计算属性测试
+  - [x] 2.5 编写 confidenceScore RingBuffer 计算属性测试
     - **Property 4: confidenceScore 基于 RingBuffer 计算**
     - **Validates: Requirements 1.4**
-  - [ ]* 2.6 编写新 Agent 初始化属性测试
+  - [x] 2.6 编写新 Agent 初始化属性测试
     - **Property 5: 新 Agent 初始化不变量**
     - **Validates: Requirements 1.5**
-  - [ ]* 2.7 编写技能衰减属性测试
+  - [x] 2.7 编写技能衰减属性测试
     - **Property 6: 技能衰减公式正确性**
     - **Validates: Requirements 1.6**
 
@@ -49,19 +49,19 @@
     - 决策阈值：>=0.8 ACCEPT, 0.6-0.8 CAVEAT, 0.4-0.6 ASSIST, <0.4 REJECT
     - referralList 最多 3 个，按 fitnessScore 降序
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
-  - [ ]* 3.2 编写粗筛匹配属性测试
+  - [x] 3.2 编写粗筛匹配属性测试
     - **Property 7: 粗筛匹配正确性**
     - **Validates: Requirements 2.1**
-  - [ ]* 3.3 编写 fitnessScore 加权求和属性测试
+  - [x] 3.3 编写 fitnessScore 加权求和属性测试
     - **Property 8: fitnessScore 加权求和正确性**
     - **Validates: Requirements 2.2**
-  - [ ]* 3.4 编写余弦相似度属性测试
+  - [x] 3.4 编写余弦相似度属性测试
     - **Property 9: 余弦相似度数学性质**
     - **Validates: Requirements 2.3**
-  - [ ]* 3.5 编写决策阈值属性测试
+  - [x] 3.5 编写决策阈值属性测试
     - **Property 10: 决策阈值正确性**
     - **Validates: Requirements 2.4**
-  - [ ]* 3.6 编写推荐列表属性测试
+  - [x] 3.6 编写推荐列表属性测试
     - **Property 11: 推荐列表长度限制**
     - **Validates: Requirements 2.5**
 
@@ -74,13 +74,13 @@
     - 超时未响应视为 REJECT
     - 全部 REJECT 时按推荐频次最高者 FORCE_ASSIGN
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
-  - [ ]* 5.2 编写候选 Agent 筛选属性测试
+  - [x] 5.2 编写候选 Agent 筛选属性测试
     - **Property 12: 候选 Agent 筛选正确性**
     - **Validates: Requirements 3.1**
-  - [ ]* 5.3 编写分配优先级属性测试
+  - [x] 5.3 编写分配优先级属性测试
     - **Property 13: 分配优先级与兜底策略**
     - **Validates: Requirements 3.3, 3.4**
-  - [ ]* 5.4 编写拒绝率滑动窗口属性测试
+  - [x] 5.4 编写拒绝率滑动窗口属性测试
     - **Property 14: 拒绝率滑动窗口告警**
     - **Validates: Requirements 3.5**
 
@@ -96,31 +96,31 @@
     - 第 1 名 rewardDelta=0.05，末位 penaltyDelta=0.03
     - judgeConfidenceScore 推翻时 -0.1，低于 0.5 触发告警
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
-  - [ ]* 6.3 编写竞争触发条件属性测试
+  - [x] 6.3 编写竞争触发条件属性测试
     - **Property 15: 竞争模式触发条件**
     - **Validates: Requirements 4.1**
-  - [ ]* 6.4 编写竞争预算检查属性测试
+  - [x] 6.4 编写竞争预算检查属性测试
     - **Property 16: 竞争预算检查**
     - **Validates: Requirements 4.2, 8.2**
-  - [ ]* 6.5 编写多样性参赛者选择属性测试
+  - [x] 6.5 编写多样性参赛者选择属性测试
     - **Property 17: 多样性优先参赛者选择**
     - **Validates: Requirements 4.3**
-  - [ ]* 6.6 编写外部 Agent 安全校验属性测试
+  - [x] 6.6 编写外部 Agent 安全校验属性测试
     - **Property 18: 外部 Agent 安全校验**
     - **Validates: Requirements 4.4**
-  - [ ]* 6.7 编写 deadline 计算属性测试
+  - [x] 6.7 编写 deadline 计算属性测试
     - **Property 19: 竞争 deadline 计算**
     - **Validates: Requirements 4.6**
-  - [ ]* 6.8 编写裁判加权评分属性测试
+  - [x] 6.8 编写裁判加权评分属性测试
     - **Property 20: 裁判加权评分公式**
     - **Validates: Requirements 5.1**
-  - [ ]* 6.9 编写竞争结果能力回写属性测试
+  - [x] 6.9 编写竞争结果能力回写属性测试
     - **Property 21: 竞争结果能力画像回写**
     - **Validates: Requirements 5.4**
-  - [ ]* 6.10 编写 Judge 置信度下调属性测试
+  - [x] 6.10 编写 Judge 置信度下调属性测试
     - **Property 22: Judge 置信度下调**
     - **Validates: Requirements 5.5**
-  - [ ]* 6.11 编写合并触发条件属性测试
+  - [x] 6.11 编写合并触发条件属性测试
     - **Property 23: 合并触发条件**
     - **Validates: Requirements 5.7**
 
@@ -135,16 +135,16 @@
     - 心跳间隔 30s，连续 3 次未收到视为离线
     - 解散时注销 taskforceId，归档日志
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
-  - [ ]* 8.2 编写 Lead 选举属性测试
+  - [x] 8.2 编写 Lead 选举属性测试
     - **Property 24: Lead 选举正确性**
     - **Validates: Requirements 6.1**
-  - [ ]* 8.3 编写应征资格属性测试
+  - [x] 8.3 编写应征资格属性测试
     - **Property 25: 应征资格条件**
     - **Validates: Requirements 6.3**
-  - [ ]* 8.4 编写 Taskforce 角色约束属性测试
+  - [x] 8.4 编写 Taskforce 角色约束属性测试
     - **Property 26: Taskforce 角色约束**
     - **Validates: Requirements 6.5**
-  - [ ]* 8.5 编写心跳离线检测属性测试
+  - [x] 8.5 编写心跳离线检测属性测试
     - **Property 27: 心跳离线检测**
     - **Validates: Requirements 6.7**
 
@@ -154,7 +154,7 @@
     - ROI = winnerQuality / normalEstimate，< 1.0 触发告警
     - Prometheus 指标：assessment_duration_ms、competition_trigger_total、winner_quality_score、taskforce_formation_total、taskforce_duration_seconds
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
-  - [ ]* 9.2 编写 ROI 计算与告警属性测试
+  - [x] 9.2 编写 ROI 计算与告警属性测试
     - **Property 28: 竞争 ROI 计算与告警**
     - **Validates: Requirements 8.1**
 
@@ -174,7 +174,7 @@
     - _Requirements: 7.7_
   - [x] 11.4 创建 AutonomyConfig 配置加载逻辑，从 .env 读取 autonomy.enabled 等配置项，支持全局开关
     - _Requirements: 8.5_
-  - [ ]* 11.5 编写全局开关回退属性测试
+  - [x] 11.5 编写全局开关回退属性测试
     - **Property 29: 全局开关回退**
     - **Validates: Requirements 8.5**
 
