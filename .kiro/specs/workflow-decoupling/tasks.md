@@ -24,7 +24,7 @@
     - 所有新字段必须为 optional，确保向后兼容
     - MissionOrganizationSnapshot 是 WorkflowOrganizationSnapshot 的精简版（departments + agentCount）
     - _需求: 2.1, 2.2, 2.3, 2.4, 2.7_
-  - [ ]* 3.2 编写 MissionRecord 丰富化字段向后兼容属性测试
+  - [x] 3.2 编写 MissionRecord 丰富化字段向后兼容属性测试
     - **Property 1: MissionRecord 丰富化字段向后兼容**
     - **验证: 需求 2.1, 2.2, 2.3, 2.4, 2.7**
 
@@ -36,10 +36,10 @@
     - _需求: 2.5_
   - [x] 4.2 在 MissionOrchestrator 的工作流阶段完成回调中调用 `enrichMissionFromWorkflow()`，确保 MissionStore.update() 触发 Socket 广播包含丰富化字段
     - _需求: 2.5, 2.6_
-  - [ ]* 4.3 编写阶段完成丰富化完整性属性测试
+  - [x] 4.3 编写阶段完成丰富化完整性属性测试
     - **Property 2: 阶段完成丰富化完整性**
     - **验证: 需求 2.5, 2.6**
-  - [ ]* 4.4 编写丰富化钩子单元测试：extractOrganization 转换正确性、extractWorkPackages 转换正确性、workflow 不存在时安全跳过
+  - [x] 4.4 编写丰富化钩子单元测试：extractOrganization 转换正确性、extractWorkPackages 转换正确性、workflow 不存在时安全跳过
     - _需求: 2.5_
 
 - [x] 5. 检查点 - 数据补齐完成
@@ -56,14 +56,14 @@
     - activeAgentCount 从 agentCrew.filter(working/thinking) 派生
     - 所有丰富化字段为 undefined 时使用默认值（空数组、0）
     - _需求: 3.2_
-  - [ ]* 6.3 编写原生 Summary 构建完整性属性测试
+  - [x] 6.3 编写原生 Summary 构建完整性属性测试
     - **Property 3: 原生 Summary 构建完整性**
     - **验证: 需求 3.2**
   - [x] 6.4 实现 `buildNativeDetailRecord(mission: MissionRecord): MissionTaskDetail` 函数，从 MissionRecord 派生所有 detail 字段，包括 `buildNativeInteriorAgents()`（从 agentCrew 构建）和 `buildNativeLogSummary()`（从 messageLog 构建）
     - agents 从 agentCrew 构建，始终包含 mission-core agent
     - logSummary 从 messageLog 最近 10 条构建
     - _需求: 3.3_
-  - [ ]* 6.5 编写原生 Detail 构建完整性属性测试
+  - [x] 6.5 编写原生 Detail 构建完整性属性测试
     - **Property 4: 原生 Detail 构建完整性**
     - **验证: 需求 3.3**
 
@@ -74,7 +74,7 @@
     - _需求: 3.1, 3.5_
   - [x] 7.3 修改 `ensureMissionSocket()` 函数，当 `useMissionNativeData` 为 true 时不注册 workflow_* Socket 事件监听
     - _需求: 3.4_
-  - [ ]* 7.4 编写数据源等价性属性测试
+  - [x] 7.4 编写数据源等价性属性测试
     - **Property 5: 数据源等价性**
     - **验证: 需求 3.7**
 
