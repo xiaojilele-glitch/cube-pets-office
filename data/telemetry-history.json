@@ -1,4 +1,102 @@
 {
   "version": 1,
-  "missions": []
+  "missions": [
+    {
+      "missionId": "'i/~Im&key%O",
+      "title": "Xj",
+      "completedAt": 588749073668,
+      "totalTokensIn": 4956147,
+      "totalTokensOut": 9999982,
+      "totalCost": 5.4450222767764296e-260,
+      "totalCalls": 7021,
+      "topAgents": [
+        {
+          "agentId": "WQ",
+          "agentName": "R%2zG:jUn;+Y",
+          "avgDurationMs": 1.9637293483013817e-147,
+          "callCount": 9994
+        },
+        {
+          "agentId": "1W8:{ =w~",
+          "agentName": "wci c,q]]5",
+          "avgDurationMs": 5.409210326362748e-206,
+          "callCount": 9990
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": ".MX2T++nfw",
+          "stageLabel": "f$t\\A?`",
+          "durationMs": 1.934672433430861e-292
+        },
+        {
+          "stageKey": "vfLHO-tesf~4",
+          "stageLabel": "m",
+          "durationMs": 3e-323
+        },
+        {
+          "stageKey": "T{ #Kk#\\$)O_",
+          "stageLabel": "8",
+          "durationMs": 7.274805597909058e-101
+        },
+        {
+          "stageKey": "F^mH-:<)",
+          "stageLabel": "?[Sp3W_?vM",
+          "durationMs": 1.0464848609413544e-200
+        },
+        {
+          "stageKey": "#};|#$",
+          "stageLabel": "egs;",
+          "durationMs": 3e-323
+        }
+      ]
+    },
+    {
+      "missionId": "NR!!",
+      "title": "Ub~KE",
+      "completedAt": 1418237295634,
+      "totalTokensIn": 5891393,
+      "totalTokensOut": 700990,
+      "totalCost": 9.591852544170493e-179,
+      "totalCalls": 12,
+      "topAgents": [
+        {
+          "agentId": "QS`b}.w;Z%i",
+          "agentName": "UtHR%xQi:R_",
+          "avgDurationMs": 3.2351272106232772e-37,
+          "callCount": 8692
+        },
+        {
+          "agentId": "ebR#",
+          "agentName": "I#\"U'i0)TrG0",
+          "avgDurationMs": 1.0242489107875614,
+          "callCount": 2237
+        },
+        {
+          "agentId": ";j,,l{j_T!W",
+          "agentName": "\\HqtM",
+          "avgDurationMs": 5.887204138293303e-190,
+          "callCount": 1262
+        },
+        {
+          "agentId": "qMtcJ'~xrv05",
+          "agentName": "kumRvK",
+          "avgDurationMs": 1.2247374049198642e-62,
+          "callCount": 98
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "=}l*er8*",
+          "stageLabel": "wCEs",
+          "durationMs": 1.3483864941604484e-14
+        },
+        {
+          "stageKey": "pLf-vV",
+          "stageLabel": "F\\8,*3 9mDJ",
+          "durationMs": 1.8146248145788838e-172
+        }
+      ]
+    }
+  ]
 }

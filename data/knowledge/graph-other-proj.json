@@ -1,7 +1,7 @@
 {
   "version": 1,
   "projectId": "other-proj",
-  "lastUpdated": "2026-04-02T09:02:41.110Z",
+  "lastUpdated": "2026-04-03T13:53:14.381Z",
   "entities": [
     {
       "entityType": "CodeModule",
@@ -128,11 +128,29 @@
       "createdAt": "2026-04-02T09:02:41.110Z",
       "updatedAt": "2026-04-02T09:02:41.110Z",
       "status": "active"
+    },
+    {
+      "entityType": "CodeModule",
+      "name": "B",
+      "description": "A test module",
+      "source": "code_analysis",
+      "confidence": 0.8,
+      "projectId": "other-proj",
+      "needsReview": false,
+      "linkedMemoryIds": [],
+      "extendedAttributes": {
+        "filePath": "src/test.ts",
+        "language": "typescript"
+      },
+      "entityId": "d53a564e-e7f7-44b6-a1ba-045cecded42e",
+      "createdAt": "2026-04-03T13:53:14.381Z",
+      "updatedAt": "2026-04-03T13:53:14.381Z",
+      "status": "active"
     }
   ],
   "relations": [],
   "_counters": {
-    "entities": 7,
+    "entities": 8,
     "relations": 0
   }
 }

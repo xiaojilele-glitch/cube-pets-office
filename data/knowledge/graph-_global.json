@@ -1,7 +1,7 @@
 {
   "version": 1,
   "projectId": "_global",
-  "lastUpdated": "2026-04-02T09:03:22.668Z",
+  "lastUpdated": "2026-04-03T13:53:21.996Z",
   "entities": [],
   "relations": [
     {
@@ -675,10 +675,118 @@
       "needsReview": false,
       "relationId": "1cbaa54c-6fe0-41ee-92bf-d10455a74cf7",
       "createdAt": "2026-04-02T09:03:22.668Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::src/main",
+      "targetEntityId": "test-extractor-project::src/utils",
+      "weight": 0.8,
+      "evidence": "import from \"./utils.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "dc569b97-d8d2-4bea-8eb6-4ea0087cb265",
+      "createdAt": "2026-04-03T13:53:13.614Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::src/main",
+      "targetEntityId": "test-extractor-project::src/helpers/greet",
+      "weight": 0.8,
+      "evidence": "import from \"./helpers/greet.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "bc99bded-a878-4c6d-a9f2-08ba626cea8d",
+      "createdAt": "2026-04-03T13:53:13.614Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::src/app",
+      "targetEntityId": "test-extractor-project::src/my-util",
+      "weight": 0.8,
+      "evidence": "import from \"./my-util.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "fe31c2c5-b2b8-465e-8063-a23373be9885",
+      "createdAt": "2026-04-03T13:53:13.632Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::b",
+      "targetEntityId": "test-extractor-project::a",
+      "weight": 0.8,
+      "evidence": "import from \"./a.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "42347bc5-62d3-4341-9634-89bf2d93eb98",
+      "createdAt": "2026-04-03T13:53:13.644Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::src/modify",
+      "targetEntityId": "test-extractor-project::src/remove",
+      "weight": 0.8,
+      "evidence": "import from \"./remove.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "ae84c094-9e8b-413f-9873-9bd6b7c945a3",
+      "createdAt": "2026-04-03T13:53:15.109Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::src/modify",
+      "targetEntityId": "test-extractor-project::src/remove",
+      "weight": 0.8,
+      "evidence": "import from \"./remove.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "03868267-3107-4a5f-96ff-dfef2aad48c4",
+      "createdAt": "2026-04-03T13:53:17.926Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project::src/modify",
+      "targetEntityId": "test-extractor-project::src/remove",
+      "weight": 0.8,
+      "evidence": "import from \"./remove.js\"",
+      "source": "code_analysis",
+      "confidence": 0.9,
+      "needsReview": false,
+      "relationId": "7067c7ba-1ece-4fa6-87a6-cddf1a1ffe74",
+      "createdAt": "2026-04-03T13:53:21.096Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project:main_module",
+      "targetEntityId": "test-extractor-project:utils_module",
+      "weight": 0.7,
+      "evidence": "import utils",
+      "source": "llm_inferred",
+      "confidence": 0.7,
+      "needsReview": false,
+      "relationId": "d4578cd0-87f7-48bd-93ed-f8753d9108fd",
+      "createdAt": "2026-04-03T13:53:21.996Z"
+    },
+    {
+      "relationType": "DEPENDS_ON",
+      "sourceEntityId": "test-extractor-project:main_module",
+      "targetEntityId": "test-extractor-project:utils_module",
+      "weight": 0.7,
+      "evidence": "import utils",
+      "source": "llm_inferred",
+      "confidence": 0.7,
+      "needsReview": false,
+      "relationId": "721030c2-9fc0-4d16-a0ad-9b9c3c49b448",
+      "createdAt": "2026-04-03T13:53:21.996Z"
     }
   ],
   "_counters": {
     "entities": 0,
-    "relations": 56
+    "relations": 65
   }
 }
