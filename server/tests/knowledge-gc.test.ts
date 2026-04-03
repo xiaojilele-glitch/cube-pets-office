@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+﻿import { beforeEach, describe, expect, it } from "vitest";
 import os from "os";
 import fs from "fs";
 import path from "path";
@@ -91,7 +91,7 @@ describe("archiveExpiredDeprecated", () => {
 
     const entity = makeEntity(store);
     store.enforceStatusTransition(entity.entityId, "deprecated", "recent", "manual", lifecycleLog);
-    // Only 10 days old — should NOT be archived
+    // Only 10 days old 鈥?should NOT be archived
     backdateEntity(store, entity.entityId, 10);
 
     const count = gc.archiveExpiredDeprecated();
@@ -349,5 +349,381 @@ describe("run", () => {
     expect(result.deleted).toBe(1);
     expect(result.merged).toBe(1);
     expect(result.duration).toBeGreaterThanOrEqual(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Property-Based Tests 鈥?鍨冨溇鍥炴敹姝ｇ‘鎬?
+// Feature: knowledge-graph, Property 18: 鍨冨溇鍥炴敹姝ｇ‘鎬?
+// Validates: Requirements 6.3
+// ---------------------------------------------------------------------------
+
+import fc from "fast-check";
+
+/**
+ * Backdate an entity's timestamps for a specific project.
+ * Supports both createdAt and updatedAt independently.
+ */
+function backdateEntityForProject(
+  store: GraphStore,
+  entityId: string,
+  projectId: string,
+  daysAgo: number,
+): void {
+  const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+  const data = store.getGraphData(projectId);
+  const entity = data.entities.find((e) => e.entityId === entityId);
+  if (entity) {
+    entity.createdAt = date;
+    entity.updatedAt = date;
+  }
+}
+
+describe("Property 18: 鍨冨溇鍥炴敹姝ｇ‘鎬?, () => {
+  /**
+   * **Validates: Requirements 6.3**
+   *
+   * *For any* entity with status "deprecated" older than archiveAfterDays,
+   * KnowledgeGarbageCollector SHALL transition it to "archived";
+   * *for any* entity with confidence < 0.3, age > 30 days, and zero query
+   * references, KnowledgeGarbageCollector SHALL delete it.
+   */
+
+  let gcTmpDir: string;
+  let gcStore: GraphStore;
+  let gcLifecycleLog: LifecycleLog;
+
+  beforeEach(() => {
+    gcTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gc-prop18-"));
+    gcStore = new GraphStore();
+    gcLifecycleLog = new LifecycleLog(path.join(gcTmpDir, "lifecycle.jsonl"));
+    gcStore.lifecycleLog = gcLifecycleLog;
+  });
+
+  // --- Sub-property A: deprecated entities older than archiveAfterDays 鈫?archived ---
+
+  it("archives all deprecated entities older than archiveAfterDays", () => {
+    fc.assert(
+      fc.property(
+        // archiveAfterDays: 1..180
+        fc.integer({ min: 1, max: 180 }),
+        // daysOverThreshold: how many days past the threshold (1..100)
+        fc.integer({ min: 1, max: 100 }),
+        // number of deprecated entities to create (1..5)
+        fc.integer({ min: 1, max: 5 }),
+        (archiveAfterDays, daysOver, entityCount) => {
+          const projectId = `prop18a-${Math.random().toString(36).slice(2, 8)}`;
+          const gc = new KnowledgeGarbageCollector(gcStore, gcLifecycleLog, {
+            archiveAfterDays,
+          });
+
+          const entityIds: string[] = [];
+          for (let i = 0; i < entityCount; i++) {
+            const entity = gcStore.createEntity({
+              entityType: "CodeModule",
+              name: `deprecated-${i}-${Math.random().toString(36).slice(2, 6)}`,
+              description: "test deprecated entity",
+              source: "code_analysis" as EntitySource,
+              confidence: 0.8,
+              projectId,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            // Transition to deprecated
+            gcStore.enforceStatusTransition(
+              entity.entityId,
+              "deprecated",
+              "test deprecation",
+              "manual",
+              gcLifecycleLog,
+            );
+            // Backdate beyond the threshold
+            backdateEntityForProject(gcStore, entity.entityId, projectId, archiveAfterDays + daysOver);
+            entityIds.push(entity.entityId);
+          }
+
+          const archived = gc.archiveExpiredDeprecated();
+
+          // All deprecated entities older than threshold must be archived
+          expect(archived).toBe(entityCount);
+          for (const id of entityIds) {
+            const e = gcStore.getEntity(id);
+            expect(e?.status).toBe("archived");
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("does NOT archive deprecated entities younger than archiveAfterDays", () => {
+    fc.assert(
+      fc.property(
+        // archiveAfterDays: 10..180
+        fc.integer({ min: 10, max: 180 }),
+        // daysAge: will be clamped to < archiveAfterDays
+        fc.integer({ min: 1, max: 179 }),
+        fc.integer({ min: 1, max: 5 }),
+        (archiveAfterDays, rawDaysAge, entityCount) => {
+          // Ensure daysAge is strictly less than archiveAfterDays
+          const daysAge = Math.min(rawDaysAge, archiveAfterDays - 1);
+          if (daysAge < 1) return; // skip degenerate case
+
+          // Fresh store per iteration to avoid cross-iteration interference
+          const iterStore = new GraphStore();
+          const iterLog = new LifecycleLog(path.join(gcTmpDir, `iter-${Math.random().toString(36).slice(2)}.jsonl`));
+          iterStore.lifecycleLog = iterLog;
+
+          const projectId = `prop18b-${Math.random().toString(36).slice(2, 8)}`;
+          const gc = new KnowledgeGarbageCollector(iterStore, iterLog, {
+            archiveAfterDays,
+          });
+
+          const entityIds: string[] = [];
+          for (let i = 0; i < entityCount; i++) {
+            const entity = iterStore.createEntity({
+              entityType: "CodeModule",
+              name: `young-deprecated-${i}-${Math.random().toString(36).slice(2, 6)}`,
+              description: "test young deprecated entity",
+              source: "code_analysis" as EntitySource,
+              confidence: 0.8,
+              projectId,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            iterStore.enforceStatusTransition(
+              entity.entityId,
+              "deprecated",
+              "test deprecation",
+              "manual",
+              iterLog,
+            );
+            backdateEntityForProject(iterStore, entity.entityId, projectId, daysAge);
+            entityIds.push(entity.entityId);
+          }
+
+          const archived = gc.archiveExpiredDeprecated();
+
+          // None should be archived
+          expect(archived).toBe(0);
+          for (const id of entityIds) {
+            const e = iterStore.getEntity(id);
+            expect(e?.status).toBe("deprecated");
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  // --- Sub-property B: low-confidence + old + no relations 鈫?deleted ---
+
+  it("deletes low-confidence entities older than lowConfidenceMaxAgeDays with no relations", () => {
+    fc.assert(
+      fc.property(
+        // confidence: strictly below 0.3
+        fc.double({ min: 0.01, max: 0.29, noNaN: true }),
+        // lowConfidenceMaxAgeDays: 1..90
+        fc.integer({ min: 1, max: 90 }),
+        // daysOverThreshold: 1..100
+        fc.integer({ min: 1, max: 100 }),
+        // entity count: 1..5
+        fc.integer({ min: 1, max: 5 }),
+        (confidence, maxAgeDays, daysOver, entityCount) => {
+          const projectId = `prop18c-${Math.random().toString(36).slice(2, 8)}`;
+          const gc = new KnowledgeGarbageCollector(gcStore, gcLifecycleLog, {
+            lowConfidenceThreshold: 0.3,
+            lowConfidenceMaxAgeDays: maxAgeDays,
+          });
+
+          const entityIds: string[] = [];
+          for (let i = 0; i < entityCount; i++) {
+            const entity = gcStore.createEntity({
+              entityType: "CodeModule",
+              name: `low-quality-${i}-${Math.random().toString(36).slice(2, 6)}`,
+              description: "test low quality entity",
+              source: "llm_inferred" as EntitySource,
+              confidence,
+              projectId,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            backdateEntityForProject(gcStore, entity.entityId, projectId, maxAgeDays + daysOver);
+            entityIds.push(entity.entityId);
+          }
+
+          const deleted = gc.deleteLowQualityEntities();
+
+          // All low-quality entities should be deleted (physically removed)
+          expect(deleted).toBe(entityCount);
+          for (const id of entityIds) {
+            expect(gcStore.getEntity(id)).toBeUndefined();
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("does NOT delete low-confidence entities that have relations", () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 0.29, noNaN: true }),
+        fc.integer({ min: 1, max: 5 }),
+        (confidence, entityCount) => {
+          const projectId = `prop18d-${Math.random().toString(36).slice(2, 8)}`;
+          const gc = new KnowledgeGarbageCollector(gcStore, gcLifecycleLog, {
+            lowConfidenceThreshold: 0.3,
+            lowConfidenceMaxAgeDays: 30,
+          });
+
+          const entityIds: string[] = [];
+          // Create a "hub" entity that will reference the low-quality ones
+          const hub = gcStore.createEntity({
+            entityType: "CodeModule",
+            name: `hub-${Math.random().toString(36).slice(2, 6)}`,
+            description: "hub entity",
+            source: "code_analysis" as EntitySource,
+            confidence: 0.9,
+            projectId,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+
+          for (let i = 0; i < entityCount; i++) {
+            const entity = gcStore.createEntity({
+              entityType: "CodeModule",
+              name: `related-low-${i}-${Math.random().toString(36).slice(2, 6)}`,
+              description: "low quality but has relations",
+              source: "llm_inferred" as EntitySource,
+              confidence,
+              projectId,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            backdateEntityForProject(gcStore, entity.entityId, projectId, 60);
+
+            // Create a relation so the entity is referenced
+            gcStore.createRelation({
+              relationType: "DEPENDS_ON",
+              sourceEntityId: hub.entityId,
+              targetEntityId: entity.entityId,
+              weight: 1.0,
+              evidence: "test relation",
+              source: "code_analysis" as EntitySource,
+              confidence: 0.9,
+              needsReview: false,
+            });
+
+            entityIds.push(entity.entityId);
+          }
+
+          const deleted = gc.deleteLowQualityEntities();
+
+          // None should be deleted because they have relations
+          expect(deleted).toBe(0);
+          for (const id of entityIds) {
+            expect(gcStore.getEntity(id)).toBeDefined();
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("does NOT delete entities with confidence >= threshold even if old", () => {
+    fc.assert(
+      fc.property(
+        // confidence at or above threshold
+        fc.double({ min: 0.3, max: 1.0, noNaN: true }),
+        fc.integer({ min: 1, max: 5 }),
+        (confidence, entityCount) => {
+          const projectId = `prop18e-${Math.random().toString(36).slice(2, 8)}`;
+          const gc = new KnowledgeGarbageCollector(gcStore, gcLifecycleLog, {
+            lowConfidenceThreshold: 0.3,
+            lowConfidenceMaxAgeDays: 30,
+          });
+
+          const entityIds: string[] = [];
+          for (let i = 0; i < entityCount; i++) {
+            const entity = gcStore.createEntity({
+              entityType: "CodeModule",
+              name: `high-conf-${i}-${Math.random().toString(36).slice(2, 6)}`,
+              description: "above threshold",
+              source: "code_analysis" as EntitySource,
+              confidence,
+              projectId,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            backdateEntityForProject(gcStore, entity.entityId, projectId, 60);
+            entityIds.push(entity.entityId);
+          }
+
+          const deleted = gc.deleteLowQualityEntities();
+
+          expect(deleted).toBe(0);
+          for (const id of entityIds) {
+            expect(gcStore.getEntity(id)).toBeDefined();
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
+  });
+
+  it("does NOT delete low-confidence entities younger than lowConfidenceMaxAgeDays", () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 0.29, noNaN: true }),
+        fc.integer({ min: 10, max: 90 }),
+        fc.integer({ min: 1, max: 5 }),
+        (confidence, maxAgeDays, entityCount) => {
+          const daysAge = Math.max(1, maxAgeDays - 5); // younger than threshold
+
+          // Fresh store per iteration to avoid cross-iteration interference
+          const iterStore = new GraphStore();
+          const iterLog = new LifecycleLog(path.join(gcTmpDir, `iter-${Math.random().toString(36).slice(2)}.jsonl`));
+          iterStore.lifecycleLog = iterLog;
+
+          const projectId = `prop18f-${Math.random().toString(36).slice(2, 8)}`;
+          const gc = new KnowledgeGarbageCollector(iterStore, iterLog, {
+            lowConfidenceThreshold: 0.3,
+            lowConfidenceMaxAgeDays: maxAgeDays,
+          });
+
+          const entityIds: string[] = [];
+          for (let i = 0; i < entityCount; i++) {
+            const entity = iterStore.createEntity({
+              entityType: "CodeModule",
+              name: `young-low-${i}-${Math.random().toString(36).slice(2, 6)}`,
+              description: "young low quality",
+              source: "llm_inferred" as EntitySource,
+              confidence,
+              projectId,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+            backdateEntityForProject(iterStore, entity.entityId, projectId, daysAge);
+            entityIds.push(entity.entityId);
+          }
+
+          const deleted = gc.deleteLowQualityEntities();
+
+          expect(deleted).toBe(0);
+          for (const id of entityIds) {
+            expect(iterStore.getEntity(id)).toBeDefined();
+          }
+        },
+      ),
+      { numRuns: 20 },
+    );
   });
 });

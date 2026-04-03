@@ -18,10 +18,10 @@
     - 实现 onChange 事件监听和 ontology.changed 事件触发
     - 持久化到 `data/knowledge/ontology.json`
     - _Requirements: 1.1, 1.2, 1.5, 1.6, 1.7_
-  - [ ]* 1.4 编写 OntologyRegistry 属性测试
+  - [x] 1.4 编写 OntologyRegistry 属性测试
     - **Property 3: 自定义类型注册往返一致性**
     - **Validates: Requirements 1.5, 1.6**
-  - [ ]* 1.5 编写 OntologyRegistry 属性测试
+  - [x] 1.5 编写 OntologyRegistry 属性测试
     - **Property 4: 本体变更事件触发**
     - **Validates: Requirements 1.7**
 
@@ -36,19 +36,19 @@
   - [x] 2.2 实现图遍历方法：getNeighbors（BFS N 跳）、findPath（BFS 最短路径）、getSubgraph
     - 使用 visited set 防止循环引用
     - _Requirements: 4.1_
-  - [ ]* 2.3 编写 GraphStore 属性测试
+  - [x] 2.3 编写 GraphStore 属性测试
     - **Property 1: 实体创建属性完整性**
     - **Validates: Requirements 1.3**
-  - [ ]* 2.4 编写 GraphStore 属性测试
+  - [x] 2.4 编写 GraphStore 属性测试
     - **Property 2: 关系创建属性完整性**
     - **Validates: Requirements 1.4**
-  - [ ]* 2.5 编写 GraphStore 属性测试
+  - [x] 2.5 编写 GraphStore 属性测试
     - **Property 7: 实体去重唯一键不变量**
     - **Validates: Requirements 2.6**
-  - [ ]* 2.6 编写 GraphStore 属性测试
+  - [x] 2.6 编写 GraphStore 属性测试
     - **Property 12: 项目隔离不变量**
     - **Validates: Requirements 4.5**
-  - [ ]* 2.7 编写 GraphStore 属性测试
+  - [x] 2.7 编写 GraphStore 属性测试
     - **Property 13: 图遍历深度约束**
     - **Validates: Requirements 4.1**
 
@@ -66,13 +66,13 @@
     - deleteLowQualityEntities()：confidence < 0.3 且 > 30 天且未被查询引用
     - mergeDuplicateEntities()：name + entityType + projectId 相似度 > 0.9 合并
     - _Requirements: 6.3_
-  - [ ]* 3.4 编写生命周期属性测试
+  - [x] 3.4 编写生命周期属性测试
     - **Property 16: 实体状态机转换合法性**
     - **Validates: Requirements 6.1**
-  - [ ]* 3.5 编写生命周期属性测试
+  - [x] 3.5 编写生命周期属性测试
     - **Property 20: 生命周期日志完整性**
     - **Validates: Requirements 6.5**
-  - [ ]* 3.6 编写垃圾回收属性测试
+  - [x] 3.6 编写垃圾回收属性测试
     - **Property 18: 垃圾回收正确性**
     - **Validates: Requirements 6.3**
 
@@ -95,13 +95,13 @@
     - 将代码片段 + 本体模型定义发送给 LLM，解析 JSON 输出
     - LLM 提取结果 confidence 默认 0.7
     - _Requirements: 2.2_
-  - [ ]* 5.4 编写代码提取器属性测试
+  - [x] 5.4 编写代码提取器属性测试
     - **Property 5: 提取实体扩展属性完整性**
     - **Validates: Requirements 2.3, 2.4**
-  - [ ]* 5.5 编写代码提取器属性测试
+  - [x] 5.5 编写代码提取器属性测试
     - **Property 6: LLM 提取默认置信度**
     - **Validates: Requirements 2.2**
-  - [ ]* 5.6 编写代码提取器属性测试
+  - [x] 5.6 编写代码提取器属性测试
     - **Property 17: 删除文件触发废弃标记**
     - **Validates: Requirements 6.2**
 
@@ -119,13 +119,13 @@
     - confidence < 0.5 的条目标记 needsReview: true，进入审核队列
     - 写入 Mission 的 knowledgeSinkSummary 统计信息
     - _Requirements: 3.2, 3.3, 3.6_
-  - [ ]* 6.4 编写 AgentKnowledgeSink 属性测试
+  - [x] 6.4 编写 AgentKnowledgeSink 属性测试
     - **Property 8: ArchitectureDecision 必填字段验证**
     - **Validates: Requirements 3.4**
-  - [ ]* 6.5 编写 AgentKnowledgeSink 属性测试
+  - [x] 6.5 编写 AgentKnowledgeSink 属性测试
     - **Property 9: 低置信度实体进入审核队列**
     - **Validates: Requirements 3.3, 7.1**
-  - [ ]* 6.6 编写 AgentKnowledgeSink 属性测试
+  - [x] 6.6 编写 AgentKnowledgeSink 属性测试
     - **Property 10: 知识写入自动关系建立**
     - **Validates: Requirements 3.5**
 
@@ -144,10 +144,10 @@
   - [x] 7.3 实现 ArchitectureDecision 版本链查询
     - 默认返回最新版本，includeHistory: true 返回完整版本链
     - _Requirements: 6.4_
-  - [ ]* 7.4 编写图查询属性测试
+  - [x] 7.4 编写图查询属性测试
     - **Property 11: 查询结果置信度排序**
     - **Validates: Requirements 4.4**
-  - [ ]* 7.5 编写图查询属性测试
+  - [x] 7.5 编写图查询属性测试
     - **Property 19: 架构决策版本链**
     - **Validates: Requirements 6.4**
 
@@ -161,7 +161,7 @@
     - 区分人工审核（confidence → 0.8）和 Agent 审核（confidence → 0.7）
     - 实现队列积压告警（超过 reviewQueueAlertThreshold 触发 KNOWLEDGE_REVIEW_BACKLOG）
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
-  - [ ]* 9.2 编写审核队列属性测试
+  - [x] 9.2 编写审核队列属性测试
     - **Property 21: 审核操作置信度调整**
     - **Validates: Requirements 7.2, 7.3**
 
@@ -178,10 +178,10 @@
   - [x] 10.3 实现记忆 → 图谱方向同步（批处理）
     - 从长期记忆中识别结构化知识候选项，推送到审核队列
     - _Requirements: 5.3_
-  - [ ]* 10.4 编写统一检索属性测试
+  - [x] 10.4 编写统一检索属性测试
     - **Property 14: 统一检索模式行为**
     - **Validates: Requirements 5.1**
-  - [ ]* 10.5 编写双向同步属性测试
+  - [x] 10.5 编写双向同步属性测试
     - **Property 15: 图谱到向量同步双向链接**
     - **Validates: Requirements 5.4**
 
@@ -195,7 +195,7 @@
     - GET /api/admin/knowledge/reindex/:taskId：查询重建进度
     - GET /api/admin/knowledge/export：导出项目图谱为自描述 JSON
     - _Requirements: 8.2, 8.3, 8.4, 8.5_
-  - [ ]* 11.3 编写导出属性测试
+  - [x] 11.3 编写导出属性测试
     - **Property 22: 图谱导出往返一致性**
     - **Validates: Requirements 8.5**
 

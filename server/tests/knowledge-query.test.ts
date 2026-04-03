@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import fc from "fast-check";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -367,6 +368,146 @@ describe("KnowledgeGraphQuery", () => {
   });
 
   // -------------------------------------------------------------------------
+  // Feature: knowledge-graph, Property 11: 查询结果置信度排序
+  // Validates: Requirements 4.4
+  // -------------------------------------------------------------------------
+
+  describe("Property 11: 查询结果置信度排序", () => {
+    // Arbitrary for a confidence value in [0, 1]
+    const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true });
+
+    // Arbitrary for a list of 2-20 unique entity inputs with random confidence
+    const entityListArb = fc
+      .array(confidenceArb, { minLength: 2, maxLength: 20 })
+      .map((confidences) =>
+        confidences.map((conf, i) =>
+          makeEntityInput({ name: `Entity_${i}`, confidence: conf }),
+        ),
+      );
+
+    it(
+      "findEntities returns entities sorted by confidence descending",
+      async () => {
+        await fc.assert(
+          fc.asyncProperty(entityListArb, async (entityInputs) => {
+            // Clean slate per iteration
+            cleanup();
+            const localStore = new GraphStore();
+            const localRegistry = new OntologyRegistry();
+            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+
+            for (const input of entityInputs) {
+              localStore.createEntity(input);
+            }
+
+            const results = await localQuery.findEntities({ projectId: TEST_PROJECT });
+
+            // All entities returned
+            expect(results).toHaveLength(entityInputs.length);
+
+            // Confidence must be monotonically non-increasing
+            for (let i = 1; i < results.length; i++) {
+              expect(results[i].confidence).toBeLessThanOrEqual(results[i - 1].confidence);
+            }
+
+            localStore.forceSave();
+            cleanup();
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
+
+    it(
+      "getNeighbors returns entities sorted by confidence descending",
+      async () => {
+        await fc.assert(
+          fc.asyncProperty(entityListArb, async (entityInputs) => {
+            cleanup();
+            const localStore = new GraphStore();
+            const localRegistry = new OntologyRegistry();
+            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+
+            // Create a hub entity and connect all others to it
+            const hub = localStore.createEntity(
+              makeEntityInput({ name: "Hub", confidence: 1.0 }),
+            );
+            const created: Entity[] = [];
+            for (const input of entityInputs) {
+              const e = localStore.createEntity(input);
+              created.push(e);
+              localStore.createRelation(
+                makeRelationInput(hub.entityId, e.entityId),
+              );
+            }
+
+            const result = await localQuery.getNeighbors(hub.entityId, [], 1);
+
+            // Confidence must be monotonically non-increasing
+            for (let i = 1; i < result.entities.length; i++) {
+              expect(result.entities[i].confidence).toBeLessThanOrEqual(
+                result.entities[i - 1].confidence,
+              );
+            }
+
+            localStore.forceSave();
+            cleanup();
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
+
+    it(
+      "contextSummary annotates every entity with confidence < 0.5 as [low confidence]",
+      async () => {
+        await fc.assert(
+          fc.asyncProperty(entityListArb, async (entityInputs) => {
+            cleanup();
+            const localStore = new GraphStore();
+            const localRegistry = new OntologyRegistry();
+            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+
+            // Create hub + neighbors so we get a QueryResult with contextSummary
+            const hub = localStore.createEntity(
+              makeEntityInput({ name: "Hub_Center", confidence: 1.0 }),
+            );
+            for (const input of entityInputs) {
+              const e = localStore.createEntity(input);
+              localStore.createRelation(
+                makeRelationInput(hub.entityId, e.entityId),
+              );
+            }
+
+            const result = await localQuery.getNeighbors(hub.entityId, [], 1);
+            const summary = result.contextSummary;
+
+            for (const entity of result.entities) {
+              if (entity.confidence < 0.5) {
+                // Low-confidence entity must have [low confidence] annotation on its line
+                const linePattern = new RegExp(
+                  `${entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.*\\[low confidence\\]`,
+                );
+                expect(summary).toMatch(linePattern);
+              } else {
+                // High-confidence entity must NOT have [low confidence] on its line
+                const linePattern = new RegExp(
+                  `${entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.*\\[low confidence\\]`,
+                );
+                expect(summary).not.toMatch(linePattern);
+              }
+            }
+
+            localStore.forceSave();
+            cleanup();
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
+  });
+
+  // -------------------------------------------------------------------------
   // findArchitectureDecisions — 版本链查询 (Req 6.4)
   // -------------------------------------------------------------------------
 
@@ -457,5 +598,168 @@ describe("KnowledgeGraphQuery", () => {
 
       expect(result.contextSummary).toContain("Use-PostgreSQL");
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // Feature: knowledge-graph, Property 19: 架构决策版本链
+  // Validates: Requirements 6.4
+  // -------------------------------------------------------------------------
+
+  describe("Property 19: 架构决策版本链", () => {
+    /**
+     * Arbitrary: generates a chain length between 2 and 8.
+     * Each chain element gets a unique name and an incrementing createdAt
+     * so the ordering is deterministic.
+     */
+    const chainLengthArb = fc.integer({ min: 2, max: 8 });
+
+    it(
+      "default query returns only the latest (non-superseded) decision in a chain",
+      async () => {
+        await fc.assert(
+          fc.asyncProperty(chainLengthArb, async (chainLen) => {
+            cleanup();
+            const localStore = new GraphStore();
+            const localRegistry = new OntologyRegistry();
+            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+
+            // Build a linear chain: D[0] ← D[1] ← ... ← D[chainLen-1]
+            // D[i+1] SUPERSEDES D[i], so D[chainLen-1] is the latest
+            const baseTime = new Date("2025-01-01T00:00:00Z").getTime();
+            const decisions: Entity[] = [];
+
+            for (let i = 0; i < chainLen; i++) {
+              const entity = localStore.createEntity({
+                entityType: "ArchitectureDecision",
+                name: `Decision-v${i}`,
+                description: `Version ${i}`,
+                source: "user_defined" as const,
+                confidence: 0.9,
+                projectId: TEST_PROJECT,
+                needsReview: false,
+                linkedMemoryIds: [],
+                extendedAttributes: {
+                  context: "ctx",
+                  decision: "dec",
+                  alternatives: [],
+                  consequences: "cons",
+                },
+              });
+              // Override createdAt to guarantee ordering
+              localStore.updateEntity(entity.entityId, {
+                createdAt: new Date(baseTime + i * 1000).toISOString(),
+              });
+              decisions.push(entity);
+            }
+
+            // Create SUPERSEDES relations: D[i+1] → D[i]
+            for (let i = 0; i < chainLen - 1; i++) {
+              localStore.createRelation({
+                relationType: "SUPERSEDES",
+                sourceEntityId: decisions[i + 1].entityId,
+                targetEntityId: decisions[i].entityId,
+                weight: 1.0,
+                evidence: `v${i + 1} supersedes v${i}`,
+                source: "user_defined" as const,
+                confidence: 1.0,
+                needsReview: false,
+              });
+            }
+
+            const result = await localQuery.findArchitectureDecisions(TEST_PROJECT);
+
+            // Only the latest (last) decision should be returned
+            expect(result.entities).toHaveLength(1);
+            expect(result.entities[0].entityId).toBe(
+              decisions[chainLen - 1].entityId,
+            );
+            // No SUPERSEDES relations in default result
+            expect(result.relations).toHaveLength(0);
+
+            localStore.forceSave();
+            cleanup();
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
+
+    it(
+      "includeHistory: true returns all decisions in the chain ordered by createdAt",
+      async () => {
+        await fc.assert(
+          fc.asyncProperty(chainLengthArb, async (chainLen) => {
+            cleanup();
+            const localStore = new GraphStore();
+            const localRegistry = new OntologyRegistry();
+            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+
+            const baseTime = new Date("2025-01-01T00:00:00Z").getTime();
+            const decisions: Entity[] = [];
+
+            for (let i = 0; i < chainLen; i++) {
+              const entity = localStore.createEntity({
+                entityType: "ArchitectureDecision",
+                name: `Decision-v${i}`,
+                description: `Version ${i}`,
+                source: "user_defined" as const,
+                confidence: 0.9,
+                projectId: TEST_PROJECT,
+                needsReview: false,
+                linkedMemoryIds: [],
+                extendedAttributes: {
+                  context: "ctx",
+                  decision: "dec",
+                  alternatives: [],
+                  consequences: "cons",
+                },
+              });
+              localStore.updateEntity(entity.entityId, {
+                createdAt: new Date(baseTime + i * 1000).toISOString(),
+              });
+              decisions.push(entity);
+            }
+
+            for (let i = 0; i < chainLen - 1; i++) {
+              localStore.createRelation({
+                relationType: "SUPERSEDES",
+                sourceEntityId: decisions[i + 1].entityId,
+                targetEntityId: decisions[i].entityId,
+                weight: 1.0,
+                evidence: `v${i + 1} supersedes v${i}`,
+                source: "user_defined" as const,
+                confidence: 1.0,
+                needsReview: false,
+              });
+            }
+
+            const result = await localQuery.findArchitectureDecisions(
+              TEST_PROJECT,
+              { includeHistory: true },
+            );
+
+            // All decisions in the chain should be returned
+            expect(result.entities).toHaveLength(chainLen);
+
+            // Must be ordered by createdAt ascending
+            for (let i = 1; i < result.entities.length; i++) {
+              const prev = new Date(result.entities[i - 1].createdAt).getTime();
+              const curr = new Date(result.entities[i].createdAt).getTime();
+              expect(curr).toBeGreaterThanOrEqual(prev);
+            }
+
+            // All SUPERSEDES relations should be included
+            expect(result.relations).toHaveLength(chainLen - 1);
+            for (const rel of result.relations) {
+              expect(rel.relationType).toBe("SUPERSEDES");
+            }
+
+            localStore.forceSave();
+            cleanup();
+          }),
+          { numRuns: 100 },
+        );
+      },
+    );
   });
 });

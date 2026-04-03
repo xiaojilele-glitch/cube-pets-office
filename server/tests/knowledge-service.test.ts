@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import fc from "fast-check";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -592,5 +593,428 @@ describe("KnowledgeService", () => {
 
       expect(upsertCalls).toHaveLength(0);
     });
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// Property-Based Tests
+// Feature: knowledge-graph, Property 14: 统一检索模式行为
+// Validates: Requirements 5.1
+// ---------------------------------------------------------------------------
+
+describe("Feature: knowledge-graph, Property 14: 统一检索模式行为", () => {
+  const PBT_PROJECT = "test-project-ks-pbt";
+
+  function pbtGraphFilePath(): string {
+    return path.join(DATA_DIR, `graph-${PBT_PROJECT}.json`);
+  }
+
+  function pbtCleanup(): void {
+    try {
+      const fp = pbtGraphFilePath();
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    } catch {
+      // ignore
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Generators
+  // -------------------------------------------------------------------------
+
+  /** Generate 1-5 entity names (non-empty alphanumeric strings) */
+  const entityNamesArb = fc.array(
+    fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,19}$/),
+    { minLength: 1, maxLength: 5 },
+  );
+
+  /** Generate 1-5 vector search hits with scores in [0, 1] */
+  const vectorHitsArb = fc.array(
+    fc.record({
+      id: fc.stringMatching(/^v-[a-z0-9]{1,8}$/),
+      content: fc.string({ minLength: 1, maxLength: 80 }),
+      score: fc.double({ min: 0, max: 1, noNaN: true }),
+    }),
+    { minLength: 1, maxLength: 5 },
+  );
+
+  /** Generate a query mode */
+  const modeArb = fc.constantFrom(
+    "preferStructured" as const,
+    "preferSemantic" as const,
+    "balanced" as const,
+  );
+
+  // -------------------------------------------------------------------------
+  // Property: preferStructured ranks structured higher than semantic
+  // -------------------------------------------------------------------------
+
+  it("preferStructured: structured results appear before semantic results in mergedSummary", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        entityNamesArb,
+        vectorHitsArb,
+        async (entityNames, vectorHits) => {
+          pbtCleanup();
+          const store = new GraphStore();
+          const registry = new OntologyRegistry();
+          const queryService = new KnowledgeGraphQuery(store, registry);
+
+          // Seed graph with entities
+          for (const name of entityNames) {
+            store.createEntity({
+              entityType: "CodeModule",
+              name,
+              description: `Desc for ${name}`,
+              source: "code_analysis",
+              confidence: 0.8,
+              projectId: PBT_PROJECT,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+          }
+
+          const mockVS: VectorStore = {
+            search: async () => vectorHits,
+          };
+
+          const service = new KnowledgeService(queryService, store, mockVS);
+          const result = await service.query("test", PBT_PROJECT, { mode: "preferStructured" });
+
+          // Structured results should be present
+          expect(result.structuredResults.entities.length).toBeGreaterThanOrEqual(1);
+          // Semantic results should be present
+          expect(result.semanticResults.length).toBeGreaterThanOrEqual(1);
+
+          // In mergedSummary, graph section (Primary) must appear before semantic section (Supplementary)
+          const graphIdx = result.mergedSummary.indexOf("Knowledge Graph Results — Primary");
+          const semanticIdx = result.mergedSummary.indexOf("Semantic Search Results — Supplementary");
+          expect(graphIdx).toBeGreaterThanOrEqual(0);
+          expect(semanticIdx).toBeGreaterThanOrEqual(0);
+          expect(graphIdx).toBeLessThan(semanticIdx);
+
+          store.forceSave();
+          pbtCleanup();
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Property: preferSemantic ranks semantic higher than structured
+  // -------------------------------------------------------------------------
+
+  it("preferSemantic: semantic results appear before structured results in mergedSummary", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        entityNamesArb,
+        vectorHitsArb,
+        async (entityNames, vectorHits) => {
+          pbtCleanup();
+          const store = new GraphStore();
+          const registry = new OntologyRegistry();
+          const queryService = new KnowledgeGraphQuery(store, registry);
+
+          for (const name of entityNames) {
+            store.createEntity({
+              entityType: "CodeModule",
+              name,
+              description: `Desc for ${name}`,
+              source: "code_analysis",
+              confidence: 0.8,
+              projectId: PBT_PROJECT,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+          }
+
+          const mockVS: VectorStore = {
+            search: async () => vectorHits,
+          };
+
+          const service = new KnowledgeService(queryService, store, mockVS);
+          const result = await service.query("test", PBT_PROJECT, { mode: "preferSemantic" });
+
+          expect(result.structuredResults.entities.length).toBeGreaterThanOrEqual(1);
+          expect(result.semanticResults.length).toBeGreaterThanOrEqual(1);
+
+          // In mergedSummary, semantic section (Primary) must appear before graph section (Supplementary)
+          const semanticIdx = result.mergedSummary.indexOf("Semantic Search Results — Primary");
+          const graphIdx = result.mergedSummary.indexOf("Knowledge Graph Results — Supplementary");
+          expect(semanticIdx).toBeGreaterThanOrEqual(0);
+          expect(graphIdx).toBeGreaterThanOrEqual(0);
+          expect(semanticIdx).toBeLessThan(graphIdx);
+
+          store.forceSave();
+          pbtCleanup();
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Property: balanced mode mixes results by relevance (no Primary/Supplementary)
+  // -------------------------------------------------------------------------
+
+  it("balanced: results are mixed without priority labels", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        entityNamesArb,
+        vectorHitsArb,
+        async (entityNames, vectorHits) => {
+          pbtCleanup();
+          const store = new GraphStore();
+          const registry = new OntologyRegistry();
+          const queryService = new KnowledgeGraphQuery(store, registry);
+
+          for (const name of entityNames) {
+            store.createEntity({
+              entityType: "CodeModule",
+              name,
+              description: `Desc for ${name}`,
+              source: "code_analysis",
+              confidence: 0.8,
+              projectId: PBT_PROJECT,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+          }
+
+          const mockVS: VectorStore = {
+            search: async () => vectorHits,
+          };
+
+          const service = new KnowledgeService(queryService, store, mockVS);
+          const result = await service.query("test", PBT_PROJECT, { mode: "balanced" });
+
+          expect(result.structuredResults.entities.length).toBeGreaterThanOrEqual(1);
+          expect(result.semanticResults.length).toBeGreaterThanOrEqual(1);
+
+          // Balanced mode: both sections present without Primary/Supplementary labels
+          expect(result.mergedSummary).toContain("[Knowledge Graph Results]");
+          expect(result.mergedSummary).toContain("[Semantic Search Results]");
+          expect(result.mergedSummary).not.toContain("Primary");
+          expect(result.mergedSummary).not.toContain("Supplementary");
+
+          store.forceSave();
+          pbtCleanup();
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
+  // -------------------------------------------------------------------------
+  // Property: mode parameter consistently determines ranking across all modes
+  // -------------------------------------------------------------------------
+
+  it("mode parameter consistently determines the ranking strategy for any input", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        entityNamesArb,
+        vectorHitsArb,
+        modeArb,
+        async (entityNames, vectorHits, mode) => {
+          pbtCleanup();
+          const store = new GraphStore();
+          const registry = new OntologyRegistry();
+          const queryService = new KnowledgeGraphQuery(store, registry);
+
+          for (const name of entityNames) {
+            store.createEntity({
+              entityType: "CodeModule",
+              name,
+              description: `Desc for ${name}`,
+              source: "code_analysis",
+              confidence: 0.8,
+              projectId: PBT_PROJECT,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {},
+            });
+          }
+
+          const mockVS: VectorStore = {
+            search: async () => vectorHits,
+          };
+
+          const service = new KnowledgeService(queryService, store, mockVS);
+          const result = await service.query("test", PBT_PROJECT, { mode });
+
+          // Both result types should always be populated
+          expect(result.structuredResults.entities.length).toBeGreaterThanOrEqual(1);
+          expect(result.semanticResults.length).toBeGreaterThanOrEqual(1);
+          expect(result.mergedSummary.length).toBeGreaterThan(0);
+
+          switch (mode) {
+            case "preferStructured": {
+              // Graph ranked higher (Primary), semantic is Supplementary
+              expect(result.mergedSummary).toContain("Primary");
+              expect(result.mergedSummary).toContain("Knowledge Graph Results — Primary");
+              const gIdx = result.mergedSummary.indexOf("Knowledge Graph Results — Primary");
+              const sIdx = result.mergedSummary.indexOf("Semantic Search Results — Supplementary");
+              expect(gIdx).toBeLessThan(sIdx);
+              break;
+            }
+            case "preferSemantic": {
+              // Semantic ranked higher (Primary), graph is Supplementary
+              expect(result.mergedSummary).toContain("Primary");
+              expect(result.mergedSummary).toContain("Semantic Search Results — Primary");
+              const sIdx = result.mergedSummary.indexOf("Semantic Search Results — Primary");
+              const gIdx = result.mergedSummary.indexOf("Knowledge Graph Results — Supplementary");
+              expect(sIdx).toBeLessThan(gIdx);
+              break;
+            }
+            case "balanced": {
+              // Mixed by relevance — no priority labels
+              expect(result.mergedSummary).not.toContain("Primary");
+              expect(result.mergedSummary).not.toContain("Supplementary");
+              expect(result.mergedSummary).toContain("[Knowledge Graph Results]");
+              expect(result.mergedSummary).toContain("[Semantic Search Results]");
+              break;
+            }
+          }
+
+          store.forceSave();
+          pbtCleanup();
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// Property-Based Tests
+// Feature: knowledge-graph, Property 15: 图谱到向量同步双向链接
+// Validates: Requirements 5.4
+// ---------------------------------------------------------------------------
+
+describe("Feature: knowledge-graph, Property 15: 图谱到向量同步双向链接", () => {
+  const PBT_PROJECT = "test-project-sync-pbt";
+
+  function syncPbtGraphFilePath(): string {
+    return path.join(DATA_DIR, `graph-${PBT_PROJECT}.json`);
+  }
+
+  function syncPbtCleanup(): void {
+    try {
+      const fp = syncPbtGraphFilePath();
+      if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    } catch {
+      // ignore
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Generators
+  // -------------------------------------------------------------------------
+
+  /** Generate a valid entity name (alphanumeric, starts with letter) */
+  const entityNameArb = fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,19}$/);
+
+  /** Generate a valid entity type from the core types */
+  const entityTypeArb = fc.constantFrom(
+    "CodeModule",
+    "API",
+    "BusinessRule",
+    "ArchitectureDecision",
+    "TechStack",
+    "Agent",
+    "Role",
+    "Mission",
+    "Bug",
+    "Config",
+  );
+
+  /** Generate a valid source */
+  const sourceArb = fc.constantFrom(
+    "agent_extracted" as const,
+    "user_defined" as const,
+    "code_analysis" as const,
+    "llm_inferred" as const,
+  );
+
+  /** Generate a confidence value in [0.0, 1.0] */
+  const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true });
+
+  /** Generate a description string */
+  const descriptionArb = fc.string({ minLength: 0, maxLength: 60 });
+
+  /** Generate a unique memory ID prefix to simulate vector store behavior */
+  const memoryPrefixArb = fc.stringMatching(/^mem-[a-z0-9]{1,8}$/);
+
+  // -------------------------------------------------------------------------
+  // Property: After syncEntityToVectorStore, bidirectional links are established
+  // -------------------------------------------------------------------------
+
+  it("after sync, entity.linkedMemoryIds contains the vector memory ID and upsert metadata carries linkedEntityId", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        entityNameArb,
+        entityTypeArb,
+        sourceArb,
+        confidenceArb,
+        descriptionArb,
+        memoryPrefixArb,
+        async (name, entityType, source, confidence, description, memoryPrefix) => {
+          syncPbtCleanup();
+          const store = new GraphStore();
+
+          // Create entity in graph
+          const entity = store.createEntity({
+            entityType,
+            name,
+            description,
+            source,
+            confidence,
+            projectId: PBT_PROJECT,
+            needsReview: false,
+            linkedMemoryIds: [],
+            extendedAttributes: {},
+          });
+
+          // Track what the vector store receives
+          let capturedMetadata: Record<string, unknown> | null = null;
+          const returnedMemoryId = `${memoryPrefix}-${entity.entityId}`;
+
+          const mockVS: VectorStore = {
+            search: async () => [],
+            upsert: async (_id, _content, metadata) => {
+              capturedMetadata = metadata;
+              return returnedMemoryId;
+            },
+          };
+
+          const registry = new OntologyRegistry();
+          const queryService = new KnowledgeGraphQuery(store, registry);
+          const service = new KnowledgeService(queryService, store, mockVS);
+
+          await service.syncEntityToVectorStore(entity);
+
+          // --- Verify direction 1: entity → vector store ---
+          // The entity's linkedMemoryIds should contain the returned memory ID
+          const updatedEntity = store.getEntity(entity.entityId);
+          expect(updatedEntity).toBeDefined();
+          expect(updatedEntity!.linkedMemoryIds).toContain(returnedMemoryId);
+
+          // --- Verify direction 2: vector store → entity ---
+          // The upsert metadata should carry linkedEntityId referencing the entity
+          expect(capturedMetadata).not.toBeNull();
+          expect(capturedMetadata!.linkedEntityId).toBe(entity.entityId);
+
+          store.forceSave();
+          syncPbtCleanup();
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 });
