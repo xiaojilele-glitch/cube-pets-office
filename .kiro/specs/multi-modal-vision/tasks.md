@@ -15,7 +15,7 @@
     - 修改 `shared/workflow-runtime.ts`
     - 确保现有使用 LLMMessage 的代码无需修改（string 类型向后兼容）
     - _Requirements: 3.1_
-  - [ ]* 1.3 编写 LLMMessage 多模态消息序列化 round-trip 属性测试
+  - [x] 1.3 编写 LLMMessage 多模态消息序列化 round-trip 属性测试
     - **Property 6: 多模态消息序列化 round-trip**
     - **Validates: Requirements 3.4**
 
@@ -25,7 +25,7 @@
     - 从 `server/core/ai-config.ts` 读取基础配置，叠加 VISION_LLM_* 环境变量
     - 导出 VisionProviderConfig 接口和 getVisionConfig 函数
     - _Requirements: 2.1, 2.2, 7.1_
-  - [ ]* 2.2 编写 Vision 配置解析与 Fallback 链属性测试
+  - [x] 2.2 编写 Vision 配置解析与 Fallback 链属性测试
     - **Property 4: Vision 配置解析与 Fallback 链**
     - **Validates: Requirements 2.1, 2.2, 7.1**
   - [x] 2.3 实现 analyzeImage 和 analyzeImages 函数，复用 llm-client 的调用机制发送多模态消息到 Vision LLM
@@ -34,7 +34,7 @@
     - 解析 LLM 响应为 VisionAnalysisResult 结构
     - analyzeImages 使用 Promise.allSettled 并行处理多张图片
     - _Requirements: 4.1, 4.4, 4.5_
-  - [ ]* 2.4 编写多图分析时 detail 参数约束属性测试
+  - [x] 2.4 编写多图分析时 detail 参数约束属性测试
     - **Property 11: 多图分析时 detail 参数约束**
     - **Validates: Requirements 7.2**
 
@@ -47,7 +47,7 @@
     - 修改 `server/core/llm-client.ts`
     - 当 content 为数组时，遍历条目：text → input_text，image_url → input_image
     - _Requirements: 3.3_
-  - [ ]* 3.3 编写多模态消息格式转换属性测试
+  - [x] 3.3 编写多模态消息格式转换属性测试
     - **Property 5: 多模态消息格式转换**
     - **Validates: Requirements 3.1, 3.2, 3.3**
 
@@ -62,7 +62,7 @@
     - 新增 fileToBase64DataUrl 函数：读取 File 为 ArrayBuffer，转 base64，拼接 data URL
     - 新增 compressImage 函数：使用 Canvas API 降采样大图
     - _Requirements: 1.2, 1.3_
-  - [ ]* 5.2 编写 Base64 编码 round-trip 属性测试
+  - [x] 5.2 编写 Base64 编码 round-trip 属性测试
     - **Property 2: Base64 编码 round-trip**
     - **Validates: Requirements 1.2**
   - [x] 5.3 扩展 parseImageFile 函数，增加 Vision 分析路径：先编码 Base64，通过服务端 API 请求 Vision 分析，失败时回退到 OCR
@@ -71,7 +71,7 @@
     - 修改 parseImageFile：先尝试 Vision 路径，catch 后走现有 OCR 路径
     - 标记 visionReady、base64DataUrl、visualDescription 字段
     - _Requirements: 1.1, 1.4, 4.1, 4.2, 4.5_
-  - [ ]* 5.4 编写图片类型检测准确性属性测试
+  - [x] 5.4 编写图片类型检测准确性属性测试
     - **Property 1: 图片类型检测准确性**
     - **Validates: Requirements 1.1**
 
@@ -89,14 +89,14 @@
     - 新增 VisionContext 接口：{ imageName: string; visualDescription: string }
     - 在 composeAgentMessages 中，遍历 visionContexts 插入 user message
     - _Requirements: 5.1, 5.2_
-  - [ ]* 7.2 编写视觉上下文注入与排序属性测试
+  - [x] 7.2 编写视觉上下文注入与排序属性测试
     - **Property 9: Agent 消息序列中视觉上下文的注入与排序**
     - **Validates: Requirements 5.1, 5.2**
   - [x] 7.3 修改 RuntimeAgent.invoke 方法，当 options 包含 visionContexts 时增加 maxTokens
     - 修改 `shared/runtime-agent.ts`
     - 在 invoke 中检查 visionContexts，有则 maxTokens += 1000
     - _Requirements: 5.3_
-  - [ ]* 7.4 编写 maxTokens 增加属性测试
+  - [x] 7.4 编写 maxTokens 增加属性测试
     - **Property 10: 视觉上下文触发 maxTokens 增加**
     - **Validates: Requirements 5.3**
 
@@ -105,7 +105,7 @@
     - 修改 `shared/workflow-input.ts`
     - 在 attachmentSections 构建中检查 visualDescription 字段
     - _Requirements: 4.3_
-  - [ ]* 8.2 编写指令上下文包含视觉分析属性测试
+  - [ ] 8.2 编写指令上下文包含视觉分析属性测试
     - **Property 8: 指令上下文包含视觉分析**
     - **Validates: Requirements 4.3**
 
