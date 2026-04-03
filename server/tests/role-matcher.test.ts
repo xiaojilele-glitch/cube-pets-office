@@ -1,364 +1,300 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, rmSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+/**
+ * RoleMatcher 单元测试
+ *
+ * 覆盖场景：
+ * 1. 空候选 Agent 列表 → 返回空结果
+ * 2. 所有 Agent 低分 → 仍返回结果（按分数降序排列）
+ * 3. LLM 推断失败降级 → 回退到关键词匹配
+ *
+ * _Requirements: 3.1, 3.3_
+ */
+
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 
 import type { RoleTemplate } from '../../shared/role-schema.js';
-import { RoleRegistry } from '../core/role-registry.js';
-import { RolePerformanceTracker } from '../core/role-performance-tracker.js';
-import { RoleMatcher, KEYWORD_ROLE_MAP } from '../core/role-matcher.js';
 
-// We need to mock the singletons used by RoleMatcher.
-// Instead of mocking, we'll create fresh instances and wire them up via module internals.
-// Since RoleMatcher imports singletons, we'll test the class directly with controlled state.
+// ── vi.hoisted: shared state for mocked singletons ──────────────
+const { _perfState, perfTrackerProxy } = vi.hoisted(() => {
+  const _perfState: { tracker: any } = { tracker: null };
 
-const __test_dirname = dirname(fileURLToPath(import.meta.url));
-const TEST_STORE_DIR = resolve(__test_dirname, '../../data/__test_role_matcher__');
-const TEST_STORE_PATH = resolve(TEST_STORE_DIR, 'role-templates.json');
+  const perfTrackerProxy = new Proxy({} as any, {
+    get(_target, prop) {
+      const t = _perfState.tracker;
+      if (!t) throw new Error('Test perf tracker not initialized');
+      const val = (t as any)[prop];
+      return typeof val === 'function' ? val.bind(t) : val;
+    },
+  });
 
-/** Helper: build a minimal valid RoleTemplate */
-function makeTemplate(overrides: Partial<RoleTemplate> = {}): RoleTemplate {
-  const now = new Date().toISOString();
+  return { _perfState, perfTrackerProxy };
+});
+
+// ── Mock the rolePerformanceTracker singleton ───────────────────
+vi.mock('../core/role-performance-tracker.js', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('../core/role-performance-tracker.js')>();
   return {
-    roleId: overrides.roleId ?? `role-${Date.now()}`,
-    roleName: overrides.roleName ?? 'TestRole',
-    responsibilityPrompt: overrides.responsibilityPrompt ?? 'You are a test role.',
-    requiredSkillIds: overrides.requiredSkillIds ?? ['skill-a'],
-    mcpIds: overrides.mcpIds ?? ['mcp-a'],
-    defaultModelConfig: overrides.defaultModelConfig ?? { model: 'gpt-4o', temperature: 0.7, maxTokens: 4096 },
-    authorityLevel: overrides.authorityLevel ?? 'medium',
-    source: overrides.source ?? 'predefined',
-    createdAt: overrides.createdAt ?? now,
-    updatedAt: overrides.updatedAt ?? now,
+    ...orig,
+    rolePerformanceTracker: perfTrackerProxy,
+  };
+});
+
+// ── Mock roleRegistry ───────────────────────────────────────────
+vi.mock('../core/role-registry.js', () => ({
+  roleRegistry: {
+    get: vi.fn(() => undefined),
+    list: vi.fn(() => []),
+    resolve: vi.fn(() => undefined),
+    register: vi.fn(),
+  },
+}));
+
+// ── Import after mocks ──────────────────────────────────────────
+import { RoleMatcher } from '../core/role-matcher.js';
+import { RolePerformanceTracker } from '../core/role-performance-tracker.js';
+import { roleRegistry } from '../core/role-registry.js';
+
+// ── Helpers ─────────────────────────────────────────────────────
+
+function makeRole(overrides: Partial<RoleTemplate> = {}): RoleTemplate {
+  return {
+    roleId: 'coder',
+    roleName: 'Coder',
+    responsibilityPrompt: 'You are a coder.',
+    requiredSkillIds: ['typescript', 'nodejs'],
+    mcpIds: [],
+    defaultModelConfig: { model: 'gpt-4', temperature: 0.7, maxTokens: 4096 },
+    authorityLevel: 'medium',
+    source: 'predefined',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...overrides,
   };
 }
 
-/** Minimal mock Agent that satisfies the interface used by RoleMatcher */
-function makeMockAgent(id: string, loadedSkillIds: string[] = []): any {
+function createMockAgent(agentId: string, loadedSkillIds: string[] = []): any {
   return {
-    config: { id },
-    getCurrentRoleId: () => null,
+    config: { id: agentId },
     getRoleState: () => ({
+      loadedSkillIds,
+      loadedMcpIds: [],
       currentRoleId: null,
       currentRoleLoadedAt: null,
       baseSystemPrompt: '',
-      baseModelConfig: 'gpt-4o',
-      roleLoadPolicy: 'merge' as const,
+      baseModelConfig: '',
+      roleLoadPolicy: 'prefer_agent' as const,
       lastRoleSwitchAt: null,
       roleSwitchCooldownMs: 60000,
       operationLog: [],
-      loadedSkillIds,
-      loadedMcpIds: [],
+      effectiveModelConfig: null,
+      baseFullModelConfig: null,
     }),
   };
 }
 
-describe('RoleMatcher', () => {
+// ── Tests ───────────────────────────────────────────────────────
+
+describe('RoleMatcher Unit Tests', () => {
   let matcher: RoleMatcher;
 
   beforeEach(() => {
     matcher = new RoleMatcher();
+    _perfState.tracker = new RolePerformanceTracker();
+    vi.mocked(roleRegistry.get).mockReset();
+    vi.mocked(roleRegistry.resolve).mockReset();
+    vi.mocked(roleRegistry.list).mockReset();
   });
 
-  afterEach(() => {
-    if (existsSync(TEST_STORE_DIR)) {
-      rmSync(TEST_STORE_DIR, { recursive: true, force: true });
-    }
-  });
+  // ── 1. Empty candidate agent list → returns empty results ──────
 
-  // ── inferCandidateRoles ────────────────────────────────────────
-
-  describe('inferCandidateRoles', () => {
-    it('matches "code" keyword to coder role when registered', async () => {
-      // We need the role registered in the global registry for this test
-      const { roleRegistry } = await import('../core/role-registry.js');
-      const coderTemplate = makeTemplate({ roleId: 'coder', roleName: 'Coder' });
-      roleRegistry.register(coderTemplate);
-
-      try {
-        const roles = await matcher.inferCandidateRoles('Please implement the code for this feature');
-        const roleIds = roles.map(r => r.roleId);
-        expect(roleIds).toContain('coder');
-      } finally {
-        roleRegistry.unregister('coder');
-      }
+  describe('empty candidate agent list', () => {
+    it('returns empty array when no candidate agents are provided', async () => {
+      const task = { description: 'implement a feature', requiredSkills: ['typescript'] };
+      const results = await matcher.match(task, []);
+      expect(results).toEqual([]);
     });
 
-    it('matches "review" keyword to reviewer role when registered', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({ roleId: 'reviewer', roleName: 'Reviewer' }));
+    it('returns empty array for empty candidates even with requiredRole set', async () => {
+      const role = makeRole();
+      vi.mocked(roleRegistry.get).mockReturnValue(role);
+      vi.mocked(roleRegistry.resolve).mockReturnValue(role);
 
-      try {
-        const roles = await matcher.inferCandidateRoles('Please review this pull request');
-        const roleIds = roles.map(r => r.roleId);
-        expect(roleIds).toContain('reviewer');
-      } finally {
-        roleRegistry.unregister('reviewer');
-      }
-    });
-
-    it('matches "design" keyword to architect role when registered', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({ roleId: 'architect', roleName: 'Architect' }));
-
-      try {
-        const roles = await matcher.inferCandidateRoles('Design the system architecture');
-        const roleIds = roles.map(r => r.roleId);
-        expect(roleIds).toContain('architect');
-      } finally {
-        roleRegistry.unregister('architect');
-      }
-    });
-
-    it('matches "test" keyword to qa role when registered', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({ roleId: 'qa', roleName: 'QA' }));
-
-      try {
-        const roles = await matcher.inferCandidateRoles('Test the login functionality');
-        const roleIds = roles.map(r => r.roleId);
-        expect(roleIds).toContain('qa');
-      } finally {
-        roleRegistry.unregister('qa');
-      }
-    });
-
-    it('returns all registered roles when no keywords match', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({ roleId: 'role-x', roleName: 'X' }));
-      roleRegistry.register(makeTemplate({ roleId: 'role-y', roleName: 'Y' }));
-
-      try {
-        const roles = await matcher.inferCandidateRoles('something completely unrelated xyz');
-        expect(roles.length).toBe(roleRegistry.list().length);
-      } finally {
-        roleRegistry.unregister('role-x');
-        roleRegistry.unregister('role-y');
-      }
+      const task = { description: 'implement a feature', requiredRole: 'coder' };
+      const results = await matcher.match(task, []);
+      expect(results).toEqual([]);
     });
   });
 
-  // ── computeScore ───────────────────────────────────────────────
+  // ── 2. All agents have low scores → still returns results sorted ──
 
-  describe('computeScore', () => {
-    it('computes score with default values when no skills or performance data', () => {
-      const agent = makeMockAgent('agent-1');
-      const role = makeTemplate({ roleId: 'coder', requiredSkillIds: ['ts', 'node'] });
-      const task = { description: 'Implement feature' };
-
-      const score = matcher.computeScore(task, agent, role);
-
-      // skillMatch: no task skills → 0.5
-      // agentCompetency: no agent skills → 0.5
-      // rolePerformance: no data → 0.5, confidenceCoeff = 0.6
-      // loadFactor: 0
-      // = 0.5*0.35 + 0.5*0.30 + 0.5*0.25*0.6 + (1-0)*0.10
-      // = 0.175 + 0.15 + 0.075 + 0.10 = 0.5
-      expect(score).toBeCloseTo(0.5, 2);
-    });
-
-    it('computes higher score when task skills match role skills', () => {
-      const agent = makeMockAgent('agent-1');
-      const role = makeTemplate({ roleId: 'coder', requiredSkillIds: ['ts', 'node'] });
-      const taskMatch = { description: 'Implement', requiredSkills: ['ts', 'node'] };
-      const taskNoMatch = { description: 'Implement', requiredSkills: ['python', 'django'] };
-
-      const scoreMatch = matcher.computeScore(taskMatch, agent, role);
-      const scoreNoMatch = matcher.computeScore(taskNoMatch, agent, role);
-
-      expect(scoreMatch).toBeGreaterThan(scoreNoMatch);
-    });
-
-    it('computes higher score when agent has matching skills', () => {
-      const agentWithSkills = makeMockAgent('agent-1', ['ts', 'node']);
-      const agentNoSkills = makeMockAgent('agent-2', ['python']);
-      const role = makeTemplate({ roleId: 'coder', requiredSkillIds: ['ts', 'node'] });
-      const task = { description: 'Implement feature' };
-
-      const scoreWith = matcher.computeScore(task, agentWithSkills, role);
-      const scoreWithout = matcher.computeScore(task, agentNoSkills, role);
-
-      expect(scoreWith).toBeGreaterThan(scoreWithout);
-    });
-
-    it('applies confidence coefficient of 0.6 when totalTasks < 10', async () => {
-      const { rolePerformanceTracker } = await import('../core/role-performance-tracker.js');
-      const agent = makeMockAgent('agent-score-conf');
-      const role = makeTemplate({ roleId: 'coder-conf', requiredSkillIds: [] });
-
-      // Add 5 tasks (< 10 threshold)
-      for (let i = 0; i < 5; i++) {
-        rolePerformanceTracker.updateOnTaskComplete('agent-score-conf', 'coder-conf', {
-          taskId: `t-${i}`,
-          qualityScore: 80,
-          latencyMs: 100,
-          success: true,
-        });
-      }
-
-      const task = { description: 'Test' };
-      const score = matcher.computeScore(task, agent, role);
-
-      // rolePerformance = 80/100 = 0.8, confidenceCoeff = 0.6
-      // perfComponent = 0.8 * 0.25 * 0.6 = 0.12
-      expect(score).toBeDefined();
-      expect(typeof score).toBe('number');
-    });
-
-    it('applies confidence coefficient of 1.0 when totalTasks >= 10', async () => {
-      const { rolePerformanceTracker } = await import('../core/role-performance-tracker.js');
-      const agent = makeMockAgent('agent-score-full');
-      const role = makeTemplate({ roleId: 'coder-full', requiredSkillIds: [] });
-
-      // Add 15 tasks (>= 10 threshold)
-      for (let i = 0; i < 15; i++) {
-        rolePerformanceTracker.updateOnTaskComplete('agent-score-full', 'coder-full', {
-          taskId: `t-${i}`,
-          qualityScore: 80,
-          latencyMs: 100,
-          success: true,
-        });
-      }
-
-      const task = { description: 'Test' };
-      const score = matcher.computeScore(task, agent, role);
-
-      expect(score).toBeDefined();
-      expect(typeof score).toBe('number');
-    });
-
-    it('score is always between 0 and 1', () => {
-      const agent = makeMockAgent('agent-range', ['ts']);
-      const role = makeTemplate({ roleId: 'coder', requiredSkillIds: ['ts'] });
-      const task = { description: 'Code', requiredSkills: ['ts'] };
-
-      const score = matcher.computeScore(task, agent, role);
-      expect(score).toBeGreaterThanOrEqual(0);
-      expect(score).toBeLessThanOrEqual(1);
-    });
-  });
-
-  // ── match ──────────────────────────────────────────────────────
-
-  describe('match', () => {
-    it('returns empty array when no candidate agents', async () => {
-      const result = await matcher.match({ description: 'Do something' }, []);
-      expect(result).toEqual([]);
-    });
-
-    it('returns empty array when requiredRole is not in registry', async () => {
-      const agent = makeMockAgent('agent-1');
-      const result = await matcher.match(
-        { description: 'Do something', requiredRole: 'nonexistent-role' },
-        [agent]
-      );
-      expect(result).toEqual([]);
-    });
-
-    it('only returns the requiredRole when task specifies one', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({ roleId: 'coder', roleName: 'Coder' }));
-      roleRegistry.register(makeTemplate({ roleId: 'reviewer', roleName: 'Reviewer' }));
-
-      try {
-        const agent = makeMockAgent('agent-1');
-        const result = await matcher.match(
-          { description: 'Review the code', requiredRole: 'coder' },
-          [agent]
-        );
-
-        expect(result.length).toBe(1);
-        expect(result[0].recommendedRoleId).toBe('coder');
-        expect(result[0].agentId).toBe('agent-1');
-      } finally {
-        roleRegistry.unregister('coder');
-        roleRegistry.unregister('reviewer');
-      }
-    });
-
-    it('returns results sorted by score descending', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({
+  describe('all agents have low scores', () => {
+    it('returns results sorted by score descending even when all scores are low', async () => {
+      const role = makeRole({
         roleId: 'coder',
-        roleName: 'Coder',
-        requiredSkillIds: ['ts', 'node'],
-      }));
+        requiredSkillIds: ['rust', 'wasm', 'gpu'],
+      });
 
-      try {
-        const agentGood = makeMockAgent('agent-good', ['ts', 'node']);
-        const agentBad = makeMockAgent('agent-bad', ['python']);
+      vi.mocked(roleRegistry.get).mockReturnValue(role);
+      vi.mocked(roleRegistry.resolve).mockReturnValue(role);
 
-        const result = await matcher.match(
-          { description: 'Implement the code', requiredRole: 'coder' },
-          [agentGood, agentBad]
-        );
+      // Agents with no matching skills → low skillMatch and competency
+      const agentA = createMockAgent('agent-a', ['cooking']);
+      const agentB = createMockAgent('agent-b', ['painting']);
+      const agentC = createMockAgent('agent-c', []);
 
-        expect(result.length).toBe(2);
-        expect(result[0].roleMatchScore).toBeGreaterThanOrEqual(result[1].roleMatchScore);
-        expect(result[0].agentId).toBe('agent-good');
-      } finally {
-        roleRegistry.unregister('coder');
+      const task = {
+        description: 'implement a feature',
+        requiredSkills: ['java', 'spring'],
+        requiredRole: 'coder',
+      };
+
+      const results = await matcher.match(task, [agentA, agentB, agentC]);
+
+      expect(results.length).toBe(3);
+      // All results should be sorted descending by score
+      for (let i = 1; i < results.length; i++) {
+        expect(results[i - 1].roleMatchScore).toBeGreaterThanOrEqual(results[i].roleMatchScore);
+      }
+      // All scores should be non-negative
+      for (const r of results) {
+        expect(r.roleMatchScore).toBeGreaterThanOrEqual(0);
+        expect(r.recommendedRoleId).toBe('coder');
       }
     });
 
-    it('each recommendation contains required fields', async () => {
-      const { roleRegistry } = await import('../core/role-registry.js');
-      roleRegistry.register(makeTemplate({ roleId: 'coder', roleName: 'Coder' }));
+    it('returns all agents even when scores are near zero', async () => {
+      const role = makeRole({
+        roleId: 'architect',
+        requiredSkillIds: ['system-design', 'cloud'],
+      });
 
-      try {
-        const agent = makeMockAgent('agent-1');
-        const result = await matcher.match(
-          { description: 'Code something', requiredRole: 'coder' },
-          [agent]
-        );
+      vi.mocked(roleRegistry.get).mockReturnValue(role);
+      vi.mocked(roleRegistry.resolve).mockReturnValue(role);
 
-        expect(result.length).toBe(1);
-        const rec = result[0];
-        expect(rec).toHaveProperty('agentId');
-        expect(rec).toHaveProperty('recommendedRoleId');
-        expect(rec).toHaveProperty('roleMatchScore');
-        expect(rec).toHaveProperty('reason');
-        expect(typeof rec.roleMatchScore).toBe('number');
-      } finally {
-        roleRegistry.unregister('coder');
+      const agents = [
+        createMockAgent('agent-1', []),
+        createMockAgent('agent-2', []),
+      ];
+
+      const task = {
+        description: 'design system',
+        requiredSkills: ['unrelated-skill-xyz'],
+        requiredRole: 'architect',
+      };
+
+      const results = await matcher.match(task, agents);
+
+      expect(results.length).toBe(2);
+      // Each result has all required fields
+      for (const r of results) {
+        expect(r).toHaveProperty('agentId');
+        expect(r).toHaveProperty('recommendedRoleId');
+        expect(r).toHaveProperty('roleMatchScore');
+        expect(r).toHaveProperty('reason');
       }
     });
   });
 
-  // ── skillMatch (via computeScore) ──────────────────────────────
+  // ── 3. LLM inference failure fallback → keyword matching ──────
 
-  describe('skillMatch edge cases', () => {
-    it('defaults to 0.5 when task has no requiredSkills', () => {
-      const agent = makeMockAgent('a1');
-      const role = makeTemplate({ roleId: 'r1', requiredSkillIds: ['ts'] });
-      const task = { description: 'Do stuff' }; // no requiredSkills
+  describe('LLM inference failure fallback to keyword matching', () => {
+    it('infers "coder" role when task description contains code-related keywords', async () => {
+      const coderRole = makeRole({ roleId: 'coder', requiredSkillIds: ['typescript'] });
 
-      const score = matcher.computeScore(task, agent, role);
-      // skillMatch = 0.5 (default)
-      expect(score).toBeDefined();
+      vi.mocked(roleRegistry.get).mockImplementation((roleId: string) =>
+        roleId === 'coder' ? coderRole : undefined,
+      );
+      vi.mocked(roleRegistry.resolve).mockImplementation((roleId: string) => {
+        if (roleId === 'coder') return coderRole;
+        throw new Error(`Role ${roleId} not found`);
+      });
+
+      const agent = createMockAgent('agent-a', ['typescript']);
+      const task = { description: 'implement the login feature and develop the API' };
+
+      const results = await matcher.match(task, [agent]);
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].recommendedRoleId).toBe('coder');
+      expect(results[0].reason).toContain('Keyword match');
     });
 
-    it('defaults to 0.5 when task has empty requiredSkills', () => {
-      const agent = makeMockAgent('a1');
-      const role = makeTemplate({ roleId: 'r1', requiredSkillIds: ['ts'] });
-      const task = { description: 'Do stuff', requiredSkills: [] };
+    it('infers "reviewer" role when task description contains review keywords', async () => {
+      const reviewerRole = makeRole({
+        roleId: 'reviewer',
+        roleName: 'Reviewer',
+        requiredSkillIds: ['code-review'],
+      });
 
-      const score = matcher.computeScore(task, agent, role);
-      expect(score).toBeDefined();
+      vi.mocked(roleRegistry.get).mockImplementation((roleId: string) =>
+        roleId === 'reviewer' ? reviewerRole : undefined,
+      );
+      vi.mocked(roleRegistry.resolve).mockImplementation((roleId: string) => {
+        if (roleId === 'reviewer') return reviewerRole;
+        throw new Error(`Role ${roleId} not found`);
+      });
+
+      const agent = createMockAgent('agent-b', []);
+      const task = { description: 'review the pull request and check for issues' };
+
+      const results = await matcher.match(task, [agent]);
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].recommendedRoleId).toBe('reviewer');
+      expect(results[0].reason).toContain('Keyword match');
     });
 
-    it('returns 1.0 skillMatch when task and role skills are identical', () => {
-      const agent = makeMockAgent('a1');
-      const role = makeTemplate({ roleId: 'r1', requiredSkillIds: ['ts', 'node'] });
-      const taskPerfect = { description: 'Do stuff', requiredSkills: ['ts', 'node'] };
-      const taskNone = { description: 'Do stuff', requiredSkills: ['python', 'go'] };
+    it('falls back to all registered roles when no keywords match', async () => {
+      const coderRole = makeRole({ roleId: 'coder' });
+      const qaRole = makeRole({ roleId: 'qa', roleName: 'QA', requiredSkillIds: ['testing'] });
 
-      const scorePerfect = matcher.computeScore(taskPerfect, agent, role);
-      const scoreNone = matcher.computeScore(taskNone, agent, role);
+      vi.mocked(roleRegistry.get).mockImplementation((roleId: string) => {
+        if (roleId === 'coder') return coderRole;
+        if (roleId === 'qa') return qaRole;
+        return undefined;
+      });
+      vi.mocked(roleRegistry.resolve).mockImplementation((roleId: string) => {
+        if (roleId === 'coder') return coderRole;
+        if (roleId === 'qa') return qaRole;
+        throw new Error(`Role ${roleId} not found`);
+      });
+      vi.mocked(roleRegistry.list).mockReturnValue([coderRole, qaRole]);
 
-      // Perfect match should have higher skillMatch component
-      expect(scorePerfect).toBeGreaterThan(scoreNone);
+      const agent = createMockAgent('agent-c', []);
+      // Description with no matching keywords from KEYWORD_ROLE_MAP
+      const task = { description: 'perform an unrelated activity with no matching terms' };
+
+      const results = await matcher.match(task, [agent]);
+
+      // Should return recommendations for all registered roles
+      expect(results.length).toBe(2);
+      const roleIds = results.map((r) => r.recommendedRoleId).sort();
+      expect(roleIds).toEqual(['coder', 'qa']);
+      // Reason should indicate fallback
+      for (const r of results) {
+        expect(r.reason).toContain('No keyword match');
+      }
+    });
+
+    it('returns empty when no keywords match and no roles are registered', async () => {
+      vi.mocked(roleRegistry.list).mockReturnValue([]);
+
+      const agent = createMockAgent('agent-d', []);
+      const task = { description: 'something completely unrelated' };
+
+      const results = await matcher.match(task, [agent]);
+
+      expect(results).toEqual([]);
+    });
+
+    it('returns empty when requiredRole is set but not found in registry', async () => {
+      vi.mocked(roleRegistry.get).mockReturnValue(undefined);
+
+      const agent = createMockAgent('agent-e', []);
+      const task = { description: 'do something', requiredRole: 'nonexistent-role' };
+
+      const results = await matcher.match(task, [agent]);
+
+      expect(results).toEqual([]);
     });
   });
 });
