@@ -23,7 +23,7 @@
     - 验证 version 字段符合语义化版本格式（X.Y.Z）
     - 持久化到数据库并返回完整 SkillRecord
     - _Requirements: 1.1, 1.2, 1.4, 1.5, 6.1_
-  - [ ]* 2.2 编写 registerSkill 的属性测试
+  - [x] 2.2 编写 registerSkill 的属性测试
     - **Property 1: Skill 注册往返一致性**
     - **Property 2: Prompt 模板验证**
     - **Property 3: 版本并存**
@@ -35,7 +35,7 @@
     - 过滤禁用的 Skill
     - 未找到的 skillId 记录 warn 日志并跳过
     - _Requirements: 2.2, 2.3, 2.4, 5.2, 8.2, 8.3_
-  - [ ]* 2.4 编写 resolveSkills 的属性测试
+  - [x] 2.4 编写 resolveSkills 的属性测试
     - **Property 4: Skill 解析正确性**
     - **Property 5: 依赖传递闭包**
     - **Property 6: 缺失 Skill 优雅降级**
@@ -51,7 +51,7 @@
     - querySkills 支持 category 和 tags 过滤
     - resolveMcpForSkill 复用现有 MCP_LIBRARY 解析逻辑，缺失 MCP 记录 warn 并跳过
     - _Requirements: 6.2, 6.3, 4.2, 4.3_
-  - [ ]* 2.7 编写版本管理和 MCP 解析的属性测试
+  - [x] 2.7 编写版本管理和 MCP 解析的属性测试
     - **Property 12: MCP 解析正确性**
     - **Property 13: MCP 不可用时优雅降级**
     - **Property 14: 审计日志完整性**
@@ -61,7 +61,7 @@
     - 在 resolveSkills 中根据 CanaryConfig.percentage 决定返回哪个版本
     - 使用 Math.random() 进行流量分配
     - _Requirements: 6.4_
-  - [ ]* 2.9 编写灰度发布的属性测试
+  - [x] 2.9 编写灰度发布的属性测试
     - **Property 17: 灰度流量分布**
     - **Validates: Requirements 6.4**
 
@@ -79,7 +79,7 @@
   - [x] 4.2 实现 buildSkillPromptSection 方法
     - 将激活的 Skill prompt 按优先级拼接为系统提示片段
     - _Requirements: 3.2_
-  - [ ]* 4.3 编写 SkillActivator 的属性测试
+  - [x] 4.3 编写 SkillActivator 的属性测试
     - **Property 9: Skill 激活数量上限**
     - **Property 10: 优先级排序的 Prompt 拼接**
     - **Property 11: 上下文占位符替换**
@@ -91,7 +91,7 @@
     - 实现 recordSideEffect 方法记录副作用
     - 确保每个 Skill 的 state 互不影响
     - _Requirements: 9.1, 9.2, 9.3_
-  - [ ]* 5.2 编写上下文隔离的属性测试
+  - [x] 5.2 编写上下文隔离的属性测试
     - **Property 21: 上下文隔离**
     - **Property 22: 副作用记录**
     - **Validates: Requirements 9.1, 9.2, 9.3**
@@ -105,7 +105,7 @@
     - 计算指定 Skill 在时间窗口内的失败率
     - 超过阈值时返回 AlertResult
     - _Requirements: 7.4_
-  - [ ]* 6.3 编写 SkillMonitor 的属性测试
+  - [x] 6.3 编写 SkillMonitor 的属性测试
     - **Property 18: 性能指标记录往返**
     - **Property 19: 指标聚合正确性**
     - **Property 20: 告警阈值触发**
@@ -152,7 +152,7 @@
     - 在 Agent 节点信息中展示 Skill 列表
     - 通过 GET /api/workflows/:id/nodes/:nodeId/skills 获取数据
     - _Requirements: 10.1, 10.4_
-  - [ ]* 10.3 编写 SkillCard 渲染的属性测试
+  - [x] 10.3 编写 SkillCard 渲染的属性测试
     - **Property 23: Skill 卡片渲染完整性**
     - **Validates: Requirements 10.2**
 
@@ -160,7 +160,7 @@
   - [x] 11.1 创建种子数据脚本，将现有 SKILL_LIBRARY 中的 8 个 Skill 注册到数据库
     - 在服务启动时检查并自动注册种子 Skill
     - _Requirements: 1.2, 1.3_
-  - [ ]* 11.2 编写集成测试
+  - [x] 11.2 编写集成测试
     - 测试完整的 Skill 注册 → 解析 → 激活 → 执行流程
     - 测试 API 端点的请求/响应格式
     - _Requirements: 1.2, 2.2, 3.1, 10.4_
