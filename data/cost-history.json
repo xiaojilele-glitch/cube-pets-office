@@ -1,38 +1,14 @@
 {
   "version": 1,
   "budget": {
-    "maxCost": 0.01,
-    "maxTokens": 100,
-    "warningThreshold": 0.5
+    "maxCost": 1,
+    "maxTokens": 100000,
+    "warningThreshold": 0.8
   },
   "downgradePolicy": {
     "enabled": true,
     "lowCostModel": "glm-4.6",
     "criticalAgentIds": []
   },
-  "missions": [
-    {
-      "missionId": "m-1",
-      "title": "Done",
-<<<<<<< HEAD
-      "completedAt": 1775099152298,
-=======
-      "completedAt": 1775115285122,
->>>>>>> feat/L16-vector-db-rag-pipeline
-      "totalTokensIn": 80,
-      "totalTokensOut": 80,
-      "totalCost": 0.02,
-      "totalCalls": 1,
-      "topAgents": [
-        {
-          "agentId": "unknown",
-          "agentName": "unknown",
-          "tokensIn": 80,
-          "tokensOut": 80,
-          "totalCost": 0.02,
-          "callCount": 1
-        }
-      ]
-    }
-  ]
+  "missions": []
 }
