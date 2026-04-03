@@ -118,73 +118,9 @@ cd services/lobster-executor && npm start
 
 ## 🏗️ 系统架构
 
-```mermaid
-flowchart TB
-  subgraph Entry["🌐 入口层"]
-    User([用户 / 浏览器])
-    Feishu([飞书 / Relay])
-  end
-
-  subgraph Client["🖥️ 前端层"]
-    Home["3D Office · Three.js"]
-    WorkflowPanel["工作流面板"]
-    TasksCockpit["任务驾驶舱"]
-    NLCommand["自然语言指挥中心"]
-    GovernancePanel["成本治理面板"]
-    BrowserRT["浏览器运行时"]
-  end
-
-  subgraph Brain["🧠 Cube Brain（服务端）"]
-    API["Express API · REST + Socket.IO"]
-    DynOrg["动态组织生成器"]
-    Engine["十阶段工作流引擎"]
-    MissionRT["Mission Runtime"]
-    SkillSystem["Skill 热插拔体系"]
-    RoleSystem["动态角色系统"]
-    GovernanceEngine["成本治理引擎"]
-  end
-
-  subgraph Intelligence["🧬 智能层"]
-    Memory["三级记忆系统"]
-    KnowledgeGraph["知识图谱"]
-    RAG["向量数据库 + RAG"]
-    Evolution["自进化引擎"]
-    Reputation["信誉评分系统"]
-    Autonomy["自评估 + 竞争执行"]
-  end
-
-  subgraph Executor["🐳 执行层"]
-    Lobster["Lobster Executor"]
-    Docker["Docker 容器"]
-  end
-
-  User --> Home & WorkflowPanel & NLCommand
-  Feishu --> API
-  Home & WorkflowPanel & TasksCockpit <--> API
-  GovernancePanel <--> API
-
-  API --> DynOrg & Engine & MissionRT
-  Engine --> SkillSystem & RoleSystem
-  Engine --> Memory & KnowledgeGraph & RAG
-  Engine --> Evolution & Reputation & Autonomy
-  MissionRT --> GovernanceEngine
-  MissionRT -->|ExecutionPlan| Lobster
-  Lobster --> Docker
-  Docker -->|回调| MissionRT
-```
-
-### 数据流：两条并行主线
-
-```
-预演主线（Frontend Mode）
-  用户 → 浏览器运行时 → IndexedDB → 3D 场景 + 工作流面板
-  不需要服务端，适合演示和教学
-
-执行主线（Advanced Mode）
-  用户 → Express API → 动态组织 → 十阶段管道 → Mission Runtime
-       → ExecutionPlan → Docker 执行器 → 回调 → 任务驾驶舱
-  需要 LLM 配置，可选接入执行器和飞书
-```
+<p align="center">
+  <img src="./docs/architecture.svg" alt="Cube Pets Office Architecture" width="100%" />
+</p>
 
 ---
 
