@@ -44,16 +44,16 @@
   - [x] 2.6 创建 server/rag/chunking/passthrough-chunker.ts，实现直通分块（architecture_decision 使用）
     - 整体作为单个 chunk，不分割
     - _Requirements: 2.1_
-  - [ ]* 2.7 编写分块层属性测试
-    - **Property 1: 数据源类型路由正确性**
+  - [x] 2.7 编写分块层属性测试
+    - [x] **Property 1: 数据源类型路由正确性** ✅ passed
     - **Validates: Requirements 1.1, 2.1**
-    - **Property 5: ChunkRecord 结构与代码元数据完整性**
+    - [x] **Property 5: ChunkRecord 结构与代码元数据完整性** ✅ passed
     - **Validates: Requirements 2.2, 2.3**
-    - **Property 6: Chunk token 数范围不变量**
+    - [x] **Property 6: Chunk token 数范围不变量** ✅ passed
     - **Validates: Requirements 2.4**
-    - **Property 7: 分块配置覆盖**
+    - [x] **Property 7: 分块配置覆盖** ✅ passed
     - **Validates: Requirements 2.5**
-  - [ ]* 2.8 编写分块层单元测试
+  - [x] 2.8 编写分块层单元测试
     - 测试各 Chunker 的边界情况（空内容、超长内容、特殊字符）
     - 测试 CodeChunker 的元数据提取
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
@@ -68,7 +68,7 @@
     - 实现 generateBatch（batchSize=64）和 generateSingle
     - 批量失败时降级为单条重试
     - _Requirements: 3.1, 3.2_
-  - [ ]* 3.3 编写嵌入层属性测试
+  - [x] 3.3 编写嵌入层属性测试
     - **Property 8: 嵌入批量失败降级为单条重试**
     - **Validates: Requirements 3.2**
 
@@ -85,7 +85,7 @@
     - 实现 rag_chunk_metadata 表的 CRUD 操作
     - 使用本地 JSON 文件存储（与现有 database.json 模式一致）
     - _Requirements: 3.5_
-  - [ ]* 4.4 编写向量存储层属性测试
+  - [x] 4.4 编写向量存储层属性测试
     - **Property 9: 向量按 projectId 分 collection**
     - **Validates: Requirements 3.4**
     - **Property 10: 向量-元数据同步一致性**
@@ -112,14 +112,14 @@
     - 监听 task.completed、mission.finished、code.committed、document.uploaded 事件
     - 将事件数据转换为 IngestionPayload 并调用 ingestion-pipeline
     - _Requirements: 1.3_
-  - [ ]* 5.6 编写摄入管道属性测试
+  - [x] 5.6 编写摄入管道属性测试
     - **Property 2: IngestionPayload 结构完整性**
     - **Validates: Requirements 1.2**
     - **Property 3: 摄入幂等性**
     - **Validates: Requirements 1.6**
     - **Property 4: 失败数据进入 Dead Letter Queue**
     - **Validates: Requirements 1.5**
-  - [ ]* 5.7 编写摄入管道单元测试
+  - [x] 5.7 编写摄入管道单元测试
     - 测试事件监听器的事件转换
     - 测试 DLQ 的查询和重试
     - 测试去重逻辑的边界情况
@@ -143,19 +143,19 @@
     - 支持 semantic/keyword/hybrid 三种模式
     - 串联：query 向量化 → ANN 搜索 → 关键词搜索 → RRF 合并 → 元数据获取 → 上下文扩展 → 组装 RetrievalResult
     - _Requirements: 4.1, 4.2, 4.3_
-  - [ ]* 7.5 编写检索层属性测试
+  - [x] 7.5 编写检索层属性测试
     - **Property 11: 检索过滤合规性与结果完整性**
     - **Validates: Requirements 4.1, 4.3**
     - **Property 12: RRF 混合合并排序正确性**
     - **Validates: Requirements 4.4**
     - **Property 13: 上下文扩展包含相邻 chunk**
     - **Validates: Requirements 4.5**
-  - [ ]* 7.6 编写检索层单元测试
+  - [x] 7.6 编写检索层单元测试
     - 测试 RRF 合并的具体数值
     - 测试上下文扩展的边界（首尾 chunk）
     - _Requirements: 4.4, 4.5_
 
-- [ ] 8. 增强生成管道实现
+- [x] 8. 增强生成管道实现
   - [x] 8.1 创建 server/rag/augmentation/reranker.ts，实现 Reranker 接口和三种实现
     - NoopReranker（默认）、LLMReranker、CrossEncoderReranker
     - _Requirements: 5.2_
@@ -171,7 +171,7 @@
     - 串联：RAGRetriever.search → Reranker.rerank → TokenBudgetManager.allocate → 组装 ragContext → AugmentationLogger.log
     - 支持 auto/on_demand/disabled 三种模式
     - _Requirements: 5.1, 5.4, 5.5_
-  - [ ]* 8.5 编写增强管道属性测试
+  - [x] 8.5 编写增强管道属性测试
     - **Property 14: Reranker 保持结果集不变量**
     - **Validates: Requirements 5.2**
     - **Property 15: Token 预算不变量与来源标注**
@@ -186,7 +186,7 @@
 - [x] 9. Checkpoint - 确保检索与增强链路测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
-- [ ] 10. 反馈与自优化循环实现
+- [x] 10. 反馈与自优化循环实现
   - [x] 10.1 创建 server/rag/feedback/feedback-collector.ts，实现反馈收集
     - 实现 recordImplicit（计算 utilizationRate）和 recordExplicit
     - 持久化到 rag_feedback 表
@@ -199,7 +199,7 @@
     - 监控 utilizationRate 趋势
     - 连续低于阈值时发出 RETRIEVAL_GAP_DETECTED 告警
     - _Requirements: 6.3_
-  - [ ]* 10.4 编写反馈层属性测试
+  - [x] 10.4 编写反馈层属性测试
     - **Property 18: utilizationRate 计算正确性**
     - **Validates: Requirements 6.1**
     - **Property 19: 显式反馈记录与硬负例集构建**
@@ -207,7 +207,7 @@
     - **Property 20: 低利用率告警触发**
     - **Validates: Requirements 6.3**
 
-- [ ] 11. 生命周期管理实现
+- [x] 11. 生命周期管理实现
   - [x] 11.1 创建 server/rag/lifecycle/hot-cold-manager.ts，实现冷热分层
     - 管理 hot/cold collection
     - 检索命中 cold 时自动提升到 hot
@@ -218,7 +218,7 @@
     - 批量清理（purge）接口
     - 操作日志写入 rag_lifecycle_log
     - _Requirements: 7.1, 7.2, 7.4, 7.5_
-  - [ ]* 11.3 编写生命周期属性测试
+  - [x] 11.3 编写生命周期属性测试
     - **Property 21: 访问时间戳更新与冷热提升**
     - **Validates: Requirements 7.1, 7.3**
     - **Property 22: 生命周期定时任务与操作日志**
@@ -226,7 +226,7 @@
     - **Property 23: 按条件批量清理**
     - **Validates: Requirements 7.4**
 
-- [ ] 12. 可观测性与成本治理实现
+- [x] 12. 可观测性与成本治理实现
   - [x] 12.1 创建 server/rag/observability/metrics.ts，实现 Prometheus 兼容指标
     - 暴露 ingestion/retrieval/augmentation/vector_count/embedding_cost 指标
     - _Requirements: 8.1_
@@ -237,7 +237,7 @@
   - [x] 12.3 创建 server/rag/observability/health-checker.ts，实现健康检查
     - 检查向量数据库连接、Embedding 模型可用性、collection 状态、DLQ 积压
     - _Requirements: 8.4_
-  - [ ]* 12.4 编写可观测性属性测试
+  - [x] 12.4 编写可观测性属性测试
     - **Property 24: 项目级配额拒绝**
     - **Validates: Requirements 8.2**
     - **Property 25: Token 消耗分解一致性**
@@ -248,7 +248,7 @@
 - [x] 13. Checkpoint - 确保反馈/生命周期/可观测性测试通过
   - 确保所有测试通过，如有问题请向用户确认。
 
-- [ ] 14. REST API 路由与集成
+- [x] 14. REST API 路由与集成
   - [x] 14.1 创建 server/routes/rag.ts，实现所有 RAG REST API 路由
     - POST /api/rag/ingest - 手动摄入
     - POST /api/rag/ingest/batch - 批量摄入
@@ -275,12 +275,12 @@
     - 在 invoke() 方法中增加 RAG 上下文注入
     - 根据注入模式（auto/on_demand/disabled）控制行为
     - _Requirements: 5.1, 5.5_
-  - [ ]* 14.5 编写 API 路由单元测试
+  - [x] 14.5 编写 API 路由单元测试
     - 测试各端点的请求/响应格式
     - 测试错误处理（400/429/500）
     - _Requirements: 1.4, 4.1, 8.4_
 
-- [ ] 15. 前端 RAG 展示组件
+- [x] 15. 前端 RAG 展示组件
   - [x] 15.1 创建 client/src/lib/rag-store.ts，实现 RAG 前端状态管理（Zustand）
     - 管理 RAG 数据获取、缓存、反馈提交状态
     - 调用 GET /api/workflows/:id/tasks/:taskId/rag 获取数据
