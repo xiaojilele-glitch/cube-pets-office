@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "entryId": "audit-1775237245420-1qm403",
+      "operationType": "decomposition_completed",
+      "operator": "system",
+      "content": "Decomposed command into 3 missions with 2 dependencies",
+      "timestamp": 1775237245420,
+      "result": "success",
+      "entityId": "cmd-test-1",
+      "entityType": "command",
+      "metadata": {
+        "decompositionId": "decomp-1775237245420-845ipb",
+        "missionCount": 3
+      }
+    }
+  ]
+}

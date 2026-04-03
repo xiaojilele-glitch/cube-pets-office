@@ -178,6 +178,102 @@ describe('AuditTrail', () => {
       const results = await trail.query({ operator: 'nonexistent' });
       expect(results).toHaveLength(0);
     });
+
+    it('should handle overlapping time ranges correctly', async () => {
+      // Entries at 1000, 2000, 3000, 4000, 5000
+      for (let i = 1; i <= 5; i++) {
+        await trail.record(makeEntry({ entryId: `e${i}`, timestamp: i * 1000 }));
+      }
+
+      // Range [2000, 4000] should include e2, e3, e4
+      const results = await trail.query({ startTime: 2000, endTime: 4000 });
+      expect(results).toHaveLength(3);
+      expect(results.map((e) => e.entryId)).toEqual(['e4', 'e3', 'e2']);
+    });
+
+    it('should handle time range where startTime equals endTime', async () => {
+      await trail.record(makeEntry({ entryId: 'e1', timestamp: 1000 }));
+      await trail.record(makeEntry({ entryId: 'e2', timestamp: 2000 }));
+      await trail.record(makeEntry({ entryId: 'e3', timestamp: 3000 }));
+
+      const results = await trail.query({ startTime: 2000, endTime: 2000 });
+      expect(results).toHaveLength(1);
+      expect(results[0].entryId).toBe('e2');
+    });
+
+    it('should return empty when startTime > endTime', async () => {
+      await trail.record(makeEntry({ entryId: 'e1', timestamp: 2000 }));
+      const results = await trail.query({ startTime: 3000, endTime: 1000 });
+      expect(results).toHaveLength(0);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should return empty array when querying an empty audit log', async () => {
+      const results = await trail.query({});
+      expect(results).toHaveLength(0);
+    });
+
+    it('should export empty JSON array for empty audit log', async () => {
+      const json = await trail.export({}, 'json');
+      const parsed = JSON.parse(json);
+      expect(parsed).toEqual([]);
+    });
+
+    it('should handle a large number of entries', async () => {
+      const count = 500;
+      for (let i = 0; i < count; i++) {
+        await trail.record(makeEntry({ entryId: `e-${i}`, timestamp: i }));
+      }
+
+      const all = await trail.query({});
+      expect(all).toHaveLength(count);
+      // Verify descending order
+      expect(all[0].timestamp).toBe(count - 1);
+      expect(all[count - 1].timestamp).toBe(0);
+    });
+
+    it('should paginate correctly over large datasets', async () => {
+      const count = 100;
+      for (let i = 0; i < count; i++) {
+        await trail.record(makeEntry({ entryId: `e-${i}`, timestamp: i }));
+      }
+
+      // Fetch page by page
+      const pageSize = 25;
+      const allIds: string[] = [];
+      for (let offset = 0; offset < count; offset += pageSize) {
+        const page = await trail.query({ limit: pageSize, offset });
+        allIds.push(...page.map((e) => e.entryId));
+      }
+      expect(allIds).toHaveLength(count);
+      // All unique
+      expect(new Set(allIds).size).toBe(count);
+    });
+
+    it('should persist entries with all optional fields populated', async () => {
+      const entry = makeEntry({
+        entryId: 'full-entry',
+        entityId: 'cmd-42',
+        entityType: 'command',
+        metadata: { key: 'value', nested: { a: 1 } },
+      });
+      await trail.record(entry);
+
+      // Reload from disk
+      const trail2 = new AuditTrail(TEST_AUDIT_PATH);
+      const results = await trail2.query({});
+      expect(results).toHaveLength(1);
+      expect(results[0].entityId).toBe('cmd-42');
+      expect(results[0].entityType).toBe('command');
+      expect(results[0].metadata).toEqual({ key: 'value', nested: { a: 1 } });
+    });
+
+    it('should handle offset beyond total entries gracefully', async () => {
+      await trail.record(makeEntry({ entryId: 'e1' }));
+      const results = await trail.query({ offset: 100 });
+      expect(results).toHaveLength(0);
+    });
   });
 
   describe('export()', () => {
