@@ -397,8 +397,10 @@ export class DockerRunner implements JobRunner {
     const command = (payload.command ?? []) as string[];
 
     // Use payload.workspaceRoot if provided, otherwise use the job-local workspace
+    // When Docker is remote (TCP), skip bind mount since local paths don't exist on the remote host
     const hostWorkspace =
       (payload.workspaceRoot as string | undefined) || workspaceDir;
+    const isRemoteDocker = this.config.dockerHost?.startsWith("tcp:") || this.config.dockerHost?.startsWith("http:");
 
     // Security policy → Docker options
     const securityCreateOpts = toDockerCreateOptions(this.securityPolicy);
@@ -411,7 +413,8 @@ export class DockerRunner implements JobRunner {
       WorkingDir: "/workspace",
       User: securityCreateOpts.User,
       HostConfig: {
-        Binds: [`${hostWorkspace}:/workspace`],
+        // Only bind-mount workspace for local Docker; remote Docker uses an anonymous volume
+        ...(isRemoteDocker ? { Binds: [] } : { Binds: [`${hostWorkspace}:/workspace`] }),
         ...securityHostConfig,
       },
     };

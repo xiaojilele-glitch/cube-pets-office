@@ -753,19 +753,37 @@ async function startServer() {
       if (!firstJob) {
         throw new Error("Execution plan did not produce any executor jobs.");
       }
-      firstJob.payload = {
-        ...(firstJob.payload || {}),
-        runner: {
-          kind: "mock",
-          outcome,
-          steps: 3,
-          delayMs: 40,
-          summary:
-            outcome === "failed"
-              ? "Smoke failed job completed with expected mock failure"
-              : "Smoke success job completed",
-        },
-      };
+
+      const executionMode = process.env.LOBSTER_EXECUTION_MODE || "mock";
+      if (executionMode === "mock") {
+        // Mock mode: use fake runner for quick smoke testing without Docker
+        firstJob.payload = {
+          ...(firstJob.payload || {}),
+          runner: {
+            kind: "mock",
+            outcome,
+            steps: 3,
+            delayMs: 40,
+            summary:
+              outcome === "failed"
+                ? "Smoke failed job completed with expected mock failure"
+                : "Smoke success job completed",
+          },
+        };
+      } else {
+        // Real mode: run in Docker container
+        firstJob.payload = {
+          ...(firstJob.payload || {}),
+          image: process.env.LOBSTER_DEFAULT_IMAGE || "node:20-slim",
+          command: outcome === "failed"
+            ? ["sh", "-c", "echo 'Smoke test running in Docker...' && sleep 2 && echo 'Failing as requested' && exit 1"]
+            : ["sh", "-c", "echo 'Smoke test running in Docker...' && sleep 2 && echo 'Success!' && mkdir -p /workspace/artifacts && echo '{\"smoke\":true}' > /workspace/artifacts/result.json"],
+          env: {
+            SMOKE_TEST: "true",
+            SMOKE_OUTCOME: outcome,
+          },
+        };
+      }
 
       const executorBaseUrl =
         body.executorBaseUrl?.trim() ||

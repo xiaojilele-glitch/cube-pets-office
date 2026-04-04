@@ -1,0 +1,130 @@
+{
+  "missionId": "b786176c-63da-4cfc-a2b6-42dbdec92a13",
+  "startTime": 1775288292790,
+  "endTime": 1775288307423,
+  "totalDuration": 14633,
+  "eventCount": 20,
+  "indices": {
+    "byTime": {
+      "1775288292000": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "1775288302000": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "1775288307000": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    "byAgent": {
+      "wf-b786176c63-root": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "wf-b786176c63-manager-1-insights": [
+        0,
+        1,
+        6,
+        7,
+        8,
+        9
+      ],
+      "wf-b786176c63-manager-2-strategy": [
+        2,
+        3,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "wf-b786176c63-manager-3-quality": [
+        4,
+        5,
+        10,
+        11,
+        12,
+        13
+      ],
+      "wf-b786176c63-worker-1-1-market-researcher": [
+        6,
+        7
+      ],
+      "wf-b786176c63-worker-1-2-data-analyst": [
+        8,
+        9
+      ],
+      "wf-b786176c63-worker-3-1-quality-reviewer": [
+        10,
+        11
+      ],
+      "wf-b786176c63-worker-3-2-risk-analyst": [
+        12,
+        13
+      ],
+      "wf-b786176c63-worker-2-1-content-strategist": [
+        14,
+        15
+      ],
+      "wf-b786176c63-worker-2-2-user-experience-designer": [
+        16,
+        17
+      ],
+      "wf-b786176c63-worker-2-3-data-analyst": [
+        18,
+        19
+      ]
+    },
+    "byType": {
+      "MESSAGE_SENT": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18
+      ],
+      "MESSAGE_RECEIVED": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19
+      ]
+    },
+    "byResource": {}
+  },
+  "version": 3,
+  "checksum": "dcda8794056108e211da99ba284e085872dfd3715936259217e9443d13864fb0"
+}
