@@ -33,5 +33,6 @@ export function readLobsterExecutorConfig(
     dockerTlsVerify: env.DOCKER_TLS_VERIFY === "1" ? true : undefined,
     dockerCertPath: env.DOCKER_CERT_PATH || undefined,
     callbackSecret: env.EXECUTOR_CALLBACK_SECRET || "",
+    aiImage: env.LOBSTER_AI_IMAGE || "cube-ai-sandbox:latest",
   };
 }

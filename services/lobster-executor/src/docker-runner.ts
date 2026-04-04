@@ -3,6 +3,7 @@ import {
   appendFileSync,
   existsSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
   statSync,
   writeFileSync,
@@ -16,10 +17,16 @@ import {
   type ExecutorEvent,
   type ExecutorJobStatus,
 } from "../../../shared/executor/contracts.js";
-import type { LobsterExecutorConfig, StoredJobRecord } from "./types.js";
+import type { AIResultArtifact, LobsterExecutorConfig, StoredJobRecord } from "./types.js";
 import type { JobRunner } from "./runner.js";
 import type { CallbackSender } from "./callback-sender.js";
 import { LogBatcher } from "./log-batcher.js";
+import {
+  resolveAICredentials,
+  validateCredentials,
+  buildAIEnvVars,
+} from "./credential-injector.js";
+import { CredentialScrubber } from "./credential-scrubber.js";
 
 function toRelativePath(pathname: string): string {
   return relative(process.cwd(), pathname).replace(/\\/g, "/");
@@ -27,6 +34,7 @@ function toRelativePath(pathname: string): string {
 
 export interface DockerRunnerConfig {
   defaultImage: string;
+  aiImage?: string;
   dockerHost?: string;
   dockerTlsVerify?: boolean;
   dockerCertPath?: string;
@@ -60,6 +68,7 @@ export class DockerRunner implements JobRunner {
     this.callbackSender = callbackSender;
     this.config = {
       defaultImage: executorConfig.defaultImage,
+      aiImage: executorConfig.aiImage,
       dockerHost: executorConfig.dockerHost,
       dockerTlsVerify: executorConfig.dockerTlsVerify,
       dockerCertPath: executorConfig.dockerCertPath,
@@ -110,6 +119,10 @@ export class DockerRunner implements JobRunner {
     let container: Dockerode.Container | undefined;
 
     try {
+      // 0. Extract payload flags
+      const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+      const aiEnabled = payload.aiEnabled === true;
+
       // 1. Prepare workspace
       const workspaceDir = join(record.dataDirectory, "workspace");
       const artifactsDir = join(workspaceDir, "artifacts");
@@ -156,6 +169,25 @@ export class DockerRunner implements JobRunner {
 
       // 7. Collect artifacts
       const artifacts = this.collectArtifacts(record, workspaceDir);
+
+      // 7.5 Scrub credentials from artifacts and logs for AI jobs
+      if (aiEnabled) {
+        const creds = resolveAICredentials(payload, process.env);
+        const scrubber = new CredentialScrubber([creds.apiKey]);
+        try {
+          if (existsSync(artifactsDir)) {
+            scrubber.scrubDirectory(artifactsDir);
+          }
+          if (existsSync(record.logFile)) {
+            scrubber.scrubFile(record.logFile);
+          }
+        } catch (scrubErr) {
+          console.warn(
+            "[DockerRunner] Credential scrubbing failed:",
+            scrubErr instanceof Error ? scrubErr.message : scrubErr,
+          );
+        }
+      }
 
       // 8. Write result.json
       this.writeResult(record, exitCode, durationMs, timedOut);
@@ -209,13 +241,26 @@ export class DockerRunner implements JobRunner {
     workspaceDir: string,
   ): Dockerode.ContainerCreateOptions {
     const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
-    const image =
-      (payload.image as string | undefined) ||
-      this.config.defaultImage ||
-      "node:20-slim";
+    const aiEnabled = payload.aiEnabled === true;
+
+    // Image selection: payload.image > (aiEnabled ? aiImage : defaultImage)
+    const image = aiEnabled
+      ? (payload.image as string | undefined) ||
+        this.config.aiImage ||
+        "cube-ai-sandbox:latest"
+      : (payload.image as string | undefined) ||
+        this.config.defaultImage ||
+        "node:20-slim";
 
     const envMap = (payload.env ?? {}) as Record<string, string>;
     const envArray = Object.entries(envMap).map(([k, v]) => `${k}=${v}`);
+
+    // Inject AI credentials when aiEnabled
+    if (aiEnabled) {
+      const creds = resolveAICredentials(payload, process.env);
+      validateCredentials(creds);
+      envArray.push(...buildAIEnvVars(creds));
+    }
 
     const command = (payload.command ?? []) as string[];
 
@@ -491,6 +536,47 @@ export class DockerRunner implements JobRunner {
 
   /* ── event helpers ── */
 
+  /**
+   * Build an AI result summary from an AIResultArtifact.
+   * Exported as static so property tests can validate contentPreview truncation.
+   */
+  static buildAIResultSummary(aiResult: AIResultArtifact): {
+    tokenUsage: AIResultArtifact["usage"];
+    model: string;
+    contentPreview: string;
+  } {
+    const contentPreview =
+      aiResult.content.length > 200
+        ? aiResult.content.slice(0, 200)
+        : aiResult.content;
+    return {
+      tokenUsage: aiResult.usage,
+      model: aiResult.model,
+      contentPreview,
+    };
+  }
+
+  /**
+   * Try to read ai-result.json from the artifacts directory.
+   */
+  private readAIResult(record: StoredJobRecord): AIResultArtifact | undefined {
+    try {
+      const artifactPath = join(
+        record.dataDirectory,
+        "workspace",
+        "artifacts",
+        "ai-result.json",
+      );
+      if (existsSync(artifactPath)) {
+        const raw = readFileSync(artifactPath, "utf-8");
+        return JSON.parse(raw) as AIResultArtifact;
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return undefined;
+  }
+
   private async emitCompleted(
     record: StoredJobRecord,
     emitEvent: (event: ExecutorEvent) => void,
@@ -502,6 +588,29 @@ export class DockerRunner implements JobRunner {
     record.summary = "Docker execution completed successfully";
     record.message = record.summary;
 
+    const jobPayload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const aiEnabled = jobPayload.aiEnabled === true;
+
+    let eventPayload: Record<string, unknown> | undefined;
+    if (aiEnabled) {
+      const aiTaskType = (jobPayload.aiTaskType as string) || "text-generation";
+      const aiResult = this.readAIResult(record);
+      eventPayload = {
+        aiTaskType,
+        aiModel: aiResult?.model ?? (jobPayload.llmConfig as Record<string, unknown> | undefined)?.model ?? "",
+      };
+      if (aiResult) {
+        eventPayload.aiResult = DockerRunner.buildAIResultSummary(aiResult);
+      }
+
+      // Scrub event payload content
+      const creds = resolveAICredentials(jobPayload, process.env);
+      if (creds.apiKey) {
+        const scrubber = new CredentialScrubber([creds.apiKey]);
+        eventPayload = JSON.parse(scrubber.scrubLine(JSON.stringify(eventPayload)));
+      }
+    }
+
     const event = this.createEvent(record, {
       type: "job.completed",
       status: "completed",
@@ -510,6 +619,7 @@ export class DockerRunner implements JobRunner {
       summary: record.summary,
       artifacts,
       metrics: { durationMs, passed: 1 },
+      payload: eventPayload,
     });
     emitEvent(event);
     await this.sendCallback(record, event);
@@ -530,22 +640,52 @@ export class DockerRunner implements JobRunner {
     record.errorMessage = errorMessage;
     record.message = errorMessage;
 
+    const jobPayload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const aiEnabled = jobPayload.aiEnabled === true;
+
     // detail: last 50 lines of stderr
-    const detail =
+    let detail =
       stderrLines.length > 0
         ? stderrLines.slice(-50).join("\n")
         : undefined;
+
+    let scrubMessage = errorMessage;
+    let eventPayload: Record<string, unknown> | undefined;
+
+    if (aiEnabled) {
+      const aiTaskType = (jobPayload.aiTaskType as string) || "text-generation";
+      const aiResult = this.readAIResult(record);
+      eventPayload = {
+        aiTaskType,
+        aiModel: aiResult?.model ?? (jobPayload.llmConfig as Record<string, unknown> | undefined)?.model ?? "",
+      };
+      if (aiResult) {
+        eventPayload.aiResult = DockerRunner.buildAIResultSummary(aiResult);
+      }
+
+      // Scrub all event content
+      const creds = resolveAICredentials(jobPayload, process.env);
+      if (creds.apiKey) {
+        const scrubber = new CredentialScrubber([creds.apiKey]);
+        scrubMessage = scrubber.scrubLine(errorMessage);
+        if (detail) {
+          detail = scrubber.scrubLine(detail);
+        }
+        eventPayload = JSON.parse(scrubber.scrubLine(JSON.stringify(eventPayload)));
+      }
+    }
 
     const event = this.createEvent(record, {
       type: "job.failed",
       status: "failed",
       progress: 100,
-      message: errorMessage,
+      message: scrubMessage,
       errorCode,
       detail,
-      summary: errorMessage,
+      summary: scrubMessage,
       artifacts,
       metrics: { durationMs, failed: 1 },
+      payload: eventPayload,
     });
     emitEvent(event);
     await this.sendCallback(record, event);
@@ -571,6 +711,7 @@ export class DockerRunner implements JobRunner {
       detail?: string;
       artifacts?: ExecutionPlanArtifact[];
       metrics?: ExecutorEvent["metrics"];
+      payload?: Record<string, unknown>;
     },
   ): ExecutorEvent {
     return {
@@ -589,6 +730,7 @@ export class DockerRunner implements JobRunner {
       detail: input.detail,
       artifacts: input.artifacts,
       metrics: input.metrics,
+      payload: input.payload,
     };
   }
 

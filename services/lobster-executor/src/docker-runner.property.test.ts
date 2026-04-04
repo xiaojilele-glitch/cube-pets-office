@@ -36,6 +36,7 @@ function makeRunner(defaultImage = DEFAULT_IMAGE): DockerRunner {
     defaultImage,
     maxConcurrentJobs: 2,
     callbackSecret: "",
+    aiImage: "cube-ai-sandbox:latest",
   };
   const mockCallbackSender = { send: async () => {} } as unknown as CallbackSender;
   const mockDocker = {} as Dockerode;
