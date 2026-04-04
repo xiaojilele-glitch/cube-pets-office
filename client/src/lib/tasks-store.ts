@@ -6,6 +6,8 @@ import {
   type MissionArtifact,
   type MissionDecision,
   type MissionEvent,
+  type MissionExecutorContext,
+  type MissionInstanceContext,
   type MissionPlanetInteriorData,
   type MissionPlanetOverviewItem,
   type MissionRecord,
@@ -24,6 +26,7 @@ import {
   listPlanets,
   submitMissionDecision as submitMissionDecisionRequest,
 } from "./mission-client";
+import { useSandboxStore } from "./sandbox-store";
 import { useAppStore } from "./store";
 
 /** Locally-defined status union derived from MissionTaskStatus. */
@@ -193,6 +196,9 @@ export interface MissionTaskDetail extends MissionTaskSummary {
     cpuLimit: string;
     pidsLimit: number;
   };
+  executor?: MissionExecutorContext;
+  instance?: MissionInstanceContext;
+  missionArtifacts?: MissionArtifact[];
 }
 
 interface TasksStoreState {
@@ -917,6 +923,9 @@ function buildDetailRecord(
     logSummary: buildMissionLogSummary(mission, mission.events),
     decisionHistory: mission.decisionHistory ?? [],
     securitySummary: mission.securitySummary,
+    executor: mission.executor,
+    instance: mission.instance,
+    missionArtifacts: mission.artifacts,
   };
 }/**
  * Build a MissionTaskDetail from the /api/planets/:id/interior response.
@@ -996,6 +1005,9 @@ export function buildPlanetDetailRecord(
     logSummary: buildMissionLogSummary(mission, events),
     decisionHistory: mission.decisionHistory ?? [],
     securitySummary: mission.securitySummary,
+    executor: mission.executor,
+    instance: mission.instance,
+    missionArtifacts: mission.artifacts,
   };
 }
 
@@ -1027,6 +1039,9 @@ function buildMissionDetailRecord(
     logSummary: buildNativeLogSummary(mission),
     decisionHistory: mission.decisionHistory ?? [],
     securitySummary: mission.securitySummary,
+    executor: mission.executor,
+    instance: mission.instance,
+    missionArtifacts: mission.artifacts,
   };
 }
 
@@ -1132,6 +1147,9 @@ function ensureMissionSocket(
   missionSocket = io(window.location.origin, {
     transports: ["websocket", "polling"],
   });
+
+  // Initialize sandbox store for live log/screenshot streaming
+  useSandboxStore.getState().initSocket(missionSocket);
 
   missionSocket.on(MISSION_SOCKET_EVENT, (payload: MissionSocketPayload) => {
     if (!payload || typeof payload !== "object" || !("type" in payload)) {

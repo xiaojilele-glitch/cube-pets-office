@@ -332,6 +332,8 @@ export interface WorkflowRuntime {
   evolutionService: EvolutionService;
   /** Called after a workflow stage completes. Used by MissionOrchestrator to enrich MissionRecord. */
   onStageCompleted?(workflowId: string, completedStage: string): void | Promise<void>;
+  /** Resolve the missionId linked to a given workflowId. Used by ExecutionBridge integration. */
+  resolveMissionId?(workflowId: string): string | undefined;
 }
 
 export type AgentEvent =

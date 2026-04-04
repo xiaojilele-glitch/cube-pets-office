@@ -2,13 +2,13 @@
   "version": 1,
   "entries": [
     {
-      "entryId": "audit-1775237245462-he31fn",
+      "entryId": "audit-1775297335235-6sdx4z",
       "operationType": "plan_generated",
       "operator": "system",
-      "content": "Generated execution plan \"plan-1775237245461-ungelq\" for command \"cmd-1\" with 1 missions and 1 tasks",
-      "timestamp": 1775237245462,
+      "content": "Generated execution plan \"plan-1775297335234-1xhwau\" for command \"cmd-1\" with 1 missions and 1 tasks",
+      "timestamp": 1775297335235,
       "result": "success",
-      "entityId": "plan-1775237245461-ungelq",
+      "entityId": "plan-1775297335234-1xhwau",
       "entityType": "plan",
       "metadata": {
         "commandId": "cmd-1",

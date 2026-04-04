@@ -2,99 +2,399 @@
   "version": 1,
   "missions": [
     {
-      "missionId": "'i/~Im&key%O",
-      "title": "Xj",
-      "completedAt": 588749073668,
-      "totalTokensIn": 4956147,
-      "totalTokensOut": 9999982,
-      "totalCost": 5.4450222767764296e-260,
-      "totalCalls": 7021,
+      "missionId": "dfth/jbX=}\"",
+      "title": "1b(`Ar6\\(c<T",
+      "completedAt": 1915922882650,
+      "totalTokensIn": 1172744,
+      "totalTokensOut": 3633080,
+      "totalCost": 4.3174114802915194e-162,
+      "totalCalls": 87958,
       "topAgents": [
         {
-          "agentId": "WQ",
-          "agentName": "R%2zG:jUn;+Y",
-          "avgDurationMs": 1.9637293483013817e-147,
-          "callCount": 9994
-        },
-        {
-          "agentId": "1W8:{ =w~",
-          "agentName": "wci c,q]]5",
-          "avgDurationMs": 5.409210326362748e-206,
-          "callCount": 9990
+          "agentId": "4O},[;;As]+",
+          "agentName": "_e*6\"\\(q*",
+          "avgDurationMs": 2.9008684924048986e-286,
+          "callCount": 1535
         }
       ],
       "stageTimings": [
         {
-          "stageKey": ".MX2T++nfw",
-          "stageLabel": "f$t\\A?`",
-          "durationMs": 1.934672433430861e-292
+          "stageKey": "roTe9g[Glj",
+          "stageLabel": "dra=89d!",
+          "durationMs": 9.142125610421627e-249
         },
         {
-          "stageKey": "vfLHO-tesf~4",
-          "stageLabel": "m",
-          "durationMs": 3e-323
+          "stageKey": "J\\*=omk0JTIC",
+          "stageLabel": ">",
+          "durationMs": 2.6245109173517893e-157
         },
         {
-          "stageKey": "T{ #Kk#\\$)O_",
-          "stageLabel": "8",
-          "durationMs": 7.274805597909058e-101
+          "stageKey": "p\\VeI",
+          "stageLabel": "m=g9",
+          "durationMs": 7.851127792691484e-151
         },
         {
-          "stageKey": "F^mH-:<)",
-          "stageLabel": "?[Sp3W_?vM",
-          "durationMs": 1.0464848609413544e-200
+          "stageKey": "#$}2=t9Kv5",
+          "stageLabel": "kx4,V~G~OsBa",
+          "durationMs": 1.6822338723497392e-253
         },
         {
-          "stageKey": "#};|#$",
-          "stageLabel": "egs;",
-          "durationMs": 3e-323
+          "stageKey": "0v:f).-2",
+          "stageLabel": "S",
+          "durationMs": 2.1373526878580475e-180
         }
       ]
     },
     {
-      "missionId": "NR!!",
-      "title": "Ub~KE",
-      "completedAt": 1418237295634,
-      "totalTokensIn": 5891393,
-      "totalTokensOut": 700990,
-      "totalCost": 9.591852544170493e-179,
-      "totalCalls": 12,
+      "missionId": "MM",
+      "title": "?dm-?",
+      "completedAt": 1870668648999,
+      "totalTokensIn": 1718165,
+      "totalTokensOut": 352266,
+      "totalCost": 5.708509172360883e-150,
+      "totalCalls": 47028,
       "topAgents": [
         {
-          "agentId": "QS`b}.w;Z%i",
-          "agentName": "UtHR%xQi:R_",
-          "avgDurationMs": 3.2351272106232772e-37,
-          "callCount": 8692
-        },
-        {
-          "agentId": "ebR#",
-          "agentName": "I#\"U'i0)TrG0",
-          "avgDurationMs": 1.0242489107875614,
-          "callCount": 2237
-        },
-        {
-          "agentId": ";j,,l{j_T!W",
-          "agentName": "\\HqtM",
-          "avgDurationMs": 5.887204138293303e-190,
-          "callCount": 1262
-        },
-        {
-          "agentId": "qMtcJ'~xrv05",
-          "agentName": "kumRvK",
-          "avgDurationMs": 1.2247374049198642e-62,
-          "callCount": 98
+          "agentId": ",l F|D}",
+          "agentName": "V/'WY",
+          "avgDurationMs": 2.2851532028258846e-184,
+          "callCount": 4713
         }
       ],
       "stageTimings": [
         {
-          "stageKey": "=}l*er8*",
-          "stageLabel": "wCEs",
-          "durationMs": 1.3483864941604484e-14
+          "stageKey": "x;`",
+          "stageLabel": "\\3*?(?cZ",
+          "durationMs": 5.2737969710525115e-157
         },
         {
-          "stageKey": "pLf-vV",
-          "stageLabel": "F\\8,*3 9mDJ",
-          "durationMs": 1.8146248145788838e-172
+          "stageKey": "Ek",
+          "stageLabel": "a3#HO^/",
+          "durationMs": 1.5004008752685813e-305
+        },
+        {
+          "stageKey": "q?)QN{)O9:3J",
+          "stageLabel": ". :k7C",
+          "durationMs": 2.0455828844877295e-267
+        }
+      ]
+    },
+    {
+      "missionId": "|n",
+      "title": " ",
+      "completedAt": 405619788817,
+      "totalTokensIn": 1309923,
+      "totalTokensOut": 2883589,
+      "totalCost": 3.152907647672986e-196,
+      "totalCalls": 95859,
+      "topAgents": [
+        {
+          "agentId": "!A$4 -=Iv=",
+          "agentName": "1[",
+          "avgDurationMs": 5.905816239311952e-182,
+          "callCount": 6201
+        },
+        {
+          "agentId": "&!zBpu)x",
+          "agentName": "6'@[tDh|iK<#",
+          "avgDurationMs": 3.0878499591299794e-265,
+          "callCount": 356
+        },
+        {
+          "agentId": "!=",
+          "agentName": "+\\)VyeU,B",
+          "avgDurationMs": 2.8123127388162748e-145,
+          "callCount": 5917
+        }
+      ],
+      "stageTimings": []
+    },
+    {
+      "missionId": "A{wcz:8L",
+      "title": "D",
+      "completedAt": 1728475797268,
+      "totalTokensIn": 9507166,
+      "totalTokensOut": 266391,
+      "totalCost": 1.4503474147392192e-150,
+      "totalCalls": 41393,
+      "topAgents": [
+        {
+          "agentId": "Z",
+          "agentName": "c ",
+          "avgDurationMs": 3.372922695604866e-13,
+          "callCount": 7026
+        }
+      ],
+      "stageTimings": []
+    },
+    {
+      "missionId": "<zJ]ahN\\",
+      "title": ">12`% K9y=9",
+      "completedAt": 123323024673,
+      "totalTokensIn": 2097953,
+      "totalTokensOut": 8185435,
+      "totalCost": 2.704834948567572e-245,
+      "totalCalls": 63603,
+      "topAgents": [
+        {
+          "agentId": "\"7nm=JZb.G",
+          "agentName": "f| uFUjxTqA",
+          "avgDurationMs": 2.47148807498485e-204,
+          "callCount": 7982
+        },
+        {
+          "agentId": "9?f-M&B3t8Po",
+          "agentName": "NQ",
+          "avgDurationMs": 1.454749013901314e-174,
+          "callCount": 6539
+        },
+        {
+          "agentId": "aZeD#",
+          "agentName": "]1PbpX*C6",
+          "avgDurationMs": 4.788663062794525e-43,
+          "callCount": 2514
+        }
+      ],
+      "stageTimings": []
+    },
+    {
+      "missionId": "3K-0nRb,",
+      "title": "Vrz*X6dDB",
+      "completedAt": 1837433286352,
+      "totalTokensIn": 363872,
+      "totalTokensOut": 5077348,
+      "totalCost": 1.5393014025953417e-185,
+      "totalCalls": 40935,
+      "topAgents": [
+        {
+          "agentId": "B^T>wu",
+          "agentName": "(`6:K\"P}xJ_7",
+          "avgDurationMs": 5.648206985436664e-129,
+          "callCount": 6946
+        },
+        {
+          "agentId": "JM/4R$@G",
+          "agentName": "C\"er",
+          "avgDurationMs": 8.276596736368685e-267,
+          "callCount": 213
+        }
+      ],
+      "stageTimings": []
+    },
+    {
+      "missionId": "B4",
+      "title": "t<1",
+      "completedAt": 336478884441,
+      "totalTokensIn": 4407333,
+      "totalTokensOut": 9413960,
+      "totalCost": 2.3682155562044087e-198,
+      "totalCalls": 97153,
+      "topAgents": [
+        {
+          "agentId": "?zhnY0$A",
+          "agentName": "57{Q",
+          "avgDurationMs": 3.073853973941689e-109,
+          "callCount": 6210
+        },
+        {
+          "agentId": "\\dh<ZmlT",
+          "agentName": "~a9",
+          "avgDurationMs": 3.1414654891065153e-22,
+          "callCount": 7939
+        },
+        {
+          "agentId": ".Wg@ZuF",
+          "agentName": "{P]{EW",
+          "avgDurationMs": 9.207509676033261e-298,
+          "callCount": 297
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "c9H",
+          "stageLabel": "M3qALJh]qlF",
+          "durationMs": 3.790479568883473e-175
+        },
+        {
+          "stageKey": "1O]y`F1VaZ",
+          "stageLabel": "MU_aM%-a)M0E",
+          "durationMs": 8.870578442961758e-131
+        }
+      ]
+    },
+    {
+      "missionId": "!Dg9FBB]hr",
+      "title": "CTYvuOK}{",
+      "completedAt": 494142249909,
+      "totalTokensIn": 1105523,
+      "totalTokensOut": 5203424,
+      "totalCost": 2.0829583241358577e-267,
+      "totalCalls": 41083,
+      "topAgents": [
+        {
+          "agentId": "OF-o_%w{",
+          "agentName": "dz.qwMi8%zaq",
+          "avgDurationMs": 1.0572238535842147e-250,
+          "callCount": 3561
+        },
+        {
+          "agentId": "m!b8g$scOa.",
+          "agentName": "\\J.X9T(fh",
+          "avgDurationMs": 3.860112009501558e-148,
+          "callCount": 5190
+        },
+        {
+          "agentId": "UhER:P)D,H-",
+          "agentName": "0%IMT8f",
+          "avgDurationMs": 5.215954697984605e-263,
+          "callCount": 2700
+        },
+        {
+          "agentId": "HSLrx\"hd",
+          "agentName": "ycN6q7fl",
+          "avgDurationMs": 1.7235460207423276e-144,
+          "callCount": 3683
+        },
+        {
+          "agentId": "5_,s",
+          "agentName": "9f{7oGuFXF%,",
+          "avgDurationMs": 0.0000014810437888749686,
+          "callCount": 903
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "9Ks\";",
+          "stageLabel": ".D0o51D",
+          "durationMs": 1.5768871283200903e-226
+        },
+        {
+          "stageKey": "sm",
+          "stageLabel": "8haWJM[",
+          "durationMs": 7.937894923288658e-40
+        },
+        {
+          "stageKey": "b:'Gq;Y{{LiV",
+          "stageLabel": "U5En.",
+          "durationMs": 5.585405713483874e-75
+        }
+      ]
+    },
+    {
+      "missionId": "i4FB=P3",
+      "title": ">Z}d2x",
+      "completedAt": 830955431589,
+      "totalTokensIn": 896066,
+      "totalTokensOut": 3613183,
+      "totalCost": 1.138942799711209e-105,
+      "totalCalls": 93503,
+      "topAgents": [
+        {
+          "agentId": "~&B]O62Q^u",
+          "agentName": "@MUOa",
+          "avgDurationMs": 2.869961981549955e-237,
+          "callCount": 4809
+        },
+        {
+          "agentId": "7Z3[(|",
+          "agentName": "M7f0v",
+          "avgDurationMs": 2.411830213392032e-84,
+          "callCount": 4970
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "`[iz>LJ2",
+          "stageLabel": "TS=zrNrvRO_",
+          "durationMs": 2.981085959594877
+        },
+        {
+          "stageKey": "pQ",
+          "stageLabel": "NU~)D$Qv",
+          "durationMs": 2.749835518969482e-201
+        },
+        {
+          "stageKey": "VZ [Q",
+          "stageLabel": "^6@",
+          "durationMs": 3.7923078434948976e-107
+        },
+        {
+          "stageKey": "X5c4=W5K",
+          "stageLabel": "R18[",
+          "durationMs": 5.529738081772779e-259
+        },
+        {
+          "stageKey": "<%*OB_BdZ",
+          "stageLabel": " ^TRhPrb,1w\"",
+          "durationMs": 5.634348185782857e-210
+        }
+      ]
+    },
+    {
+      "missionId": "Q",
+      "title": "y5#}`RTGs]=",
+      "completedAt": 1207593929518,
+      "totalTokensIn": 9722206,
+      "totalTokensOut": 4298110,
+      "totalCost": 7.995659638937591e-305,
+      "totalCalls": 36235,
+      "topAgents": [
+        {
+          "agentId": "cvqu(",
+          "agentName": "356W8X@M1Gy",
+          "avgDurationMs": 6.600135842087602e-175,
+          "callCount": 4588
+        },
+        {
+          "agentId": "!]N2g",
+          "agentName": "I=~i6q5",
+          "avgDurationMs": 2.128790208315575e-199,
+          "callCount": 2853
+        },
+        {
+          "agentId": "]x\\Ci%",
+          "agentName": "WDwg6[Ug2Bq",
+          "avgDurationMs": 2.098429546158642e-100,
+          "callCount": 3784
+        },
+        {
+          "agentId": "\"",
+          "agentName": "wpF-F7dr",
+          "avgDurationMs": 5.613460403778722e-75,
+          "callCount": 8003
+        },
+        {
+          "agentId": "p^vN MC&",
+          "agentName": "e",
+          "avgDurationMs": 9.783965342184852e-151,
+          "callCount": 3628
+        }
+      ],
+      "stageTimings": [
+        {
+          "stageKey": "z07",
+          "stageLabel": "z2([&CP8~c`C",
+          "durationMs": 1.0959455722109284e-124
+        },
+        {
+          "stageKey": ";(Y'TFH#,];",
+          "stageLabel": "?}4!fUhIfs",
+          "durationMs": 3.5370576122102356e-40
+        },
+        {
+          "stageKey": "?'$RG{jS",
+          "stageLabel": "-",
+          "durationMs": 1.7252080314024132e-202
+        },
+        {
+          "stageKey": "4RtD`2'p4S)I",
+          "stageLabel": "InCx@d0",
+          "durationMs": 1.4071710854415133e-103
+        },
+        {
+          "stageKey": "I[<q$n*&",
+          "stageLabel": "+p4M4l]s",
+          "durationMs": 7.160274873713086e-38
         }
       ]
     }
