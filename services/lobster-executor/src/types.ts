@@ -12,12 +12,21 @@ export interface LobsterExecutorConfig {
   port: number;
   dataRoot: string;
   serviceName: string;
+  executionMode: "real" | "mock";
+  defaultImage: string;
+  maxConcurrentJobs: number;
+  dockerHost?: string;
+  dockerTlsVerify?: boolean;
+  dockerCertPath?: string;
+  callbackSecret: string;
 }
 
 export interface LobsterExecutorServiceOptions {
   dataRoot: string;
   sleep?: (ms: number) => Promise<void>;
   now?: () => Date;
+  /** Full executor config — used to select runner and create limiter */
+  config?: LobsterExecutorConfig;
 }
 
 export interface JobQueueStats {
@@ -75,13 +84,17 @@ export interface LobsterExecutorHealthResponse {
   timestamp: string;
   dataRoot: string;
   queue: JobQueueStats;
+  docker: {
+    status: "connected" | "disconnected";
+    host?: string;
+  };
   features: {
     health: true;
     createJob: true;
     jobQuery: true;
     cancelJob: false;
-    dockerLifecycle: false;
-    callbackSigning: false;
+    dockerLifecycle: boolean;
+    callbackSigning: boolean;
   };
 }
 
@@ -102,4 +115,6 @@ export interface StoredJobRecord {
   events: ExecutorEvent[];
   dataDirectory: string;
   logFile: string;
+  containerId?: string;
+  executionMode: "real" | "mock";
 }

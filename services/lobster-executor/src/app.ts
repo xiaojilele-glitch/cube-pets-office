@@ -1,5 +1,6 @@
 import express from "express";
 import type { Request, Response } from "express";
+import Dockerode from "dockerode";
 import { ZodError } from "zod";
 import { EXECUTOR_CONTRACT_VERSION } from "../../../shared/executor/contracts.js";
 import {
@@ -50,8 +51,23 @@ export function createLobsterExecutorApp(
   const app = express();
   app.use(express.json({ limit: "1mb" }));
 
-  app.get("/health", (_req, res: Response<LobsterExecutorHealthResponse>) => {
+  app.get("/health", async (_req, res: Response<LobsterExecutorHealthResponse>) => {
     const config = readLobsterExecutorConfig();
+
+    let dockerStatus: "connected" | "disconnected" = "disconnected";
+    if (config.executionMode === "real") {
+      try {
+        const docker = new Dockerode({
+          socketPath: config.dockerHost?.startsWith("/") ? config.dockerHost : undefined,
+          host: config.dockerHost && !config.dockerHost.startsWith("/") ? config.dockerHost : undefined,
+        });
+        await docker.ping();
+        dockerStatus = "connected";
+      } catch {
+        dockerStatus = "disconnected";
+      }
+    }
+
     res.json({
       ok: true,
       status: "ok",
@@ -60,13 +76,17 @@ export function createLobsterExecutorApp(
       timestamp: new Date().toISOString(),
       dataRoot: service.getDataRoot(),
       queue: service.getQueueStats(),
+      docker: {
+        status: dockerStatus,
+        host: config.dockerHost,
+      },
       features: {
         health: true,
         createJob: true,
         jobQuery: true,
         cancelJob: false,
-        dockerLifecycle: false,
-        callbackSigning: false,
+        dockerLifecycle: config.executionMode === "real",
+        callbackSigning: config.callbackSecret !== "",
       },
     });
   });

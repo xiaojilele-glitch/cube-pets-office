@@ -7,13 +7,31 @@ function parsePort(rawPort: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function defaultDockerHost(platform: string): string {
+  return platform === "win32"
+    ? "npipe:////./pipe/docker_engine"
+    : "/var/run/docker.sock";
+}
+
 export function readLobsterExecutorConfig(
-  env: NodeJS.ProcessEnv = process.env
+  env: NodeJS.ProcessEnv = process.env,
+  platform: string = process.platform
 ): LobsterExecutorConfig {
   return {
     host: env.LOBSTER_EXECUTOR_HOST || "0.0.0.0",
     port: parsePort(env.LOBSTER_EXECUTOR_PORT, 3031),
     dataRoot: resolve(env.LOBSTER_EXECUTOR_DATA_ROOT || "tmp/lobster-executor"),
     serviceName: env.LOBSTER_EXECUTOR_NAME || "lobster-executor",
+    executionMode:
+      env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real",
+    defaultImage: env.LOBSTER_DEFAULT_IMAGE || "node:20-slim",
+    maxConcurrentJobs: Math.max(
+      1,
+      Number.parseInt(env.LOBSTER_MAX_CONCURRENT_JOBS || "2", 10) || 2
+    ),
+    dockerHost: env.DOCKER_HOST || defaultDockerHost(platform),
+    dockerTlsVerify: env.DOCKER_TLS_VERIFY === "1" ? true : undefined,
+    dockerCertPath: env.DOCKER_CERT_PATH || undefined,
+    callbackSecret: env.EXECUTOR_CALLBACK_SECRET || "",
   };
 }
