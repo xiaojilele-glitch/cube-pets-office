@@ -1,7 +1,9 @@
-<svg width="960" height="720" viewBox="0 0 960 720" xmlns="http://www.w3.org/2000/svg">
+<svg width="960" height="780" viewBox="0 0 960 780" xmlns="http://www.w3.org/2000/svg">
 <style>
   .ts { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; }
   .th { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; }
+  .sm { font-family: system-ui, sans-serif; font-size: 10px; }
+  .xs { font-family: system-ui, sans-serif; font-size: 9px; }
 </style>
 <defs>
   <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -26,19 +28,19 @@
 <text class="ts" x="470" y="34" text-anchor="middle" fill="#0C447C">Frontend layer</text>
 <rect x="224" y="44" width="90" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="269" y="58" text-anchor="middle" fill="#0C447C">3D office</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="269" y="72" text-anchor="middle" fill="#185FA5">Three.js</text>
+<text class="sm" x="269" y="72" text-anchor="middle" fill="#185FA5">Three.js</text>
 <rect x="324" y="44" width="90" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="369" y="58" text-anchor="middle" fill="#0C447C">Workflow</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="369" y="72" text-anchor="middle" fill="#185FA5">panel</text>
+<text class="sm" x="369" y="72" text-anchor="middle" fill="#185FA5">panel</text>
 <rect x="424" y="44" width="90" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="469" y="58" text-anchor="middle" fill="#0C447C">NL command</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="469" y="72" text-anchor="middle" fill="#185FA5">center</text>
+<text class="sm" x="469" y="72" text-anchor="middle" fill="#185FA5">center</text>
 <rect x="524" y="44" width="90" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="569" y="58" text-anchor="middle" fill="#0C447C">Cost govern</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="569" y="72" text-anchor="middle" fill="#185FA5">panel</text>
+<text class="sm" x="569" y="72" text-anchor="middle" fill="#185FA5">panel</text>
 <rect x="624" y="44" width="90" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="669" y="58" text-anchor="middle" fill="#0C447C">Browser RT</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="669" y="72" text-anchor="middle" fill="#185FA5">IndexedDB</text>
+<text class="sm" x="669" y="72" text-anchor="middle" fill="#185FA5">IndexedDB</text>
 <line x1="370" y1="116" x2="370" y2="148" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)"/>
 <line x1="570" y1="116" x2="570" y2="148" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)"/>
 
@@ -47,28 +49,28 @@
 <text class="th" x="365" y="170" text-anchor="middle" fill="#27500A">Cube brain (server)</text>
 <rect x="228" y="184" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="288" y="200" text-anchor="middle" fill="#27500A">Express API</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="288" y="214" text-anchor="middle" fill="#3B6D11">REST + Socket.IO</text>
+<text class="sm" x="288" y="214" text-anchor="middle" fill="#3B6D11">REST + Socket.IO</text>
 <rect x="228" y="234" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="288" y="250" text-anchor="middle" fill="#27500A">Dyn. org gen</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="288" y="264" text-anchor="middle" fill="#3B6D11">CEO/Mgr/Worker</text>
+<text class="sm" x="288" y="264" text-anchor="middle" fill="#3B6D11">CEO/Mgr/Worker</text>
 <rect x="228" y="284" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="288" y="300" text-anchor="middle" fill="#27500A">10-stage engine</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="288" y="314" text-anchor="middle" fill="#3B6D11">workflow pipeline</text>
+<text class="sm" x="288" y="314" text-anchor="middle" fill="#3B6D11">workflow pipeline</text>
 <rect x="228" y="334" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="288" y="350" text-anchor="middle" fill="#27500A">Mission RT</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="288" y="364" text-anchor="middle" fill="#3B6D11">6-stage FSM</text>
+<text class="sm" x="288" y="364" text-anchor="middle" fill="#3B6D11">6-stage FSM</text>
 <rect x="380" y="184" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="440" y="200" text-anchor="middle" fill="#27500A">Skill system</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="440" y="214" text-anchor="middle" fill="#3B6D11">hot-plug</text>
+<text class="sm" x="440" y="214" text-anchor="middle" fill="#3B6D11">hot-plug</text>
 <rect x="380" y="234" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="440" y="250" text-anchor="middle" fill="#27500A">Role system</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="440" y="264" text-anchor="middle" fill="#3B6D11">dynamic switch</text>
+<text class="sm" x="440" y="264" text-anchor="middle" fill="#3B6D11">dynamic switch</text>
 <rect x="380" y="284" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="440" y="300" text-anchor="middle" fill="#27500A">Cost governance</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="440" y="314" text-anchor="middle" fill="#3B6D11">budget + alerts</text>
+<text class="sm" x="440" y="314" text-anchor="middle" fill="#3B6D11">budget + alerts</text>
 <rect x="380" y="334" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="440" y="350" text-anchor="middle" fill="#27500A">Review system</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="440" y="364" text-anchor="middle" fill="#3B6D11">20-point scoring</text>
+<text class="sm" x="440" y="364" text-anchor="middle" fill="#3B6D11">20-point scoring</text>
 <line x1="348" y1="304" x2="378" y2="304" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
 <line x1="348" y1="254" x2="378" y2="254" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
 
@@ -77,92 +79,124 @@
 <text class="th" x="745" y="170" text-anchor="middle" fill="#412402">Intelligence layer</text>
 <rect x="568" y="184" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="622" y="200" text-anchor="middle" fill="#633806">3-tier memory</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="622" y="214" text-anchor="middle" fill="#854F0B">short/mid/long</text>
+<text class="sm" x="622" y="214" text-anchor="middle" fill="#854F0B">short/mid/long</text>
 <rect x="568" y="234" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="622" y="250" text-anchor="middle" fill="#633806">Knowledge graph</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="622" y="264" text-anchor="middle" fill="#854F0B">entity + relation</text>
+<text class="sm" x="622" y="264" text-anchor="middle" fill="#854F0B">entity + relation</text>
 <rect x="568" y="284" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="622" y="300" text-anchor="middle" fill="#633806">Vector DB + RAG</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="622" y="314" text-anchor="middle" fill="#854F0B">7-step pipeline</text>
+<text class="sm" x="622" y="314" text-anchor="middle" fill="#854F0B">7-step pipeline</text>
 <rect x="700" y="184" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="754" y="200" text-anchor="middle" fill="#633806">Self-evolution</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="754" y="214" text-anchor="middle" fill="#854F0B">auto persona fix</text>
+<text class="sm" x="754" y="214" text-anchor="middle" fill="#854F0B">auto persona fix</text>
 <rect x="700" y="234" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="754" y="250" text-anchor="middle" fill="#633806">Reputation</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="754" y="264" text-anchor="middle" fill="#854F0B">score + decay</text>
+<text class="sm" x="754" y="264" text-anchor="middle" fill="#854F0B">score + decay</text>
 <rect x="700" y="284" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="754" y="300" text-anchor="middle" fill="#633806">Autonomy</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="754" y="314" text-anchor="middle" fill="#854F0B">self-eval + compete</text>
+<text class="sm" x="754" y="314" text-anchor="middle" fill="#854F0B">self-eval + compete</text>
 <rect x="830" y="184" width="96" height="90" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
 <text class="ts" x="878" y="204" text-anchor="middle" fill="#633806">Meta audit</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="878" y="220" text-anchor="middle" fill="#854F0B">independent</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="878" y="234" text-anchor="middle" fill="#854F0B">quality check</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="878" y="260" text-anchor="middle" fill="#854F0B">compliance</text>
+<text class="sm" x="878" y="220" text-anchor="middle" fill="#854F0B">independent</text>
+<text class="sm" x="878" y="234" text-anchor="middle" fill="#854F0B">quality check</text>
+<text class="sm" x="878" y="260" text-anchor="middle" fill="#854F0B">compliance</text>
 <rect x="830" y="300" width="96" height="40" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
 <text class="ts" x="878" y="316" text-anchor="middle" fill="#3C3489">LLM provider</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="878" y="330" text-anchor="middle" fill="#534AB7">OpenAI compat.</text>
+<text class="sm" x="878" y="330" text-anchor="middle" fill="#534AB7">OpenAI compat.</text>
 <line x1="520" y1="254" x2="566" y2="254" stroke="#BA7517" stroke-width="1" marker-end="url(#arrow)"/>
 <line x1="520" y1="304" x2="566" y2="304" stroke="#BA7517" stroke-width="1" marker-end="url(#arrow)"/>
 
-<!-- ===== EXECUTOR LAYER ===== -->
-<rect x="210" y="420" width="310" height="100" rx="12" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
-<text class="th" x="365" y="440" text-anchor="middle" fill="#4A1B0C">Execution layer</text>
-<rect x="228" y="452" width="120" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="288" y="468" text-anchor="middle" fill="#712B13">Lobster executor</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="288" y="482" text-anchor="middle" fill="#993C1D">execution plans</text>
-<rect x="380" y="452" width="120" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="440" y="468" text-anchor="middle" fill="#712B13">Docker containers</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="440" y="482" text-anchor="middle" fill="#993C1D">sandboxed run</text>
+<!-- ===== EXECUTION LAYER (expanded) ===== -->
+<rect x="210" y="420" width="520" height="120" rx="14" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text class="th" x="470" y="440" text-anchor="middle" fill="#4A1B0C">Execution layer (Docker)</text>
+
+<!-- Executor service -->
+<rect x="228" y="452" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="278" y="468" text-anchor="middle" fill="#712B13">Lobster exec</text>
+<text class="sm" x="278" y="482" text-anchor="middle" fill="#993C1D">dockerode</text>
+<!-- HMAC callback -->
+<rect x="338" y="452" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="388" y="468" text-anchor="middle" fill="#712B13">HMAC callback</text>
+<text class="sm" x="388" y="482" text-anchor="middle" fill="#993C1D">signed events</text>
+<!-- Security sandbox -->
+<rect x="448" y="452" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="498" y="468" text-anchor="middle" fill="#712B13">Secure sandbox</text>
+<text class="sm" x="498" y="482" text-anchor="middle" fill="#993C1D">seccomp + caps</text>
+<!-- Live preview -->
+<rect x="558" y="452" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="608" y="468" text-anchor="middle" fill="#712B13">Live preview</text>
+<text class="sm" x="608" y="482" text-anchor="middle" fill="#993C1D">terminal + screenshot</text>
+<!-- AI inject -->
+<rect x="228" y="498" width="100" height="30" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="278" y="518" text-anchor="middle" fill="#3C3489">AI inject</text>
+<!-- Concurrency limiter -->
+<rect x="338" y="498" width="100" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="388" y="518" text-anchor="middle" fill="#666">Concurrency</text>
+<!-- Log batcher -->
+<rect x="448" y="498" width="100" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="498" y="518" text-anchor="middle" fill="#666">Log batcher</text>
+<!-- Docker daemon -->
+<rect x="558" y="498" width="100" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="608" y="518" text-anchor="middle" fill="#666">Docker daemon</text>
+
+<!-- Arrows: Brain → Executor -->
 <line x1="288" y1="388" x2="288" y2="450" stroke="#D85A30" stroke-width="1" marker-end="url(#arrow)"/>
 <text class="ts" x="296" y="418" fill="#993C1D">Exec plan</text>
-<line x1="348" y1="472" x2="378" y2="472" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
-<path d="M500 472 L530 472 L530 354 L520 354" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="ts" x="538" y="418" fill="#993C1D">Callback</text>
+<!-- Arrows: internal executor flow -->
+<line x1="328" y1="472" x2="336" y2="472" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
+<line x1="438" y1="472" x2="446" y2="472" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
+<line x1="548" y1="472" x2="556" y2="472" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
+<!-- Callback arrow back to brain -->
+<path d="M388 452 L388 410 L440 410 L440 388" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="sm" x="430" y="404" fill="#993C1D">HMAC callback</text>
+<!-- Live preview arrow to frontend -->
+<path d="M608 452 L608 130 L669 130 L669 116" fill="none" stroke="#85B7EB" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="sm" x="650" y="136" text-anchor="end" fill="#185FA5">WebSocket stream</text>
 
 <!-- ===== WORKFLOW PIPELINE ===== -->
-<rect x="20" y="550" width="920" height="150" rx="14" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="th" x="480" y="574" text-anchor="middle" fill="#333">10-stage workflow pipeline</text>
-<rect x="40" y="590" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="84" y="608" text-anchor="middle" fill="#3C3489">1. Assemble</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="84" y="624" text-anchor="middle" fill="#534AB7">dyn. org</text>
-<line x1="128" y1="612" x2="146" y2="612" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="148" y="590" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="192" y="608" text-anchor="middle" fill="#3C3489">2. CEO split</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="192" y="624" text-anchor="middle" fill="#534AB7">decompose</text>
-<line x1="236" y1="612" x2="254" y2="612" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="256" y="590" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="300" y="608" text-anchor="middle" fill="#3C3489">3. Mgr plan</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="300" y="624" text-anchor="middle" fill="#534AB7">assign tasks</text>
-<line x1="344" y1="612" x2="362" y2="612" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="364" y="590" width="88" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="408" y="608" text-anchor="middle" fill="#0C447C">4. Execute</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="408" y="624" text-anchor="middle" fill="#185FA5">parallel work</text>
-<line x1="452" y1="612" x2="470" y2="612" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="472" y="590" width="88" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="516" y="608" text-anchor="middle" fill="#27500A">5. Review</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="516" y="624" text-anchor="middle" fill="#3B6D11">20-pt score</text>
-<line x1="560" y1="612" x2="578" y2="612" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="580" y="590" width="72" height="44" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="616" y="608" text-anchor="middle" fill="#633806">6. Audit</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="616" y="624" text-anchor="middle" fill="#854F0B">meta</text>
-<line x1="652" y1="612" x2="664" y2="612" stroke="#FAC775" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="666" y="590" width="72" height="44" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="702" y="608" text-anchor="middle" fill="#712B13">7. Revise</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="702" y="624" text-anchor="middle" fill="#993C1D">fix</text>
-<line x1="738" y1="612" x2="750" y2="612" stroke="#F0997B" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="752" y="590" width="72" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="788" y="608" text-anchor="middle" fill="#27500A">8. Verify</text>
-<text style="font-family:system-ui,sans-serif;font-size:9px" x="788" y="624" text-anchor="middle" fill="#3B6D11">confirm</text>
-<line x1="824" y1="612" x2="836" y2="612" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="838" y="590" width="44" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="860" y="616" text-anchor="middle" fill="#0C447C">9</text>
-<line x1="882" y1="612" x2="894" y2="612" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="896" y="590" width="36" height="44" rx="6" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
-<text class="ts" x="914" y="616" text-anchor="middle" fill="#72243E">10</text>
-<text class="ts" x="860" y="652" text-anchor="middle" fill="#666">Aggregate</text>
-<text class="ts" x="914" y="652" text-anchor="middle" fill="#666">Evolve</text>
-<path d="M702 634 L702 668 L408 668 L408 634" fill="none" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="555" y="680" text-anchor="middle" fill="#993C1D">Score &lt; 16 ? Revise and re-execute</text>
+<rect x="20" y="570" width="920" height="150" rx="14" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="th" x="480" y="594" text-anchor="middle" fill="#333">10-stage workflow pipeline</text>
+<rect x="40" y="610" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="84" y="628" text-anchor="middle" fill="#3C3489">1. Assemble</text>
+<text class="xs" x="84" y="644" text-anchor="middle" fill="#534AB7">dyn. org</text>
+<line x1="128" y1="632" x2="146" y2="632" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="148" y="610" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="192" y="628" text-anchor="middle" fill="#3C3489">2. CEO split</text>
+<text class="xs" x="192" y="644" text-anchor="middle" fill="#534AB7">decompose</text>
+<line x1="236" y1="632" x2="254" y2="632" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="256" y="610" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="300" y="628" text-anchor="middle" fill="#3C3489">3. Mgr plan</text>
+<text class="xs" x="300" y="644" text-anchor="middle" fill="#534AB7">assign tasks</text>
+<line x1="344" y1="632" x2="362" y2="632" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="364" y="610" width="88" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="408" y="628" text-anchor="middle" fill="#0C447C">4. Execute</text>
+<text class="xs" x="408" y="644" text-anchor="middle" fill="#185FA5">parallel work</text>
+<line x1="452" y1="632" x2="470" y2="632" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="472" y="610" width="88" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="516" y="628" text-anchor="middle" fill="#27500A">5. Review</text>
+<text class="xs" x="516" y="644" text-anchor="middle" fill="#3B6D11">20-pt score</text>
+<line x1="560" y1="632" x2="578" y2="632" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="580" y="610" width="72" height="44" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="616" y="628" text-anchor="middle" fill="#633806">6. Audit</text>
+<text class="xs" x="616" y="644" text-anchor="middle" fill="#854F0B">meta</text>
+<line x1="652" y1="632" x2="664" y2="632" stroke="#FAC775" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="666" y="610" width="72" height="44" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="702" y="628" text-anchor="middle" fill="#712B13">7. Revise</text>
+<text class="xs" x="702" y="644" text-anchor="middle" fill="#993C1D">fix</text>
+<line x1="738" y1="632" x2="750" y2="632" stroke="#F0997B" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="752" y="610" width="72" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="788" y="628" text-anchor="middle" fill="#27500A">8. Verify</text>
+<text class="xs" x="788" y="644" text-anchor="middle" fill="#3B6D11">confirm</text>
+<line x1="824" y1="632" x2="836" y2="632" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="838" y="610" width="44" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="860" y="636" text-anchor="middle" fill="#0C447C">9</text>
+<line x1="882" y1="632" x2="894" y2="632" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="896" y="610" width="36" height="44" rx="6" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
+<text class="ts" x="914" y="636" text-anchor="middle" fill="#72243E">10</text>
+<text class="ts" x="860" y="672" text-anchor="middle" fill="#666">Aggregate</text>
+<text class="ts" x="914" y="672" text-anchor="middle" fill="#666">Evolve</text>
+<path d="M702 654 L702 688 L408 688 L408 654" fill="none" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="sm" x="555" y="700" text-anchor="middle" fill="#993C1D">Score &lt; 16 ? Revise and re-execute</text>
 
 <!-- ===== SHARED CONTRACTS ===== -->
 <rect x="20" y="148" width="170" height="240" rx="12" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
@@ -173,19 +207,48 @@
 <text class="ts" x="36" y="254" fill="#72243E">rag/contracts.ts</text>
 <text class="ts" x="36" y="274" fill="#72243E">skill/contracts.ts</text>
 <text class="ts" x="36" y="294" fill="#72243E">export/contracts.ts</text>
-<text class="ts" x="36" y="314" fill="#72243E">+ 2 more modules</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="105" y="360" text-anchor="middle" fill="#993556">8 frozen contract modules</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="105" y="376" text-anchor="middle" fill="#993556">shared by client + server</text>
+<text class="ts" x="36" y="314" fill="#72243E">executor/contracts.ts</text>
+<text class="ts" x="36" y="334" fill="#72243E">mission/contracts.ts</text>
+<text class="sm" x="105" y="360" text-anchor="middle" fill="#993556">8+ frozen contract modules</text>
+<text class="sm" x="105" y="376" text-anchor="middle" fill="#993556">shared by client + server</text>
 <line x1="190" y1="268" x2="226" y2="268" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
 
 <!-- ===== DUAL RUNTIME ===== -->
-<rect x="550" y="420" width="390" height="100" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="th" x="745" y="440" text-anchor="middle" fill="#333">Dual runtime architecture</text>
-<rect x="568" y="452" width="170" height="40" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="653" y="468" text-anchor="middle" fill="#0C447C">Frontend mode</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="653" y="482" text-anchor="middle" fill="#185FA5">Browser + IndexedDB</text>
-<rect x="752" y="452" width="170" height="40" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="837" y="468" text-anchor="middle" fill="#27500A">Advanced mode</text>
-<text style="font-family:system-ui,sans-serif;font-size:10px" x="837" y="482" text-anchor="middle" fill="#3B6D11">Express + Docker</text>
+<rect x="750" y="420" width="190" height="120" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="th" x="845" y="440" text-anchor="middle" fill="#333">Dual runtime</text>
+<rect x="762" y="452" width="166" height="34" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="845" y="468" text-anchor="middle" fill="#0C447C">Frontend mode</text>
+<text class="sm" x="845" y="480" text-anchor="middle" fill="#185FA5">Browser + IndexedDB</text>
+<rect x="762" y="496" width="166" height="34" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="845" y="512" text-anchor="middle" fill="#27500A">Advanced mode</text>
+<text class="sm" x="845" y="524" text-anchor="middle" fill="#3B6D11">Express + Docker</text>
+
+<!-- ===== RUNNER STRATEGY (mock/real) ===== -->
+<rect x="20" y="420" width="170" height="120" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="th" x="105" y="440" text-anchor="middle" fill="#333">Runner strategy</text>
+<rect x="34" y="454" width="142" height="30" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="105" y="474" text-anchor="middle" fill="#27500A">DockerRunner (real)</text>
+<rect x="34" y="494" width="142" height="30" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="105" y="514" text-anchor="middle" fill="#0C447C">MockRunner (mock)</text>
+<line x1="190" y1="472" x2="226" y2="472" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+<!-- ===== LEGEND ===== -->
+<rect x="20" y="740" width="920" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.3"/>
+<circle cx="50" cy="755" r="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="sm" x="60" y="759" fill="#666">Server</text>
+<circle cx="120" cy="755" r="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="sm" x="130" y="759" fill="#666">Frontend</text>
+<circle cx="200" cy="755" r="5" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<text class="sm" x="210" y="759" fill="#666">Intelligence</text>
+<circle cx="300" cy="755" r="5" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text class="sm" x="310" y="759" fill="#666">Execution</text>
+<circle cx="400" cy="755" r="5" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
+<text class="sm" x="410" y="759" fill="#666">Contracts</text>
+<circle cx="490" cy="755" r="5" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="sm" x="500" y="759" fill="#666">Workflow</text>
+<line x1="570" y1="755" x2="600" y2="755" stroke="#D85A30" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="sm" x="610" y="759" fill="#666">Data flow</text>
+<line x1="680" y1="755" x2="710" y2="755" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="sm" x="720" y="759" fill="#666">Callback / async</text>
 
 </svg>
