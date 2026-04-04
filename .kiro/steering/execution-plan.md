@@ -15,7 +15,7 @@ inclusion: auto
 
 38 个 spec 中 8 个已完成（归档），30 个待开发。按依赖关系、是否可独立执行、是否需要服务器环境分为四个层级。核心策略：契约先行，再并行实现。
 
-> **进度快照（2026-04-04）**：第一层 9 个 + 第二层 12 个 + 第三层 L22/L22.5/L23/L24 = 共 25 个 spec 已实现并合并，剩余 5 个待开发。
+> **进度快照（2026-04-04）**：第一层 9 个 + 第二层 12 个 + 第三层 L22/L22.5/L23/L24/L24.5/L25 = 共 27 个 spec 已实现并合并，第三层 Docker 执行链路全部完成。
 
 ## 已完成归档模块
 
@@ -94,8 +94,8 @@ L22 → L24.5（独立并行，桥接 WorkflowEngine ↔ Docker）
 - [x] L22.5 `ai-enabled-sandbox` — Docker 容器 AI 能力注入（中）✅ 已合并 (20 files, +2261)
 - [x] L23 `secure-sandbox` — Docker 安全沙箱（中）✅ 已合并 (24 files, +2283)
 - [x] L24 `sandbox-live-preview` — 容器实时终端 + 截图预览（中）✅ 已合并 (25 files, +2177)
-- [ ] L24.5 `executor-integration` — WorkflowEngine ↔ Docker 执行管线桥接（中）← 依赖 L22 ✅，独立于 L25，可并行
-- [ ] L25 `agent-permission-model` — Agent 细粒度权限矩阵（中）← 严格依赖 L23 ✅
+- [x] L24.5 `executor-integration` — WorkflowEngine ↔ Docker 执行管线桥接（中）✅ 已合并 (30 files, +5916)
+- [x] L25 `agent-permission-model` — Agent 细粒度权限矩阵（中）✅ 已合并 (46 files, +9970)
 
 ### 第三层其他串行链路
 
