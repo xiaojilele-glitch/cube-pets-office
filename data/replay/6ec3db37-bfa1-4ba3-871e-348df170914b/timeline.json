@@ -1,0 +1,130 @@
+{
+  "missionId": "6ec3db37-bfa1-4ba3-871e-348df170914b",
+  "startTime": 1775278594516,
+  "endTime": 1775278676178,
+  "totalDuration": 81662,
+  "eventCount": 20,
+  "indices": {
+    "byTime": {
+      "1775278594000": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "1775278602000": [
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "1775278612000": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "1775278676000": [
+        18,
+        19
+      ]
+    },
+    "byAgent": {
+      "wf-6ec3db37bf-root": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "wf-6ec3db37bf-manager-1-research": [
+        0,
+        1,
+        6,
+        7,
+        8,
+        9,
+        18,
+        19
+      ],
+      "wf-6ec3db37bf-manager-2-strategy": [
+        2,
+        3,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "wf-6ec3db37bf-manager-3-quality": [
+        4,
+        5,
+        10,
+        11
+      ],
+      "wf-6ec3db37bf-worker-1-1-market-researcher": [
+        6,
+        7,
+        18,
+        19
+      ],
+      "wf-6ec3db37bf-worker-1-2-data-analyst": [
+        8,
+        9
+      ],
+      "wf-6ec3db37bf-worker-3-1-quality-reviewer": [
+        10,
+        11
+      ],
+      "wf-6ec3db37bf-worker-2-1-content-strategist": [
+        12,
+        13
+      ],
+      "wf-6ec3db37bf-worker-2-2-user-experience-designer": [
+        14,
+        15
+      ],
+      "wf-6ec3db37bf-worker-2-3-risk-analyst": [
+        16,
+        17
+      ]
+    },
+    "byType": {
+      "MESSAGE_SENT": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18
+      ],
+      "MESSAGE_RECEIVED": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13,
+        15,
+        17,
+        19
+      ]
+    },
+    "byResource": {}
+  },
+  "version": 5,
+  "checksum": "09b41515ddc76b378831689f2512e20b0cd97421dc840d4cd77c079ae276e445"
+}

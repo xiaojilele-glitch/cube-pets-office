@@ -59,10 +59,22 @@ export function createLobsterExecutorApp(
     let dockerStatus: "connected" | "disconnected" = "disconnected";
     if (config.executionMode === "real") {
       try {
-        const docker = new Dockerode({
-          socketPath: config.dockerHost?.startsWith("/") ? config.dockerHost : undefined,
-          host: config.dockerHost && !config.dockerHost.startsWith("/") ? config.dockerHost : undefined,
-        });
+        const opts: Dockerode.DockerOptions = {};
+        if (config.dockerHost) {
+          if (config.dockerHost.startsWith("/") || config.dockerHost.startsWith("npipe:")) {
+            opts.socketPath = config.dockerHost;
+          } else {
+            try {
+              const url = new URL(config.dockerHost.replace(/^tcp:\/\//, "http://"));
+              opts.host = url.hostname;
+              opts.port = url.port || "2375";
+              opts.protocol = "http";
+            } catch {
+              opts.host = config.dockerHost;
+            }
+          }
+        }
+        const docker = new Dockerode(opts);
         await docker.ping();
         dockerStatus = "connected";
       } catch {

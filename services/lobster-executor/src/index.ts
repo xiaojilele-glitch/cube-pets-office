@@ -1,18 +1,40 @@
 import { createServer } from "node:http";
+import dotenv from "dotenv";
 import Dockerode from "dockerode";
 import { createLobsterExecutorApp } from "./app.js";
 import { readLobsterExecutorConfig } from "./config.js";
 import { createLobsterExecutorService } from "./service.js";
+
+dotenv.config();
+
+/**
+ * Parse a DOCKER_HOST value into Dockerode connection options.
+ * Supports: unix socket paths, npipe, tcp:// URLs.
+ */
+function parseDockerHost(dockerHost: string | undefined): Dockerode.DockerOptions {
+  if (!dockerHost) return {};
+  if (dockerHost.startsWith("/") || dockerHost.startsWith("npipe:")) {
+    return { socketPath: dockerHost };
+  }
+  // tcp://host:port or http://host:port
+  try {
+    const url = new URL(dockerHost.replace(/^tcp:\/\//, "http://"));
+    return {
+      host: url.hostname,
+      port: url.port || "2375",
+      protocol: "http",
+    };
+  } catch {
+    return { host: dockerHost };
+  }
+}
 
 export async function startLobsterExecutorServer(): Promise<void> {
   const config = readLobsterExecutorConfig();
 
   // Validate Docker daemon connectivity in "real" mode before starting
   if (config.executionMode === "real") {
-    const docker = new Dockerode({
-      socketPath: config.dockerHost?.startsWith("/") ? config.dockerHost : undefined,
-      host: config.dockerHost && !config.dockerHost.startsWith("/") ? config.dockerHost : undefined,
-    });
+    const docker = new Dockerode(parseDockerHost(config.dockerHost));
     try {
       await docker.ping();
       console.log("[lobster-executor] Docker daemon connected");

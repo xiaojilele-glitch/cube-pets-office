@@ -15,7 +15,7 @@ inclusion: auto
 
 38 个 spec 中 8 个已完成（归档），30 个待开发。按依赖关系、是否可独立执行、是否需要服务器环境分为四个层级。核心策略：契约先行，再并行实现。
 
-> **进度快照（2026-04-04）**：第一层 9 个 + 第二层 12 个 + 第三层 L22 = 共 22 个 spec 已实现并合并，剩余 8 个待开发。
+> **进度快照（2026-04-04）**：第一层 9 个 + 第二层 12 个 + 第三层 L22/L22.5/L23/L24 = 共 25 个 spec 已实现并合并，剩余 5 个待开发。
 
 ## 已完成归档模块
 
@@ -85,15 +85,15 @@ inclusion: auto
 ```
 串行执行顺序（不可跳过）：
 L22 → L23 → L24
-            → L25
+            → L25bi
 L22 → L22.5（独立并行）
 ```
 
 - [x] L22 `lobster-executor-real` — Docker 真实容器生命周期（大）✅ 已完成 (15 test files, 61 tests, 12 PBT properties)
-- [ ] L22.5 `ai-enabled-sandbox` — Docker 容器 AI 能力注入（中）← 依赖 L22 ✅，独立于 L23/L24/L25，可并行
-- [ ] L23 `secure-sandbox` — Docker 安全沙箱（中）← 严格依赖 L22 ✅
-- [ ] L24 `sandbox-live-preview` — 容器实时终端 + 截图预览（中）← 严格依赖 L22 ✅
-- [ ] L25 `agent-permission-model` — Agent 细粒度权限矩阵（中）← 严格依赖 L23
+- [x] L22.5 `ai-enabled-sandbox` — Docker 容器 AI 能力注入（中）✅ 已合并 (20 files, +2261)
+- [x] L23 `secure-sandbox` — Docker 安全沙箱（中）✅ 已合并 (24 files, +2283)
+- [x] L24 `sandbox-live-preview` — 容器实时终端 + 截图预览（中）✅ 已合并 (25 files, +2177)
+- [ ] L25 `agent-permission-model` — Agent 细粒度权限矩阵（中）← 严格依赖 L23 ✅
 
 ### 第三层其他串行链路
 

@@ -104,14 +104,21 @@ export class DockerRunner implements JobRunner {
     } else {
       const opts: Dockerode.DockerOptions = {};
       if (executorConfig.dockerHost) {
-        // Unix socket vs TCP
         if (
           executorConfig.dockerHost.startsWith("/") ||
           executorConfig.dockerHost.startsWith("npipe:")
         ) {
           opts.socketPath = executorConfig.dockerHost;
         } else {
-          opts.host = executorConfig.dockerHost;
+          // Parse tcp://host:port or http://host:port
+          try {
+            const url = new URL(executorConfig.dockerHost.replace(/^tcp:\/\//, "http://"));
+            opts.host = url.hostname;
+            opts.port = url.port || "2375";
+            opts.protocol = "http";
+          } catch {
+            opts.host = executorConfig.dockerHost;
+          }
         }
       }
       if (executorConfig.dockerTlsVerify) {

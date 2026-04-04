@@ -117,6 +117,7 @@ async function main() {
   }
 
   run("client", "npm run dev");
+  run("executor", "npx tsx services/lobster-executor/src/index.ts");
 }
 
 void main();
