@@ -18,6 +18,14 @@ import type {
   ReputationChangeEvent,
   ReputationAuditEntry,
 } from "../../shared/reputation.js";
+import type {
+  AgentRole,
+  AgentPermissionPolicy,
+  PermissionTemplate,
+  PermissionAuditEntry,
+  PermissionEscalation,
+  Permission,
+} from "../../shared/permission/contracts.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -144,6 +152,11 @@ interface DatabaseSchema {
   reputation_profiles: ReputationProfile[];
   reputation_events: ReputationChangeEvent[];
   reputation_audit_log: ReputationAuditEntry[];
+  permission_roles: AgentRole[];
+  permission_policies: AgentPermissionPolicy[];
+  permission_templates: PermissionTemplate[];
+  permission_audit: PermissionAuditEntry[];
+  permission_escalations: PermissionEscalation[];
   _counters: {
     messages: number;
     tasks: number;
@@ -184,6 +197,11 @@ class Database {
       reputation_profiles: [],
       reputation_events: [],
       reputation_audit_log: [],
+      permission_roles: [],
+      permission_policies: [],
+      permission_templates: [],
+      permission_audit: [],
+      permission_escalations: [],
       _counters: {
         messages: 0,
         tasks: 0,
@@ -237,6 +255,21 @@ class Database {
     const reputationAuditLog = Array.isArray(data.reputation_audit_log)
       ? data.reputation_audit_log
       : [];
+    const permissionRoles = Array.isArray(data.permission_roles)
+      ? data.permission_roles
+      : [];
+    const permissionPolicies = Array.isArray(data.permission_policies)
+      ? data.permission_policies
+      : [];
+    const permissionTemplates = Array.isArray(data.permission_templates)
+      ? data.permission_templates
+      : [];
+    const permissionAudit = Array.isArray(data.permission_audit)
+      ? data.permission_audit
+      : [];
+    const permissionEscalations = Array.isArray(data.permission_escalations)
+      ? data.permission_escalations
+      : [];
 
     const counters = data._counters || {};
 
@@ -255,6 +288,11 @@ class Database {
       reputation_profiles: reputationProfiles,
       reputation_events: reputationEvents,
       reputation_audit_log: reputationAuditLog,
+      permission_roles: permissionRoles,
+      permission_policies: permissionPolicies,
+      permission_templates: permissionTemplates,
+      permission_audit: permissionAudit,
+      permission_escalations: permissionEscalations,
       _counters: {
         messages: Math.max(
           Number(counters.messages) || 0,
@@ -823,6 +861,54 @@ class Database {
     return this.data.tasks
       .filter(t => t.worker_id === agentId && t.total_score !== null)
       .slice(-limit);
+  }
+
+  // ============================================================
+  // Permission tables
+  // ============================================================
+  getPermissionRoles(): AgentRole[] {
+    return this.data.permission_roles;
+  }
+
+  setPermissionRoles(roles: AgentRole[]): void {
+    this.data.permission_roles = roles;
+    this.save();
+  }
+
+  getPermissionPolicies(): AgentPermissionPolicy[] {
+    return this.data.permission_policies;
+  }
+
+  setPermissionPolicies(policies: AgentPermissionPolicy[]): void {
+    this.data.permission_policies = policies;
+    this.save();
+  }
+
+  getPermissionTemplates(): PermissionTemplate[] {
+    return this.data.permission_templates;
+  }
+
+  setPermissionTemplates(templates: PermissionTemplate[]): void {
+    this.data.permission_templates = templates;
+    this.save();
+  }
+
+  getPermissionAudit(): PermissionAuditEntry[] {
+    return this.data.permission_audit;
+  }
+
+  addPermissionAudit(entry: PermissionAuditEntry): void {
+    this.data.permission_audit.push(entry);
+    this.save();
+  }
+
+  getPermissionEscalations(): PermissionEscalation[] {
+    return this.data.permission_escalations;
+  }
+
+  setPermissionEscalations(escalations: PermissionEscalation[]): void {
+    this.data.permission_escalations = escalations;
+    this.save();
   }
 }
 

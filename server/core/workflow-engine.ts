@@ -1,4 +1,4 @@
-import {
+﻿import {
   WORKFLOW_STAGES,
   type AgentHandle,
   type FinalWorkflowReportRecord,
@@ -36,6 +36,8 @@ import {
   buildWorkflowInputSignature,
   type WorkflowInputAttachment,
 } from "../../shared/workflow-input.js";
+
+import type { TokenService } from "../permission/token-service.js";
 
 interface WorkflowStartOptions {
   attachments?: WorkflowInputAttachment[];
@@ -109,16 +111,18 @@ async function runWithConcurrencyLimit<T>(
 }
 
 export class WorkflowEngine {
-  /** Optional autonomy configuration — when enabled, activates intelligent task allocation. */
+  /** Optional autonomy configuration 鈥?when enabled, activates intelligent task allocation. */
   autonomyConfig?: AutonomyConfig;
-  /** Intelligent task allocator — used only when autonomyConfig.enabled is true. */
+  /** Intelligent task allocator 鈥?used only when autonomyConfig.enabled is true. */
   taskAllocator?: TaskAllocator;
-  /** Competition engine for high-value tasks — used only when autonomyConfig.enabled is true. */
+  /** Competition engine for high-value tasks 鈥?used only when autonomyConfig.enabled is true. */
   competitionEngine?: CompetitionEngine;
-  /** Taskforce manager for collaborative tasks — used only when autonomyConfig.enabled is true. */
+  /** Taskforce manager for collaborative tasks 鈥?used only when autonomyConfig.enabled is true. */
   taskforceManager?: TaskforceManager;
-  /** Optional ExecutionBridge — when set, bridges workflow deliverables to Docker execution after the execution stage. */
+  /** Optional ExecutionBridge 鈥?when set, bridges workflow deliverables to Docker execution after the execution stage. */
   executionBridge?: ExecutionBridge;
+  /** Optional permission token service 鈥?when set, issues CapabilityTokens to agents at workflow start. */
+  tokenService?: TokenService;
 
   constructor(private readonly runtime: WorkflowRuntime) {}
 
@@ -195,7 +199,7 @@ export class WorkflowEngine {
       await this.runExecution(workflowId, organization);
       await this.emitStageCompleted(workflowId, "execution");
 
-      // ── ExecutionBridge: bridge deliverables to Docker executor ──
+      // 鈹€鈹€ ExecutionBridge: bridge deliverables to Docker executor 鈹€鈹€
       await this.bridgeToExecutor(workflowId);
 
       await this.runReview(workflowId, organization);
@@ -330,7 +334,7 @@ export class WorkflowEngine {
           console.log(
             `[WorkflowEngine] Phase role switch: agent=${nextAssignment.agentId} ` +
             `from=${currentRoleId} to=${nextAssignment.roleId} ` +
-            `(${currentStepKey} → ${nextStepKey})`,
+            `(${currentStepKey} 鈫?${nextStepKey})`,
           );
         }
       } catch (err) {
@@ -343,7 +347,7 @@ export class WorkflowEngine {
           scope: "agent",
           severity: "warning",
           agentId: nextAssignment.agentId,
-          message: `Phase role switch failed (${currentRoleId} → ${nextAssignment.roleId}): ${
+          message: `Phase role switch failed (${currentRoleId} 鈫?${nextAssignment.roleId}): ${
             err instanceof Error ? err.message : String(err)
           }`,
         });
@@ -401,7 +405,7 @@ export class WorkflowEngine {
           );
           result.push({ agentId: alternativeAgentId, roleId: assignment.roleId });
         } else {
-          // No alternative available — keep original assignment with a warning
+          // No alternative available 鈥?keep original assignment with a warning
           console.warn(
             `[WorkflowEngine] allowSelfReview=false: no alternative agent available ` +
             `for review role ${assignment.roleId}, keeping ${assignment.agentId}`,
@@ -618,6 +622,23 @@ export class WorkflowEngine {
     });
 
     materializeWorkflowOrganization(organization);
+
+    // Issue CapabilityTokens for each agent in the organization (opt-in)
+    if (this.tokenService) {
+      for (const node of organization.nodes) {
+        try {
+          const capToken = this.tokenService.issueToken(node.agentId);
+          const agent = this.getAgent(node.agentId);
+          if (agent instanceof Agent && typeof agent.setPermissionToken === "function") {
+            agent.setPermissionToken(capToken.token);
+          }
+        } catch {
+          // Token issuance failure must not block workflow execution
+          // Agent will operate without permission checks (backward compatible)
+        }
+      }
+    }
+
     const debugLogPath = persistOrganizationDebugLog(organization, debug);
     const rootNode = this.getRootNode(organization);
 
@@ -735,7 +756,7 @@ Rules:
           const workerNode = workers.find(worker => worker.agentId === task.worker_id);
           if (!workerNode) continue;
 
-          // ─── Autonomy-aware task allocation ────────────────────
+          // 鈹€鈹€鈹€ Autonomy-aware task allocation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
           let assignedWorkerNode = workerNode;
 
           if (this.autonomyConfig?.enabled && this.taskAllocator) {
@@ -750,7 +771,7 @@ Rules:
 
               const allocationDecision = await this.taskAllocator.allocateTask(taskRequest);
 
-              // Handle TASKFORCE strategy — form a taskforce when REQUEST_ASSIST
+              // Handle TASKFORCE strategy 鈥?form a taskforce when REQUEST_ASSIST
               if (
                 allocationDecision.strategy === 'TASKFORCE' &&
                 this.taskforceManager
@@ -832,14 +853,14 @@ Rules:
                 }
               }
             } catch (autonomyErr) {
-              // Autonomy allocation failed — fall back to static assignment
+              // Autonomy allocation failed 鈥?fall back to static assignment
               console.warn(
                 `[WorkflowEngine] Autonomy allocation failed, using static assignment: ` +
                 `${autonomyErr instanceof Error ? autonomyErr.message : autonomyErr}`,
               );
             }
           }
-          // ─── End autonomy-aware allocation ─────────────────────
+          // 鈹€鈹€鈹€ End autonomy-aware allocation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
           const taskRow = this.repo.createTask({
             workflow_id: workflowId,

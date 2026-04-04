@@ -17,6 +17,8 @@ import { writeAgentWorkspaceFile } from "./access-guard.js";
 import { ensureAgentWorkspaces } from "../memory/workspace.js";
 import { registry } from "./registry.js";
 import { SkillRegistry } from "./skill-registry.js";
+import { RoleStore } from "../permission/role-store.js";
+import { PolicyStore } from "../permission/policy-store.js";
 
 type ExecutionMode = WorkflowOrganizationNode["execution"]["mode"];
 
@@ -1094,12 +1096,75 @@ export function materializeWorkflowOrganization(
     });
   }
 
+  // ── Permission assignment for each node ──────────────────────────────
+  assignOrganizationPermissions(organization);
+
   if (registry.refreshAll) {
     registry.refreshAll();
   } else {
     organization.nodes.forEach(node => registry.refresh(node.agentId));
   }
 }
+
+/**
+ * Assign permission policies to all nodes in an organization.
+ *
+ * - Looks up a permission template by the node's role
+ * - CEO gets Admin role added (full access)
+ * - Manager gets Writer role added (read + write)
+ * - Worker gets base template only (minimal permissions)
+ * - Each policy is tagged with organizationId for cleanup
+ */
+export function assignOrganizationPermissions(
+  organization: WorkflowOrganizationSnapshot,
+  roleStoreOverride?: RoleStore,
+  policyStoreOverride?: PolicyStore,
+): void {
+  const roleStore = roleStoreOverride ?? new RoleStore(db);
+  const policyStore = policyStoreOverride ?? new PolicyStore(db, roleStore);
+
+  for (const node of organization.nodes) {
+    // Skip if policy already exists for this agent
+    if (policyStore.getPolicy(node.agentId)) continue;
+
+    // Look up permission template by agent role
+    const template = roleStore.getTemplateByRole(node.role);
+    const assignedRoles: string[] = template ? [template.templateId] : ["reader"];
+
+    // Apply permission inheritance: CEO > Manager > Worker
+    if (node.role === "ceo") {
+      assignedRoles.push("admin");
+    } else if (node.role === "manager") {
+      assignedRoles.push("writer");
+    }
+    // Worker gets base template only (no extra role)
+
+    policyStore.createPolicy({
+      agentId: node.agentId,
+      assignedRoles,
+      customPermissions: [],
+      deniedPermissions: [],
+      effectiveAt: new Date().toISOString(),
+      expiresAt: null,
+      templateId: template?.templateId,
+      organizationId: organization.workflowId,
+    });
+  }
+}
+
+/**
+ * Clean up all permission policies associated with an organization.
+ * Called when an organization is deleted / disbanded.
+ */
+export function deleteOrganizationPermissions(
+  organizationId: string,
+  policyStoreOverride?: PolicyStore,
+): void {
+  const roleStore = new RoleStore(db);
+  const policyStore = policyStoreOverride ?? new PolicyStore(db, roleStore);
+  policyStore.deletePoliciesByOrganization(organizationId);
+}
+
 
 export function persistOrganizationDebugLog(
   organization: WorkflowOrganizationSnapshot,
