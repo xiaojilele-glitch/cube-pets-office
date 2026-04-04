@@ -15,7 +15,7 @@
 
 <p align="center">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-111827" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-110K%20lines-3178c6" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-153K%20lines-3178c6" />
   <img alt="modules" src="https://img.shields.io/badge/modules-33%2F39%20done-22c55e" />
   <img alt="scene" src="https://img.shields.io/badge/3D-Three.js-8b5cf6" />
   <img alt="agents" src="https://img.shields.io/badge/agents-动态组织-f97316" />
@@ -275,15 +275,15 @@ cube-pets-office/
 
 | 维度 | 数据 |
 |------|------|
-| TypeScript 源码 | **600+ 文件 / ~120,000 行** |
-| 服务端 (server/) | 280+ 文件 / ~65,000 行 |
-| 前端 (client/) | 250+ 文件 / ~43,000 行 |
-| 共享层 (shared/) | 55+ 文件 / ~8,500 行 |
-| 执行器 (services/) | 40+ 文件 / ~6,500 行 |
+| TypeScript 源码 | **748 文件 / ~153,000 行** |
+| 服务端 (server/) | 374 文件 / ~91,000 行 |
+| 前端 (client/) | 266 文件 / ~45,800 行 |
+| 共享层 (shared/) | 55 文件 / ~8,400 行 |
+| 执行器 (services/) | 51 文件 / ~7,800 行 |
 | 功能模块 | **39 个 spec，已完成 33 个** |
 | 契约模块 | 8 个（shared/ 下冻结） |
 | 属性测试 | 12+ correctness properties (fast-check) |
-| Commits | 230+ |
+| Commits | 263+ |
 
 ---
 
