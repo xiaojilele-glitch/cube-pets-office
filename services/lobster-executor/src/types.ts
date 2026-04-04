@@ -20,6 +20,16 @@ export interface LobsterExecutorConfig {
   dockerCertPath?: string;
   callbackSecret: string;
   aiImage: string;
+
+  // ── Security sandbox (Task 2.2) ──
+  securityLevel: string;
+  containerUser: string;
+  maxMemory: string;
+  maxCpus: string;
+  maxPids: number;
+  tmpfsSize: string;
+  networkWhitelist: string[];
+  seccompProfilePath?: string;
 }
 
 export interface LobsterExecutorServiceOptions {

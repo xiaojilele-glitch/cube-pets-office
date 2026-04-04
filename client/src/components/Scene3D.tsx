@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { ACESFilmicToneMapping } from 'three';
 
 import { useViewportTier } from '@/hooks/useViewportTier';
+import { useTasksStore } from '@/lib/tasks-store';
 
 import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
@@ -12,6 +13,12 @@ import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
+
+  // Sandbox shield: show when selected mission runs at strict security level
+  const isStrictSandbox = useTasksStore(state => {
+    const detail = state.selectedTaskId ? state.detailsById[state.selectedTaskId] : null;
+    return detail?.securitySummary?.level === "strict" && detail?.status === "running";
+  });
 
   // Recovery overlay state
   const [isRecovering, setIsRecovering] = useState(false);
@@ -110,6 +117,18 @@ export function Scene3D() {
           <p className="text-base font-medium text-white drop-shadow-md">
             正在恢复上一次任务…
           </p>
+        </div>
+      )}
+
+      {/* Sandbox shield indicator */}
+      {isStrictSandbox && (
+        <div
+          className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-2xl border border-rose-200/60 bg-white/80 px-3.5 py-2 shadow-lg backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="text-lg" aria-hidden="true">🛡️</span>
+          <span className="text-xs font-semibold text-rose-700">沙箱保护中</span>
         </div>
       )}
     </div>

@@ -154,3 +154,42 @@ export interface ExecutorEvent {
   artifacts?: ExecutionPlanArtifact[];
   payload?: Record<string, unknown>;
 }
+
+
+// ─── Security Sandbox Types ─────────────────────────────────────────────────
+
+export const SECURITY_LEVELS = ["strict", "balanced", "permissive"] as const;
+export type SecurityLevel = (typeof SECURITY_LEVELS)[number];
+
+export interface SecurityResourceLimits {
+  memoryBytes: number;      // 默认 512MB = 536870912
+  nanoCpus: number;         // 默认 1.0 核 = 1_000_000_000
+  pidsLimit: number;        // 默认 256
+  tmpfsSizeBytes: number;   // 默认 64MB = 67108864
+}
+
+export interface SecurityNetworkPolicy {
+  mode: "none" | "whitelist" | "bridge";
+  whitelist?: string[];     // 域名/IP 列表
+}
+
+export interface SecurityPolicy {
+  level: SecurityLevel;
+  user: string;             // 容器运行用户，默认 "65534" (nobody)
+  readonlyRootfs: boolean;
+  noNewPrivileges: boolean;
+  capDrop: string[];        // 默认 ["ALL"]
+  capAdd: string[];         // 按等级添加
+  seccompProfile?: string;  // seccomp profile 路径
+  resources: SecurityResourceLimits;
+  network: SecurityNetworkPolicy;
+}
+
+export interface SecurityAuditEntry {
+  timestamp: string;
+  jobId: string;
+  missionId: string;
+  eventType: "container.created" | "container.started" | "container.oom" | "container.seccomp_violation" | "container.security_failure" | "container.destroyed" | "resource.exceeded";
+  securityLevel: SecurityLevel;
+  detail: Record<string, unknown>;
+}

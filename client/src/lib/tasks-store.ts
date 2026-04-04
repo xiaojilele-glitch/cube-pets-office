@@ -184,6 +184,15 @@ export interface MissionTaskDetail extends MissionTaskSummary {
   instanceInfo: Array<{ label: string; value: string }>;
   logSummary: Array<{ label: string; value: string }>;
   decisionHistory: DecisionHistoryEntry[];
+  securitySummary?: {
+    level: string;
+    user: string;
+    networkMode: string;
+    readonlyRootfs: boolean;
+    memoryLimit: string;
+    cpuLimit: string;
+    pidsLimit: number;
+  };
 }
 
 interface TasksStoreState {
@@ -907,6 +916,7 @@ function buildDetailRecord(
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildMissionLogSummary(mission, mission.events),
     decisionHistory: mission.decisionHistory ?? [],
+    securitySummary: mission.securitySummary,
   };
 }/**
  * Build a MissionTaskDetail from the /api/planets/:id/interior response.
@@ -985,6 +995,7 @@ export function buildPlanetDetailRecord(
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildMissionLogSummary(mission, events),
     decisionHistory: mission.decisionHistory ?? [],
+    securitySummary: mission.securitySummary,
   };
 }
 
@@ -1015,6 +1026,7 @@ function buildMissionDetailRecord(
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildNativeLogSummary(mission),
     decisionHistory: mission.decisionHistory ?? [],
+    securitySummary: mission.securitySummary,
   };
 }
 

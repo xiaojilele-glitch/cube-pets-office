@@ -37,6 +37,13 @@ function makeRunner(defaultImage = DEFAULT_IMAGE): DockerRunner {
     maxConcurrentJobs: 2,
     callbackSecret: "",
     aiImage: "cube-ai-sandbox:latest",
+    securityLevel: "strict",
+    containerUser: "65534",
+    maxMemory: "512m",
+    maxCpus: "1.0",
+    maxPids: 256,
+    tmpfsSize: "64m",
+    networkWhitelist: [],
   };
   const mockCallbackSender = { send: async () => {} } as unknown as CallbackSender;
   const mockDocker = {} as Dockerode;
