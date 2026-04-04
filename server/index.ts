@@ -101,6 +101,18 @@ interface ExecutorCallbackRequestBody {
         pidsLimit?: number;
       };
     };
+    /** 日志/截图关联的步骤索引 */
+    stepIndex?: number;
+    /** 日志流类型 */
+    stream?: "stdout" | "stderr";
+    /** 日志数据（最大 4KB） */
+    data?: string;
+    /** base64 编码 PNG 截图（最大 200KB） */
+    imageData?: string;
+    /** 截图宽度 */
+    imageWidth?: number;
+    /** 截图高度 */
+    imageHeight?: number;
   };
 }
 
@@ -483,7 +495,12 @@ async function startServer() {
   const queryService = new KnowledgeGraphQuery(graphStore, ontologyRegistry);
   const knowledgeService = new KnowledgeService(queryService, graphStore);
 
-  const { getSocketIO } = await import("./core/socket.js");
+  const { getSocketIO, registerSandboxRelay } = await import("./core/socket.js");
+  const { SandboxRelay } = await import("./core/sandbox-relay.js");
+  const { SANDBOX_SOCKET_EVENTS } = await import("../shared/mission/socket.js");
+  const sandboxRelay = new SandboxRelay();
+  registerSandboxRelay(sandboxRelay);
+
   graphStore.onEntityChanged((entity, action) => {
     const io = getSocketIO();
     if (io) {
@@ -594,6 +611,34 @@ async function startServer() {
         progress,
         "executor"
       );
+    } else if (event.type === "job.log_stream") {
+      const logEntry = {
+        missionId,
+        jobId: event.jobId.trim(),
+        stepIndex: typeof event.stepIndex === "number" ? event.stepIndex : 0,
+        stream: (event.stream === "stderr" ? "stderr" : "stdout") as "stdout" | "stderr",
+        data: event.data ?? "",
+        timestamp: event.occurredAt?.trim() || new Date().toISOString(),
+      };
+      sandboxRelay.appendLog(logEntry);
+      const io = getSocketIO();
+      if (io) {
+        io.emit(SANDBOX_SOCKET_EVENTS.missionLog, logEntry);
+      }
+    } else if (event.type === "job.screenshot") {
+      const screenPayload = {
+        missionId,
+        jobId: event.jobId.trim(),
+        stepIndex: typeof event.stepIndex === "number" ? event.stepIndex : 0,
+        imageData: event.imageData ?? "",
+        width: typeof event.imageWidth === "number" ? event.imageWidth : 0,
+        height: typeof event.imageHeight === "number" ? event.imageHeight : 0,
+        timestamp: event.occurredAt?.trim() || new Date().toISOString(),
+      };
+      const io = getSocketIO();
+      if (io) {
+        io.emit(SANDBOX_SOCKET_EVENTS.missionScreen, screenPayload);
+      }
     } else if (event.type === "job.waiting" || event.status === "waiting") {
       missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
       missionRuntime.waitOnMission(

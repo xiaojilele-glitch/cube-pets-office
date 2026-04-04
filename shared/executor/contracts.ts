@@ -44,6 +44,8 @@ export const EXECUTOR_EVENT_TYPES = [
   "job.cancelled",
   "job.log",
   "job.heartbeat",
+  "job.log_stream",
+  "job.screenshot",
 ] as const;
 
 export type ExecutorEventType = (typeof EXECUTOR_EVENT_TYPES)[number];
@@ -153,6 +155,18 @@ export interface ExecutorEvent {
   metrics?: ExecutorEventMetrics;
   artifacts?: ExecutionPlanArtifact[];
   payload?: Record<string, unknown>;
+  /** 日志/截图关联的步骤索引 */
+  stepIndex?: number;
+  /** 日志流类型 */
+  stream?: "stdout" | "stderr";
+  /** 日志数据（最大 4KB） */
+  data?: string;
+  /** base64 编码 PNG 截图（最大 200KB） */
+  imageData?: string;
+  /** 截图宽度 */
+  imageWidth?: number;
+  /** 截图高度 */
+  imageHeight?: number;
 }
 
 

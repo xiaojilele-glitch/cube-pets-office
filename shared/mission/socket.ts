@@ -76,3 +76,35 @@ export type MissionSocketPayload =
   | MissionSocketPlanetEdgeUpdatedEvent
   | MissionSocketExecutorEvent
   | MissionSocketDecisionSubmittedEvent;
+
+// ─── Sandbox Live Preview Socket Events ─────────────────────────────
+
+export const SANDBOX_SOCKET_EVENTS = {
+  missionLog: "mission_log",
+  missionScreen: "mission_screen",
+  missionLogHistory: "mission_log_history",
+} as const;
+
+export interface SandboxLogPayload {
+  missionId: string;
+  jobId: string;
+  stepIndex: number;
+  stream: "stdout" | "stderr";
+  data: string;
+  timestamp: string;
+}
+
+export interface SandboxScreenPayload {
+  missionId: string;
+  jobId: string;
+  stepIndex: number;
+  imageData: string;
+  width: number;
+  height: number;
+  timestamp: string;
+}
+
+export interface SandboxLogHistoryPayload {
+  missionId: string;
+  lines: SandboxLogPayload[];
+}
