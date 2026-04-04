@@ -24,7 +24,7 @@
     - 常量：EXCHANGE_RATES、CONCURRENCY_LIMITS、RATE_LIMITS、DOWNGRADE_CHAIN、DEFAULT_BUDGET_TEMPLATES
     - 工具函数：convertCurrency
     - _Requirements: 1.1, 1.2, 1.4, 1.5, 3.1, 4.1, 5.1, 6.1, 9.1, 14.1_
-  - [ ]* 1.2 编写币种转换往返属性测试
+  - [x] 1.2 编写币种转换往返属性测试
     - **Property 1: 币种转换往返一致性**
     - **Validates: Requirements 1.4**
 
@@ -36,7 +36,7 @@
     - 实现 load() 启动时加载历史审计数据
     - 导出 auditTrail 单例
     - _Requirements: 3.5, 4.4, 4.7, 5.6, 6.7, 7.5, 14.5_
-  - [ ]* 2.2 编写审计链完整性属性测试
+  - [x] 2.2 编写审计链完整性属性测试
     - **Property 6: 审计链完整性**
     - **Validates: Requirements 3.5, 4.4, 4.7, 5.6, 6.7, 7.5, 14.5**
 
@@ -50,13 +50,13 @@
     - 实现 reconcile() 预算对账（计算预算与实际成本差异）
     - 实现 getVersionHistory() 获取预算版本历史
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
-  - [ ]* 3.2 编写预算层级约束属性测试
+  - [x] 3.2 编写预算层级约束属性测试
     - **Property 22: 预算层级约束**
     - **Validates: Requirements 11.1, 11.5**
-  - [ ]* 3.3 编写预算模板实例化属性测试
+  - [x] 3.3 编写预算模板实例化属性测试
     - **Property 23: 预算模板实例化**
     - **Validates: Requirements 11.2**
-  - [ ]* 3.4 编写预算修改审批阈值属性测试
+  - [x] 3.4 编写预算修改审批阈值属性测试
     - **Property 24: 预算修改审批阈值**
     - **Validates: Requirements 11.3, 11.4**
 
@@ -68,7 +68,7 @@
     - 实现 getActiveAlerts() / resolveAlert() 管理告警生命周期
     - 支持自定义阈值覆盖默认阈值
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.6_
-  - [ ]* 4.2 编写告警类型与响应策略映射属性测试
+  - [x] 4.2 编写告警类型与响应策略映射属性测试
     - **Property 5: 告警类型与响应策略映射**
     - **Validates: Requirements 3.2, 3.3, 3.6**
 
@@ -84,12 +84,12 @@
     - 实现 getRecords() 获取降级记录
     - 降级和回滚操作均记录到 AuditTrail
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
-  - [ ]* 6.2 编写降级链正确性属性测试
+  - [x] 6.2 编写降级链正确性属性测试
     - **Property 7: 降级链正确性**
     - **Validates: Requirements 4.2**
-  - [ ]* 6.3 编写灰度降级比例属性测试
+  - [x] 6.3 编写灰度降级比例属性测试
     - **Property 8: 灰度降级比例**
     - **Validates: Requirements 4.5**
-  - [ ]* 6.4 编写降级失败自动回滚属性测试
+  - [x] 6.4 编写降级失败自动回滚属性测试
     - **Property 9: 降级失败自动回滚**
     - **Validates: Requirements 4.6**
