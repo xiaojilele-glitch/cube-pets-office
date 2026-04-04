@@ -9,6 +9,8 @@ import { generateWorkflowOrganization } from "../core/dynamic-organization.js";
 import { workflowEngine } from "../core/workflow-engine.js";
 import { reportStore } from "../memory/report-store.js";
 import { serverRuntime } from "../runtime/server-runtime.js";
+import { missionRuntime } from "../tasks/mission-runtime.js";
+import { linkWorkflowToMission } from "../core/mission-enrichment-bridge.js";
 import {
   buildWorkflowDirectiveContext,
   buildWorkflowInputSignature,
@@ -116,7 +118,16 @@ router.post("/", async (req, res) => {
       directiveContext,
       inputSignature,
     });
-    res.json({ workflowId, status: "running", deduped: false });
+
+    // Create a Mission and link it to the workflow so ExecutionBridge can dispatch to Docker
+    const mission = missionRuntime.createChatTask(
+      normalizedDirective.slice(0, 120),
+      normalizedDirective,
+    );
+    linkWorkflowToMission(workflowId, mission.id);
+    missionRuntime.markMissionRunning(mission.id, "execute", `Workflow ${workflowId} started`);
+
+    res.json({ workflowId, missionId: mission.id, status: "running", deduped: false });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

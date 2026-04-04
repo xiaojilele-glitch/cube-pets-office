@@ -439,7 +439,7 @@ async function startServer() {
   serverRuntime.resolveMissionId = resolveWorkflowMission;
 
   const executionBridge = createExecutionBridge(missionRuntime, {
-    executorBaseUrl: process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() || "http://localhost:9800",
+    executorBaseUrl: process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() || DEFAULT_EXECUTOR_BASE_URL,
     executionMode: (process.env.LOBSTER_EXECUTION_MODE as "mock" | "real") || "mock",
     defaultImage: process.env.LOBSTER_DEFAULT_IMAGE?.trim() || "node:20-slim",
     callbackUrl: buildCallbackUrl(process.env.SERVER_BASE_URL?.trim() || "http://localhost:3000"),
