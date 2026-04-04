@@ -16,7 +16,7 @@
 <p align="center">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-111827" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-110K%20lines-3178c6" />
-  <img alt="modules" src="https://img.shields.io/badge/modules-29%2F38%20done-22c55e" />
+  <img alt="modules" src="https://img.shields.io/badge/modules-33%2F39%20done-22c55e" />
   <img alt="scene" src="https://img.shields.io/badge/3D-Three.js-8b5cf6" />
   <img alt="agents" src="https://img.shields.io/badge/agents-动态组织-f97316" />
   <img alt="i18n" src="https://img.shields.io/badge/i18n-中文%20%2F%20English-22c55e" />
@@ -108,11 +108,14 @@ LLM_MODEL=gpt-4o
 # 终端 1：启动主服务
 npm run dev:all
 
-# 终端 2：启动 lobster 执行器
+# 终端 2：启动 lobster 执行器（mock 模式，无需 Docker）
 cd services/lobster-executor && npm start
+
+# 或者启动真实 Docker 模式（需要 Docker 运行中）
+LOBSTER_EXECUTION_MODE=real npm start
 ```
 
-系统会把 AI 生成的执行计划下发到 Docker 执行器，页面上实时展示容器状态、日志和产物。
+系统会把 AI 生成的执行计划下发到 Docker 执行器，页面上实时展示容器状态、日志和产物。支持 mock 模式（开发调试）和 real 模式（真实 Docker 容器执行）。
 
 ---
 
@@ -177,6 +180,14 @@ cube-pets-office/
 │
 ├── services/                        # 🐳 执行器
 │   └── lobster-executor/            # Docker 参考执行器
+│       ├── src/
+│       │   ├── docker-runner.ts     # 真实 Docker 容器生命周期
+│       │   ├── mock-runner.ts       # Mock 模式（无 Docker 依赖）
+│       │   ├── callback-sender.ts   # HMAC 签名回调投递
+│       │   ├── security-policy.ts   # 安全沙箱策略
+│       │   ├── screenshot-utils.ts  # 容器截图工具
+│       │   └── credential-*.ts      # AI 凭证注入/脱敏
+│       └── ai-bridge/               # 容器内 AI 通信桥接
 │
 └── docs/                            # 📖 文档与规范
 ```
@@ -238,13 +249,20 @@ cube-pets-office/
 | 飞书集成 | ✅ | ACK / Progress / 决策回传 |
 | 中英文 / 移动端 | ✅ | i18n 双语切换，响应式布局 |
 
-### 🚧 开发中 & 规划中
+### � 执行器与安全
 
 | 功能 | 状态 | 说明 |
 |------|:----:|------|
-| Docker 真实容器生命周期 | 🚧 | 容器创建/启动/监控/销毁全链路 |
-| 安全沙箱 + 实时终端 | 🚧 | 隔离执行环境 + 终端预览 |
+| Docker 真实容器生命周期 | ✅ | dockerode 容器创建/启动/日志流/超时/清理，HMAC 签名回调 |
+| AI 容器能力注入 | ✅ | API Key 安全注入、凭证脱敏、AI 任务预设模板 |
+| 安全沙箱 | ✅ | seccomp/AppArmor 安全策略、能力裁剪、安全审计日志 |
+| 容器实时终端 + 截图预览 | ✅ | WebSocket 终端流、容器截图、3D 场景沙箱监控 |
 | Agent 权限矩阵 | 🚧 | 细粒度工具/资源/网络权限控制 |
+
+### 🚧 规划中
+
+| 功能 | 状态 | 说明 |
+|------|:----:|------|
 | 跨 Pod 自主协作 | 📋 | 多节点 Agent 集群协作 |
 | A2A 互操作协议 | 📋 | 跨框架 Agent 通信标准 |
 | Agent 交易市场 | 📋 | Guest Agent 机制 + 信誉交易 |
@@ -257,13 +275,15 @@ cube-pets-office/
 
 | 维度 | 数据 |
 |------|------|
-| TypeScript 源码 | **567 文件 / ~110,000 行** |
-| 服务端 (server/) | 266 文件 / ~60,800 行 |
-| 前端 (client/) | 238 文件 / ~40,700 行 |
-| 共享层 (shared/) | 52 文件 / ~7,800 行 |
-| 功能模块 | **38 个 spec，已完成 29 个** |
+| TypeScript 源码 | **600+ 文件 / ~120,000 行** |
+| 服务端 (server/) | 280+ 文件 / ~65,000 行 |
+| 前端 (client/) | 250+ 文件 / ~43,000 行 |
+| 共享层 (shared/) | 55+ 文件 / ~8,500 行 |
+| 执行器 (services/) | 40+ 文件 / ~6,500 行 |
+| 功能模块 | **39 个 spec，已完成 33 个** |
 | 契约模块 | 8 个（shared/ 下冻结） |
-| Commits | 212+ |
+| 属性测试 | 12+ correctness properties (fast-check) |
+| Commits | 230+ |
 
 ---
 
