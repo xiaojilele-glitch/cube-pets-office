@@ -82,6 +82,7 @@ export class LobsterExecutorService {
       defaultImage: "node:20-slim",
       maxConcurrentJobs: 2,
       callbackSecret: "",
+      aiImage: "cube-ai-sandbox:latest",
     };
 
     this.executionMode = config.executionMode;

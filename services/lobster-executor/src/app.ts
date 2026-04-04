@@ -88,6 +88,11 @@ export function createLobsterExecutorApp(
         dockerLifecycle: config.executionMode === "real",
         callbackSigning: config.callbackSecret !== "",
       },
+      aiCapability: {
+        enabled: !!process.env.LLM_API_KEY,
+        image: config.aiImage,
+        llmProvider: process.env.LLM_BASE_URL || "openai",
+      },
     });
   });
 

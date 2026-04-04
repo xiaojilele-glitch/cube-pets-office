@@ -19,6 +19,7 @@ export interface LobsterExecutorConfig {
   dockerTlsVerify?: boolean;
   dockerCertPath?: string;
   callbackSecret: string;
+  aiImage: string;
 }
 
 export interface LobsterExecutorServiceOptions {
@@ -96,6 +97,11 @@ export interface LobsterExecutorHealthResponse {
     dockerLifecycle: boolean;
     callbackSigning: boolean;
   };
+  aiCapability: {
+    enabled: boolean;
+    image: string;
+    llmProvider: string;
+  };
 }
 
 export interface StoredJobRecord {
@@ -117,4 +123,30 @@ export interface StoredJobRecord {
   logFile: string;
   containerId?: string;
   executionMode: "real" | "mock";
+}
+
+export interface AIJobPayload {
+  aiEnabled?: boolean;
+  aiTaskType?:
+    | "text-generation"
+    | "code-generation"
+    | "data-analysis"
+    | "image-understanding";
+  llmConfig?: {
+    apiKey?: string;
+    baseUrl?: string;
+    model?: string;
+  };
+}
+
+export interface AIResultArtifact {
+  content: string;
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  model: string;
+  taskType: string;
+  completedAt: string;
 }

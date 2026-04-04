@@ -1,4 +1,4 @@
-import { appendFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { join, relative } from "node:path";
 import {
@@ -7,9 +7,16 @@ import {
   type ExecutorEvent,
   type ExecutorJobStatus,
 } from "../../../shared/executor/contracts.js";
-import type { StoredJobRecord } from "./types.js";
+import type { AIResultArtifact, StoredJobRecord } from "./types.js";
 import { getMockRunnerConfig } from "./request-schema.js";
 import type { JobRunner } from "./runner.js";
+
+const MOCK_AI_RESULT = {
+  content: "This is a mock AI response for testing purposes.",
+  usage: { promptTokens: 50, completionTokens: 30, totalTokens: 80 },
+  model: "mock-model",
+  taskType: "text-generation",
+};
 
 function toRelativePath(pathname: string): string {
   return relative(process.cwd(), pathname).replace(/\\/g, "/");
@@ -109,6 +116,27 @@ export class MockRunner implements JobRunner {
       "utf-8"
     );
 
+    const jobPayload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const aiEnabled = jobPayload.aiEnabled === true;
+
+    // Write AI result artifact if AI is enabled
+    let aiResultArtifact: AIResultArtifact | undefined;
+    let aiResultFile: string | undefined;
+    if (aiEnabled) {
+      const aiTaskType = (jobPayload.aiTaskType as string) || MOCK_AI_RESULT.taskType;
+      aiResultArtifact = {
+        ...MOCK_AI_RESULT,
+        taskType: aiTaskType,
+        completedAt: finishedAt,
+      };
+      const artifactsDir = join(record.dataDirectory, "artifacts");
+      if (!existsSync(artifactsDir)) {
+        mkdirSync(artifactsDir, { recursive: true });
+      }
+      aiResultFile = join(artifactsDir, "ai-result.json");
+      writeFileSync(aiResultFile, `${JSON.stringify(aiResultArtifact, null, 2)}\n`, "utf-8");
+    }
+
     const artifacts: ExecutionPlanArtifact[] = [
       {
         kind: "log",
@@ -123,9 +151,35 @@ export class MockRunner implements JobRunner {
         description: "Mock execution summary and callback delivery placeholder",
       },
     ];
+
+    if (aiEnabled && aiResultFile) {
+      artifacts.push({
+        kind: "report",
+        name: "ai-result.json",
+        path: toRelativePath(aiResultFile),
+        description: "Mock AI execution result",
+      });
+    }
+
     record.artifacts = artifacts;
     record.summary = resultPayload.summary;
     record.finishedAt = finishedAt;
+
+    // Build AI event payload if enabled
+    let eventPayload: Record<string, unknown> | undefined;
+    if (aiEnabled && aiResultArtifact) {
+      eventPayload = {
+        aiTaskType: aiResultArtifact.taskType,
+        aiModel: aiResultArtifact.model,
+        aiResult: {
+          tokenUsage: aiResultArtifact.usage,
+          model: aiResultArtifact.model,
+          contentPreview: aiResultArtifact.content.length > 200
+            ? aiResultArtifact.content.slice(0, 200)
+            : aiResultArtifact.content,
+        },
+      };
+    }
 
     if (runner.outcome === "failed") {
       record.status = "failed";
@@ -146,6 +200,7 @@ export class MockRunner implements JobRunner {
           durationMs,
           failed: 1,
         },
+        payload: eventPayload,
       }));
       return;
     }
@@ -165,6 +220,7 @@ export class MockRunner implements JobRunner {
         durationMs,
         passed: 1,
       },
+      payload: eventPayload,
     }));
   }
 
@@ -179,6 +235,7 @@ export class MockRunner implements JobRunner {
       errorCode?: string;
       artifacts?: ExecutionPlanArtifact[];
       metrics?: ExecutorEvent["metrics"];
+      payload?: Record<string, unknown>;
     },
   ): ExecutorEvent {
     return {
@@ -196,6 +253,7 @@ export class MockRunner implements JobRunner {
       errorCode: input.errorCode,
       artifacts: input.artifacts,
       metrics: input.metrics,
+      payload: input.payload,
     };
   }
 
