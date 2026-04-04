@@ -86,9 +86,11 @@ inclusion: auto
 串行执行顺序（不可跳过）：
 L22 → L23 → L24
             → L25
+L22 → L22.5（独立并行）
 ```
 
 - [x] L22 `lobster-executor-real` — Docker 真实容器生命周期（大）✅ 已完成 (15 test files, 61 tests, 12 PBT properties)
+- [ ] L22.5 `ai-enabled-sandbox` — Docker 容器 AI 能力注入（中）← 依赖 L22 ✅，独立于 L23/L24/L25，可并行
 - [ ] L23 `secure-sandbox` — Docker 安全沙箱（中）← 严格依赖 L22 ✅
 - [ ] L24 `sandbox-live-preview` — 容器实时终端 + 截图预览（中）← 严格依赖 L22 ✅
 - [ ] L25 `agent-permission-model` — Agent 细粒度权限矩阵（中）← 严格依赖 L23
@@ -189,7 +191,8 @@ C01-C08 契约冻结 (已完成)
   └──→ L22 ✅ ──→ L23 ──→ Docker 执行闭环
                     │
                     ├──→ L24
-                    └──→ L25
+                    ├──→ L25
+                    └──→ L22.5 (AI 增强，独立并行)
 ```
 
 ## 风险提示
