@@ -456,7 +456,9 @@ export class ExecutionBridge {
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        return await this.executorClient.dispatchPlan(plan);
+        return await this.executorClient.dispatchPlan(plan, {
+          jobId: plan.jobs[0]?.id,
+        });
       } catch (error) {
         lastError = error;
 
