@@ -54,6 +54,7 @@ export function buildAIEnvVars(creds: AICredentials): string[] {
     `AI_API_KEY=${creds.apiKey}`,
     `AI_BASE_URL=${creds.baseUrl}`,
     `AI_MODEL=${creds.model}`,
+    `AI_WIRE_API=${process.env.LLM_WIRE_API || "chat"}`,
   ];
 }
 
