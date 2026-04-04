@@ -497,7 +497,7 @@ export function createExecutionBridge(
   const executorBaseUrl =
     options?.executorBaseUrl ||
     process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() ||
-    "http://localhost:9800";
+    "http://localhost:3031";
   const executionMode =
     options?.executionMode ||
     (process.env.LOBSTER_EXECUTION_MODE as "mock" | "real") ||
