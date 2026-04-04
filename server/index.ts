@@ -590,12 +590,12 @@ async function startServer() {
   }));
 
   // Wire permission system into workflow engine and agent layer
-  const { workflowEngine } = await import("./core/workflow-engine.js");
+  const { workflowEngine: wfEngine } = await import("./core/workflow-engine.js");
   const { setPermissionCheckEngine } = await import("./core/agent.js");
   const { PermissionCheckEngine } = await import("./permission/check-engine.js");
   const { FilesystemChecker } = await import("./permission/checkers/filesystem-checker.js");
 
-  workflowEngine.tokenService = permTokenService;
+  wfEngine.tokenService = permTokenService;
 
   const permCheckEngine = new PermissionCheckEngine(
     permTokenService,
