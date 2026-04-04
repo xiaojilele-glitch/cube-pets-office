@@ -9,6 +9,7 @@ import {
   FolderKanban,
   History,
   LoaderCircle,
+  Shield,
   Sparkles,
   TimerReset,
   Workflow,
@@ -1212,6 +1213,41 @@ export function TaskDetailView({
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
           <DetailTabViewport isDesktop={isDesktop}>
+            {detail.securitySummary && (
+              <Card className="mb-4 rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+                <CardHeader className="space-y-1 pb-3">
+                  <CardTitle className="flex items-center gap-2 text-stone-900">
+                    <Shield className="size-4 text-stone-600" />
+                    Security Policy
+                  </CardTitle>
+                  <CardDescription className="flex items-center gap-2">
+                    Container sandbox configuration
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                        detail.securitySummary.level === "strict"
+                          ? "border border-rose-200 bg-rose-50 text-rose-700"
+                          : detail.securitySummary.level === "balanced"
+                            ? "border border-amber-200 bg-amber-50 text-amber-700"
+                            : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                      )}
+                    >
+                      {detail.securitySummary.level}
+                    </span>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    <SnapshotTile label="User" value={detail.securitySummary.user} />
+                    <SnapshotTile label="Network" value={detail.securitySummary.networkMode} />
+                    <SnapshotTile label="Readonly FS" value={detail.securitySummary.readonlyRootfs ? "Yes" : "No"} />
+                    <SnapshotTile label="Memory" value={detail.securitySummary.memoryLimit} />
+                    <SnapshotTile label="CPU" value={detail.securitySummary.cpuLimit} />
+                    <SnapshotTile label="PIDs Limit" value={String(detail.securitySummary.pidsLimit)} />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
               {workPackagesPanel}
               {timelinePanel}

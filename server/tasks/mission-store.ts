@@ -36,6 +36,7 @@ export interface PatchMissionExecutionInput {
   executor?: MissionExecutorContext;
   instance?: MissionInstanceContext;
   artifacts?: MissionArtifact[];
+  securitySummary?: MissionRecord["securitySummary"];
 }
 
 function now(): number {
@@ -173,6 +174,9 @@ export class MissionStore {
       }
       if (patch.artifacts !== undefined) {
         task.artifacts = structuredClone(patch.artifacts);
+      }
+      if (patch.securitySummary !== undefined) {
+        task.securitySummary = structuredClone(patch.securitySummary);
       }
     });
   }

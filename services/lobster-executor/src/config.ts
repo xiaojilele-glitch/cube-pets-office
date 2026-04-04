@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { LobsterExecutorConfig } from "./types.js";
+import { readSecurityConfig } from "./security-policy.js";
 
 function parsePort(rawPort: string | undefined, fallback: number): number {
   if (!rawPort) return fallback;
@@ -17,6 +18,8 @@ export function readLobsterExecutorConfig(
   env: NodeJS.ProcessEnv = process.env,
   platform: string = process.platform
 ): LobsterExecutorConfig {
+  const securityConfig = readSecurityConfig(env);
+
   return {
     host: env.LOBSTER_EXECUTOR_HOST || "0.0.0.0",
     port: parsePort(env.LOBSTER_EXECUTOR_PORT, 3031),
@@ -34,5 +37,15 @@ export function readLobsterExecutorConfig(
     dockerCertPath: env.DOCKER_CERT_PATH || undefined,
     callbackSecret: env.EXECUTOR_CALLBACK_SECRET || "",
     aiImage: env.LOBSTER_AI_IMAGE || "cube-ai-sandbox:latest",
+
+    // Security sandbox fields
+    securityLevel: securityConfig.securityLevel,
+    containerUser: securityConfig.containerUser,
+    maxMemory: securityConfig.maxMemory,
+    maxCpus: securityConfig.maxCpus,
+    maxPids: securityConfig.maxPids,
+    tmpfsSize: securityConfig.tmpfsSize,
+    networkWhitelist: securityConfig.networkWhitelist,
+    seccompProfilePath: securityConfig.seccompProfilePath,
   };
 }

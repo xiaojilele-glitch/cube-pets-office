@@ -214,6 +214,16 @@ export interface MissionRecord {
   waitingFor?: string;
   decision?: MissionDecision;
   decisionHistory?: DecisionHistoryEntry[];
+  /** Security sandbox summary attached from executor job.started event */
+  securitySummary?: {
+    level: string;
+    user: string;
+    networkMode: string;
+    readonlyRootfs: boolean;
+    memoryLimit: string;
+    cpuLimit: string;
+    pidsLimit: number;
+  };
   createdAt: number;
   updatedAt: number;
   completedAt?: number;

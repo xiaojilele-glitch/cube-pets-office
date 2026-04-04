@@ -97,6 +97,67 @@ $env:LOBSTER_EXECUTOR_BASE_URL='http://127.0.0.1:3031'
 node scripts/lobster-executor-smoke.mjs
 ```
 
+## Security Sandbox
+
+The executor enforces a multi-layer security sandbox on every Docker container. Security is controlled by a single `LOBSTER_SECURITY_LEVEL` environment variable with three presets.
+
+### Security Levels
+
+| Feature | `strict` (default) | `balanced` | `permissive` |
+|---|---|---|---|
+| Linux capabilities | Drop ALL, add none | Drop ALL, add `NET_BIND_SERVICE` | Drop ALL, add `NET_BIND_SERVICE`, `SYS_PTRACE` |
+| Root filesystem | Read-only | Read-only | Read-write |
+| `no-new-privileges` | Yes | Yes | Yes |
+| Network | `none` (fully isolated) | Whitelist only | Default bridge |
+| Seccomp profile | Minimal allow-list | Minimal allow-list | Minimal allow-list |
+| tmpfs `/tmp` | 64 MB (configurable) | 64 MB (configurable) | Not mounted |
+
+### Environment Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `LOBSTER_SECURITY_LEVEL` | Security preset: `strict`, `balanced`, `permissive` | `strict` |
+| `LOBSTER_CONTAINER_USER` | UID the container process runs as | `65534` (nobody) |
+| `LOBSTER_MAX_MEMORY` | Container memory limit (e.g. `512m`, `1g`) | `512m` |
+| `LOBSTER_MAX_CPUS` | CPU quota in cores (e.g. `1.0`, `2.0`) | `1.0` |
+| `LOBSTER_MAX_PIDS` | Max processes inside the container | `256` |
+| `LOBSTER_TMPFS_SIZE` | Size of `/tmp` tmpfs in read-only mode | `64m` |
+| `LOBSTER_NETWORK_WHITELIST` | Comma-separated domains/IPs for balanced mode | (empty) |
+| `LOBSTER_SECCOMP_PROFILE` | Path to a custom seccomp JSON profile | Built-in `seccomp.json` |
+
+### Seccomp Profile
+
+A default seccomp profile ships at `services/lobster-executor/seccomp.json`. It uses a deny-by-default strategy (`SCMP_ACT_ERRNO`) and explicitly allows ~90 safe syscalls needed for typical Node.js / Python workloads. Dangerous syscalls like `mount`, `reboot`, `kexec_load`, `ptrace` (in strict mode), and `bpf` are blocked.
+
+Override with a custom profile via `LOBSTER_SECCOMP_PROFILE=/path/to/custom.json`.
+
+### Audit Logging
+
+Every container lifecycle event is recorded to `<dataRoot>/security-audit.jsonl`. Each line is a JSON object with:
+
+- `timestamp` — ISO 8601
+- `jobId` / `missionId`
+- `eventType` — `container.created`, `container.started`, `container.oom`, `container.seccomp_violation`, `container.security_failure`, `container.destroyed`, `resource.exceeded`
+- `securityLevel` — the active level
+- `detail` — event-specific metadata
+
+Query audit entries via the API:
+
+```
+GET /api/executor/security-audit?jobId=<jobId>
+```
+
+### Security Smoke Test
+
+```bash
+# Start executor in real + strict mode:
+LOBSTER_EXECUTION_MODE=real LOBSTER_SECURITY_LEVEL=strict \
+  npx tsx services/lobster-executor/src/index.ts
+
+# In another terminal:
+LOBSTER_SMOKE_NO_SPAWN=1 node scripts/secure-sandbox-smoke.mjs
+```
+
 ## Next Phase
 
 The remaining Worktree B items stay unchanged:

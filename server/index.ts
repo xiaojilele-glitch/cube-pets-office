@@ -91,6 +91,15 @@ interface ExecutorCallbackRequestBody {
         exitCode?: number;
         host?: string;
       };
+      securitySummary?: {
+        level?: string;
+        user?: string;
+        networkMode?: string;
+        readonlyRootfs?: boolean;
+        memoryLimit?: string;
+        cpuLimit?: string;
+        pidsLimit?: number;
+      };
     };
   };
 }
@@ -295,6 +304,23 @@ function normalizeExecutorInstance(
 
 function normalizeSmokeOutcome(value: unknown): "success" | "failed" {
   return value === "failed" ? "failed" : "success";
+}
+
+function normalizeSecuritySummary(
+  value: NonNullable<ExecutorCallbackRequestBody["event"]>["payload"]
+): MissionRecord["securitySummary"] | undefined {
+  const ss = value?.securitySummary;
+  if (!ss || typeof ss !== "object") return undefined;
+  if (!ss.level?.trim()) return undefined;
+  return {
+    level: ss.level.trim(),
+    user: ss.user?.trim() || "65534",
+    networkMode: ss.networkMode?.trim() || "none",
+    readonlyRootfs: ss.readonlyRootfs === true,
+    memoryLimit: ss.memoryLimit?.trim() || "512MB",
+    cpuLimit: ss.cpuLimit?.trim() || "1.0",
+    pidsLimit: typeof ss.pidsLimit === "number" ? ss.pidsLimit : 256,
+  };
 }
 
 function normalizeExecutorDecision(
@@ -539,6 +565,7 @@ async function startServer() {
     const executorName = event.executor?.trim() || current.executor?.name || "executor";
     const artifacts = normalizeExecutorArtifacts(event.artifacts);
     const instance = normalizeExecutorInstance(event.payload);
+    const securitySummary = normalizeSecuritySummary(event.payload);
 
     missionRuntime.patchMissionExecution(missionId, {
       executor: {
@@ -552,6 +579,7 @@ async function startServer() {
       },
       instance: instance || current.instance,
       artifacts: artifacts || current.artifacts,
+      securitySummary: securitySummary || current.securitySummary,
     });
 
     if (event.type === "job.log") {

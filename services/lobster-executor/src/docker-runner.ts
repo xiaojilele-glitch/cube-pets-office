@@ -16,6 +16,7 @@ import {
   type ExecutionPlanArtifact,
   type ExecutorEvent,
   type ExecutorJobStatus,
+  type SecurityPolicy,
 } from "../../../shared/executor/contracts.js";
 import type { AIResultArtifact, LobsterExecutorConfig, StoredJobRecord } from "./types.js";
 import type { JobRunner } from "./runner.js";
@@ -27,6 +28,13 @@ import {
   buildAIEnvVars,
 } from "./credential-injector.js";
 import { CredentialScrubber } from "./credential-scrubber.js";
+import {
+  readSecurityConfig,
+  resolveSecurityPolicy,
+  toDockerCreateOptions,
+  toDockerHostConfig,
+} from "./security-policy.js";
+import { SecurityAuditLogger } from "./security-audit.js";
 
 function toRelativePath(pathname: string): string {
   return relative(process.cwd(), pathname).replace(/\\/g, "/");
@@ -59,6 +67,8 @@ export class DockerRunner implements JobRunner {
   private readonly docker: Dockerode;
   private readonly callbackSender: CallbackSender;
   private readonly config: DockerRunnerConfig;
+  private readonly securityPolicy: SecurityPolicy;
+  private readonly auditLogger: SecurityAuditLogger;
 
   constructor(
     executorConfig: LobsterExecutorConfig,
@@ -73,6 +83,21 @@ export class DockerRunner implements JobRunner {
       dockerTlsVerify: executorConfig.dockerTlsVerify,
       dockerCertPath: executorConfig.dockerCertPath,
     };
+
+    // Resolve security policy once at construction time
+    this.securityPolicy = resolveSecurityPolicy({
+      securityLevel: executorConfig.securityLevel as "strict" | "balanced" | "permissive",
+      containerUser: executorConfig.containerUser ?? "65534",
+      maxMemory: executorConfig.maxMemory ?? "512m",
+      maxCpus: executorConfig.maxCpus ?? "1.0",
+      maxPids: executorConfig.maxPids ?? 256,
+      tmpfsSize: executorConfig.tmpfsSize ?? "64m",
+      networkWhitelist: executorConfig.networkWhitelist ?? [],
+      seccompProfilePath: executorConfig.seccompProfilePath,
+    });
+
+    // Security audit logger
+    this.auditLogger = new SecurityAuditLogger(executorConfig.dataRoot);
 
     if (docker) {
       this.docker = docker;
@@ -133,8 +158,36 @@ export class DockerRunner implements JobRunner {
       const containerId = container.id;
       record.containerId = containerId;
 
+      // Audit: container.created
+      this.auditLogger.log({
+        jobId: record.request.jobId,
+        missionId: record.request.missionId,
+        eventType: "container.created",
+        securityLevel: this.securityPolicy.level,
+        detail: {
+          containerId,
+          image: (record.planJob.payload as Record<string, unknown>)?.image ?? this.config.defaultImage,
+          user: this.securityPolicy.user,
+          readonlyRootfs: this.securityPolicy.readonlyRootfs,
+          capDrop: this.securityPolicy.capDrop,
+          capAdd: this.securityPolicy.capAdd,
+          networkMode: this.securityPolicy.network.mode,
+          memoryBytes: this.securityPolicy.resources.memoryBytes,
+          pidsLimit: this.securityPolicy.resources.pidsLimit,
+        },
+      });
+
       // 3. Start container
       await container.start();
+
+      // Audit: container.started
+      this.auditLogger.log({
+        jobId: record.request.jobId,
+        missionId: record.request.missionId,
+        eventType: "container.started",
+        securityLevel: this.securityPolicy.level,
+        detail: { containerId },
+      });
 
       // 4. Update record & emit job.started
       const startedAt = new Date().toISOString();
@@ -149,6 +202,30 @@ export class DockerRunner implements JobRunner {
         progress: 5,
         message: `Started Docker container ${containerId.slice(0, 12)} for ${record.planJob.label}`,
       });
+      // Task 3.2: Attach network policy info to job.started payload
+      // Task 5.1: Attach securitySummary to job.started payload
+      const memBytes = this.securityPolicy.resources.memoryBytes;
+      const memoryLimit = memBytes >= 1_073_741_824
+        ? `${Math.round(memBytes / 1_073_741_824)}GB`
+        : `${Math.round(memBytes / 1_048_576)}MB`;
+      const cpuLimit = (this.securityPolicy.resources.nanoCpus / 1_000_000_000).toFixed(1);
+
+      startedEvent.payload = {
+        ...startedEvent.payload,
+        networkPolicy: {
+          mode: this.securityPolicy.network.mode,
+          whitelist: this.securityPolicy.network.whitelist ?? [],
+        },
+        securitySummary: {
+          level: this.securityPolicy.level,
+          user: this.securityPolicy.user,
+          networkMode: this.securityPolicy.network.mode,
+          readonlyRootfs: this.securityPolicy.readonlyRootfs,
+          memoryLimit,
+          cpuLimit,
+          pidsLimit: this.securityPolicy.resources.pidsLimit,
+        },
+      };
       emitEvent(startedEvent);
       await this.sendCallback(record, startedEvent);
 
@@ -164,6 +241,7 @@ export class DockerRunner implements JobRunner {
       // 6. Inspect exit code
       const inspection = await container.inspect();
       const exitCode = inspection.State.ExitCode;
+      const oomKilled = !!(inspection.State as Record<string, unknown>).OOMKilled;
       const finishedAt = new Date().toISOString();
       const durationMs = Date.now() - startTime;
 
@@ -202,6 +280,36 @@ export class DockerRunner implements JobRunner {
           `Container timed out after ${durationMs}ms`,
           durationMs, artifacts, stderrLines,
         );
+      } else if (oomKilled) {
+        // Task 2.4: OOM detection
+        // Audit: container.oom
+        this.auditLogger.log({
+          jobId: record.request.jobId,
+          missionId: record.request.missionId,
+          eventType: "container.oom",
+          securityLevel: this.securityPolicy.level,
+          detail: { exitCode, memoryLimit: this.securityPolicy.resources.memoryBytes },
+        });
+        await this.emitFailed(
+          record, emitEvent, "OOM_KILLED",
+          `Container killed by OOM (exit code ${exitCode})`,
+          durationMs, artifacts, stderrLines,
+        );
+      } else if (exitCode === 159) {
+        // Task 2.5: Seccomp violation detection (128 + 31 = SIGSYS)
+        // Audit: container.seccomp_violation
+        this.auditLogger.log({
+          jobId: record.request.jobId,
+          missionId: record.request.missionId,
+          eventType: "container.seccomp_violation",
+          securityLevel: this.securityPolicy.level,
+          detail: { exitCode, signal: "SIGSYS" },
+        });
+        await this.emitFailed(
+          record, emitEvent, "SECCOMP_VIOLATION",
+          `Container killed by seccomp violation (SIGSYS, exit code 159)`,
+          durationMs, artifacts, stderrLines,
+        );
       } else if (exitCode !== 0) {
         await this.emitFailed(
           record, emitEvent, `EXIT_CODE_${exitCode}`,
@@ -217,6 +325,15 @@ export class DockerRunner implements JobRunner {
       const errorCode = this.classifyError(err);
       const errorMessage = err instanceof Error ? err.message : String(err);
 
+      // Audit: container.security_failure
+      this.auditLogger.log({
+        jobId: record.request.jobId,
+        missionId: record.request.missionId,
+        eventType: "container.security_failure",
+        securityLevel: this.securityPolicy.level,
+        detail: { errorCode, errorMessage },
+      });
+
       record.finishedAt = new Date().toISOString();
       await this.emitFailed(
         record, emitEvent, errorCode, errorMessage,
@@ -225,6 +342,14 @@ export class DockerRunner implements JobRunner {
     } finally {
       // 10. Cleanup container
       if (container) {
+        // Audit: container.destroyed
+        this.auditLogger.log({
+          jobId: record.request.jobId,
+          missionId: record.request.missionId,
+          eventType: "container.destroyed",
+          securityLevel: this.securityPolicy.level,
+          detail: { containerId: container.id },
+        });
         await this.cleanupContainer(container);
       }
     }
@@ -268,13 +393,19 @@ export class DockerRunner implements JobRunner {
     const hostWorkspace =
       (payload.workspaceRoot as string | undefined) || workspaceDir;
 
+    // Security policy → Docker options
+    const securityCreateOpts = toDockerCreateOptions(this.securityPolicy);
+    const securityHostConfig = toDockerHostConfig(this.securityPolicy);
+
     return {
       Image: image,
       Cmd: command.length > 0 ? command : undefined,
       Env: envArray.length > 0 ? envArray : undefined,
       WorkingDir: "/workspace",
+      User: securityCreateOpts.User,
       HostConfig: {
         Binds: [`${hostWorkspace}:/workspace`],
+        ...securityHostConfig,
       },
     };
   }
@@ -687,6 +818,24 @@ export class DockerRunner implements JobRunner {
       metrics: { durationMs, failed: 1 },
       payload: eventPayload,
     });
+
+    // Task 4.4: Attach securityContext for security-related failures
+    const SECURITY_ERROR_CODES = ["OOM_KILLED", "SECCOMP_VIOLATION", "SECURITY_CONFIG_INVALID"];
+    if (SECURITY_ERROR_CODES.includes(errorCode)) {
+      event.payload = {
+        ...event.payload,
+        securityContext: {
+          level: this.securityPolicy.level,
+          user: this.securityPolicy.user,
+          networkMode: this.securityPolicy.network.mode,
+          readonlyRootfs: this.securityPolicy.readonlyRootfs,
+          capDrop: this.securityPolicy.capDrop,
+          capAdd: this.securityPolicy.capAdd,
+          resources: this.securityPolicy.resources,
+        },
+      };
+    }
+
     emitEvent(event);
     await this.sendCallback(record, event);
   }

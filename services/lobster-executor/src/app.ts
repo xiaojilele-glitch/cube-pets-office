@@ -18,6 +18,8 @@ import type {
   LobsterExecutorJobDetailResponse,
   LobsterExecutorJobsResponse,
 } from "./types.js";
+import { SecurityAuditLogger } from "./security-audit.js";
+import type { SecurityAuditEntry } from "../../../shared/executor/contracts.js";
 
 function sendError(
   res: Response<ExecutorApiErrorResponse>,
@@ -141,6 +143,27 @@ export function createLobsterExecutorApp(
           "Cancel route is reserved but not implemented yet. Docker lifecycle and cancellation land in the next Worktree B phase.",
       });
     }
+  );
+
+  // ── Security audit route (Task 4.3) ──
+  app.get(
+    "/api/executor/security-audit",
+    (
+      req: Request<unknown, unknown, unknown, { jobId?: string }>,
+      res: Response<{ ok: true; entries: SecurityAuditEntry[] } | ExecutorApiErrorResponse>,
+    ) => {
+      try {
+        const config = readLobsterExecutorConfig();
+        const auditLogger = new SecurityAuditLogger(config.dataRoot);
+        const { jobId } = req.query;
+        const entries = jobId
+          ? auditLogger.getByJobId(jobId)
+          : auditLogger.getAll();
+        res.json({ ok: true, entries });
+      } catch (error) {
+        sendError(res, error);
+      }
+    },
   );
 
   app.use((_req, res: Response<ExecutorApiErrorResponse>) =>
