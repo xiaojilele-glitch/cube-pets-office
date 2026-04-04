@@ -8,6 +8,7 @@ import {
   Monitor,
   Server,
   Settings,
+  Shield,
   Sparkles,
   Terminal,
   Workflow,
@@ -16,6 +17,14 @@ import {
 import { useLocation } from 'wouter';
 
 import { GitHubRepoBadge } from '@/components/GitHubRepoBadge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { PermissionPanel } from '@/components/permissions/PermissionPanel';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
 import { getAgentToolbarLabel } from '@/lib/agent-config';
@@ -23,7 +32,7 @@ import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
-type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter';
+type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions';
 
 function getRuntimeNarrative(
   locale: string,
@@ -171,6 +180,7 @@ export function Toolbar() {
 
   const [showHelp, setShowHelp] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
   const showGitHubBadge = IS_GITHUB_PAGES;
   const [location, setLocation] = useLocation();
 
@@ -208,6 +218,13 @@ export function Toolbar() {
       accent: '#6366F1',
       active: location === '/command-center',
       onClick: () => setLocation('/command-center'),
+    },
+    {
+      id: 'permissions',
+      icon: Shield,
+      accent: '#7C3AED',
+      active: showPermissions,
+      onClick: () => setShowPermissions(prev => !prev),
     },
     {
       id: 'help',
@@ -392,7 +409,7 @@ export function Toolbar() {
         style={{ pointerEvents: 'auto' }}
       >
         <div className="rounded-[32px] border border-white/60 bg-white/78 px-3 py-2.5 shadow-[0_14px_40px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
-          <div className={`grid gap-2 ${isTablet ? 'grid-cols-5' : 'grid-cols-5'}`}>
+          <div className={`grid gap-2 ${isTablet ? 'grid-cols-6' : 'grid-cols-6'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
               const labels = copy.toolbar.dockButtons[button.id];
@@ -436,6 +453,26 @@ export function Toolbar() {
           </div>
         </div>
       </div>
+
+      {/* Permission management dialog */}
+      <Dialog open={showPermissions} onOpenChange={setShowPermissions}>
+        <DialogContent className="max-w-4xl h-[600px] rounded-[28px] border-stone-200 bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
+          <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
+            <DialogTitle className="flex items-center gap-2 text-stone-900">
+              <Shield className="size-4 text-[#7C3AED]" />
+              {locale === 'zh-CN' ? 'Agent 权限管理' : 'Agent Permissions'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-stone-500">
+              {locale === 'zh-CN'
+                ? '管理 Agent 权限角色、查看权限矩阵和审计日志'
+                : 'Manage agent permission roles, view permission matrix and audit logs'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden" style={{ height: 'calc(600px - 80px)' }}>
+            <PermissionPanel />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

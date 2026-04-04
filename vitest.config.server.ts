@@ -11,6 +11,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "server/tests/**/*.test.ts",
+      "server/permission/**/*.test.ts",
       "shared/**/*.test.ts",
       "client/src/lib/replay/__tests__/**/*.test.ts",
       "client/src/runtime/demo-data/__tests__/**/*.test.ts",

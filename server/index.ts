@@ -563,6 +563,47 @@ async function startServer() {
   app.use("/api/knowledge", createKnowledgeRouter({ graphStore, reviewQueue, knowledgeService }));
   app.use("/api/admin/knowledge", createKnowledgeAdminRouter({ graphStore, ontologyRegistry, reviewQueue }));
 
+  // ── Agent Permission Model ──
+  const { RoleStore } = await import("./permission/role-store.js");
+  const { PolicyStore } = await import("./permission/policy-store.js");
+  const { TokenService } = await import("./permission/token-service.js");
+  const { DynamicPermissionManager } = await import("./permission/dynamic-manager.js");
+  const { ConflictDetector } = await import("./permission/conflict-detector.js");
+  const { AuditLogger } = await import("./permission/audit-logger.js");
+  const { createPermissionRouter } = await import("./routes/permissions.js");
+
+  const permRoleStore = new RoleStore(db);
+  permRoleStore.initBuiltinRoles();
+  const permPolicyStore = new PolicyStore(db, permRoleStore);
+  const permTokenService = new TokenService(permPolicyStore, permRoleStore);
+  const permAuditLogger = new AuditLogger(db);
+  const permDynamicManager = new DynamicPermissionManager(permPolicyStore, permTokenService, db, permAuditLogger);
+  const permConflictDetector = new ConflictDetector(permPolicyStore, permRoleStore);
+
+  app.use("/api/permissions", createPermissionRouter({
+    roleStore: permRoleStore,
+    policyStore: permPolicyStore,
+    tokenService: permTokenService,
+    dynamicManager: permDynamicManager,
+    conflictDetector: permConflictDetector,
+    auditLogger: permAuditLogger,
+  }));
+
+  // Wire permission system into workflow engine and agent layer
+  const { workflowEngine } = await import("./core/workflow-engine.js");
+  const { setPermissionCheckEngine } = await import("./core/agent.js");
+  const { PermissionCheckEngine } = await import("./permission/check-engine.js");
+  const { FilesystemChecker } = await import("./permission/checkers/filesystem-checker.js");
+
+  workflowEngine.tokenService = permTokenService;
+
+  const permCheckEngine = new PermissionCheckEngine(
+    permTokenService,
+    permAuditLogger,
+    new Map([["filesystem", new FilesystemChecker()]]),
+  );
+  setPermissionCheckEngine(permCheckEngine);
+
   const nlCommandRoutes = (await import("./routes/nl-command.js")).default;
   app.use("/api/nl-command", nlCommandRoutes);
 

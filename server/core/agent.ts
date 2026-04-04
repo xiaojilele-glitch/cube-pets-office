@@ -22,7 +22,7 @@ import {
   ensureAgentWorkspace,
   type AgentWorkspaceScope,
 } from "../memory/workspace.js";
-import { readAgentWorkspaceFile, writeAgentWorkspaceFile } from "./access-guard.js";
+import { readAgentWorkspaceFile, writeAgentWorkspaceFile, resolveAgentWorkspacePath } from "./access-guard.js";
 import { callLLM, callLLMJson } from "./llm-client.js";
 import { messageBus } from "./message-bus.js";
 import { emitEvent } from "./socket.js";
@@ -30,6 +30,31 @@ import { telemetryStore } from "./telemetry-store.js";
 import { roleRegistry } from "./role-registry.js";
 import { roleConstraintValidator } from "./role-constraint-validator.js";
 import { getRAGConfig } from "../rag/config.js";
+import type { PermissionCheckEngine } from "../permission/check-engine.js";
+
+// ─── Permission Error ───────────────────────────────────────────────────────
+
+export class PermissionDeniedError extends Error {
+  public readonly suggestion?: string;
+
+  constructor(reason?: string, suggestion?: string) {
+    super(reason ?? "Permission denied");
+    this.name = "PermissionDeniedError";
+    this.suggestion = suggestion;
+  }
+}
+
+// ─── Singleton permission check engine (lazy, opt-in) ───────────────────────
+
+let _permissionCheckEngine: PermissionCheckEngine | undefined;
+
+export function setPermissionCheckEngine(engine: PermissionCheckEngine): void {
+  _permissionCheckEngine = engine;
+}
+
+export function getPermissionCheckEngine(): PermissionCheckEngine | undefined {
+  return _permissionCheckEngine;
+}
 
 const __agent_filename = fileURLToPath(import.meta.url);
 const __agent_dirname = dirname(__agent_filename);
@@ -169,6 +194,23 @@ const sharedAgentDependencies: RuntimeAgentDependencies = {
 
 export class Agent extends RuntimeAgent {
   private roleState: AgentRoleState;
+  private permissionToken?: string;
+
+  /**
+   * Set the permission token for this agent.
+   * When set, file operations (saveToWorkspace, readFromWorkspace) will be
+   * checked against the permission system before execution.
+   */
+  setPermissionToken(token: string): void {
+    this.permissionToken = token;
+  }
+
+  /**
+   * Get the current permission token (for testing / inspection).
+   */
+  getPermissionToken(): string | undefined {
+    return this.permissionToken;
+  }
 
   constructor(config: AgentConfig) {
     // Create per-agent dependencies with timing instrumentation
@@ -485,6 +527,19 @@ export class Agent extends RuntimeAgent {
     scope: AgentWorkspaceScope = "root"
   ): string {
     this.ensureWorkspace();
+    // Permission check: if token is set, verify write permission before proceeding
+    if (this.permissionToken) {
+      const engine = getPermissionCheckEngine();
+      if (engine) {
+        const resolvedPath = resolveAgentWorkspacePath(this.config.id, filename, scope);
+        const result = engine.checkPermission(
+          this.config.id, "filesystem", "write", resolvedPath, this.permissionToken
+        );
+        if (!result.allowed) {
+          throw new PermissionDeniedError(result.reason, result.suggestion);
+        }
+      }
+    }
     return writeAgentWorkspaceFile(this.config.id, filename, content, scope);
   }
 
@@ -493,6 +548,19 @@ export class Agent extends RuntimeAgent {
     scope: AgentWorkspaceScope = "root"
   ): string | null {
     this.ensureWorkspace();
+    // Permission check: if token is set, verify read permission before proceeding
+    if (this.permissionToken) {
+      const engine = getPermissionCheckEngine();
+      if (engine) {
+        const resolvedPath = resolveAgentWorkspacePath(this.config.id, filename, scope);
+        const result = engine.checkPermission(
+          this.config.id, "filesystem", "read", resolvedPath, this.permissionToken
+        );
+        if (!result.allowed) {
+          throw new PermissionDeniedError(result.reason, result.suggestion);
+        }
+      }
+    }
     return readAgentWorkspaceFile(this.config.id, filename, scope);
   }
 
