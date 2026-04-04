@@ -101,7 +101,7 @@ Rules:
         role: "user",
         content: taskContent
       }
-    ], { temperature: 0.1, maxTokens: 4096, jsonMode: true });
+    ], { temperature: 0.1, maxTokens: 4096 });
 
     plan = JSON.parse(planResponse.content);
     log(`AI plan: language=${plan.language}, file=${plan.code_filename}, setup=${plan.setup_commands?.length || 0} commands`);
@@ -159,10 +159,16 @@ function fallbackPlan(content) {
   // Try to extract python code block
   const pyMatch = content.match(/```python\s*\n([\s\S]*?)```/i);
   if (pyMatch) {
+    // Auto-detect imports and generate pip install commands
+    const code = pyMatch[1].trim();
+    const imports = [...code.matchAll(/^(?:import|from)\s+(\w+)/gm)].map(m => m[1]);
+    const stdlibs = new Set(["os", "sys", "json", "re", "math", "datetime", "collections", "itertools", "functools", "pathlib", "typing", "io", "csv", "time", "random", "hashlib", "base64", "urllib", "http", "subprocess", "shutil", "glob", "string", "textwrap", "copy", "pprint"]);
+    const thirdParty = imports.filter(m => !stdlibs.has(m));
+    const setup = thirdParty.length > 0 ? [`pip install ${thirdParty.join(" ")}`] : [];
     return {
-      setup_commands: [],
+      setup_commands: setup,
       code_filename: "solution.py",
-      code_content: pyMatch[1].trim(),
+      code_content: code,
       run_command: "python solution.py",
       language: "python",
     };
