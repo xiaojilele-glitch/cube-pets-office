@@ -19,6 +19,7 @@ import type { TaskAllocator } from "./task-allocator.js";
 import type { CompetitionEngine, CompetitionTaskRequest } from "./competition-engine.js";
 import type { TaskforceManager } from "./taskforce-manager.js";
 import type { TaskRequest } from "./self-assessment.js";
+import type { ExecutionBridge, BridgeResult } from "./execution-bridge.js";
 import { Agent } from "./agent.js";
 import { getAIConfig } from "./ai-config.js";
 import {
@@ -116,6 +117,8 @@ export class WorkflowEngine {
   competitionEngine?: CompetitionEngine;
   /** Taskforce manager for collaborative tasks — used only when autonomyConfig.enabled is true. */
   taskforceManager?: TaskforceManager;
+  /** Optional ExecutionBridge — when set, bridges workflow deliverables to Docker execution after the execution stage. */
+  executionBridge?: ExecutionBridge;
 
   constructor(private readonly runtime: WorkflowRuntime) {}
 
@@ -191,6 +194,9 @@ export class WorkflowEngine {
 
       await this.runExecution(workflowId, organization);
       await this.emitStageCompleted(workflowId, "execution");
+
+      // ── ExecutionBridge: bridge deliverables to Docker executor ──
+      await this.bridgeToExecutor(workflowId);
 
       await this.runReview(workflowId, organization);
       await this.emitStageCompleted(workflowId, "review");
@@ -428,6 +434,67 @@ export class WorkflowEngine {
         `[WorkflowEngine] onStageCompleted callback failed for ${workflowId}/${completedStage}:`,
         err instanceof Error ? err.message : err,
       );
+    }
+  }
+
+  /**
+   * Bridge workflow deliverables to Docker executor after the execution stage.
+   * Collects all task deliverables, resolves the linked missionId, and calls
+   * ExecutionBridge.bridge(). Failures are recorded as workflow issues but
+   * never block the pipeline.
+   */
+  private async bridgeToExecutor(workflowId: string): Promise<void> {
+    if (!this.executionBridge) return;
+
+    const missionId = this.runtime.resolveMissionId?.(workflowId);
+    if (!missionId) {
+      console.warn(
+        `[WorkflowEngine] bridgeToExecutor: no missionId found for workflow ${workflowId}, skipping.`,
+      );
+      return;
+    }
+
+    // Collect all task deliverables for this workflow
+    const tasks = this.repo.getTasksByWorkflow(workflowId);
+    const deliverables = tasks
+      .map((t) => bestDeliverable(t))
+      .filter((d) => d !== "(no deliverable)");
+
+    if (deliverables.length === 0) {
+      return;
+    }
+
+    // Collect mission metadata from workflow results
+    const workflow = this.repo.getWorkflow(workflowId);
+    const metadata: Record<string, unknown> = {
+      workflowId,
+      ...(workflow?.results?.input ?? {}),
+    };
+
+    try {
+      const result: BridgeResult = await this.executionBridge.bridge(
+        missionId,
+        deliverables,
+        metadata,
+      );
+
+      if (result.triggered) {
+        console.log(
+          `[WorkflowEngine] ExecutionBridge triggered for workflow ${workflowId}: ` +
+            `jobId=${result.jobId ?? "n/a"}, reason=${result.reason}`,
+        );
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[WorkflowEngine] bridgeToExecutor failed for workflow ${workflowId}: ${message}`,
+      );
+      this.recordWorkflowIssue(workflowId, {
+        stage: "execution",
+        scope: "workflow",
+        severity: "warning",
+        message: `ExecutionBridge failed: ${message}`,
+      });
     }
   }
 

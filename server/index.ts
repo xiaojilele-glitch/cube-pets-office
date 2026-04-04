@@ -427,9 +427,24 @@ async function startServer() {
 
   // Wire up workflow → mission enrichment bridge (workflow-decoupling Task 4.2)
   const { serverRuntime, setOnStageCompleted } = await import("./runtime/server-runtime.js");
-  const { initEnrichmentBridge, onWorkflowStageCompleted } = await import("./core/mission-enrichment-bridge.js");
+  const { initEnrichmentBridge, onWorkflowStageCompleted, resolveWorkflowMission } = await import("./core/mission-enrichment-bridge.js");
   initEnrichmentBridge(missionRuntime, serverRuntime.workflowRepo);
   setOnStageCompleted(onWorkflowStageCompleted);
+
+  // ── ExecutionBridge: bridge WorkflowEngine deliverables → Docker executor (executor-integration Task 9.1) ──
+  const { createExecutionBridge, buildCallbackUrl } = await import("./core/execution-bridge.js");
+  const { workflowEngine } = await import("./core/workflow-engine.js");
+
+  // Wire up resolveMissionId so bridgeToExecutor can find the missionId for a workflowId
+  serverRuntime.resolveMissionId = resolveWorkflowMission;
+
+  const executionBridge = createExecutionBridge(missionRuntime, {
+    executorBaseUrl: process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() || "http://localhost:9800",
+    executionMode: (process.env.LOBSTER_EXECUTION_MODE as "mock" | "real") || "mock",
+    defaultImage: process.env.LOBSTER_DEFAULT_IMAGE?.trim() || "node:20-slim",
+    callbackUrl: buildCallbackUrl(process.env.SERVER_BASE_URL?.trim() || "http://localhost:3000"),
+  });
+  workflowEngine.executionBridge = executionBridge;
 
   for (const workflow of db.getWorkflows()) {
     if (workflow.status === "running") {
@@ -498,8 +513,10 @@ async function startServer() {
   const { getSocketIO, registerSandboxRelay } = await import("./core/socket.js");
   const { SandboxRelay } = await import("./core/sandbox-relay.js");
   const { SANDBOX_SOCKET_EVENTS } = await import("../shared/mission/socket.js");
+  const { HeartbeatMonitor } = await import("./core/execution-bridge.js");
   const sandboxRelay = new SandboxRelay();
   registerSandboxRelay(sandboxRelay);
+  const heartbeatMonitor = new HeartbeatMonitor(missionRuntime);
 
   graphStore.onEntityChanged((entity, action) => {
     const io = getSocketIO();
@@ -584,12 +601,19 @@ async function startServer() {
     const instance = normalizeExecutorInstance(event.payload);
     const securitySummary = normalizeSecuritySummary(event.payload);
 
+    // ── Determine effective executor status ──
+    // For job.started events, force status to "running" regardless of payload
+    const effectiveExecutorStatus =
+      event.type === "job.started"
+        ? "running"
+        : (event.status?.trim() || current.executor?.status);
+
     missionRuntime.patchMissionExecution(missionId, {
       executor: {
         name: executorName,
         requestId: current.executor?.requestId,
         jobId: event.jobId.trim(),
-        status: event.status?.trim() || current.executor?.status,
+        status: effectiveExecutorStatus,
         baseUrl: current.executor?.baseUrl,
         lastEventType: event.type?.trim() || current.executor?.lastEventType,
         lastEventAt: Date.now(),
@@ -599,7 +623,16 @@ async function startServer() {
       securitySummary: securitySummary || current.securitySummary,
     });
 
-    if (event.type === "job.log") {
+    // ── HeartbeatMonitor: reset on every event ──
+    heartbeatMonitor.resetHeartbeat(missionId);
+
+    if (event.type === "job.started") {
+      // Req 4.1: job.started → executor.status = running (handled above via effectiveExecutorStatus)
+      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+    } else if (event.type === "job.progress") {
+      // Req 4.2: job.progress → update mission progress
+      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+    } else if (event.type === "job.log") {
       missionRuntime.logMission(
         missionId,
         event.log?.message?.trim() || detail,
@@ -612,6 +645,7 @@ async function startServer() {
         "executor"
       );
     } else if (event.type === "job.log_stream") {
+      // Req 4.5: job.log_stream → Socket.IO forward
       const logEntry = {
         missionId,
         jobId: event.jobId.trim(),
@@ -626,6 +660,7 @@ async function startServer() {
         io.emit(SANDBOX_SOCKET_EVENTS.missionLog, logEntry);
       }
     } else if (event.type === "job.screenshot") {
+      // Req 4.6: job.screenshot → Socket.IO forward
       const screenPayload = {
         missionId,
         jobId: event.jobId.trim(),
@@ -650,24 +685,30 @@ async function startServer() {
         "executor"
       );
     } else if (event.type === "job.completed" || event.status === "completed") {
+      // Req 4.3: job.completed → mission.status = done
       missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
       missionRuntime.finishMission(
         missionId,
         event.summary?.trim() || detail,
         "executor"
       );
+      // Terminal event: clear heartbeat
+      heartbeatMonitor.clearHeartbeat(missionId);
     } else if (
       event.type === "job.failed" ||
       event.type === "job.cancelled" ||
       event.status === "failed" ||
       event.status === "cancelled"
     ) {
+      // Req 4.4: job.failed → mission.status = failed
       missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
       missionRuntime.failMission(
         missionId,
         event.summary?.trim() || detail,
         "executor"
       );
+      // Terminal event: clear heartbeat
+      heartbeatMonitor.clearHeartbeat(missionId);
     } else {
       missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
     }

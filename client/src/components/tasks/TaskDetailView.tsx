@@ -57,6 +57,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { MissionTaskDetail, TaskArtifact } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
+import { ExecutorStatusPanel } from "@/components/ExecutorStatusPanel";
+import { ExecutorTerminalPanel } from "@/components/ExecutorTerminalPanel";
 
 import { useCostStore } from "@/lib/cost-store";
 import { useRAGStore } from "@/lib/rag-store";
@@ -1247,6 +1249,31 @@ export function TaskDetailView({
                   </div>
                 </CardContent>
               </Card>
+            )}
+            {detail.executor && (
+              <Card className="mb-4 rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+                <CardHeader className="space-y-1 pb-3">
+                  <CardTitle className="flex items-center gap-2 text-stone-900">
+                    <Bot className="size-4 text-sky-600" />
+                    Executor Status
+                  </CardTitle>
+                  <CardDescription>
+                    Docker execution runtime status and artifacts.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <ExecutorStatusPanel
+                    executor={detail.executor}
+                    instance={detail.instance}
+                    artifacts={detail.missionArtifacts}
+                  />
+                </CardContent>
+              </Card>
+            )}
+            {detail.executor && (
+              <div className="mb-4">
+                <ExecutorTerminalPanel missionId={detail.id} />
+              </div>
             )}
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
               {workPackagesPanel}

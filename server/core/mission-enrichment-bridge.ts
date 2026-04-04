@@ -57,6 +57,14 @@ export function linkWorkflowToMission(workflowId: string, missionId: string): vo
 }
 
 /**
+ * Resolve the missionId linked to a given workflowId.
+ * Returns undefined if no mapping exists.
+ */
+export function resolveWorkflowMission(workflowId: string): string | undefined {
+  return workflowMissionMap.get(workflowId);
+}
+
+/**
  * Handle a workflow stage completion — the callback wired into
  * WorkflowRuntime.onStageCompleted by server-runtime.ts.
  */
