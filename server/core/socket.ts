@@ -9,6 +9,8 @@ import type { CostSnapshot, CostAlert } from "../../shared/cost.js";
 import { telemetryStore } from "./telemetry-store.js";
 import { NLCommandSocketEmitter } from "./nl-command/socket-emitter.js";
 import type { EmitFn } from "./nl-command/socket-emitter.js";
+import type { SandboxRelay } from "./sandbox-relay.js";
+import { SANDBOX_SOCKET_EVENTS } from "../../shared/mission/socket.js";
 
 let io: SocketIOServer | null = null;
 
@@ -162,3 +164,22 @@ export function emitTrustTierChanged(payload: {
   if (!io) return;
   io.emit('reputation.trustTierChanged', payload);
 }
+
+/**
+ * Register sandbox-relay socket handlers.
+ * Adds `request_log_history` listener so clients can fetch buffered logs.
+ */
+export function registerSandboxRelay(relay: SandboxRelay): void {
+  if (!io) return;
+
+  io.on("connection", (socket) => {
+    socket.on("request_log_history", (payload: { missionId?: string }) => {
+      const missionId = payload?.missionId;
+      if (!missionId || typeof missionId !== "string") return;
+
+      const lines = relay.getLogHistory(missionId);
+      socket.emit(SANDBOX_SOCKET_EVENTS.missionLogHistory, { missionId, lines });
+    });
+  });
+}
+

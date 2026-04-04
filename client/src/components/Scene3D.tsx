@@ -9,6 +9,7 @@ import { useTasksStore } from '@/lib/tasks-store';
 import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
+import { SandboxMonitor } from './three/SandboxMonitor';
 import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
 
 export function Scene3D() {
@@ -93,6 +94,7 @@ export function Scene3D() {
           <OfficeRoom />
           <PetWorkers />
           <MissionIsland />
+          <SandboxMonitor />
           <WaitingDecisionBubble />
 
           <ContactShadows

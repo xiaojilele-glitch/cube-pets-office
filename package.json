@@ -50,6 +50,7 @@
     "@types/d3": "^7.4.3",
     "@types/dockerode": "^4.0.1",
     "@types/three": "^0.183.1",
+    "@xterm/addon-fit": "^0.11.0",
     "axios": "^1.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -86,6 +87,7 @@
     "vaul": "^1.1.2",
     "wouter": "^3.3.5",
     "xlsx": "^0.18.5",
+    "xterm": "^5.3.0",
     "zod": "^4.1.12",
     "zustand": "^5.0.12"
   },
