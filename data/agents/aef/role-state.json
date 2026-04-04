@@ -1,8 +1,0 @@
-{
-  "currentRoleId": null,
-  "currentRoleLoadedAt": null,
-  "roleLoadPolicy": "merge",
-  "lastRoleSwitchAt": null,
-  "roleSwitchCooldownMs": 60000,
-  "operationLog": []
-}

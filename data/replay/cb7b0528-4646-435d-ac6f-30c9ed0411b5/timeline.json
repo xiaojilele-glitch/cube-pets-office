@@ -1,0 +1,88 @@
+{
+  "missionId": "cb7b0528-4646-435d-ac6f-30c9ed0411b5",
+  "startTime": 1775303302626,
+  "endTime": 1775303356877,
+  "totalDuration": 54251,
+  "eventCount": 12,
+  "indices": {
+    "byTime": {
+      "1775303302000": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "1775303309000": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "1775303327000": [
+        8,
+        9
+      ],
+      "1775303356000": [
+        10,
+        11
+      ]
+    },
+    "byAgent": {
+      "wf-cb7b052846-root": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "wf-cb7b052846-manager-1-delivery": [
+        0,
+        1,
+        6,
+        7,
+        8,
+        9
+      ],
+      "wf-cb7b052846-manager-2-quality": [
+        2,
+        3,
+        4,
+        5,
+        10,
+        11
+      ],
+      "wf-cb7b052846-worker-2-1-quality-reviewer": [
+        4,
+        5,
+        10,
+        11
+      ],
+      "wf-cb7b052846-worker-1-1-implementation-engineer": [
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "byType": {
+      "MESSAGE_SENT": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10
+      ],
+      "MESSAGE_RECEIVED": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        11
+      ]
+    },
+    "byResource": {}
+  },
+  "version": 5,
+  "checksum": "491e1a255984afb48077559bcd59d52c9d2ff451216f1d081697d824221b9a9f"
+}

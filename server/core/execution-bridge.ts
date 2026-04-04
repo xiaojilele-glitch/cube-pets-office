@@ -435,12 +435,19 @@ export class ExecutionBridge {
         },
       };
     } else {
-      const command = extractCommandFromDeliverable(deliverables.join("\n"));
+      // AI autonomous mode: pass task content to the AI executor inside the container.
+      // The container's entrypoint (ai-bridge/executor.js) reads TASK_CONTENT,
+      // calls LLM to plan, installs deps, writes code, and executes it.
+      const taskContent = deliverables.join("\n\n---\n\n");
       job.payload = {
         ...existing,
+        aiEnabled: true,
         image: this.options.defaultImage,
-        command,
-        env: { MISSION_ID: missionId },
+        command: [],  // Use container's default ENTRYPOINT (node /opt/ai-bridge/executor.js)
+        env: {
+          MISSION_ID: missionId,
+          TASK_CONTENT: taskContent,
+        },
       };
     }
   }

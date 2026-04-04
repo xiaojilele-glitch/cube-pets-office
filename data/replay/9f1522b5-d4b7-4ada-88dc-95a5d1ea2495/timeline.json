@@ -1,0 +1,100 @@
+{
+  "missionId": "9f1522b5-d4b7-4ada-88dc-95a5d1ea2495",
+  "startTime": 1775302197528,
+  "endTime": 1775302206216,
+  "totalDuration": 8688,
+  "eventCount": 14,
+  "indices": {
+    "byTime": {
+      "1775302197000": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "1775302203000": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "1775302206000": [
+        10,
+        11,
+        12,
+        13
+      ]
+    },
+    "byAgent": {
+      "wf-9f1522b5d4-root": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "wf-9f1522b5d4-manager-1-delivery": [
+        0,
+        1
+      ],
+      "wf-9f1522b5d4-manager-2-operations": [
+        2,
+        3,
+        6,
+        7,
+        8,
+        9
+      ],
+      "wf-9f1522b5d4-manager-3-quality": [
+        4,
+        5,
+        10,
+        11,
+        12,
+        13
+      ],
+      "wf-9f1522b5d4-worker-2-1-operations-specialist": [
+        6,
+        7
+      ],
+      "wf-9f1522b5d4-worker-2-2-mcp-integration-specialist": [
+        8,
+        9
+      ],
+      "wf-9f1522b5d4-worker-3-1-quality-reviewer": [
+        10,
+        11
+      ],
+      "wf-9f1522b5d4-worker-3-2-risk-analyst": [
+        12,
+        13
+      ]
+    },
+    "byType": {
+      "MESSAGE_SENT": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12
+      ],
+      "MESSAGE_RECEIVED": [
+        1,
+        3,
+        5,
+        7,
+        9,
+        11,
+        13
+      ]
+    },
+    "byResource": {}
+  },
+  "version": 3,
+  "checksum": "56af092063e0ba73ce412eb869eb113d81880c4c45f962de92cd6ed349e2e551"
+}
