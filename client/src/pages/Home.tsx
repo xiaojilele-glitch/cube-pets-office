@@ -8,6 +8,7 @@ import { HoloDrawer } from '@/components/HoloDrawer';
 import { LoadingScreen } from '@/components/LoadingScreen';
 import { Scene3D } from '@/components/Scene3D';
 import { TelemetryDashboard } from '@/components/TelemetryDashboard';
+import { Toolbar } from '@/components/Toolbar';
 import { WorkflowPanel } from '@/components/WorkflowPanel';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
@@ -81,6 +82,9 @@ export default function Home() {
 
       {isSceneReady && (
         <>
+          {/* ── Toolbar: 左上角系统状态 + 右上角功能按钮 ── */}
+          <Toolbar />
+
           {/* ── 5.1: HoloDock 替代 Toolbar (AC-2.1, AC-2.2) ── */}
           <HoloDock />
 
