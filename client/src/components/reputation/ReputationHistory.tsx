@@ -73,7 +73,7 @@ function EventRow({ event }: { event: ReputationChangeEvent }) {
     <div className="flex items-center justify-between py-1 text-xs border-b border-gray-800">
       <span className="text-gray-400 w-36 truncate" title={time}>{time}</span>
       <span className="text-gray-300 flex-1 px-2">{label}</span>
-      <span className={`font-mono ${color}`}>
+      <span className={`font-mono font-data ${color}`}>
         {sign}{delta} → {event.newOverallScore}
       </span>
     </div>

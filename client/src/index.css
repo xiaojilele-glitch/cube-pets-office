@@ -76,6 +76,32 @@
   --sidebar-accent-foreground: oklch(0.2 0.03 60);
   --sidebar-border: oklch(0.90 0.01 80);
   --sidebar-ring: oklch(0.45 0.08 160);
+
+  /* 毛玻璃背景 */
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-bg-hover: rgba(255, 255, 255, 0.18);
+  --glass-bg-active: rgba(255, 255, 255, 0.24);
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-border-hover: rgba(255, 255, 255, 0.25);
+
+  /* 发光色 */
+  --glow-cyan: rgba(6, 182, 212, 0.5);
+  --glow-blue: rgba(59, 130, 246, 0.5);
+  --glow-amber: rgba(245, 158, 11, 0.4);
+  --glow-purple: rgba(168, 85, 247, 0.4);
+
+  /* 状态色 */
+  --status-working: #06b6d4;
+  --status-thinking: #f59e0b;
+  --status-reviewing: #a855f7;
+  --status-idle: rgba(255, 255, 255, 0.6);
+  --status-done: #22c55e;
+  --status-error: #ef4444;
+
+  /* 字体 */
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-body: 'DM Sans', system-ui, sans-serif;
 }
 
 @layer base {
@@ -84,9 +110,19 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ── Typography: display font for headings (AC-6.1) ── */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+  }
+
+  /* Card titles also use display font (AC-6.1) */
+  [data-slot="card-title"] {
+    font-family: var(--font-display);
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -131,6 +167,89 @@
   }
 }
 
+/* ── Typography: mono font for numeric data (AC-6.2) ── */
+.font-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Holographic Glass Utility Classes (Sub-task 1.2) ── */
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.glass-panel-strong {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glass-3d {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Holographic Keyframe Animations (Sub-task 1.3) ── */
+
+@keyframes breathe-glow {
+  0%, 100% {
+    border-color: var(--glow-cyan);
+    box-shadow: 0 0 8px var(--glow-cyan);
+  }
+  50% {
+    border-color: var(--glow-blue);
+    box-shadow: 0 0 16px var(--glow-blue);
+  }
+}
+
+@keyframes breathe-glow-amber {
+  0%, 100% {
+    border-color: rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    border-color: rgba(245, 158, 11, 0.8);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.6);
+  }
+}
+
+@keyframes breathe-glow-purple {
+  0%, 100% {
+    border-color: rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    border-color: rgba(168, 85, 247, 0.8);
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.6);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ── Holographic Scrollbar Styles (Sub-task 1.6) ── */
+
 /* Custom scrollbar for panels */
 .overflow-y-auto::-webkit-scrollbar {
   width: 4px;
@@ -139,11 +258,17 @@
   background: transparent;
 }
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  background: rgba(196, 149, 106, 0.3);
+  background: var(--glass-border);
   border-radius: 2px;
 }
 .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(196, 149, 106, 0.5);
+  background: var(--glass-border-hover);
+}
+
+/* Firefox scrollbar */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
 }
 
 /* Smooth transitions for all panels */

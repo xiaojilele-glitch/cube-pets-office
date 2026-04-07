@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 
 import { ExportDialog } from '@/components/ExportDialog';
+import { GlowButton } from '@/components/ui/GlowButton';
 import { SkillCard, type SkillCardData } from '@/components/SkillCard';
 import { ReputationBadge } from '@/components/reputation/ReputationBadge';
 import { ReputationRadar } from '@/components/reputation/ReputationRadar';
@@ -74,30 +75,30 @@ import type {
 } from '@shared/autonomy-types';
 
 const wfBadge: Record<string, string> = {
-  pending: 'bg-gray-100 text-gray-700',
-  running: 'bg-blue-100 text-blue-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  completed_with_errors: 'bg-amber-100 text-amber-700',
-  failed: 'bg-red-100 text-red-700',
+  pending: 'bg-white/10 text-white/60',
+  running: 'bg-blue-500/15 text-blue-400',
+  completed: 'bg-emerald-500/15 text-emerald-400',
+  completed_with_errors: 'bg-amber-500/15 text-amber-400',
+  failed: 'bg-red-500/15 text-red-400',
 };
 
 const taskBadge: Record<string, string> = {
-  assigned: 'bg-slate-100 text-slate-700',
-  executing: 'bg-blue-100 text-blue-700',
-  submitted: 'bg-violet-100 text-violet-700',
-  reviewed: 'bg-emerald-100 text-emerald-700',
-  audited: 'bg-amber-100 text-amber-700',
-  revising: 'bg-orange-100 text-orange-700',
-  verified: 'bg-teal-100 text-teal-700',
-  passed: 'bg-emerald-100 text-emerald-700',
-  failed: 'bg-red-100 text-red-700',
+  assigned: 'bg-white/10 text-slate-300',
+  executing: 'bg-blue-500/15 text-blue-400',
+  submitted: 'bg-violet-500/15 text-violet-400',
+  reviewed: 'bg-emerald-500/15 text-emerald-400',
+  audited: 'bg-amber-500/15 text-amber-400',
+  revising: 'bg-orange-500/15 text-orange-400',
+  verified: 'bg-teal-500/15 text-teal-400',
+  passed: 'bg-emerald-500/15 text-emerald-400',
+  failed: 'bg-red-500/15 text-red-400',
 };
 
 const hbBadge: Record<string, string> = {
-  idle: 'bg-gray-100 text-gray-700',
-  scheduled: 'bg-blue-100 text-blue-700',
-  running: 'bg-cyan-100 text-cyan-700',
-  error: 'bg-red-100 text-red-700',
+  idle: 'bg-white/10 text-white/60',
+  scheduled: 'bg-blue-500/15 text-blue-400',
+  running: 'bg-cyan-500/15 text-cyan-400',
+  error: 'bg-red-500/15 text-red-400',
 };
 
 function t(locale: string, zh: string, en: string) {
@@ -211,9 +212,9 @@ function getFrontendWorkflowBanner(locale: string, canUseAdvanced: boolean) {
 
 function Section({ title, description }: { title: string; description?: string }) {
   return (
-    <div className="border-b border-[#F0E8E0] px-4 py-3">
-      <h3 className="text-sm font-bold text-[#3A2A1A]">{title}</h3>
-      {description ? <p className="mt-0.5 text-[10px] leading-5 text-[#8B7355]">{description}</p> : null}
+    <div className="border-b border-white/10 px-4 py-3">
+      <h3 className="text-sm font-bold text-white">{title}</h3>
+      {description ? <p className="mt-0.5 text-[10px] leading-5 text-white/50">{description}</p> : null}
     </div>
   );
 }
@@ -221,16 +222,16 @@ function Section({ title, description }: { title: string; description?: string }
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-      <Network className="mb-3 h-10 w-10 text-[#C4B5A0]" />
-      <p className="text-sm font-medium text-[#5A4A3A]">{title}</p>
-      <p className="mt-1 text-[10px] text-[#8B7355]">{description}</p>
+      <Network className="mb-3 h-10 w-10 text-white/30" />
+      <p className="text-sm font-medium text-white/80">{title}</p>
+      <p className="mt-1 text-[10px] text-white/50">{description}</p>
     </div>
   );
 }
 
 function Pill({ children }: { children: ReactNode }) {
   return (
-    <span className="rounded-full bg-white/85 px-2 py-0.5 text-[8px] font-medium text-[#6B5A4A]">
+    <span className="rounded-full bg-white/5 px-2 py-0.5 text-[8px] font-medium text-white/60">
       {children}
     </span>
   );
@@ -251,7 +252,7 @@ function StageBar({ stages, current }: { stages: StageInfo[]; current: string | 
           <div
             key={stage.id}
             className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold ${
-              done ? 'bg-emerald-100 text-emerald-700' : active ? 'bg-blue-100 text-blue-700' : 'bg-[#F5EFE8] text-[#8B7355]'
+              done ? 'bg-emerald-500/15 text-emerald-400' : active ? 'bg-blue-500/15 text-blue-400' : 'bg-white/5 text-white/50'
             }`}
           >
             {label}
@@ -299,10 +300,10 @@ function agentStatusLabel(
 function taskStatusIcon(status: string) {
   switch (status) {
     case 'assigned':
-      return <Clock className="h-3.5 w-3.5 text-slate-500" />;
+      return <Clock className="h-3.5 w-3.5 text-slate-400" />;
     case 'executing':
     case 'revising':
-      return <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />;
+      return <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-400" />;
     case 'submitted':
     case 'passed':
       return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
@@ -311,7 +312,7 @@ function taskStatusIcon(status: string) {
     case 'audited':
       return <Shield className="h-3.5 w-3.5 text-orange-500" />;
     case 'failed':
-      return <AlertCircle className="h-3.5 w-3.5 text-red-500" />;
+      return <AlertCircle className="h-3.5 w-3.5 text-red-400" />;
     default:
       return <Clock className="h-3.5 w-3.5 text-slate-400" />;
   }
@@ -392,15 +393,15 @@ function getRoleStatusLabel(locale: string, status: RoleProgressStatus) {
 function getRoleStatusClass(status: RoleProgressStatus) {
   switch (status) {
     case 'blocked':
-      return 'bg-amber-100 text-amber-800';
+      return 'bg-amber-500/15 text-amber-300';
     case 'active':
-      return 'bg-blue-100 text-blue-700';
+      return 'bg-blue-500/15 text-blue-400';
     case 'review':
-      return 'bg-violet-100 text-violet-700';
+      return 'bg-violet-500/15 text-violet-400';
     case 'done':
-      return 'bg-emerald-100 text-emerald-700';
+      return 'bg-emerald-500/15 text-emerald-400';
     default:
-      return 'bg-slate-100 text-slate-700';
+      return 'bg-white/10 text-slate-300';
   }
 }
 
@@ -462,8 +463,8 @@ function TtsPlayButton({ id, content }: { id: string; content: string }) {
       onClick={(e) => { e.stopPropagation(); handleTtsPlay(id, content); }}
       className={`relative ml-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-all ${
         isPlaying
-          ? 'bg-[#D4845A] text-white shadow-sm'
-          : 'bg-[#F0E8E0] text-[#8B7355] hover:bg-[#E8DDD0]'
+          ? 'bg-[#D4845A] text-white'
+          : 'bg-white/10 text-white/50 hover:bg-white/20'
       }`}
       title={isPlaying ? 'Stop' : 'Play'}
     >
@@ -537,7 +538,7 @@ function DirectiveView() {
         setAttachmentError(
           t(
             locale,
-            `最多附带 ${MAX_WORKFLOW_ATTACHMENTS} 个文件，其余文件已忽略。`,
+            `最多附加 ${MAX_WORKFLOW_ATTACHMENTS} 个文件，其余文件已忽略。`,
             `You can attach up to ${MAX_WORKFLOW_ATTACHMENTS} files. Extra files were ignored.`
           )
         );
@@ -547,7 +548,7 @@ function DirectiveView() {
       setAttachmentError(
         t(
           locale,
-          '文件读取失败，请重试或换成 txt / md / json / csv 等文本格式。',
+          '文件读取失败，请重试或换用 txt / md / json / csv 等文本格式。',
           'Failed to read the selected files. Try again or use a text-based format such as txt, md, json, or csv.'
         )
       );
@@ -565,33 +566,33 @@ function DirectiveView() {
       <Section title={copy.workflow.directive.title} description={narrative.sectionDescription} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {isFrontend ? (
-          <div className="mb-4 rounded-2xl border border-[#E8DDD0] bg-gradient-to-br from-[#FFF7EC] to-[#F7EDE2] p-3 text-[11px] leading-5 text-[#6B5A4A]">
-            <p className="font-bold text-[#3A2A1A]">
+          <div className="mb-4 rounded-2xl glass-panel p-3 text-[11px] leading-5 text-white/60">
+            <p className="font-bold text-white">
               {CAN_USE_ADVANCED_RUNTIME ? copy.workflow.directive.frontendTitle : copy.workflow.directive.pagesTitle}
             </p>
             <p className="mt-1">
               {CAN_USE_ADVANCED_RUNTIME ? copy.workflow.directive.frontendDescription : copy.workflow.directive.pagesDescription}
             </p>
-            <p className="mt-2 rounded-xl bg-white/55 px-3 py-2 text-[10px] leading-5 text-[#7A624B]">
+            <p className="mt-2 rounded-xl bg-white/8 px-3 py-2 text-[10px] leading-5 text-white/60">
               {narrative.modeNote}
             </p>
           </div>
         ) : null}
 
-        <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.directive.examplesTitle}</p>
+        <p className="mb-2 text-[11px] font-semibold text-white/50">{copy.workflow.directive.examplesTitle}</p>
         <div className="space-y-2">
           {copy.workflow.directive.examples.map(example => (
-            <button key={example} onClick={() => setDirective(example)} className="w-full rounded-xl bg-[#F8F4F0] px-3 py-2 text-left text-xs text-[#5A4A3A] hover:bg-[#F0E8E0]">
+            <button key={example} onClick={() => setDirective(example)} className="w-full rounded-xl bg-white/5 px-3 py-2 text-left text-xs text-white/80 hover:bg-white/10">
               {example}
             </button>
           ))}
         </div>
 
-        <div className="mt-4 rounded-2xl border border-[#E8DDD0] bg-gradient-to-br from-[#F8F4F0] to-[#F0E8E0] p-3">
-          <p className="mb-2 text-[11px] font-bold text-[#3A2A1A]">{narrative.stepsTitle}</p>
+        <div className="mt-4 rounded-2xl glass-panel p-3">
+          <p className="mb-2 text-[11px] font-bold text-white">{narrative.stepsTitle}</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {narrative.steps.map(([step, desc]) => (
-              <div key={step} className="rounded-xl bg-white/60 px-3 py-2 text-[11px] text-[#5A4A3A]">
+              <div key={step} className="rounded-xl bg-white/8 px-3 py-2 text-[11px] text-white/80">
                 <p className="font-semibold text-[#D4845A]">{step}</p>
                 <p className="mt-1">{desc}</p>
               </div>
@@ -600,7 +601,7 @@ function DirectiveView() {
         </div>
       </div>
 
-      <div className="border-t border-[#F0E8E0] p-4">
+      <div className="border-t border-white/10 p-4">
         <input
           ref={fileInputRef}
           type="file"
@@ -613,10 +614,10 @@ function DirectiveView() {
 
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-[11px] font-semibold text-[#8B7355]">
+            <p className="text-[11px] font-semibold text-white/50">
               {t(locale, '补充参考文件', 'Add reference files')}
             </p>
-            <p className="text-[10px] leading-5 text-[#B08F72]">
+            <p className="text-[10px] leading-5 text-white/40">
               {t(
                 locale,
                 '支持文字指令 + 附件一起提交。txt / md / json / PDF / Word / Excel / 图片都会尽量提取摘要，图片会尝试 OCR。',
@@ -628,7 +629,7 @@ function DirectiveView() {
             type="button"
             onClick={handlePickFiles}
             disabled={isPreparingFiles || attachments.length >= MAX_WORKFLOW_ATTACHMENTS}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2 text-xs font-semibold text-[#6B5A4A] transition-colors hover:bg-[#F0E8E0] disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-xl glass-panel px-3 py-2 text-xs font-semibold text-white/60 transition-colors hover:bg-white/10 disabled:opacity-40"
           >
             {isPreparingFiles ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Paperclip className="h-3.5 w-3.5" />}
             <span>{t(locale, '添加文件', 'Add files')}</span>
@@ -636,13 +637,13 @@ function DirectiveView() {
         </div>
 
         {attachments.length > 0 ? (
-          <div className="mb-3 space-y-2 rounded-2xl border border-[#E8DDD0] bg-[#F8F4F0] p-3">
+          <div className="mb-3 space-y-2 rounded-2xl glass-panel p-3">
             {attachments.map(attachment => (
-              <div key={attachment.id} className="rounded-xl bg-white/90 px-3 py-2 shadow-sm">
+              <div key={attachment.id} className="rounded-xl bg-white/8 px-3 py-2">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-semibold text-[#3A2A1A]">{attachment.name}</p>
-                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-[#8B7355]">
+                    <p className="truncate text-[12px] font-semibold text-white">{attachment.name}</p>
+                    <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-white/50">
                       <span>{formatAttachmentSize(attachment.size)}</span>
                       <span>{attachment.mimeType || 'application/octet-stream'}</span>
                       <span>
@@ -657,13 +658,13 @@ function DirectiveView() {
                   <button
                     type="button"
                     onClick={() => removeAttachment(attachment.id)}
-                    className="rounded-lg p-1 text-[#A58971] transition-colors hover:bg-[#F4E8DE] hover:text-[#6B5A4A]"
+                    className="rounded-lg p-1 text-white/40 transition-colors hover:bg-white/10 hover:text-white/60"
                     title={t(locale, '移除附件', 'Remove attachment')}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-[10px] leading-5 text-[#7A624B]">
+                <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-[10px] leading-5 text-white/60">
                   {attachment.excerpt}
                 </p>
               </div>
@@ -672,7 +673,7 @@ function DirectiveView() {
         ) : null}
 
         {attachmentError ? (
-          <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[10px] leading-5 text-amber-700">
+          <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[10px] leading-5 text-amber-400">
             {attachmentError}
           </div>
         ) : null}
@@ -688,12 +689,12 @@ function DirectiveView() {
           }}
           placeholder={copy.workflow.directive.placeholder}
           rows={3}
-          className="w-full resize-none rounded-xl border border-[#F0E8E0] bg-[#F8F4F0] px-3 py-2 text-sm text-[#3A2A1A] placeholder:text-[#C4B5A0] focus:border-[#D4845A]/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#D4845A]/20"
+          className="w-full resize-none rounded-xl glass-panel px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-cyan-400/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
         />
-        <button onClick={() => void handleSubmit()} disabled={!directive.trim() || isSubmitting || isPreparingFiles} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D4845A] to-[#E4946A] px-4 py-2.5 text-sm font-semibold text-white shadow-sm disabled:opacity-40">
+        <GlowButton onClick={() => void handleSubmit()} disabled={!directive.trim() || isSubmitting || isPreparingFiles} className="mt-2 w-full">
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : canUpgrade ? <Server className="h-4 w-4" /> : isFrontend ? <Monitor className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           <span>{isSubmitting ? copy.workflow.directive.submitting : canUpgrade ? copy.workflow.directive.switchCta : isFrontend ? copy.workflow.directive.previewCta : copy.workflow.directive.submit}</span>
-        </button>
+        </GlowButton>
       </div>
     </div>
   );
@@ -724,7 +725,7 @@ function OrgView() {
       <div className="flex h-full flex-col">
         <Section title={copy.workflow.org.title} description={copy.workflow.org.description} />
         <div className="flex-1 overflow-y-auto px-4 py-3">
-          <div className="mb-4 rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-slate-50 p-4">
+          <div className="mb-4 rounded-2xl glass-panel border-indigo-400/20 bg-indigo-500/10 p-4">
             <div className="flex flex-wrap gap-2">
               <Pill>{organization.source}</Pill>
               <Pill>{organization.taskProfile}</Pill>
@@ -732,9 +733,9 @@ function OrgView() {
               <Pill>{organization.nodes.length} {t(locale, '节点', 'nodes')}</Pill>
               <Pill>{organization.departments.length} {t(locale, '部门', 'departments')}</Pill>
             </div>
-            <p className="mt-3 text-[11px] leading-5 text-indigo-900">{organization.reasoning}</p>
+            <p className="mt-3 text-[11px] leading-5 text-indigo-300">{organization.reasoning}</p>
             {currentWorkflow?.results?.organization_debug?.logPath ? (
-              <p className="mt-2 break-all text-[10px] text-indigo-700">
+              <p className="mt-2 break-all text-[10px] text-indigo-400">
                 {t(locale, '回放日志', 'Replay log')}: {currentWorkflow.results.organization_debug.logPath}
               </p>
             ) : null}
@@ -743,14 +744,14 @@ function OrgView() {
           {rootNode ? (
             <button
               onClick={() => openMemory(rootNode.agentId)}
-              className="mb-4 w-full rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-4 text-left"
+              className="mb-4 w-full rounded-2xl glass-panel border-amber-400/20 bg-amber-500/10 p-4 text-left"
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold text-amber-900">{rootNode.name}</span>
+                <span className="text-sm font-bold text-amber-300">{rootNode.name}</span>
                 <Pill>{rootNode.title}</Pill>
                 <Pill>{agentStatusLabel(copy, agentStatuses[rootNode.agentId] || 'idle')}</Pill>
               </div>
-              <p className="mt-2 text-[11px] leading-5 text-amber-800">{rootNode.responsibility}</p>
+              <p className="mt-2 text-[11px] leading-5 text-amber-300">{rootNode.responsibility}</p>
             </button>
           ) : null}
 
@@ -763,9 +764,9 @@ function OrgView() {
               );
 
               return (
-                <div key={department.id} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3">
+                <div key={department.id} className="rounded-2xl glass-panel p-3">
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-bold text-[#3A2A1A]">{department.label}</span>
+                    <span className="text-sm font-bold text-white">{department.label}</span>
                     <Pill>{department.strategy}</Pill>
                     <Pill>{t(locale, '并发', 'concurrency')} {department.maxConcurrency}</Pill>
                   </div>
@@ -773,14 +774,14 @@ function OrgView() {
                   {manager ? (
                     <button
                       onClick={() => openMemory(manager.agentId)}
-                      className="w-full rounded-xl bg-[#F8F4F0] p-3 text-left hover:bg-[#F0E8E0]"
+                      className="w-full rounded-xl bg-white/5 p-3 text-left hover:bg-white/10"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-bold text-[#3A2A1A]">{manager.name}</span>
+                        <span className="text-xs font-bold text-white">{manager.name}</span>
                         <Pill>{manager.title}</Pill>
                         <Pill>{manager.execution.strategy}</Pill>
                       </div>
-                      <p className="mt-2 text-[10px] leading-5 text-[#6B5A4A]">{manager.responsibility}</p>
+                      <p className="mt-2 text-[10px] leading-5 text-white/60">{manager.responsibility}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {manager.skills.map(skill => (
                           <Pill key={skill.id}>{t(locale, '技能', 'Skill')}: {skill.name}</Pill>
@@ -797,14 +798,14 @@ function OrgView() {
                       <button
                         key={worker.id}
                         onClick={() => openMemory(worker.agentId)}
-                        className="w-full rounded-xl border border-[#E8DDD0] bg-white p-3 text-left hover:bg-[#F8F4F0]"
+                        className="w-full rounded-xl glass-panel p-3 text-left hover:bg-white/5"
                       >
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[12px] font-semibold text-[#3A2A1A]">{worker.name}</span>
+                          <span className="text-[12px] font-semibold text-white">{worker.name}</span>
                           <Pill>{worker.title}</Pill>
                           <Pill>{worker.execution.mode}</Pill>
                         </div>
-                        <p className="mt-1 text-[10px] leading-5 text-[#6B5A4A]">{worker.responsibility}</p>
+                        <p className="mt-1 text-[10px] leading-5 text-white/60">{worker.responsibility}</p>
                         <div className="mt-2 flex flex-wrap gap-1">
                           {worker.skills.map(skill => (
                             <Pill key={skill.id}>{t(locale, '技能', 'Skill')}: {skill.name}</Pill>
@@ -848,11 +849,11 @@ function OrgView() {
       <Section title={copy.workflow.org.title} description={copy.workflow.org.description} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {ceo ? (
-          <button onClick={() => openMemory(ceo.id)} className="mb-4 flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-3 text-left">
+          <button onClick={() => openMemory(ceo.id)} className="mb-4 flex w-full items-center gap-3 rounded-2xl glass-panel border-amber-400/20 bg-amber-500/10 px-3 py-3 text-left">
             <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-amber-800">{ceo.name}</p>
-              <p className="text-[10px] text-amber-700">{agentStatusLabel(copy, agentStatuses[ceo.id] || 'idle')}</p>
+              <p className="truncate text-sm font-bold text-amber-300">{ceo.name}</p>
+              <p className="text-[10px] text-amber-400">{agentStatusLabel(copy, agentStatuses[ceo.id] || 'idle')}</p>
             </div>
           </button>
         ) : null}
@@ -862,21 +863,21 @@ function OrgView() {
             const dept = copy.workflow.departments[manager.department as keyof typeof copy.workflow.departments] || manager.department;
             const workers = agents.filter(agent => agent.managerId === manager.id && agent.role === 'worker');
             return (
-              <div key={manager.id} className="rounded-2xl border border-[#E8DDD0] bg-white/72 p-3">
-                <button onClick={() => openMemory(manager.id)} className="flex w-full items-center gap-3 rounded-xl bg-[#F8F4F0] px-3 py-2 text-left hover:bg-[#F0E8E0]">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white text-[11px] font-bold text-[#8B7355]">{dept.slice(0, 2).toUpperCase()}</div>
+              <div key={manager.id} className="rounded-2xl glass-panel p-3">
+                <button onClick={() => openMemory(manager.id)} className="flex w-full items-center gap-3 rounded-xl bg-white/5 px-3 py-2 text-left hover:bg-white/10">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-[11px] font-bold text-white/50">{dept.slice(0, 2).toUpperCase()}</div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-[#3A2A1A]">{dept}</p>
-                    <p className="truncate text-[10px] text-[#8B7355]">{manager.name}</p>
+                    <p className="truncate text-xs font-bold text-white">{dept}</p>
+                    <p className="truncate text-[10px] text-white/50">{manager.name}</p>
                   </div>
-                  <span className="text-[10px] text-[#8B7355]">{copy.workflow.org.viewMemory}</span>
+                  <span className="text-[10px] text-white/50">{copy.workflow.org.viewMemory}</span>
                 </button>
                 <div className="mt-2 space-y-2">
                   {workers.map(worker => (
-                    <button key={worker.id} onClick={() => openMemory(worker.id)} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left hover:bg-[#F8F4F0]">
+                    <button key={worker.id} onClick={() => openMemory(worker.id)} className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left hover:bg-white/5">
                       <div className="h-2 w-2 rounded-full bg-[#D4845A]" />
-                      <span className="flex-1 truncate text-[11px] text-[#5A4A3A]">{worker.name}</span>
-                      <span className="text-[10px] text-[#B0A090]">{agentStatusLabel(copy, agentStatuses[worker.id] || 'idle')}</span>
+                      <span className="flex-1 truncate text-[11px] text-white/80">{worker.name}</span>
+                      <span className="text-[10px] text-white/40">{agentStatusLabel(copy, agentStatuses[worker.id] || 'idle')}</span>
                     </button>
                   ))}
                 </div>
@@ -917,75 +918,75 @@ function ProgressViewLegacy() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.progress.overview} />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-3">
-        <div className="rounded-2xl border border-[#E8DDD0] bg-white/80 p-4">
+        <div className="rounded-2xl glass-panel p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-[#3A2A1A]">{currentWorkflow.directive}</p>
-              <p className="mt-2 text-[11px] text-[#8B7355]">{copy.workflow.progress.startedAt}: {fmt(currentWorkflow.started_at || currentWorkflow.created_at)}</p>
-              <p className="mt-1 text-[11px] text-[#8B7355]">{copy.workflow.progress.currentStage}: {getDynamicStageLabel(locale, currentWorkflow.current_stage || 'direction', copy.workflow.stages[(currentWorkflow.current_stage || 'direction') as keyof typeof copy.workflow.stages] || currentWorkflow.current_stage || copy.common.unavailable)}</p>
+              <p className="text-sm font-semibold text-white">{currentWorkflow.directive}</p>
+              <p className="mt-2 text-[11px] text-white/50">{copy.workflow.progress.startedAt}: {fmt(currentWorkflow.started_at || currentWorkflow.created_at)}</p>
+              <p className="mt-1 text-[11px] text-white/50">{copy.workflow.progress.currentStage}: {getDynamicStageLabel(locale, currentWorkflow.current_stage || 'direction', copy.workflow.stages[(currentWorkflow.current_stage || 'direction') as keyof typeof copy.workflow.stages] || currentWorkflow.current_stage || copy.common.unavailable)}</p>
             </div>
             <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${wfBadge[currentWorkflow.status] || wfBadge.pending}`}>
               {copy.workflow.statuses.workflow[currentWorkflow.status as keyof typeof copy.workflow.statuses.workflow] || currentWorkflow.status}
             </span>
           </div>
           <div className="mt-4">
-            <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.stageProgress}</p>
+            <p className="mb-2 text-[11px] font-semibold text-white/50">{copy.workflow.progress.stageProgress}</p>
             <StageBar stages={stages} current={currentWorkflow.current_stage} />
           </div>
           {attachments.length > 0 ? (
-            <div className="mt-4 rounded-2xl border border-[#E8DDD0] bg-[#F8F4F0] p-3">
-              <p className="text-[11px] font-semibold text-[#8B7355]">
+            <div className="mt-4 rounded-2xl glass-panel p-3">
+              <p className="text-[11px] font-semibold text-white/50">
                 {t(locale, '参考文件', 'Reference files')} · {attachments.length}
               </p>
               <div className="mt-2 space-y-2">
                 {attachments.map(attachment => (
-                  <div key={attachment.id} className="rounded-xl bg-white/85 px-3 py-2">
+                  <div key={attachment.id} className="rounded-xl bg-white/5 px-3 py-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-[11px] font-semibold text-[#3A2A1A]">{attachment.name}</p>
-                      <div className="flex flex-wrap gap-2 text-[9px] text-[#8B7355]">
+                      <p className="text-[11px] font-semibold text-white">{attachment.name}</p>
+                      <div className="flex flex-wrap gap-2 text-[9px] text-white/50">
                         <Pill>{formatAttachmentSize(attachment.size)}</Pill>
                         <Pill>{getAttachmentStatusLabel(locale, attachment)}</Pill>
                       </div>
                     </div>
-                    <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-[10px] leading-5 text-[#7A624B]">{attachment.excerpt}</p>
+                    <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-[10px] leading-5 text-white/60">{attachment.excerpt}</p>
                   </div>
                 ))}
               </div>
             </div>
           ) : null}
           {organization ? (
-            <div className="mt-4 rounded-2xl border border-indigo-200 bg-indigo-50/80 p-3">
+            <div className="mt-4 rounded-2xl border border-indigo-400/20 bg-indigo-500/10 p-3">
               <div className="flex flex-wrap gap-2">
                 <Pill>{organization.source}</Pill>
                 <Pill>{organization.taskProfile}</Pill>
                 <Pill>{organization.nodes.length} {t(locale, '节点', 'nodes')}</Pill>
                 <Pill>{organization.departments.length} {t(locale, '部门', 'departments')}</Pill>
               </div>
-              <p className="mt-2 text-[11px] leading-5 text-indigo-900">{organization.reasoning}</p>
+              <p className="mt-2 text-[11px] leading-5 text-indigo-300">{organization.reasoning}</p>
             </div>
           ) : null}
           {currentWorkflow.status === 'failed' ? (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-[11px] text-red-700">
+            <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-3 text-[11px] text-red-400">
               {currentWorkflow.results?.last_error || copy.common.unavailable}
             </div>
           ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
-            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
+            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
+            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
             {canExport ? (
-              <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
+              <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
             ) : null}
           </div>
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.tasks}</p>
-          {grouped.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">{copy.workflow.progress.noTasks}</div> : <div className="space-y-3">{grouped.map(([department, items]) => <div key={department} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3"><div className="mb-2 flex items-center justify-between gap-3"><h4 className="text-sm font-semibold text-[#3A2A1A]">{copy.workflow.departments[department as keyof typeof copy.workflow.departments] || department}</h4>{items[0]?.manager_id ? <button onClick={() => void downloadDepartmentReport(currentWorkflow.id, items[0].manager_id, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[10px] font-semibold text-[#5B4837]"><Download className="h-3 w-3" />{copy.workflow.progress.departmentReport}</button> : null}</div><div className="space-y-2">{items.map(task => <div key={task.id} className="rounded-xl bg-[#F8F4F0] p-3"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0 flex-1"><div className="flex items-center gap-2">{taskStatusIcon(task.status)}<p className="flex-1 text-[12px] font-medium text-[#3A2A1A]">{task.description}</p></div><p className="mt-1 text-[10px] text-[#8B7355]">{t(locale, '执行者', 'Worker')}: {getNodeName(task.worker_id, nodeMap)}</p></div><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p> : null}{task.total_score !== null ? <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-[#8B7355]"><Pill>{copy.workflow.progress.score}: {task.total_score}/20</Pill><Pill>{t(locale, '版本', 'Version')} {task.version}</Pill></div> : null}</div>)}</div></div>)}</div>}
+          <p className="mb-2 text-[11px] font-semibold text-white/50">{copy.workflow.progress.tasks}</p>
+          {grouped.length === 0 ? <div className="rounded-2xl bg-white/5 px-4 py-6 text-center text-[11px] text-white/50">{copy.workflow.progress.noTasks}</div> : <div className="space-y-3">{grouped.map(([department, items]) => <div key={department} className="rounded-2xl glass-panel p-3"><div className="mb-2 flex items-center justify-between gap-3"><h4 className="text-sm font-semibold text-white">{copy.workflow.departments[department as keyof typeof copy.workflow.departments] || department}</h4>{items[0]?.manager_id ? <button onClick={() => void downloadDepartmentReport(currentWorkflow.id, items[0].manager_id, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white/60"><Download className="h-3 w-3" />{copy.workflow.progress.departmentReport}</button> : null}</div><div className="space-y-2">{items.map(task => <div key={task.id} className="rounded-xl bg-white/5 p-3"><div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0 flex-1"><div className="flex items-center gap-2">{taskStatusIcon(task.status)}<p className="flex-1 text-[12px] font-medium text-white">{task.description}</p></div><p className="mt-1 text-[10px] text-white/50">{t(locale, '执行者', 'Worker')}: {getNodeName(task.worker_id, nodeMap)}</p></div><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-white/80">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p> : null}{task.total_score !== null ? <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-white/50"><Pill>{copy.workflow.progress.score}: {task.total_score}/20</Pill><Pill>{t(locale, '版本', 'Version')} {task.version}</Pill></div> : null}</div>)}</div></div>)}</div>}
         </div>
 
         <div>
-          <p className="mb-2 text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.messageFlow}</p>
-          {messages.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">{copy.workflow.progress.noMessages}</div> : <div className="space-y-2">{messages.slice(-10).map(message => <div key={message.id} className="rounded-xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8B7355]"><span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span><span>{fmt(message.created_at)}</span></div><p className="mt-1 text-[10px] text-[#B0A090]">{getDynamicStageLabel(locale, message.stage, copy.workflow.stages[message.stage as keyof typeof copy.workflow.stages] || message.stage)}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{message.content}</p></div>)}</div>}
+          <p className="mb-2 text-[11px] font-semibold text-white/50">{copy.workflow.progress.messageFlow}</p>
+          {messages.length === 0 ? <div className="rounded-2xl bg-white/5 px-4 py-6 text-center text-[11px] text-white/50">{copy.workflow.progress.noMessages}</div> : <div className="space-y-2">{messages.slice(-10).map(message => <div key={message.id} className="rounded-xl glass-panel p-3"><div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-white/50"><span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span><span>{fmt(message.created_at)}</span></div><p className="mt-1 text-[10px] text-white/40">{getDynamicStageLabel(locale, message.stage, copy.workflow.stages[message.stage as keyof typeof copy.workflow.stages] || message.stage)}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-white/80">{message.content}</p></div>)}</div>}
         </div>
       </div>
       {canExport ? <ExportDialog open={exportOpen} onOpenChange={setExportOpen} workflowId={currentWorkflow.id} /> : null}
@@ -1005,34 +1006,34 @@ function RoleSwitchTimeline() {
   if (allSwitches.length === 0) return null;
 
   return (
-    <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+    <div className="rounded-2xl glass-panel p-3">
       <div className="mb-3 flex items-center gap-2">
-        <Shield className="h-4 w-4 text-[#B08F72]" />
+        <Shield className="h-4 w-4 text-white/40" />
         <div>
-          <p className="text-sm font-semibold text-[#3A2A1A]">{t(locale, '角色切换时间轴', 'Role Switch Timeline')}</p>
-          <p className="text-[10px] leading-5 text-[#8B7355]">
-            {t(locale, '各 Agent 的角色切换事件，不同角色用不同颜色标注。', 'Role switch events per agent, color-coded by role.')}
+          <p className="text-sm font-semibold text-white">{t(locale, '角色切换时间线', 'Role Switch Timeline')}</p>
+          <p className="text-[10px] leading-5 text-white/50">
+            {t(locale, '每个 Agent 的角色切换事件，不同角色用不同颜色标注。', 'Role switch events per agent, color-coded by role.')}
           </p>
         </div>
       </div>
       <div className="space-y-1.5">
         {allSwitches.map((entry, i) => (
-          <div key={`${entry.agentId}-${entry.timestamp}-${i}`} className="flex items-center gap-2 rounded-lg bg-[#F8F4F0] px-3 py-2">
+          <div key={`${entry.agentId}-${entry.timestamp}-${i}`} className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ backgroundColor: getRoleColor(entry.toRole) }}
             />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1 text-[11px]">
-                <span className="font-semibold text-[#3A2A1A]">{entry.agentId}</span>
-                <span className="text-[#8B7355]">:</span>
+                <span className="font-semibold text-white">{entry.agentId}</span>
+                <span className="text-white/50">:</span>
                 <span
                   className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
                   style={{ backgroundColor: getRoleColor(entry.fromRole) }}
                 >
                   {entry.fromRole || t(locale, '无', '—')}
                 </span>
-                <span className="text-[#B08F72]">→</span>
+                <span className="text-white/40">→</span>
                 <span
                   className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
                   style={{ backgroundColor: getRoleColor(entry.toRole) }}
@@ -1040,7 +1041,7 @@ function RoleSwitchTimeline() {
                   {entry.toRole || t(locale, '无', '—')}
                 </span>
               </div>
-              <div className="mt-0.5 flex flex-wrap gap-2 text-[9px] text-[#8B7355]">
+              <div className="mt-0.5 flex flex-wrap gap-2 text-[9px] text-white/50">
                 {entry.missionName ? <span>{entry.missionName}</span> : null}
                 <span>{fmt(entry.timestamp)}</span>
               </div>
@@ -1057,25 +1058,25 @@ function RoleSwitchTimeline() {
 // ---------------------------------------------------------------------------
 
 const decisionBadge: Record<string, string> = {
-  ACCEPT: 'bg-emerald-100 text-emerald-700',
-  ACCEPT_WITH_CAVEAT: 'bg-amber-100 text-amber-700',
-  REQUEST_ASSIST: 'bg-blue-100 text-blue-700',
-  REJECT_AND_REFER: 'bg-red-100 text-red-700',
+  ACCEPT: 'bg-emerald-500/15 text-emerald-400',
+  ACCEPT_WITH_CAVEAT: 'bg-amber-500/15 text-amber-400',
+  REQUEST_ASSIST: 'bg-blue-500/15 text-blue-400',
+  REJECT_AND_REFER: 'bg-red-500/15 text-red-400',
 };
 
 const competitionStatusBadge: Record<string, string> = {
-  preparing: 'bg-gray-100 text-gray-700',
-  running: 'bg-blue-100 text-blue-700',
-  judging: 'bg-violet-100 text-violet-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  degraded: 'bg-amber-100 text-amber-700',
+  preparing: 'bg-white/10 text-white/60',
+  running: 'bg-blue-500/15 text-blue-400',
+  judging: 'bg-violet-500/15 text-violet-400',
+  completed: 'bg-emerald-500/15 text-emerald-400',
+  degraded: 'bg-amber-500/15 text-amber-400',
 };
 
 const taskforceStatusBadge: Record<string, string> = {
-  recruiting: 'bg-blue-100 text-blue-700',
-  active: 'bg-emerald-100 text-emerald-700',
-  merging: 'bg-violet-100 text-violet-700',
-  dissolved: 'bg-gray-100 text-gray-700',
+  recruiting: 'bg-blue-500/15 text-blue-400',
+  active: 'bg-emerald-500/15 text-emerald-400',
+  merging: 'bg-violet-500/15 text-violet-400',
+  dissolved: 'bg-white/10 text-white/60',
 };
 
 // ---------------------------------------------------------------------------
@@ -1086,10 +1087,10 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
   const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 flex-1 rounded-full bg-[#F0E8E0]">
+      <div className="h-1.5 flex-1 rounded-full bg-white/10">
         <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="w-8 text-right text-[9px] tabular-nums text-[#6B5A4A]">{pct}%</span>
+      <span className="w-8 text-right text-[9px] tabular-nums text-white/60 font-data">{pct}%</span>
     </div>
   );
 }
@@ -1110,16 +1111,16 @@ function CollapsiblePanel({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+    <div className="rounded-2xl glass-panel p-3">
       <button type="button" onClick={onToggle} className="flex w-full items-center justify-between gap-2 text-left">
         <div className="flex items-center gap-2">
           {icon}
           <div>
-            <p className="text-sm font-semibold text-[#3A2A1A]">{title}</p>
-            <p className="text-[10px] text-[#8B7355]">{count} items</p>
+            <p className="text-sm font-semibold text-white">{title}</p>
+            <p className="text-[10px] text-white/50">{count} items</p>
           </div>
         </div>
-        {open ? <ChevronDown className="h-4 w-4 text-[#B08F72]" /> : <ChevronRight className="h-4 w-4 text-[#B08F72]" />}
+        {open ? <ChevronDown className="h-4 w-4 text-white/40" /> : <ChevronRight className="h-4 w-4 text-white/40" />}
       </button>
       {open ? <div className="mt-3 space-y-2">{children}</div> : null}
     </div>
@@ -1143,7 +1144,7 @@ function AgentAssessmentPanel() {
     <CollapsiblePanel
       title={t(locale, 'Agent 评估分配', 'Agent Assessment')}
       count={assessments.length}
-      icon={<Brain className="h-4 w-4 text-[#B08F72]" />}
+      icon={<Brain className="h-4 w-4 text-white/40" />}
       open={open}
       onToggle={() => setOpen(prev => !prev)}
     >
@@ -1151,9 +1152,9 @@ function AgentAssessmentPanel() {
         const sorted = [...results].sort((a, b) => b.fitnessScore - a.fitnessScore);
         const best = sorted[0];
         return (
-          <div key={taskId} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+          <div key={taskId} className="rounded-xl glass-panel p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold text-[#3A2A1A]">
+              <p className="text-[11px] font-semibold text-white">
                 {t(locale, '任务', 'Task')}: {taskId.slice(0, 12)}
               </p>
               <div className="flex items-center gap-1.5">
@@ -1167,7 +1168,7 @@ function AgentAssessmentPanel() {
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('autonomy:intervene', { detail: { type: 'assessment', taskId } }));
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DDD0] bg-white px-2 py-0.5 text-[9px] font-medium text-[#6B5A4A] transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[9px] font-medium text-white/60 transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
                 >
                   <Hand className="h-3 w-3" />
                   {t(locale, '介入', 'Intervene')}
@@ -1176,10 +1177,10 @@ function AgentAssessmentPanel() {
             </div>
             <div className="space-y-1.5">
               {sorted.map(result => (
-                <div key={result.agentId} className="rounded-lg bg-white px-3 py-2">
+                <div key={result.agentId} className="rounded-lg bg-white/5 px-3 py-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-medium text-[#3A2A1A]">{result.agentId.slice(0, 14)}</span>
-                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${decisionBadge[result.decision] || 'bg-gray-100 text-gray-700'}`}>
+                    <span className="text-[11px] font-medium text-white">{result.agentId.slice(0, 14)}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${decisionBadge[result.decision] || 'bg-white/10 text-white/60'}`}>
                       {result.decision.replace(/_/g, ' ')}
                     </span>
                   </div>
@@ -1187,7 +1188,7 @@ function AgentAssessmentPanel() {
                     <ScoreBar value={result.fitnessScore} color="bg-[#D4845A]" />
                   </div>
                   {result.reason ? (
-                    <p className="mt-1 text-[9px] leading-4 text-[#8B7355]">{result.reason}</p>
+                    <p className="mt-1 text-[9px] leading-4 text-white/50">{result.reason}</p>
                   ) : null}
                 </div>
               ))}
@@ -1210,18 +1211,18 @@ function CompetitionResultsPanel() {
     <CollapsiblePanel
       title={t(locale, '竞争执行结果', 'Competition Results')}
       count={competitions.length}
-      icon={<Star className="h-4 w-4 text-[#B08F72]" />}
+      icon={<Star className="h-4 w-4 text-white/40" />}
       open={open}
       onToggle={() => setOpen(prev => !prev)}
     >
       {competitions.map(session => (
-        <div key={session.id} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+        <div key={session.id} className="rounded-xl glass-panel p-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-[#3A2A1A]">
+            <p className="text-[11px] font-semibold text-white">
               {t(locale, '任务', 'Task')}: {session.taskId.slice(0, 12)}
             </p>
             <div className="flex items-center gap-1.5">
-              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${competitionStatusBadge[session.status] || 'bg-gray-100 text-gray-700'}`}>
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${competitionStatusBadge[session.status] || 'bg-white/10 text-white/60'}`}>
                 {session.status}
               </span>
               {session.status === 'completed' ? (
@@ -1230,7 +1231,7 @@ function CompetitionResultsPanel() {
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('autonomy:intervene', { detail: { type: 'competition', sessionId: session.id } }));
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DDD0] bg-white px-2 py-0.5 text-[9px] font-medium text-[#6B5A4A] transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[9px] font-medium text-white/60 transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
                 >
                   <Hand className="h-3 w-3" />
                   {t(locale, '介入', 'Intervene')}
@@ -1242,17 +1243,17 @@ function CompetitionResultsPanel() {
           <div className="mb-2 flex flex-wrap gap-1">
             {session.contestants.map(c => (
               <Pill key={c.agentId}>
-                {c.agentId.slice(0, 10)}{c.isExternal ? ' (ext)' : ''}{c.timedOut ? ' ⏱' : ''}
+                {c.agentId.slice(0, 10)}{c.isExternal ? ' (ext)' : ''}{c.timedOut ? ' ⏱ : ''}
               </Pill>
             ))}
           </div>
 
           {session.judgingResult ? (
             <>
-              <div className="overflow-x-auto rounded-lg border border-[#EEE1D3]">
+              <div className="overflow-x-auto rounded-lg glass-panel">
                 <table className="w-full text-[9px]">
                   <thead>
-                    <tr className="bg-[#F8F4F0] text-[#8B7355]">
+                    <tr className="bg-white/5 text-white/50">
                       <th className="px-2 py-1.5 text-left font-semibold">Agent</th>
                       <th className="px-2 py-1.5 text-right font-semibold">Corr</th>
                       <th className="px-2 py-1.5 text-right font-semibold">Qual</th>
@@ -1268,15 +1269,15 @@ function CompetitionResultsPanel() {
                       .map((score: JudgingScore) => {
                         const isWinner = score.agentId === session.judgingResult!.winnerId;
                         return (
-                          <tr key={score.agentId} className={isWinner ? 'bg-emerald-50' : ''}>
-                            <td className="px-2 py-1.5 text-left font-medium text-[#3A2A1A]">
+                          <tr key={score.agentId} className={isWinner ? 'bg-emerald-500/10' : ''}>
+                            <td className="px-2 py-1.5 text-left font-medium text-white">
                               {isWinner ? '🏆 ' : ''}{score.agentId.slice(0, 10)}
                             </td>
-                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.correctness * 100).toFixed(0)}</td>
-                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.quality * 100).toFixed(0)}</td>
-                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.efficiency * 100).toFixed(0)}</td>
-                            <td className="px-2 py-1.5 text-right tabular-nums text-[#5A4A3A]">{(score.novelty * 100).toFixed(0)}</td>
-                            <td className="px-2 py-1.5 text-right font-semibold tabular-nums text-[#3A2A1A]">{(score.totalWeighted * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-white/80 font-data">{(score.correctness * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-white/80 font-data">{(score.quality * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-white/80 font-data">{(score.efficiency * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right tabular-nums text-white/80 font-data">{(score.novelty * 100).toFixed(0)}</td>
+                            <td className="px-2 py-1.5 text-right font-semibold tabular-nums text-white font-data">{(score.totalWeighted * 100).toFixed(0)}</td>
                           </tr>
                         );
                       })}
@@ -1284,12 +1285,12 @@ function CompetitionResultsPanel() {
                 </table>
               </div>
               {session.judgingResult.mergeRequired ? (
-                <div className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[9px] font-medium text-amber-700">
+                <div className="mt-2 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-[9px] font-medium text-amber-400">
                   {t(locale, '⚠ 分差 < 5%，需要合并方案', '⚠ Score gap < 5%, merge required')}
                 </div>
               ) : null}
               {session.judgingResult.rationaleText ? (
-                <p className="mt-2 text-[9px] leading-4 text-[#8B7355]">{session.judgingResult.rationaleText}</p>
+                <p className="mt-2 text-[9px] leading-4 text-white/50">{session.judgingResult.rationaleText}</p>
               ) : null}
             </>
           ) : null}
@@ -1319,18 +1320,18 @@ function TaskforcePanel() {
     <CollapsiblePanel
       title={t(locale, '临时工作组', 'Taskforce')}
       count={taskforces.length}
-      icon={<Network className="h-4 w-4 text-[#B08F72]" />}
+      icon={<Network className="h-4 w-4 text-white/40" />}
       open={open}
       onToggle={() => setOpen(prev => !prev)}
     >
       {taskforces.map(tf => (
-        <div key={tf.taskforceId} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+        <div key={tf.taskforceId} className="rounded-xl glass-panel p-3">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold text-[#3A2A1A]">
+            <p className="text-[11px] font-semibold text-white">
               {tf.taskforceId.slice(0, 14)}
             </p>
             <div className="flex items-center gap-1.5">
-              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${taskforceStatusBadge[tf.status] || 'bg-gray-100 text-gray-700'}`}>
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${taskforceStatusBadge[tf.status] || 'bg-white/10 text-white/60'}`}>
                 {tf.status}
               </span>
               {tf.status !== 'dissolved' ? (
@@ -1339,7 +1340,7 @@ function TaskforcePanel() {
                   onClick={() => {
                     window.dispatchEvent(new CustomEvent('autonomy:intervene', { detail: { type: 'taskforce', taskforceId: tf.taskforceId } }));
                   }}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#E8DDD0] bg-white px-2 py-0.5 text-[9px] font-medium text-[#6B5A4A] transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[9px] font-medium text-white/60 transition-colors hover:border-[#D4845A] hover:text-[#D4845A]"
                 >
                   <Hand className="h-3 w-3" />
                   {t(locale, '介入', 'Intervene')}
@@ -1354,20 +1355,20 @@ function TaskforcePanel() {
               return (
                 <div
                   key={member.agentId}
-                  className={`flex items-center gap-2 rounded-lg px-3 py-2 ${isLead ? 'bg-amber-50 border border-amber-200' : 'bg-white'}`}
+                  className={`flex items-center gap-2 rounded-lg px-3 py-2 ${isLead ? 'glass-panel border-amber-400/20 bg-amber-500/10' : 'glass-panel'}`}
                 >
-                  <span className={`h-2 w-2 shrink-0 rounded-full ${member.online ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                  <span className={`h-2 w-2 shrink-0 rounded-full ${member.online ? 'bg-emerald-500' : 'bg-white/20'}`} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] font-medium text-[#3A2A1A]">
-                        {isLead ? '⭐ ' : ''}{member.agentId.slice(0, 14)}
+                      <span className="text-[11px] font-medium text-white">
+                        {isLead ? '★' : ''}{member.agentId.slice(0, 14)}
                       </span>
-                      <span className="rounded-full bg-[#F0E8E0] px-1.5 py-0.5 text-[8px] font-medium text-[#6B5A4A]">
+                      <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-medium text-white/60">
                         {roleLabel(member.role)}
                       </span>
                     </div>
                   </div>
-                  <span className="text-[8px] text-[#B0A090]">
+                  <span className="text-[8px] text-white/40">
                     {member.online ? t(locale, '在线', 'Online') : t(locale, '离线', 'Offline')}
                   </span>
                 </div>
@@ -1376,8 +1377,8 @@ function TaskforcePanel() {
           </div>
 
           {tf.subTasks.length > 0 ? (
-            <div className="mt-2 rounded-lg bg-[#F8F4F0] px-2.5 py-2">
-              <p className="text-[9px] font-semibold text-[#8B7355]">
+            <div className="mt-2 rounded-lg bg-white/5 px-2.5 py-2">
+              <p className="text-[9px] font-semibold text-white/50">
                 {t(locale, '子任务', 'Sub-tasks')} · {tf.subTasks.filter(s => s.status === 'done').length}/{tf.subTasks.length}
               </p>
             </div>
@@ -1571,16 +1572,16 @@ function ProgressView() {
         )}
       />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-3">
-        <div className="rounded-2xl border border-[#E8DDD0] bg-white/85 p-4 shadow-sm">
+        <div className="rounded-2xl glass-panel p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#B08F72]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/40">
                 {t(locale, '当前执行', 'Current run')}
               </p>
-              <p className="mt-1 text-sm font-semibold leading-6 text-[#3A2A1A]">
+              <p className="mt-1 text-sm font-semibold leading-6 text-white">
                 {summarizeText(currentWorkflow.directive, copy.common.unavailable, 120)}
               </p>
-              <p className="mt-2 text-[11px] text-[#8B7355]">
+              <p className="mt-2 text-[11px] text-white/50">
                 {copy.workflow.progress.startedAt}: {fmt(currentWorkflow.started_at || currentWorkflow.created_at)}
               </p>
             </div>
@@ -1590,44 +1591,44 @@ function ProgressView() {
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <div className="rounded-2xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
-              <div className="flex items-center gap-2 text-[#8B7355]">
+            <div className="rounded-2xl glass-panel p-3">
+              <div className="flex items-center gap-2 text-white/50">
                 <BarChart3 className="h-3.5 w-3.5" />
                 <p className="text-[10px] font-semibold">{t(locale, '当前阶段', 'Current stage')}</p>
               </div>
-              <p className="mt-2 text-[13px] font-semibold text-[#3A2A1A]">{currentStageLabel}</p>
+              <p className="mt-2 text-[13px] font-semibold text-white">{currentStageLabel}</p>
             </div>
-            <div className="rounded-2xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
-              <div className="flex items-center gap-2 text-[#8B7355]">
+            <div className="rounded-2xl glass-panel p-3">
+              <div className="flex items-center gap-2 text-white/50">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 <p className="text-[10px] font-semibold">{t(locale, '总体进度', 'Overall progress')}</p>
               </div>
-              <p className="mt-2 text-[13px] font-semibold text-[#3A2A1A]">
+              <p className="mt-2 text-[13px] font-semibold text-white">
                 {progressState.completedTasks} / {tasks.length || 0} {t(locale, '任务完成', 'tasks completed')}
               </p>
             </div>
-            <div className="rounded-2xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
-              <div className="flex items-center gap-2 text-[#8B7355]">
+            <div className="rounded-2xl glass-panel p-3">
+              <div className="flex items-center gap-2 text-white/50">
                 <Zap className="h-3.5 w-3.5" />
                 <p className="text-[10px] font-semibold">{t(locale, '当前活跃角色', 'Active roles')}</p>
               </div>
-              <p className="mt-2 text-[13px] font-semibold text-[#3A2A1A]">{progressState.activeRoles.length}</p>
-              <p className="mt-1 text-[10px] leading-5 text-[#8B7355]">{activeRoleNames}</p>
+              <p className="mt-2 text-[13px] font-semibold text-white">{progressState.activeRoles.length}</p>
+              <p className="mt-1 text-[10px] leading-5 text-white/50">{activeRoleNames}</p>
             </div>
-            <div className="rounded-2xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
-              <div className="flex items-center gap-2 text-[#8B7355]">
+            <div className="rounded-2xl glass-panel p-3">
+              <div className="flex items-center gap-2 text-white/50">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 <p className="text-[10px] font-semibold">{t(locale, '阻塞与等待', 'Blockers')}</p>
               </div>
-              <p className="mt-2 text-[13px] font-semibold text-[#3A2A1A]">{progressState.blockedRoles.length}</p>
-              <p className="mt-1 text-[10px] leading-5 text-[#8B7355]">{blockerSummary}</p>
+              <p className="mt-2 text-[13px] font-semibold text-white">{progressState.blockedRoles.length}</p>
+              <p className="mt-1 text-[10px] leading-5 text-white/50">{blockerSummary}</p>
             </div>
           </div>
 
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold text-[#8B7355]">{copy.workflow.progress.stageProgress}</p>
-              <span className="text-[10px] text-[#B08F72]">
+              <p className="text-[11px] font-semibold text-white/50">{copy.workflow.progress.stageProgress}</p>
+              <span className="text-[10px] text-white/40">
                 {progressState.roleSummaries.length} {t(locale, '个角色摘要', 'role summaries')}
               </span>
             </div>
@@ -1635,24 +1636,24 @@ function ProgressView() {
           </div>
 
           {currentWorkflow.status === 'failed' ? (
-            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-[11px] text-red-700">
+            <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 p-3 text-[11px] text-red-400">
               {currentWorkflow.results?.last_error || copy.common.unavailable}
             </div>
           ) : null}
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
-            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
+            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'json')} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.json}</button>
+            <button onClick={() => void downloadWorkflowReport(currentWorkflow.id, 'md')} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{copy.workflow.progress.workflowReport} · {copy.common.markdown}</button>
             {canExport ? (
-              <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-[#F0E8E0] px-3 py-2 text-xs font-semibold text-[#5B4837]"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
+              <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
             ) : null}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <div className="mb-3">
-            <p className="text-sm font-semibold text-[#3A2A1A]">{t(locale, '角色执行摘要', 'Role execution summary')}</p>
-            <p className="text-[10px] leading-5 text-[#8B7355]">
+            <p className="text-sm font-semibold text-white">{t(locale, '角色执行摘要', 'Role execution summary')}</p>
+            <p className="text-[10px] leading-5 text-white/50">
               {t(
                 locale,
                 '每个角色默认只显示一行摘要，点开后再看完整交付、反馈和相关事件。',
@@ -1662,24 +1663,24 @@ function ProgressView() {
           </div>
 
           {progressState.departmentSummaries.length === 0 ? (
-            <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">
+            <div className="rounded-2xl bg-white/5 px-4 py-6 text-center text-[11px] text-white/50">
               {copy.workflow.progress.noTasks}
             </div>
           ) : (
             <div className="space-y-3">
               {progressState.departmentSummaries.map(group => (
-                <div key={group.department} className="rounded-2xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+                <div key={group.department} className="rounded-2xl glass-panel p-3">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#3A2A1A]">
+                      <p className="text-sm font-semibold text-white">
                         {copy.workflow.departments[group.department as keyof typeof copy.workflow.departments] || group.department}
                       </p>
-                      <p className="text-[10px] text-[#8B7355]">
+                      <p className="text-[10px] text-white/50">
                         {group.completedTasks} / {group.totalTasks} {t(locale, '任务完成', 'tasks completed')}
                       </p>
                     </div>
                     {group.managerId ? (
-                      <button onClick={() => void downloadDepartmentReport(currentWorkflow.id, group.managerId, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[10px] font-semibold text-[#5B4837]"><Download className="h-3 w-3" />{copy.workflow.progress.departmentReport}</button>
+                      <button onClick={() => void downloadDepartmentReport(currentWorkflow.id, group.managerId, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white/60"><Download className="h-3 w-3" />{copy.workflow.progress.departmentReport}</button>
                     ) : null}
                   </div>
 
@@ -1687,7 +1688,7 @@ function ProgressView() {
                     {group.roles.map(role => {
                       const isExpanded = expandedRoleKeys.includes(role.key);
                       return (
-                        <div key={role.key} className="rounded-xl border border-[#E8DDD0] bg-white/90">
+                        <div key={role.key} className="rounded-xl glass-panel">
                           <button
                             type="button"
                             onClick={() => toggleRole(role.key)}
@@ -1695,42 +1696,42 @@ function ProgressView() {
                           >
                             <div className="mt-0.5">
                               {isExpanded ? (
-                                <ChevronDown className="h-4 w-4 text-[#B08F72]" />
+                                <ChevronDown className="h-4 w-4 text-white/40" />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-[#B08F72]" />
+                                <ChevronRight className="h-4 w-4 text-white/40" />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-[12px] font-semibold text-[#3A2A1A]">{role.name}</p>
+                                <p className="text-[12px] font-semibold text-white">{role.name}</p>
                                 <span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${getRoleStatusClass(role.status)}`}>
                                   {getRoleStatusLabel(locale, role.status)}
                                 </span>
                                 <Pill>{role.roleKind === 'manager' ? t(locale, '经理', 'Manager') : t(locale, '执行者', 'Worker')}</Pill>
                               </div>
-                              <p className="mt-1 text-[11px] font-medium text-[#5A4A3A]">{role.currentTask}</p>
-                              <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-[#8B7355]">
+                              <p className="mt-1 text-[11px] font-medium text-white/80">{role.currentTask}</p>
+                              <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-white/50">
                                 <span>{t(locale, '最近更新', 'Latest update')}: {fmt(role.updatedAt)}</span>
                                 <span>{role.tasks.length} {t(locale, '项任务', 'tasks')}</span>
                               </div>
-                              <p className="mt-1 text-[10px] leading-5 text-[#8B7355]">{role.summary}</p>
+                              <p className="mt-1 text-[10px] leading-5 text-white/50">{role.summary}</p>
                             </div>
                           </button>
 
                           {isExpanded ? (
-                            <div className="border-t border-[#F0E8E0] bg-[#FFFCF8] px-3 py-3">
+                            <div className="border-t border-white/10 bg-white/5 px-3 py-3">
                               <div className="space-y-3">
                                 {role.tasks.map(task => {
                                   const blocks = getTaskDetailBlocks(task);
                                   return (
-                                    <div key={task.id} className="rounded-xl border border-[#EEE1D3] bg-white px-3 py-3">
+                                    <div key={task.id} className="rounded-xl glass-panel px-3 py-3">
                                       <div className="flex flex-wrap items-start justify-between gap-2">
                                         <div className="min-w-0 flex-1">
                                           <div className="flex items-center gap-2">
                                             {taskStatusIcon(task.status)}
-                                            <p className="text-[12px] font-semibold text-[#3A2A1A]">{task.description}</p>
+                                            <p className="text-[12px] font-semibold text-white">{task.description}</p>
                                           </div>
-                                          <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-[#8B7355]">
+                                          <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-white/50">
                                             <span>{t(locale, '执行者', 'Worker')}: {getNodeName(task.worker_id, nodeMap)}</span>
                                             <span>{t(locale, '版本', 'Version')} {task.version}</span>
                                             {task.total_score !== null ? <span>{copy.workflow.progress.score}: {task.total_score}/20</span> : null}
@@ -1744,8 +1745,8 @@ function ProgressView() {
                                       {blocks.length > 0 ? (
                                         <div className="mt-3 space-y-2">
                                           {blocks.map(block => (
-                                            <div key={block.key} className="rounded-lg bg-[#F8F4F0] px-3 py-2">
-                                              <p className="flex items-center text-[9px] font-semibold uppercase tracking-[0.16em] text-[#B08F72]">
+                                            <div key={block.key} className="rounded-lg bg-white/5 px-3 py-2">
+                                              <p className="flex items-center text-[9px] font-semibold uppercase tracking-[0.16em] text-white/40">
                                                 {block.key === 'deliverable'
                                                   ? t(locale, '交付内容', 'Deliverable')
                                                   : block.key === 'manager_feedback'
@@ -1753,14 +1754,14 @@ function ProgressView() {
                                                     : t(locale, '审计反馈', 'Audit feedback')}
                                                 <TtsPlayButton id={`task-${task.id}-${block.key}`} content={block.content || ''} />
                                               </p>
-                                              <p className="mt-1 whitespace-pre-wrap text-[10px] leading-5 text-[#5A4A3A]">
+                                              <p className="mt-1 whitespace-pre-wrap text-[10px] leading-5 text-white/80">
                                                 {block.content}
                                               </p>
                                             </div>
                                           ))}
                                         </div>
                                       ) : (
-                                        <p className="mt-3 text-[10px] text-[#8B7355]">
+                                        <p className="mt-3 text-[10px] text-white/50">
                                           {t(locale, '当前还没有可展开的详细内容。', 'There is no detailed content to expand yet.')}
                                         </p>
                                       )}
@@ -1769,19 +1770,19 @@ function ProgressView() {
                                 })}
 
                                 {role.messages.length > 0 ? (
-                                  <div className="rounded-xl border border-[#EEE1D3] bg-white px-3 py-3">
-                                    <p className="text-[11px] font-semibold text-[#3A2A1A]">
+                                  <div className="rounded-xl glass-panel px-3 py-3">
+                                    <p className="text-[11px] font-semibold text-white">
                                       {t(locale, '相关事件', 'Related events')}
                                     </p>
                                     <div className="mt-2 space-y-2">
                                       {role.messages.map(message => (
-                                        <div key={message.id} className="rounded-lg bg-[#F8F4F0] px-3 py-2">
-                                          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8B7355]">
+                                        <div key={message.id} className="rounded-lg bg-white/5 px-3 py-2">
+                                          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-white/50">
                                             <span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span>
                                             <span>{fmt(message.created_at)}</span>
                                           </div>
                                           <div className="mt-1 flex items-start gap-1">
-                                            <p className="flex-1 text-[10px] leading-5 text-[#5A4A3A]">
+                                            <p className="flex-1 text-[10px] leading-5 text-white/80">
                                               {summarizeText(message.content, copy.common.unavailable, 180)}
                                             </p>
                                             {message.content ? <TtsPlayButton id={`msg-${message.id}`} content={message.content} /> : null}
@@ -1804,13 +1805,13 @@ function ProgressView() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-[#B08F72]" />
+              <FileText className="h-4 w-4 text-white/40" />
               <div>
-                <p className="text-sm font-semibold text-[#3A2A1A]">{t(locale, '关键事件', 'Key events')}</p>
-                <p className="text-[10px] leading-5 text-[#8B7355]">
+                <p className="text-sm font-semibold text-white">{t(locale, '关键事件', 'Key events')}</p>
+                <p className="text-[10px] leading-5 text-white/50">
                   {t(locale, '默认只显示最近 3 条，避免消息流把进度信息淹没。', 'Only the most recent events are shown by default so progress stays readable.')}
                 </p>
               </div>
@@ -1819,7 +1820,7 @@ function ProgressView() {
               <button
                 type="button"
                 onClick={() => setShowAllEvents(prev => !prev)}
-                className="rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[10px] font-semibold text-[#5B4837]"
+                className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-white/60"
               >
                 {showAllEvents ? t(locale, '收起', 'Show less') : t(locale, '查看全部事件', 'View all events')}
               </button>
@@ -1827,18 +1828,18 @@ function ProgressView() {
           </div>
 
           {visibleEvents.length === 0 ? (
-            <div className="rounded-2xl bg-[#F8F4F0] px-4 py-6 text-center text-[11px] text-[#8B7355]">
+            <div className="rounded-2xl bg-white/5 px-4 py-6 text-center text-[11px] text-white/50">
               {copy.workflow.progress.noMessages}
             </div>
           ) : (
             <div className="space-y-2">
               {visibleEvents.map(message => (
-                <div key={message.id} className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] px-3 py-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8B7355]">
+                <div key={message.id} className="rounded-xl glass-panel px-3 py-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-white/50">
                     <span>{getNodeName(message.from_agent, nodeMap)} → {getNodeName(message.to_agent, nodeMap)}</span>
                     <span>{fmt(message.created_at)}</span>
                   </div>
-                  <p className="mt-1 text-[10px] text-[#B08F72]">
+                  <p className="mt-1 text-[10px] text-white/40">
                     {getDynamicStageLabel(
                       locale,
                       message.stage,
@@ -1846,7 +1847,7 @@ function ProgressView() {
                     )}
                   </p>
                   <div className="mt-2 flex items-start gap-1">
-                    <p className="flex-1 text-[11px] leading-5 text-[#5A4A3A]">
+                    <p className="flex-1 text-[11px] leading-5 text-white/80">
                       {summarizeText(message.content, copy.common.unavailable, 180)}
                     </p>
                     {message.content ? <TtsPlayButton id={`evt-${message.id}`} content={message.content} /> : null}
@@ -1863,38 +1864,38 @@ function ProgressView() {
         <CompetitionResultsPanel />
         <TaskforcePanel />
 
-        <div className="rounded-2xl border border-[#E8DDD0] bg-white/82 p-3">
+        <div className="rounded-2xl glass-panel p-3">
           <button
             type="button"
             onClick={() => setIsContextOpen(prev => !prev)}
             className="flex w-full items-center justify-between gap-2 text-left"
           >
             <div className="flex items-center gap-2">
-              <PanelRight className="h-4 w-4 text-[#B08F72]" />
+              <PanelRight className="h-4 w-4 text-white/40" />
               <div>
-                <p className="text-sm font-semibold text-[#3A2A1A]">{t(locale, '输入与上下文', 'Input and context')}</p>
-                <p className="text-[10px] leading-5 text-[#8B7355]">
+                <p className="text-sm font-semibold text-white">{t(locale, '输入与上下文', 'Input and context')}</p>
+                <p className="text-[10px] leading-5 text-white/50">
                   {t(locale, '附件和组织推理保留，但默认折叠，避免跟执行进度抢层级。', 'Attachments and organization context stay available, but collapsed by default.')}
                 </p>
               </div>
             </div>
-            {isContextOpen ? <ChevronDown className="h-4 w-4 text-[#B08F72]" /> : <ChevronRight className="h-4 w-4 text-[#B08F72]" />}
+            {isContextOpen ? <ChevronDown className="h-4 w-4 text-white/40" /> : <ChevronRight className="h-4 w-4 text-white/40" />}
           </button>
 
           {isContextOpen ? (
             <div className="mt-3 space-y-3">
-              <div className="rounded-xl border border-[#EEE1D3] bg-[#FFFCF8] p-3">
+              <div className="rounded-xl glass-panel p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-semibold text-[#3A2A1A]">{t(locale, '输入附件', 'Input attachments')}</p>
+                  <p className="text-[11px] font-semibold text-white">{t(locale, '输入附件', 'Input attachments')}</p>
                   <Pill>{attachments.length}</Pill>
                 </div>
                 {attachments.length > 0 ? (
                   <div className="mt-2 space-y-2">
                     {attachments.map(attachment => (
-                      <div key={attachment.id} className="rounded-lg bg-white px-3 py-2">
+                      <div key={attachment.id} className="rounded-lg bg-white/5 px-3 py-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[11px] font-medium text-[#3A2A1A]">{attachment.name}</p>
-                          <div className="flex flex-wrap gap-2 text-[9px] text-[#8B7355]">
+                          <p className="text-[11px] font-medium text-white">{attachment.name}</p>
+                          <div className="flex flex-wrap gap-2 text-[9px] text-white/50">
                             <Pill>{formatAttachmentSize(attachment.size)}</Pill>
                             <Pill>{getAttachmentStatusLabel(locale, attachment)}</Pill>
                           </div>
@@ -1903,26 +1904,26 @@ function ProgressView() {
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-2 text-[10px] text-[#8B7355]">{t(locale, '当前没有输入附件。', 'There are no input attachments for this workflow.')}</p>
+                  <p className="mt-2 text-[10px] text-white/50">{t(locale, '当前没有输入附件。', 'There are no input attachments for this workflow.')}</p>
                 )}
               </div>
 
-              <div className="rounded-xl border border-indigo-200 bg-indigo-50/80 p-3">
+              <div className="rounded-xl border border-indigo-400/20 bg-indigo-500/10 p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[11px] font-semibold text-indigo-900">{t(locale, '组织摘要', 'Organization summary')}</p>
+                  <p className="text-[11px] font-semibold text-indigo-300">{t(locale, '组织摘要', 'Organization summary')}</p>
                   {organization ? <Pill>{organization.departments.length} {t(locale, '部门', 'departments')}</Pill> : null}
                 </div>
                 {organization ? (
                   <>
-                    <p className="mt-2 text-[11px] leading-5 text-indigo-900">
+                    <p className="mt-2 text-[11px] leading-5 text-indigo-300">
                       {t(locale, '当前组织', 'Current org')}: {organization.departments.length} {t(locale, '部门', 'departments')} / {organization.nodes.length} {t(locale, '节点', 'nodes')} / {organization.taskProfile}
                     </p>
-                    <p className="mt-2 text-[10px] leading-5 text-indigo-800">
+                    <p className="mt-2 text-[10px] leading-5 text-indigo-300">
                       {summarizeText(organization.reasoning, copy.common.unavailable, 180)}
                     </p>
                   </>
                 ) : (
-                  <p className="mt-2 text-[10px] text-indigo-800">{t(locale, '当前还没有组织生成结果。', 'No organization summary is available yet.')}</p>
+                  <p className="mt-2 text-[10px] text-indigo-300">{t(locale, '当前还没有组织生成结果。', 'No organization summary is available yet.')}</p>
                 )}
               </div>
             </div>
@@ -1941,7 +1942,7 @@ function ReviewView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.review.title} description={copy.workflow.review.description} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        {tasks.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-4 py-8 text-center text-[11px] text-[#8B7355]">{copy.workflow.review.empty}</div> : <div className="space-y-3">{tasks.map(task => <div key={task.id} className="rounded-2xl border border-[#E8DDD0] bg-white/78 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-[#3A2A1A]">{task.description}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <div className="mt-3 rounded-xl bg-[#F8F4F0] p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-[#8B7355]">{copy.workflow.review.deliverable}<TtsPlayButton id={`rv-del-${task.id}`} content={task.deliverable_v3 || task.deliverable_v2 || task.deliverable || ''} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p></div> : null}{task.manager_feedback ? <div className="mt-3 rounded-xl bg-emerald-50 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-emerald-700">{copy.workflow.review.feedback}<TtsPlayButton id={`rv-mf-${task.id}`} content={task.manager_feedback} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#375B46]">{task.manager_feedback}</p></div> : null}{task.meta_audit_feedback ? <div className="mt-3 rounded-xl bg-amber-50 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-amber-700">{copy.workflow.review.audit}<TtsPlayButton id={`rv-af-${task.id}`} content={task.meta_audit_feedback} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-[#6B5635]">{task.meta_audit_feedback}</p></div> : null}</div>)}</div>}
+        {tasks.length === 0 ? <div className="rounded-2xl bg-white/5 px-4 py-8 text-center text-[11px] text-white/50">{copy.workflow.review.empty}</div> : <div className="space-y-3">{tasks.map(task => <div key={task.id} className="rounded-2xl glass-panel p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-semibold text-white">{task.description}</p><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${taskBadge[task.status] || taskBadge.assigned}`}>{copy.workflow.statuses.task[task.status as keyof typeof copy.workflow.statuses.task] || task.status}</span></div>{task.deliverable_v3 || task.deliverable_v2 || task.deliverable ? <div className="mt-3 rounded-xl bg-white/5 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-white/50">{copy.workflow.review.deliverable}<TtsPlayButton id={`rv-del-${task.id}`} content={task.deliverable_v3 || task.deliverable_v2 || task.deliverable || ''} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-white/80">{task.deliverable_v3 || task.deliverable_v2 || task.deliverable}</p></div> : null}{task.manager_feedback ? <div className="mt-3 rounded-xl bg-emerald-500/10 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-emerald-400">{copy.workflow.review.feedback}<TtsPlayButton id={`rv-mf-${task.id}`} content={task.manager_feedback} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-white/80">{task.manager_feedback}</p></div> : null}{task.meta_audit_feedback ? <div className="mt-3 rounded-xl bg-amber-500/10 p-3"><p className="mb-1 flex items-center text-[10px] font-semibold text-amber-400">{copy.workflow.review.audit}<TtsPlayButton id={`rv-af-${task.id}`} content={task.meta_audit_feedback} /></p><p className="whitespace-pre-wrap text-[11px] leading-5 text-white/80">{task.meta_audit_feedback}</p></div> : null}</div>)}</div>}
       </div>
     </div>
   );
@@ -1996,7 +1997,7 @@ function MemoryView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.memory.title} description={copy.workflow.memory.description} />
       {isDemoActive && <MemoryTimeline />}
-      <div className="border-b border-[#F0E8E0] px-4 py-3">
+      <div className="border-b border-white/10 px-4 py-3">
         <div className="flex flex-wrap gap-1.5">
           {availableAgents.map(agent => (
             <button
@@ -2005,7 +2006,7 @@ function MemoryView() {
               className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${
                 selectedAgent?.id === agent.id
                   ? 'bg-[#D4845A] text-white'
-                  : 'bg-[#F8F4F0] text-[#6B5A4A]'
+                  : 'bg-white/5 text-white/60'
               }`}
             >
               {agent.name}
@@ -2013,7 +2014,7 @@ function MemoryView() {
           ))}
         </div>
         {selectedAgent ? (
-          <div className="mt-2 rounded-xl bg-[#F8F4F0] px-3 py-2 text-[10px] text-[#6B5A4A]">
+          <div className="mt-2 rounded-xl bg-white/5 px-3 py-2 text-[10px] text-white/60">
             {selectedAgent.name} / {nodeMap.get(selectedAgent.id)?.title || selectedAgent.role} / {nodeMap.get(selectedAgent.id)?.departmentLabel || selectedAgent.department}
             {(() => {
               const profile = useReputationStore.getState().profiles[selectedAgent.id];
@@ -2043,19 +2044,19 @@ function MemoryView() {
         ) : null}
         <div className="mb-4">
           <div className="mb-1.5 flex items-center justify-between">
-            <h4 className="text-[11px] font-bold text-[#8B7355]">{copy.workflow.memory.recent}</h4>
-            {isMemoryLoading ? <span className="flex items-center gap-1 text-[10px] text-[#B0A090]"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}
+            <h4 className="text-[11px] font-bold text-white/50">{copy.workflow.memory.recent}</h4>
+            {isMemoryLoading ? <span className="flex items-center gap-1 text-[10px] text-white/40"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}
           </div>
-          {!selectedAgent ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.memory.emptySelected}</div> : agentMemoryRecent.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.memory.emptyRecent}</div> : <div className="space-y-2">{agentMemoryRecent.slice().reverse().map((entry, index) => <div key={`${entry.timestamp}-${index}`} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3"><div className="mb-1 flex items-center justify-between gap-2"><div className="flex flex-wrap items-center gap-1.5"><span className="rounded-full bg-[#F0E8E0] px-2 py-0.5 text-[8px] text-[#6B5A4A]">{getMemoryTypeLabel(copy, entry.type)}</span>{entry.direction ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] text-blue-700">{copy.workflow.directions[entry.direction as keyof typeof copy.workflow.directions] || entry.direction}</span> : null}{entry.stage ? <Pill>{entry.stage}</Pill> : null}</div><span className="text-[8px] text-[#B0A090]">{fmt(entry.timestamp)}</span></div><p className="whitespace-pre-wrap text-[10px] leading-5 text-[#5D4C3B]">{entry.preview || entry.content}</p></div>)}</div>}
+          {!selectedAgent ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.memory.emptySelected}</div> : agentMemoryRecent.length === 0 ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.memory.emptyRecent}</div> : <div className="space-y-2">{agentMemoryRecent.slice().reverse().map((entry, index) => <div key={`${entry.timestamp}-${index}`} className="rounded-xl glass-panel p-3"><div className="mb-1 flex items-center justify-between gap-2"><div className="flex flex-wrap items-center gap-1.5"><span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] text-white/60">{getMemoryTypeLabel(copy, entry.type)}</span>{entry.direction ? <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] text-blue-400">{copy.workflow.directions[entry.direction as keyof typeof copy.workflow.directions] || entry.direction}</span> : null}{entry.stage ? <Pill>{entry.stage}</Pill> : null}</div><span className="text-[8px] text-white/40">{fmt(entry.timestamp)}</span></div><p className="whitespace-pre-wrap text-[10px] leading-5 text-white/80">{entry.preview || entry.content}</p></div>)}</div>}
         </div>
 
         <div>
-          <h4 className="mb-1.5 text-[11px] font-bold text-[#8B7355]">{copy.workflow.memory.search}</h4>
+          <h4 className="mb-1.5 text-[11px] font-bold text-white/50">{copy.workflow.memory.search}</h4>
           <div className="mb-3 flex items-center gap-2">
-            <input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void doSearch(); } }} placeholder={copy.workflow.memory.searchPlaceholder} className="flex-1 rounded-xl border border-[#E8DDD0] bg-[#FFFCF8] px-3 py-2 text-sm text-[#3A2A1A] placeholder:text-[#B8A897] focus:border-[#2D5F4A]/40 focus:outline-none focus:ring-2 focus:ring-[#2D5F4A]/15" />
+            <input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); void doSearch(); } }} placeholder={copy.workflow.memory.searchPlaceholder} className="flex-1 rounded-xl glass-panel px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-cyan-400/40 focus:outline-none focus:ring-2 focus:ring-cyan-400/20" />
             <button onClick={() => void doSearch()} disabled={!selectedAgent || !draft.trim()} className="inline-flex h-10 items-center justify-center rounded-xl bg-[#2D5F4A] px-3 text-sm font-semibold text-white disabled:opacity-40">{copy.common.search}</button>
           </div>
-          {agentMemorySearchResults.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.memory.emptySearch}</div> : <div className="space-y-2">{agentMemorySearchResults.map(item => <div key={`${item.workflowId}-${item.createdAt}`} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[11px] font-semibold text-[#3A2A1A]">{item.directive}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${wfBadge[item.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[item.status as keyof typeof copy.workflow.statuses.workflow] || item.status}</span></div><p className="mt-1 text-[9px] text-[#8B7355]">{fmt(item.createdAt)}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-[#5A4A3A]">{item.summary}</p></div>)}</div>}
+          {agentMemorySearchResults.length === 0 ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.memory.emptySearch}</div> : <div className="space-y-2">{agentMemorySearchResults.map(item => <div key={`${item.workflowId}-${item.createdAt}`} className="rounded-xl glass-panel p-3"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[11px] font-semibold text-white">{item.directive}</p><span className={`rounded-full px-2 py-0.5 text-[9px] font-semibold ${wfBadge[item.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[item.status as keyof typeof copy.workflow.statuses.workflow] || item.status}</span></div><p className="mt-1 text-[9px] text-white/50">{fmt(item.createdAt)}</p><p className="mt-2 whitespace-pre-wrap text-[11px] leading-5 text-white/80">{item.summary}</p></div>)}</div>}
         </div>
       </div>
     </div>
@@ -2067,18 +2068,18 @@ function ReportCard({ item }: { item: HeartbeatReportInfo }) {
   const fmt = useFmt();
   const downloadHeartbeatReport = useWorkflowStore(state => state.downloadHeartbeatReport);
   return (
-    <div className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm">
+    <div className="rounded-xl glass-panel p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-[#3A2A1A]">{item.title}</p>
-          <p className="mt-0.5 text-[9px] text-[#8B7355]">{item.agentName} · {item.department} · {fmt(item.generatedAt)}</p>
+          <p className="text-[11px] font-semibold text-white">{item.title}</p>
+          <p className="mt-0.5 text-[9px] text-white/50">{item.agentName} · {item.department} · {fmt(item.generatedAt)}</p>
         </div>
-        <span className="rounded-full bg-[#F0E8E0] px-2 py-0.5 text-[8px] font-medium text-[#6B5A4A]">{copy.workflow.reports.triggers[item.trigger as keyof typeof copy.workflow.reports.triggers] || item.trigger}</span>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-medium text-white/60">{copy.workflow.reports.triggers[item.trigger as keyof typeof copy.workflow.reports.triggers] || item.trigger}</span>
       </div>
-      <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-[#5D4C3B]">{item.summaryPreview}</p>
+      <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/80">{item.summaryPreview}</p>
       <div className="mt-2 flex flex-wrap gap-2">
-        <button onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, 'json')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837]"><Download className="h-3 w-3" />{copy.common.json}</button>
-        <button onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-[#F0E8E0] px-2.5 py-1 text-[9px] font-medium text-[#5B4837]"><Download className="h-3 w-3" />{copy.common.markdown}</button>
+        <button onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, 'json')} className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-[9px] font-medium text-white/60"><Download className="h-3 w-3" />{copy.common.json}</button>
+        <button onClick={() => void downloadHeartbeatReport(item.agentId, item.reportId, 'md')} className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-[9px] font-medium text-white/60"><Download className="h-3 w-3" />{copy.common.markdown}</button>
       </div>
     </div>
   );
@@ -2095,9 +2096,9 @@ function ReportsView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.reports.title} description={copy.workflow.reports.description} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
-        <div className="mb-3 grid grid-cols-3 gap-2"><div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2"><p className="text-[9px] text-[#8B7355]">{copy.workflow.reports.enabled}</p><p className="mt-1 text-sm font-bold text-[#3A2A1A]">{enabled}</p></div><div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2"><p className="text-[9px] text-[#8B7355]">{copy.workflow.reports.running}</p><p className="mt-1 text-sm font-bold text-[#3A2A1A]">{running}</p></div><div className="rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] px-3 py-2"><p className="text-[9px] text-[#8B7355]">{copy.workflow.reports.latest}</p><p className="mt-1 text-[10px] font-semibold text-[#3A2A1A]">{fmt(heartbeatReports[0]?.generatedAt || null)}</p></div></div>
-        <div className="mb-4"><div className="mb-1.5 flex items-center justify-between"><h4 className="text-[11px] font-bold text-[#8B7355]">{copy.workflow.reports.statusList}</h4>{isHeartbeatLoading ? <span className="flex items-center gap-1 text-[10px] text-[#B0A090]"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}</div>{heartbeatStatuses.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.reports.emptyStatuses}</div> : <div className="space-y-2">{heartbeatStatuses.map(item => <div key={item.agentId} className="rounded-xl border border-[#E8DDD0] bg-white/80 p-3 shadow-sm"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex items-center gap-2"><p className="text-[11px] font-semibold text-[#3A2A1A]">{item.agentName}</p><span className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${hbBadge[item.state] || hbBadge.idle}`}>{copy.workflow.statuses.heartbeat[item.state as keyof typeof copy.workflow.statuses.heartbeat] || item.state}</span></div><p className="mt-0.5 text-[9px] text-[#8B7355]">{item.department} · {item.intervalMinutes} min · {item.reportCount}</p></div><button onClick={() => void runHeartbeat(item.agentId)} disabled={!item.enabled || runningHeartbeatAgentId === item.agentId} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-cyan-100 px-2.5 py-1.5 text-[9px] font-medium text-cyan-700 disabled:opacity-50">{runningHeartbeatAgentId === item.agentId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}{runningHeartbeatAgentId === item.agentId ? copy.workflow.reports.runningNow : copy.workflow.reports.triggerNow}</button></div><div className="mt-2 rounded-lg bg-[#F8F4F0] px-2.5 py-2 text-[9px] text-[#6B5A4A]"><p>{copy.workflow.reports.focus}: {item.focus}</p><p className="mt-1">{copy.workflow.reports.keywords}: {item.keywords.length > 0 ? item.keywords.join(' / ') : copy.common.unavailable}</p><p className="mt-1">{copy.workflow.reports.lastSuccess}: {fmt(item.lastSuccessAt)}</p><p className="mt-1">{copy.workflow.reports.nextRun}: {fmt(item.nextRunAt)}</p>{item.lastReportTitle ? <p className="mt-1">{copy.workflow.reports.lastReport}: {item.lastReportTitle}</p> : null}{item.lastError ? <p className="mt-1 text-red-600">{copy.workflow.reports.error}: {item.lastError}</p> : null}</div></div>)}</div>}</div>
-        <div><h4 className="mb-1.5 text-[11px] font-bold text-[#8B7355]">{copy.workflow.reports.reportsList}</h4>{heartbeatReports.length === 0 ? <div className="rounded-2xl bg-[#F8F4F0] px-3 py-4 text-center text-[11px] text-[#8B7355]">{copy.workflow.reports.emptyReports}</div> : <div className="space-y-2">{heartbeatReports.map(item => <ReportCard key={`${item.agentId}-${item.reportId}`} item={item} />)}</div>}</div>
+        <div className="mb-3 grid grid-cols-3 gap-2"><div className="rounded-xl glass-panel px-3 py-2"><p className="text-[9px] text-white/50">{copy.workflow.reports.enabled}</p><p className="mt-1 text-sm font-bold text-white font-data">{enabled}</p></div><div className="rounded-xl glass-panel px-3 py-2"><p className="text-[9px] text-white/50">{copy.workflow.reports.running}</p><p className="mt-1 text-sm font-bold text-white font-data">{running}</p></div><div className="rounded-xl glass-panel px-3 py-2"><p className="text-[9px] text-white/50">{copy.workflow.reports.latest}</p><p className="mt-1 text-[10px] font-semibold text-white">{fmt(heartbeatReports[0]?.generatedAt || null)}</p></div></div>
+        <div className="mb-4"><div className="mb-1.5 flex items-center justify-between"><h4 className="text-[11px] font-bold text-white/50">{copy.workflow.reports.statusList}</h4>{isHeartbeatLoading ? <span className="flex items-center gap-1 text-[10px] text-white/40"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}</div>{heartbeatStatuses.length === 0 ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.reports.emptyStatuses}</div> : <div className="space-y-2">{heartbeatStatuses.map(item => <div key={item.agentId} className="rounded-xl glass-panel p-3"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex items-center gap-2"><p className="text-[11px] font-semibold text-white">{item.agentName}</p><span className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${hbBadge[item.state] || hbBadge.idle}`}>{copy.workflow.statuses.heartbeat[item.state as keyof typeof copy.workflow.statuses.heartbeat] || item.state}</span></div><p className="mt-0.5 text-[9px] text-white/50">{item.department} · {item.intervalMinutes} min · {item.reportCount}</p></div><button onClick={() => void runHeartbeat(item.agentId)} disabled={!item.enabled || runningHeartbeatAgentId === item.agentId} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-cyan-500/15 px-2.5 py-1.5 text-[9px] font-medium text-cyan-400 disabled:opacity-50">{runningHeartbeatAgentId === item.agentId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}{runningHeartbeatAgentId === item.agentId ? copy.workflow.reports.runningNow : copy.workflow.reports.triggerNow}</button></div><div className="mt-2 rounded-lg bg-white/5 px-2.5 py-2 text-[9px] text-white/60"><p>{copy.workflow.reports.focus}: {item.focus}</p><p className="mt-1">{copy.workflow.reports.keywords}: {item.keywords.length > 0 ? item.keywords.join(' / ') : copy.common.unavailable}</p><p className="mt-1">{copy.workflow.reports.lastSuccess}: {fmt(item.lastSuccessAt)}</p><p className="mt-1">{copy.workflow.reports.nextRun}: {fmt(item.nextRunAt)}</p>{item.lastReportTitle ? <p className="mt-1">{copy.workflow.reports.lastReport}: {item.lastReportTitle}</p> : null}{item.lastError ? <p className="mt-1 text-red-400">{copy.workflow.reports.error}: {item.lastError}</p> : null}</div></div>)}</div>}</div>
+        <div><h4 className="mb-1.5 text-[11px] font-bold text-white/50">{copy.workflow.reports.reportsList}</h4>{heartbeatReports.length === 0 ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.reports.emptyReports}</div> : <div className="space-y-2">{heartbeatReports.map(item => <ReportCard key={`${item.agentId}-${item.reportId}`} item={item} />)}</div>}</div>
       </div>
     </div>
   );
@@ -2112,7 +2113,7 @@ function HistoryView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.history.title} />
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
-        {workflows.length === 0 ? <div className="py-8 text-center text-xs text-[#8B7355]">{copy.workflow.history.empty}</div> : workflows.map(workflow => <button key={workflow.id} onClick={() => { setCurrentWorkflow(workflow.id); setActiveView('workflow'); }} className="w-full rounded-xl border border-[#E8DDD0] bg-[#F8F4F0] p-3 text-left hover:bg-[#F0E8E0]"><div className="mb-1 flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${wfBadge[workflow.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[workflow.status as keyof typeof copy.workflow.statuses.workflow] || workflow.status}</span><span className="text-[9px] text-[#B0A090]">{fmt(workflow.created_at)}</span></div><p className="line-clamp-2 text-xs text-[#3A2A1A]">{workflow.directive}</p></button>)}
+        {workflows.length === 0 ? <div className="py-8 text-center text-xs text-white/50">{copy.workflow.history.empty}</div> : workflows.map(workflow => <button key={workflow.id} onClick={() => { setCurrentWorkflow(workflow.id); setActiveView('workflow'); }} className="w-full rounded-xl glass-panel p-3 text-left hover:bg-white/10"><div className="mb-1 flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${wfBadge[workflow.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[workflow.status as keyof typeof copy.workflow.statuses.workflow] || workflow.status}</span><span className="text-[9px] text-white/40">{fmt(workflow.created_at)}</span></div><p className="line-clamp-2 text-xs text-white">{workflow.directive}</p></button>)}
       </div>
     </div>
   );
@@ -2133,21 +2134,21 @@ function DemoControls() {
   if (!isDemoActive) return null;
 
   return (
-    <div className="flex items-center gap-2 border-b border-[#7CB9E8]/30 bg-[#E8F4FD] px-4 py-2">
-      <span className="text-[10px] font-semibold text-[#2E86C1]">🎬 Demo</span>
-      <span className="rounded-full bg-[#7CB9E8]/20 px-2 py-0.5 text-[9px] font-medium text-[#2E86C1]">{playbackState}</span>
+    <div className="flex items-center gap-2 border-b border-[#7CB9E8]/30 bg-blue-500/10 px-4 py-2">
+      <span className="text-[10px] font-semibold text-blue-400">🎬 Demo</span>
+      <span className="rounded-full bg-blue-400/20 px-2 py-0.5 text-[9px] font-medium text-blue-400">{playbackState}</span>
       <div className="flex-1" />
       {playbackState === 'playing' ? (
-        <button onClick={pauseDemo} className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-medium text-[#2E86C1] shadow-sm hover:bg-white">⏸ Pause</button>
+        <button onClick={pauseDemo} className="rounded-lg bg-white/5 px-2.5 py-1 text-[10px] font-medium text-blue-400 hover:bg-white">⏸ Pause</button>
       ) : playbackState === 'paused' ? (
-        <button onClick={resumeDemo} className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-medium text-[#2E86C1] shadow-sm hover:bg-white">▶ Resume</button>
+        <button onClick={resumeDemo} className="rounded-lg bg-white/5 px-2.5 py-1 text-[10px] font-medium text-blue-400 hover:bg-white">▶ Resume</button>
       ) : null}
-      <button onClick={stopDemo} className="rounded-lg bg-white/80 px-2.5 py-1 text-[10px] font-medium text-red-500 shadow-sm hover:bg-white">⏹ Stop</button>
+      <button onClick={stopDemo} className="rounded-lg bg-white/5 px-2.5 py-1 text-[10px] font-medium text-red-400 hover:bg-white">⏹ Stop</button>
     </div>
   );
 }
 
-export function WorkflowPanel() {
+export function WorkflowPanel({ embedded = false }: { embedded?: boolean }) {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
   const runtimeMode = useAppStore(state => state.runtimeMode);
@@ -2156,7 +2157,7 @@ export function WorkflowPanel() {
   const { isMobile, isTablet } = useViewportTier();
   const { isWorkflowPanelOpen, toggleWorkflowPanel, activeView, setActiveView, initSocket, fetchAgents, fetchStages, fetchWorkflows, fetchHeartbeatStatuses, fetchHeartbeatReports, connected } = useWorkflowStore();
 
-  // TTS engine setup — reuses same pattern as ChatPanel (Req 3.4)
+  // TTS engine setup —reuses same pattern as ChatPanel (Req 3.4)
   const ttsEngineRef = useRef<TTSEngine | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
@@ -2211,7 +2212,7 @@ export function WorkflowPanel() {
     void fetchHeartbeatReports(undefined, 12);
   }, [fetchAgents, fetchHeartbeatReports, fetchHeartbeatStatuses, fetchStages, fetchWorkflows, initSocket, runtimeMode]);
 
-  if (!isWorkflowPanelOpen) return null;
+  if (!isWorkflowPanelOpen && !embedded) return null;
 
   const shellClass = isMobile ? 'left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+8px)] top-[calc(env(safe-area-inset-top)+108px)] rounded-[30px]' : isTablet ? 'bottom-5 right-5 h-[min(74svh,620px)] w-[420px] rounded-3xl' : 'bottom-6 right-6 h-[620px] w-[440px] rounded-3xl';
   const tabs: Array<{ id: PanelView; icon: typeof Zap; label: string }> = [
@@ -2227,19 +2228,21 @@ export function WorkflowPanel() {
 
   return (
     <WorkflowTtsContext.Provider value={ttsCtx}>
-    <div className={`fixed z-[71] flex flex-col border border-white/60 bg-white/92 shadow-[0_12px_48px_rgba(0,0,0,0.15)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`} style={{ pointerEvents: 'auto' }}>
-      <div className="flex items-center justify-between border-b border-[#F0E8E0] px-4 py-3">
+    <div className={embedded ? 'flex h-full flex-col overflow-hidden' : `fixed z-[71] flex flex-col border border-white/60 bg-transparent animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`} style={embedded ? undefined : { pointerEvents: 'auto' }}>
+      {!embedded && (
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A] shadow-sm"><Brain className="h-4 w-4 text-white" /></div>
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A]"><Brain className="h-4 w-4 text-white" /></div>
           <div>
-            <h3 className="text-sm font-bold text-[#3A2A1A]">{copy.workflow.title}</h3>
-            <div className="flex items-center gap-1.5"><div className={`h-1.5 w-1.5 rounded-full ${runtimeMode === 'frontend' ? 'bg-amber-400' : connected ? 'bg-emerald-500' : 'bg-red-400'}`} /><span className="text-[9px] text-[#8B7355]">{connected ? copy.workflow.connected : copy.workflow.disconnected}</span></div>
+            <h3 className="text-sm font-bold text-white">{copy.workflow.title}</h3>
+            <div className="flex items-center gap-1.5"><div className={`h-1.5 w-1.5 rounded-full ${runtimeMode === 'frontend' ? 'bg-amber-400' : connected ? 'bg-emerald-500' : 'bg-red-400'}`} /><span className="text-[9px] text-white/50">{connected ? copy.workflow.connected : copy.workflow.disconnected}</span></div>
           </div>
         </div>
-        <button onClick={toggleWorkflowPanel} className="rounded-xl p-2 hover:bg-[#F0E8E0]" title={copy.common.close}><X className="h-4 w-4 text-[#8B7355]" /></button>
+        <button onClick={toggleWorkflowPanel} className="rounded-xl p-2 hover:bg-white/10" title={copy.common.close}><X className="h-4 w-4 text-white/50" /></button>
       </div>
-      <div className="border-b border-[#F0E8E0] px-3 py-2"><div className="flex gap-1 overflow-x-auto pb-1">{tabs.map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setActiveView(id)} className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${activeView === id ? 'bg-[#D4845A] text-white shadow-sm' : 'text-[#8B7355] hover:bg-[#F0E8E0]'}`}><Icon className="h-3 w-3" />{label}</button>)}</div></div>
-      {runtimeMode === 'frontend' ? <div className="border-b border-[#F0E8E0] bg-[#FFF7EC] px-4 py-2.5"><p className="text-[10px] leading-5 text-[#6B5A4A]">{getFrontendWorkflowBanner(locale, CAN_USE_ADVANCED_RUNTIME)}</p></div> : null}
+      )}
+      <div className="border-b border-white/10 px-3 py-2"><div className="flex gap-1 overflow-x-auto pb-1">{tabs.map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setActiveView(id)} className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${activeView === id ? 'bg-[#D4845A] text-white' : 'text-white/50 hover:bg-white/10'}`}><Icon className="h-3 w-3" />{label}</button>)}</div></div>
+      {runtimeMode === 'frontend' ? <div className="border-b border-white/10 bg-white/5 px-4 py-2.5"><p className="text-[10px] leading-5 text-white/60">{getFrontendWorkflowBanner(locale, CAN_USE_ADVANCED_RUNTIME)}</p></div> : null}
       <DemoControls />
       <div className="min-h-0 flex-1 overflow-hidden">
         {activeView === 'directive' ? <DirectiveView /> : null}

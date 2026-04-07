@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Send } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { GlowButton } from "@/components/ui/GlowButton";
 import { cn } from "@/lib/utils";
 
 /**
@@ -147,16 +147,15 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
           )}
         </div>
 
-        <Button
+        <GlowButton
           type="button"
-          size="sm"
           disabled={!text.trim() || loading}
-          className="shrink-0 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="shrink-0 rounded-xl"
           onClick={() => void handleSubmit()}
         >
           <Send className="size-4" />
           {loading ? "Sending..." : "Send"}
-        </Button>
+        </GlowButton>
       </div>
     </div>
   );

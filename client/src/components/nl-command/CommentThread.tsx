@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { GlowButton } from "@/components/ui/GlowButton";
 import type { Comment } from "@shared/nl-command/contracts";
 
 /**
@@ -79,13 +80,13 @@ export function CommentThread({ comments, onAdd }: CommentThreadProps) {
             placeholder="Add a comment… (use @userId to mention)"
             className="flex-1 rounded-lg border border-stone-200 px-3 py-1.5 text-xs text-stone-700 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none"
           />
-          <button
+          <GlowButton
             onClick={handleSubmit}
             disabled={!text.trim()}
-            className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+            className="rounded-md"
           >
             Send
-          </button>
+          </GlowButton>
         </div>
       )}
     </div>

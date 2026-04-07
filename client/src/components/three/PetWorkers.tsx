@@ -1,6 +1,7 @@
 import { Html, Line, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import * as THREE from 'three';
 
 import {
@@ -328,6 +329,87 @@ function getStatusBubble(status: string, locale: AppLocale, fallback: string) {
   return STATUS_BUBBLES[locale][status] || fallback;
 }
 
+/* ── Agent status → visual category mapping ── */
+type StatusCategory = 'working' | 'thinking' | 'reviewing' | 'idle' | 'done' | 'error';
+
+function getStatusCategory(status: string): StatusCategory {
+  switch (status) {
+    case 'executing':
+    case 'revising':
+    case 'analyzing':
+    case 'analyzing_image':
+    case 'verifying':
+    case 'summarizing':
+    case 'listening':
+    case 'speaking':
+      return 'working';
+    case 'thinking':
+    case 'planning':
+    case 'evaluating':
+      return 'thinking';
+    case 'reviewing':
+    case 'auditing':
+      return 'reviewing';
+    case 'done':
+      return 'done';
+    case 'error':
+      return 'error';
+    default:
+      return 'idle';
+  }
+}
+
+const STATUS_TEXT_COLORS: Record<StatusCategory, string> = {
+  working: '#06b6d4',
+  thinking: '#f59e0b',
+  reviewing: '#a855f7',
+  idle: 'rgba(255, 255, 255, 0.6)',
+  done: '#22c55e',
+  error: '#ef4444',
+};
+
+function getStatusTextColor(status: string): string {
+  return STATUS_TEXT_COLORS[getStatusCategory(status)];
+}
+
+function getStatusBorderStyle(status: string): CSSProperties {
+  const category = getStatusCategory(status);
+  switch (category) {
+    case 'working':
+      return {
+        borderColor: 'rgba(6, 182, 212, 0.5)',
+        boxShadow: '0 0 8px rgba(6, 182, 212, 0.5)',
+        animation: 'breathe-glow 2s ease-in-out infinite',
+      } as CSSProperties;
+    case 'thinking':
+      return {
+        borderColor: 'rgba(245, 158, 11, 0.5)',
+        boxShadow: '0 0 8px rgba(245, 158, 11, 0.5)',
+        animation: 'breathe-glow-amber 1.5s ease-in-out infinite',
+      };
+    case 'reviewing':
+      return {
+        borderColor: 'rgba(168, 85, 247, 0.5)',
+        boxShadow: '0 0 8px rgba(168, 85, 247, 0.5)',
+        animation: 'breathe-glow-purple 2s ease-in-out infinite',
+      };
+    case 'done':
+      return {
+        borderColor: 'rgba(34, 197, 94, 0.3)',
+      };
+    case 'error':
+      return {
+        borderColor: 'rgba(239, 68, 68, 0.5)',
+        boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)',
+      };
+    default:
+      // idle: static semi-transparent white border
+      return {
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+      };
+  }
+}
+
 const STAGE_FLOW_COLORS: Record<string, string> = {
   direction: '#F59E0B',
   planning: '#F97316',
@@ -521,21 +603,20 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
 
       <Html position={[0, 1.8, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
         <div
-          className={`flex whitespace-nowrap items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
-            isActive ? 'scale-110 text-white' : 'bg-white/88 text-[#3A3A3A]'
+          className={`glass-3d flex whitespace-nowrap items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
+            isActive ? 'scale-110' : ''
           }`}
           style={{
-            background: isActive ? accent : 'rgba(255,255,255,0.88)',
-            borderColor: `${accent}66`,
+            ...(isActive ? { background: accent } : {}),
+            ...getStatusBorderStyle(agentStatus),
           }}
         >
-          <span>
+          <span className="text-white">
             {config.emoji} {config.shortLabel}
           </span>
           <span
-            className={`rounded-full px-2 py-0.5 text-[9px] font-bold tracking-[0.08em] ${
-              isActive ? 'bg-white/20 text-white' : 'bg-black/6 text-[#6B5A4A]'
-            }`}
+            className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold tracking-[0.08em]"
+            style={{ color: getStatusTextColor(agentStatus) }}
           >
             {config.titleLabel}
           </span>

@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { MessageCircleQuestion, Send } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { GlowButton } from "@/components/ui/GlowButton";
 import { cn } from "@/lib/utils";
 import type { ClarificationDialog, ClarificationQuestion } from "@shared/nl-command/contracts";
 
@@ -139,16 +139,15 @@ function QuestionCard({
       </div>
 
       <div className="mt-2 flex justify-end">
-        <Button
+        <GlowButton
           type="button"
-          size="sm"
           disabled={!canSubmit || submitting}
-          className="rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50"
+          className="rounded-lg"
           onClick={() => void handleSubmit()}
         >
           <Send className="size-3.5" />
           {submitting ? "Submitting..." : "Answer"}
-        </Button>
+        </GlowButton>
       </div>
     </div>
   );

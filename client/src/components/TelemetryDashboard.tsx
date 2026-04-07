@@ -81,14 +81,14 @@ function TokenCostCard({ snapshot }: { snapshot: TelemetrySnapshot }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <div className="flex justify-between text-xs text-[#6B5A4A]">
+        <div className="flex justify-between text-xs text-[#6B5A4A] font-data">
           <span>
             {totalTokens.toLocaleString()} / {TOKEN_BUDGET.toLocaleString()}
           </span>
           <span>{fmtCost(snapshot.totalCost)}</span>
         </div>
         <Progress value={pct} className={overBudget ? "[&>*]:bg-red-500" : ""} />
-        <div className="flex justify-between text-[10px] text-[#6B5A4A]/70">
+        <div className="flex justify-between text-[10px] text-[#6B5A4A]/70 font-data">
           <span>In: {snapshot.totalTokensIn.toLocaleString()}</span>
           <span>Out: {snapshot.totalTokensOut.toLocaleString()}</span>
           <span>Calls: {snapshot.totalCalls}</span>
@@ -146,7 +146,7 @@ function BottleneckAgentsCard({ snapshot }: { snapshot: TelemetrySnapshot }) {
                 {agent.agentName}
                 {isSlow && <AlertTriangle className="h-3 w-3 text-red-500" />}
               </span>
-              <Badge variant={isSlow ? "destructive" : "secondary"} className="text-[10px]">
+              <Badge variant={isSlow ? "destructive" : "secondary"} className="text-[10px] font-data">
                 {fmtMs(agent.avgDurationMs)}
               </Badge>
             </div>
@@ -208,7 +208,7 @@ function ActiveAgentCard({ count }: { count: number }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-3xl font-bold text-[#3A2A1A]">{count}</p>
+        <p className="text-3xl font-bold text-[#3A2A1A] font-data">{count}</p>
       </CardContent>
     </Card>
   );

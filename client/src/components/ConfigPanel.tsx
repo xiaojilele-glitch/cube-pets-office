@@ -101,8 +101,8 @@ export function ConfigPanel() {
   if (!isConfigOpen) return null;
 
   const inputClass =
-    'w-full rounded-xl border border-[#E8DDD0] bg-[#FFFCF8] px-3.5 py-2.5 text-sm text-[#3A2A1A] transition-all placeholder:text-[#C4B5A0] disabled:bg-[#F7F1EA] disabled:opacity-70';
-  const labelClass = 'mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#5A4A3A]';
+    'w-full rounded-xl glass-panel px-3.5 py-2.5 text-sm text-white transition-all placeholder:text-white/30 disabled:opacity-70 focus:border-cyan-400/50 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-cyan-400/20';
+  const labelClass = 'mb-1.5 flex items-center gap-2 text-xs font-semibold text-white/60';
   const shellClass = isMobile
     ? 'inset-0 rounded-none'
     : isTablet
@@ -267,37 +267,37 @@ export function ConfigPanel() {
 
   return (
     <div
-      className={`fixed z-[72] flex flex-col border border-white/60 bg-white/92 shadow-[12px_0_40px_rgba(0,0,0,0.1)] backdrop-blur-2xl animate-in slide-in-from-left duration-300 ${shellClass}`}
+      className={`fixed z-[72] flex flex-col glass-panel animate-in slide-in-from-left duration-300 ${shellClass}`}
       style={{ pointerEvents: 'auto' }}
     >
-      <div className="flex items-center justify-between border-b border-[#F0E8E0] px-4 py-3.5 sm:px-5">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3.5 sm:px-5">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-sm">
             <Settings className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#3A2A1A]">{copy.config.title}</h3>
-            <p className="text-[10px] text-[#8B7355]">
+            <h3 className="text-sm font-bold text-white">{copy.config.title}</h3>
+            <p className="text-[10px] text-white/50">
               {isFrontendMode ? copy.config.subtitleFrontend : copy.config.subtitleAdvanced}
             </p>
           </div>
         </div>
         <button
           onClick={toggleConfig}
-          className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+          className="rounded-xl p-2 transition-colors hover:bg-white/10"
           title={copy.common.close}
         >
-          <X className="h-4 w-4 text-[#8B7355]" />
+          <X className="h-4 w-4 text-white/50" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
         <div className="space-y-4">
-          <div className="rounded-2xl border border-[#E8DDD0] bg-white/80 p-3.5 shadow-sm">
+          <div className="rounded-2xl glass-panel p-3.5">
             <div className="flex flex-col gap-3">
               <div>
-                <p className="text-xs font-bold text-[#3A2A1A]">{copy.config.sections.runMode}</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-[#8B7355]">
+                <p className="text-xs font-bold text-white">{copy.config.sections.runMode}</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-white/50">
                   {CAN_USE_ADVANCED_RUNTIME
                     ? copy.config.runModeDescription
                     : copy.config.pagesModeDescription}
@@ -308,8 +308,8 @@ export function ConfigPanel() {
                   onClick={() => void handleRuntimeModeChange('frontend')}
                   className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
                     isFrontendMode
-                      ? 'bg-[#2D5F4A] text-white'
-                      : 'bg-[#F7F1EA] text-[#5A4A3A] hover:bg-[#F0E8E0]'
+                      ? 'bg-cyan-500/30 text-cyan-300'
+                      : 'bg-white/5 text-white/60 hover:bg-white/10'
                   }`}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -320,8 +320,8 @@ export function ConfigPanel() {
                     onClick={() => void handleRuntimeModeChange('advanced')}
                     className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
                       isFrontendMode
-                        ? 'bg-[#F7F1EA] text-[#5A4A3A] hover:bg-[#F0E8E0]'
-                        : 'bg-[#D4845A] text-white'
+                        ? 'bg-white/5 text-white/60 hover:bg-white/10'
+                        : 'bg-amber-500/30 text-amber-300'
                     }`}
                   >
                     <Server className="h-3.5 w-3.5" />
@@ -332,11 +332,11 @@ export function ConfigPanel() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#E8DDD0] bg-[#F7F1EA] p-1.5">
+          <div className="grid grid-cols-2 gap-2 rounded-2xl glass-panel p-1.5">
             <button
               onClick={() => handleAISourceChange('server_proxy')}
               className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                !isBrowserMode ? 'bg-white text-[#2D5F4A] shadow-sm' : 'text-[#8B7355] hover:bg-white/70'
+                !isBrowserMode ? 'bg-white/15 text-white shadow-sm' : 'text-white/50 hover:bg-white/10'
               }`}
             >
               <Server className="h-3.5 w-3.5" />
@@ -345,7 +345,7 @@ export function ConfigPanel() {
             <button
               onClick={() => handleAISourceChange('browser_direct')}
               className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                isBrowserMode ? 'bg-white text-[#2D5F4A] shadow-sm' : 'text-[#8B7355] hover:bg-white/70'
+                isBrowserMode ? 'bg-white/15 text-white shadow-sm' : 'text-white/50 hover:bg-white/10'
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
@@ -353,19 +353,19 @@ export function ConfigPanel() {
             </button>
           </div>
 
-          <div className="rounded-xl border border-[#E0D5C5] bg-gradient-to-br from-[#F0E8E0] to-[#E8DDD0] p-3.5">
+          <div className="rounded-xl glass-panel p-3.5">
             <div className="mb-1.5 flex items-center gap-2">
               {isBrowserMode ? (
-                <Globe className="h-3.5 w-3.5 text-[#2D5F4A]" />
+                <Globe className="h-3.5 w-3.5 text-cyan-400" />
               ) : (
-                <Server className="h-3.5 w-3.5 text-[#2D5F4A]" />
+                <Server className="h-3.5 w-3.5 text-cyan-400" />
               )}
-              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sections.currentSource}</span>
+              <span className="text-xs font-bold text-white">{copy.config.sections.currentSource}</span>
             </div>
-            <p className="text-sm font-semibold text-[#2D5F4A]">
+            <p className="text-sm font-semibold text-cyan-300">
               {getSourceLabel(isFrontendMode, isBrowserMode, copy)}
             </p>
-            <p className="mt-0.5 text-[10px] text-[#8B7355]">
+            <p className="mt-0.5 text-[10px] text-white/50">
               {isFrontendMode
                 ? isBrowserMode
                   ? copy.config.currentSourceDescription.frontendBrowser
@@ -377,30 +377,30 @@ export function ConfigPanel() {
           </div>
 
           {isBrowserMode ? (
-            <div className="rounded-xl border border-[#E8C27A] bg-[#FFF7E5] px-3.5 py-3">
-              <div className="flex items-center gap-2 text-[#8A5A18]">
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3.5 py-3">
+              <div className="flex items-center gap-2 text-amber-300">
                 <ShieldAlert className="h-4 w-4" />
                 <span className="text-xs font-bold">{copy.config.browserDirectNoticeTitle}</span>
               </div>
-              <p className="mt-1 text-[11px] leading-relaxed text-[#7A5B2B]">
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-200/70">
                 {copy.config.browserDirectNotice}
               </p>
             </div>
           ) : null}
 
-          <div className="rounded-xl border border-[#D8E6DE] bg-gradient-to-br from-[#F2FBF6] to-[#E7F4EC] p-3.5">
+          <div className="rounded-xl glass-panel p-3.5">
             <div className="mb-1.5 flex items-center gap-2">
-              <Database className="h-3.5 w-3.5 text-[#2D5F4A]" />
-              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sections.browserRuntime}</span>
+              <Database className="h-3.5 w-3.5 text-emerald-400" />
+              <span className="text-xs font-bold text-white">{copy.config.sections.browserRuntime}</span>
             </div>
-            <p className="text-[10px] text-[#5A6A5E]">{copy.config.browserRuntimeDescription}</p>
-            <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-[#5A6A5E]">
-              <div className="rounded-lg bg-white/60 px-2.5 py-2">
-                <p className="font-semibold text-[#2D5F4A]">{copy.config.lastSync}</p>
+            <p className="text-[10px] text-white/50">{copy.config.browserRuntimeDescription}</p>
+            <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-white/50">
+              <div className="rounded-lg bg-white/8 px-2.5 py-2">
+                <p className="font-semibold text-emerald-400">{copy.config.lastSync}</p>
                 <p className="mt-0.5">{formatRuntimeTime(runtimeMeta?.lastSyncedAt)}</p>
               </div>
-              <div className="rounded-lg bg-white/60 px-2.5 py-2">
-                <p className="font-semibold text-[#2D5F4A]">{copy.config.lastImport}</p>
+              <div className="rounded-lg bg-white/8 px-2.5 py-2">
+                <p className="font-semibold text-emerald-400">{copy.config.lastImport}</p>
                 <p className="mt-0.5">{formatRuntimeTime(runtimeMeta?.importedAt)}</p>
               </div>
             </div>
@@ -409,7 +409,7 @@ export function ConfigPanel() {
                 <button
                   onClick={() => void handleSyncRuntime()}
                   disabled={isRuntimeSyncing}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#2D5F4A] to-[#3D7F5A] px-3 py-2.5 text-xs font-bold text-white transition-all hover:from-[#245040] hover:to-[#2D6F4A] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2.5 text-xs font-bold text-white transition-all hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${isRuntimeSyncing ? 'animate-spin' : ''}`} />
                   {isRuntimeSyncing ? copy.config.syncingRuntime : copy.config.syncRuntime}
@@ -419,7 +419,7 @@ export function ConfigPanel() {
                 <button
                   onClick={() => void handleExportRuntime()}
                   disabled={isRuntimeExporting}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-white/75 px-3 py-2.5 text-xs font-semibold text-[#315745] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-white/8 px-3 py-2.5 text-xs font-semibold text-white/60 transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Download className="h-3.5 w-3.5" />
                   {isRuntimeExporting ? copy.config.exportingJson : copy.config.exportJson}
@@ -427,7 +427,7 @@ export function ConfigPanel() {
                 <button
                   onClick={() => importInputRef.current?.click()}
                   disabled={isRuntimeImporting}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-white/75 px-3 py-2.5 text-xs font-semibold text-[#315745] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-white/8 px-3 py-2.5 text-xs font-semibold text-white/60 transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   {isRuntimeImporting ? copy.config.importingJson : copy.config.importJson}
@@ -443,17 +443,17 @@ export function ConfigPanel() {
             />
           </div>
 
-          <div className="rounded-xl border border-[#D8DDE6] bg-gradient-to-br from-[#F2F5FB] to-[#E7ECF4] p-3.5">
+          <div className="rounded-xl glass-panel p-3.5">
             <div className="mb-1.5 flex items-center gap-2">
-              <Database className="h-3.5 w-3.5 text-[#4A5A8A]" />
-              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sessionSnapshotTitle}</span>
+              <Database className="h-3.5 w-3.5 text-blue-400" />
+              <span className="text-xs font-bold text-white">{copy.config.sessionSnapshotTitle}</span>
             </div>
-            <p className="text-[10px] text-[#5A6068]">{copy.config.sessionSnapshotDescription}</p>
+            <p className="text-[10px] text-white/50">{copy.config.sessionSnapshotDescription}</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button
                 onClick={() => void handleExportSession()}
                 disabled={isSessionExporting}
-                className="flex items-center justify-center gap-2 rounded-xl bg-white/75 px-3 py-2.5 text-xs font-semibold text-[#4A5A8A] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center justify-center gap-2 rounded-xl bg-white/8 px-3 py-2.5 text-xs font-semibold text-white/60 transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Download className="h-3.5 w-3.5" />
                 {isSessionExporting ? copy.config.exportingSession : copy.config.exportSession}
@@ -461,7 +461,7 @@ export function ConfigPanel() {
               <button
                 onClick={() => sessionImportRef.current?.click()}
                 disabled={isSessionImporting}
-                className="flex items-center justify-center gap-2 rounded-xl bg-white/75 px-3 py-2.5 text-xs font-semibold text-[#4A5A8A] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center justify-center gap-2 rounded-xl bg-white/8 px-3 py-2.5 text-xs font-semibold text-white/60 transition-colors hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Upload className="h-3.5 w-3.5" />
                 {isSessionImporting ? copy.config.importingSession : copy.config.importSession}
@@ -478,7 +478,7 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Key className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Key className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.apiKey}
             </label>
             <div className="relative">
@@ -492,13 +492,13 @@ export function ConfigPanel() {
               />
               <button
                 onClick={() => setShowKey(prev => !prev)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1 transition-colors hover:bg-[#F0E8E0]"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-lg p-1 transition-colors hover:bg-white/10"
                 title={copy.config.sections.apiKey}
               >
                 {showKey ? (
-                  <EyeOff className="h-3.5 w-3.5 text-[#8B7355]" />
+                  <EyeOff className="h-3.5 w-3.5 text-white/50" />
                 ) : (
-                  <Eye className="h-3.5 w-3.5 text-[#8B7355]" />
+                  <Eye className="h-3.5 w-3.5 text-white/50" />
                 )}
               </button>
             </div>
@@ -506,7 +506,7 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Server className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Server className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.baseUrl}
             </label>
             <input
@@ -522,7 +522,7 @@ export function ConfigPanel() {
           {isBrowserMode ? (
             <div>
               <label className={labelClass}>
-                <Globe className="h-3.5 w-3.5 text-[#C4956A]" />
+                <Globe className="h-3.5 w-3.5 text-cyan-400" />
                 {copy.config.sections.proxyUrl}
               </label>
               <input
@@ -532,13 +532,13 @@ export function ConfigPanel() {
                 placeholder="http://localhost:8787/v1"
                 className={`${inputClass} font-mono text-xs`}
               />
-              <p className="mt-1 text-[10px] text-[#8B7355]">{copy.config.proxyHelp}</p>
+              <p className="mt-1 text-[10px] text-white/40">{copy.config.proxyHelp}</p>
             </div>
           ) : null}
 
           <div>
             <label className={labelClass}>
-              <Brain className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Brain className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.model}
             </label>
             <input
@@ -552,7 +552,7 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Tag className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Tag className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.wireApi}
             </label>
             <select
@@ -568,7 +568,7 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Tag className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Tag className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.reasoning}
             </label>
             <input
@@ -582,7 +582,7 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Database className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Database className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.timeout}
             </label>
             <input
@@ -596,7 +596,7 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Database className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Database className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.maxContext}
             </label>
             <input
@@ -610,36 +610,36 @@ export function ConfigPanel() {
 
           <div>
             <label className={labelClass}>
-              <Tag className="h-3.5 w-3.5 text-[#C4956A]" />
+              <Tag className="h-3.5 w-3.5 text-cyan-400" />
               {copy.config.sections.providerName}
             </label>
             <input type="text" value={aiConfig.providerName} readOnly className={inputClass} />
           </div>
 
           {!isBrowserMode ? (
-            <div className="rounded-xl border border-[#D7C9B8] bg-[#F8F3EC] px-3.5 py-3">
-              <div className="flex items-center gap-2 text-[#6F5B46]">
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3.5 py-3">
+              <div className="flex items-center gap-2 text-amber-300">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-xs font-bold">
                   {isFrontendMode ? copy.config.previewOnlyTitle : copy.config.serverOwnedTitle}
                 </span>
               </div>
-              <p className="mt-1 text-[11px] leading-relaxed text-[#8B7355]">
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-200/70">
                 {isFrontendMode
                   ? copy.config.previewOnlyDescription
                   : copy.config.serverOwnedDescription}
               </p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#D7C9B8] bg-[#F8F3EC] px-3.5 py-3">
-              <div className="flex items-center gap-2 text-[#6F5B46]">
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/10 px-3.5 py-3">
+              <div className="flex items-center gap-2 text-amber-300">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-xs font-bold">{copy.config.browserScopeTitle}</span>
               </div>
-              <p className="mt-1 text-[11px] leading-relaxed text-[#8B7355]">
+              <p className="mt-1 text-[11px] leading-relaxed text-amber-200/70">
                 {copy.config.browserScopeDescription}
               </p>
-              <p className="mt-2 text-[10px] text-[#8B7355]">
+              <p className="mt-2 text-[10px] text-white/50">
                 {copy.config.serverDefault}: {serverAIConfig.model} / {serverAIConfig.providerName}
               </p>
             </div>
@@ -647,12 +647,12 @@ export function ConfigPanel() {
         </div>
       </div>
 
-      <div className={`border-t border-[#F0E8E0] px-4 py-4 sm:px-5 ${isMobile ? 'pb-[calc(env(safe-area-inset-bottom)+16px)]' : ''}`}>
+      <div className={`border-t border-white/10 px-4 py-4 sm:px-5 ${isMobile ? 'pb-[calc(env(safe-area-inset-bottom)+16px)]' : ''}`}>
         <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-[1fr_auto]'}`}>
           <button
             onClick={() => void handleRefresh()}
             disabled={isAIConfigLoading}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2D5F4A] to-[#3D7F5A] px-4 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:from-[#245040] hover:to-[#2D6F4A] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${isAIConfigLoading ? 'animate-spin' : ''}`} />
             {isAIConfigLoading ? copy.config.buttons.reloading : copy.config.buttons.reload}
@@ -664,7 +664,7 @@ export function ConfigPanel() {
                 resetBrowserAIConfig();
                 toast.success(copy.config.toasts.resetSuccess);
               }}
-              className="flex items-center justify-center gap-2 rounded-2xl border border-[#E8DDD0] bg-[#F7F1EA] px-4 py-3 text-sm font-bold text-[#5A4A3A] transition-all duration-200 hover:bg-[#F0E8E0] active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 rounded-2xl glass-panel px-4 py-3 text-sm font-bold text-white/60 transition-all duration-200 hover:bg-white/10 active:scale-[0.98]"
             >
               <RotateCcw className="h-4 w-4" />
               {copy.config.buttons.resetLocal}

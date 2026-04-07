@@ -1,3 +1,4 @@
+import { GlowButton } from "@/components/ui/GlowButton";
 import type { PlanTemplate } from "@shared/nl-command/contracts";
 
 /**
@@ -39,12 +40,12 @@ export function TemplateManager({ templates, onSave, onLoad }: TemplateManagerPr
             </span>
             <div className="flex gap-1.5">
               {onLoad && (
-                <button
+                <GlowButton
                   onClick={() => onLoad(t)}
-                  className="rounded-md bg-indigo-600 px-2 py-0.5 text-xs text-white transition-colors hover:bg-indigo-700"
+                  className="rounded-md"
                 >
                   Load
-                </button>
+                </GlowButton>
               )}
               {onSave && (
                 <button

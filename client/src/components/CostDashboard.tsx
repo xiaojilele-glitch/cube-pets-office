@@ -126,15 +126,15 @@ export function CostDashboard() {
       <Card className="mx-2 my-2 cursor-pointer" onClick={toggleDashboard}>
         <CardContent className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4 text-sm">
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 font-data">
               <DollarSign className="size-3.5 text-amber-600" />
               {formatCost(snapshot.totalCost)}
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 font-data">
               <Zap className="size-3.5 text-indigo-500" />
               {formatTokens(snapshot.totalTokensIn + snapshot.totalTokensOut)} tokens
             </span>
-            <span className="flex items-center gap-1">
+            <span className="flex items-center gap-1 font-data">
               <Percent className="size-3.5 text-emerald-500" />
               {100 - budgetPct}% remaining
             </span>
@@ -201,12 +201,12 @@ export function CostDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="flex justify-between text-xs text-muted-foreground">
+            <div className="flex justify-between text-xs text-muted-foreground font-data">
               <span>Input: {formatTokens(snapshot.totalTokensIn)}</span>
               <span>Output: {formatTokens(snapshot.totalTokensOut)}</span>
             </div>
             <Progress value={tokenPct} className="h-2" />
-            <p className="text-right text-xs text-muted-foreground">
+            <p className="text-right text-xs text-muted-foreground font-data">
               {formatTokens(snapshot.totalTokensIn + snapshot.totalTokensOut)} /{" "}
               {formatTokens(snapshot.budget.maxTokens)} ({tokenPct}%)
             </p>
@@ -222,12 +222,12 @@ export function CostDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-2xl font-bold">{formatCost(snapshot.totalCost)}</p>
+            <p className="text-2xl font-bold font-data">{formatCost(snapshot.totalCost)}</p>
             <Progress
               value={budgetPct}
               className={`h-2 ${budgetPct >= 80 ? "[&>[data-slot=progress-indicator]]:bg-red-500" : ""}`}
             />
-            <p className="text-right text-xs text-muted-foreground">
+            <p className="text-right text-xs text-muted-foreground font-data">
               {formatCost(snapshot.totalCost)} / {formatCost(snapshot.budget.maxCost)} ({budgetPct}%)
             </p>
           </CardContent>
@@ -243,14 +243,14 @@ export function CostDashboard() {
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center">
             <p
-              className={`text-4xl font-bold ${
+              className={`text-4xl font-bold font-data ${
                 100 - budgetPct <= 20 ? "text-red-500" : "text-emerald-600"
               }`}
             >
               {100 - budgetPct}%
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {snapshot.totalCalls} calls this mission
+              <span className="font-data">{snapshot.totalCalls}</span> calls this mission
             </p>
           </CardContent>
         </Card>

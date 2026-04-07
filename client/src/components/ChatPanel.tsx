@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, Mic, MicOff, Monitor, Play, Send, Server, Square, Trash2, Volume2, VolumeX, X } from 'lucide-react';
+import { GlowButton } from '@/components/ui/GlowButton';
 
 import {
   DEFAULT_AGENT_ID,
@@ -69,7 +70,7 @@ function getModeLabel(
   return browserDirect ? copy.chat.modeLabels.browserDirect : copy.chat.modeLabels.serverProxy;
 }
 
-export function ChatPanel() {
+export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
   const {
     chatMessages,
     addMessage,
@@ -324,21 +325,22 @@ export function ChatPanel() {
     setLoading,
   ]);
 
-  if (!isChatOpen) return null;
+  if (!isChatOpen && !embedded) return null;
 
   return (
     <div
-      className={`fixed z-[71] flex flex-col border border-white/60 bg-white/92 shadow-[0_12px_48px_rgba(0,0,0,0.12)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`}
-      style={{ pointerEvents: 'auto' }}
+      className={embedded ? 'flex h-full flex-col overflow-hidden' : `fixed z-[71] flex flex-col glass-panel animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`}
+      style={embedded ? undefined : { pointerEvents: 'auto' }}
     >
-      <div className="flex items-center justify-between border-b border-[#F0E8E0] px-4 py-3 sm:px-5">
+      {!embedded && (
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A] shadow-sm">
             <MessageCircle className="h-4 w-4 text-white" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold text-[#3A2A1A]">{copy.chat.title(agentName)}</h3>
-            <p className="truncate text-[10px] text-[#8B7355]">
+            <h3 className="truncate text-sm font-bold text-white">{copy.chat.title(agentName)}</h3>
+            <p className="truncate text-[10px] text-white/50">
               {agentRole} / {getModeLabel(runtimeMode, isBrowserDirect, copy)}
             </p>
           </div>
@@ -346,7 +348,7 @@ export function ChatPanel() {
         </div>
 
         <div className="flex items-center gap-1">
-          <div className="rounded-full bg-[#F7F1EA] px-2 py-1 text-[9px] font-semibold text-[#6B5A4A]">
+          <div className="rounded-full glass-panel px-2 py-1 text-[9px] font-semibold text-white/60">
             {isFrontendMode ? (
               <span className="inline-flex items-center gap-1">
                 <Monitor className="h-3 w-3" />
@@ -361,29 +363,30 @@ export function ChatPanel() {
           </div>
           <button
             onClick={clearChat}
-            className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+            className="rounded-xl p-2 transition-colors hover:bg-white/10"
             title={copy.chat.clear}
           >
-            <Trash2 className="h-3.5 w-3.5 text-[#8B7355]" />
+            <Trash2 className="h-3.5 w-3.5 text-white/50" />
           </button>
           <button
             onClick={toggleChat}
-            className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+            className="rounded-xl p-2 transition-colors hover:bg-white/10"
             title={copy.common.close}
           >
-            <X className="h-3.5 w-3.5 text-[#8B7355]" />
+            <X className="h-3.5 w-3.5 text-white/50" />
           </button>
         </div>
       </div>
+      )}
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {chatMessages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F0E8E0] to-[#E8DDD0]">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl glass-panel">
               <span className="text-2xl">{agentEmoji}</span>
             </div>
-            <p className="mb-1 text-sm font-semibold text-[#3A2A1A]">{copy.chat.ready(agentName)}</p>
-            <p className="text-xs leading-relaxed text-[#8B7355]">
+            <p className="mb-1 text-sm font-semibold text-white">{copy.chat.ready(agentName)}</p>
+            <p className="text-xs leading-relaxed text-white/50">
               {isFrontendMode
                 ? CAN_USE_ADVANCED_RUNTIME
                   ? copy.chat.emptyFrontendAdvanced
@@ -402,12 +405,12 @@ export function ChatPanel() {
               <div
                 className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
                   message.role === 'user'
-                    ? 'rounded-br-md bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white'
-                    : 'rounded-bl-md border border-[#E8DDD0] bg-[#F7F1EA] text-[#3A2A1A]'
+                    ? 'rounded-br-md bg-gradient-to-br from-cyan-500 to-blue-600 text-white'
+                    : 'rounded-bl-md glass-panel text-white/90'
                 }`}
               >
                 {message.role !== 'user' && (
-                  <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[#8B7355]">
+                  <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-white/50">
                     <span>{message.petName ? getAgentEmoji(message.petName) : agentEmoji}</span>
                     <span>{message.petName ? getAgentLabel(message.petName) : agentName}</span>
                   </div>
@@ -421,7 +424,7 @@ export function ChatPanel() {
                   className={`relative mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all ${
                     playingMessageIndex === index
                       ? 'bg-[#D4845A] text-white shadow-sm'
-                      : 'bg-[#F0E8E0] text-[#8B7355] hover:bg-[#E8DDD0]'
+                      : 'glass-panel text-white/50 hover:bg-white/20'
                   }`}
                   title={playingMessageIndex === index ? 'Stop' : 'Play'}
                 >
@@ -442,13 +445,13 @@ export function ChatPanel() {
 
         {isLoading && (
           <div className="flex justify-start animate-in fade-in duration-200">
-            <div className="rounded-2xl rounded-bl-md border border-[#E8DDD0] bg-[#F7F1EA] px-3.5 py-2.5 shadow-sm">
+            <div className="rounded-2xl rounded-bl-md glass-panel px-3.5 py-2.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">{agentEmoji}</span>
                 <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D4845A] [animation-delay:-0.3s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D4845A] [animation-delay:-0.15s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#D4845A]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400" />
                 </div>
               </div>
             </div>
@@ -458,10 +461,10 @@ export function ChatPanel() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-[#F0E8E0] px-4 py-3">
+      <div className="border-t border-white/10 glass-panel rounded-b-3xl px-4 py-3">
         {/* Interim transcript preview */}
         {interimText && (
-          <p className="mb-2 truncate text-xs italic text-[#8B7355]">{interimText}</p>
+          <p className="mb-2 truncate text-xs italic text-white/50">{interimText}</p>
         )}
         <div className="flex items-center gap-2">
           {/* Microphone button — visible only when STT is available (Req 3.6) */}
@@ -472,7 +475,7 @@ export function ChatPanel() {
               className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all ${
                 isRecording
                   ? 'bg-red-500 text-white shadow-md'
-                  : 'bg-[#F7F1EA] text-[#8B7355] hover:bg-[#EDE5DA]'
+                  : 'glass-panel text-white/50 hover:bg-white/20'
               } disabled:cursor-not-allowed disabled:opacity-50`}
               title={isRecording ? 'Stop recording' : 'Start recording'}
             >
@@ -495,23 +498,23 @@ export function ChatPanel() {
               }
             }}
             placeholder={copy.chat.placeholder(agentName)}
-            className="flex-1 rounded-2xl border border-[#E8DDD0] bg-[#FFFCF8] px-4 py-3 text-sm text-[#3A2A1A] outline-none transition-all placeholder:text-[#B8A897] focus:border-[#2D5F4A]/40 focus:ring-2 focus:ring-[#2D5F4A]/15"
+            className="flex-1 rounded-2xl glass-panel px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-white/30 focus:border-cyan-400/50 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/20"
           />
-          <button
+          <GlowButton
             onClick={() => void sendMessage()}
             disabled={!input.trim() || isLoading}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D5F4A] to-[#3D7F5A] text-white shadow-md transition-all hover:from-[#245040] hover:to-[#2D6F4A] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl !px-0"
           >
             <Send className="h-4 w-4" />
-          </button>
+          </GlowButton>
           {/* TTS toggle — visible only when TTS is available (Req 3.7) */}
           {ttsAvailable && (
             <button
               onClick={() => setTtsEnabled(!ttsEnabled)}
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all ${
                 ttsEnabled
-                  ? 'bg-[#2D5F4A] text-white shadow-md'
-                  : 'bg-[#F7F1EA] text-[#8B7355] hover:bg-[#EDE5DA]'
+                  ? 'bg-cyan-500/30 text-cyan-300 shadow-md'
+                  : 'glass-panel text-white/50 hover:bg-white/20'
               }`}
               title={ttsEnabled ? 'Disable TTS' : 'Enable TTS'}
             >

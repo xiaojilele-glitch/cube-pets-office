@@ -1,3 +1,4 @@
+import { GlowButton } from "@/components/ui/GlowButton";
 import type { Suggestion } from "@shared/nl-command/api";
 
 /**
@@ -43,12 +44,12 @@ export function SuggestionPanel({ suggestions, onApply }: SuggestionPanelProps) 
               Impact: {s.estimatedImpact.timelineImpact} · {s.estimatedImpact.costImpact}
             </span>
             {onApply && (
-              <button
+              <GlowButton
                 onClick={() => onApply(s.suggestionId)}
-                className="rounded-md bg-indigo-600 px-2.5 py-1 text-xs text-white transition-colors hover:bg-indigo-700"
+                className="rounded-md"
               >
                 Apply
-              </button>
+              </GlowButton>
             )}
           </div>
         </li>

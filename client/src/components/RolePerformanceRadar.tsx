@@ -137,7 +137,7 @@ export function RolePerformanceRadar({ agentId }: { agentId: string }) {
               className="inline-block h-2 w-2 rounded-full"
               style={{ backgroundColor: getRoleColor(d.roleName) }}
             />
-            <span>{d.roleName}: {d.avgQualityScore}</span>
+            <span>{d.roleName}: <span className="font-data">{d.avgQualityScore}</span></span>
           </div>
         ))}
       </div>

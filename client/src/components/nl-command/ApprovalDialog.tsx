@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { GlowButton } from "@/components/ui/GlowButton";
 import type { NLExecutionPlan, PlanApprovalRequest } from "@shared/nl-command/contracts";
 
 /**
@@ -65,12 +66,12 @@ export function ApprovalDialog({ plan, approval, onSubmit }: ApprovalDialogProps
             rows={2}
             className="w-full resize-none rounded-lg border border-stone-200 px-3 py-2 text-xs text-stone-700 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none"
           />
-          <button
+          <GlowButton
             onClick={handleSubmit}
-            className="self-end rounded-md bg-indigo-600 px-4 py-1.5 text-xs text-white transition-colors hover:bg-indigo-700"
+            className="self-end rounded-md"
           >
             Submit
-          </button>
+          </GlowButton>
         </>
       )}
     </div>
