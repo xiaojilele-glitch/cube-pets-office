@@ -329,18 +329,18 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <div
-      className={embedded ? 'flex h-full flex-col overflow-hidden' : `fixed z-[71] flex flex-col glass-panel animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`}
+      className={embedded ? 'flex h-full flex-col overflow-hidden' : `fixed z-[71] flex flex-col studio-shell animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`}
       style={embedded ? undefined : { pointerEvents: 'auto' }}
     >
       {!embedded && (
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5">
+      <div className="flex items-center justify-between border-b border-[rgba(151,120,90,0.14)] px-4 py-3 sm:px-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A] shadow-sm">
             <MessageCircle className="h-4 w-4 text-white" />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-sm font-bold text-white">{copy.chat.title(agentName)}</h3>
-            <p className="truncate text-[10px] text-white/50">
+            <h3 className="truncate text-sm font-bold text-[#3A2A1A]">{copy.chat.title(agentName)}</h3>
+            <p className="truncate text-[10px] text-[#8B7355]">
               {agentRole} / {getModeLabel(runtimeMode, isBrowserDirect, copy)}
             </p>
           </div>
@@ -348,7 +348,7 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
         </div>
 
         <div className="flex items-center gap-1">
-          <div className="rounded-full glass-panel px-2 py-1 text-[9px] font-semibold text-white/60">
+          <div className="rounded-full studio-surface px-2 py-1 text-[9px] font-semibold text-[#7D6856]">
             {isFrontendMode ? (
               <span className="inline-flex items-center gap-1">
                 <Monitor className="h-3 w-3" />
@@ -363,17 +363,17 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
           </div>
           <button
             onClick={clearChat}
-            className="rounded-xl p-2 transition-colors hover:bg-white/10"
+            className="rounded-xl p-2 transition-colors hover:bg-white/35"
             title={copy.chat.clear}
           >
-            <Trash2 className="h-3.5 w-3.5 text-white/50" />
+            <Trash2 className="h-3.5 w-3.5 text-[#8B7355]" />
           </button>
           <button
             onClick={toggleChat}
-            className="rounded-xl p-2 transition-colors hover:bg-white/10"
+            className="rounded-xl p-2 transition-colors hover:bg-white/35"
             title={copy.common.close}
           >
-            <X className="h-3.5 w-3.5 text-white/50" />
+            <X className="h-3.5 w-3.5 text-[#8B7355]" />
           </button>
         </div>
       </div>
@@ -382,11 +382,11 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
         {chatMessages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center px-4 text-center">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl glass-panel">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl studio-surface">
               <span className="text-2xl">{agentEmoji}</span>
             </div>
-            <p className="mb-1 text-sm font-semibold text-white">{copy.chat.ready(agentName)}</p>
-            <p className="text-xs leading-relaxed text-white/50">
+            <p className="mb-1 text-sm font-semibold text-[#3A2A1A]">{copy.chat.ready(agentName)}</p>
+            <p className="text-xs leading-relaxed text-[#7D6856]">
               {isFrontendMode
                 ? CAN_USE_ADVANCED_RUNTIME
                   ? copy.chat.emptyFrontendAdvanced
@@ -405,12 +405,12 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
               <div
                 className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm ${
                   message.role === 'user'
-                    ? 'rounded-br-md bg-gradient-to-br from-cyan-500 to-blue-600 text-white'
-                    : 'rounded-bl-md glass-panel text-white/90'
+                    ? 'rounded-br-md bg-gradient-to-br from-[#5E8B72] to-[#87AFC7] text-white'
+                    : 'rounded-bl-md studio-surface text-[#4A3727]'
                 }`}
               >
                 {message.role !== 'user' && (
-                  <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-white/50">
+                  <div className="mb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.12em] text-[#8B7355]">
                     <span>{message.petName ? getAgentEmoji(message.petName) : agentEmoji}</span>
                     <span>{message.petName ? getAgentLabel(message.petName) : agentName}</span>
                   </div>
@@ -424,7 +424,7 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
                   className={`relative mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-all ${
                     playingMessageIndex === index
                       ? 'bg-[#D4845A] text-white shadow-sm'
-                      : 'glass-panel text-white/50 hover:bg-white/20'
+                      : 'studio-surface text-[#8B7355] hover:bg-white/6'
                   }`}
                   title={playingMessageIndex === index ? 'Stop' : 'Play'}
                 >
@@ -445,13 +445,13 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
 
         {isLoading && (
           <div className="flex justify-start animate-in fade-in duration-200">
-            <div className="rounded-2xl rounded-bl-md glass-panel px-3.5 py-2.5">
+            <div className="rounded-2xl rounded-bl-md studio-surface px-3.5 py-2.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-sm">{agentEmoji}</span>
                 <div className="flex gap-1">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 [animation-delay:-0.3s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400 [animation-delay:-0.15s]" />
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-cyan-400" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#5E8B72] [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#5E8B72] [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#5E8B72]" />
                 </div>
               </div>
             </div>
@@ -461,10 +461,10 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-white/10 glass-panel rounded-b-3xl px-4 py-3">
+      <div className="rounded-b-3xl border-t border-[rgba(151,120,90,0.14)] studio-surface px-4 py-3">
         {/* Interim transcript preview */}
         {interimText && (
-          <p className="mb-2 truncate text-xs italic text-white/50">{interimText}</p>
+          <p className="mb-2 truncate text-xs italic text-[#8B7355]">{interimText}</p>
         )}
         <div className="flex items-center gap-2">
           {/* Microphone button — visible only when STT is available (Req 3.6) */}
@@ -475,7 +475,7 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
               className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all ${
                 isRecording
                   ? 'bg-red-500 text-white shadow-md'
-                  : 'glass-panel text-white/50 hover:bg-white/20'
+                  : 'studio-surface text-[#8B7355] hover:bg-white/65'
               } disabled:cursor-not-allowed disabled:opacity-50`}
               title={isRecording ? 'Stop recording' : 'Start recording'}
             >
@@ -498,7 +498,7 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
               }
             }}
             placeholder={copy.chat.placeholder(agentName)}
-            className="flex-1 rounded-2xl glass-panel px-4 py-3 text-sm text-white outline-none transition-all placeholder:text-white/30 focus:border-cyan-400/50 focus:bg-white/10 focus:ring-2 focus:ring-cyan-400/20"
+            className="flex-1 rounded-2xl studio-input px-4 py-3 text-sm outline-none transition-all"
           />
           <GlowButton
             onClick={() => void sendMessage()}
@@ -513,8 +513,8 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
               onClick={() => setTtsEnabled(!ttsEnabled)}
               className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-all ${
                 ttsEnabled
-                  ? 'bg-cyan-500/30 text-cyan-300 shadow-md'
-                  : 'glass-panel text-white/50 hover:bg-white/20'
+                  ? 'bg-[#C98257]/18 text-[#B86F45] shadow-md'
+                  : 'studio-surface text-[#8B7355] hover:bg-white/65'
               }`}
               title={ttsEnabled ? 'Disable TTS' : 'Enable TTS'}
             >

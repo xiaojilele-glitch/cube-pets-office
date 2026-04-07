@@ -83,40 +83,69 @@ function TerminalPreviewInner({
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "#1a1a2e",
+        background: "linear-gradient(180deg, #111827, #0f172a)",
         padding: 16,
       }
     : {
         width: "100%",
         height: "100%",
         position: "relative",
-        background: "#1a1a2e",
-        borderRadius: 4,
+        background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
+        borderRadius: 12,
         overflow: "hidden",
+        border: "1px solid rgba(148, 163, 184, 0.18)",
+        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.24)",
       };
 
   return (
     <div style={containerStyle} data-testid="terminal-preview">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          height: 28,
+          padding: "0 10px",
+          borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
+          color: "#cbd5e1",
+          background: "rgba(15,23,42,0.78)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: "#fb7185" }} />
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: "#f59e0b" }} />
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: "#34d399" }} />
+        </div>
+        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8" }}>
+          执行终端
+        </span>
+      </div>
+
       {!isStreaming && (
         <div
           data-testid="terminal-idle"
           style={{
             position: "absolute",
-            inset: 0,
+            inset: 28,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            color: "#666",
-            fontSize: 14,
+            color: "#94a3b8",
+            fontSize: 13,
             zIndex: 1,
             pointerEvents: "none",
+            textAlign: "center",
+            gap: 6,
           }}
         >
-          等待执行...
+          <span style={{ fontWeight: 600, color: "#e2e8f0" }}>等待执行</span>
+          <span style={{ fontSize: 11, color: "#94a3b8" }}>运行任务后，这里会显示实时日志</span>
         </div>
       )}
 
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      <div ref={containerRef} style={{ width: "100%", height: "calc(100% - 28px)" }} />
 
       <button
         data-testid="terminal-fullscreen-btn"
@@ -124,13 +153,13 @@ function TerminalPreviewInner({
         style={{
           position: "absolute",
           top: 4,
-          right: 4,
-          background: "rgba(255,255,255,0.1)",
+          right: 6,
+          background: "rgba(51,65,85,0.55)",
           border: "none",
-          color: "#ccc",
+          color: "#e2e8f0",
           cursor: "pointer",
           padding: "2px 6px",
-          borderRadius: 3,
+          borderRadius: 6,
           fontSize: 12,
           zIndex: 2,
         }}

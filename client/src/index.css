@@ -83,6 +83,19 @@
   --glass-bg-active: rgba(255, 255, 255, 0.95);
   --glass-border: rgba(255, 255, 255, 0.50);
   --glass-border-hover: rgba(255, 255, 255, 0.60);
+  --studio-shell-bg: linear-gradient(180deg, rgba(255, 248, 241, 0.9), rgba(241, 232, 220, 0.84));
+  --studio-shell-border: rgba(151, 120, 90, 0.18);
+  --studio-surface-bg: rgba(255, 255, 255, 0.42);
+  --studio-surface-strong: rgba(255, 255, 255, 0.58);
+  --studio-surface-border: rgba(255, 255, 255, 0.48);
+  --studio-ink: #4A3727;
+  --studio-ink-soft: #7D6856;
+  --studio-accent: #C98257;
+  --studio-accent-strong: #B86F45;
+  --studio-sage: #5E8B72;
+  --studio-sage-strong: #456B58;
+  --studio-plum: #836A88;
+  --studio-sky: #87AFC7;
 
   /* 发光色 */
   --glow-cyan: rgba(6, 182, 212, 0.5);
@@ -176,25 +189,25 @@
 /* ── Holographic Glass Utility Classes (Sub-task 1.2) ── */
 
 .glass-panel {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(1.2);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, rgba(255, 250, 245, 0.54), rgba(244, 235, 224, 0.46));
+  backdrop-filter: blur(24px) saturate(1.18);
+  -webkit-backdrop-filter: blur(24px) saturate(1.18);
+  border: 1px solid rgba(255, 255, 255, 0.42);
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  color: #3A2A1A;
+    0 12px 36px rgba(84, 59, 37, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  color: var(--studio-ink);
 }
 
 .glass-panel-strong {
-  background: rgba(255, 255, 255, 0.90);
-  backdrop-filter: blur(40px) saturate(1.4);
-  -webkit-backdrop-filter: blur(40px) saturate(1.4);
-  border: 1px solid rgba(255, 255, 255, 0.50);
+  background: linear-gradient(180deg, rgba(255, 250, 244, 0.94), rgba(244, 236, 226, 0.88));
+  backdrop-filter: blur(40px) saturate(1.35);
+  -webkit-backdrop-filter: blur(40px) saturate(1.35);
+  border: 1px solid rgba(255, 255, 255, 0.56);
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  color: #3A2A1A;
+    0 18px 48px rgba(84, 59, 37, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  color: var(--studio-ink);
 }
 
 .glass-3d {
@@ -271,6 +284,135 @@
 .overflow-y-auto {
   scrollbar-width: thin;
   scrollbar-color: var(--glass-border) transparent;
+}
+
+.studio-shell {
+  background: var(--studio-shell-bg);
+  border: 1px solid var(--studio-shell-border);
+  box-shadow:
+    0 20px 56px rgba(88, 61, 39, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(26px) saturate(1.08);
+  -webkit-backdrop-filter: blur(26px) saturate(1.08);
+  color: var(--studio-ink);
+}
+
+.studio-surface {
+  background: var(--studio-surface-bg);
+  border: 1px solid var(--studio-surface-border);
+  box-shadow:
+    0 10px 28px rgba(88, 61, 39, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.36);
+  backdrop-filter: blur(16px) saturate(1.02);
+  -webkit-backdrop-filter: blur(16px) saturate(1.02);
+  color: var(--studio-ink);
+}
+
+.studio-surface-strong {
+  background: var(--studio-surface-strong);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  box-shadow:
+    0 14px 34px rgba(88, 61, 39, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(18px) saturate(1.04);
+  -webkit-backdrop-filter: blur(18px) saturate(1.04);
+  color: var(--studio-ink);
+}
+
+.studio-input {
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(168, 139, 113, 0.2);
+  color: var(--studio-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.studio-input::placeholder {
+  color: rgba(125, 104, 86, 0.62);
+}
+
+.studio-input:focus {
+  border-color: rgba(94, 139, 114, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 0 0 4px rgba(94, 139, 114, 0.12);
+  outline: none;
+}
+
+.studio-badge {
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid rgba(170, 142, 115, 0.2);
+  color: var(--studio-ink-soft);
+}
+
+.workflow-studio {
+  color: var(--studio-ink);
+}
+
+.workflow-studio .glass-panel {
+  background: linear-gradient(180deg, rgba(255, 250, 245, 0.74), rgba(243, 234, 223, 0.68));
+  border: 1px solid rgba(171, 141, 111, 0.18);
+  box-shadow:
+    0 12px 30px rgba(88, 61, 39, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  color: var(--studio-ink);
+}
+
+.workflow-studio .text-white,
+.workflow-studio .text-white\/90,
+.workflow-studio .text-white\/80 {
+  color: #4A3727;
+}
+
+.workflow-studio .text-white\/60,
+.workflow-studio .text-white\/50,
+.workflow-studio .text-white\/40 {
+  color: #7D6856;
+}
+
+.workflow-studio .bg-white\/5,
+.workflow-studio .bg-white\/8,
+.workflow-studio .bg-white\/10,
+.workflow-studio .bg-white\/15 {
+  background: rgba(255, 255, 255, 0.46);
+}
+
+.workflow-studio .border-white\/10 {
+  border-color: rgba(171, 141, 111, 0.16);
+}
+
+.workflow-studio input,
+.workflow-studio textarea,
+.workflow-studio select {
+  background: rgba(255, 255, 255, 0.58);
+  border-color: rgba(171, 141, 111, 0.2);
+  color: var(--studio-ink);
+}
+
+.workflow-studio input::placeholder,
+.workflow-studio textarea::placeholder {
+  color: rgba(125, 104, 86, 0.62);
+}
+
+.workflow-studio input:focus,
+.workflow-studio textarea:focus,
+.workflow-studio select:focus {
+  border-color: rgba(94, 139, 114, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 0 0 4px rgba(94, 139, 114, 0.12);
+}
+
+.workflow-studio .hover\:bg-white\/5:hover,
+.workflow-studio .hover\:bg-white\/10:hover,
+.workflow-studio .hover\:bg-white\/20:hover,
+.workflow-studio .hover\:bg-white:hover {
+  background: rgba(255, 255, 255, 0.62);
+}
+
+.workflow-studio .hover\:text-white\/60:hover,
+.workflow-studio .hover\:text-white\/80:hover,
+.workflow-studio .hover\:text-white:hover {
+  color: #4A3727;
 }
 
 /* Smooth transitions for all panels */

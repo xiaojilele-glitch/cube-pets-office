@@ -81,7 +81,7 @@ function RuntimeCard({
   };
 
   return (
-    <div className="rounded-[22px] border border-white/60 bg-white/88 p-3 shadow-[0_12px_32px_rgba(60,44,28,0.12)] backdrop-blur-2xl">
+    <div className="rounded-[22px] studio-surface-strong p-3">
       <div className="flex items-center justify-between gap-2">
         <div>
           <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#A08972]">
@@ -98,8 +98,8 @@ function RuntimeCard({
           onClick={() => void handleSwitch('frontend')}
           className={`inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all ${
             runtimeMode === 'frontend'
-              ? 'bg-[#2F6A54] text-white shadow-sm'
-              : 'bg-[#F4EDE4] text-[#6B5A4A] hover:bg-[#ECE1D5]'
+              ? 'bg-[#5E8B72] text-white shadow-sm'
+              : 'studio-surface text-[#6B5A4A] hover:bg-white/65'
           }`}
         >
           <Monitor className="h-3.5 w-3.5" />
@@ -110,8 +110,8 @@ function RuntimeCard({
             onClick={() => void handleSwitch('advanced')}
             className={`inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all ${
               runtimeMode === 'advanced'
-                ? 'bg-[#D07A4F] text-white shadow-sm'
-                : 'bg-[#F4EDE4] text-[#6B5A4A] hover:bg-[#ECE1D5]'
+                ? 'bg-[#C98257] text-white shadow-sm'
+                : 'studio-surface text-[#6B5A4A] hover:bg-white/65'
             }`}
           >
             <Server className="h-3.5 w-3.5" />
@@ -127,7 +127,7 @@ function HelpCard({ onClose }: { onClose?: () => void }) {
   const { copy } = useI18n();
 
   return (
-    <div className="rounded-[28px] border border-white/60 bg-white/88 p-5 shadow-[0_16px_44px_rgba(60,44,28,0.18)] backdrop-blur-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="rounded-[28px] studio-shell p-5 animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A08972]">
@@ -143,7 +143,7 @@ function HelpCard({ onClose }: { onClose?: () => void }) {
         {onClose ? (
           <button
             onClick={onClose}
-            className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
+            className="rounded-xl p-2 transition-colors hover:bg-white/45"
             title={copy.common.close}
           >
             <X className="h-4 w-4 text-[#8B7355]" />
@@ -154,7 +154,7 @@ function HelpCard({ onClose }: { onClose?: () => void }) {
       <div className="space-y-3 text-xs leading-relaxed text-[#5A4A3A]">
         {copy.toolbar.quickTips.map(tip => (
           <div key={tip} className="flex items-start gap-3">
-            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#D07A4F]" />
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#C98257]" />
             <span>{tip}</span>
           </div>
         ))}
@@ -194,35 +194,35 @@ export function Toolbar() {
     {
       id: 'config',
       icon: Settings,
-      accent: '#2F6A54',
+      accent: '#5E8B72',
       active: isConfigOpen,
       onClick: () => toggleConfig(),
     },
     {
       id: 'workflow',
       icon: Brain,
-      accent: '#D07A4F',
+      accent: '#C98257',
       active: isWorkflowPanelOpen,
       onClick: () => toggleWorkflowPanel(),
     },
     {
       id: 'chat',
       icon: MessageCircle,
-      accent: '#A86B4E',
+      accent: '#B77B63',
       active: isChatOpen,
       onClick: () => toggleChat(),
     },
     {
       id: 'commandCenter',
       icon: Terminal,
-      accent: '#6366F1',
+      accent: '#8B735E',
       active: location === '/command-center',
       onClick: () => setLocation('/command-center'),
     },
     {
       id: 'permissions',
       icon: Shield,
-      accent: '#7C3AED',
+      accent: '#836A88',
       active: showPermissions,
       onClick: () => setShowPermissions(prev => !prev),
     },
@@ -250,7 +250,7 @@ export function Toolbar() {
     return (
       <>
         <div
-          className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[80] rounded-[26px] border border-white/60 bg-white/84 px-3 py-3 shadow-[0_12px_30px_rgba(60,44,28,0.14)] backdrop-blur-2xl"
+          className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[80] rounded-[26px] studio-shell px-3 py-3"
           style={{ pointerEvents: 'auto' }}
         >
           <div className="flex items-center justify-between gap-3">
@@ -269,7 +269,7 @@ export function Toolbar() {
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleLocale}
-                className="inline-flex h-10 min-w-10 items-center justify-center rounded-2xl bg-[#F4EDE4] px-3 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-[#ECE1D5]"
+                className="inline-flex h-10 min-w-10 items-center justify-center rounded-2xl studio-surface px-3 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-white/65"
                 title={copy.app.localeSwitch}
               >
                 <Globe2 className="mr-1 h-3.5 w-3.5" />
@@ -277,7 +277,7 @@ export function Toolbar() {
               </button>
               <button
                 onClick={() => setShowMobileMenu(prev => !prev)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#2F6A54] text-white shadow-sm"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#5E8B72] text-white shadow-sm"
                 title={copy.toolbar.mobileMenuTitle}
               >
                 {showMobileMenu ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -285,12 +285,12 @@ export function Toolbar() {
             </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-[#F7F1EA] px-3 py-2">
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl studio-surface px-3 py-2">
             <div className="flex items-center gap-2 text-xs font-semibold text-[#5A4A3A]">
               {CAN_USE_ADVANCED_RUNTIME && !isWorkflowPanelOpen ? (
-                <Workflow className="h-3.5 w-3.5 text-[#D07A4F]" />
+                <Workflow className="h-3.5 w-3.5 text-[#C98257]" />
               ) : (
-                <Monitor className="h-3.5 w-3.5 text-[#2F6A54]" />
+                <Monitor className="h-3.5 w-3.5 text-[#5E8B72]" />
               )}
               <span>
                 {CAN_USE_ADVANCED_RUNTIME
@@ -320,7 +320,7 @@ export function Toolbar() {
               aria-label={copy.common.close}
             />
             <div
-              className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+88px)] z-[82] max-h-[calc(100svh-120px)] overflow-y-auto rounded-[30px] border border-white/60 bg-white/92 p-4 shadow-[0_18px_44px_rgba(60,44,28,0.18)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-4 duration-300"
+              className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+88px)] z-[82] max-h-[calc(100svh-120px)] overflow-y-auto rounded-[30px] studio-shell p-4 animate-in fade-in slide-in-from-top-4 duration-300"
               style={{ pointerEvents: 'auto' }}
             >
               <div className="mb-4">
@@ -348,7 +348,7 @@ export function Toolbar() {
                       key={button.id}
                       onClick={() => handleButtonClick(button.id)}
                       className={`flex items-center gap-3 rounded-[22px] px-4 py-3 text-left transition-all ${
-                        button.active ? 'text-white shadow-md' : 'bg-[#F8F3EC] text-[#5A4A3A]'
+                        button.active ? 'text-white shadow-md' : 'studio-surface text-[#5A4A3A]'
                       }`}
                       style={{
                         background: button.active
@@ -408,7 +408,7 @@ export function Toolbar() {
         className={`fixed left-1/2 z-[60] -translate-x-1/2 ${isTablet ? 'bottom-5' : 'bottom-6'}`}
         style={{ pointerEvents: 'auto' }}
       >
-        <div className="rounded-[32px] border border-white/60 bg-white/78 px-3 py-2.5 shadow-[0_14px_40px_rgba(60,44,28,0.14)] backdrop-blur-2xl">
+        <div className="rounded-[32px] studio-shell px-3 py-2.5">
           <div className={`grid gap-2 ${isTablet ? 'grid-cols-6' : 'grid-cols-6'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
@@ -421,12 +421,12 @@ export function Toolbar() {
                   className={`group flex ${isTablet ? 'min-w-[102px]' : 'min-w-[138px]'} items-center gap-3 rounded-[22px] px-4 py-2.5 text-left transition-all duration-300 ${
                     button.active
                       ? '-translate-y-1 shadow-[0_12px_24px_rgba(80,56,36,0.14)]'
-                      : 'hover:-translate-y-1 hover:bg-white/70'
+                      : 'hover:-translate-y-1 hover:bg-white/62'
                   }`}
                   style={{
                     background: button.active
                       ? `linear-gradient(135deg, ${button.accent}, ${button.accent}CC)`
-                      : 'rgba(255,255,255,0.28)',
+                      : 'rgba(255,255,255,0.36)',
                     color: button.active ? '#FFFFFF' : '#5A4A3A',
                   }}
                 >

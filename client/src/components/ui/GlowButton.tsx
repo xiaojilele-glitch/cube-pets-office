@@ -20,8 +20,8 @@ const variantStyles: Record<
   { base: string; glow: string }
 > = {
   primary: {
-    base: "bg-gradient-to-r from-cyan-500 to-blue-600",
-    glow: "hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]",
+    base: "bg-gradient-to-r from-[#5E8B72] to-[#87AFC7]",
+    glow: "hover:shadow-[0_0_20px_rgba(94,139,114,0.35)]",
   },
   danger: {
     base: "bg-gradient-to-r from-red-500 to-orange-500",
@@ -86,7 +86,7 @@ const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
           // Disabled: desaturate + no pointer events
           disabled && "saturate-[0.35] opacity-60 cursor-not-allowed shadow-none",
           // Focus ring
-          "outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+          "outline-none focus-visible:ring-2 focus-visible:ring-[#5E8B72]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
           className,
         )}
         {...props}

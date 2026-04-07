@@ -164,9 +164,7 @@ export function MissionIsland() {
       {/* Detail Overlay (visible when expanded) */}
       {expanded && missionDetail && (
         <Html
-          position={DETAIL_OVERLAY_OFFSET}
-          center
-          distanceFactor={7}
+          fullscreen
           style={{ pointerEvents: "auto" }}
         >
           <MissionDetailOverlay

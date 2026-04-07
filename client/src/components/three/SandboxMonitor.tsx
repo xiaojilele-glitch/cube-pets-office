@@ -25,8 +25,8 @@ const STAND_COLOR = "#555";
 const GLOW_ACTIVE = new THREE.Color("#4FC3F7");
 const GLOW_IDLE = new THREE.Color("#333");
 
-const TERMINAL_HTML_OFFSET: [number, number, number] = [0, 2.2, 0];
-const SCREENSHOT_HTML_OFFSET: [number, number, number] = [1.8, 2.2, 0];
+const TERMINAL_HTML_OFFSET: [number, number, number] = [0, 2.2, 0.03];
+const SCREENSHOT_HTML_OFFSET: [number, number, number] = [1.8, 2.2, 0.03];
 
 export function SandboxMonitor() {
   const logLines = useSandboxStore((s) => s.logLines);
@@ -111,7 +111,7 @@ export function SandboxMonitor() {
         position={TERMINAL_HTML_OFFSET}
         center
         distanceFactor={7}
-        style={{ pointerEvents: "auto", width: 320, height: 200 }}
+        style={{ pointerEvents: "auto", width: 276, height: 170 }}
       >
         <TerminalPreview
           logLines={logLines}
@@ -125,7 +125,7 @@ export function SandboxMonitor() {
         position={SCREENSHOT_HTML_OFFSET}
         center
         distanceFactor={7}
-        style={{ pointerEvents: "auto", width: 240, height: 160 }}
+        style={{ pointerEvents: "auto", width: 214, height: 142 }}
       >
         <ScreenshotPreview
           current={latestScreenshot}

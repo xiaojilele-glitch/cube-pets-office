@@ -72,22 +72,22 @@ export default function Home() {
   const managerNames = ['CEO', 'Pixel', 'Nexus', 'Echo', 'Warden'];
 
   return (
-    <div className="relative h-[100svh] w-screen overflow-hidden bg-[#CFE5FA]">
+    <div className="relative h-[100svh] w-screen overflow-hidden bg-[linear-gradient(180deg,#d8e5f0_0%,#e9dfd2_48%,#e3d2c0_100%)]">
       <Scene3D />
 
       {/* Gradient overlays */}
       <div className="pointer-events-none absolute inset-0 z-[5]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(214,236,255,0.62),rgba(214,236,255,0)_40%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.3),rgba(255,255,255,0)_30%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(120,88,56,0.08),rgba(120,88,56,0)_30%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(103,80,58,0.1),rgba(103,80,58,0)_26%)]" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#EAF5FF]/42 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#D7C8B8]/35 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(228,241,252,0.72),rgba(228,241,252,0)_38%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,251,247,0.42),rgba(255,251,247,0)_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(157,119,83,0.09),rgba(157,119,83,0)_32%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(94,139,114,0.08),rgba(94,139,114,0)_24%)]" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-[#f5f9fd]/46 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#ddc8b2]/34 to-transparent" />
         <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(79,58,38,0.12)]" />
       </div>
 
       {isMobile && (
-        <div className="pointer-events-none absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+72px)] z-[18] rounded-2xl border border-white/40 bg-white/45 px-3 py-2 text-[11px] leading-5 text-[#5C4A39] shadow-sm backdrop-blur-md">
+        <div className="pointer-events-none absolute left-3 right-3 top-[calc(env(safe-area-inset-top)+72px)] z-[18] rounded-2xl studio-surface px-3 py-2 text-[11px] leading-5 text-[#5C4A39]">
           {copy.home.mobileHint}
         </div>
       )}
@@ -99,18 +99,18 @@ export default function Home() {
           {/* ── Top bar: logo | mode switch | github + locale ── */}
           <div className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-between px-5 py-3" style={{ pointerEvents: 'auto' }}>
             {/* Left: Logo */}
-            <div className="flex items-center gap-2 rounded-full border border-white/50 bg-white/70 px-3 py-1.5 shadow-sm backdrop-blur-xl">
-              <span className="h-2 w-2 rounded-full bg-[#D07A4F]" />
+            <div className="flex items-center gap-2 rounded-full studio-surface px-3 py-1.5">
+              <span className="h-2 w-2 rounded-full bg-[#C98257]" />
               <span className="text-xs font-bold text-[#3A2A1A]">Cube Pets Office</span>
             </div>
 
             {/* Center: Mode switch */}
-            <div className="flex items-center gap-1 rounded-full border border-white/50 bg-white/70 p-1 shadow-sm backdrop-blur-xl">
+            <div className="flex items-center gap-1 rounded-full studio-surface p-1">
               <button
                 onClick={() => void setRuntimeMode('frontend')}
                 className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
                   runtimeMode === 'frontend'
-                    ? 'bg-white text-[#3A2A1A] shadow-sm'
+                    ? 'bg-[#F8F3ED] text-[#3A2A1A] shadow-sm'
                     : 'text-[#8B7355] hover:text-[#5A4A3A]'
                 }`}
               >
@@ -121,7 +121,7 @@ export default function Home() {
                   onClick={() => void setRuntimeMode('advanced')}
                   className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
                     runtimeMode === 'advanced'
-                      ? 'bg-[#D07A4F] text-white shadow-sm'
+                      ? 'bg-[#C98257] text-white shadow-sm'
                       : 'text-[#8B7355] hover:text-[#5A4A3A]'
                   }`}
                 >
@@ -135,7 +135,7 @@ export default function Home() {
               {IS_GITHUB_PAGES && <GitHubRepoBadge />}
               <button
                 onClick={toggleLocale}
-                className="rounded-full border border-white/50 bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#5A4A3A] shadow-sm backdrop-blur-xl transition-colors hover:bg-white"
+                className="rounded-full studio-surface px-3 py-1.5 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-white/70"
               >
                 {locale === 'zh-CN' ? 'EN / 中' : 'EN / 中'}
               </button>
@@ -143,48 +143,48 @@ export default function Home() {
           </div>
 
           {/* ── Left sidebar: Mission control + System status ── */}
-          <div className="fixed left-4 top-16 z-[60] flex w-[150px] flex-col gap-3" style={{ pointerEvents: 'auto' }}>
+          <div className="fixed left-4 top-16 z-[60] flex w-[160px] flex-col gap-3" style={{ pointerEvents: 'auto' }}>
             {/* Mission control */}
-            <div className="rounded-2xl border border-white/50 bg-white/80 p-3 shadow-sm backdrop-blur-xl">
+            <div className="rounded-2xl studio-shell p-3">
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-red-400" />
+                <span className="h-2 w-2 rounded-full bg-[#C98257]" />
                 <span className="text-[11px] font-bold text-[#3A2A1A]">
                   {locale === 'zh-CN' ? '任务中心' : 'Mission control'}
                 </span>
               </div>
               <button
                 onClick={() => setLocation('/tasks?new=1')}
-                className="mt-2 w-full rounded-xl bg-[#D07A4F] px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:bg-[#C26D42]"
+                className="mt-2 w-full rounded-xl bg-[#C98257] px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:bg-[#B86F45]"
               >
                 {locale === 'zh-CN' ? '新建任务' : 'New mission'}
               </button>
               <button
                 onClick={handleStartDemo}
-                className="mt-1.5 w-full text-center text-[11px] font-medium text-[#2E86C1] transition-colors hover:text-[#1A6FA0]"
+                className="mt-1.5 w-full text-center text-[11px] font-medium text-[#5E8B72] transition-colors hover:text-[#456B58]"
               >
                 Live Demo
               </button>
             </div>
 
             {/* System status */}
-            <div className="rounded-2xl border border-white/50 bg-white/80 p-3 shadow-sm backdrop-blur-xl">
+            <div className="rounded-2xl studio-shell p-3">
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
                 <span className="text-[11px] font-bold text-[#3A2A1A]">
                   {locale === 'zh-CN' ? '系统状态' : 'System status'}
                 </span>
               </div>
               <div className="mt-2 space-y-1 text-[10px] text-[#5A4A3A]">
                 <div className="flex justify-between">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{locale === 'zh-CN' ? 'Agent 在线' : 'Agents online'}</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#5E8B72]" />{locale === 'zh-CN' ? 'Agent 在线' : 'Agents online'}</span>
                   <span className="font-semibold">{agentCount} / 18</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />{locale === 'zh-CN' ? '活跃工作流' : 'Active workflows'}</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />{locale === 'zh-CN' ? '活跃工作流' : 'Active workflows'}</span>
                   <span className="font-semibold">{activeWorkflows}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" />{locale === 'zh-CN' ? '运行模式' : 'Runtime mode'}</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#87AFC7]" />{locale === 'zh-CN' ? '运行模式' : 'Runtime mode'}</span>
                   <span className="font-semibold">{runtimeMode === 'advanced' ? 'Advanced' : 'Frontend'}</span>
                 </div>
               </div>
@@ -192,19 +192,19 @@ export default function Home() {
           </div>
 
           {/* ── Right sidebar: Active agents + Token usage ── */}
-          <div className="fixed right-4 top-16 z-[60] flex w-[160px] flex-col gap-3" style={{ pointerEvents: 'auto' }}>
+          <div className="fixed right-4 top-16 z-[60] flex w-[170px] flex-col gap-3" style={{ pointerEvents: 'auto' }}>
             {/* Active agents */}
-            <div className="rounded-2xl border border-white/50 bg-white/80 p-3 shadow-sm backdrop-blur-xl">
+            <div className="rounded-2xl studio-shell p-3">
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="h-2 w-2 rounded-full bg-[#C98257]" />
                 <span className="text-[11px] font-bold text-[#3A2A1A]">
                   {locale === 'zh-CN' ? '活跃 Agent' : 'Active agents'}
                 </span>
               </div>
               <div className="mt-2 flex flex-wrap gap-1">
                 {managerNames.map(name => (
-                  <span key={name} className="flex items-center gap-1 rounded-full bg-[#F4EDE4] px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#D07A4F]" />
+                  <span key={name} className="flex items-center gap-1 rounded-full studio-surface px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
                     {name}
                   </span>
                 ))}
@@ -213,15 +213,15 @@ export default function Home() {
             </div>
 
             {/* Token usage */}
-            <div className="rounded-2xl border border-white/50 bg-white/80 p-3 shadow-sm backdrop-blur-xl">
+            <div className="rounded-2xl studio-shell p-3">
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-red-400" />
+                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
                 <span className="text-[11px] font-bold text-[#3A2A1A]">
                   {locale === 'zh-CN' ? 'Token 用量' : 'Token usage'}
                 </span>
               </div>
               <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-[10px] text-[#D07A4F]">
+                <span className="text-[10px] text-[#5E8B72]">
                   {(telemetrySnapshot?.totalTokensIn ?? 0).toLocaleString()} tokens
                 </span>
                 <span className="text-[10px] font-semibold text-[#3A2A1A]">

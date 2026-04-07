@@ -2214,7 +2214,11 @@ export function WorkflowPanel({ embedded = false }: { embedded?: boolean }) {
 
   if (!isWorkflowPanelOpen && !embedded) return null;
 
-  const shellClass = isMobile ? 'left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+8px)] top-[calc(env(safe-area-inset-top)+108px)] rounded-[30px]' : isTablet ? 'bottom-5 right-5 h-[min(74svh,620px)] w-[420px] rounded-3xl' : 'bottom-6 right-6 h-[620px] w-[440px] rounded-3xl';
+  const shellClass = isMobile
+    ? 'left-2 right-2 bottom-[calc(env(safe-area-inset-bottom)+8px)] top-[calc(env(safe-area-inset-top)+96px)] rounded-[30px]'
+    : isTablet
+      ? 'left-1/2 top-[6svh] h-[88svh] max-h-[860px] w-[min(94vw,980px)] -translate-x-1/2 rounded-[32px]'
+      : 'left-1/2 top-[5svh] h-[88svh] max-h-[860px] w-[min(92vw,1240px)] -translate-x-1/2 rounded-[34px]';
   const tabs: Array<{ id: PanelView; icon: typeof Zap; label: string }> = [
     { id: 'directive', icon: Zap, label: copy.workflow.tabs.directive },
     { id: 'org', icon: Network, label: copy.workflow.tabs.org },
@@ -2228,21 +2232,28 @@ export function WorkflowPanel({ embedded = false }: { embedded?: boolean }) {
 
   return (
     <WorkflowTtsContext.Provider value={ttsCtx}>
-    <div className={embedded ? 'flex h-full flex-col overflow-hidden' : `fixed z-[71] flex flex-col border border-white/60 bg-transparent animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`} style={embedded ? undefined : { pointerEvents: 'auto' }}>
+    {!embedded && !isMobile ? (
+      <div
+        className="fixed inset-0 z-[69] bg-[radial-gradient(circle_at_top,rgba(242,232,219,0.18),rgba(60,44,28,0.08)_42%,rgba(28,18,10,0.22)_100%)] backdrop-blur-[10px]"
+        style={{ pointerEvents: 'auto' }}
+        onClick={toggleWorkflowPanel}
+      />
+    ) : null}
+    <div className={embedded ? 'workflow-studio flex h-full flex-col overflow-hidden' : `workflow-studio fixed z-[71] flex flex-col studio-shell animate-in slide-in-from-bottom-4 fade-in duration-300 ${shellClass}`} style={embedded ? undefined : { pointerEvents: 'auto' }}>
       {!embedded && (
-      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[rgba(151,120,90,0.14)] px-5 py-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-[#D4845A] to-[#E4946A]"><Brain className="h-4 w-4 text-white" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C98257] to-[#E2AF85] shadow-sm"><Brain className="h-5 w-5 text-white" /></div>
           <div>
-            <h3 className="text-sm font-bold text-white">{copy.workflow.title}</h3>
-            <div className="flex items-center gap-1.5"><div className={`h-1.5 w-1.5 rounded-full ${runtimeMode === 'frontend' ? 'bg-amber-400' : connected ? 'bg-emerald-500' : 'bg-red-400'}`} /><span className="text-[9px] text-white/50">{connected ? copy.workflow.connected : copy.workflow.disconnected}</span></div>
+            <h3 className="text-base font-bold text-[#3A2A1A]">{copy.workflow.title}</h3>
+            <div className="mt-0.5 flex items-center gap-1.5"><div className={`h-1.5 w-1.5 rounded-full ${runtimeMode === 'frontend' ? 'bg-[#C98257]' : connected ? 'bg-[#5E8B72]' : 'bg-red-400'}`} /><span className="text-[10px] text-[#8B7355]">{connected ? copy.workflow.connected : copy.workflow.disconnected}</span></div>
           </div>
         </div>
-        <button onClick={toggleWorkflowPanel} className="rounded-xl p-2 hover:bg-white/10" title={copy.common.close}><X className="h-4 w-4 text-white/50" /></button>
+        <button onClick={toggleWorkflowPanel} className="rounded-2xl px-3 py-2 text-sm font-medium text-[#7D6856] transition-colors hover:bg-white/45 hover:text-[#4A3727]" title={copy.common.close}><X className="h-4 w-4" /></button>
       </div>
       )}
-      <div className="border-b border-white/10 px-3 py-2"><div className="flex gap-1 overflow-x-auto pb-1">{tabs.map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setActiveView(id)} className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-medium ${activeView === id ? 'bg-[#D4845A] text-white' : 'text-white/50 hover:bg-white/10'}`}><Icon className="h-3 w-3" />{label}</button>)}</div></div>
-      {runtimeMode === 'frontend' ? <div className="border-b border-white/10 bg-white/5 px-4 py-2.5"><p className="text-[10px] leading-5 text-white/60">{getFrontendWorkflowBanner(locale, CAN_USE_ADVANCED_RUNTIME)}</p></div> : null}
+      <div className="border-b border-[rgba(151,120,90,0.14)] px-4 py-3"><div className="flex gap-2 overflow-x-auto pb-1">{tabs.map(({ id, icon: Icon, label }) => <button key={id} onClick={() => setActiveView(id)} className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold ${activeView === id ? 'bg-[#C98257] text-white shadow-sm' : 'bg-white/35 text-[#7D6856] hover:bg-white/52 hover:text-[#4A3727]'}`}><Icon className="h-3.5 w-3.5" />{label}</button>)}</div></div>
+      {runtimeMode === 'frontend' ? <div className="border-b border-[rgba(151,120,90,0.14)] bg-white/18 px-4 py-2.5"><p className="text-[10px] leading-5 text-[#7D6856]">{getFrontendWorkflowBanner(locale, CAN_USE_ADVANCED_RUNTIME)}</p></div> : null}
       <DemoControls />
       <div className="min-h-0 flex-1 overflow-hidden">
         {activeView === 'directive' ? <DirectiveView /> : null}
