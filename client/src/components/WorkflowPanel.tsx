@@ -1243,7 +1243,7 @@ function CompetitionResultsPanel() {
           <div className="mb-2 flex flex-wrap gap-1">
             {session.contestants.map(c => (
               <Pill key={c.agentId}>
-                {c.agentId.slice(0, 10)}{c.isExternal ? ' (ext)' : ''}{c.timedOut ? ' ⏱ : ''}
+                {c.agentId.slice(0, 10)}{c.isExternal ? ' (ext)' : ''}{c.timedOut ? ' ⏱' : ''}
               </Pill>
             ))}
           </div>
