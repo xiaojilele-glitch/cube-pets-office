@@ -78,9 +78,9 @@
   --sidebar-ring: oklch(0.45 0.08 160);
 
   /* 毛玻璃背景 */
-  --glass-bg: rgba(255, 255, 255, 0.12);
-  --glass-bg-hover: rgba(255, 255, 255, 0.18);
-  --glass-bg-active: rgba(255, 255, 255, 0.24);
+  --glass-bg: rgba(20, 24, 40, 0.88);
+  --glass-bg-hover: rgba(20, 24, 40, 0.92);
+  --glass-bg-active: rgba(20, 24, 40, 0.95);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-border-hover: rgba(255, 255, 255, 0.25);
 
