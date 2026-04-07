@@ -13,7 +13,14 @@ dotenv.config();
  */
 function parseDockerHost(dockerHost: string | undefined): Dockerode.DockerOptions {
   if (!dockerHost) return {};
-  if (dockerHost.startsWith("/") || dockerHost.startsWith("npipe:")) {
+  // npipe:////./pipe/xxx → \\.\pipe\xxx
+  if (dockerHost.startsWith("npipe:")) {
+    const pipePath = dockerHost
+      .replace(/^npipe:\/\//, "")
+      .replace(/\//g, "\\");
+    return { socketPath: pipePath };
+  }
+  if (dockerHost.startsWith("/") || dockerHost.startsWith("\\\\.\\pipe\\")) {
     return { socketPath: dockerHost };
   }
   // tcp://host:port or http://host:port

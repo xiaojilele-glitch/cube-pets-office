@@ -32,7 +32,7 @@ export function readLobsterExecutorConfig(
       1,
       Number.parseInt(env.LOBSTER_MAX_CONCURRENT_JOBS || "2", 10) || 2
     ),
-    dockerHost: env.DOCKER_HOST || defaultDockerHost(platform),
+    dockerHost: env.LOBSTER_DOCKER_HOST || env.DOCKER_HOST || defaultDockerHost(platform),
     dockerTlsVerify: env.DOCKER_TLS_VERIFY === "1" ? true : undefined,
     dockerCertPath: env.DOCKER_CERT_PATH || undefined,
     callbackSecret: env.EXECUTOR_CALLBACK_SECRET || "",
