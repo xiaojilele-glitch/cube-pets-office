@@ -64,6 +64,7 @@ export const messages = {
         help: { label: '帮助', sublabel: 'GUIDE' },
         commandCenter: { label: '指挥中心', sublabel: 'NL CMD' },
         permissions: { label: '权限', sublabel: 'GUARD' },
+        audit: { label: '审计', sublabel: 'AUDIT' },
       },
       quickTips: [
         '点击任意 Agent 可高亮角色，并把对话焦点切换到该角色。',
@@ -506,6 +507,7 @@ export const messages = {
         help: { label: 'Help', sublabel: 'GUIDE' },
         commandCenter: { label: 'Command', sublabel: 'NL CMD' },
         permissions: { label: 'Permissions', sublabel: 'GUARD' },
+        audit: { label: 'Audit', sublabel: 'AUDIT' },
       },
       quickTips: [
         'Click any Agent to highlight it and move chat focus to that role.',
