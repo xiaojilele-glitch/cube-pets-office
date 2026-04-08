@@ -116,6 +116,9 @@ data/agents/*/reports/
 data/agents/*/SOUL.md
 data/agents/*/HEARTBEAT.md
 
+# Audit keys (never commit private keys)
+data/audit/keys/
+
 # Local debug artifacts
 .manus-logs/
 .tmp-dev-all.*.log
