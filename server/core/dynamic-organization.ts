@@ -5,6 +5,7 @@ import type {
   LLMProvider,
 } from "../../shared/workflow-runtime.js";
 import type {
+  ExternalAgentNode,
   OrganizationGenerationDebugLog,
   OrganizationGenerationSource,
   WorkflowMcpBinding,
@@ -12,6 +13,7 @@ import type {
   WorkflowOrganizationSnapshot,
   WorkflowSkillBinding,
 } from "../../shared/organization-schema.js";
+import type { A2AFrameworkType } from "../../shared/a2a-protocol.js";
 import db from "../db/index.js";
 import { writeAgentWorkspaceFile } from "./access-guard.js";
 import { ensureAgentWorkspaces } from "../memory/workspace.js";
@@ -845,6 +847,78 @@ function createNode(
   };
 }
 
+const EXTERNAL_AGENT_PATTERN = /@external-([a-z]+)-([a-z0-9-]+)/gi;
+
+const KNOWN_FRAMEWORKS: Record<string, A2AFrameworkType> = {
+  crewai: "crewai",
+  langgraph: "langgraph",
+  claude: "claude",
+};
+
+export function extractExternalAgentReferences(
+  directive: string
+): { name: string; frameworkType: A2AFrameworkType; endpoint: string }[] {
+  const refs: { name: string; frameworkType: A2AFrameworkType; endpoint: string }[] = [];
+  const seen = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  // Reset lastIndex for global regex
+  EXTERNAL_AGENT_PATTERN.lastIndex = 0;
+  while ((match = EXTERNAL_AGENT_PATTERN.exec(directive)) !== null) {
+    const frameworkPrefix = match[1].toLowerCase();
+    const agentName = match[2].toLowerCase();
+    const key = `${frameworkPrefix}-${agentName}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    refs.push({
+      name: agentName,
+      frameworkType: KNOWN_FRAMEWORKS[frameworkPrefix] ?? "custom",
+      endpoint: "",
+    });
+  }
+
+  return refs;
+}
+
+export function createExternalAgentNode(
+  workflowId: string,
+  workflowKey: string,
+  ref: { name: string; frameworkType: A2AFrameworkType; endpoint: string },
+  parentId: string,
+  departmentId: string,
+  departmentLabel: string
+): ExternalAgentNode {
+  const nodeId = `external-${sanitizeId(ref.name)}`;
+  const agentId = `wf-${workflowKey}-${nodeId}`;
+
+  return {
+    id: nodeId,
+    agentId,
+    parentId,
+    departmentId,
+    departmentLabel,
+    name: ref.name,
+    title: `External ${ref.frameworkType} Agent`,
+    role: "worker",
+    responsibility: `External agent provided via A2A protocol (${ref.frameworkType}).`,
+    responsibilities: [],
+    goals: [],
+    summaryFocus: [],
+    skills: [],
+    mcp: [],
+    model: { model: "external", temperature: 0, maxTokens: 0 },
+    execution: { mode: "execute", strategy: "sequential", maxConcurrency: 1 },
+    // GuestAgentNode fields
+    invitedBy: "system",
+    source: "a2a-protocol",
+    expiresAt: 0,
+    // ExternalAgentNode fields
+    frameworkType: ref.frameworkType,
+    a2aEndpoint: ref.endpoint,
+  };
+}
+
 function buildNodeSoul(
   snapshot: WorkflowOrganizationSnapshot,
   node: WorkflowOrganizationNode
@@ -982,6 +1056,21 @@ function assembleOrganizationSnapshot(
       maxConcurrency: managerNode.execution.maxConcurrency,
     };
   });
+
+  // ── Attach ExternalAgentNodes for @external-xxx references ──────────
+  const externalRefs = extractExternalAgentReferences(directive);
+  for (const ref of externalRefs) {
+    nodes.push(
+      createExternalAgentNode(
+        workflowId,
+        workflowKey,
+        ref,
+        rootNodeId,
+        "executive",
+        "Executive Office"
+      )
+    );
+  }
 
   return {
     kind: "workflow_organization",

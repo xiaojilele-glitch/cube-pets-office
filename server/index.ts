@@ -607,6 +607,22 @@ async function startServer() {
   const nlCommandRoutes = (await import("./routes/nl-command.js")).default;
   app.use("/api/nl-command", nlCommandRoutes);
 
+  // ── A2A Protocol ──
+  const { A2AServer: A2AServerClass } = await import("./core/a2a-server.js");
+  const { A2AClient: A2AClientClass } = await import("./core/a2a-client.js");
+  const a2aRoutes = await import("./routes/a2a.js");
+
+  const a2aAgents = db.getAgents().map(agent => ({
+    id: agent.id,
+    name: agent.name,
+    capabilities: [] as string[],
+    description: agent.role ?? agent.name,
+  }));
+  const a2aServer = new A2AServerClass({ agentExecutor: { execute: async () => "", executeStream: async function* () {} }, exposedAgents: a2aAgents });
+  const a2aClient = new A2AClientClass();
+  a2aRoutes.initA2ARoutes(a2aServer, a2aClient);
+  app.use("/api/a2a", a2aRoutes.default);
+
   app.post("/api/executor/events", async (request, response) => {
     const typedRequest = request as RequestWithRawBody;
     if (!verifyExecutorCallbackSignature(typedRequest, response)) return;

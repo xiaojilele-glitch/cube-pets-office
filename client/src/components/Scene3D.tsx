@@ -12,6 +12,7 @@ import { PetWorkers } from './three/PetWorkers';
 import { SandboxMonitor } from './three/SandboxMonitor';
 import { CrossPodParticles } from './three/CrossPodParticles';
 import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
+import { CrossFrameworkParticles } from './three/CrossFrameworkParticles';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
@@ -98,6 +99,7 @@ export function Scene3D() {
           <SandboxMonitor />
           <WaitingDecisionBubble />
           <CrossPodParticles />
+          <CrossFrameworkParticles />
 
           <ContactShadows
             position={[0, 0.01, 0]}

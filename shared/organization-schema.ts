@@ -1,4 +1,5 @@
 import type { AgentRole } from "./workflow-runtime.js";
+import type { A2AFrameworkType } from "./a2a-protocol.js";
 
 export type OrganizationGenerationSource = "generated" | "fallback";
 
@@ -87,4 +88,39 @@ export interface OrganizationGenerationDebugLog {
   parsedPlan: unknown;
   fallbackReason: string | null;
   logPath?: string;
+}
+
+// ─── Guest Agent Types (from agent-marketplace spec) ─────────────────
+
+/** 访客代理技能描述 */
+export interface GuestSkillDescriptor {
+  name: string;
+  description: string;
+}
+
+/** 访客代理配置 */
+export interface GuestAgentConfig {
+  model: string;
+  baseUrl: string;
+  apiKey?: string;
+  skills: GuestSkillDescriptor[];
+  mcp: WorkflowMcpBinding[];
+  avatarHint: string;
+}
+
+/** 访客代理节点（继承 WorkflowOrganizationNode） */
+export interface GuestAgentNode extends WorkflowOrganizationNode {
+  invitedBy: string;
+  source: string;
+  expiresAt: number;
+  guestConfig?: GuestAgentConfig;
+}
+
+// ─── External Agent Types (A2A Protocol) ─────────────────────────────
+
+/** 外部框架 Agent 节点（继承 GuestAgentNode） */
+export interface ExternalAgentNode extends GuestAgentNode {
+  frameworkType: A2AFrameworkType;
+  a2aEndpoint: string;
+  a2aAuth?: string;
 }

@@ -12,6 +12,8 @@ import type {
   WorkflowOrganizationNode,
   WorkflowOrganizationSnapshot,
 } from "../../shared/organization-schema.js";
+import type { ExternalAgentNode } from "../../shared/organization-schema.js";
+import { A2AClient } from "./a2a-client.js";
 import type { PhaseAssignment } from "../../shared/role-schema.js";
 import type { ExecutionPlan } from "../../shared/executor/contracts.js";
 import type { AutonomyConfig } from "../../shared/autonomy-types.js";
@@ -124,7 +126,15 @@ export class WorkflowEngine {
   /** Optional permission token service 鈥?when set, issues CapabilityTokens to agents at workflow start. */
   tokenService?: TokenService;
 
+  /** Lazy A2A client for routing tasks to external framework agents. */
+  private a2aClient = new A2AClient();
+
   constructor(private readonly runtime: WorkflowRuntime) {}
+
+  /** Type guard: checks whether a node is an ExternalAgentNode. */
+  private isExternalAgent(node: WorkflowOrganizationNode): node is ExternalAgentNode {
+    return "frameworkType" in node && "a2aEndpoint" in node;
+  }
 
   protected get repo() {
     return this.runtime.workflowRepo;
@@ -939,6 +949,65 @@ Rules:
             workerId: task.worker_id,
             status: "executing",
           });
+
+          // Check if worker is an external agent — route via A2A
+          const extWorkerNode = organization.nodes.find(n => n.agentId === task.worker_id);
+          if (extWorkerNode && this.isExternalAgent(extWorkerNode)) {
+            try {
+              const response = await this.a2aClient.invoke(
+                {
+                  targetAgent: extWorkerNode.name,
+                  task: task.description,
+                  context: `Department: ${department.label}`,
+                  capabilities: [],
+                  streamMode: false,
+                },
+                extWorkerNode.frameworkType,
+                extWorkerNode.a2aEndpoint,
+                extWorkerNode.a2aAuth,
+              );
+
+              const deliverable = response.result?.output ?? response.error?.message ?? "No output";
+              this.repo.updateTask(task.id, { deliverable, status: "submitted" });
+
+              await this.runtime.messageBus.sendA2A(
+                task.worker_id,
+                extWorkerNode.id,
+                deliverable,
+                workflowId,
+                { frameworkType: extWorkerNode.frameworkType, sessionId: response.id },
+              );
+
+              this.emit({
+                type: "task_update",
+                workflowId,
+                taskId: task.id,
+                workerId: task.worker_id,
+                status: "submitted",
+              });
+            } catch (error: any) {
+              this.repo.updateTask(task.id, {
+                status: "failed",
+                deliverable: `A2A Error: ${error.message}`,
+              });
+              this.recordWorkflowIssue(workflowId, {
+                stage: "execution",
+                scope: "task",
+                severity: "warning",
+                taskId: task.id,
+                agentId: task.worker_id,
+                message: `External agent execution failed: ${error.message}`,
+              });
+            }
+
+            this.emit({
+              type: "agent_active",
+              agentId: task.worker_id,
+              action: "idle",
+              workflowId,
+            });
+            return; // Skip the normal worker.invoke() path
+          }
 
           try {
             // Activate skills for this worker's node
