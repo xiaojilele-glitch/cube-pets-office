@@ -12,6 +12,7 @@ import Home from "./pages/Home";
 import { TaskDetailPage, TasksPage } from "./pages/tasks";
 import { ReplayPage } from "./components/replay/ReplayPage";
 import CommandCenterPage from "@/pages/nl-command/CommandCenterPage";
+import LineagePage from "@/pages/lineage/LineagePage";
 
 const routerBase =
   import.meta.env.BASE_URL === "/"
@@ -32,6 +33,7 @@ function Router() {
         {params => <ReplayPage missionId={params.missionId || ''} />}
       </Route>
       <Route path={"/command-center"} component={CommandCenterPage} />
+      <Route path={"/lineage"} component={LineagePage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -623,6 +623,29 @@ async function startServer() {
   a2aRoutes.initA2ARoutes(a2aServer, a2aClient);
   app.use("/api/a2a", a2aRoutes.default);
 
+  // ── Data Lineage Tracking ──
+  const { JsonLineageStorage } = await import("./lineage/lineage-store.js");
+  const { LineageQueryService } = await import("./lineage/lineage-query.js");
+  const { LineageAuditService } = await import("./lineage/lineage-audit.js");
+  const { ChangeDetectionService } = await import("./lineage/change-detection.js");
+  const { LineageExportService } = await import("./lineage/lineage-export.js");
+  const { createLineageRouter } = await import("./routes/lineage.js");
+
+  const lineageStore = new JsonLineageStorage("data/lineage");
+  lineageStore.init();
+  const lineageQueryService = new LineageQueryService(lineageStore);
+  const lineageAuditService = new LineageAuditService(lineageStore, lineageQueryService);
+  const lineageChangeDetection = new ChangeDetectionService(lineageStore, lineageQueryService);
+  const lineageExportService = new LineageExportService(lineageStore);
+
+  app.use("/api/lineage", createLineageRouter({
+    queryService: lineageQueryService,
+    auditService: lineageAuditService,
+    exportService: lineageExportService,
+    changeDetectionService: lineageChangeDetection,
+    store: lineageStore,
+  }));
+
   app.post("/api/executor/events", async (request, response) => {
     const typedRequest = request as RequestWithRawBody;
     if (!verifyExecutorCallbackSignature(typedRequest, response)) return;

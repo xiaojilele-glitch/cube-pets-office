@@ -5,6 +5,19 @@ import type {
   MissionDecisionSubmission,
   MissionRecord,
 } from '../../shared/mission/contracts.js';
+import type { LineageCollectorLike } from '../../shared/runtime-agent.js';
+
+// ─── Lineage Collector Integration (module-level, opt-in) ──────────────────
+
+let _decisionLineageCollector: LineageCollectorLike | null = null;
+
+export function setDecisionLineageCollector(collector: LineageCollectorLike | null): void {
+  _decisionLineageCollector = collector;
+}
+
+export function getDecisionLineageCollector(): LineageCollectorLike | null {
+  return _decisionLineageCollector;
+}
 
 export function generateDecisionId(): string {
   const timestamp = Date.now().toString(36);
@@ -195,6 +208,28 @@ export function submitMissionDecision(
     updated.decisionHistory = [];
   }
   updated.decisionHistory.push(historyEntry);
+
+  // Lineage hook: record decision lineage after successful submission
+  try {
+    const collector = _decisionLineageCollector;
+    if (collector?.recordDecision) {
+      collector.recordDecision({
+        decisionId: historyEntry.decisionId,
+        agentId: undefined,
+        inputLineageIds: [],
+        result: optionId ?? freeText ?? 'unknown',
+        context: { missionId: taskId },
+        metadata: {
+          optionId,
+          optionLabel: selectedOption?.label,
+          freeText,
+          type: historyEntry.type,
+        },
+      });
+    }
+  } catch {
+    // Graceful degradation: lineage failure must not affect decision submission
+  }
 
   return {
     ok: true,

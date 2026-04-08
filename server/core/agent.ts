@@ -12,7 +12,9 @@ import type { RuntimeAgentDependencies } from "../../shared/runtime-agent.js";
 import {
   RuntimeAgent,
   type AgentInvokeOptions,
+  setLineageCollector as setSharedLineageCollector,
 } from "../../shared/runtime-agent.js";
+import type { LineageCollector } from "../lineage/lineage-collector.js";
 import type { RoleLoadPolicy, RoleOperationLog } from "../../shared/role-schema.js";
 import type { WorkflowNodeModelConfig } from "../../shared/organization-schema.js";
 import db from "../db/index.js";
@@ -42,6 +44,12 @@ export class PermissionDeniedError extends Error {
     this.name = "PermissionDeniedError";
     this.suggestion = suggestion;
   }
+}
+
+// ─── Singleton lineage collector (lazy, opt-in) ─────────────────────────────
+
+export function setAgentLineageCollector(collector: LineageCollector): void {
+  setSharedLineageCollector(collector);
 }
 
 // ─── Singleton permission check engine (lazy, opt-in) ───────────────────────

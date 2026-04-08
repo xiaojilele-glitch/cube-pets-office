@@ -65,6 +65,7 @@ export const messages = {
         commandCenter: { label: '指挥中心', sublabel: 'NL CMD' },
         permissions: { label: '权限', sublabel: 'GUARD' },
         audit: { label: '审计', sublabel: 'AUDIT' },
+        lineage: { label: '血缘', sublabel: 'LINEAGE' },
       },
       quickTips: [
         '点击任意 Agent 可高亮角色，并把对话焦点切换到该角色。',
@@ -442,6 +443,20 @@ export const messages = {
       },
       brand: 'Cube Pets Office',
     },
+    lineage: {
+      title: '数据血缘',
+      upstream: '上游追溯',
+      downstream: '下游影响',
+      fullPath: '完整链路',
+      impact: '影响分析',
+      export: '导出',
+      noData: '暂无血缘数据',
+      nodeDetail: '节点详情',
+      timeline: '时间轴',
+      heatmap: '热力图',
+      dag: 'DAG 图',
+      filters: '过滤器',
+    },
   },
   'en-US': {
     common: {
@@ -508,6 +523,7 @@ export const messages = {
         commandCenter: { label: 'Command', sublabel: 'NL CMD' },
         permissions: { label: 'Permissions', sublabel: 'GUARD' },
         audit: { label: 'Audit', sublabel: 'AUDIT' },
+        lineage: { label: 'Lineage', sublabel: 'LINEAGE' },
       },
       quickTips: [
         'Click any Agent to highlight it and move chat focus to that role.',
@@ -893,6 +909,20 @@ export const messages = {
         meta: 'Meta audit zone',
       },
       brand: 'Cube Pets Office',
+    },
+    lineage: {
+      title: 'Data Lineage',
+      upstream: 'Upstream',
+      downstream: 'Downstream',
+      fullPath: 'Full Path',
+      impact: 'Impact Analysis',
+      export: 'Export',
+      noData: 'No lineage data',
+      nodeDetail: 'Node Detail',
+      timeline: 'Timeline',
+      heatmap: 'Heatmap',
+      dag: 'DAG View',
+      filters: 'Filters',
     },
   },
 } as const;
