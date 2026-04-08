@@ -14,6 +14,7 @@ import type { AutonomyData } from "../../shared/autonomy-types.js";
 import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
 import type { ExecutorEvent, ExecutionPlan } from "../../shared/executor/contracts.js";
 import type { RoleSwitchTrace } from "../../shared/role-schema.js";
+import type { CollaborationSession } from "../../shared/swarm.js";
 import type {
   WorkflowRuntime,
   TaskRecord,
@@ -527,6 +528,41 @@ export class MissionOrchestrator {
       `[MissionOrchestrator] Autonomy data stored: mission=${missionId} ` +
       `assessments=${data.assessments.length} competitions=${data.competitions.length} taskforces=${data.taskforces.length}`,
     );
+  }
+
+  /**
+   * Append a collaboration result to the Mission event stream.
+   * Records source Pod, target Pod, collaboration duration, and result status.
+   * @see Requirements 6.1, 6.3
+   */
+  async appendCollaborationResult(
+    missionId: string,
+    session: CollaborationSession,
+  ): Promise<MissionRecord> {
+    const record = await this.repository.get(missionId);
+    if (!record) {
+      throw new Error(`Mission not found: ${missionId}`);
+    }
+
+    const sourcePodId = session.request.sourcePodId;
+    const targetPodId = session.response?.targetPodId ?? "unknown";
+    const status = session.result?.status ?? session.status;
+    const durationMs =
+      session.completedAt != null
+        ? session.completedAt - session.startedAt
+        : Date.now() - session.startedAt;
+
+    const event = missionEvent(
+      "collaboration_result",
+      `Collaboration from Pod ${sourcePodId} to Pod ${targetPodId}: ${status} (${durationMs}ms)`,
+      {
+        source: "brain",
+        time: session.completedAt ?? Date.now(),
+      },
+    );
+
+    const updated = appendEvent(record, event);
+    return this.persist(updated);
   }
 
   async startMission(input: StartMissionInput): Promise<StartMissionResult> {

@@ -9,6 +9,7 @@ import {
 } from '../memory/report-store.js';
 import { registry } from './registry.js';
 import { emitEvent } from './socket.js';
+import type { SwarmOrchestrator } from './swarm-orchestrator.js';
 
 type HeartbeatTrigger = HeartbeatReport['trigger'];
 type HeartbeatRuntimeState = 'idle' | 'scheduled' | 'running' | 'error';
@@ -165,6 +166,11 @@ export class HeartbeatScheduler {
   private states = new Map<string, HeartbeatStatus>();
   private started = false;
   private llmUnavailableUntil = 0;
+  private swarmOrchestrator: SwarmOrchestrator | null = null;
+
+  setSwarmOrchestrator(orchestrator: SwarmOrchestrator): void {
+    this.swarmOrchestrator = orchestrator;
+  }
 
   start(): void {
     if (this.started) return;
@@ -392,6 +398,20 @@ Rules:
         });
       } else {
         this.publishStatus(agentId);
+      }
+
+      // Trigger swarm collaboration analysis if orchestrator is available
+      if (this.swarmOrchestrator) {
+        // Fire and forget — don't block heartbeat on collaboration analysis
+        this.swarmOrchestrator.analyzeHeartbeat({
+          agentId: report.agent.id,
+          podId: report.agent.department ?? '',
+          actionItems: report.actionItems,
+          observations: report.observations,
+          timestamp: Date.now(),
+        }).catch(() => {
+          // Silently ignore collaboration analysis failures — they should not affect heartbeat
+        });
       }
 
       this.scheduleNext(agentId);

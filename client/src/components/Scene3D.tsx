@@ -10,6 +10,7 @@ import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
 import { SandboxMonitor } from './three/SandboxMonitor';
+import { CrossPodParticles } from './three/CrossPodParticles';
 import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
 
 export function Scene3D() {
@@ -96,6 +97,7 @@ export function Scene3D() {
           <MissionIsland />
           <SandboxMonitor />
           <WaitingDecisionBubble />
+          <CrossPodParticles />
 
           <ContactShadows
             position={[0, 0.01, 0]}
