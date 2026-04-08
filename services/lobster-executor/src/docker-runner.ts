@@ -104,9 +104,15 @@ export class DockerRunner implements JobRunner {
     } else {
       const opts: Dockerode.DockerOptions = {};
       if (executorConfig.dockerHost) {
-        if (
+        if (executorConfig.dockerHost.startsWith("npipe:")) {
+          // npipe:////./pipe/xxx → \\.\pipe\xxx
+          const pipePath = executorConfig.dockerHost
+            .replace(/^npipe:\/\//, "")
+            .replace(/\//g, "\\");
+          opts.socketPath = pipePath;
+        } else if (
           executorConfig.dockerHost.startsWith("/") ||
-          executorConfig.dockerHost.startsWith("npipe:")
+          executorConfig.dockerHost.startsWith("\\\\.\\pipe\\")
         ) {
           opts.socketPath = executorConfig.dockerHost;
         } else {
