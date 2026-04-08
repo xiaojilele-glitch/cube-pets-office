@@ -15,7 +15,7 @@ inclusion: auto
 
 38 个 spec 中 8 个已完成（归档），30 个待开发。按依赖关系、是否可独立执行、是否需要服务器环境分为四个层级。核心策略：契约先行，再并行实现。
 
-> **进度快照（2026-04-08）**：第一层 9 个 + 第二层 12 个 + 第三层 L22/L22.5/L23/L24/L24.5/L25/L26/L27/L29 = 共 30 个 spec 已实现并合并，第三层 Docker 执行链路全部完成，第三层其他串行链路 L26/L27/L29 已完成，L28/L30 开发中。
+> **进度快照（2026-04-08）**：第一层 9 个 + 第二层 12 个 + 第三层全部 11 个 (L22-L30) = 共 32 个 spec 已实现并合并，第三层全部完成。剩余第四层 L31-L38 待环境就绪。
 
 ## 已完成归档模块
 
@@ -107,9 +107,9 @@ L12 → L29 → L30
 
 - [x] L26 `autonomous-swarm` — 跨 Pod 自主协作（大）✅ 已合并 (15 files, +3931)
 - [x] L27 `audit-chain` — 不可篡改审计日志（中）✅ 已合并 (37 files, +9125)
-- [ ] L28 `data-lineage-tracking` — 数据血缘追踪（中）← 依赖 L27 audit-chain（开发中）
+- [x] L28 `data-lineage-tracking` — 数据血缘追踪（中）✅ 已合并 (42 files, +9684)
 - [x] L29 `a2a-protocol` — 跨框架 Agent 互操作协议（大）✅ 已合并 (22 files, +3068)
-- [ ] L30 `agent-marketplace` — Guest Agent 机制（中）← 依赖 L29 a2a-protocol（开发中）
+- [x] L30 `agent-marketplace` — Guest Agent 机制（中）✅ 已合并 (18 files, +2363)
 
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
 
@@ -177,8 +177,8 @@ C01-C08 全部完成，shared/ 下 8 个契约模块已冻结
 
 ### Day 3+：按需推进（当前阶段）
 ```
-第三层其他串行链路: L26 ✅ → L27 ✅ → L28（开发中）
-                    L29 ✅ → L30（开发中）
+第三层全部完成: L26 ✅ → L27 ✅ → L28 ✅
+                L29 ✅ → L30 ✅
 holographic-ui spec 已完成（tasks 1-8）
 第四层 (L31-L38) 待环境就绪
 ```
@@ -201,9 +201,9 @@ C01-C08 契约冻结 (已完成)
   │
   ├──→ L18 ✅ ──→ L26 ✅ (autonomous-swarm)
   │
-  ├──→ L14 ✅ ──→ L27 ✅ ──→ L28 🔧 (data-lineage-tracking, 开发中)
+  ├──→ L14 ✅ ──→ L27 ✅ ──→ L28 ✅ (data-lineage-tracking)
   │
-  └──→ L12 ✅ ──→ L29 ✅ ──→ L30 🔧 (agent-marketplace, 开发中)
+  └──→ L12 ✅ ──→ L29 ✅ ──→ L30 ✅ (agent-marketplace)
 ```
 
 ## 风险提示
