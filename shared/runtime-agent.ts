@@ -16,6 +16,7 @@ export interface RuntimeAgentConfig {
   model: string;
   soulMd: string;
   currentRoleId?: string | null;
+  isGuest?: boolean;
 }
 
 export interface VisionContext {

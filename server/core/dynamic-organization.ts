@@ -6,6 +6,7 @@ import type {
 } from "../../shared/workflow-runtime.js";
 import type {
   ExternalAgentNode,
+  GuestAgentNode,
   OrganizationGenerationDebugLog,
   OrganizationGenerationSource,
   WorkflowMcpBinding,
@@ -13,6 +14,11 @@ import type {
   WorkflowOrganizationSnapshot,
   WorkflowSkillBinding,
 } from "../../shared/organization-schema.js";
+import { parseInvitation } from "./guest-invitation-parser.js";
+import type { ParsedInvitation } from "./guest-invitation-parser.js";
+import { generateGuestId } from "../../shared/guest-agent-utils.js";
+import { GuestAgent } from "./guest-agent.js";
+import { getSocketIO } from "./socket.js";
 import type { A2AFrameworkType } from "../../shared/a2a-protocol.js";
 import db from "../db/index.js";
 import { writeAgentWorkspaceFile } from "./access-guard.js";
@@ -911,12 +917,223 @@ export function createExternalAgentNode(
     execution: { mode: "execute", strategy: "sequential", maxConcurrency: 1 },
     // GuestAgentNode fields
     invitedBy: "system",
-    source: "a2a-protocol",
+    source: "a2a-protocol" as const,
     expiresAt: 0,
+    guestConfig: {
+      model: "external",
+      baseUrl: ref.endpoint,
+      skills: [],
+      mcp: [],
+      avatarHint: "cat",
+    },
     // ExternalAgentNode fields
     frameworkType: ref.frameworkType,
     a2aEndpoint: ref.endpoint,
   };
+}
+
+// ── Guest Invitation Integration (Requirements 3.2, 3.4, 3.5) ────────────
+
+/**
+ * Create a GuestAgentNode from a parsed natural-language invitation.
+ * Placed under the root (executive) node by default.
+ *
+ * @see Requirements 3.2
+ */
+function createGuestInvitationNode(
+  workflowId: string,
+  workflowKey: string,
+  invitation: ParsedInvitation,
+  parentId: string,
+  departmentId: string,
+  departmentLabel: string,
+): GuestAgentNode {
+  const guestId = generateGuestId();
+  const nodeId = `guest-${sanitizeId(invitation.guestName)}`;
+  const agentId = `wf-${workflowKey}-${nodeId}`;
+
+  return {
+    id: nodeId,
+    agentId,
+    parentId,
+    departmentId,
+    departmentLabel,
+    name: invitation.guestName,
+    title: "Guest Agent",
+    role: "worker",
+    responsibility: `Guest agent invited via natural language: ${invitation.context.slice(0, 100)}`,
+    responsibilities: invitation.skills.length > 0 ? invitation.skills : ["Assist with tasks"],
+    goals: [],
+    summaryFocus: [],
+    skills: [],
+    mcp: [],
+    model: { model: "gpt-4", temperature: 0.7, maxTokens: 3000 },
+    execution: { mode: "execute", strategy: "sequential", maxConcurrency: 1 },
+    invitedBy: "ceo",
+    source: "natural_language",
+    expiresAt: Date.now() + 3600_000,
+    guestConfig: {
+      model: "gpt-4",
+      baseUrl: "",
+      skills: invitation.skills.map((s) => ({ name: s, description: s })),
+      mcp: [],
+      avatarHint: "cat",
+    },
+  };
+}
+
+/**
+ * Extract guest invitation references from a directive message.
+ * Returns parsed invitations found in the directive text.
+ *
+ * @see Requirements 3.1, 3.2
+ */
+export function extractGuestInvitations(directive: string): ParsedInvitation[] {
+  const invitation = parseInvitation(directive);
+  return invitation ? [invitation] : [];
+}
+
+/**
+ * Process guest invitations detected in the directive during the direction phase.
+ *
+ * Flow:
+ * 1. Parse the directive for invitation intent
+ * 2. Pass to CEO for approval (LLM judgment)
+ * 3. On approval: register guest agent + emit socket event
+ *
+ * @see Requirements 3.2, 3.4, 3.5
+ */
+export async function processGuestInvitations(options: {
+  directive: string;
+  workflowId: string;
+  llmProvider: LLMProvider;
+  model: string;
+}): Promise<{ approved: ParsedInvitation[]; rejected: ParsedInvitation[] }> {
+  const invitations = extractGuestInvitations(options.directive);
+  const approved: ParsedInvitation[] = [];
+  const rejected: ParsedInvitation[] = [];
+
+  for (const invitation of invitations) {
+    const isApproved = await ceoApproveInvitation(
+      invitation,
+      options.directive,
+      options.llmProvider,
+      options.model,
+    );
+
+    if (isApproved) {
+      approved.push(invitation);
+
+      // Register the guest agent in the registry
+      const guestId = generateGuestId();
+      const guestConfig = {
+        model: options.model,
+        baseUrl: "",
+        skills: invitation.skills.map((s) => ({ name: s, description: s })),
+        mcp: [] as WorkflowMcpBinding[],
+        avatarHint: "cat",
+      };
+
+      const orgNode: GuestAgentNode = {
+        id: `guest-${sanitizeId(invitation.guestName)}`,
+        agentId: guestId,
+        parentId: "root",
+        departmentId: "executive",
+        departmentLabel: "Executive Office",
+        name: invitation.guestName,
+        title: "Guest Agent",
+        role: "worker",
+        responsibility: `Guest agent invited via natural language`,
+        responsibilities: invitation.skills.length > 0 ? invitation.skills : ["Assist"],
+        goals: [],
+        summaryFocus: [],
+        skills: [],
+        mcp: [],
+        model: { model: options.model, temperature: 0.7, maxTokens: 3000 },
+        execution: { mode: "execute", strategy: "sequential", maxConcurrency: 1 },
+        invitedBy: "ceo",
+        source: "natural_language",
+        expiresAt: Date.now() + 3600_000,
+        guestConfig,
+      };
+
+      try {
+        const agent = new GuestAgent(guestId, guestConfig, orgNode);
+        registry.registerGuest(guestId, agent);
+
+        // Emit socket event to notify frontend
+        const io = getSocketIO();
+        if (io) {
+          io.emit("guest_join", { guestId, name: invitation.guestName });
+        }
+      } catch (err) {
+        console.warn(`[DynOrg] Failed to register guest ${invitation.guestName}:`, err);
+        rejected.push(invitation);
+        approved.pop(); // Remove from approved since registration failed
+      }
+    } else {
+      rejected.push(invitation);
+
+      // Notify frontend of rejection
+      const io = getSocketIO();
+      if (io) {
+        io.emit("guest_invitation_rejected", {
+          guestName: invitation.guestName,
+          reason: "CEO determined the invitation is not relevant to the current task.",
+        });
+      }
+    }
+  }
+
+  return { approved, rejected };
+}
+
+/**
+ * CEO approval judgment — uses LLM to decide if the invitation is relevant
+ * to the current task.
+ *
+ * @see Requirements 3.4
+ */
+async function ceoApproveInvitation(
+  invitation: ParsedInvitation,
+  directive: string,
+  llmProvider: LLMProvider,
+  model: string,
+): Promise<boolean> {
+  try {
+    const messages: LLMMessage[] = [
+      {
+        role: "system",
+        content:
+          "You are the CEO agent. Decide whether to approve a guest agent invitation. " +
+          "Reply with JSON: { \"approved\": true/false, \"reason\": \"...\" }. " +
+          "Approve if the guest's skills are relevant to the task.",
+      },
+      {
+        role: "user",
+        content:
+          `Task directive: ${directive}\n\n` +
+          `Guest invitation:\n` +
+          `- Name: ${invitation.guestName}\n` +
+          `- Skills: ${invitation.skills.join(", ") || "general"}\n` +
+          `- Context: ${invitation.context}\n\n` +
+          `Should this guest be invited? Reply JSON only.`,
+      },
+    ];
+
+    const response = await llmProvider.call(messages, {
+      model,
+      temperature: 0.1,
+      maxTokens: 200,
+    });
+
+    const parsed = JSON.parse(response.content);
+    return parsed.approved === true;
+  } catch {
+    // On LLM failure, default to approve (fail-open for usability)
+    console.warn("[DynOrg] CEO approval LLM call failed, defaulting to approve");
+    return true;
+  }
 }
 
 function buildNodeSoul(
@@ -1068,6 +1285,22 @@ function assembleOrganizationSnapshot(
         rootNodeId,
         "executive",
         "Executive Office"
+      )
+    );
+  }
+
+  // ── Attach GuestAgentNodes for natural-language invitations ──────────
+  // @see Requirements 3.2
+  const guestInvitations = extractGuestInvitations(directive);
+  for (const invitation of guestInvitations) {
+    nodes.push(
+      createGuestInvitationNode(
+        workflowId,
+        workflowKey,
+        invitation,
+        rootNodeId,
+        "executive",
+        "Executive Office",
       )
     );
   }

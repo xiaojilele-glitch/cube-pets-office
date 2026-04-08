@@ -623,6 +623,10 @@ async function startServer() {
   a2aRoutes.initA2ARoutes(a2aServer, a2aClient);
   app.use("/api/a2a", a2aRoutes.default);
 
+  // ── Guest Agents (agent-marketplace) ──
+  const guestAgentRoutes = (await import("./routes/guest-agents.js")).default;
+  app.use("/api/agents/guest", guestAgentRoutes);
+
   app.post("/api/executor/events", async (request, response) => {
     const typedRequest = request as RequestWithRawBody;
     if (!verifyExecutorCallbackSignature(typedRequest, response)) return;

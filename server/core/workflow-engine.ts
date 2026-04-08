@@ -40,6 +40,8 @@ import {
 } from "../../shared/workflow-input.js";
 
 import type { TokenService } from "../permission/token-service.js";
+import { guestLifecycleManager } from "./guest-lifecycle.js";
+import { isGuestId } from "../../shared/guest-agent-utils.js";
 
 interface WorkflowStartOptions {
   attachments?: WorkflowInputAttachment[];
@@ -260,6 +262,16 @@ export class WorkflowEngine {
       }
 
       this.runtime.memoryRepo.materializeWorkflowMemories(workflowId);
+
+      // Clean up all guest agents after mission completion (Requirements 5.5)
+      try {
+        await guestLifecycleManager.onMissionComplete(workflowId);
+      } catch (cleanupError: any) {
+        console.warn(
+          `[WorkflowEngine] Guest agent cleanup after completion failed: ${cleanupError.message}`,
+        );
+      }
+
       this.emit({
         type: "workflow_complete",
         workflowId,
@@ -280,6 +292,16 @@ export class WorkflowEngine {
         },
       });
       this.runtime.memoryRepo.materializeWorkflowMemories(workflowId);
+
+      // Clean up all guest agents after mission failure (Requirements 5.5)
+      try {
+        await guestLifecycleManager.onMissionFailed(workflowId);
+      } catch (cleanupError: any) {
+        console.warn(
+          `[WorkflowEngine] Guest agent cleanup after failure failed: ${cleanupError.message}`,
+        );
+      }
+
       this.emit({ type: "workflow_error", workflowId, error: error.message });
       throw error;
     }
@@ -935,6 +957,14 @@ Rules:
         department.maxConcurrency,
         async task => {
           const worker = this.getAgent(task.worker_id);
+
+          // Log when a guest agent is assigned a task (Requirements 5.1)
+          if (isGuestId(task.worker_id)) {
+            console.log(
+              `[WorkflowEngine] Guest agent ${task.worker_id} assigned task ${task.id} in execution stage`,
+            );
+          }
+
           this.emit({
             type: "agent_active",
             agentId: task.worker_id,
@@ -1323,6 +1353,14 @@ Return a concise audit with concrete findings and revision guidance.`,
     await Promise.all(
       Array.from(tasksByWorker.entries()).map(async ([workerId, workerTasks]) => {
         const worker = this.getAgent(workerId);
+
+        // Log when a guest agent is assigned revision tasks (Requirements 5.1)
+        if (isGuestId(workerId)) {
+          console.log(
+            `[WorkflowEngine] Guest agent ${workerId} assigned ${workerTasks.length} revision task(s)`,
+          );
+        }
+
         let llmOutageMessage: string | null = null;
 
         for (const task of workerTasks) {

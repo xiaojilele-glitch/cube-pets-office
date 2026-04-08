@@ -163,25 +163,24 @@ const arbitraryExternalAgentNode: fc.Arbitrary<ExternalAgentNode> = fc.record({
   }),
   // GuestAgentNode fields
   invitedBy: fc.uuid(),
-  source: fc.string({ minLength: 1, maxLength: 30 }),
-  expiresAt: fc.nat(),
-  guestConfig: fc.option(
-    fc.record({
-      model: fc.string({ minLength: 1, maxLength: 30 }),
-      baseUrl: fc.string({ minLength: 1, maxLength: 50 }),
-      apiKey: fc.option(fc.string({ minLength: 1, maxLength: 50 }), { nil: undefined }),
-      skills: fc.array(
-        fc.record({
-          name: fc.string({ minLength: 1, maxLength: 20 }),
-          description: fc.string({ maxLength: 50 }),
-        }),
-        { maxLength: 2 },
-      ),
-      mcp: fc.array(arbitraryWorkflowMcpBinding, { maxLength: 2 }),
-      avatarHint: fc.string({ minLength: 1, maxLength: 20 }),
-    }),
-    { nil: undefined },
+  source: fc.constantFrom(
+    "manual" as const, "feishu" as const, "natural_language" as const, "a2a-protocol" as const,
   ),
+  expiresAt: fc.nat(),
+  guestConfig: fc.record({
+    model: fc.string({ minLength: 1, maxLength: 30 }),
+    baseUrl: fc.string({ minLength: 1, maxLength: 50 }),
+    apiKey: fc.option(fc.string({ minLength: 1, maxLength: 50 }), { nil: undefined }),
+    skills: fc.array(
+      fc.record({
+        name: fc.string({ minLength: 1, maxLength: 20 }),
+        description: fc.string({ maxLength: 50 }),
+      }),
+      { maxLength: 2 },
+    ),
+    mcp: fc.array(arbitraryWorkflowMcpBinding, { maxLength: 2 }),
+    avatarHint: fc.string({ minLength: 1, maxLength: 20 }),
+  }),
   // ExternalAgentNode fields
   frameworkType: fc.constantFrom(
     "crewai" as const, "langgraph" as const, "claude" as const, "custom" as const,
