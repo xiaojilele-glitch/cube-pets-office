@@ -279,4 +279,88 @@
 <text class="sm" x="850" y="892" fill="#666">Callback / async</text>
 <text class="sm" x="480" y="918" text-anchor="middle" fill="#999">Cube Pets Office v0.38 — 38/39 specs complete — 180K+ lines TypeScript</text>
 
+<!-- ===== DETAILED FLOW ARROWS ===== -->
+
+<!-- Frontend → Brain: NL command sends structured command via Socket.IO -->
+<path d="M445 80 L445 116 L370 116 L370 148" fill="none" stroke="#185FA5" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="xs" x="395" y="136" fill="#185FA5">Socket.IO command</text>
+
+<!-- Frontend → Brain: Cost panel reads governance state -->
+<path d="M535 80 L535 116 L440 116 L440 148" fill="none" stroke="#185FA5" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="500" y="130" fill="#185FA5">governance state</text>
+
+<!-- Brain → Frontend: Socket.IO real-time push (workflow state, agent status) -->
+<path d="M265 148 L265 116" fill="none" stroke="#3B6D11" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="xs" x="240" y="136" fill="#3B6D11">WS push</text>
+
+<!-- Brain → Intelligence: Workflow engine queries memory for context -->
+<line x1="500" y1="200" x2="566" y2="200" stroke="#BA7517" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="xs" x="530" y="194" fill="#854F0B">context query</text>
+
+<!-- Intelligence → Brain: RAG returns enriched context -->
+<path d="M566 310 L520 310 L520 320 L500 320" fill="none" stroke="#BA7517" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="530" y="328" fill="#854F0B">enriched context</text>
+
+<!-- Intelligence → LLM: All intelligence modules call LLM -->
+<line x1="808" y1="254" x2="830" y2="220" stroke="#534AB7" stroke-width="0.8" marker-end="url(#arrow)"/>
+<text class="xs" x="836" y="260" fill="#534AB7">LLM calls</text>
+
+<!-- Brain → Trust: Every workflow action emits audit event -->
+<path d="M500 354 L540 354 L540 408 L566 408" fill="none" stroke="#6B46C1" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="xs" x="530" y="380" fill="#6B46C1">audit events</text>
+
+<!-- Brain → Trust: Data mutations tracked by lineage collector -->
+<path d="M500 370 L600 370 L600 408 L698 408" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="610" y="366" fill="#6B46C1">data mutations</text>
+
+<!-- Trust → Frontend: Audit timeline + lineage DAG push via Socket -->
+<path d="M622 390 L622 130 L625 130 L625 116" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="610" y="140" fill="#6B46C1">audit stream</text>
+
+<path d="M715 390 L715 130 L715 116" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="730" y="140" fill="#6B46C1">lineage DAG</text>
+
+<!-- Execution → Trust: Container events feed audit chain -->
+<path d="M498 502 L498 460 L560 460 L560 426 L566 426" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="540" y="448" fill="#6B46C1">container audit</text>
+
+<!-- Execution → Frontend: Live preview WebSocket stream -->
+<path d="M658 502 L658 130 L805 130 L805 116" fill="none" stroke="#85B7EB" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="730" y="136" fill="#185FA5">WS terminal stream</text>
+
+<!-- Interop → Brain: External agent tasks routed back to workflow -->
+<path d="M762 530 L730 530 L730 460 L500 460 L500 438" fill="none" stroke="#38B2AC" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="xs" x="620" y="456" fill="#2C7A7B">external task results</text>
+
+<!-- Brain → Interop: Guest agent invitation + A2A task delegation -->
+<path d="M348 404 L348 450 L760 450 L760 510" fill="none" stroke="#38B2AC" stroke-width="1" marker-end="url(#arrow)"/>
+<text class="xs" x="550" y="446" fill="#2C7A7B">A2A delegate + guest invite</text>
+
+<!-- Interop → Interop: Swarm consensus between pods -->
+<path d="M802 546 L802 540 L888 540 L888 546" fill="none" stroke="#38B2AC" stroke-width="0.8" marker-end="url(#arrow)"/>
+<text class="xs" x="845" y="538" fill="#2C7A7B">consensus</text>
+
+<!-- Intelligence: Evolution writes back to memory -->
+<path d="M754 224 L754 230 L676 230 L676 224" fill="none" stroke="#BA7517" stroke-width="0.8" marker-end="url(#arrow)"/>
+<text class="xs" x="715" y="228" fill="#854F0B">persona update</text>
+
+<!-- Intelligence: Reputation feeds autonomy decisions -->
+<line x1="754" y1="274" x2="754" y2="282" stroke="#BA7517" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+<!-- Brain internal: Mission RT dispatches to executor -->
+<path d="M288 374 L288 380 L288 438" fill="none" stroke="#3B6D11" stroke-width="0.8"/>
+
+<!-- Brain internal: Review score feeds back to workflow engine -->
+<path d="M440 334 L440 330 L348 330 L348 314" fill="none" stroke="#3B6D11" stroke-width="0.8" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+<text class="xs" x="390" y="326" fill="#3B6D11">score feedback</text>
+
+<!-- Brain internal: Permission checks on every action -->
+<path d="M440 384 L440 378 L500 378 L500 370" fill="none" stroke="#3B6D11" stroke-width="0.6" stroke-dasharray="2 2"/>
+<text class="xs" x="476" y="374" fill="#3B6D11">RBAC check</text>
+
+<!-- Shared contracts: dotted lines to all consumers -->
+<line x1="190" y1="314" x2="226" y2="314" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="190" y1="354" x2="226" y2="354" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="190" y1="394" x2="226" y2="394" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+
 </svg>
