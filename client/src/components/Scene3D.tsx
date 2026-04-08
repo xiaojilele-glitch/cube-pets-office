@@ -11,6 +11,7 @@ import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
 import { SandboxMonitor } from './three/SandboxMonitor';
 import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
+import { CrossFrameworkParticles } from './three/CrossFrameworkParticles';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
@@ -96,6 +97,7 @@ export function Scene3D() {
           <MissionIsland />
           <SandboxMonitor />
           <WaitingDecisionBubble />
+          <CrossFrameworkParticles />
 
           <ContactShadows
             position={[0, 0.01, 0]}

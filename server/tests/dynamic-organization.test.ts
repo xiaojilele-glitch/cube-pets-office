@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { generateWorkflowOrganization } from "../core/dynamic-organization.js";
+import {
+  generateWorkflowOrganization,
+  extractExternalAgentReferences,
+  createExternalAgentNode,
+} from "../core/dynamic-organization.js";
 
 describe("dynamic organization generation", () => {
   it("falls back to heuristic departments and keeps skills/MCP bindings", async () => {
@@ -112,5 +116,96 @@ describe("dynamic organization generation", () => {
     expect(result.organization.nodes.some(node => node.role === "worker")).toBe(
       true
     );
+  });
+});
+
+describe("extractExternalAgentReferences", () => {
+  it("extracts known framework references from directive", () => {
+    const refs = extractExternalAgentReferences(
+      "Use @external-crewai-researcher and @external-langgraph-planner for this task"
+    );
+    expect(refs).toEqual([
+      { name: "researcher", frameworkType: "crewai", endpoint: "" },
+      { name: "planner", frameworkType: "langgraph", endpoint: "" },
+    ]);
+  });
+
+  it("maps unknown framework prefixes to custom", () => {
+    const refs = extractExternalAgentReferences("Ask @external-autogen-coder");
+    expect(refs).toEqual([
+      { name: "coder", frameworkType: "custom", endpoint: "" },
+    ]);
+  });
+
+  it("maps claude framework correctly", () => {
+    const refs = extractExternalAgentReferences("Delegate to @external-claude-analyst");
+    expect(refs).toEqual([
+      { name: "analyst", frameworkType: "claude", endpoint: "" },
+    ]);
+  });
+
+  it("deduplicates identical references", () => {
+    const refs = extractExternalAgentReferences(
+      "@external-crewai-bot and again @external-crewai-bot"
+    );
+    expect(refs).toHaveLength(1);
+  });
+
+  it("returns empty array when no references found", () => {
+    const refs = extractExternalAgentReferences("Just a normal directive");
+    expect(refs).toEqual([]);
+  });
+});
+
+describe("createExternalAgentNode", () => {
+  it("creates a valid ExternalAgentNode with correct fields", () => {
+    const node = createExternalAgentNode(
+      "wf-123",
+      "wf123",
+      { name: "researcher", frameworkType: "crewai", endpoint: "http://localhost:8000" },
+      "root",
+      "executive",
+      "Executive Office"
+    );
+
+    expect(node.id).toBe("external-researcher");
+    expect(node.agentId).toBe("wf-wf123-external-researcher");
+    expect(node.parentId).toBe("root");
+    expect(node.role).toBe("worker");
+    expect(node.frameworkType).toBe("crewai");
+    expect(node.a2aEndpoint).toBe("http://localhost:8000");
+    expect(node.invitedBy).toBe("system");
+    expect(node.source).toBe("a2a-protocol");
+    expect(node.expiresAt).toBe(0);
+  });
+});
+
+describe("assembleOrganizationSnapshot with external agents", () => {
+  it("includes ExternalAgentNodes when directive contains @external references", async () => {
+    const llmProvider = {
+      call: vi.fn().mockRejectedValue(new Error("planner unavailable")),
+      callJson: vi.fn(),
+    };
+
+    const result = await generateWorkflowOrganization({
+      workflowId: "wf-ext-test",
+      directive: "Research topic using @external-crewai-researcher and @external-claude-writer",
+      llmProvider,
+      model: "gpt-4.1-mini",
+    });
+
+    const externalNodes = result.organization.nodes.filter(
+      (n: any) => n.source === "a2a-protocol"
+    );
+    expect(externalNodes).toHaveLength(2);
+
+    const researcher = externalNodes.find((n: any) => n.name === "researcher") as any;
+    expect(researcher).toBeDefined();
+    expect(researcher.frameworkType).toBe("crewai");
+    expect(researcher.parentId).toBe("root");
+
+    const writer = externalNodes.find((n: any) => n.name === "writer") as any;
+    expect(writer).toBeDefined();
+    expect(writer.frameworkType).toBe("claude");
   });
 });
