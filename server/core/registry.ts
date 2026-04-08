@@ -2,12 +2,17 @@
  * Agent Registry — Manages all agent instances
  */
 import { Agent } from './agent.js';
+import type { GuestAgent } from './guest-agent.js';
 import db from '../db/index.js';
 import type { ReputationProfile } from '../../shared/reputation.js';
 import { reputationService } from './reputation/index.js';
 
+/** Maximum number of concurrent guest agents allowed. @see Requirements 2.6 */
+export const MAX_GUESTS = 5;
+
 class AgentRegistry {
   private agents: Map<string, Agent> = new Map();
+  private guestAgents: Map<string, GuestAgent> = new Map();
 
   /**
    * Initialize all agents from database
@@ -27,10 +32,10 @@ class AgentRegistry {
   }
 
   /**
-   * Get agent by ID
+   * Get agent by ID (checks both resident and guest agents)
    */
-  get(id: string): Agent | undefined {
-    return this.agents.get(id);
+  get(id: string): Agent | GuestAgent | undefined {
+    return this.agents.get(id) ?? this.guestAgents.get(id);
   }
 
   /**
@@ -100,6 +105,51 @@ class AgentRegistry {
    */
   getReputation(agentId: string): ReputationProfile | undefined {
     return db.getReputationProfile(agentId);
+  }
+
+  // ── Guest Agent Methods ──────────────────────────────────────────
+
+  /**
+   * Register a guest agent. Enforces MAX_GUESTS concurrency limit.
+   * @throws Error if guest limit is reached
+   * @see Requirements 2.4, 2.6
+   */
+  registerGuest(id: string, agent: GuestAgent): void {
+    if (this.guestAgents.size >= MAX_GUESTS) {
+      throw new Error(
+        `Maximum guest agent limit reached (${MAX_GUESTS}). Remove an existing guest before adding a new one.`,
+      );
+    }
+    this.guestAgents.set(id, agent);
+  }
+
+  /**
+   * Unregister a guest agent by ID.
+   * @see Requirements 2.4
+   */
+  unregisterGuest(id: string): void {
+    this.guestAgents.delete(id);
+  }
+
+  /**
+   * Get all currently registered guest agents.
+   */
+  getGuestAgents(): GuestAgent[] {
+    return Array.from(this.guestAgents.values());
+  }
+
+  /**
+   * Get the number of currently registered guest agents.
+   */
+  getGuestCount(): number {
+    return this.guestAgents.size;
+  }
+
+  /**
+   * Check whether an agent ID belongs to a guest agent.
+   */
+  isGuest(id: string): boolean {
+    return this.guestAgents.has(id);
   }
 }
 

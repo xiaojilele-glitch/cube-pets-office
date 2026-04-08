@@ -13,6 +13,7 @@ import { DEFAULT_SWARM_CONFIG } from "../../shared/swarm.js";
 import db, { type AgentRow, type MessageRow } from '../db/index.js';
 import { sessionStore } from '../memory/session-store.js';
 import { getSocketIO } from './socket.js';
+import { registry } from './registry.js';
 import type { A2AFrameworkType, A2AResponse } from "../../shared/a2a-protocol.js";
 
 export interface CrossPodMessageMetadata {
@@ -334,10 +335,30 @@ export class MessageBus {
 
   private assertAgentExists(agentId: string, label: 'sender' | 'receiver'): AgentRow {
     const agent = db.getAgent(agentId);
-    if (!agent) {
-      throw new MessageBusValidationError('unknown_agent', `${label} agent not found: ${agentId}`);
+    if (agent) return agent;
+
+    // Check if this is a guest agent and construct a compatible AgentRow
+    // @see Requirements 5.2
+    if (registry.isGuest(agentId)) {
+      const guest = registry.get(agentId);
+      if (guest) {
+        return {
+          id: guest.config.id,
+          name: guest.config.name,
+          department: guest.config.department ?? 'engineering',
+          role: (guest.config.role as AgentRow['role']) ?? 'worker',
+          manager_id: guest.config.managerId ?? null,
+          model: guest.config.model ?? '',
+          soul_md: null,
+          heartbeat_config: null,
+          is_active: 1,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
     }
-    return agent;
+
+    throw new MessageBusValidationError('unknown_agent', `${label} agent not found: ${agentId}`);
   }
 
   private assertWorkflowExists(workflowId: string): void {

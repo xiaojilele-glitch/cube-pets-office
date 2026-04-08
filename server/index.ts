@@ -646,6 +646,10 @@ async function startServer() {
     store: lineageStore,
   }));
 
+  // ── Guest Agents (agent-marketplace) ──
+  const guestAgentRoutes = (await import("./routes/guest-agents.js")).default;
+  app.use("/api/agents/guest", guestAgentRoutes);
+
   app.post("/api/executor/events", async (request, response) => {
     const typedRequest = request as RequestWithRawBody;
     if (!verifyExecutorCallbackSignature(typedRequest, response)) return;

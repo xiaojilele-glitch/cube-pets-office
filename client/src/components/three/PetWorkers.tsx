@@ -1,12 +1,14 @@
 import { Html, Line, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import * as THREE from 'three';
 
 import {
   AGENT_VISUAL_MAP,
   AGENT_VISUAL_CONFIGS,
+  GUEST_POD_POSITIONS,
+  resolveGuestAnimal,
   type AgentAnimationType,
   type AgentVisualConfig,
 } from '@/lib/agent-config';
@@ -35,6 +37,7 @@ type SceneAgentConfig = {
   animationType: AgentAnimationType;
   idleText: string;
   color: string;
+  isGuest?: boolean;
 };
 
 type SceneDepartmentMarker = {
@@ -207,6 +210,52 @@ function createDynamicSceneData(
         idleText: workerNode.responsibility,
         color: slot.color,
       });
+    });
+  });
+
+  // ─── Guest Agent Nodes ─────────────────────────────────────────────
+  const GUEST_COLOR = '#F97316';
+  const guestNodes = organization.nodes.filter(
+    node => 'guestConfig' in node || node.agentId.startsWith('guest_'),
+  );
+
+  if (guestNodes.length > 0) {
+    markers.push({
+      id: 'guest-pod',
+      label: locale === 'zh-CN' ? '访客区' : 'Guest Pod',
+      position: [0, 0, 4.5],
+      color: GUEST_COLOR,
+    });
+  }
+
+  guestNodes.forEach((guestNode, guestIndex) => {
+    const guestConfig = (guestNode as any).guestConfig;
+    const avatarHint = guestConfig?.avatarHint || 'cat';
+    const animal = resolveGuestAnimal(avatarHint);
+    const podPosition = GUEST_POD_POSITIONS[guestIndex % GUEST_POD_POSITIONS.length];
+
+    const GUEST_EMOJI: Record<string, string> = {
+      cat: '🐱', dog: '🐶', bunny: '🐰', tiger: '🐯', lion: '🦁',
+      elephant: '🐘', monkey: '🐵', parrot: '🦜', pig: '🐷', fish: '🐟',
+      giraffe: '🦒', chick: '🐥', cow: '🐮', hog: '🐗', caterpillar: '🐛',
+    };
+
+    sceneAgents.push({
+      id: guestNode.agentId,
+      name: guestNode.name,
+      shortLabel: clampLabel(guestNode.name, 'Guest'),
+      titleLabel: guestNode.title,
+      department: guestNode.departmentId,
+      role: guestNode.role,
+      emoji: GUEST_EMOJI[animal] || '🐱',
+      animal,
+      position: podPosition,
+      rotation: [0, Math.PI, 0],
+      scale: 0.28,
+      animationType: 'typing',
+      idleText: guestNode.responsibility,
+      color: GUEST_COLOR,
+      isGuest: true,
     });
   });
 
@@ -492,7 +541,7 @@ function MessageFlowPath({
   );
 }
 
-function AgentWorker({ config }: { config: SceneAgentConfig }) {
+function AgentWorker({ config, leaving }: { config: SceneAgentConfig; leaving?: boolean }) {
   const { scene } = useGLTF(PET_MODELS[config.animal]);
   const cloned = useMemo(() => {
     const next = scene.clone(true);
@@ -520,6 +569,16 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const [showBubble, setShowBubble] = useState(false);
+
+  // Guest agent entry/exit animation state
+  const guestAnimRef = useRef({ progress: config.isGuest ? 0 : 1, leaving: false });
+
+  // Sync leaving prop into the animation ref
+  useEffect(() => {
+    if (config.isGuest && leaving) {
+      guestAnimRef.current.leaving = true;
+    }
+  }, [config.isGuest, leaving]);
 
   const selectedPet = useAppStore(state => state.selectedPet);
   const setSelectedPet = useAppStore(state => state.setSelectedPet);
@@ -552,6 +611,30 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
 
+    // Guest entry/exit spring animation
+    const guestAnim = guestAnimRef.current;
+    if (config.isGuest) {
+      const target = guestAnim.leaving ? 0 : 1;
+      const springStiffness = 0.06;
+      guestAnim.progress += (target - guestAnim.progress) * springStiffness;
+      // Clamp to avoid floating point drift
+      if (Math.abs(guestAnim.progress - target) < 0.001) guestAnim.progress = target;
+
+      // Apply opacity to all mesh materials
+      groupRef.current.traverse(child => {
+        if ('isMesh' in child && child.isMesh) {
+          const mesh = child as THREE.Mesh;
+          const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          for (const mat of materials) {
+            if (mat && 'opacity' in mat) {
+              (mat as THREE.MeshStandardMaterial).transparent = true;
+              (mat as THREE.MeshStandardMaterial).opacity = guestAnim.progress;
+            }
+          }
+        }
+      });
+    }
+
     groupRef.current.position.set(...config.position);
     groupRef.current.rotation.set(...config.rotation);
 
@@ -571,12 +654,16 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
       speedBoost
     );
 
+    // Scale: blend base scale with guest animation progress (0.5→1 range)
+    const guestScaleFactor = config.isGuest ? 0.5 + guestAnim.progress * 0.5 : 1;
+    const baseScale = config.scale * guestScaleFactor;
+
     const targetScale =
       isActive
-        ? config.scale * 1.14
+        ? baseScale * 1.14
         : agentStatus !== 'idle'
-          ? config.scale * 1.04
-          : config.scale;
+          ? baseScale * 1.04
+          : baseScale;
 
     const nextScale = groupRef.current.scale.x + (targetScale - groupRef.current.scale.x) * 0.12;
     groupRef.current.scale.setScalar(nextScale);
@@ -614,6 +701,11 @@ function AgentWorker({ config }: { config: SceneAgentConfig }) {
           <span className="text-white">
             {config.emoji} {config.shortLabel}
           </span>
+          {config.isGuest && (
+            <span className="rounded-full bg-orange-500/80 px-1.5 py-0.5 text-[8px] font-bold text-white tracking-wider">
+              Guest
+            </span>
+          )}
           <span
             className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold tracking-[0.08em]"
             style={{ color: getStatusTextColor(agentStatus) }}
@@ -720,7 +812,26 @@ export function PetWorkers() {
   const agents = useWorkflowStore(state => state.agents);
   const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
   const messages = useWorkflowStore(state => state.messages);
+  const socket = useWorkflowStore(state => state.socket);
   const organization = useMemo(() => getWorkflowOrganization(currentWorkflow), [currentWorkflow]);
+
+  // Track guest agents that are in the process of leaving (exit animation)
+  const [guestLeavingIds, setGuestLeavingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleGuestLeave = (data: { guestId: string }) => {
+      if (data?.guestId) {
+        setGuestLeavingIds(prev => new Set(prev).add(data.guestId));
+      }
+    };
+
+    socket.on('guest_leave', handleGuestLeave);
+    return () => {
+      socket.off('guest_leave', handleGuestLeave);
+    };
+  }, [socket]);
 
   const { configs, departmentMarkers } = useMemo(() => {
     if (organization) {
@@ -848,7 +959,11 @@ export function PetWorkers() {
       ))}
 
       {configs.map(config => (
-        <AgentWorker key={config.id} config={config} />
+        <AgentWorker
+          key={config.id}
+          config={config}
+          leaving={guestLeavingIds.has(config.id)}
+        />
       ))}
     </group>
   );

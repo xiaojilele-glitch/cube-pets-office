@@ -2,6 +2,7 @@ import type { Router } from "express";
 import { createFeishuRelayAuth } from "./relay-auth.js";
 import { isComplexRequest, startComplexFeishuTask } from "./task-start.js";
 import type { FeishuBridgeRuntime } from "./runtime.js";
+import { parseInvitation } from "../core/guest-invitation-parser.js";
 
 interface FeishuRelayBody {
   chatId?: string;
@@ -53,6 +54,21 @@ export function registerFeishuRelayRoutes(
         ok: false,
         handled: false,
         error: "chatId is required",
+      });
+    }
+
+    // Detect @GuestName invitation pattern in relayed messages (Requirements 3.3)
+    const invitation = text ? parseInvitation(text) : null;
+    if (invitation) {
+      return response.json({
+        ok: true,
+        handled: true,
+        invitation: {
+          guestName: invitation.guestName,
+          skills: invitation.skills,
+          context: invitation.context,
+          source: "feishu" as const,
+        },
       });
     }
 

@@ -1,5 +1,6 @@
 import { PET_MODELS } from '@/lib/assets';
 
+import type { GuestAgentNode } from '@shared/organization-schema';
 import type { AppLocale } from './locale';
 
 type LocalizedText = Record<AppLocale, string>;
@@ -492,3 +493,85 @@ export function getAgentToolbarLabel(
   const config = getAgentConfig(agentId);
   return `${config.emoji} ${config.name} · ${getLocalizedText(config.title, locale)}`;
 }
+
+// ─── Guest Agent Visual Helpers ──────────────────────────────────────
+
+/** Map avatarHint strings to available PET_MODELS keys */
+const AVATAR_HINT_MAP: Record<string, keyof typeof PET_MODELS> = {
+  cat: 'cat',
+  dog: 'dog',
+  bunny: 'bunny',
+  tiger: 'tiger',
+  lion: 'lion',
+  elephant: 'elephant',
+  monkey: 'monkey',
+  parrot: 'parrot',
+  pig: 'pig',
+  fish: 'fish',
+  giraffe: 'giraffe',
+  chick: 'chick',
+  cow: 'cow',
+  hog: 'hog',
+  caterpillar: 'caterpillar',
+};
+
+/** Guest Pod positions — bottom area of the scene */
+const GUEST_POD_POSITIONS: [number, number, number][] = [
+  [0, 0, 4.5],
+  [-1.5, 0, 4.5],
+  [1.5, 0, 4.5],
+  [-3, 0, 4.5],
+  [3, 0, 4.5],
+];
+
+const GUEST_EMOJI_MAP: Record<string, string> = {
+  cat: '🐱', dog: '🐶', bunny: '🐰', tiger: '🐯', lion: '🦁',
+  elephant: '🐘', monkey: '🐵', parrot: '🦜', pig: '🐷', fish: '🐟',
+  giraffe: '🦒', chick: '🐥', cow: '🐮', hog: '🐗', caterpillar: '🐛',
+};
+
+/**
+ * Resolve an avatarHint string to a valid PET_MODELS key.
+ * Falls back to 'cat' for unknown hints.
+ */
+export function resolveGuestAnimal(hint: string): keyof typeof PET_MODELS {
+  return AVATAR_HINT_MAP[hint.toLowerCase()] || 'cat';
+}
+
+/**
+ * Build a SceneAgentConfig-compatible object for a GuestAgentNode.
+ * @param node  A GuestAgentNode from the organization snapshot
+ * @param index Zero-based index among guest agents (for position assignment)
+ */
+export function createGuestVisualConfig(
+  node: GuestAgentNode,
+  index: number = 0,
+): AgentVisualConfig {
+  const animal = resolveGuestAnimal(node.guestConfig.avatarHint);
+  const position = GUEST_POD_POSITIONS[index % GUEST_POD_POSITIONS.length];
+
+  return {
+    id: node.agentId,
+    name: node.name,
+    shortLabel: node.name.length > 10 ? `${node.name.slice(0, 10)}…` : node.name,
+    title: localized(`访客 · ${node.title}`, `Guest · ${node.title}`),
+    department: (node.departmentId as AgentVisualConfig['department']) || 'meta',
+    role: 'worker',
+    emoji: GUEST_EMOJI_MAP[animal] || '🐱',
+    animal,
+    position,
+    rotation: [0, Math.PI, 0],
+    scale: 0.28,
+    animationType: 'typing',
+    idleText: localized(
+      `我是访客代理 ${node.name}。\n随时准备协助。`,
+      `I am guest agent ${node.name}.\nReady to assist.`,
+    ),
+    chatRole: localized(
+      `访客代理，${node.responsibility || '协助完成任务'}。`,
+      `Guest agent, ${node.responsibility || 'assisting with the task'}.`,
+    ),
+  };
+}
+
+export { GUEST_POD_POSITIONS };
