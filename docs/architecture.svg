@@ -1,366 +1,458 @@
-<svg width="960" height="940" viewBox="0 0 960 940" xmlns="http://www.w3.org/2000/svg">
+<svg width="1120" height="1060" viewBox="0 0 1120 1060" xmlns="http://www.w3.org/2000/svg">
 <style>
   .ts { font-family: system-ui, -apple-system, sans-serif; font-size: 12px; }
   .th { font-family: system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; }
   .sm { font-family: system-ui, sans-serif; font-size: 10px; }
   .xs { font-family: system-ui, sans-serif; font-size: 9px; }
+  .fl { font-family: system-ui, sans-serif; font-size: 8.5px; letter-spacing: 0.02em; }
 </style>
 <defs>
-  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+  <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
     <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   </marker>
 </defs>
 
-<!-- ===== ENTRY LAYER ===== -->
-<rect x="20" y="16" width="160" height="100" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="ts" x="100" y="34" text-anchor="middle" fill="#666">Entry</text>
-<circle cx="60" cy="62" r="10" fill="none" stroke="#534AB7" stroke-width="1.2"/>
-<circle cx="60" cy="56" r="4" fill="none" stroke="#534AB7" stroke-width="1"/>
-<path d="M48 72Q60 80 72 72" fill="none" stroke="#534AB7" stroke-width="1"/>
-<text class="ts" x="60" y="90" text-anchor="middle" fill="#534AB7">User query</text>
-<rect x="110" y="50" width="56" height="24" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
-<text class="ts" x="138" y="66" text-anchor="middle" fill="#3C3489">Feishu</text>
-<text class="ts" x="138" y="90" text-anchor="middle" fill="#999">Relay</text>
-<line x1="180" y1="66" x2="210" y2="66" stroke="#534AB7" stroke-width="1" marker-end="url(#arrow)"/>
+<!-- ==================== ROW 0: ENTRY + FRONTEND ==================== -->
 
-<!-- ===== FRONTEND LAYER (Holographic UI) ===== -->
-<rect x="210" y="16" width="730" height="100" rx="12" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="575" y="34" text-anchor="middle" fill="#0C447C">Frontend layer — Holographic Command Deck UI</text>
-<rect x="224" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="265" y="58" text-anchor="middle" fill="#0C447C">3D office</text>
-<text class="sm" x="265" y="72" text-anchor="middle" fill="#185FA5">Three.js</text>
-<rect x="314" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="355" y="58" text-anchor="middle" fill="#0C447C">HoloDock</text>
-<text class="sm" x="355" y="72" text-anchor="middle" fill="#185FA5">capsule nav</text>
-<rect x="404" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="445" y="58" text-anchor="middle" fill="#0C447C">NL command</text>
-<text class="sm" x="445" y="72" text-anchor="middle" fill="#185FA5">center</text>
-<rect x="494" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="535" y="58" text-anchor="middle" fill="#0C447C">Cost govern</text>
-<text class="sm" x="535" y="72" text-anchor="middle" fill="#185FA5">panel</text>
-<rect x="584" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="625" y="58" text-anchor="middle" fill="#0C447C">Lineage DAG</text>
-<text class="sm" x="625" y="72" text-anchor="middle" fill="#185FA5">visualization</text>
-<rect x="674" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="715" y="58" text-anchor="middle" fill="#0C447C">Audit panel</text>
-<text class="sm" x="715" y="72" text-anchor="middle" fill="#185FA5">timeline</text>
-<rect x="764" y="44" width="82" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="805" y="58" text-anchor="middle" fill="#0C447C">Browser RT</text>
-<text class="sm" x="805" y="72" text-anchor="middle" fill="#185FA5">IndexedDB</text>
+<!-- Entry -->
+<rect x="20" y="16" width="150" height="96" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="95" y="34" text-anchor="middle" fill="#666">Entry</text>
+<circle cx="56" cy="60" r="10" fill="none" stroke="#534AB7" stroke-width="1.2"/>
+<circle cx="56" cy="54" r="4" fill="none" stroke="#534AB7" stroke-width="1"/>
+<path d="M44 70Q56 78 68 70" fill="none" stroke="#534AB7" stroke-width="1"/>
+<text class="ts" x="56" y="88" text-anchor="middle" fill="#534AB7">User query</text>
+<rect x="104" y="48" width="52" height="24" rx="6" fill="#EEEDFE" stroke="#534AB7" stroke-width="0.5"/>
+<text class="ts" x="130" y="64" text-anchor="middle" fill="#3C3489">Feishu</text>
+<text class="xs" x="130" y="88" text-anchor="middle" fill="#999">Relay</text>
+<line x1="170" y1="64" x2="196" y2="64" stroke="#534AB7" stroke-width="1" marker-end="url(#a)"/>
 
-<line x1="445" y1="116" x2="445" y2="148" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)"/>
-<line x1="625" y1="116" x2="625" y2="148" stroke="#85B7EB" stroke-width="1" marker-end="url(#arrow)"/>
+<!-- Frontend -->
+<rect x="198" y="16" width="900" height="96" rx="12" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="648" y="34" text-anchor="middle" fill="#0C447C">Frontend — Holographic Command Deck UI (glass-panel + spring animations)</text>
 
-<!-- ===== CUBE BRAIN ===== -->
-<rect x="210" y="148" width="310" height="290" rx="14" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="th" x="365" y="170" text-anchor="middle" fill="#27500A">Cube brain (server)</text>
-<rect x="228" y="184" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="288" y="200" text-anchor="middle" fill="#27500A">Express API</text>
-<text class="sm" x="288" y="214" text-anchor="middle" fill="#3B6D11">REST + Socket.IO</text>
-<rect x="228" y="234" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="288" y="250" text-anchor="middle" fill="#27500A">Dyn. org gen</text>
-<text class="sm" x="288" y="264" text-anchor="middle" fill="#3B6D11">CEO/Mgr/Worker</text>
-<rect x="228" y="284" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="288" y="300" text-anchor="middle" fill="#27500A">10-stage engine</text>
-<text class="sm" x="288" y="314" text-anchor="middle" fill="#3B6D11">workflow pipeline</text>
-<rect x="228" y="334" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="288" y="350" text-anchor="middle" fill="#27500A">Mission RT</text>
-<text class="sm" x="288" y="364" text-anchor="middle" fill="#3B6D11">6-stage FSM</text>
-<rect x="228" y="384" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="288" y="400" text-anchor="middle" fill="#27500A">Guest Agent</text>
-<text class="sm" x="288" y="414" text-anchor="middle" fill="#3B6D11">marketplace</text>
-<rect x="380" y="184" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="440" y="200" text-anchor="middle" fill="#27500A">Skill system</text>
-<text class="sm" x="440" y="214" text-anchor="middle" fill="#3B6D11">hot-plug</text>
-<rect x="380" y="234" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="440" y="250" text-anchor="middle" fill="#27500A">Role system</text>
-<text class="sm" x="440" y="264" text-anchor="middle" fill="#3B6D11">dynamic switch</text>
-<rect x="380" y="284" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="440" y="300" text-anchor="middle" fill="#27500A">Cost governance</text>
-<text class="sm" x="440" y="314" text-anchor="middle" fill="#3B6D11">budget + alerts</text>
-<rect x="380" y="334" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="440" y="350" text-anchor="middle" fill="#27500A">Review system</text>
-<text class="sm" x="440" y="364" text-anchor="middle" fill="#3B6D11">20-point scoring</text>
-<rect x="380" y="384" width="120" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="440" y="400" text-anchor="middle" fill="#27500A">Permission</text>
-<text class="sm" x="440" y="414" text-anchor="middle" fill="#3B6D11">RBAC matrix</text>
-<line x1="348" y1="304" x2="378" y2="304" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
-<line x1="348" y1="254" x2="378" y2="254" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
+<!-- Frontend boxes -->
+<rect x="210" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="252" y="58" text-anchor="middle" fill="#0C447C">3D office</text>
+<text class="sm" x="252" y="72" text-anchor="middle" fill="#185FA5">Three.js R3F</text>
 
-<!-- ===== INTELLIGENCE LAYER ===== -->
-<rect x="550" y="148" width="390" height="190" rx="14" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
-<text class="th" x="745" y="170" text-anchor="middle" fill="#412402">Intelligence layer</text>
-<rect x="568" y="184" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="622" y="200" text-anchor="middle" fill="#633806">3-tier memory</text>
-<text class="sm" x="622" y="214" text-anchor="middle" fill="#854F0B">short/mid/long</text>
-<rect x="568" y="234" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="622" y="250" text-anchor="middle" fill="#633806">Knowledge graph</text>
-<text class="sm" x="622" y="264" text-anchor="middle" fill="#854F0B">entity + relation</text>
-<rect x="568" y="284" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="622" y="300" text-anchor="middle" fill="#633806">Vector DB + RAG</text>
-<text class="sm" x="622" y="314" text-anchor="middle" fill="#854F0B">7-step pipeline</text>
-<rect x="700" y="184" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="754" y="200" text-anchor="middle" fill="#633806">Self-evolution</text>
-<text class="sm" x="754" y="214" text-anchor="middle" fill="#854F0B">auto persona fix</text>
-<rect x="700" y="234" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="754" y="250" text-anchor="middle" fill="#633806">Reputation</text>
-<text class="sm" x="754" y="264" text-anchor="middle" fill="#854F0B">score + decay</text>
-<rect x="700" y="284" width="108" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="754" y="300" text-anchor="middle" fill="#633806">Autonomy</text>
-<text class="sm" x="754" y="314" text-anchor="middle" fill="#854F0B">self-eval + compete</text>
-<rect x="830" y="184" width="96" height="60" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="878" y="204" text-anchor="middle" fill="#3C3489">LLM provider</text>
-<text class="sm" x="878" y="220" text-anchor="middle" fill="#534AB7">OpenAI compat.</text>
-<text class="sm" x="878" y="236" text-anchor="middle" fill="#534AB7">multi-provider</text>
-<line x1="520" y1="254" x2="566" y2="254" stroke="#BA7517" stroke-width="1" marker-end="url(#arrow)"/>
-<line x1="520" y1="304" x2="566" y2="304" stroke="#BA7517" stroke-width="1" marker-end="url(#arrow)"/>
+<rect x="302" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="344" y="58" text-anchor="middle" fill="#0C447C">HoloDock</text>
+<text class="sm" x="344" y="72" text-anchor="middle" fill="#185FA5">capsule nav</text>
 
-<!-- ===== TRUST & COMPLIANCE LAYER (NEW) ===== -->
-<rect x="550" y="358" width="390" height="80" rx="14" fill="#F0E6FF" stroke="#B794F4" stroke-width="0.5"/>
-<text class="th" x="745" y="378" text-anchor="middle" fill="#44337A">Trust &amp; compliance</text>
-<rect x="568" y="390" width="108" height="36" rx="6" fill="#fff" stroke="#B794F4" stroke-width="0.5"/>
-<text class="ts" x="622" y="406" text-anchor="middle" fill="#44337A">Audit chain</text>
-<text class="sm" x="622" y="420" text-anchor="middle" fill="#6B46C1">hash-linked log</text>
-<rect x="700" y="390" width="108" height="36" rx="6" fill="#fff" stroke="#B794F4" stroke-width="0.5"/>
-<text class="ts" x="754" y="406" text-anchor="middle" fill="#44337A">Data lineage</text>
-<text class="sm" x="754" y="420" text-anchor="middle" fill="#6B46C1">DAG tracking</text>
-<rect x="830" y="390" width="96" height="36" rx="6" fill="#fff" stroke="#B794F4" stroke-width="0.5"/>
-<text class="ts" x="878" y="406" text-anchor="middle" fill="#44337A">Anomaly det.</text>
-<text class="sm" x="878" y="420" text-anchor="middle" fill="#6B46C1">compliance</text>
+<rect x="394" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="436" y="58" text-anchor="middle" fill="#0C447C">NL command</text>
+<text class="sm" x="436" y="72" text-anchor="middle" fill="#185FA5">center</text>
 
-<!-- ===== EXECUTION LAYER (Docker) ===== -->
-<rect x="210" y="470" width="520" height="120" rx="14" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
-<text class="th" x="470" y="490" text-anchor="middle" fill="#4A1B0C">Execution layer (Docker)</text>
-<rect x="228" y="502" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="278" y="518" text-anchor="middle" fill="#712B13">Lobster exec</text>
-<text class="sm" x="278" y="532" text-anchor="middle" fill="#993C1D">dockerode</text>
-<rect x="338" y="502" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="388" y="518" text-anchor="middle" fill="#712B13">HMAC callback</text>
-<text class="sm" x="388" y="532" text-anchor="middle" fill="#993C1D">signed events</text>
-<rect x="448" y="502" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="498" y="518" text-anchor="middle" fill="#712B13">Secure sandbox</text>
-<text class="sm" x="498" y="532" text-anchor="middle" fill="#993C1D">seccomp + caps</text>
-<rect x="558" y="502" width="100" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="608" y="518" text-anchor="middle" fill="#712B13">Live preview</text>
-<text class="sm" x="608" y="532" text-anchor="middle" fill="#993C1D">terminal + screenshot</text>
-<rect x="228" y="548" width="100" height="30" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="278" y="568" text-anchor="middle" fill="#3C3489">AI inject</text>
-<rect x="338" y="548" width="100" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="ts" x="388" y="568" text-anchor="middle" fill="#666">Concurrency</text>
-<rect x="448" y="548" width="100" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="ts" x="498" y="568" text-anchor="middle" fill="#666">Log batcher</text>
-<rect x="558" y="548" width="100" height="30" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="ts" x="608" y="568" text-anchor="middle" fill="#666">Docker daemon</text>
+<rect x="486" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="528" y="58" text-anchor="middle" fill="#0C447C">Cost govern</text>
+<text class="sm" x="528" y="72" text-anchor="middle" fill="#185FA5">dashboard</text>
 
-<!-- Arrows: Brain → Executor -->
-<line x1="288" y1="438" x2="288" y2="500" stroke="#D85A30" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="ts" x="296" y="468" fill="#993C1D">Exec plan</text>
-<line x1="328" y1="522" x2="336" y2="522" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
-<line x1="438" y1="522" x2="446" y2="522" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
-<line x1="548" y1="522" x2="556" y2="522" stroke="#D85A30" stroke-width="0.8" marker-end="url(#arrow)"/>
-<path d="M388 502 L388 460 L440 460 L440 438" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="sm" x="430" y="454" fill="#993C1D">HMAC callback</text>
+<rect x="578" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="620" y="58" text-anchor="middle" fill="#0C447C">Replay</text>
+<text class="sm" x="620" y="72" text-anchor="middle" fill="#185FA5">timeline</text>
 
-<!-- ===== INTEROP LAYER (NEW) ===== -->
-<rect x="750" y="470" width="190" height="120" rx="12" fill="#E6FFFA" stroke="#38B2AC" stroke-width="0.5"/>
-<text class="th" x="845" y="490" text-anchor="middle" fill="#234E52">Interop layer</text>
-<rect x="762" y="502" width="166" height="34" rx="6" fill="#fff" stroke="#38B2AC" stroke-width="0.5"/>
-<text class="ts" x="845" y="518" text-anchor="middle" fill="#234E52">A2A protocol</text>
-<text class="sm" x="845" y="530" text-anchor="middle" fill="#2C7A7B">CrewAI / LangGraph</text>
-<rect x="762" y="546" width="80" height="34" rx="6" fill="#fff" stroke="#38B2AC" stroke-width="0.5"/>
-<text class="ts" x="802" y="562" text-anchor="middle" fill="#234E52">Swarm</text>
-<text class="sm" x="802" y="574" text-anchor="middle" fill="#2C7A7B">cross-pod</text>
-<rect x="848" y="546" width="80" height="34" rx="6" fill="#fff" stroke="#38B2AC" stroke-width="0.5"/>
-<text class="ts" x="888" y="562" text-anchor="middle" fill="#234E52">Guest</text>
-<text class="sm" x="888" y="574" text-anchor="middle" fill="#2C7A7B">marketplace</text>
-<!-- Arrow: Brain → Interop -->
-<line x1="520" y1="404" x2="760" y2="510" stroke="#38B2AC" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<rect x="670" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="712" y="58" text-anchor="middle" fill="#0C447C">Lineage DAG</text>
+<text class="sm" x="712" y="72" text-anchor="middle" fill="#185FA5">heatmap</text>
 
-<!-- ===== SHARED CONTRACTS ===== -->
-<rect x="20" y="148" width="170" height="290" rx="12" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
-<text class="th" x="105" y="170" text-anchor="middle" fill="#4B1528">Shared contracts</text>
-<text class="ts" x="36" y="194" fill="#72243E">cost.ts</text>
-<text class="ts" x="36" y="214" fill="#72243E">cost-governance.ts</text>
-<text class="ts" x="36" y="234" fill="#72243E">llm/contracts.ts</text>
-<text class="ts" x="36" y="254" fill="#72243E">rag/contracts.ts</text>
-<text class="ts" x="36" y="274" fill="#72243E">skill/contracts.ts</text>
-<text class="ts" x="36" y="294" fill="#72243E">export/contracts.ts</text>
-<text class="ts" x="36" y="314" fill="#72243E">audit/contracts.ts</text>
-<text class="ts" x="36" y="334" fill="#72243E">lineage/contracts.ts</text>
-<text class="ts" x="36" y="354" fill="#72243E">a2a-protocol.ts</text>
-<text class="ts" x="36" y="374" fill="#72243E">mission/contracts.ts</text>
-<text class="ts" x="36" y="394" fill="#72243E">swarm.ts</text>
-<text class="sm" x="105" y="420" text-anchor="middle" fill="#993556">11+ frozen contract modules</text>
-<line x1="190" y1="268" x2="226" y2="268" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<rect x="762" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="804" y="58" text-anchor="middle" fill="#0C447C">Audit panel</text>
+<text class="sm" x="804" y="72" text-anchor="middle" fill="#185FA5">verifier</text>
 
-<!-- ===== RUNNER STRATEGY ===== -->
-<rect x="20" y="470" width="170" height="120" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="th" x="105" y="490" text-anchor="middle" fill="#333">Runner strategy</text>
-<rect x="34" y="504" width="142" height="30" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="105" y="524" text-anchor="middle" fill="#27500A">DockerRunner (real)</text>
-<rect x="34" y="544" width="142" height="30" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="105" y="564" text-anchor="middle" fill="#0C447C">MockRunner (mock)</text>
-<line x1="190" y1="522" x2="226" y2="522" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="854" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="896" y="58" text-anchor="middle" fill="#0C447C">Telemetry</text>
+<text class="sm" x="896" y="72" text-anchor="middle" fill="#185FA5">Recharts</text>
 
-<!-- ===== WORKFLOW PIPELINE ===== -->
-<rect x="20" y="620" width="920" height="150" rx="14" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="th" x="480" y="644" text-anchor="middle" fill="#333">10-stage workflow pipeline</text>
-<rect x="40" y="660" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="84" y="678" text-anchor="middle" fill="#3C3489">1. Assemble</text>
-<text class="xs" x="84" y="694" text-anchor="middle" fill="#534AB7">dyn. org</text>
-<line x1="128" y1="682" x2="146" y2="682" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="148" y="660" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="192" y="678" text-anchor="middle" fill="#3C3489">2. CEO split</text>
-<text class="xs" x="192" y="694" text-anchor="middle" fill="#534AB7">decompose</text>
-<line x1="236" y1="682" x2="254" y2="682" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="256" y="660" width="88" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="ts" x="300" y="678" text-anchor="middle" fill="#3C3489">3. Mgr plan</text>
-<text class="xs" x="300" y="694" text-anchor="middle" fill="#534AB7">assign tasks</text>
-<line x1="344" y1="682" x2="362" y2="682" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="364" y="660" width="88" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="408" y="678" text-anchor="middle" fill="#0C447C">4. Execute</text>
-<text class="xs" x="408" y="694" text-anchor="middle" fill="#185FA5">parallel work</text>
-<line x1="452" y1="682" x2="470" y2="682" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="472" y="660" width="88" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="516" y="678" text-anchor="middle" fill="#27500A">5. Review</text>
-<text class="xs" x="516" y="694" text-anchor="middle" fill="#3B6D11">20-pt score</text>
-<line x1="560" y1="682" x2="578" y2="682" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="580" y="660" width="72" height="44" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
-<text class="ts" x="616" y="678" text-anchor="middle" fill="#633806">6. Audit</text>
-<text class="xs" x="616" y="694" text-anchor="middle" fill="#854F0B">meta</text>
-<line x1="652" y1="682" x2="664" y2="682" stroke="#FAC775" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="666" y="660" width="72" height="44" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
-<text class="ts" x="702" y="678" text-anchor="middle" fill="#712B13">7. Revise</text>
-<text class="xs" x="702" y="694" text-anchor="middle" fill="#993C1D">fix</text>
-<line x1="738" y1="682" x2="750" y2="682" stroke="#F0997B" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="752" y="660" width="72" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="788" y="678" text-anchor="middle" fill="#27500A">8. Verify</text>
-<text class="xs" x="788" y="694" text-anchor="middle" fill="#3B6D11">confirm</text>
-<line x1="824" y1="682" x2="836" y2="682" stroke="#97C459" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="838" y="660" width="44" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="860" y="686" text-anchor="middle" fill="#0C447C">9</text>
-<line x1="882" y1="682" x2="894" y2="682" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#arrow)"/>
-<rect x="896" y="660" width="36" height="44" rx="6" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
-<text class="ts" x="914" y="686" text-anchor="middle" fill="#72243E">10</text>
-<text class="ts" x="860" y="722" text-anchor="middle" fill="#666">Aggregate</text>
-<text class="ts" x="914" y="722" text-anchor="middle" fill="#666">Evolve</text>
-<path d="M702 704 L702 738 L408 738 L408 704" fill="none" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="sm" x="555" y="750" text-anchor="middle" fill="#993C1D">Score &lt; 16 ? Revise and re-execute</text>
+<rect x="946" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="988" y="58" text-anchor="middle" fill="#0C447C">Browser RT</text>
+<text class="sm" x="988" y="72" text-anchor="middle" fill="#185FA5">IndexedDB</text>
 
-<!-- ===== DUAL RUNTIME ===== -->
-<rect x="20" y="800" width="440" height="50" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
-<text class="th" x="240" y="822" text-anchor="middle" fill="#333">Dual runtime</text>
-<rect x="34" y="808" width="190" height="30" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="129" y="828" text-anchor="middle" fill="#0C447C">Frontend: Browser + IndexedDB</text>
-<rect x="234" y="808" width="210" height="30" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="ts" x="339" y="828" text-anchor="middle" fill="#27500A">Advanced: Express + Docker</text>
+<!-- ==================== FLOW: Frontend ↔ Brain ==================== -->
 
-<!-- ===== LEGEND ===== -->
-<rect x="20" y="870" width="920" height="60" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.3"/>
-<circle cx="50" cy="888" r="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
-<text class="sm" x="60" y="892" fill="#666">Server</text>
-<circle cx="120" cy="888" r="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="sm" x="130" y="892" fill="#666">Frontend</text>
-<circle cx="200" cy="888" r="5" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
-<text class="sm" x="210" y="892" fill="#666">Intelligence</text>
-<circle cx="300" cy="888" r="5" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
-<text class="sm" x="310" y="892" fill="#666">Execution</text>
-<circle cx="400" cy="888" r="5" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
-<text class="sm" x="410" y="892" fill="#666">Contracts</text>
-<circle cx="490" cy="888" r="5" fill="#F0E6FF" stroke="#B794F4" stroke-width="0.5"/>
-<text class="sm" x="500" y="892" fill="#666">Trust</text>
-<circle cx="550" cy="888" r="5" fill="#E6FFFA" stroke="#38B2AC" stroke-width="0.5"/>
-<text class="sm" x="560" y="892" fill="#666">Interop</text>
-<circle cx="620" cy="888" r="5" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
-<text class="sm" x="630" y="892" fill="#666">Workflow</text>
-<line x1="700" y1="888" x2="730" y2="888" stroke="#D85A30" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="sm" x="740" y="892" fill="#666">Data flow</text>
-<line x1="810" y1="888" x2="840" y2="888" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="sm" x="850" y="892" fill="#666">Callback / async</text>
-<text class="sm" x="480" y="918" text-anchor="middle" fill="#999">Cube Pets Office v0.38 — 38/39 specs complete — 180K+ lines TypeScript</text>
+<!-- ① User NL command → Brain API via Socket.IO -->
+<path d="M436 80 L436 128 L350 128 L350 156" fill="none" stroke="#185FA5" stroke-width="1" marker-end="url(#a)"/>
+<rect x="360" y="120" width="90" height="14" rx="3" fill="#E6F1FB" stroke="none"/>
+<text class="fl" x="405" y="130" text-anchor="middle" fill="#185FA5">① Socket.IO cmd</text>
 
-<!-- ===== DETAILED FLOW ARROWS ===== -->
+<!-- ② Brain pushes workflow state back to 3D + panels -->
+<path d="M252 112 L252 128 L280 128 L280 156" fill="none" stroke="#3B6D11" stroke-width="1" marker-end="url(#a)"/>
+<rect x="200" y="120" width="80" height="14" rx="3" fill="#EAF3DE" stroke="none"/>
+<text class="fl" x="240" y="130" text-anchor="middle" fill="#3B6D11">② WS state push</text>
 
-<!-- Frontend → Brain: NL command sends structured command via Socket.IO -->
-<path d="M445 80 L445 116 L370 116 L370 148" fill="none" stroke="#185FA5" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="xs" x="395" y="136" fill="#185FA5">Socket.IO command</text>
+<!-- ③ Cost governance state → Cost panel -->
+<path d="M528 80 L528 128 L490 128 L490 156" fill="none" stroke="#185FA5" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="492" y="120" width="86" height="14" rx="3" fill="#E6F1FB" stroke="none"/>
+<text class="fl" x="535" y="130" text-anchor="middle" fill="#185FA5">③ governance state</text>
 
-<!-- Frontend → Brain: Cost panel reads governance state -->
-<path d="M535 80 L535 116 L440 116 L440 148" fill="none" stroke="#185FA5" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="500" y="130" fill="#185FA5">governance state</text>
+<!-- ==================== ROW 1: CUBE BRAIN + INTELLIGENCE ==================== -->
 
-<!-- Brain → Frontend: Socket.IO real-time push (workflow state, agent status) -->
-<path d="M265 148 L265 116" fill="none" stroke="#3B6D11" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="xs" x="240" y="136" fill="#3B6D11">WS push</text>
+<!-- Cube Brain -->
+<rect x="198" y="156" width="340" height="310" rx="14" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="th" x="368" y="178" text-anchor="middle" fill="#27500A">Cube brain (server)</text>
 
-<!-- Brain → Intelligence: Workflow engine queries memory for context -->
-<line x1="500" y1="200" x2="566" y2="200" stroke="#BA7517" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="xs" x="530" y="194" fill="#854F0B">context query</text>
+<!-- Brain col 1 -->
+<rect x="216" y="192" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="281" y="208" text-anchor="middle" fill="#27500A">Express API</text>
+<text class="sm" x="281" y="222" text-anchor="middle" fill="#3B6D11">REST + Socket.IO</text>
 
-<!-- Intelligence → Brain: RAG returns enriched context -->
-<path d="M566 310 L520 310 L520 320 L500 320" fill="none" stroke="#BA7517" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="530" y="328" fill="#854F0B">enriched context</text>
+<rect x="216" y="242" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="281" y="258" text-anchor="middle" fill="#27500A">Dyn. org gen</text>
+<text class="sm" x="281" y="272" text-anchor="middle" fill="#3B6D11">CEO / Mgr / Worker</text>
 
-<!-- Intelligence → LLM: All intelligence modules call LLM -->
-<line x1="808" y1="254" x2="830" y2="220" stroke="#534AB7" stroke-width="0.8" marker-end="url(#arrow)"/>
-<text class="xs" x="836" y="260" fill="#534AB7">LLM calls</text>
+<rect x="216" y="292" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="281" y="308" text-anchor="middle" fill="#27500A">10-stage engine</text>
+<text class="sm" x="281" y="322" text-anchor="middle" fill="#3B6D11">workflow pipeline</text>
 
-<!-- Brain → Trust: Every workflow action emits audit event -->
-<path d="M500 354 L540 354 L540 408 L566 408" fill="none" stroke="#6B46C1" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="xs" x="530" y="380" fill="#6B46C1">audit events</text>
+<rect x="216" y="342" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="281" y="358" text-anchor="middle" fill="#27500A">Mission RT</text>
+<text class="sm" x="281" y="372" text-anchor="middle" fill="#3B6D11">6-stage FSM</text>
 
-<!-- Brain → Trust: Data mutations tracked by lineage collector -->
-<path d="M500 370 L600 370 L600 408 L698 408" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="610" y="366" fill="#6B46C1">data mutations</text>
+<rect x="216" y="392" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="281" y="408" text-anchor="middle" fill="#27500A">Guest Agent</text>
+<text class="sm" x="281" y="422" text-anchor="middle" fill="#3B6D11">marketplace lifecycle</text>
 
-<!-- Trust → Frontend: Audit timeline + lineage DAG push via Socket -->
-<path d="M622 390 L622 130 L625 130 L625 116" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="610" y="140" fill="#6B46C1">audit stream</text>
+<!-- Brain col 2 -->
+<rect x="390" y="192" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="455" y="208" text-anchor="middle" fill="#27500A">Skill system</text>
+<text class="sm" x="455" y="222" text-anchor="middle" fill="#3B6D11">hot-plug registry</text>
 
-<path d="M715 390 L715 130 L715 116" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="730" y="140" fill="#6B46C1">lineage DAG</text>
+<rect x="390" y="242" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="455" y="258" text-anchor="middle" fill="#27500A">Role system</text>
+<text class="sm" x="455" y="272" text-anchor="middle" fill="#3B6D11">dynamic switch</text>
 
-<!-- Execution → Trust: Container events feed audit chain -->
-<path d="M498 502 L498 460 L560 460 L560 426 L566 426" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="540" y="448" fill="#6B46C1">container audit</text>
+<rect x="390" y="292" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="455" y="308" text-anchor="middle" fill="#27500A">Cost governance</text>
+<text class="sm" x="455" y="322" text-anchor="middle" fill="#3B6D11">budget + 4-level alert</text>
 
-<!-- Execution → Frontend: Live preview WebSocket stream -->
-<path d="M658 502 L658 130 L805 130 L805 116" fill="none" stroke="#85B7EB" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="730" y="136" fill="#185FA5">WS terminal stream</text>
+<rect x="390" y="342" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="455" y="358" text-anchor="middle" fill="#27500A">Review system</text>
+<text class="sm" x="455" y="372" text-anchor="middle" fill="#3B6D11">20-point scoring</text>
 
-<!-- Interop → Brain: External agent tasks routed back to workflow -->
-<path d="M762 530 L730 530 L730 460 L500 460 L500 438" fill="none" stroke="#38B2AC" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-<text class="xs" x="620" y="456" fill="#2C7A7B">external task results</text>
+<rect x="390" y="392" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="455" y="408" text-anchor="middle" fill="#27500A">Permission</text>
+<text class="sm" x="455" y="422" text-anchor="middle" fill="#3B6D11">RBAC matrix</text>
 
-<!-- Brain → Interop: Guest agent invitation + A2A task delegation -->
-<path d="M348 404 L348 450 L760 450 L760 510" fill="none" stroke="#38B2AC" stroke-width="1" marker-end="url(#arrow)"/>
-<text class="xs" x="550" y="446" fill="#2C7A7B">A2A delegate + guest invite</text>
+<!-- Brain internal arrows -->
+<line x1="346" y1="312" x2="388" y2="312" stroke="#97C459" stroke-width="0.8" marker-end="url(#a)"/>
+<line x1="346" y1="262" x2="388" y2="262" stroke="#97C459" stroke-width="0.8" marker-end="url(#a)"/>
+<!-- Review score → engine feedback -->
+<path d="M455 342 L455 336 L346 336 L346 332" fill="none" stroke="#3B6D11" stroke-width="0.7" stroke-dasharray="3 2" marker-end="url(#a)"/>
+<text class="fl" x="400" y="334" text-anchor="middle" fill="#3B6D11">score feedback</text>
+<!-- Permission RBAC check -->
+<path d="M455 392 L455 386 L520 386 L520 378" fill="none" stroke="#3B6D11" stroke-width="0.5" stroke-dasharray="2 2"/>
+<text class="fl" x="500" y="382" text-anchor="end" fill="#3B6D11">RBAC</text>
 
-<!-- Interop → Interop: Swarm consensus between pods -->
-<path d="M802 546 L802 540 L888 540 L888 546" fill="none" stroke="#38B2AC" stroke-width="0.8" marker-end="url(#arrow)"/>
-<text class="xs" x="845" y="538" fill="#2C7A7B">consensus</text>
+<!-- Intelligence layer -->
+<rect x="570" y="156" width="420" height="200" rx="14" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<text class="th" x="780" y="178" text-anchor="middle" fill="#412402">Intelligence layer</text>
 
-<!-- Intelligence: Evolution writes back to memory -->
-<path d="M754 224 L754 230 L676 230 L676 224" fill="none" stroke="#BA7517" stroke-width="0.8" marker-end="url(#arrow)"/>
-<text class="xs" x="715" y="228" fill="#854F0B">persona update</text>
+<rect x="588" y="192" width="116" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="646" y="208" text-anchor="middle" fill="#633806">3-tier memory</text>
+<text class="sm" x="646" y="222" text-anchor="middle" fill="#854F0B">short / mid / long</text>
 
-<!-- Intelligence: Reputation feeds autonomy decisions -->
-<line x1="754" y1="274" x2="754" y2="282" stroke="#BA7517" stroke-width="0.8" marker-end="url(#arrow)"/>
+<rect x="588" y="242" width="116" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="646" y="258" text-anchor="middle" fill="#633806">Knowledge graph</text>
+<text class="sm" x="646" y="272" text-anchor="middle" fill="#854F0B">entity + relation</text>
 
-<!-- Brain internal: Mission RT dispatches to executor -->
-<path d="M288 374 L288 380 L288 438" fill="none" stroke="#3B6D11" stroke-width="0.8"/>
+<rect x="588" y="292" width="116" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="646" y="308" text-anchor="middle" fill="#633806">Vector DB + RAG</text>
+<text class="sm" x="646" y="322" text-anchor="middle" fill="#854F0B">7-step pipeline</text>
 
-<!-- Brain internal: Review score feeds back to workflow engine -->
-<path d="M440 334 L440 330 L348 330 L348 314" fill="none" stroke="#3B6D11" stroke-width="0.8" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
-<text class="xs" x="390" y="326" fill="#3B6D11">score feedback</text>
+<rect x="724" y="192" width="116" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="782" y="208" text-anchor="middle" fill="#633806">Self-evolution</text>
+<text class="sm" x="782" y="222" text-anchor="middle" fill="#854F0B">auto persona fix</text>
 
-<!-- Brain internal: Permission checks on every action -->
-<path d="M440 384 L440 378 L500 378 L500 370" fill="none" stroke="#3B6D11" stroke-width="0.6" stroke-dasharray="2 2"/>
-<text class="xs" x="476" y="374" fill="#3B6D11">RBAC check</text>
+<rect x="724" y="242" width="116" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="782" y="258" text-anchor="middle" fill="#633806">Reputation</text>
+<text class="sm" x="782" y="272" text-anchor="middle" fill="#854F0B">score + decay</text>
 
-<!-- Shared contracts: dotted lines to all consumers -->
-<line x1="190" y1="314" x2="226" y2="314" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
-<line x1="190" y1="354" x2="226" y2="354" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
-<line x1="190" y1="394" x2="226" y2="394" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<rect x="724" y="292" width="116" height="40" rx="6" fill="#fff" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="782" y="308" text-anchor="middle" fill="#633806">Autonomy</text>
+<text class="sm" x="782" y="322" text-anchor="middle" fill="#854F0B">self-eval + compete</text>
+
+<rect x="860" y="192" width="110" height="60" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="915" y="212" text-anchor="middle" fill="#3C3489">LLM provider</text>
+<text class="sm" x="915" y="228" text-anchor="middle" fill="#534AB7">OpenAI compat.</text>
+<text class="sm" x="915" y="242" text-anchor="middle" fill="#534AB7">multi-provider</text>
+
+<!-- ④ Brain → Intelligence: context query -->
+<line x1="520" y1="212" x2="586" y2="212" stroke="#BA7517" stroke-width="1" marker-end="url(#a)"/>
+<rect x="524" y="200" width="60" height="14" rx="3" fill="#FAEEDA" stroke="none"/>
+<text class="fl" x="554" y="210" text-anchor="middle" fill="#854F0B">④ context</text>
+
+<!-- ⑤ Brain → Intelligence: RAG enrichment -->
+<line x1="520" y1="308" x2="586" y2="308" stroke="#BA7517" stroke-width="1" marker-end="url(#a)"/>
+<rect x="524" y="296" width="60" height="14" rx="3" fill="#FAEEDA" stroke="none"/>
+<text class="fl" x="554" y="306" text-anchor="middle" fill="#854F0B">⑤ RAG enrich</text>
+
+<!-- Intelligence → LLM -->
+<line x1="840" y1="262" x2="858" y2="232" stroke="#534AB7" stroke-width="0.8" marker-end="url(#a)"/>
+<text class="fl" x="862" y="260" fill="#534AB7">LLM calls</text>
+
+<!-- Evolution writes back to memory -->
+<path d="M782 232 L782 238 L704 238 L704 232" fill="none" stroke="#BA7517" stroke-width="0.7" marker-end="url(#a)"/>
+<text class="fl" x="743" y="236" text-anchor="middle" fill="#854F0B">persona update</text>
+
+<!-- Reputation → Autonomy -->
+<line x1="782" y1="282" x2="782" y2="290" stroke="#BA7517" stroke-width="0.7" marker-end="url(#a)"/>
+
+<!-- ==================== ROW 2: TRUST & COMPLIANCE ==================== -->
+
+<rect x="570" y="376" width="420" height="86" rx="14" fill="#F0E6FF" stroke="#B794F4" stroke-width="0.5"/>
+<text class="th" x="780" y="396" text-anchor="middle" fill="#44337A">Trust &amp; compliance</text>
+
+<rect x="588" y="406" width="116" height="40" rx="6" fill="#fff" stroke="#B794F4" stroke-width="0.5"/>
+<text class="ts" x="646" y="422" text-anchor="middle" fill="#44337A">Audit chain</text>
+<text class="sm" x="646" y="436" text-anchor="middle" fill="#6B46C1">hash-linked log</text>
+
+<rect x="724" y="406" width="116" height="40" rx="6" fill="#fff" stroke="#B794F4" stroke-width="0.5"/>
+<text class="ts" x="782" y="422" text-anchor="middle" fill="#44337A">Data lineage</text>
+<text class="sm" x="782" y="436" text-anchor="middle" fill="#6B46C1">DAG tracking</text>
+
+<rect x="860" y="406" width="110" height="40" rx="6" fill="#fff" stroke="#B794F4" stroke-width="0.5"/>
+<text class="ts" x="915" y="422" text-anchor="middle" fill="#44337A">Anomaly det.</text>
+<text class="sm" x="915" y="436" text-anchor="middle" fill="#6B46C1">compliance map</text>
+
+<!-- ⑥ Brain → Trust: audit events on every workflow action -->
+<path d="M520 362 L548 362 L548 426 L586 426" fill="none" stroke="#6B46C1" stroke-width="1" marker-end="url(#a)"/>
+<rect x="530" y="388" width="56" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
+<text class="fl" x="558" y="398" text-anchor="middle" fill="#6B46C1">⑥ audit evt</text>
+
+<!-- ⑦ Brain → Trust: data mutations → lineage -->
+<path d="M520 380 L556 380 L556 426 L722 426" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="560" y="370" width="70" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
+<text class="fl" x="595" y="380" text-anchor="middle" fill="#6B46C1">⑦ data mutations</text>
+
+<!-- ⑧ Trust → Frontend: audit stream to Audit panel -->
+<path d="M646 406 L646 148 L804 148 L804 112" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="660" y="140" width="70" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
+<text class="fl" x="695" y="150" text-anchor="middle" fill="#6B46C1">⑧ audit stream</text>
+
+<!-- ⑨ Trust → Frontend: lineage DAG to Lineage panel -->
+<path d="M782 406 L782 148 L712 148 L712 112" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="740" y="140" width="70" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
+<text class="fl" x="775" y="150" text-anchor="middle" fill="#6B46C1">⑨ lineage DAG</text>
+
+<!-- ==================== ROW 3: EXECUTION + INTEROP ==================== -->
+
+<!-- Execution layer -->
+<rect x="198" y="500" width="540" height="130" rx="14" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text class="th" x="468" y="520" text-anchor="middle" fill="#4A1B0C">Execution layer (Docker)</text>
+
+<rect x="216" y="534" width="108" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="270" y="550" text-anchor="middle" fill="#712B13">Lobster exec</text>
+<text class="sm" x="270" y="564" text-anchor="middle" fill="#993C1D">dockerode</text>
+
+<rect x="334" y="534" width="108" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="388" y="550" text-anchor="middle" fill="#712B13">HMAC callback</text>
+<text class="sm" x="388" y="564" text-anchor="middle" fill="#993C1D">signed events</text>
+
+<rect x="452" y="534" width="108" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="506" y="550" text-anchor="middle" fill="#712B13">Secure sandbox</text>
+<text class="sm" x="506" y="564" text-anchor="middle" fill="#993C1D">seccomp + caps</text>
+
+<rect x="570" y="534" width="108" height="40" rx="6" fill="#fff" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="624" y="550" text-anchor="middle" fill="#712B13">Live preview</text>
+<text class="sm" x="624" y="564" text-anchor="middle" fill="#993C1D">terminal + screenshot</text>
+
+<rect x="216" y="582" width="108" height="28" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="270" y="600" text-anchor="middle" fill="#3C3489">AI inject</text>
+<rect x="334" y="582" width="108" height="28" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="388" y="600" text-anchor="middle" fill="#666">Concurrency</text>
+<rect x="452" y="582" width="108" height="28" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="506" y="600" text-anchor="middle" fill="#666">Log batcher</text>
+<rect x="570" y="582" width="108" height="28" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="ts" x="624" y="600" text-anchor="middle" fill="#666">Docker daemon</text>
+
+<!-- ⑩ Brain → Executor: exec plan dispatch -->
+<path d="M281 466 L281 498" fill="none" stroke="#D85A30" stroke-width="1" marker-end="url(#a)"/>
+<rect x="240" y="478" width="60" height="14" rx="3" fill="#FAECE7" stroke="none"/>
+<text class="fl" x="270" y="488" text-anchor="middle" fill="#993C1D">⑩ exec plan</text>
+
+<!-- ⑪ Executor → Brain: HMAC callback -->
+<path d="M388 534 L388 490 L440 490 L440 466" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="396" y="482" width="70" height="14" rx="3" fill="#FAECE7" stroke="none"/>
+<text class="fl" x="431" y="492" text-anchor="middle" fill="#993C1D">⑪ HMAC callback</text>
+
+<!-- Executor internal flow -->
+<line x1="324" y1="554" x2="332" y2="554" stroke="#D85A30" stroke-width="0.8" marker-end="url(#a)"/>
+<line x1="442" y1="554" x2="450" y2="554" stroke="#D85A30" stroke-width="0.8" marker-end="url(#a)"/>
+<line x1="560" y1="554" x2="568" y2="554" stroke="#D85A30" stroke-width="0.8" marker-end="url(#a)"/>
+
+<!-- ⑫ Live preview → Frontend: WS terminal stream -->
+<path d="M678 554 L700 554 L700 148 L955 148 L955 112" fill="none" stroke="#85B7EB" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="900" y="140" width="80" height="14" rx="3" fill="#E6F1FB" stroke="none"/>
+<text class="fl" x="940" y="150" text-anchor="middle" fill="#185FA5">⑫ WS terminal</text>
+
+<!-- ⑬ Executor → Trust: container events → audit chain -->
+<path d="M506 534 L506 480 L560 480 L560 446 L586 446" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="510" y="460" width="72" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
+<text class="fl" x="546" y="470" text-anchor="middle" fill="#6B46C1">⑬ container audit</text>
+
+<!-- Interop layer -->
+<rect x="770" y="500" width="220" height="130" rx="12" fill="#E6FFFA" stroke="#38B2AC" stroke-width="0.5"/>
+<text class="th" x="880" y="520" text-anchor="middle" fill="#234E52">Interop layer</text>
+
+<rect x="784" y="534" width="192" height="34" rx="6" fill="#fff" stroke="#38B2AC" stroke-width="0.5"/>
+<text class="ts" x="880" y="550" text-anchor="middle" fill="#234E52">A2A protocol server + client</text>
+<text class="sm" x="880" y="562" text-anchor="middle" fill="#2C7A7B">CrewAI / LangGraph / AutoGen adapters</text>
+
+<rect x="784" y="578" width="92" height="34" rx="6" fill="#fff" stroke="#38B2AC" stroke-width="0.5"/>
+<text class="ts" x="830" y="594" text-anchor="middle" fill="#234E52">Swarm</text>
+<text class="sm" x="830" y="606" text-anchor="middle" fill="#2C7A7B">cross-pod</text>
+
+<rect x="884" y="578" width="92" height="34" rx="6" fill="#fff" stroke="#38B2AC" stroke-width="0.5"/>
+<text class="ts" x="930" y="594" text-anchor="middle" fill="#234E52">Guest agent</text>
+<text class="sm" x="930" y="606" text-anchor="middle" fill="#2C7A7B">TTL sandbox</text>
+
+<!-- Swarm ↔ Guest consensus -->
+<line x1="876" y1="595" x2="882" y2="595" stroke="#38B2AC" stroke-width="0.6" stroke-dasharray="2 2"/>
+
+<!-- ⑭ Brain → Interop: A2A delegate + guest invite -->
+<path d="M346 432 L346 480 L782 480 L782 540" fill="none" stroke="#38B2AC" stroke-width="1" marker-end="url(#a)"/>
+<rect x="500" y="472" width="120" height="14" rx="3" fill="#E6FFFA" stroke="none"/>
+<text class="fl" x="560" y="482" text-anchor="middle" fill="#2C7A7B">⑭ A2A delegate + guest invite</text>
+
+<!-- ⑮ Interop → Brain: external task results -->
+<path d="M784 560 L760 560 L760 480 L520 480 L520 466" fill="none" stroke="#38B2AC" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<rect x="600" y="472" width="100" height="14" rx="3" fill="#E6FFFA" stroke="none"/>
+<text class="fl" x="650" y="482" text-anchor="middle" fill="#2C7A7B">⑮ external results</text>
+
+<!-- ==================== LEFT SIDEBAR: CONTRACTS + RUNNER ==================== -->
+
+<!-- Shared contracts -->
+<rect x="20" y="156" width="160" height="310" rx="12" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
+<text class="th" x="100" y="178" text-anchor="middle" fill="#4B1528">Shared contracts</text>
+<text class="ts" x="34" y="200" fill="#72243E">cost.ts</text>
+<text class="ts" x="34" y="218" fill="#72243E">cost-governance.ts</text>
+<text class="ts" x="34" y="236" fill="#72243E">llm/contracts.ts</text>
+<text class="ts" x="34" y="254" fill="#72243E">rag/contracts.ts</text>
+<text class="ts" x="34" y="272" fill="#72243E">skill/contracts.ts</text>
+<text class="ts" x="34" y="290" fill="#72243E">export/contracts.ts</text>
+<text class="ts" x="34" y="308" fill="#72243E">audit/contracts.ts</text>
+<text class="ts" x="34" y="326" fill="#72243E">lineage/contracts.ts</text>
+<text class="ts" x="34" y="344" fill="#72243E">a2a-protocol.ts</text>
+<text class="ts" x="34" y="362" fill="#72243E">mission/contracts.ts</text>
+<text class="ts" x="34" y="380" fill="#72243E">swarm.ts</text>
+<text class="ts" x="34" y="398" fill="#72243E">guest-agent-utils.ts</text>
+<text class="sm" x="100" y="440" text-anchor="middle" fill="#993556">12 frozen contract modules</text>
+<text class="sm" x="100" y="454" text-anchor="middle" fill="#993556">shared by client + server</text>
+<!-- Contracts → Brain dotted -->
+<line x1="180" y1="270" x2="214" y2="270" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="180" y1="310" x2="214" y2="310" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="180" y1="350" x2="214" y2="350" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<line x1="180" y1="390" x2="214" y2="390" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+<!-- Runner strategy -->
+<rect x="20" y="500" width="160" height="130" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="th" x="100" y="520" text-anchor="middle" fill="#333">Runner strategy</text>
+<rect x="34" y="536" width="132" height="30" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="100" y="556" text-anchor="middle" fill="#27500A">DockerRunner (real)</text>
+<rect x="34" y="576" width="132" height="30" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="100" y="596" text-anchor="middle" fill="#0C447C">MockRunner (mock)</text>
+<line x1="166" y1="554" x2="214" y2="554" stroke="#97C459" stroke-width="0.8" marker-end="url(#a)"/>
+
+<!-- ==================== ROW 4: WORKFLOW PIPELINE ==================== -->
+
+<rect x="20" y="660" width="1060" height="160" rx="14" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="th" x="550" y="684" text-anchor="middle" fill="#333">10-stage workflow pipeline</text>
+
+<rect x="40" y="700" width="96" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="88" y="718" text-anchor="middle" fill="#3C3489">1. Assemble</text>
+<text class="xs" x="88" y="734" text-anchor="middle" fill="#534AB7">dyn. org</text>
+<line x1="136" y1="722" x2="152" y2="722" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="154" y="700" width="96" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="202" y="718" text-anchor="middle" fill="#3C3489">2. CEO split</text>
+<text class="xs" x="202" y="734" text-anchor="middle" fill="#534AB7">decompose</text>
+<line x1="250" y1="722" x2="266" y2="722" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="268" y="700" width="96" height="44" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="ts" x="316" y="718" text-anchor="middle" fill="#3C3489">3. Mgr plan</text>
+<text class="xs" x="316" y="734" text-anchor="middle" fill="#534AB7">assign tasks</text>
+<line x1="364" y1="722" x2="380" y2="722" stroke="#AFA9EC" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="382" y="700" width="96" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="430" y="718" text-anchor="middle" fill="#0C447C">4. Execute</text>
+<text class="xs" x="430" y="734" text-anchor="middle" fill="#185FA5">parallel work</text>
+<line x1="478" y1="722" x2="494" y2="722" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="496" y="700" width="96" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="544" y="718" text-anchor="middle" fill="#27500A">5. Review</text>
+<text class="xs" x="544" y="734" text-anchor="middle" fill="#3B6D11">20-pt score</text>
+<line x1="592" y1="722" x2="608" y2="722" stroke="#97C459" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="610" y="700" width="76" height="44" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<text class="ts" x="648" y="718" text-anchor="middle" fill="#633806">6. Audit</text>
+<text class="xs" x="648" y="734" text-anchor="middle" fill="#854F0B">meta check</text>
+<line x1="686" y1="722" x2="698" y2="722" stroke="#FAC775" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="700" y="700" width="76" height="44" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text class="ts" x="738" y="718" text-anchor="middle" fill="#712B13">7. Revise</text>
+<text class="xs" x="738" y="734" text-anchor="middle" fill="#993C1D">fix issues</text>
+<line x1="776" y1="722" x2="788" y2="722" stroke="#F0997B" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="790" y="700" width="76" height="44" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="828" y="718" text-anchor="middle" fill="#27500A">8. Verify</text>
+<text class="xs" x="828" y="734" text-anchor="middle" fill="#3B6D11">confirm</text>
+<line x1="866" y1="722" x2="878" y2="722" stroke="#97C459" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="880" y="700" width="60" height="44" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="910" y="718" text-anchor="middle" fill="#0C447C">9. Sum</text>
+<text class="xs" x="910" y="734" text-anchor="middle" fill="#185FA5">aggregate</text>
+<line x1="940" y1="722" x2="952" y2="722" stroke="#85B7EB" stroke-width="0.8" marker-end="url(#a)"/>
+
+<rect x="954" y="700" width="60" height="44" rx="6" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
+<text class="ts" x="984" y="718" text-anchor="middle" fill="#72243E">10. Evolve</text>
+<text class="xs" x="984" y="734" text-anchor="middle" fill="#993556">learn</text>
+
+<!-- Revision loop arrow -->
+<path d="M738 744 L738 780 L430 780 L430 744" fill="none" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<text class="sm" x="584" y="794" text-anchor="middle" fill="#993C1D">Score &lt; 16 → Revise and re-execute</text>
+
+<!-- ==================== ROW 5: DUAL RUNTIME ==================== -->
+
+<rect x="20" y="850" width="500" height="50" rx="12" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.5"/>
+<text class="th" x="270" y="872" text-anchor="middle" fill="#333">Dual runtime</text>
+<rect x="34" y="858" width="210" height="30" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="ts" x="139" y="878" text-anchor="middle" fill="#0C447C">Frontend: Browser + IndexedDB + Web Worker</text>
+<rect x="254" y="858" width="250" height="30" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="ts" x="379" y="878" text-anchor="middle" fill="#27500A">Advanced: Express + Docker + Socket.IO</text>
+
+<!-- ==================== FLOW LEGEND ==================== -->
+
+<rect x="20" y="920" width="1060" height="70" rx="6" fill="#F7F7F8" stroke="#E0E0E0" stroke-width="0.3"/>
+
+<!-- Color legend row 1 -->
+<circle cx="50" cy="940" r="5" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<text class="sm" x="60" y="944" fill="#666">Server</text>
+<circle cx="120" cy="940" r="5" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<text class="sm" x="130" y="944" fill="#666">Frontend</text>
+<circle cx="200" cy="940" r="5" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<text class="sm" x="210" y="944" fill="#666">Intelligence</text>
+<circle cx="300" cy="940" r="5" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text class="sm" x="310" y="944" fill="#666">Execution</text>
+<circle cx="390" cy="940" r="5" fill="#FBEAF0" stroke="#ED93B1" stroke-width="0.5"/>
+<text class="sm" x="400" y="944" fill="#666">Contracts</text>
+<circle cx="480" cy="940" r="5" fill="#F0E6FF" stroke="#B794F4" stroke-width="0.5"/>
+<text class="sm" x="490" y="944" fill="#666">Trust</text>
+<circle cx="540" cy="940" r="5" fill="#E6FFFA" stroke="#38B2AC" stroke-width="0.5"/>
+<text class="sm" x="550" y="944" fill="#666">Interop</text>
+<circle cx="610" cy="940" r="5" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<text class="sm" x="620" y="944" fill="#666">Workflow</text>
+
+<!-- Arrow legend row 2 -->
+<line x1="50" y1="964" x2="80" y2="964" stroke="#D85A30" stroke-width="1" marker-end="url(#a)"/>
+<text class="sm" x="90" y="968" fill="#666">Data flow</text>
+<line x1="160" y1="964" x2="190" y2="964" stroke="#D85A30" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
+<text class="sm" x="200" y="968" fill="#666">Callback / async</text>
+<line x1="310" y1="964" x2="340" y2="964" stroke="#ED93B1" stroke-width="0.5" stroke-dasharray="3 3"/>
+<text class="sm" x="350" y="968" fill="#666">Contract dependency</text>
+
+<!-- Numbered flow legend -->
+<text class="sm" x="500" y="968" fill="#666">Numbered flows: ①–⑮ show the complete data path from user query to execution result</text>
+
+<!-- Version -->
+<text class="sm" x="550" y="984" text-anchor="middle" fill="#999">Cube Pets Office v0.38 — 38/39 specs complete — 180K+ lines TypeScript</text>
 
 </svg>
