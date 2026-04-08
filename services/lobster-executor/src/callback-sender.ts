@@ -33,7 +33,7 @@ export class CallbackSender {
    */
   async send(eventsUrl: string, event: ExecutorEvent): Promise<void> {
     try {
-      const body = JSON.stringify(event);
+      const body = JSON.stringify({ event });
       const headers = createCallbackHeaders(
         this.config.executorId,
         this.config.secret,
