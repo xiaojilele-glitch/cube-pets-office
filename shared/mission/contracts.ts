@@ -28,6 +28,7 @@ export const MISSION_EVENT_TYPES = [
   "done",
   "failed",
   "role_switch",
+  "collaboration_result",
 ] as const;
 
 export type MissionEventType = (typeof MISSION_EVENT_TYPES)[number];

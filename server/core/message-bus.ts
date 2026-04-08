@@ -7,10 +7,20 @@ import {
   WORKFLOW_STAGE_SET,
   validateHierarchy as validateHierarchyRule,
   validateStageRoute,
+  validateCrossPod,
 } from "../../shared/message-bus-rules.js";
+import { DEFAULT_SWARM_CONFIG } from "../../shared/swarm.js";
 import db, { type AgentRow, type MessageRow } from '../db/index.js';
 import { sessionStore } from '../memory/session-store.js';
 import { getSocketIO } from './socket.js';
+
+export interface CrossPodMessageMetadata {
+  crossPod: true;
+  sourcePodId: string;
+  targetPodId: string;
+  collaborationSessionId?: string;
+  contentPreview: string;
+}
 
 export class MessageBusValidationError extends Error {
   code: string;
@@ -22,7 +32,7 @@ export class MessageBusValidationError extends Error {
   }
 }
 
-class MessageBus {
+export class MessageBus {
   /**
    * Send a message between agents with strict routing validation.
    */
@@ -76,6 +86,112 @@ class MessageBus {
     }
 
     return msg;
+  }
+
+  /**
+   * Send a cross-pod message between Manager agents of different departments.
+   * Only Manager-to-Manager communication across different pods is allowed.
+   */
+  async sendCrossPod(
+    fromId: string,
+    toId: string,
+    content: string,
+    workflowId: string,
+    metadata?: CrossPodMessageMetadata
+  ): Promise<MessageRow> {
+    if (!fromId.trim() || !toId.trim()) {
+      throw new MessageBusValidationError('missing_agent_id', 'Sender and receiver IDs are required');
+    }
+    if (!content.trim()) {
+      throw new MessageBusValidationError('empty_content', 'Message content must not be empty');
+    }
+    if (!workflowId.trim()) {
+      throw new MessageBusValidationError('missing_workflow_id', 'workflowId is required');
+    }
+
+    const fromAgent = this.assertAgentExists(fromId, 'sender');
+    const toAgent = this.assertAgentExists(toId, 'receiver');
+    this.assertWorkflowExists(workflowId);
+
+    // Validate same-pod violation first (more specific error)
+    if (fromAgent.department === toAgent.department) {
+      throw new MessageBusValidationError(
+        'same_pod_violation',
+        `Cross-pod messages must be between different pods: both agents are in "${fromAgent.department}"`
+      );
+    }
+
+    // Validate cross-pod permissions (Manager-to-Manager)
+    if (!validateCrossPod(fromAgent, toAgent)) {
+      throw new MessageBusValidationError(
+        'cross_pod_unauthorized',
+        `Cross-pod messaging requires both agents to be managers: ${fromId} (${fromAgent.role}) -> ${toId} (${toAgent.role})`
+      );
+    }
+
+    const contentPreview = content.substring(0, DEFAULT_SWARM_CONFIG.summaryMaxLength);
+
+    const crossPodMeta: CrossPodMessageMetadata = metadata ?? {
+      crossPod: true,
+      sourcePodId: fromAgent.department,
+      targetPodId: toAgent.department,
+      contentPreview,
+    };
+    // Ensure contentPreview is always truncated
+    crossPodMeta.contentPreview = content.substring(0, DEFAULT_SWARM_CONFIG.summaryMaxLength);
+
+    const msg = db.createMessage({
+      workflow_id: workflowId,
+      from_agent: fromId,
+      to_agent: toId,
+      stage: 'cross_pod',
+      content,
+      metadata: crossPodMeta,
+    });
+
+    sessionStore.appendMessageLog(fromId, {
+      workflowId,
+      stage: 'cross_pod',
+      direction: 'outbound',
+      otherAgentId: toId,
+      content,
+      metadata: crossPodMeta,
+    });
+    sessionStore.appendMessageLog(toId, {
+      workflowId,
+      stage: 'cross_pod',
+      direction: 'inbound',
+      otherAgentId: fromId,
+      content,
+      metadata: crossPodMeta,
+    });
+
+    const io = getSocketIO();
+    if (io) {
+      io.emit('cross_pod_message', {
+        sourcePodId: crossPodMeta.sourcePodId,
+        targetPodId: crossPodMeta.targetPodId,
+        contentPreview: crossPodMeta.contentPreview,
+        messageId: msg.id,
+      });
+    }
+
+    return msg;
+  }
+
+  /**
+   * Retrieve the full content of a cross-pod message by its ID.
+   * Used to fetch complete message content on demand (since cross-pod events only carry a summary preview).
+   */
+  async getCrossPodMessageContent(messageId: number): Promise<string> {
+    const msg = db.getMessage(messageId);
+    if (!msg) {
+      throw new MessageBusValidationError(
+        'message_not_found',
+        `Message not found: ${messageId}`
+      );
+    }
+    return msg.content;
   }
 
   /**

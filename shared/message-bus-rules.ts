@@ -45,6 +45,18 @@ export function validateStageRoute(
   }
 }
 
+/** 验证跨 Pod 消息权限：仅允许 Manager-to-Manager，且必须跨 Pod */
+export function validateCrossPod(
+  from: Pick<AgentRecord, "role" | "department">,
+  to: Pick<AgentRecord, "role" | "department">
+): boolean {
+  return (
+    from.role === "manager" &&
+    to.role === "manager" &&
+    from.department !== to.department
+  );
+}
+
 export function validateHierarchy(
   from: Pick<AgentRecord, "role" | "department" | "manager_id" | "id">,
   to: Pick<AgentRecord, "role" | "department" | "manager_id" | "id">

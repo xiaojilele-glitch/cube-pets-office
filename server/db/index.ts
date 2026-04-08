@@ -520,6 +520,10 @@ class Database {
     return row;
   }
 
+  getMessage(id: number): MessageRow | undefined {
+    return this.data.messages.find(m => m.id === id);
+  }
+
   getMessagesByWorkflow(workflowId: string): MessageRow[] {
     return this.data.messages.filter(m => m.workflow_id === workflowId);
   }
