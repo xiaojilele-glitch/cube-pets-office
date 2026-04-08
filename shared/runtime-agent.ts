@@ -6,6 +6,38 @@ import type {
   RuntimeEventEmitter,
   LLMProvider,
 } from "./workflow-runtime.js";
+import type {
+  LineageOperation,
+  RecordTransformationInput,
+  RecordSourceInput,
+  RecordDecisionInput,
+} from "./lineage/contracts.js";
+
+// ─── Lineage Collector Integration (module-level, shared/server bridge) ────
+
+/** Minimal interface so shared code doesn't depend on server-only LineageCollector */
+export interface LineageCollectorLike {
+  recordTransformation(input: RecordTransformationInput): string;
+  recordSource?(input: RecordSourceInput): string;
+  recordDecision?(input: RecordDecisionInput): string;
+}
+
+let _lineageCollector: LineageCollectorLike | null = null;
+
+export function setLineageCollector(collector: LineageCollectorLike | null): void {
+  _lineageCollector = collector;
+}
+
+export function getLineageCollector(): LineageCollectorLike | null {
+  return _lineageCollector;
+}
+
+// ─── Lineage Track Options ────────────────────────────────────────────────
+
+export interface LineageTrackOptions {
+  operation?: LineageOperation;
+  metadata?: Record<string, unknown>;
+}
 
 export interface RuntimeAgentConfig {
   id: string;
@@ -125,6 +157,94 @@ export class RuntimeAgent implements AgentHandle {
   constructor(config: RuntimeAgentConfig, deps: RuntimeAgentDependencies) {
     this.config = config;
     this.deps = deps;
+  }
+
+  /**
+   * AC-9.1 ~ AC-9.3: 血缘追踪包装方法
+   *
+   * Wraps an async function with lineage tracking. Records a transformation
+   * node before execution, updates it with execution time after completion.
+   * If no collector is set, acts as a transparent pass-through (no-op).
+   * AC-9.4: Never throws due to lineage collection failures.
+   */
+  async lineageTracked<T>(
+    fn: () => Promise<T>,
+    options?: LineageTrackOptions,
+  ): Promise<T> {
+    const collector = _lineageCollector;
+
+    // No collector → transparent pass-through
+    if (!collector) {
+      return fn();
+    }
+
+    const startTime = Date.now();
+    let lineageId: string | undefined;
+
+    // Record transformation BEFORE execution (AC-9.1)
+    try {
+      lineageId = collector.recordTransformation({
+        agentId: this.config.id,
+        operation: options?.operation ?? "transform",
+        inputLineageIds: [],
+        parameters: options?.metadata,
+        metadata: {
+          agentName: this.config.name,
+          department: this.config.department,
+          role: this.config.role,
+          ...options?.metadata,
+        },
+      });
+    } catch {
+      // AC-9.4: lineage failure must not affect execution
+    }
+
+    try {
+      const result = await fn();
+
+      // Update with execution time on success (AC-9.2)
+      try {
+        if (lineageId) {
+          collector.recordTransformation({
+            agentId: this.config.id,
+            operation: options?.operation ?? "transform",
+            inputLineageIds: lineageId ? [lineageId] : [],
+            executionTimeMs: Date.now() - startTime,
+            dataChanged: true,
+            metadata: {
+              status: "success",
+              ...options?.metadata,
+            },
+          });
+        }
+      } catch {
+        // AC-9.4: graceful degradation
+      }
+
+      return result;
+    } catch (err) {
+      // Record failure info (AC-9.2)
+      try {
+        if (lineageId) {
+          collector.recordTransformation({
+            agentId: this.config.id,
+            operation: options?.operation ?? "transform",
+            inputLineageIds: lineageId ? [lineageId] : [],
+            executionTimeMs: Date.now() - startTime,
+            dataChanged: false,
+            metadata: {
+              status: "error",
+              error: err instanceof Error ? err.message : String(err),
+              ...options?.metadata,
+            },
+          });
+        }
+      } catch {
+        // AC-9.4: graceful degradation
+      }
+
+      throw err;
+    }
   }
 
   async invoke(

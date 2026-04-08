@@ -26,6 +26,20 @@ import {
   type PatchMissionExecutionInput,
 } from './mission-store.js';
 
+// ─── Lineage Collector Integration (module-level, opt-in) ──────────────────
+
+import type { LineageCollectorLike } from '../../shared/runtime-agent.js';
+
+let _missionLineageCollector: LineageCollectorLike | null = null;
+
+export function setMissionLineageCollector(collector: LineageCollectorLike | null): void {
+  _missionLineageCollector = collector;
+}
+
+export function getMissionLineageCollector(): LineageCollectorLike | null {
+  return _missionLineageCollector;
+}
+
 export interface MissionRuntimeOptions {
   store?: MissionStore;
   autoRecover?: boolean;
@@ -57,6 +71,22 @@ export class MissionRuntime {
   createTask(input: CreateMissionInput): MissionRecord {
     const task = this.store.create(input);
     this.emitMissionUpdate(task);
+
+    // Lineage hook: record source when a mission is created
+    try {
+      const collector = _missionLineageCollector;
+      if (collector?.recordSource) {
+        collector.recordSource({
+          sourceId: task.id,
+          sourceName: task.title,
+          context: { missionId: task.id },
+          metadata: { kind: task.kind, topicId: task.topicId },
+        });
+      }
+    } catch {
+      // Graceful degradation: lineage failure must not affect mission creation
+    }
+
     return task;
   }
 
@@ -176,6 +206,24 @@ export class MissionRuntime {
   ): MissionRecord | undefined {
     const task = this.store.markDone(id, summary, source);
     this.emitMissionUpdate(task);
+
+    // Lineage hook: record decision when a mission finishes
+    try {
+      const collector = _missionLineageCollector;
+      if (task && collector?.recordDecision) {
+        collector.recordDecision({
+          decisionId: id,
+          agentId: undefined,
+          inputLineageIds: [],
+          result: 'done',
+          context: { missionId: id },
+          metadata: { summary, source },
+        });
+      }
+    } catch {
+      // Graceful degradation
+    }
+
     return task;
   }
 

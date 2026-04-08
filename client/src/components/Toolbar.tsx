@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Brain,
   FileSearch,
+  GitBranch,
   Globe2,
   HelpCircle,
   Menu,
@@ -34,7 +35,7 @@ import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
-type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions' | 'audit';
+type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions' | 'audit' | 'lineage';
 
 function getRuntimeNarrative(
   locale: string,
@@ -237,6 +238,13 @@ export function Toolbar() {
       onClick: () => setShowAudit(prev => !prev),
     },
     {
+      id: 'lineage',
+      icon: GitBranch,
+      accent: '#4A8BA8',
+      active: location === '/lineage',
+      onClick: () => setLocation('/lineage'),
+    },
+    {
       id: 'help',
       icon: HelpCircle,
       accent: '#75604D',
@@ -419,7 +427,7 @@ export function Toolbar() {
         style={{ pointerEvents: 'auto' }}
       >
         <div className="rounded-[32px] studio-shell px-3 py-2.5">
-          <div className={`grid gap-2 ${isTablet ? 'grid-cols-7' : 'grid-cols-7'}`}>
+          <div className={`grid gap-2 ${isTablet ? 'grid-cols-8' : 'grid-cols-8'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
               const labels = copy.toolbar.dockButtons[button.id];
