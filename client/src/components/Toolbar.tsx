@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   Brain,
+  FileSearch,
   Globe2,
   HelpCircle,
   Menu,
@@ -24,6 +25,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { AuditPanel } from '@/components/AuditPanel';
 import { PermissionPanel } from '@/components/permissions/PermissionPanel';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
@@ -32,7 +34,7 @@ import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
 import { useWorkflowStore } from '@/lib/workflow-store';
 
-type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions';
+type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions' | 'audit';
 
 function getRuntimeNarrative(
   locale: string,
@@ -181,6 +183,7 @@ export function Toolbar() {
   const [showHelp, setShowHelp] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showPermissions, setShowPermissions] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
   const showGitHubBadge = IS_GITHUB_PAGES;
   const [location, setLocation] = useLocation();
 
@@ -225,6 +228,13 @@ export function Toolbar() {
       accent: '#836A88',
       active: showPermissions,
       onClick: () => setShowPermissions(prev => !prev),
+    },
+    {
+      id: 'audit',
+      icon: FileSearch,
+      accent: '#6B8E7B',
+      active: showAudit,
+      onClick: () => setShowAudit(prev => !prev),
     },
     {
       id: 'help',
@@ -409,7 +419,7 @@ export function Toolbar() {
         style={{ pointerEvents: 'auto' }}
       >
         <div className="rounded-[32px] studio-shell px-3 py-2.5">
-          <div className={`grid gap-2 ${isTablet ? 'grid-cols-6' : 'grid-cols-6'}`}>
+          <div className={`grid gap-2 ${isTablet ? 'grid-cols-7' : 'grid-cols-7'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
               const labels = copy.toolbar.dockButtons[button.id];
@@ -470,6 +480,26 @@ export function Toolbar() {
           </DialogHeader>
           <div className="flex-1 overflow-hidden" style={{ height: 'calc(600px - 80px)' }}>
             <PermissionPanel />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Audit chain dialog */}
+      <Dialog open={showAudit} onOpenChange={setShowAudit}>
+        <DialogContent className="max-w-4xl h-[600px] rounded-[28px] border-stone-200 bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
+          <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
+            <DialogTitle className="flex items-center gap-2 text-stone-900">
+              <FileSearch className="size-4 text-[#6B8E7B]" />
+              {locale === 'zh-CN' ? '审计链日志' : 'Audit Chain Log'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-stone-500">
+              {locale === 'zh-CN'
+                ? '查看审计事件、验证哈希链完整性、管理异常告警'
+                : 'View audit events, verify hash chain integrity, manage anomaly alerts'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden" style={{ height: 'calc(600px - 80px)' }}>
+            <AuditPanel />
           </div>
         </DialogContent>
       </Dialog>
