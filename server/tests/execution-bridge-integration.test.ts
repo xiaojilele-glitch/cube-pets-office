@@ -197,10 +197,17 @@ describe("Integration: mock 模式完整桥接流程", () => {
       const createJobCall = calls.find((c) => c.url.endsWith("/api/executor/jobs"));
       const jobRequest = JSON.parse(createJobCall!.init.body as string);
       const firstJob = jobRequest.plan.jobs[0];
-      expect(firstJob.payload.image).toBe("node:20-slim");
+      expect(firstJob.payload.aiEnabled).toBe(true);
+      expect(firstJob.payload.aiTaskType).toBe("text-generation");
+      expect(firstJob.payload.image).toBeUndefined();
       expect(firstJob.payload.command).toBeDefined();
       expect(Array.isArray(firstJob.payload.command)).toBe(true);
-      expect(firstJob.payload.env).toEqual({ MISSION_ID: "mission-real-1" });
+      expect(firstJob.payload.command).toHaveLength(0);
+      expect(firstJob.payload.env).toMatchObject({
+        MISSION_ID: "mission-real-1",
+      });
+      expect(typeof firstJob.payload.env.TASK_CONTENT).toBe("string");
+      expect(firstJob.payload.env.TASK_CONTENT).toContain("pytest");
     });
   });
 

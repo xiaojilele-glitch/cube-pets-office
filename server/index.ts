@@ -440,7 +440,7 @@ async function startServer() {
 
   const executionBridge = createExecutionBridge(missionRuntime, {
     executorBaseUrl: process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() || DEFAULT_EXECUTOR_BASE_URL,
-    executionMode: (process.env.LOBSTER_EXECUTION_MODE as "mock" | "real") || "mock",
+    executionMode: process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real",
     defaultImage: process.env.LOBSTER_DEFAULT_IMAGE?.trim() || "node:20-slim",
     callbackUrl: buildCallbackUrl(process.env.SERVER_BASE_URL?.trim() || "http://localhost:3000"),
   });
@@ -879,7 +879,7 @@ async function startServer() {
         throw new Error("Execution plan did not produce any executor jobs.");
       }
 
-      const executionMode = process.env.LOBSTER_EXECUTION_MODE || "mock";
+      const executionMode = process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real";
       if (executionMode === "mock") {
         // Mock mode: use fake runner for quick smoke testing without Docker
         firstJob.payload = {

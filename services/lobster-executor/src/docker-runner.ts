@@ -258,10 +258,13 @@ export class DockerRunner implements JobRunner {
       const finishedAt = new Date().toISOString();
       const durationMs = Date.now() - startTime;
 
-      // 7. Collect artifacts
-      const artifacts = this.collectArtifacts(record, workspaceDir);
+      // 7. Write result.json before artifact collection so it is exposed to the UI.
+      const resultFile = this.writeResult(record, exitCode, durationMs, timedOut);
 
-      // 7.5 Scrub credentials from artifacts and logs for AI jobs
+      // 8. Collect artifacts
+      const artifacts = this.collectArtifacts(record, workspaceDir, resultFile);
+
+      // 8.5 Scrub credentials from artifacts and logs for AI jobs
       if (aiEnabled) {
         const creds = resolveAICredentials(payload, process.env);
         const scrubber = new CredentialScrubber([creds.apiKey]);
@@ -279,9 +282,6 @@ export class DockerRunner implements JobRunner {
           );
         }
       }
-
-      // 8. Write result.json
-      this.writeResult(record, exitCode, durationMs, timedOut);
 
       // 9. Finalize record & emit terminal event
       record.finishedAt = finishedAt;
@@ -594,6 +594,7 @@ export class DockerRunner implements JobRunner {
   private collectArtifacts(
     record: StoredJobRecord,
     workspaceDir: string,
+    resultFile: string,
   ): ExecutionPlanArtifact[] {
     const artifacts: ExecutionPlanArtifact[] = [];
 
@@ -603,6 +604,13 @@ export class DockerRunner implements JobRunner {
       name: "executor.log",
       path: toRelativePath(record.logFile),
       description: "Line-oriented executor runtime log",
+    });
+
+    artifacts.push({
+      kind: "report",
+      name: "result.json",
+      path: toRelativePath(resultFile),
+      description: "Docker execution summary and exit metadata",
     });
 
     // Collect files from workspace/artifacts/ (bind-mounted, so available on host)
@@ -640,7 +648,7 @@ export class DockerRunner implements JobRunner {
     exitCode: number,
     durationMs: number,
     timedOut: boolean,
-  ): void {
+  ): string {
     const resultPayload = {
       missionId: record.request.missionId,
       jobId: record.request.jobId,
@@ -666,6 +674,7 @@ export class DockerRunner implements JobRunner {
       `${JSON.stringify(resultPayload, null, 2)}\n`,
       "utf-8",
     );
+    return resultFile;
   }
 
   /* ── container cleanup ── */

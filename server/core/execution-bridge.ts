@@ -43,6 +43,12 @@ export interface DetectResult {
   reason: string;
 }
 
+export function resolveExecutionModeValue(
+  rawValue: string | undefined,
+): "mock" | "real" {
+  return rawValue === "mock" ? "mock" : "real";
+}
+
 // ─── Detection Constants ────────────────────────────────────────────────────
 
 const EXECUTABLE_CODE_BLOCK_LANGS = [
@@ -422,10 +428,26 @@ export class ExecutionBridge {
     deliverables: string[],
   ): void {
     const existing = job.payload || {};
+    const existingEnv =
+      typeof existing.env === "object" &&
+      existing.env !== null &&
+      !Array.isArray(existing.env)
+        ? (existing.env as Record<string, unknown>)
+        : {};
 
     if (this.options.executionMode === "mock") {
+      const {
+        aiEnabled: _aiEnabled,
+        aiTaskType: _aiTaskType,
+        command: _command,
+        image: _image,
+        runner: _runner,
+        ...rest
+      } = existing;
+
       job.payload = {
-        ...existing,
+        ...rest,
+        ...(Object.keys(existingEnv).length > 0 ? { env: existingEnv } : {}),
         runner: {
           kind: "mock",
           outcome: "success",
@@ -439,12 +461,17 @@ export class ExecutionBridge {
       // The container's entrypoint (ai-bridge/executor.js) reads TASK_CONTENT,
       // calls LLM to plan, installs deps, writes code, and executes it.
       const taskContent = deliverables.join("\n\n---\n\n");
+      const { runner: _runner, ...rest } = existing;
       job.payload = {
-        ...existing,
+        ...rest,
         aiEnabled: true,
-        image: this.options.defaultImage,
+        aiTaskType:
+          typeof existing.aiTaskType === "string" && existing.aiTaskType.trim()
+            ? existing.aiTaskType.trim()
+            : "text-generation",
         command: [],  // Use container's default ENTRYPOINT (node /opt/ai-bridge/executor.js)
         env: {
+          ...existingEnv,
           MISSION_ID: missionId,
           TASK_CONTENT: taskContent,
         },
@@ -509,8 +536,7 @@ export function createExecutionBridge(
     "http://localhost:3031";
   const executionMode =
     options?.executionMode ||
-    (process.env.LOBSTER_EXECUTION_MODE as "mock" | "real") ||
-    "mock";
+    resolveExecutionModeValue(process.env.LOBSTER_EXECUTION_MODE);
   const defaultImage =
     options?.defaultImage ||
     process.env.LOBSTER_DEFAULT_IMAGE?.trim() ||

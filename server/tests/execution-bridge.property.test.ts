@@ -428,7 +428,7 @@ describe("Feature: executor-integration, Property 8: 模式特定 payload 注入
     );
   });
 
-  it("real mode → job.payload contains image (string) and command (array)", () => {
+  it("real mode → job.payload enables AI container execution with TASK_CONTENT env", () => {
     fc.assert(
       fc.property(
         arbMissionIdPayload,
@@ -444,12 +444,14 @@ describe("Feature: executor-integration, Property 8: 模式特定 payload 注入
 
           // payload must exist
           expect(job.payload).toBeDefined();
-          // image must be a string
-          expect(typeof (job.payload as any).image).toBe("string");
-          expect((job.payload as any).image.length).toBeGreaterThan(0);
+          expect((job.payload as any).aiEnabled).toBe(true);
+          expect((job.payload as any).aiTaskType).toBe("text-generation");
+          expect((job.payload as any).image).toBeUndefined();
           // command must be an array
           expect(Array.isArray((job.payload as any).command)).toBe(true);
-          expect((job.payload as any).command.length).toBeGreaterThan(0);
+          expect((job.payload as any).command.length).toBe(0);
+          expect((job.payload as any).env.MISSION_ID).toBe(missionId);
+          expect((job.payload as any).env.TASK_CONTENT).toBe(deliverables.join("\n\n---\n\n"));
         },
       ),
       { numRuns: 100 },
@@ -499,8 +501,10 @@ describe("Feature: executor-integration, Property 8: 模式特定 payload 注入
           (bridge as any).injectModePayload(job, missionId, deliverables);
 
           expect((job.payload as any).customField).toBe(extraValue);
-          expect(typeof (job.payload as any).image).toBe("string");
+          expect((job.payload as any).aiEnabled).toBe(true);
           expect(Array.isArray((job.payload as any).command)).toBe(true);
+          expect((job.payload as any).command.length).toBe(0);
+          expect((job.payload as any).env.MISSION_ID).toBe(missionId);
         },
       ),
       { numRuns: 100 },
@@ -525,8 +529,10 @@ describe("Feature: executor-integration, Property 8: 模式特定 payload 注入
           if (mode === "mock") {
             expect((job.payload as any).runner.kind).toBe("mock");
           } else {
-            expect(typeof (job.payload as any).image).toBe("string");
+            expect((job.payload as any).runner).toBeUndefined();
+            expect((job.payload as any).aiEnabled).toBe(true);
             expect(Array.isArray((job.payload as any).command)).toBe(true);
+            expect((job.payload as any).command.length).toBe(0);
           }
         },
       ),

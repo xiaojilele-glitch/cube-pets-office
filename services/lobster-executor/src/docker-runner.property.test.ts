@@ -9,9 +9,12 @@
  *
  * Feature: lobster-executor-real, Property 1: 容器创建配置正确性
  */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, afterEach } from "vitest";
 import fc from "fast-check";
 import Dockerode from "dockerode";
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 import { DockerRunner } from "./docker-runner.js";
 import type { LobsterExecutorConfig, StoredJobRecord } from "./types.js";
@@ -25,6 +28,24 @@ import { EXECUTOR_CONTRACT_VERSION } from "../../../shared/executor/contracts.js
 /* ─── Helpers ─── */
 
 const DEFAULT_IMAGE = "node:20-slim";
+const tempDirs: string[] = [];
+
+function makeTempDir(): string {
+  const dir = mkdtempSync(join(tmpdir(), "docker-runner-prop-"));
+  tempDirs.push(dir);
+  return dir;
+}
+
+afterEach(() => {
+  for (const dir of tempDirs) {
+    try {
+      rmSync(dir, { recursive: true, force: true });
+    } catch {
+      // ignore cleanup errors
+    }
+  }
+  tempDirs.length = 0;
+});
 
 function makeRunner(defaultImage = DEFAULT_IMAGE): DockerRunner {
   const config: LobsterExecutorConfig = {
@@ -296,6 +317,34 @@ describe("Property 1: 容器创建配置正确性", () => {
       ),
       { numRuns: 100 },
     );
+  });
+
+  it("collectArtifacts always includes result.json alongside executor.log", () => {
+    const runner = makeRunner();
+    const dataDir = makeTempDir();
+    const workspaceDir = join(dataDir, "workspace");
+    const artifactsDir = join(workspaceDir, "artifacts");
+    const resultFile = join(dataDir, "result.json");
+    const logFile = join(dataDir, "executor.log");
+
+    mkdirSync(artifactsDir, { recursive: true });
+    writeFileSync(logFile, "executor output\n", "utf-8");
+    writeFileSync(resultFile, '{"outcome":"success"}\n', "utf-8");
+    writeFileSync(join(artifactsDir, "generated.txt"), "artifact\n", "utf-8");
+
+    const record = makeRecord({});
+    record.dataDirectory = dataDir;
+    record.logFile = logFile;
+
+    const collected = (runner as any).collectArtifacts(record, workspaceDir, resultFile);
+    const names = collected.map((artifact: { name: string }) => artifact.name);
+
+    expect(names).toContain("executor.log");
+    expect(names).toContain("result.json");
+    expect(names).toContain("generated.txt");
+
+    const resultArtifact = collected.find((artifact: { name: string }) => artifact.name === "result.json");
+    expect(resultArtifact?.kind).toBe("report");
   });
 });
 
