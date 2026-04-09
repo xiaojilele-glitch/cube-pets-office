@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-03-31 14:56:15
  * @Description: 
- * @LastEditTime: 2026-04-09 12:10:00
+ * @LastEditTime: 2026-04-09 16:45:00
  * @LastEditors: wangchunji
 -->
 ---
@@ -28,9 +28,9 @@ inclusion: auto
 ## 项目规模
 
 - 850+ 文件 / ~180,000 行 TypeScript
-- `.kiro/specs` 当前共 52 个 spec 目录：38 个已完成、4 个部分完成、9 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）
-- 当前活跃增量 spec：`workflow-artifacts-display`（工作流产物展示与下载）
-- 12 个 shared/ 契约模块，主线能力已覆盖前端、服务端、执行器、审计与互操作层
+- `.kiro/specs` 当前共 57 个 spec 目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）
+- 当前活跃增量：`workflow-artifacts-display`（工作流产物展示与下载）与任务控制台补完主线（取消 / 操作动作 / 详情首屏 / 文案 / UI 打磨）
+- 14 个 shared/ 契约模块，主线能力已覆盖前端、服务端、执行器、审计与互操作层
 - 大量单元测试与属性测试已覆盖 Mission、执行器、RAG、审计、NL Command 等核心域
 
 > 说明：本页以仓库当前 `tasks.md` 勾选状态和工作区代码为准；旧的阶段性计划文档保留用于历史追溯。
@@ -127,19 +127,25 @@ inclusion: auto
 
 | 状态 | 数量 | 说明 |
 |------|------|------|
-| 已完成 | 38 | 主线 L01-L30 与补充 spec `holographic-ui` 等已合并 |
-| 部分完成 | 4 | `mission-runtime`、`state-persistence-recovery`、`nl-command-center`、`workflow-artifacts-display` |
-| 未开始 | 9 | 以第四层 L31-L38 为主，另含 `i18n-cleanup` |
+| 已完成 | 37 | 主线 L01-L30 与补充 spec `holographic-ui`、`ai-enabled-sandbox`、`executor-integration` 等已合并 |
+| 部分完成 | 5 | `mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery`、`workflow-artifacts-display` |
+| 未开始 | 14 | 第四层 L31-L38、`i18n-cleanup` 与 5 个任务控制台补完 spec |
 | 待补任务清单 | 1 | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md` |
 
 - `workflow-artifacts-display` 是当前活跃项：服务端 Artifact API、`tasks-store` 扩展和基础产物列表组件已落地，预览弹窗、页面集成和测试仍待补齐。
-- `mission-runtime` 与 `nl-command-center` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
+- `mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 构成当前近端产品收口主线，目标是把任务页补齐为可操作的执行控制台。
+- `mission-runtime`、`multi-modal-vision`、`nl-command-center` 与 `state-persistence-recovery` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
 - `state-persistence-recovery` 的未完成项主要集中在标记 `*` 的可选属性测试。
 
 ### 📋 待启动 / 待环境就绪
 
 | 模块 | 依赖 / 备注 |
 |------|------|
+| P0 `mission-cancel-control` | 任务取消端到端闭环，覆盖 Mission、executor、Socket 与详情页反馈 |
+| P0 `mission-operator-actions` | 依赖取消 / 终止语义统一，补齐暂停、恢复、重试、标记阻塞、终止 |
+| P1 `task-detail-operations-first` | 依赖稳定的操作动作模型，将主操作、负责人、blocker、下一步前置 |
+| P1 `execution-language-refresh` | 与任务详情重排并行推进，文案收敛到开发执行 / 协作交付 |
+| P2 `mission-ui-polish` | 待交互语义稳定后收尾，统一反馈、层级、状态、空态与错误态 |
 | i18n-cleanup | 前端文案 / 国际化收口，独立排期 |
 | frontend-demo-mode | 需先补 `tasks.md`，再确认依赖与范围 |
 | L31 Docker Compose 生产部署 | L22 |
@@ -153,7 +159,7 @@ inclusion: auto
 
 ## 工程健康快照
 
-- 当前工作区存在一组围绕 `workflow-artifacts-display` 的暂存改动。
+- 当前近端增量集中在 `workflow-artifacts-display` 收尾，以及 5 个任务控制台补完 spec 的排期与落地准备。
 - `npm run check` 当前仍有 30 个 TypeScript 错误，主要分布在 lineage 可视化、NL Command、workflow-engine 桥接与 `server/index.ts` 等历史模块。
 - 后续增量工作建议以“不扩大现有 TypeScript 基线错误数”为最低要求，并单独安排一轮编译清债。
 

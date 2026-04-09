@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description: 
- * @LastEditTime: 2026-04-09 12:10:00
+ * @LastEditTime: 2026-04-09 16:45:00
  * @LastEditors: wangchunji
 -->
 ---
@@ -13,7 +13,7 @@ inclusion: auto
 
 ## 总览
 
-截至 2026-04-09，`.kiro/specs` 共 52 个目录：38 个已完成、4 个部分完成、9 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）。前三层主线与补充 spec `holographic-ui` 已基本落地，当前执行面主要是增量补完（`workflow-artifacts-display`）和平台层待环境项（L31-L38）。
+截至 2026-04-09，`.kiro/specs` 共 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）。前三层主线与补充 spec `holographic-ui` 已基本落地，当前执行面主要是增量补完（`workflow-artifacts-display`）与任务控制台主线收敛，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -33,7 +33,9 @@ inclusion: auto
 - 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
 - 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
 - 当前进行中：`workflow-artifacts-display`，已完成服务端 Artifact API、`tasks-store` 扩展和基础产物列表组件。
-- 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
+- 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
+- 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish`。
+- 待启动：`i18n-cleanup`、上述 5 个任务控制台补完 spec、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
 ## 阶段 0：契约先行（并行前必须完成）
@@ -119,6 +121,26 @@ L12 → L29 → L30
 - [x] L29 `a2a-protocol` — 跨框架 Agent 互操作协议（大）✅ 已合并 (22 files, +3068)
 - [x] L30 `agent-marketplace` — Guest Agent 机制（中）✅ 已合并 (18 files, +2363)
 
+## L30 后新增主线：任务控制台补完（2026-04-09）
+
+在 Docker 执行闭环与 Artifact 回传跑通后，近期优先级从“能执行”转向“可运营、可协作、可交付”。这条新增主线落在现有 `/tasks` 与任务详情页之上，不改变 L31-L38 的平台级依赖顺序，目标是把任务页从“结果观察面板”推进为“执行控制台”。
+
+### 优先级与依赖
+
+- [ ] P0 `mission-cancel-control` — 任务取消端到端可用；补齐用户入口、服务端状态流转、执行器取消、Socket 回传与 UI 反馈闭环。
+- [ ] P0 `mission-operator-actions` — 统一操作动作栏，至少支持暂停 / 恢复 / 重试 / 标记阻塞 / 终止；依赖取消与终止语义先收口。
+- [ ] P1 `task-detail-operations-first` — 重排任务详情页第一屏，把主操作、当前负责人、blocker、下一步动作前置；依赖稳定的操作动作模型。
+- [ ] P1 `execution-language-refresh` — 将“动态组队 / 方案叙事”收敛为“开发执行 / 协作交付 / 当前行动”，可与详情页重排并行推进。
+- [ ] P2 `mission-ui-polish` — 打磨反馈时机、按钮层级、状态可见性、空态与错误态；依赖前述交互语义基本稳定后收尾。
+
+### 交付顺序建议
+
+1. 先打通取消与状态操作，保证任务生命周期可控。
+2. 再重排详情页与核心文案，让用户第一屏就能判断“谁在负责、卡在哪里、下一步做什么”。
+3. 最后统一 UI 反馈与状态表达，避免在交互语义未稳定前重复返工。
+
+> 目标：把任务页从“执行结果展示”提升为“可操作的执行控制台”。
+
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
 
 - [ ] L31 `production-deployment` — Docker Compose 生产部署（中）← 依赖 L22
@@ -196,6 +218,11 @@ holographic-ui spec 已完成（tasks 1-8）
 workflow-artifacts-display 进行中：
   已完成服务端 Artifact API / tasks-store 扩展 / 基础 ArtifactListBlock
   待补测试、预览弹窗、WorkflowPanel / TaskDetailView 集成与 Socket 联动
+
+任务控制台补完主线待启动：
+  P0: mission-cancel-control / mission-operator-actions
+  P1: task-detail-operations-first / execution-language-refresh
+  P2: mission-ui-polish
 
 i18n-cleanup 未启动
 frontend-demo-mode 待补 tasks.md

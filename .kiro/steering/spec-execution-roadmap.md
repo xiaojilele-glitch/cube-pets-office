@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-本文件创建于 46 个 Spec 阶段；截至 2026-04-09，`.kiro/specs` 已扩展为 52 个目录：38 个已完成、4 个部分完成、9 个未开始、1 个待补 `tasks.md`。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
+本文件创建于 46 个 Spec 阶段；截至 2026-04-09，`.kiro/specs` 已扩展为 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
 
 ### 已完成基座（8 个）
 
@@ -21,20 +21,37 @@ inclusion: manual
 | browser-runtime | 纯前端运行时（IndexedDB + Web Worker） |
 | frontend-3d | 3D 场景 + 工作流面板 + 任务驾驶舱 |
 
-### 后续新增 / 补充 Spec（6 个）
+### 后续新增 / 补充 Spec（11 个）
 
 | Spec | 状态 | 简述 |
 |------|------|------|
 | ai-enabled-sandbox | 已完成 | Docker 容器 AI 能力注入 |
 | executor-integration | 已完成 | WorkflowEngine ↔ Docker 执行桥接 |
 | holographic-ui | 已完成 | 全息 UI 收口 |
-| i18n-cleanup | 未开始 | 前端国际化与文案清理 |
 | workflow-artifacts-display | 进行中 | 工作流产物展示与下载 |
+| mission-cancel-control | 未开始 | 任务取消端到端闭环 |
+| mission-operator-actions | 未开始 | 任务状态操作栏与动作模型 |
+| task-detail-operations-first | 未开始 | 任务详情页首屏重排 |
+| execution-language-refresh | 未开始 | 文案从方案叙事收敛到执行协作 |
+| mission-ui-polish | 未开始 | 任务控制台 UI 收尾打磨 |
+| i18n-cleanup | 未开始 | 前端国际化与文案清理 |
 | frontend-demo-mode | 待补任务 | spec 目录已存在，但尚未形成 `tasks.md` |
 
 ### 维护说明
 
 下文的 8 个阶段划分保留为原始路线图，用于追溯依赖和架构演化路径；其中“待开发 38 个”的表格是路线图创建时的历史视角，不再代表当前仓库的实时完成度。
+
+### 当前近端补完插队项（2026-04-09）
+
+这 5 个 spec 属于现有任务驾驶舱与详情页的产品收口，不改变原 8 阶段主路线，只是把“执行结果展示”继续补齐为“执行控制台”。
+
+| 优先级 | Spec | 依赖 | 目标 |
+|------|------|------|------|
+| P0 | mission-cancel-control | workflow-artifacts-display / executor-integration | 打通取消入口、执行器中断、状态落库与 UI 反馈 |
+| P0 | mission-operator-actions | mission-cancel-control | 补齐暂停 / 恢复 / 重试 / 标记阻塞 / 终止 |
+| P1 | task-detail-operations-first | mission-operator-actions | 首屏前置主操作、负责人、blocker、下一步 |
+| P1 | execution-language-refresh | 无硬依赖，可与上项并行 | 文案从“动态组队/方案感”收口到“执行/交付/协作” |
+| P2 | mission-ui-polish | 前 4 项基本稳定后 | 统一反馈时机、按钮层级、状态可见性、空态与错误态 |
 
 ### 历史待开发清单（路线图创建时，38 个）
 
