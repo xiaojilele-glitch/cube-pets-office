@@ -1,8 +1,0 @@
-{"eventId":"init-0","missionId":"mission-append-test","timestamp":1000000000000,"eventType":"AGENT_STARTED","sourceAgent":"agent-a","eventData":{}}
-{"eventId":"init-1","missionId":"mission-append-test","timestamp":1000000001000,"eventType":"AGENT_STARTED","sourceAgent":"agent-a","eventData":{}}
-{"eventId":"init-2","missionId":"mission-append-test","timestamp":1000000002000,"eventType":"AGENT_STARTED","sourceAgent":"agent-a","eventData":{}}
-{"eventId":"init-3","missionId":"mission-append-test","timestamp":1000000003000,"eventType":"AGENT_STARTED","sourceAgent":"agent-a","eventData":{}}
-{"eventId":"init-4","missionId":"mission-append-test","timestamp":1000000004000,"eventType":"AGENT_STARTED","sourceAgent":"agent-a","eventData":{}}
-{"eventId":"new-0","missionId":"mission-append-test","timestamp":1000000010000,"eventType":"AGENT_STARTED","sourceAgent":"agent-b","eventData":{}}
-{"eventId":"new-1","missionId":"mission-append-test","timestamp":1000000011000,"eventType":"AGENT_STARTED","sourceAgent":"agent-b","eventData":{}}
-{"eventId":"new-2","missionId":"mission-append-test","timestamp":1000000012000,"eventType":"AGENT_STARTED","sourceAgent":"agent-b","eventData":{}}

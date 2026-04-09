@@ -1,3 +1,0 @@
-{"eventId":"tam-0","missionId":"mission-tampered","timestamp":1000000000000,"eventType":"AGENT_STARTED","sourceAgent":"agent-1","eventData":{}}
-{"eventId":"tam-1","missionId":"mission-tampered","timestamp":1000000001000,"eventType":"AGENT_STARTED","sourceAgent":"agent-1","eventData":{}}
-{"eventId":"tam-2","missionId":"mission-tampered","timestamp":1000000002000,"eventType":"AGENT_STARTED","sourceAgent":"agent-1","eventData":{}}
