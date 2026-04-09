@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -65,11 +65,12 @@ import { useRAGStore } from "@/lib/rag-store";
 import { RAGInfoPanel } from "@/components/rag/RAGInfoPanel";
 import { RAGDebugPanel } from "@/components/rag/RAGDebugPanel";
 
+import { ArtifactListBlock } from "./ArtifactListBlock";
+import { ArtifactPreviewDialog } from "./ArtifactPreviewDialog";
 import { DecisionHistory } from "./DecisionHistory";
 import { DecisionPanel } from "./DecisionPanel";
 import { TaskPlanetInterior } from "./TaskPlanetInterior";
 import {
-  artifactActionLabel,
   compactText,
   downloadAttachmentArtifact,
   formatTaskDate,
@@ -489,24 +490,19 @@ export function TaskDetailView({
   const [downloadingArtifactId, setDownloadingArtifactId] = useState<
     string | null
   >(null);
+  const [previewArtifactIndex, setPreviewArtifactIndex] = useState<number | null>(
+    null
+  );
+  const [previewArtifactName, setPreviewArtifactName] = useState("");
+  const [previewArtifactFormat, setPreviewArtifactFormat] = useState<
+    string | undefined
+  >(undefined);
 
-  const orderedArtifacts = useMemo(() => {
-    return [...(detail?.artifacts || [])].sort((left, right) => {
-      const leftScore =
-        left.kind === "attachment"
-          ? 2
-          : left.kind === "department_report"
-            ? 1
-            : 0;
-      const rightScore =
-        right.kind === "attachment"
-          ? 2
-          : right.kind === "department_report"
-            ? 1
-            : 0;
-      return leftScore - rightScore;
-    });
-  }, [detail?.artifacts]);
+  useEffect(() => {
+    setPreviewArtifactIndex(null);
+    setPreviewArtifactName("");
+    setPreviewArtifactFormat(undefined);
+  }, [detail?.id]);
 
   if (!detail) {
     return (
@@ -543,16 +539,14 @@ export function TaskDetailView({
       return;
     }
 
-    if (
-      !artifact.href ||
-      (artifact.format !== "json" && artifact.format !== "md")
-    ) {
+    const downloadUrl = artifact.downloadUrl || artifact.href;
+    if (!downloadUrl) {
       return;
     }
 
     setDownloadingArtifactId(artifact.id);
     try {
-      const response = await fetch(artifact.href);
+      const response = await fetch(downloadUrl);
       if (!response.ok) {
         console.warn(`Failed to download artifact: ${response.status}`);
         return;
@@ -563,7 +557,7 @@ export function TaskDetailView({
       const filename =
         filenameMatch?.[1] ||
         artifact.filename ||
-        `${artifact.title}.${artifact.format}`;
+        (artifact.format ? `${artifact.title}.${artifact.format}` : artifact.title);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -575,6 +569,12 @@ export function TaskDetailView({
     } finally {
       setDownloadingArtifactId(null);
     }
+  }
+
+  function handleArtifactPreview(artifact: TaskArtifact, index: number) {
+    setPreviewArtifactIndex(index);
+    setPreviewArtifactName(artifact.title);
+    setPreviewArtifactFormat(artifact.format);
   }
 
   const summaryText = compactText(detail.summary, isDesktop ? 240 : 420);
@@ -947,72 +947,16 @@ export function TaskDetailView({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {orderedArtifacts.length > 0 ? (
-          orderedArtifacts.map((artifact, index) => (
-            <div key={artifact.id}>
-              {index > 0 ? <Separator className="mb-3 bg-stone-200/80" /> : null}
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-sm font-medium text-stone-900">
-                      {artifact.title}
-                    </div>
-                    <span className="rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
-                      {artifact.kind.replace("_", " ")}
-                    </span>
-                    {artifact.format ? (
-                      <span className="rounded-full border border-stone-200 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
-                        {artifact.format}
-                      </span>
-                    ) : null}
-                  </div>
-                  <div className="mt-3 rounded-[18px] border border-stone-200/80 bg-stone-50/70 px-3.5 py-3">
-                    <ExcerptBlock
-                      title="Artifact Summary"
-                      description={`Full metadata for ${artifact.title}.`}
-                      text={
-                        artifact.description ||
-                        artifact.href ||
-                        "Downloadable artifact."
-                      }
-                      maxLength={160}
-                    />
-                  </div>
-                  {artifact.content ? (
-                    <div className="mt-3 rounded-[18px] border border-stone-200/80 bg-white/80 px-3.5 py-3">
-                      <ExcerptBlock
-                        title="Content Preview"
-                        description={`Full captured content for ${artifact.title}.`}
-                        text={artifact.content}
-                        maxLength={200}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 rounded-full border-stone-200 bg-white/80"
-                  onClick={() => void handleArtifactDownload(artifact)}
-                  disabled={
-                    downloadingArtifactId === artifact.id ||
-                    (artifact.downloadKind === "external" && !artifact.href) ||
-                    (!artifact.href &&
-                      artifact.downloadKind !== "attachment" &&
-                      artifact.downloadKind !== "external")
-                  }
-                >
-                  {downloadingArtifactId === artifact.id ? (
-                    <LoaderCircle className="size-4 animate-spin" />
-                  ) : (
-                    <Download className="size-4" />
-                  )}
-                  {artifactActionLabel(artifact)}
-                </Button>
-              </div>
-            </div>
-          ))
+        {detail.artifacts.length > 0 ? (
+          <ArtifactListBlock
+            missionId={detail.id}
+            artifacts={detail.artifacts}
+            missionStatus={detail.status}
+            variant="full"
+            downloadingArtifactId={downloadingArtifactId}
+            onDownload={handleArtifactDownload}
+            onPreview={handleArtifactPreview}
+          />
         ) : (
           <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
             No artifacts are linked to this mission yet.
@@ -1325,6 +1269,18 @@ export function TaskDetailView({
           </DetailTabViewport>
         </TabsContent>
       </Tabs>
+      <ArtifactPreviewDialog
+        missionId={detail.id}
+        artifactIndex={previewArtifactIndex}
+        artifactName={previewArtifactName}
+        format={previewArtifactFormat}
+        open={previewArtifactIndex !== null}
+        onOpenChange={open => {
+          if (!open) {
+            setPreviewArtifactIndex(null);
+          }
+        }}
+      />
     </div>
   );
 }

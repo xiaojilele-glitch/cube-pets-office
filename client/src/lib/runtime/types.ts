@@ -30,6 +30,7 @@ export interface AgentInfo {
 
 export interface WorkflowInfo {
   id: string;
+  missionId?: string | null;
   directive: string;
   status:
     | "pending"

@@ -4,8 +4,9 @@ import {
   Download,
   ExternalLink,
   Eye,
-  FileText,
   FileCode,
+  FileText,
+  LoaderCircle,
   ScrollText,
 } from "lucide-react";
 
@@ -13,68 +14,38 @@ import { GlowButton } from "@/components/ui/GlowButton";
 import { useI18n } from "@/i18n";
 import type { TaskArtifact } from "@/lib/tasks-store";
 
-/* ------------------------------------------------------------------ */
-/*  Props                                                              */
-/* ------------------------------------------------------------------ */
+import { isArtifactPreviewable } from "./artifact-preview";
 
 export interface ArtifactListBlockProps {
   missionId: string;
   artifacts: TaskArtifact[];
   missionStatus: string;
   variant: "compact" | "full";
+  downloadingArtifactId?: string | null;
+  onDownload?: (
+    artifact: TaskArtifact,
+    index: number
+  ) => void | Promise<void>;
+  onPreview?: (artifact: TaskArtifact, index: number) => void;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-
 const KIND_ICON: Record<string, typeof FileText> = {
+  attachment: FileCode,
+  department_report: FileText,
   file: FileCode,
-  report: FileText,
   log: ScrollText,
+  report: FileText,
   url: ExternalLink,
 };
 
 const KIND_COLORS: Record<string, string> = {
+  attachment: "bg-stone-500/20 text-stone-200",
+  department_report: "bg-emerald-500/20 text-emerald-300",
   file: "bg-cyan-500/20 text-cyan-300",
-  report: "bg-amber-500/20 text-amber-300",
   log: "bg-white/10 text-white/60",
+  report: "bg-amber-500/20 text-amber-300",
   url: "bg-indigo-500/20 text-indigo-300",
 };
-
-function kindLabel(kind: string, locale: string): string {
-  const labels: Record<string, Record<string, string>> = {
-    "zh-CN": { file: "文件", report: "报告", log: "日志", url: "链接" },
-    "en-US": { file: "File", report: "Report", log: "Log", url: "Link" },
-  };
-  return labels[locale]?.[kind] ?? kind;
-}
-
-function sectionTitle(locale: string): string {
-  return locale === "zh-CN" ? "产物" : "Artifacts";
-}
-
-function previewLabel(locale: string): string {
-  return locale === "zh-CN" ? "预览" : "Preview";
-}
-
-function downloadLabel(locale: string): string {
-  return locale === "zh-CN" ? "下载" : "Download";
-}
-
-function openLinkLabel(locale: string): string {
-  return locale === "zh-CN" ? "打开链接" : "Open Link";
-}
-
-function runningHint(locale: string): string {
-  return locale === "zh-CN"
-    ? "执行中，可能有新产物..."
-    : "Running — new artifacts may appear...";
-}
-
-/* ------------------------------------------------------------------ */
-/*  Animation variants                                                 */
-/* ------------------------------------------------------------------ */
 
 const itemVariants = {
   initial: { opacity: 0, y: 12 },
@@ -82,64 +53,140 @@ const itemVariants = {
   exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
 };
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+function t(locale: string, zh: string, en: string): string {
+  return locale === "zh-CN" ? zh : en;
+}
+
+function kindLabel(kind: string, locale: string): string {
+  return (
+    {
+      attachment: t(locale, "Attachment", "Attachment"),
+      department_report: t(locale, "Dept Report", "Dept Report"),
+      file: t(locale, "File", "File"),
+      log: t(locale, "Log", "Log"),
+      report: t(locale, "Report", "Report"),
+      url: t(locale, "Link", "Link"),
+    }[kind] ?? kind
+  );
+}
+
+export function isArtifactListCompletedStatus(status: string): boolean {
+  return (
+    status === "completed" ||
+    status === "completed_with_errors" ||
+    status === "done"
+  );
+}
+
+export function isArtifactListRunningStatus(status: string): boolean {
+  return status === "pending" || status === "running";
+}
+
+export function shouldHighlightArtifact(
+  artifact: Pick<TaskArtifact, "kind">,
+  missionStatus: string
+): boolean {
+  return artifact.kind === "report" && isArtifactListCompletedStatus(missionStatus);
+}
+
+function openArtifactUrl(url?: string) {
+  if (!url || typeof window === "undefined") {
+    return;
+  }
+
+  window.open(url, "_blank", "noopener,noreferrer");
+}
 
 export function ArtifactListBlock({
+  missionId,
   artifacts,
   missionStatus,
   variant,
+  downloadingArtifactId = null,
+  onDownload,
+  onPreview,
 }: ArtifactListBlockProps) {
   const { locale } = useI18n();
-
-  const handleDownload = useCallback((url: string | undefined) => {
-    if (url) window.open(url, "_blank");
-  }, []);
-
-  /* Req 3.6 — empty → render nothing */
-  if (!artifacts.length) return null;
-
-  const isRunning = missionStatus === "running";
-  const isCompleted = missionStatus === "completed";
   const isCompact = variant === "compact";
+  const isRunning = isArtifactListRunningStatus(missionStatus);
+  const isCompleted = isArtifactListCompletedStatus(missionStatus);
+
+  const handleDownload = useCallback(
+    (artifact: TaskArtifact, index: number) => {
+      if (onDownload) {
+        void onDownload(artifact, index);
+        return;
+      }
+
+      openArtifactUrl(artifact.downloadUrl || artifact.href);
+    },
+    [onDownload]
+  );
+
+  const handlePreview = useCallback(
+    (artifact: TaskArtifact, index: number) => {
+      if (onPreview) {
+        onPreview(artifact, index);
+        return;
+      }
+
+      openArtifactUrl(artifact.previewUrl);
+    },
+    [onPreview]
+  );
+
+  if (artifacts.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="rounded-2xl glass-panel p-3">
-      {/* Header */}
+    <div
+      className="rounded-2xl glass-panel p-3"
+      data-mission-id={missionId}
+      data-variant={variant}
+    >
       <div className="mb-2 flex items-center gap-2">
         <FileText className="h-4 w-4 text-white/40" />
         <span className="text-[11px] font-semibold text-white/50">
-          {sectionTitle(locale)} · {artifacts.length}
+          {t(locale, "Artifacts", "Artifacts")} · {artifacts.length}
         </span>
-
-        {/* Req 6.4 — pulse indicator while running */}
-        {isRunning && (
+        {isRunning ? (
           <span className="relative ml-auto flex h-2.5 w-2.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-500" />
           </span>
-        )}
+        ) : null}
       </div>
 
-      {isRunning && (
-        <p className="mb-2 text-[10px] text-white/30">{runningHint(locale)}</p>
-      )}
+      {isRunning ? (
+        <p className="mb-2 text-[10px] text-white/30">
+          {t(
+            locale,
+            "Running now, new artifacts may appear soon.",
+            "Running now, new artifacts may appear soon."
+          )}
+        </p>
+      ) : null}
 
-      {/* Artifact list with entrance animation (Req 6.3) */}
       <div className={`space-y-2 ${isCompact ? "max-h-48 overflow-y-auto" : ""}`}>
         <AnimatePresence initial={false}>
-          {artifacts.map((artifact) => {
+          {artifacts.map((artifact, index) => {
             const Icon = KIND_ICON[artifact.kind] ?? FileText;
             const colorCls = KIND_COLORS[artifact.kind] ?? KIND_COLORS.file;
-            const isReport = artifact.kind === "report";
             const isUrl = artifact.kind === "url";
             const isDownloadable =
+              artifact.kind === "attachment" ||
+              artifact.kind === "department_report" ||
               artifact.kind === "file" ||
-              artifact.kind === "report" ||
-              artifact.kind === "log";
-            /* Req 5.1 — highlight report when mission completed */
-            const highlighted = isReport && isCompleted;
+              artifact.kind === "log" ||
+              artifact.kind === "report";
+            const highlight = shouldHighlightArtifact(artifact, missionStatus);
+            const previewEnabled =
+              isArtifactPreviewable(artifact) &&
+              (!isCompact || (artifact.kind === "report" && isCompleted));
+            const downloadDisabled =
+              downloadingArtifactId === artifact.id ||
+              (!isUrl && !(artifact.downloadUrl || artifact.href));
 
             return (
               <motion.div
@@ -150,12 +197,11 @@ export function ArtifactListBlock({
                 animate="animate"
                 exit="exit"
                 className={`flex items-start gap-3 rounded-xl p-2 ${
-                  highlighted
+                  highlight
                     ? "glass-panel border-amber-400/20 bg-amber-500/10"
                     : "bg-white/5"
                 }`}
               >
-                {/* Icon + kind tag */}
                 <div className="flex shrink-0 flex-col items-center gap-1 pt-0.5">
                   <Icon className="h-4 w-4 text-white/50" />
                   <span
@@ -165,46 +211,48 @@ export function ArtifactListBlock({
                   </span>
                 </div>
 
-                {/* Name + description */}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[11px] font-semibold text-white">
                     {artifact.title}
                   </p>
-                  {artifact.description && (
+                  {artifact.description ? (
                     <p className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-white/40">
                       {artifact.description}
                     </p>
-                  )}
+                  ) : null}
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {/* Req 5.2 — report completed: preview + download dual buttons */}
-                  {isReport && isCompleted && (
+                  {previewEnabled ? (
                     <GlowButton
+                      type="button"
                       variant="ghost"
                       className="!px-2 !py-1 !text-[10px]"
-                      onClick={() => handleDownload(artifact.previewUrl)}
+                      onClick={() => handlePreview(artifact, index)}
                     >
                       <Eye className="mr-1 h-3 w-3" />
-                      {previewLabel(locale)}
+                      {!isCompact ? t(locale, "Preview", "Preview") : null}
                     </GlowButton>
-                  )}
+                  ) : null}
 
-                  {/* Req 3.3 — download button for file/report/log */}
-                  {isDownloadable && (
+                  {isDownloadable ? (
                     <GlowButton
+                      type="button"
                       variant="primary"
                       className="!px-2 !py-1 !text-[10px]"
-                      onClick={() => handleDownload(artifact.downloadUrl)}
+                      onClick={() => handleDownload(artifact, index)}
+                      disabled={downloadDisabled}
                     >
-                      <Download className="mr-1 h-3 w-3" />
-                      {!isCompact && downloadLabel(locale)}
+                      {downloadingArtifactId === artifact.id ? (
+                        <LoaderCircle className="mr-1 h-3 w-3 animate-spin" />
+                      ) : (
+                        <Download className="mr-1 h-3 w-3" />
+                      )}
+                      {!isCompact ? t(locale, "Download", "Download") : null}
                     </GlowButton>
-                  )}
+                  ) : null}
 
-                  {/* Req 3.4 — external link button for url kind */}
-                  {isUrl && (
+                  {isUrl ? (
                     <a
                       href={artifact.href}
                       target="_blank"
@@ -212,9 +260,9 @@ export function ArtifactListBlock({
                       className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-2 py-1 text-[10px] font-semibold text-white/70 transition-colors hover:bg-white/10"
                     >
                       <ExternalLink className="h-3 w-3" />
-                      {!isCompact && openLinkLabel(locale)}
+                      {!isCompact ? t(locale, "Open Link", "Open Link") : null}
                     </a>
-                  )}
+                  ) : null}
                 </div>
               </motion.div>
             );

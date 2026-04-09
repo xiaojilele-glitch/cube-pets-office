@@ -10,7 +10,10 @@ import { workflowEngine } from "../core/workflow-engine.js";
 import { reportStore } from "../memory/report-store.js";
 import { serverRuntime } from "../runtime/server-runtime.js";
 import { missionRuntime } from "../tasks/mission-runtime.js";
-import { linkWorkflowToMission } from "../core/mission-enrichment-bridge.js";
+import {
+  linkWorkflowToMission,
+  resolveWorkflowMission,
+} from "../core/mission-enrichment-bridge.js";
 import {
   buildWorkflowDirectiveContext,
   buildWorkflowInputSignature,
@@ -33,6 +36,15 @@ function getWorkflowInputSignature(workflow: ReturnType<typeof db.getWorkflows>[
         workflow.directive,
         normalizeWorkflowAttachments(workflow.results?.input?.attachments)
       );
+}
+
+function withMissionLink<T extends { id: string }>(workflow: T): T & {
+  missionId: string | null;
+} {
+  return {
+    ...workflow,
+    missionId: resolveWorkflowMission(workflow.id) ?? null,
+  };
 }
 
 // POST /api/workflows — Start a new workflow
@@ -136,7 +148,7 @@ router.post("/", async (req, res) => {
 // GET /api/workflows — List all workflows
 router.get("/", (_req, res) => {
   const workflows = db.getWorkflows();
-  res.json({ workflows });
+  res.json({ workflows: workflows.map(withMissionLink) });
 });
 
 // GET /api/workflows/:id — Get workflow details
@@ -158,7 +170,7 @@ router.get("/:id", (req, res) => {
   };
 
   res.json({
-    workflow: wf,
+    workflow: withMissionLink(wf),
     tasks,
     messages,
     report,

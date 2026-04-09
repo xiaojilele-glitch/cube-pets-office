@@ -21,7 +21,7 @@
     - 实现 `resolveArtifactAbsolutePath(missionId: string, jobId: string, relativePath: string): string` 函数
     - _需求: 2.2, 2.5, 7.3, 7.4_
 
-  - [ ] 1.3 为 artifact-utils 编写单元测试
+  - [x] 1.3 为 artifact-utils 编写单元测试
     - 测试 `getMimeType` 对各扩展名的映射正确性
     - 测试 `validateArtifactPath` 拒绝 `..` 路径遍历
     - 测试 `resolveArtifactAbsolutePath` 路径拼接正确性
@@ -52,7 +52,7 @@
     - 返回文本内容，Content-Type 设为对应文本 MIME 类型，不设置 Content-Disposition
     - _需求: 7.1, 7.2, 7.3, 7.4_
 
-  - [ ] 2.4 为三个 Artifact API 端点编写集成测试
+  - [x] 2.4 为三个 Artifact API 端点编写集成测试
     - 测试列表查询正常返回、404、空数组场景
     - 测试下载路由的流式响应、302 重定向、403 路径校验、404 文件不存在
     - 测试预览路由的文本返回、截断标记、415 二进制拒绝
@@ -68,14 +68,14 @@
     - 根据 kind 和 path/url 设置 `downloadKind`（`"server"` 或 `"external"`）和 `href`
     - _需求: 1.4, 3.3, 3.4, 4.4_
 
-  - [ ] 4.2 为 `buildMissionArtifacts` 扩展编写单元测试
+  - [x] 4.2 为 `buildMissionArtifacts` 扩展编写单元测试
     - 验证 downloadUrl/previewUrl 生成格式正确
     - 验证 kind 为 url 时 downloadKind 为 "external"，href 为 artifact.url
     - 验证 kind 为 file 时 downloadKind 为 "server"，href 为下载 API 路径
     - _需求: 1.4, 3.3, 3.4_
 
-- [ ] 5. ArtifactListBlock 可复用组件
-  - [ ] 5.1 创建 `client/src/components/tasks/ArtifactListBlock.tsx`
+- [x] 5. ArtifactListBlock 可复用组件
+  - [x] 5.1 创建 `client/src/components/tasks/ArtifactListBlock.tsx`
     - 接收 `ArtifactListBlockProps`（missionId, artifacts, missionStatus, variant）
     - 渲染产物列表：每项显示 name、kind 标签、description
     - kind 为 `file`/`report`/`log` 时渲染 GlowButton 下载按钮，点击触发 `window.open(downloadUrl)`
@@ -87,14 +87,14 @@
     - 新增 artifact 使用 Framer Motion `AnimatePresence` + `motion.div` 入场动画
     - _需求: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 5.1, 5.2, 6.3, 6.4_
 
-  - [ ] 5.2 为 ArtifactListBlock 编写单元测试
+  - [x] 5.2 为 ArtifactListBlock 编写单元测试
     - 测试空 artifacts 不渲染
     - 测试各 kind 类型渲染对应按钮
     - 测试 report 类型在 completed 状态下突出显示
     - _需求: 3.1–3.6_
 
-- [ ] 6. ArtifactPreviewDialog 模态弹窗组件
-  - [ ] 6.1 创建 `client/src/components/tasks/ArtifactPreviewDialog.tsx`
+- [x] 6. ArtifactPreviewDialog 模态弹窗组件
+  - [x] 6.1 创建 `client/src/components/tasks/ArtifactPreviewDialog.tsx`
     - 接收 `ArtifactPreviewDialogProps`（missionId, artifactIndex, artifactName, format, open, onOpenChange）
     - 打开时调用 `GET /api/tasks/:missionId/artifacts/:index/preview` 获取内容
     - 根据 format 渲染：MD → react-markdown 富文本，JSON → 格式化代码块，log/其他 → 等宽字体文本
@@ -103,32 +103,32 @@
     - 使用项目现有 Dialog 组件（shadcn/ui）作为容器
     - _需求: 4.2, 4.3, 5.3, 7.1, 7.2_
 
-  - [ ] 6.2 为 ArtifactPreviewDialog 编写单元测试
+  - [x] 6.2 为 ArtifactPreviewDialog 编写单元测试
     - 测试 open 状态下发起 fetch 请求
     - 测试截断提示显示逻辑
     - _需求: 5.3, 7.2_
 
-- [ ] 7. 检查点 — 确保前端组件测试通过
+- [x] 7. 检查点 — 确保前端组件测试通过
   - 确保所有测试通过，如有疑问请询问用户。
 
-- [ ] 8. WorkflowPanel 集成 ArtifactListBlock
-  - [ ] 8.1 在 `client/src/components/WorkflowPanel.tsx` 的 `ProgressView` 中集成 ArtifactListBlock
+- [x] 8. WorkflowPanel 集成 ArtifactListBlock
+  - [x] 8.1 在 `client/src/components/WorkflowPanel.tsx` 的 `ProgressView` 中集成 ArtifactListBlock
     - 从 tasks-store 获取当前 Mission 的 artifacts 数据
     - 在进度视图区域底部渲染 `ArtifactListBlock`，variant 为 `"compact"`
     - 传入 missionId、artifacts、missionStatus
     - artifacts 为空时不渲染该区块
     - _需求: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 9. TaskDetailView 集成 ArtifactListBlock 和 ArtifactPreviewDialog
-  - [ ] 9.1 在 `client/src/components/tasks/TaskDetailView.tsx` 中集成产物展示
+- [x] 9. TaskDetailView 集成 ArtifactListBlock 和 ArtifactPreviewDialog
+  - [x] 9.1 在 `client/src/components/tasks/TaskDetailView.tsx` 中集成产物展示
     - 在现有 Artifacts 面板区域使用 `ArtifactListBlock`，variant 为 `"full"`
     - 为 kind 为 `log` 和 `report`（JSON 格式）的 artifact 添加预览按钮
     - 点击预览按钮打开 `ArtifactPreviewDialog`
     - 下载按钮点击时显示加载状态，防止重复点击
     - _需求: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-- [ ] 10. Socket.IO 实时推送集成
-  - [ ] 10.1 验证并确保 tasks-store 中 `mission.record.updated` 事件处理包含 artifacts 更新
+- [x] 10. Socket.IO 实时推送集成
+  - [x] 10.1 验证并确保 tasks-store 中 `mission.record.updated` 事件处理包含 artifacts 更新
     - 确认 `patchMissionRecordInStore` 函数在接收 Socket 事件时正确更新 artifacts 字段
     - 确认 `buildMissionArtifacts` 在 MissionRecord 更新后被重新调用
     - 如需修改，确保 artifacts 变化在 500ms 内反映到 UI

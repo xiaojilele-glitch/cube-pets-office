@@ -556,7 +556,7 @@ function extensionFromValue(value?: string | null): string | null {
   return normalized.slice(index + 1).toLowerCase();
 }
 
-function buildMissionArtifacts(mission: MissionRecord): TaskArtifact[] {
+export function buildMissionArtifacts(mission: MissionRecord): TaskArtifact[] {
   return (mission.artifacts || []).map((artifact: MissionArtifact, index) => {
     const downloadUrl = `/api/tasks/${mission.id}/artifacts/${index}/download`;
     const previewUrl = `/api/tasks/${mission.id}/artifacts/${index}/preview`;
@@ -1101,7 +1101,7 @@ function resolveSelectedTaskId(
   return pickFallbackTaskId(summaries);
 }
 
-async function patchMissionRecordInStore(
+export async function patchMissionRecordInStore(
   missionId: string,
   set: (
     partial:

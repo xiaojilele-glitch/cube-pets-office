@@ -68,7 +68,9 @@ import { useDemoMode } from '@/hooks/useDemoMode';
 import { MemoryTimeline } from '@/components/demo/MemoryTimeline';
 import { EvolutionScoreCard } from '@/components/demo/EvolutionScoreCard';
 import { SessionHistoryTab } from '@/components/SessionHistoryTab';
+import { ArtifactListBlock } from '@/components/tasks/ArtifactListBlock';
 import { useAutonomyStore } from '@/lib/autonomy-store';
+import { useTasksStore } from '@/lib/tasks-store';
 import type {
   AssessmentResult,
   JudgingScore,
@@ -1394,6 +1396,10 @@ function ProgressView() {
   const locale = useAppStore(state => state.locale);
   const fmt = useFmt();
   const { currentWorkflow, tasks, messages, stages, downloadWorkflowReport, downloadDepartmentReport } = useWorkflowStore();
+  const workflowMissionDetail = useTasksStore(state => {
+    const missionId = currentWorkflow?.missionId;
+    return missionId ? state.detailsById[missionId] ?? null : null;
+  });
   const [expandedRoleKeys, setExpandedRoleKeys] = useState<string[]>([]);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [isContextOpen, setIsContextOpen] = useState(false);
@@ -1411,6 +1417,17 @@ function ProgressView() {
     setShowAllEvents(false);
     setIsContextOpen(false);
   }, [currentWorkflow?.id]);
+
+  useEffect(() => {
+    const missionId = currentWorkflow?.missionId;
+    if (!missionId || workflowMissionDetail) {
+      return;
+    }
+
+    void useTasksStore.getState().refresh({
+      preferredTaskId: missionId,
+    });
+  }, [currentWorkflow?.missionId, workflowMissionDetail]);
 
   const progressState = useMemo(() => {
     const groupedByDepartment = Object.entries(
@@ -1648,6 +1665,16 @@ function ProgressView() {
               <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white/60"><Download className="h-3.5 w-3.5" />{t(locale, '导出到其他框架', 'Export to Other Frameworks')}</button>
             ) : null}
           </div>
+          {workflowMissionDetail?.artifacts?.length ? (
+            <div className="mt-4">
+              <ArtifactListBlock
+                missionId={workflowMissionDetail.id}
+                artifacts={workflowMissionDetail.artifacts}
+                missionStatus={currentWorkflow.status}
+                variant="compact"
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="rounded-2xl glass-panel p-3">
