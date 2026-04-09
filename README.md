@@ -16,7 +16,8 @@
 <p align="center">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-111827" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-180K%20lines-3178c6" />
-  <img alt="modules" src="https://img.shields.io/badge/modules-38%2F39%20done-22c55e" />
+  <img alt="specs" src="https://img.shields.io/badge/specs-52%20tracked-0ea5e9" />
+  <img alt="status" src="https://img.shields.io/badge/status-38%20done%20%C2%B7%204%20active-22c55e" />
   <img alt="scene" src="https://img.shields.io/badge/3D-Three.js-8b5cf6" />
   <img alt="agents" src="https://img.shields.io/badge/agents-动态组织-f97316" />
   <img alt="i18n" src="https://img.shields.io/badge/i18n-中文%20%2F%20English-22c55e" />
@@ -90,11 +91,11 @@ npm run dev:frontend
 
 完整的 3D 场景、动态组织可视化、工作流面板和交互界面——全部在浏览器里运行。
 
-### 方式二：接入 LLM（完整模式）
+### 方式二：接入 LLM（完整开发模式）
 
 ```bash
 cp .env.example .env
-# 编辑 .env，填入你的 API Key
+# 编辑 .env，至少填入 LLM_API_KEY
 npm run dev:all
 ```
 
@@ -103,23 +104,31 @@ npm run dev:all
 ```dotenv
 LLM_API_KEY=你的密钥
 LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL=gpt-4o
+LLM_MODEL=gpt-5.4
+LLM_WIRE_API=responses
 ```
 
-### 方式三：接入执行器（真实任务执行）
+`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。若机器上没有 Docker，把 `LOBSTER_EXECUTION_MODE=mock` 写入 `.env` 即可继续体验完整链路。
+
+### 方式三：单独控制执行器（调试 / 真实 Docker）
 
 ```bash
-# 终端 1：启动主服务
-npm run dev:all
+# 终端 1：启动服务端
+npm run dev:server
 
-# 终端 2：启动 lobster 执行器（mock 模式，无需 Docker）
-cd services/lobster-executor && npm start
+# 终端 2：启动前端
+npm run dev:frontend
 
-# 或者启动真实 Docker 模式（需要 Docker 运行中）
-LOBSTER_EXECUTION_MODE=real npm start
+# 终端 3：单独启动执行器（mock 模式，无需 Docker）
+LOBSTER_EXECUTION_MODE=mock npx tsx services/lobster-executor/src/index.ts
+
+# 或真实 Docker 模式（需要 Docker 运行中）
+LOBSTER_EXECUTION_MODE=real npx tsx services/lobster-executor/src/index.ts
 ```
 
-系统会把 AI 生成的执行计划下发到 Docker 执行器，页面上实时展示容器状态、日志和产物。支持 mock 模式（开发调试）和 real 模式（真实 Docker 容器执行）。
+PowerShell 下可先执行 `$env:LOBSTER_EXECUTION_MODE='mock'` 或 `$env:LOBSTER_EXECUTION_MODE='real'` 再启动命令。
+
+系统会把 AI 生成的执行计划下发到 Lobster 执行器，页面上实时展示容器状态、日志和产物。支持 mock 模式（开发调试）和 real 模式（真实 Docker 容器执行）。
 
 ---
 
@@ -136,83 +145,36 @@ LOBSTER_EXECUTION_MODE=real npm start
 ```
 cube-pets-office/
 ├── client/                          # 🖥️ 前端应用
-│   ├── src/
-│   │   ├── components/              # UI 组件
-│   │   │   ├── Scene3D.tsx          # Three.js 3D 办公室场景
-│   │   │   ├── ChatPanel.tsx        # 工作流对话面板
-│   │   │   ├── CostDashboard.tsx    # 成本可观测看板
-│   │   │   ├── TelemetryDashboard   # 实时遥测仪表盘
-│   │   │   ├── GovernancePanel      # 成本治理面板
-│   │   │   ├── knowledge/           # 知识图谱可视化
-│   │   │   ├── rag/                 # RAG 管道界面
-│   │   │   ├── replay/              # 执行回放组件
-│   │   │   ├── reputation/          # 信誉评分展示
-│   │   │   ├── lineage/             # 数据血缘 DAG / 热力图 / 时间线
-│   │   │   ├── AuditPanel.tsx       # 审计日志面板
-│   │   │   ├── HoloDock.tsx         # 全息胶囊 Dock 导航
-│   │   │   └── HoloDrawer.tsx       # 全息侧边抽屉
-│   │   ├── lib/                     # 状态管理 (Zustand stores)
-│   │   ├── runtime/                 # 浏览器运行时引擎
-│   │   └── hooks/                   # React Hooks
-│   └── public/                      # 静态资源 + 3D 模型
-│
+│   └── src/
+│       ├── components/              # Scene3D、tasks、nl-command、lineage、replay 等 UI
+│       ├── lib/                     # Zustand stores、API clients、工具函数
+│       ├── pages/                   # 页面级入口
+│       ├── runtime/                 # 浏览器运行时
+│       ├── workers/                 # snapshot-worker 等 Web Worker
+│       └── i18n/                    # 中英文本地化资源
 ├── server/                          # 🧠 服务端
-│   ├── core/
-│   │   ├── workflow-engine.ts       # 十阶段工作流引擎
-│   │   ├── dynamic-organization.ts  # 动态组织生成器
-│   │   ├── mission-runtime.ts       # Mission 六阶段状态机
-│   │   ├── cost-tracker.ts          # 成本追踪器
-│   │   ├── governance/              # 成本治理子系统
-│   │   │   ├── alert-manager.ts     # 四级告警管理
-│   │   │   ├── budget-manager.ts    # 多级预算管理
-│   │   │   ├── downgrade-manager.ts # 灰度模型降级
-│   │   │   └── audit-trail.ts       # 审计链
-│   │   ├── memory/                  # 三级记忆系统
-│   │   ├── knowledge-graph/         # 知识图谱引擎
-│   │   ├── rag/                     # RAG Pipeline
-│   │   ├── skills/                  # Skill 热插拔
-│   │   ├── roles/                   # 动态角色系统
-│   │   ├── reputation/              # 信誉评分
-│   │   ├── autonomy/                # 自评估 + 竞争执行
-│   │   ├── swarm-orchestrator.ts    # 跨 Pod 自主协作
-│   │   ├── a2a-server.ts           # A2A 协议服务端
-│   │   ├── a2a-client.ts           # A2A 协议客户端
-│   │   ├── a2a-adapters/           # CrewAI/LangGraph/AutoGen 适配器
-│   │   ├── guest-agent.ts          # Guest Agent 生命周期
-│   │   └── guest-lifecycle.ts      # Guest Agent 沙箱运行时
-│   ├── audit/                       # 🛡️ 审计子系统
-│   │   ├── audit-chain.ts          # 哈希链式审计日志
-│   │   ├── audit-collector.ts      # 事件采集器
-│   │   ├── anomaly-detector.ts     # 异常检测
-│   │   └── audit-verifier.ts       # 链完整性验证
-│   ├── lineage/                     # 📊 数据血缘
-│   │   ├── lineage-collector.ts    # 数据流采集
-│   │   ├── lineage-store.ts        # 图存储
-│   │   ├── lineage-query.ts        # 血缘查询
-│   │   └── lineage-export.ts       # DOT/JSON/CSV 导出
+│   ├── core/                        # workflow-engine、dynamic-organization、A2A、swarm、治理逻辑
+│   ├── tasks/                       # Mission runtime / store / decision
 │   ├── routes/                      # REST API 路由
-│   └── tests/                       # 测试套件 (Vitest + fast-check)
-│
-├── shared/                          # 📦 前后端共享
-│   ├── cost.ts                      # 成本基础类型 + 定价表
-│   ├── cost-governance.ts           # 成本治理类型 + 常量
-│   ├── llm/contracts.ts             # LLM 多提供商抽象
-│   ├── rag/contracts.ts             # RAG Pipeline 契约
-│   ├── skill/contracts.ts           # Skill 注册契约
-│   ├── export/contracts.ts          # 跨框架导出契约
-│   └── ...                          # 8 个契约模块
-│
-├── services/                        # 🐳 执行器
-│   └── lobster-executor/            # Docker 参考执行器
-│       ├── src/
-│       │   ├── docker-runner.ts     # 真实 Docker 容器生命周期
-│       │   ├── mock-runner.ts       # Mock 模式（无 Docker 依赖）
-│       │   ├── callback-sender.ts   # HMAC 签名回调投递
-│       │   ├── security-policy.ts   # 安全沙箱策略
-│       │   ├── screenshot-utils.ts  # 容器截图工具
-│       │   └── credential-*.ts      # AI 凭证注入/脱敏
-│       └── ai-bridge/               # 容器内 AI 通信桥接
-│
+│   ├── audit/ replay/ lineage/      # 审计、回放、数据血缘
+│   ├── knowledge/ rag/ permission/  # 知识、检索、权限
+│   └── tests/                       # Vitest + fast-check
+├── shared/                          # 📦 前后端共享契约
+│   ├── mission/ executor/ nl-command/
+│   ├── knowledge/ lineage/ replay/
+│   ├── audit/ permission/ rag/ skill/
+│   └── telemetry/ llm/ demo/ export/
+├── services/lobster-executor/       # 🐳 执行器
+│   ├── src/index.ts                 # 执行器入口
+│   ├── src/app.ts                   # HTTP API + /health
+│   ├── src/docker-runner.ts         # 真实 Docker 容器生命周期
+│   ├── src/mock-runner.ts           # Mock 模式（无 Docker 依赖）
+│   └── src/security-*.ts            # 沙箱、安全审计、凭证注入
+├── .kiro/                           # 需求与 steering
+│   ├── specs/                       # requirements / design / tasks
+│   └── steering/                    # 当前项目总览与执行口径
+├── data/                            # 本地 JSON、回放、测试数据
+├── scripts/                         # dev-all、smoke、worktree 工具
 └── docs/                            # 📖 文档与规范
 ```
 
@@ -273,7 +235,7 @@ cube-pets-office/
 | 飞书集成 | ✅ | ACK / Progress / 决策回传 |
 | 中英文 / 移动端 | ✅ | i18n 双语切换，响应式布局 |
 
-### � 执行器与安全
+### 🐳 执行器与安全
 
 | 功能 | 状态 | 说明 |
 |------|:----:|------|
@@ -301,7 +263,14 @@ cube-pets-office/
 | 3D Agent 状态融合 | ✅ | 呼吸光晕动画、状态驱动文字颜色、glass-3d 姓名牌 |
 | 科技感排版 | ✅ | Space Grotesk 标题 + JetBrains Mono 数据字体 |
 
-### 🚧 规划中（第四层）
+### 🧩 近期补完
+
+| 功能 | 状态 | 说明 |
+|------|:----:|------|
+| 工作流产物展示与下载 | 🚧 | Artifact API、基础列表组件已落地，预览弹窗、任务页集成与测试进行中 |
+| i18n cleanup | 📋 | 文案统一、国际化收口 |
+
+### 🚧 规划中（平台层）
 
 | 功能 | 状态 | 说明 |
 |------|:----:|------|
@@ -320,13 +289,10 @@ cube-pets-office/
 | 维度 | 数据 |
 |------|------|
 | TypeScript 源码 | **850+ 文件 / ~180,000 行** |
-| 服务端 (server/) | 420+ 文件 / ~108,000 行 |
-| 前端 (client/) | 300+ 文件 / ~52,000 行 |
-| 共享层 (shared/) | 70+ 文件 / ~12,000 行 |
-| 执行器 (services/) | 51 文件 / ~7,800 行 |
-| 功能模块 | **39 个 spec，已完成 38 个** |
-| 契约模块 | 8 个（shared/ 下冻结） |
-| 属性测试 | 20+ correctness properties (fast-check) |
+| `.kiro/specs` | **52 个目录：38 已完成 / 4 进行中 / 9 未开始 / 1 待补 `tasks.md`** |
+| 共享契约 | **14 个 `shared/**/contracts.ts` 模块** |
+| 测试覆盖 | **300+ 测试文件（Vitest + fast-check）** |
+| 当前活跃增量 | `workflow-artifacts-display` |
 | Commits | 280+ |
 
 ---
@@ -362,9 +328,13 @@ cube-pets-office/
 
 ```bash
 npm run dev:frontend   # 只启动前端（纯体验）
-npm run dev:all        # 启动前端 + 服务端（完整模式）
+npm run dev:server     # 只启动服务端
+npm run dev:all        # 启动前端 + 服务端 + 执行器
 npm run dev:stop       # 停止本地开发进程
+npx tsx services/lobster-executor/src/index.ts  # 单独启动执行器
+npm run build          # 构建前端 + 服务端
 npm run build:pages    # 构建 GitHub Pages 静态产物
+npm run preview        # 预览前端构建产物
 npm run check          # TypeScript 类型检查
 ```
 
@@ -372,7 +342,7 @@ npm run check          # TypeScript 类型检查
 
 ## 🤝 参与贡献
 
-欢迎 PR。代码库通过 `npm run check`（TypeScript 严格模式）。推荐从这两个文件开始了解核心逻辑：
+欢迎 PR。提交前建议运行 `npm run check`。如果当前分支存在进行中的类型基线问题，请至少保证不新增错误，并在提交说明里写清楚差异。推荐从这两个文件开始了解核心逻辑：
 
 - 工作流引擎：`server/core/workflow-engine.ts`
 - 浏览器运行时：`client/src/runtime/browser-runtime.ts`
@@ -381,6 +351,8 @@ npm run check          # TypeScript 类型检查
 
 ## 📖 文档
 
+- [.kiro/steering/](./.kiro/steering/) — 当前项目总览、执行口径与实现指南
+- [.kiro/specs/](./.kiro/specs/) — 每个 spec 的 requirements / design / tasks
 - [ROADMAP.md](./ROADMAP.md) — 开发阶段与完成状态
 - [CHANGELOG.md](./CHANGELOG.md) — 近期变更记录
 - [docs/](./docs/) — 契约规范与架构说明

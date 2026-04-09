@@ -1,12 +1,21 @@
 import { Router } from 'express';
+import fs from 'node:fs';
+import { stat } from 'node:fs/promises';
 
 import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
+import type { ArtifactListItem, ArtifactListResponse } from '../../shared/mission/contracts.js';
 import { BUILTIN_DECISION_TEMPLATES } from '../../shared/mission/decision-templates.js';
 import { submitMissionDecision } from '../tasks/mission-decision.js';
 import {
   missionRuntime,
   type MissionRuntime,
 } from '../tasks/mission-runtime.js';
+import {
+  getMimeType,
+  isTextMime,
+  validateArtifactPath,
+  resolveArtifactAbsolutePath,
+} from './artifact-utils.js';
 
 const DEFAULT_LIMIT = 20;
 const DEFAULT_DECISION_LIMIT = 50;
@@ -114,6 +123,139 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
       missionId: task.id,
       decisions: sliced,
     });
+  });
+
+  /* ─── Artifact Routes (Task 2.1 / 2.2 / 2.3) ─── */
+
+  // 2.1 — List artifacts
+  router.get('/:id/artifacts', (req, res) => {
+    const mission = runtime.getTask(req.params.id);
+    if (!mission) {
+      return res.status(404).json({ error: `Mission not found: ${req.params.id}` });
+    }
+
+    const raw = mission.artifacts ?? [];
+    const artifacts: ArtifactListItem[] = raw.map((a, index) => ({
+      ...a,
+      index,
+      downloadUrl: `/api/tasks/${mission.id}/artifacts/${index}/download`,
+    }));
+
+    const body: ArtifactListResponse = {
+      ok: true,
+      missionId: mission.id,
+      artifacts,
+    };
+    return res.json(body);
+  });
+
+  // 2.2 — Download artifact
+  router.get('/:id/artifacts/:index/download', async (req, res) => {
+    const mission = runtime.getTask(req.params.id);
+    if (!mission) {
+      return res.status(404).json({ error: `Mission not found: ${req.params.id}` });
+    }
+
+    const raw = mission.artifacts ?? [];
+    const idx = Number(req.params.index);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= raw.length) {
+      return res.status(404).json({ error: `Artifact not found at index ${req.params.index}` });
+    }
+
+    const artifact = raw[idx];
+
+    // URL artifacts → 302 redirect
+    if (artifact.kind === 'url') {
+      return res.redirect(302, artifact.url ?? '');
+    }
+
+    if (!artifact.path) {
+      return res.status(404).json({ error: 'Artifact has no file path' });
+    }
+
+    if (!validateArtifactPath(artifact.path)) {
+      return res.status(403).json({ error: 'Path traversal not allowed' });
+    }
+
+    const jobId = mission.executor?.jobId ?? '';
+    const absPath = resolveArtifactAbsolutePath(mission.id, jobId, artifact.path);
+
+    try {
+      await stat(absPath);
+    } catch {
+      return res.status(404).json({ error: 'Artifact file not found' });
+    }
+
+    res.setHeader('Content-Type', getMimeType(artifact.name));
+    res.setHeader('Content-Disposition', `attachment; filename="${artifact.name}"`);
+    const stream = fs.createReadStream(absPath);
+    stream.on('error', () => {
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to read artifact file' });
+      }
+    });
+    stream.pipe(res);
+  });
+
+  // 2.3 — Preview artifact
+  router.get('/:id/artifacts/:index/preview', async (req, res) => {
+    const mission = runtime.getTask(req.params.id);
+    if (!mission) {
+      return res.status(404).json({ error: `Mission not found: ${req.params.id}` });
+    }
+
+    const raw = mission.artifacts ?? [];
+    const idx = Number(req.params.index);
+    if (!Number.isInteger(idx) || idx < 0 || idx >= raw.length) {
+      return res.status(404).json({ error: `Artifact not found at index ${req.params.index}` });
+    }
+
+    const artifact = raw[idx];
+
+    if (!artifact.path) {
+      return res.status(404).json({ error: 'Artifact has no file path' });
+    }
+
+    if (!validateArtifactPath(artifact.path)) {
+      return res.status(403).json({ error: 'Path traversal not allowed' });
+    }
+
+    const mime = getMimeType(artifact.name);
+    if (!isTextMime(mime)) {
+      return res.status(415).json({ error: 'Binary files cannot be previewed' });
+    }
+
+    const jobId = mission.executor?.jobId ?? '';
+    const absPath = resolveArtifactAbsolutePath(mission.id, jobId, artifact.path);
+
+    const MAX_PREVIEW_BYTES = 1_048_576; // 1 MB
+
+    try {
+      const fileStat = await stat(absPath);
+      if (!fileStat.isFile()) {
+        return res.status(404).json({ error: 'Artifact file not found' });
+      }
+
+      const truncated = fileStat.size > MAX_PREVIEW_BYTES;
+
+      res.setHeader('Content-Type', mime);
+      if (truncated) {
+        res.setHeader('X-Truncated', 'true');
+      }
+
+      const stream = fs.createReadStream(absPath, {
+        start: 0,
+        end: truncated ? MAX_PREVIEW_BYTES - 1 : undefined,
+      });
+      stream.on('error', () => {
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to read artifact file' });
+        }
+      });
+      stream.pipe(res);
+    } catch {
+      return res.status(404).json({ error: 'Artifact file not found' });
+    }
   });
 
   router.post('/:id/decision', (req, res) => {

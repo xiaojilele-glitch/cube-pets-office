@@ -137,10 +137,12 @@ export interface TaskArtifact {
   format?: string;
   filename?: string;
   workflowId?: string;
-  downloadKind?: "workflow" | "department" | "attachment" | "external";
+  downloadKind?: "workflow" | "department" | "attachment" | "external" | "server";
   href?: string;
   content?: string;
   mimeType?: string;
+  downloadUrl?: string;
+  previewUrl?: string;
 }
 
 export interface TaskDecisionPreset {
@@ -556,12 +558,25 @@ function extensionFromValue(value?: string | null): string | null {
 
 function buildMissionArtifacts(mission: MissionRecord): TaskArtifact[] {
   return (mission.artifacts || []).map((artifact: MissionArtifact, index) => {
-    const href = artifact.url || undefined;
+    const downloadUrl = `/api/tasks/${mission.id}/artifacts/${index}/download`;
+    const previewUrl = `/api/tasks/${mission.id}/artifacts/${index}/preview`;
     const format =
       extensionFromValue(artifact.name) ||
       extensionFromValue(artifact.path) ||
       extensionFromValue(artifact.url) ||
       undefined;
+
+    const isExternal = artifact.kind === "url";
+    const downloadKind: TaskArtifact["downloadKind"] = isExternal
+      ? "external"
+      : artifact.path
+        ? "server"
+        : undefined;
+    const href = isExternal
+      ? artifact.url
+      : artifact.path
+        ? downloadUrl
+        : undefined;
 
     return {
       id: `${mission.id}:mission-artifact:${index}`,
@@ -574,8 +589,10 @@ function buildMissionArtifacts(mission: MissionRecord): TaskArtifact[] {
       kind: artifact.kind,
       format,
       filename: artifact.name,
-      downloadKind: href ? "external" : undefined,
+      downloadKind,
       href,
+      downloadUrl,
+      previewUrl,
     };
   });
 }

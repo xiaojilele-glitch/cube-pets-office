@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-46 个 Spec，其中 8 个已完成，38 个待开发。按领域分为 8 个大类。
+本文件创建于 46 个 Spec 阶段；截至 2026-04-09，`.kiro/specs` 已扩展为 52 个目录：38 个已完成、4 个部分完成、9 个未开始、1 个待补 `tasks.md`。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
 
 ### 已完成基座（8 个）
 
@@ -21,7 +21,22 @@ inclusion: manual
 | browser-runtime | 纯前端运行时（IndexedDB + Web Worker） |
 | frontend-3d | 3D 场景 + 工作流面板 + 任务驾驶舱 |
 
-### 待开发（38 个，按领域分类）
+### 后续新增 / 补充 Spec（6 个）
+
+| Spec | 状态 | 简述 |
+|------|------|------|
+| ai-enabled-sandbox | 已完成 | Docker 容器 AI 能力注入 |
+| executor-integration | 已完成 | WorkflowEngine ↔ Docker 执行桥接 |
+| holographic-ui | 已完成 | 全息 UI 收口 |
+| i18n-cleanup | 未开始 | 前端国际化与文案清理 |
+| workflow-artifacts-display | 进行中 | 工作流产物展示与下载 |
+| frontend-demo-mode | 待补任务 | spec 目录已存在，但尚未形成 `tasks.md` |
+
+### 维护说明
+
+下文的 8 个阶段划分保留为原始路线图，用于追溯依赖和架构演化路径；其中“待开发 38 个”的表格是路线图创建时的历史视角，不再代表当前仓库的实时完成度。
+
+### 历史待开发清单（路线图创建时，38 个）
 
 | 领域 | Spec | 简述 |
 |------|------|------|
@@ -447,7 +462,7 @@ flowchart TB
 
 ---
 
-### Phase 7-8 后 · 目标态（全部 46 个 Spec 完成）
+### Phase 7-8 后 · 目标态（全部 52 个 Spec 完成）
 
 ```mermaid
 flowchart TB

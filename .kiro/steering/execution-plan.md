@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description: 
- * @LastEditTime: 2026-04-08 13:19:20
+ * @LastEditTime: 2026-04-09 12:10:00
  * @LastEditors: wangchunji
 -->
 ---
@@ -13,9 +13,9 @@ inclusion: auto
 
 ## 总览
 
-38 个 spec 中 8 个已完成（归档），30 个待开发。按依赖关系、是否可独立执行、是否需要服务器环境分为四个层级。核心策略：契约先行，再并行实现。
+截至 2026-04-09，`.kiro/specs` 共 52 个目录：38 个已完成、4 个部分完成、9 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）。前三层主线与补充 spec `holographic-ui` 已基本落地，当前执行面主要是增量补完（`workflow-artifacts-display`）和平台层待环境项（L31-L38）。
 
-> **进度快照（2026-04-08）**：第一层 9 个 + 第二层 12 个 + 第三层全部 11 个 (L22-L30) = 共 32 个 spec 已实现并合并，第三层全部完成。剩余第四层 L31-L38 待环境就绪。
+> **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
 ## 已完成归档模块
 
@@ -27,6 +27,14 @@ inclusion: auto
 - [x] P05 `feishu-bridge` — 飞书集成
 - [x] P06 `browser-runtime` — 纯前端运行时
 - [x] P07 `frontend-3d` — 3D 场景与前端
+
+## 当前维护快照（2026-04-09）
+
+- 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
+- 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
+- 当前进行中：`workflow-artifacts-display`，已完成服务端 Artifact API、`tasks-store` 扩展和基础产物列表组件。
+- 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
+- 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
 ## 阶段 0：契约先行（并行前必须完成）
 
@@ -183,6 +191,16 @@ holographic-ui spec 已完成（tasks 1-8）
 第四层 (L31-L38) 待环境就绪
 ```
 
+### Day 4+：补完型 spec 与工程收口（当前实际）
+```
+workflow-artifacts-display 进行中：
+  已完成服务端 Artifact API / tasks-store 扩展 / 基础 ArtifactListBlock
+  待补测试、预览弹窗、WorkflowPanel / TaskDetailView 集成与 Socket 联动
+
+i18n-cleanup 未启动
+frontend-demo-mode 待补 tasks.md
+```
+
 ## 关键路径
 
 ```
@@ -212,3 +230,4 @@ C01-C08 契约冻结 (已完成)
 2. 第四层（L31-L38）没有真实多节点环境验证无意义，不建议急着做
 3. 并行组内如果跳过阶段 0 的契约冻结，会导致接口不一致需要返工
 4. L20 和 L21 虽然在第二层，但分别依赖第一层的 L09 和 L06，不能真正并行
+5. 当前 TypeScript 基线未清零，新增 spec 若不控制编译回归，容易把补完型工作拖成全局修复

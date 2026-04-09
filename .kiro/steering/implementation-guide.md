@@ -4,7 +4,7 @@ inclusion: auto
 
 # 模块实现指南
 
-从 rbac-system-pc 的 90 个 AIGC 模块批量实现经验中提炼的方法论，适配 cube-pets-office 的 30 个待开发 spec。
+从 rbac-system-pc 的 90 个 AIGC 模块批量实现经验中提炼的方法论，适配 cube-pets-office 当前“主线已落地、以增量补完 spec 为主”的实现阶段。
 
 ## 一、实现前检查清单（每个模块必须执行）
 
@@ -43,7 +43,9 @@ inclusion: auto
 2. 所有 Checkpoint 任务（如 "Checkpoint - 确保所有测试通过"）**跳过不执行**，直接标记为完成并继续下一个任务
 3. 仅执行代码实现任务（类型定义、核心逻辑、API 路由、前端组件等）
 4. 测试环节留待用户手动触发时再执行
-5. 每个模块完成后必须运行 `npm run check` 确保 TypeScript 编译通过
+5. 每个模块完成后必须运行 `npm run check`；若仓库存在历史 TypeScript 存量错误，至少保证不新增错误，并在 steering/提交说明中记录差异
+
+> 当前基线快照（2026-04-09）：`npm run check` 仍有 30 个 TypeScript 错误，后续模块实现以“局部变更不扩大基线”为最低要求。
 
 ## 三、共享能力注册制（从 rbac-system-pc 迁移的模式）
 
@@ -122,9 +124,9 @@ shared/
 
 ## 五、质量门禁
 
-每个模块实现完成后必须通过：
+每个模块实现完成后必须通过（或在当前基线未绿时明确记录差值）：
 
-1. `npm run check` — TypeScript 严格模式编译
+1. `npm run check` — TypeScript 严格模式编译；若仍受历史错误阻塞，需确认未新增错误
 2. 不引入新的 `any` 类型（除非有明确注释说明原因）
 3. 不修改 `shared/` 下已冻结的契约文件（阶段 0 产出）
 4. 不破坏现有 `npm run dev:frontend` 和 `npm run dev:all` 的启动流程

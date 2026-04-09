@@ -134,6 +134,17 @@ export interface MissionArtifact {
   description?: string;
 }
 
+export interface ArtifactListItem extends MissionArtifact {
+  index: number;
+  downloadUrl: string;
+}
+
+export interface ArtifactListResponse {
+  ok: true;
+  missionId: string;
+  artifacts: ArtifactListItem[];
+}
+
 export interface MissionOrganizationSnapshot {
   departments: Array<{
     key: string;

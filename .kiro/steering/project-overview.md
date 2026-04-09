@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-03-31 14:56:15
  * @Description: 
- * @LastEditTime: 2026-04-08 15:59:05
+ * @LastEditTime: 2026-04-09 12:10:00
  * @LastEditors: wangchunji
 -->
 ---
@@ -28,9 +28,12 @@ inclusion: auto
 ## 项目规模
 
 - 850+ 文件 / ~180,000 行 TypeScript
-- 39 个 spec，已完成 38 个（剩余第四层 L31-L38 待环境就绪）
-- 12 个 shared/ 契约模块
-- 20+ 属性测试 (fast-check correctness properties)
+- `.kiro/specs` 当前共 52 个 spec 目录：38 个已完成、4 个部分完成、9 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）
+- 当前活跃增量 spec：`workflow-artifacts-display`（工作流产物展示与下载）
+- 12 个 shared/ 契约模块，主线能力已覆盖前端、服务端、执行器、审计与互操作层
+- 大量单元测试与属性测试已覆盖 Mission、执行器、RAG、审计、NL Command 等核心域
+
+> 说明：本页以仓库当前 `tasks.md` 勾选状态和工作区代码为准；旧的阶段性计划文档保留用于历史追溯。
 
 ## 系统架构
 
@@ -74,7 +77,7 @@ inclusion: auto
 
 ## 模块完成状态
 
-### ✅ 已完成（38/39）
+### ✅ 已落地主线能力（能力视角）
 
 | 模块 | 说明 |
 |------|------|
@@ -120,10 +123,25 @@ inclusion: auto
 | Guest Agent 市场 | 外部 Agent 沙箱接入 + TTL |
 | 全息 UI 升级 | 毛玻璃拟态 + HoloDock + GlowButton + 呼吸光晕 |
 
-### 📋 规划中（第四层，待环境就绪）
+### 📍 当前进度快照（Spec 视角，2026-04-09）
 
-| 模块 | 依赖 |
+| 状态 | 数量 | 说明 |
+|------|------|------|
+| 已完成 | 38 | 主线 L01-L30 与补充 spec `holographic-ui` 等已合并 |
+| 部分完成 | 4 | `mission-runtime`、`state-persistence-recovery`、`nl-command-center`、`workflow-artifacts-display` |
+| 未开始 | 9 | 以第四层 L31-L38 为主，另含 `i18n-cleanup` |
+| 待补任务清单 | 1 | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md` |
+
+- `workflow-artifacts-display` 是当前活跃项：服务端 Artifact API、`tasks-store` 扩展和基础产物列表组件已落地，预览弹窗、页面集成和测试仍待补齐。
+- `mission-runtime` 与 `nl-command-center` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
+- `state-persistence-recovery` 的未完成项主要集中在标记 `*` 的可选属性测试。
+
+### 📋 待启动 / 待环境就绪
+
+| 模块 | 依赖 / 备注 |
 |------|------|
+| i18n-cleanup | 前端文案 / 国际化收口，独立排期 |
+| frontend-demo-mode | 需先补 `tasks.md`，再确认依赖与范围 |
 | L31 Docker Compose 生产部署 | L22 |
 | L32 多人实时协作 | 无 |
 | L33 多租户隔离 | L25 + L31 |
@@ -132,6 +150,12 @@ inclusion: auto
 | L36 边缘部署 | L31 |
 | L37 多区域灾备 | L31 + L35 |
 | L38 VR 沉浸式扩展 | L03 |
+
+## 工程健康快照
+
+- 当前工作区存在一组围绕 `workflow-artifacts-display` 的暂存改动。
+- `npm run check` 当前仍有 30 个 TypeScript 错误，主要分布在 lineage 可视化、NL Command、workflow-engine 桥接与 `server/index.ts` 等历史模块。
+- 后续增量工作建议以“不扩大现有 TypeScript 基线错误数”为最低要求，并单独安排一轮编译清债。
 
 ## 核心数据流
 

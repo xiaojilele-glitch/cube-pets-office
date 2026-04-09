@@ -1,0 +1,41 @@
+{
+  "missionId": "mission_mnqrjqzq_o3q28o",
+  "startTime": 1775696062929,
+  "endTime": 1775696063063,
+  "totalDuration": 134,
+  "eventCount": 3,
+  "indices": {
+    "byTime": {
+      "1775696062000": [
+        0
+      ],
+      "1775696063000": [
+        1,
+        2
+      ]
+    },
+    "byAgent": {
+      "lobster": [
+        0,
+        1,
+        2
+      ]
+    },
+    "byType": {
+      "CODE_EXECUTED": [
+        0,
+        1
+      ],
+      "RESOURCE_ACCESSED": [
+        2
+      ]
+    },
+    "byResource": {
+      "tmp/lobster-executor/jobs/mission_mnqrjqzq_o3q28o/mission_mnqrjqzq_o3q28o_analyze_1/executor.log": [
+        2
+      ]
+    }
+  },
+  "version": 1,
+  "checksum": "d767067499e775542d39e364418bbe1834c83735eed9f4ab3d2bb3b6182f75d4"
+}
