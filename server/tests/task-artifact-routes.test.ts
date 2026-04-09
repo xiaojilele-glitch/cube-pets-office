@@ -225,6 +225,61 @@ describe("task artifact routes", () => {
     expect(await response.text()).toBe("executor output\n");
   });
 
+  it("downloads fallback content when executor.log exists but is empty", async () => {
+    const mission = runtime.createChatTask("Executor log empty fallback");
+    const jobId = `${mission.id}:analyze:1`;
+    const sanitizedJobId = `${mission.id}_analyze_1`;
+    const jobDirectory = path.join(
+      process.cwd(),
+      "tmp/lobster-executor/jobs",
+      mission.id,
+      sanitizedJobId
+    );
+
+    cleanupTargets.push(
+      path.join(process.cwd(), "tmp/lobster-executor/jobs", mission.id)
+    );
+
+    await fs.mkdir(jobDirectory, { recursive: true });
+    await Promise.all([
+      fs.writeFile(path.join(jobDirectory, "executor.log"), "", "utf-8"),
+      fs.writeFile(
+        path.join(jobDirectory, "events.jsonl"),
+        `${JSON.stringify({
+          occurredAt: "2026-04-09T07:24:09.153Z",
+          message: "Started Docker container 2c3e17c5b91e for Analyze request",
+        })}\n`,
+        "utf-8"
+      ),
+    ]);
+
+    runtime.patchMissionExecution(mission.id, {
+      executor: {
+        name: "executor",
+        jobId,
+        status: "completed",
+      },
+      artifacts: [
+        {
+          kind: "log",
+          name: "executor.log",
+          path: `tmp/lobster-executor/jobs/${mission.id}/${sanitizedJobId}/executor.log`,
+          description: "Line-oriented executor runtime log",
+        },
+      ],
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/tasks/${mission.id}/artifacts/0/download`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/plain");
+    expect(await response.text()).toContain(
+      "Started Docker container 2c3e17c5b91e for Analyze request"
+    );
+  });
+
   it("redirects url artifacts on download", async () => {
     const { missionId } = await createMissionWithArtifacts([
       { kind: "url", name: "Dashboard", url: "https://example.com/dashboard" },
@@ -342,6 +397,61 @@ describe("task artifact routes", () => {
     expect(response.headers.get("content-type")).toContain("text/plain");
     expect(await response.text()).toContain(
       "Started Docker container 4333be9f2fc5 for Analyze request"
+    );
+  });
+
+  it("previews fallback content when executor.log only contains whitespace", async () => {
+    const mission = runtime.createChatTask("Executor log whitespace fallback");
+    const jobId = `${mission.id}:analyze:1`;
+    const sanitizedJobId = `${mission.id}_analyze_1`;
+    const jobDirectory = path.join(
+      process.cwd(),
+      "tmp/lobster-executor/jobs",
+      mission.id,
+      sanitizedJobId
+    );
+
+    cleanupTargets.push(
+      path.join(process.cwd(), "tmp/lobster-executor/jobs", mission.id)
+    );
+
+    await fs.mkdir(jobDirectory, { recursive: true });
+    await Promise.all([
+      fs.writeFile(path.join(jobDirectory, "executor.log"), "   \n\t", "utf-8"),
+      fs.writeFile(
+        path.join(jobDirectory, "events.jsonl"),
+        `${JSON.stringify({
+          occurredAt: "2026-04-09T07:24:09.226Z",
+          message: "Docker execution completed successfully",
+        })}\n`,
+        "utf-8"
+      ),
+    ]);
+
+    runtime.patchMissionExecution(mission.id, {
+      executor: {
+        name: "executor",
+        jobId,
+        status: "completed",
+      },
+      artifacts: [
+        {
+          kind: "log",
+          name: "executor.log",
+          path: `tmp/lobster-executor/jobs/${mission.id}/${sanitizedJobId}/executor.log`,
+          description: "Line-oriented executor runtime log",
+        },
+      ],
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/tasks/${mission.id}/artifacts/0/preview`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/plain");
+    expect(await response.text()).toContain(
+      "Docker execution completed successfully"
     );
   });
 

@@ -47,6 +47,7 @@ function buildTaskTitle(
 
 export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Router {
   const router = Router();
+  const EXECUTOR_LOG_WHITESPACE_CHECK_BYTES = 4096;
 
   async function buildExecutorLogFallback(
     missionId: string,
@@ -82,6 +83,34 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
       return lines.length > 0 ? `${lines.join('\n')}\n` : '';
     } catch {
       return null;
+    }
+  }
+
+  async function resolveExecutorLogFallback(
+    missionId: string,
+    jobId: string,
+    absolutePath: string,
+  ): Promise<string | null> {
+    try {
+      const fileStat = await stat(absolutePath);
+      if (!fileStat.isFile()) {
+        return buildExecutorLogFallback(missionId, jobId);
+      }
+
+      if (fileStat.size === 0) {
+        return buildExecutorLogFallback(missionId, jobId);
+      }
+
+      if (fileStat.size > EXECUTOR_LOG_WHITESPACE_CHECK_BYTES) {
+        return null;
+      }
+
+      const content = await readFile(absolutePath, 'utf-8');
+      return content.trim().length === 0
+        ? buildExecutorLogFallback(missionId, jobId)
+        : null;
+    } catch {
+      return buildExecutorLogFallback(missionId, jobId);
     }
   }
 
@@ -219,17 +248,21 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
     const jobId = mission.executor?.jobId ?? '';
     const absPath = resolveArtifactAbsolutePath(mission.id, jobId, artifact.path);
 
-    try {
-      await stat(absPath);
-    } catch {
-      if (artifact.name === 'executor.log') {
-        const fallbackLog = await buildExecutorLogFallback(mission.id, jobId);
-        if (fallbackLog !== null) {
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-          res.setHeader('Content-Disposition', `attachment; filename="${artifact.name}"`);
-          return res.send(fallbackLog);
-        }
+    if (artifact.name === 'executor.log') {
+      const fallbackLog = await resolveExecutorLogFallback(mission.id, jobId, absPath);
+      if (fallbackLog !== null) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${artifact.name}"`);
+        return res.send(fallbackLog);
       }
+    }
+
+    try {
+      const fileStat = await stat(absPath);
+      if (!fileStat.isFile()) {
+        return res.status(404).json({ error: 'Artifact file not found' });
+      }
+    } catch {
       return res.status(404).json({ error: 'Artifact file not found' });
     }
 
@@ -277,6 +310,14 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
 
     const MAX_PREVIEW_BYTES = 1_048_576; // 1 MB
 
+    if (artifact.name === 'executor.log') {
+      const fallbackLog = await resolveExecutorLogFallback(mission.id, jobId, absPath);
+      if (fallbackLog !== null) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.send(fallbackLog);
+      }
+    }
+
     try {
       const fileStat = await stat(absPath);
       if (!fileStat.isFile()) {
@@ -301,13 +342,6 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
       });
       stream.pipe(res);
     } catch {
-      if (artifact.name === 'executor.log') {
-        const fallbackLog = await buildExecutorLogFallback(mission.id, jobId);
-        if (fallbackLog !== null) {
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-          return res.send(fallbackLog);
-        }
-      }
       return res.status(404).json({ error: 'Artifact file not found' });
     }
   });
