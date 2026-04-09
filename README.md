@@ -17,7 +17,7 @@
   <img alt="license" src="https://img.shields.io/badge/license-MIT-111827" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-180K%20lines-3178c6" />
   <img alt="specs" src="https://img.shields.io/badge/specs-57%20tracked-0ea5e9" />
-  <img alt="status" src="https://img.shields.io/badge/status-37%20done%20%C2%B7%205%20active-22c55e" />
+  <img alt="status" src="https://img.shields.io/badge/status-37%20done%20%C2%B7%205%20partial-22c55e" />
   <img alt="scene" src="https://img.shields.io/badge/3D-Three.js-8b5cf6" />
   <img alt="agents" src="https://img.shields.io/badge/agents-动态组织-f97316" />
   <img alt="i18n" src="https://img.shields.io/badge/i18n-中文%20%2F%20English-22c55e" />
@@ -135,6 +135,8 @@ PowerShell 下可先执行 `$env:LOBSTER_EXECUTION_MODE='mock'` 或 `$env:LOBSTE
 ---
 
 ## 🏗️ 系统架构
+
+下图按 2026-04-10 的项目快照更新：主干仍是前端 / Cube Brain / Intelligence / Trust / Execution / Interop 六层，但前端侧已经明确纳入任务控制台、产物预览下载与执行器回传闭环。
 
 <p align="center">
   <img src="./docs/architecture.svg" alt="Cube Pets Office Architecture" width="100%" />
@@ -269,7 +271,7 @@ cube-pets-office/
 
 | 功能 | 状态 | 说明 |
 |------|:----:|------|
-| 工作流产物展示与下载 | 🚧 | Artifact API、基础列表组件已落地，预览弹窗、任务页集成与测试进行中 |
+| 工作流产物展示与下载 | 🧪 | 功能开发已完成，当前仅剩最终检查点验收 |
 | 任务取消端到端 | 📋 | P0，补齐取消入口、执行器中断、状态落库与 UI 回显 |
 | 任务状态操作栏 | 📋 | P0，补齐暂停 / 恢复 / 重试 / 标记阻塞 / 终止 |
 | 任务详情首屏重排 | 📋 | P1，把主操作、当前负责人、blocker、下一步动作放到第一屏 |
@@ -296,10 +298,10 @@ cube-pets-office/
 | 维度 | 数据 |
 |------|------|
 | TypeScript 源码 | **850+ 文件 / ~180,000 行** |
-| `.kiro/specs` | **57 个目录：37 已完成 / 5 进行中 / 14 未开始 / 1 待补 `tasks.md`** |
+| `.kiro/specs` | **57 个目录：37 已完成 / 5 部分完成 / 14 未开始 / 1 待补 `tasks.md`** |
 | 共享契约 | **14 个 `shared/**/contracts.ts` 模块** |
 | 测试覆盖 | **300+ 测试文件（Vitest + fast-check）** |
-| 当前活跃增量 | `workflow-artifacts-display` + 任务控制台补完主线（5 个新 spec） |
+| 当前活跃增量 | 任务控制台补完主线（5 个新 spec） + `workflow-artifacts-display` 最终验收 |
 | Commits | 280+ |
 
 ---

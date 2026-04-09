@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description: 
- * @LastEditTime: 2026-04-09 16:45:00
+ * @LastEditTime: 2026-04-10 01:09:31
  * @LastEditors: wangchunji
 -->
 ---
@@ -13,7 +13,7 @@ inclusion: auto
 
 ## 总览
 
-截至 2026-04-09，`.kiro/specs` 共 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）。前三层主线与补充 spec `holographic-ui` 已基本落地，当前执行面主要是增量补完（`workflow-artifacts-display`）与任务控制台主线收敛，平台层能力（L31-L38）仍待环境就绪。
+截至 2026-04-10，`.kiro/specs` 共 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点，当前执行面主要收敛到任务控制台主线与工程验收，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -28,11 +28,11 @@ inclusion: auto
 - [x] P06 `browser-runtime` — 纯前端运行时
 - [x] P07 `frontend-3d` — 3D 场景与前端
 
-## 当前维护快照（2026-04-09）
+## 当前维护快照（2026-04-10）
 
 - 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
 - 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
-- 当前进行中：`workflow-artifacts-display`，已完成服务端 Artifact API、`tasks-store` 扩展和基础产物列表组件。
+- `workflow-artifacts-display` 已完成功能开发：Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、WorkflowPanel / TaskDetailView 集成与 Socket 联动均已落地；当前仅剩 `tasks.md` 中最终检查点未勾选。
 - 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
 - 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish`。
 - 待启动：`i18n-cleanup`、上述 5 个任务控制台补完 spec、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
@@ -215,9 +215,10 @@ holographic-ui spec 已完成（tasks 1-8）
 
 ### Day 4+：补完型 spec 与工程收口（当前实际）
 ```
-workflow-artifacts-display 进行中：
-  已完成服务端 Artifact API / tasks-store 扩展 / 基础 ArtifactListBlock
-  待补测试、预览弹窗、WorkflowPanel / TaskDetailView 集成与 Socket 联动
+workflow-artifacts-display 已完成功能开发：
+  已完成 Artifact API / tasks-store 扩展 / ArtifactListBlock / ArtifactPreviewDialog
+  已完成 WorkflowPanel / TaskDetailView 集成与 Socket 联动
+  当前仅剩 tasks.md 中“最终检查点”未勾选，待补跑相关测试并完成验收
 
 任务控制台补完主线待启动：
   P0: mission-cancel-control / mission-operator-actions

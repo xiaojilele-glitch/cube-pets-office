@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-本文件创建于 46 个 Spec 阶段；截至 2026-04-09，`.kiro/specs` 已扩展为 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
+本文件创建于 46 个 Spec 阶段；截至 2026-04-10，`.kiro/specs` 已扩展为 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`。其中 `workflow-artifacts-display` 已完成功能开发，当前仅剩最终检查点待验收。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
 
 ### 已完成基座（8 个）
 
@@ -28,7 +28,7 @@ inclusion: manual
 | ai-enabled-sandbox | 已完成 | Docker 容器 AI 能力注入 |
 | executor-integration | 已完成 | WorkflowEngine ↔ Docker 执行桥接 |
 | holographic-ui | 已完成 | 全息 UI 收口 |
-| workflow-artifacts-display | 进行中 | 工作流产物展示与下载 |
+| workflow-artifacts-display | 待最终检查点 | 工作流产物展示与下载（功能开发已完成） |
 | mission-cancel-control | 未开始 | 任务取消端到端闭环 |
 | mission-operator-actions | 未开始 | 任务状态操作栏与动作模型 |
 | task-detail-operations-first | 未开始 | 任务详情页首屏重排 |
@@ -41,7 +41,7 @@ inclusion: manual
 
 下文的 8 个阶段划分保留为原始路线图，用于追溯依赖和架构演化路径；其中“待开发 38 个”的表格是路线图创建时的历史视角，不再代表当前仓库的实时完成度。
 
-### 当前近端补完插队项（2026-04-09）
+### 当前近端补完插队项（2026-04-10）
 
 这 5 个 spec 属于现有任务驾驶舱与详情页的产品收口，不改变原 8 阶段主路线，只是把“执行结果展示”继续补齐为“执行控制台”。
 

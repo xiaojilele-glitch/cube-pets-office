@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-03-31 14:56:15
  * @Description: 
- * @LastEditTime: 2026-04-09 16:45:00
+ * @LastEditTime: 2026-04-10 01:09:31
  * @LastEditors: wangchunji
 -->
 ---
@@ -28,8 +28,8 @@ inclusion: auto
 ## 项目规模
 
 - 850+ 文件 / ~180,000 行 TypeScript
-- `.kiro/specs` 当前共 57 个 spec 目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）
-- 当前活跃增量：`workflow-artifacts-display`（工作流产物展示与下载）与任务控制台补完主线（取消 / 操作动作 / 详情首屏 / 文案 / UI 打磨）
+- `.kiro/specs` 当前共 57 个 spec 目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）；其中 `workflow-artifacts-display` 已完成功能开发、待最终检查点
+- 当前活跃增量：任务控制台补完主线（取消 / 操作动作 / 详情首屏 / 文案 / UI 打磨）；`workflow-artifacts-display` 进入最终验收收口
 - 14 个 shared/ 契约模块，主线能力已覆盖前端、服务端、执行器、审计与互操作层
 - 大量单元测试与属性测试已覆盖 Mission、执行器、RAG、审计、NL Command 等核心域
 
@@ -123,16 +123,16 @@ inclusion: auto
 | Guest Agent 市场 | 外部 Agent 沙箱接入 + TTL |
 | 全息 UI 升级 | 毛玻璃拟态 + HoloDock + GlowButton + 呼吸光晕 |
 
-### 📍 当前进度快照（Spec 视角，2026-04-09）
+### 📍 当前进度快照（Spec 视角，2026-04-10）
 
 | 状态 | 数量 | 说明 |
 |------|------|------|
 | 已完成 | 37 | 主线 L01-L30 与补充 spec `holographic-ui`、`ai-enabled-sandbox`、`executor-integration` 等已合并 |
-| 部分完成 | 5 | `mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery`、`workflow-artifacts-display` |
+| 部分完成 | 5 | `mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery`、`workflow-artifacts-display`（功能开发完成，待最终检查点） |
 | 未开始 | 14 | 第四层 L31-L38、`i18n-cleanup` 与 5 个任务控制台补完 spec |
 | 待补任务清单 | 1 | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md` |
 
-- `workflow-artifacts-display` 是当前活跃项：服务端 Artifact API、`tasks-store` 扩展和基础产物列表组件已落地，预览弹窗、页面集成和测试仍待补齐。
+- `workflow-artifacts-display` 已完成 Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、页面集成与 Socket 联动；当前仅剩 `tasks.md` 的最终检查点未勾选。
 - `mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 构成当前近端产品收口主线，目标是把任务页补齐为可操作的执行控制台。
 - `mission-runtime`、`multi-modal-vision`、`nl-command-center` 与 `state-persistence-recovery` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
 - `state-persistence-recovery` 的未完成项主要集中在标记 `*` 的可选属性测试。
@@ -159,7 +159,7 @@ inclusion: auto
 
 ## 工程健康快照
 
-- 当前近端增量集中在 `workflow-artifacts-display` 收尾，以及 5 个任务控制台补完 spec 的排期与落地准备。
+- 当前近端增量集中在 5 个任务控制台补完 spec 的排期与落地准备，以及 `workflow-artifacts-display` 的最终检查点验收。
 - `npm run check` 当前仍有 30 个 TypeScript 错误，主要分布在 lineage 可视化、NL Command、workflow-engine 桥接与 `server/index.ts` 等历史模块。
 - 后续增量工作建议以“不扩大现有 TypeScript 基线错误数”为最低要求，并单独安排一轮编译清债。
 
