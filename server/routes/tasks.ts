@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import fs from 'node:fs';
 import { stat } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 
 import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
 import type { ArtifactListItem, ArtifactListResponse } from '../../shared/mission/contracts.js';
@@ -15,6 +16,7 @@ import {
   isTextMime,
   validateArtifactPath,
   resolveArtifactAbsolutePath,
+  resolveExecutorJobAbsolutePath,
 } from './artifact-utils.js';
 
 const DEFAULT_LIMIT = 20;
@@ -45,6 +47,43 @@ function buildTaskTitle(
 
 export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Router {
   const router = Router();
+
+  async function buildExecutorLogFallback(
+    missionId: string,
+    jobId: string,
+  ): Promise<string | null> {
+    const eventsPath = resolveExecutorJobAbsolutePath(missionId, jobId, 'events.jsonl');
+
+    try {
+      const raw = await readFile(eventsPath, 'utf-8');
+      const lines = raw
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .map((line) => {
+          try {
+            const parsed = JSON.parse(line) as {
+              occurredAt?: string;
+              message?: string;
+              summary?: string;
+              type?: string;
+            };
+            const timestamp = parsed.occurredAt?.trim() || 'unknown-time';
+            const message =
+              parsed.message?.trim() ||
+              parsed.summary?.trim() ||
+              parsed.type?.trim() ||
+              line;
+            return `[${timestamp}] ${message}`;
+          } catch {
+            return line;
+          }
+        });
+
+      return lines.length > 0 ? `${lines.join('\n')}\n` : '';
+    } catch {
+      return null;
+    }
+  }
 
   router.post('/', (req, res) => {
     const body = req.body || {};
@@ -183,6 +222,14 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
     try {
       await stat(absPath);
     } catch {
+      if (artifact.name === 'executor.log') {
+        const fallbackLog = await buildExecutorLogFallback(mission.id, jobId);
+        if (fallbackLog !== null) {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.setHeader('Content-Disposition', `attachment; filename="${artifact.name}"`);
+          return res.send(fallbackLog);
+        }
+      }
       return res.status(404).json({ error: 'Artifact file not found' });
     }
 
@@ -254,6 +301,13 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
       });
       stream.pipe(res);
     } catch {
+      if (artifact.name === 'executor.log') {
+        const fallbackLog = await buildExecutorLogFallback(mission.id, jobId);
+        if (fallbackLog !== null) {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          return res.send(fallbackLog);
+        }
+      }
       return res.status(404).json({ error: 'Artifact file not found' });
     }
   });

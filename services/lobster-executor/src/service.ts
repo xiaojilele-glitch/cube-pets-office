@@ -192,6 +192,7 @@ export class LobsterExecutorService {
     };
 
     this.jobs.set(request.jobId, record);
+    writeFileSync(logFile, "", "utf-8");
     writeFileSync(
       join(dataDirectory, "request.json"),
       `${JSON.stringify(request, null, 2)}\n`,

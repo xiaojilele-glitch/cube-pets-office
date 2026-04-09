@@ -188,6 +188,43 @@ describe("task artifact routes", () => {
     expect(await response.text()).toBe('{"ok":true}');
   });
 
+  it("downloads artifacts whose stored path is already repo-relative", async () => {
+    const mission = runtime.createChatTask("Repo-relative artifact");
+    const jobId = `${mission.id}:analyze:1`;
+    const sanitizedJobId = `${mission.id}_analyze_1`;
+    const relativePath = `tmp/lobster-executor/jobs/${mission.id}/${sanitizedJobId}/executor.log`;
+    const absolutePath = path.join(process.cwd(), relativePath);
+
+    cleanupTargets.push(
+      path.join(process.cwd(), "tmp/lobster-executor/jobs", mission.id)
+    );
+
+    await fs.mkdir(path.dirname(absolutePath), { recursive: true });
+    await fs.writeFile(absolutePath, "executor output\n");
+
+    runtime.patchMissionExecution(mission.id, {
+      executor: {
+        name: "executor",
+        jobId,
+        status: "completed",
+      },
+      artifacts: [
+        {
+          kind: "log",
+          name: "executor.log",
+          path: relativePath,
+        },
+      ],
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/tasks/${mission.id}/artifacts/0/download`
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("executor output\n");
+  });
+
   it("redirects url artifacts on download", async () => {
     const { missionId } = await createMissionWithArtifacts([
       { kind: "url", name: "Dashboard", url: "https://example.com/dashboard" },
@@ -254,6 +291,58 @@ describe("task artifact routes", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/plain");
     expect(await response.text()).toBe("line 1\nline 2\n");
+  });
+
+  it("falls back to events.jsonl when executor.log has not been created yet", async () => {
+    const mission = runtime.createChatTask("Executor log fallback");
+    const jobId = `${mission.id}:analyze:1`;
+    const sanitizedJobId = `${mission.id}_analyze_1`;
+    const jobDirectory = path.join(
+      process.cwd(),
+      "tmp/lobster-executor/jobs",
+      mission.id,
+      sanitizedJobId
+    );
+
+    cleanupTargets.push(
+      path.join(process.cwd(), "tmp/lobster-executor/jobs", mission.id)
+    );
+
+    await fs.mkdir(jobDirectory, { recursive: true });
+    await fs.writeFile(
+      path.join(jobDirectory, "events.jsonl"),
+      `${JSON.stringify({
+        occurredAt: "2026-04-09T07:03:44.144Z",
+        message: "Started Docker container 4333be9f2fc5 for Analyze request",
+      })}\n`,
+      "utf-8"
+    );
+
+    runtime.patchMissionExecution(mission.id, {
+      executor: {
+        name: "executor",
+        jobId,
+        status: "completed",
+      },
+      artifacts: [
+        {
+          kind: "log",
+          name: "executor.log",
+          path: `tmp/lobster-executor/jobs/${mission.id}/${sanitizedJobId}/executor.log`,
+          description: "Line-oriented executor runtime log",
+        },
+      ],
+    });
+
+    const response = await fetch(
+      `${baseUrl}/api/tasks/${mission.id}/artifacts/0/preview`
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/plain");
+    expect(await response.text()).toContain(
+      "Started Docker container 4333be9f2fc5 for Analyze request"
+    );
   });
 
   it("marks previews as truncated when the artifact exceeds 1 MB", async () => {

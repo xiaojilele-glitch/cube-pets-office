@@ -48,6 +48,24 @@ export function validateArtifactPath(artifactPath: string): boolean {
   return !artifactPath.includes('..');
 }
 
+function sanitizeJobPathSegment(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]+/g, '_');
+}
+
+export function resolveExecutorJobAbsolutePath(
+  missionId: string,
+  jobId: string,
+  ...segments: string[]
+): string {
+  return path.join(
+    process.cwd(),
+    'tmp/lobster-executor/jobs',
+    sanitizeJobPathSegment(missionId),
+    sanitizeJobPathSegment(jobId),
+    ...segments,
+  );
+}
+
 /**
  * Resolves the absolute filesystem path for an artifact file.
  */
@@ -56,11 +74,15 @@ export function resolveArtifactAbsolutePath(
   jobId: string,
   relativePath: string,
 ): string {
-  return path.join(
-    process.cwd(),
-    'tmp/lobster-executor/jobs',
-    missionId,
-    jobId,
-    relativePath,
-  );
+  const normalized = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
+
+  if (path.isAbsolute(relativePath)) {
+    return path.normalize(relativePath);
+  }
+
+  if (normalized.startsWith('tmp/lobster-executor/jobs/')) {
+    return path.join(process.cwd(), normalized);
+  }
+
+  return resolveExecutorJobAbsolutePath(missionId, jobId, normalized);
 }

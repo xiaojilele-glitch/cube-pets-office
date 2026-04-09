@@ -6,6 +6,7 @@ import {
   getMimeType,
   isTextMime,
   resolveArtifactAbsolutePath,
+  resolveExecutorJobAbsolutePath,
   validateArtifactPath,
 } from "../routes/artifact-utils.js";
 
@@ -37,6 +38,32 @@ describe("artifact-utils", () => {
         "mission-1",
         "job-9",
         "reports/final.json"
+      )
+    );
+  });
+
+  it("keeps repo-relative executor artifact paths stable", () => {
+    const absolutePath = resolveArtifactAbsolutePath(
+      "mission-1",
+      "mission-1:analyze:1",
+      "tmp/lobster-executor/jobs/mission-1/mission-1_analyze_1/executor.log"
+    );
+
+    expect(absolutePath).toBe(
+      path.join(
+        process.cwd(),
+        "tmp/lobster-executor/jobs/mission-1/mission-1_analyze_1/executor.log"
+      )
+    );
+    expect(
+      resolveExecutorJobAbsolutePath("mission-1", "mission-1:analyze:1", "events.jsonl")
+    ).toBe(
+      path.join(
+        process.cwd(),
+        "tmp/lobster-executor/jobs",
+        "mission-1",
+        "mission-1_analyze_1",
+        "events.jsonl"
       )
     );
   });
