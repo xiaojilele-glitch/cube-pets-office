@@ -4,7 +4,12 @@ import { stat } from 'node:fs/promises';
 import { readFile } from 'node:fs/promises';
 
 import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
-import type { ArtifactListItem, ArtifactListResponse } from '../../shared/mission/contracts.js';
+import type {
+  ArtifactListItem,
+  ArtifactListResponse,
+  MissionEvent,
+} from '../../shared/mission/contracts.js';
+import { EXECUTOR_API_ROUTES, type CancelExecutorJobRequest } from '../../shared/executor/api.js';
 import { BUILTIN_DECISION_TEMPLATES } from '../../shared/mission/decision-templates.js';
 import { submitMissionDecision } from '../tasks/mission-decision.js';
 import {
@@ -22,6 +27,13 @@ import {
 const DEFAULT_LIMIT = 20;
 const DEFAULT_DECISION_LIMIT = 50;
 const MAX_LIMIT = 200;
+const DEFAULT_EXECUTOR_BASE_URL = 'http://127.0.0.1:3031';
+const FINAL_MISSION_STATUSES = new Set(['done', 'failed', 'cancelled']);
+
+export interface TaskRouterOptions {
+  fetchImpl?: typeof fetch;
+  executorBaseUrl?: string;
+}
 
 function parseLimit(rawValue: unknown, defaultLimit = DEFAULT_LIMIT): number {
   const value = Number(rawValue);
@@ -45,9 +57,53 @@ function buildTaskTitle(
   return null;
 }
 
-export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Router {
+function normalizeCancelSource(value: unknown): MissionEvent['source'] {
+  switch (value) {
+    case 'brain':
+    case 'executor':
+    case 'feishu':
+    case 'mission-core':
+    case 'user':
+      return value;
+    default:
+      return 'user';
+  }
+}
+
+function toExecutorCancelSource(
+  source: MissionEvent['source'],
+): CancelExecutorJobRequest['source'] {
+  switch (source) {
+    case 'user':
+    case 'brain':
+    case 'feishu':
+      return source;
+    case 'executor':
+    case 'mission-core':
+    default:
+      return 'system';
+  }
+}
+
+function buildExecutorUrl(baseUrl: string, path: string): string {
+  return new URL(path, baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`).toString();
+}
+
+function isExecutorTerminalStatus(value: unknown): boolean {
+  return value === 'completed' || value === 'failed' || value === 'cancelled';
+}
+
+export function createTaskRouter(
+  runtime: MissionRuntime = missionRuntime,
+  options: TaskRouterOptions = {},
+): Router {
   const router = Router();
   const EXECUTOR_LOG_WHITESPACE_CHECK_BYTES = 4096;
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const defaultExecutorBaseUrl =
+    options.executorBaseUrl?.trim() ||
+    process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() ||
+    DEFAULT_EXECUTOR_BASE_URL;
 
   async function buildExecutorLogFallback(
     missionId: string,
@@ -190,6 +246,115 @@ export function createTaskRouter(runtime: MissionRuntime = missionRuntime): Rout
       ok: true,
       missionId: task.id,
       decisions: sliced,
+    });
+  });
+
+  router.post('/:id/cancel', async (req, res) => {
+    const task = runtime.getTask(req.params.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    if (FINAL_MISSION_STATUSES.has(task.status)) {
+      return res.json({
+        ok: true,
+        alreadyFinal: true,
+        executorForwarded: false,
+        task,
+      });
+    }
+
+    const reason =
+      typeof req.body?.reason === 'string' && req.body.reason.trim()
+        ? req.body.reason.trim()
+        : undefined;
+    const requestedBy =
+      typeof req.body?.requestedBy === 'string' && req.body.requestedBy.trim()
+        ? req.body.requestedBy.trim()
+        : undefined;
+    const source = normalizeCancelSource(req.body?.source);
+
+    const executorJobId = task.executor?.jobId?.trim();
+    let executorForwarded = false;
+
+    if (executorJobId) {
+      const executorBaseUrl =
+        task.executor?.baseUrl?.trim() || defaultExecutorBaseUrl;
+      const requestBody: CancelExecutorJobRequest = {
+        reason,
+        requestedBy,
+        source: toExecutorCancelSource(source),
+      };
+
+      let downstreamResponse: Response;
+      try {
+        downstreamResponse = await fetchImpl(
+          buildExecutorUrl(
+            executorBaseUrl,
+            EXECUTOR_API_ROUTES.cancelJob.replace(':id', encodeURIComponent(executorJobId)),
+          ),
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          },
+        );
+      } catch (error) {
+        return res.status(503).json({
+          error:
+            error instanceof Error
+              ? `Executor cancel request failed: ${error.message}`
+              : 'Executor cancel request failed',
+        });
+      }
+
+      const rawBody = await downstreamResponse.text();
+      let parsedBody: unknown = null;
+      try {
+        parsedBody = rawBody ? JSON.parse(rawBody) : null;
+      } catch {
+        parsedBody = null;
+      }
+
+      if (!downstreamResponse.ok) {
+        const message =
+          typeof parsedBody === 'object' &&
+          parsedBody !== null &&
+          'error' in parsedBody &&
+          typeof parsedBody.error === 'string'
+            ? parsedBody.error
+            : `Executor cancel request failed with HTTP ${downstreamResponse.status}`;
+
+        if (downstreamResponse.status !== 404) {
+          return res.status(502).json({ error: message });
+        }
+      } else {
+        executorForwarded = true;
+        const downstreamStatus =
+          typeof parsedBody === 'object' &&
+          parsedBody !== null &&
+          'status' in parsedBody
+            ? parsedBody.status
+            : undefined;
+        if (!isExecutorTerminalStatus(downstreamStatus)) {
+          executorForwarded = true;
+        }
+      }
+    }
+
+    const cancelled = runtime.cancelMission(task.id, {
+      reason,
+      requestedBy,
+      source,
+    });
+
+    return res.json({
+      ok: true,
+      alreadyFinal: false,
+      executorForwarded,
+      task: cancelled,
     });
   });
 

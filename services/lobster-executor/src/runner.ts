@@ -13,6 +13,7 @@ export interface JobRunner {
     record: StoredJobRecord,
     emitEvent: (event: ExecutorEvent) => void,
   ): Promise<void>;
+  cancel?(record: StoredJobRecord): Promise<void>;
 }
 
 /**

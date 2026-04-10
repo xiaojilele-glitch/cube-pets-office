@@ -1,4 +1,8 @@
-import type { ExecutorEvent, ExecutorJobRequest } from "./contracts.js";
+import type {
+  ExecutorEvent,
+  ExecutorJobRequest,
+  ExecutorJobStatus,
+} from "./contracts.js";
 
 export const EXECUTOR_API_ROUTES = {
   createJob: "/api/executor/jobs",
@@ -21,6 +25,23 @@ export interface CreateExecutorJobResponse {
   missionId: string;
   jobId: string;
   receivedAt: string;
+}
+
+export interface CancelExecutorJobRequest {
+  reason?: string;
+  requestedBy?: string;
+  source?: "user" | "brain" | "feishu" | "system";
+}
+
+export interface CancelExecutorJobResponse {
+  ok: true;
+  accepted: true;
+  alreadyFinal?: boolean;
+  cancelRequested?: boolean;
+  missionId: string;
+  jobId: string;
+  status: ExecutorJobStatus;
+  message: string;
 }
 
 export interface SubmitExecutorEventRequest {

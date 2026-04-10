@@ -39,6 +39,12 @@ export interface PatchMissionExecutionInput {
   securitySummary?: MissionRecord["securitySummary"];
 }
 
+export interface CancelMissionInput {
+  reason?: string;
+  requestedBy?: string;
+  source?: MissionEvent["source"];
+}
+
 function now(): number {
   return Date.now();
 }
@@ -52,6 +58,10 @@ function createMissionId(createdAt: number): string {
   return `mission_${createdAt.toString(36)}_${Math.random()
     .toString(36)
     .slice(2, 8)}`;
+}
+
+function isMissionFinalStatus(status: MissionRecord["status"]): boolean {
+  return status === "done" || status === "failed" || status === "cancelled";
 }
 
 /**
@@ -398,6 +408,75 @@ export class MissionStore {
         source,
       });
     });
+  }
+
+  markCancelled(
+    id: string,
+    input: CancelMissionInput = {}
+  ): MissionRecord | undefined {
+    const task = this.missions.get(id);
+    if (!task) return undefined;
+    if (task.status === "cancelled" || isMissionFinalStatus(task.status)) {
+      return structuredClone(task);
+    }
+
+    const cancelledAt = now();
+    const reason =
+      typeof input.reason === "string" && input.reason.trim()
+        ? input.reason.trim()
+        : undefined;
+    const requestedBy =
+      typeof input.requestedBy === "string" && input.requestedBy.trim()
+        ? input.requestedBy.trim()
+        : undefined;
+    const source = input.source ?? "user";
+    const current =
+      task.stages.find(stage => stage.key === task.currentStageKey) ??
+      task.stages.find(stage => stage.status === "running");
+
+    task.status = "cancelled";
+    task.waitingFor = undefined;
+    task.decision = undefined;
+    task.completedAt = cancelledAt;
+    task.cancelledAt = cancelledAt;
+    task.cancelledBy = requestedBy;
+    task.cancelReason = reason;
+
+    if (task.executor) {
+      task.executor = {
+        ...task.executor,
+        status: "cancelled",
+        lastEventType: "job.cancelled",
+        lastEventAt: cancelledAt,
+      };
+    }
+
+    if (task.instance) {
+      task.instance = {
+        ...task.instance,
+        completedAt: task.instance.completedAt ?? cancelledAt,
+      };
+    }
+
+    if (current) {
+      current.detail = reason || "Mission cancelled";
+      current.completedAt ??= cancelledAt;
+    }
+
+    task.events.push({
+      type: "cancelled",
+      message: reason || "Mission cancelled",
+      level: "warn",
+      progress: task.progress,
+      stageKey: current?.key ?? task.currentStageKey,
+      time: cancelledAt,
+      source,
+    });
+
+    task.updatedAt = cancelledAt;
+    this.missions.set(id, task);
+    this.persist();
+    return structuredClone(task);
   }
 
   resolveWaiting(

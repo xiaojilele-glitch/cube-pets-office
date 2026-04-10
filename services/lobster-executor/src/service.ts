@@ -7,7 +7,11 @@ import {
   type ExecutorEvent,
   type ExecutorJobStatus,
 } from "../../../shared/executor/contracts.js";
-import type { CreateExecutorJobResponse } from "../../../shared/executor/api.js";
+import type {
+  CancelExecutorJobRequest,
+  CancelExecutorJobResponse,
+  CreateExecutorJobResponse,
+} from "../../../shared/executor/api.js";
 import { ConflictError, NotFoundError } from "./errors.js";
 import {
   getPlanJobById,
@@ -67,6 +71,7 @@ export class LobsterExecutorService {
   private readonly runner: JobRunner;
   private readonly limiter: ConcurrencyLimiter;
   private readonly executionMode: "real" | "mock";
+  private readonly callbackSender?: CallbackSender;
 
   constructor(private readonly options: LobsterExecutorServiceOptions) {
     this.now = options.now ?? (() => new Date());
@@ -103,6 +108,7 @@ export class LobsterExecutorService {
         executorId: config.serviceName,
       });
     }
+    this.callbackSender = callbackSender;
 
     // Select runner based on executionMode
     this.runner = createJobRunner(config, callbackSender, {
@@ -135,6 +141,117 @@ export class LobsterExecutorService {
     }
 
     return this.toDetail(record);
+  }
+
+  async cancel(
+    jobId: string,
+    request: CancelExecutorJobRequest = {},
+  ): Promise<CancelExecutorJobResponse> {
+    const record = this.jobs.get(jobId);
+    if (!record) {
+      throw new NotFoundError(`Executor job ${jobId} was not found`);
+    }
+
+    if (FINAL_STATUSES.has(record.status)) {
+      return {
+        ok: true,
+        accepted: true,
+        alreadyFinal: true,
+        missionId: record.request.missionId,
+        jobId: record.request.jobId,
+        status: record.status,
+        message: record.message,
+      };
+    }
+
+    const requestedAt = this.now().toISOString();
+    const reason =
+      typeof request.reason === "string" && request.reason.trim()
+        ? request.reason.trim()
+        : undefined;
+    const requestedBy =
+      typeof request.requestedBy === "string" && request.requestedBy.trim()
+        ? request.requestedBy.trim()
+        : undefined;
+    const source =
+      typeof request.source === "string" && request.source.trim()
+        ? request.source.trim()
+        : undefined;
+
+    record.cancelRequested = {
+      requestedAt,
+      requestedBy,
+      reason,
+      source,
+    };
+
+    const cancelMessage = reason || "Cancellation requested";
+    record.message = cancelMessage;
+    this.appendLog(record, `[cancel] ${cancelMessage}`);
+
+    if (record.status === "queued" || record.status === "waiting") {
+      const finishedAt = this.now().toISOString();
+      record.status = "cancelled";
+      record.finishedAt = finishedAt;
+      record.summary = reason || "Executor job cancelled before execution completed";
+      record.message = record.summary;
+
+      const event = this.createEvent(record, {
+        type: "job.cancelled",
+        status: "cancelled",
+        progress: record.progress,
+        message: record.summary,
+        summary: record.summary,
+        detail: reason,
+        artifacts: [
+          {
+            kind: "log",
+            name: "executor.log",
+            path: toRelativePath(record.logFile),
+            description: "Line-oriented executor runtime log",
+          },
+        ],
+        payload: {
+          cancelRequested: record.cancelRequested,
+        },
+      });
+      this.persistEvent(record, event);
+      await this.sendCallback(record, event);
+
+      return {
+        ok: true,
+        accepted: true,
+        missionId: record.request.missionId,
+        jobId: record.request.jobId,
+        status: record.status,
+        message: record.message,
+      };
+    }
+
+    if (record.status === "running") {
+      if (typeof this.runner.cancel === "function") {
+        await this.runner.cancel(record);
+      }
+
+      return {
+        ok: true,
+        accepted: true,
+        cancelRequested: true,
+        missionId: record.request.missionId,
+        jobId: record.request.jobId,
+        status: record.status,
+        message: record.message,
+      };
+    }
+
+    return {
+      ok: true,
+      accepted: true,
+      missionId: record.request.missionId,
+      jobId: record.request.jobId,
+      status: record.status,
+      message: record.message,
+    };
   }
 
   submit(rawRequest: unknown): CreateExecutorJobResponse {
@@ -217,17 +334,38 @@ export class LobsterExecutorService {
   private async runAcceptedJob(record: StoredJobRecord): Promise<void> {
     await this.limiter.acquire();
     try {
+      if (FINAL_STATUSES.has(record.status)) {
+        return;
+      }
       await this.runner.run(record, (event: ExecutorEvent) => {
-        // Persist every event emitted by the runner
-        record.events.push(event);
-        appendFileSync(
-          join(record.dataDirectory, "events.jsonl"),
-          `${JSON.stringify(event)}\n`,
-          "utf-8"
-        );
+        this.persistEvent(record, event);
       });
     } finally {
       this.limiter.release();
+    }
+  }
+
+  private persistEvent(record: StoredJobRecord, event: ExecutorEvent): void {
+    record.events.push(event);
+    appendFileSync(
+      join(record.dataDirectory, "events.jsonl"),
+      `${JSON.stringify(event)}\n`,
+      "utf-8"
+    );
+  }
+
+  private async sendCallback(
+    record: StoredJobRecord,
+    event: ExecutorEvent,
+  ): Promise<void> {
+    if (!this.callbackSender) {
+      return;
+    }
+
+    try {
+      await this.callbackSender.send(record.request.callback.eventsUrl, event);
+    } catch {
+      // Callback delivery must not break local executor state transitions.
     }
   }
 
@@ -240,11 +378,31 @@ export class LobsterExecutorService {
       message: string;
       summary?: string;
       errorCode?: string;
+      detail?: string;
       artifacts?: ExecutionPlanArtifact[];
       metrics?: ExecutorEvent["metrics"];
     }
   ): void {
-    const event: ExecutorEvent = {
+    const event = this.createEvent(record, input);
+    this.persistEvent(record, event);
+  }
+
+  private createEvent(
+    record: StoredJobRecord,
+    input: {
+      type: ExecutorEvent["type"];
+      status: ExecutorJobStatus;
+      progress?: number;
+      message: string;
+      summary?: string;
+      errorCode?: string;
+      detail?: string;
+      artifacts?: ExecutionPlanArtifact[];
+      metrics?: ExecutorEvent["metrics"];
+      payload?: Record<string, unknown>;
+    }
+  ): ExecutorEvent {
+    return {
       version: EXECUTOR_CONTRACT_VERSION,
       eventId: randomUUID(),
       missionId: record.request.missionId,
@@ -257,15 +415,18 @@ export class LobsterExecutorService {
       message: input.message,
       summary: input.summary,
       errorCode: input.errorCode,
+      detail: input.detail,
       artifacts: input.artifacts,
       metrics: input.metrics,
+      payload: input.payload,
     };
+  }
 
-    record.events.push(event);
+  private appendLog(record: StoredJobRecord, message: string): void {
     appendFileSync(
-      join(record.dataDirectory, "events.jsonl"),
-      `${JSON.stringify(event)}\n`,
-      "utf-8"
+      record.logFile,
+      `[${this.now().toISOString()}] ${message}\n`,
+      "utf-8",
     );
   }
 

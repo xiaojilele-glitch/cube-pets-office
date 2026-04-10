@@ -74,6 +74,41 @@ export class MockRunner implements JobRunner {
 
     for (let index = 0; index < steps; index += 1) {
       await this.sleep(runner.delayMs);
+      if (record.cancelRequested) {
+        const finishedAt = this.now().toISOString();
+        const durationMs = Date.parse(finishedAt) - Date.parse(record.startedAt!);
+        const cancelReason =
+          record.cancelRequested.reason?.trim() || "Mock execution cancelled";
+
+        record.status = "cancelled";
+        record.progress = Math.min(record.progress, 99);
+        record.summary = cancelReason;
+        record.message = cancelReason;
+        record.finishedAt = finishedAt;
+
+        emitEvent(this.createEvent(record, {
+          type: "job.cancelled",
+          status: "cancelled",
+          progress: record.progress,
+          message: cancelReason,
+          summary: cancelReason,
+          artifacts: [
+            {
+              kind: "log",
+              name: "executor.log",
+              path: toRelativePath(record.logFile),
+              description: "Line-oriented executor runtime log",
+            },
+          ],
+          metrics: {
+            durationMs,
+          },
+          payload: {
+            cancelRequested: record.cancelRequested,
+          },
+        }));
+        return;
+      }
       const progress = Math.min(95, Math.round(((index + 1) / steps) * 90));
       const logMessage =
         outputLines[index] ||

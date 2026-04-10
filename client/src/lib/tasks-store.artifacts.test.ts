@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MissionRecord } from "@shared/mission/contracts";
 
 const mockGetMission = vi.fn();
+const mockCancelMission = vi.fn();
 
 vi.mock("./mission-client", () => ({
+  cancelMission: (...args: unknown[]) => mockCancelMission(...args),
   createMission: vi.fn(),
   getMission: (...args: unknown[]) => mockGetMission(...args),
   getPlanet: vi.fn(),
@@ -44,6 +46,7 @@ vi.mock("./store", () => ({
 const { buildMissionArtifacts, patchMissionRecordInStore } = await import(
   "./tasks-store"
 );
+const { useTasksStore } = await import("./tasks-store");
 
 function makeMission(
   id: string,
@@ -74,6 +77,17 @@ function makeMission(
 describe("tasks-store artifact helpers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useTasksStore.setState({
+      ready: true,
+      loading: false,
+      error: null,
+      selectedTaskId: null,
+      tasks: [],
+      detailsById: {},
+      decisionNotes: {},
+      cancellingMissionIds: {},
+      lastDecisionLaunch: null,
+    });
   });
 
   it("builds download and preview urls for mission artifacts", () => {
@@ -151,6 +165,64 @@ describe("tasks-store artifact helpers", () => {
       downloadUrl: `/api/tasks/${mission.id}/artifacts/0/download`,
       previewUrl: `/api/tasks/${mission.id}/artifacts/0/preview`,
       format: "log",
+    });
+  });
+
+  it("writes back the cancelled mission detail after cancelMission resolves", async () => {
+    const cancelledAt = Date.now();
+    const cancelledMission = makeMission("mission-cancelled", {
+      status: "cancelled",
+      summary: "Stopped by the operator",
+      cancelReason: "Stopped by the operator",
+      cancelledAt,
+      cancelledBy: "ui-user",
+      completedAt: cancelledAt,
+      events: [
+        {
+          type: "cancelled",
+          message: "Stopped by the operator",
+          level: "warn",
+          source: "user",
+          time: cancelledAt,
+        },
+      ],
+    });
+
+    mockCancelMission.mockImplementation(async () => {
+      expect(useTasksStore.getState().cancellingMissionIds[cancelledMission.id]).toBe(
+        true
+      );
+
+      return {
+        ok: true,
+        task: cancelledMission,
+      };
+    });
+
+    const result = await useTasksStore.getState().cancelMission(cancelledMission.id, {
+      reason: "Stopped by the operator",
+      requestedBy: "ui-user",
+      source: "user",
+    });
+
+    const state = useTasksStore.getState();
+    expect(result).toBe(cancelledMission.id);
+    expect(mockCancelMission).toHaveBeenCalledWith(cancelledMission.id, {
+      reason: "Stopped by the operator",
+      requestedBy: "ui-user",
+      source: "user",
+    });
+    expect(state.cancellingMissionIds[cancelledMission.id]).toBe(false);
+    expect(state.tasks[0]).toMatchObject({
+      id: cancelledMission.id,
+      status: "cancelled",
+      workflowStatus: "completed_with_errors",
+      summary: "Stopped by the operator",
+    });
+    expect(state.detailsById[cancelledMission.id]).toMatchObject({
+      id: cancelledMission.id,
+      status: "cancelled",
+      summary: "Stopped by the operator",
     });
   });
 });

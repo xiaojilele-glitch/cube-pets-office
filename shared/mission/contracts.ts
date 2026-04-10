@@ -16,6 +16,7 @@ export const MISSION_STATUSES = [
   "waiting",
   "done",
   "failed",
+  "cancelled",
 ] as const;
 
 export type MissionStatus = (typeof MISSION_STATUSES)[number];
@@ -27,6 +28,7 @@ export const MISSION_EVENT_TYPES = [
   "waiting",
   "done",
   "failed",
+  "cancelled",
   "role_switch",
   "collaboration_result",
 ] as const;
@@ -239,6 +241,9 @@ export interface MissionRecord {
   createdAt: number;
   updatedAt: number;
   completedAt?: number;
+  cancelledAt?: number;
+  cancelledBy?: string;
+  cancelReason?: string;
   events: MissionEvent[];
 }
 

@@ -13,6 +13,7 @@ export type EventMappingResult =
   | { action: "running"; progress: number }
   | { action: "done"; summary: string }
   | { action: "failed"; error: string }
+  | { action: "cancelled"; reason: string }
   | { action: "progress"; progress: number }
   | { action: "log"; message: string }
   | { action: "log_stream" }
@@ -42,7 +43,8 @@ export interface EventMappingInput {
  * - job.started  → action "running"
  * - job.progress → action "progress" with clamped progress (0–100)
  * - job.completed → action "done"
- * - job.failed / job.cancelled → action "failed"
+ * - job.failed → action "failed"
+ * - job.cancelled → action "cancelled"
  * - job.log → action "log"
  * - job.log_stream → action "log_stream"
  * - job.screenshot → action "screenshot"
@@ -74,8 +76,10 @@ export function mapExecutorEventToAction(
       return { action: "done", summary: summaryText };
 
     case "job.failed":
-    case "job.cancelled":
       return { action: "failed", error: summaryText || input.errorCode || "unknown error" };
+
+    case "job.cancelled":
+      return { action: "cancelled", reason: summaryText || input.errorCode || "cancelled" };
 
     case "job.log":
       return { action: "log", message: input.log?.message?.trim() || summaryText };
@@ -94,8 +98,11 @@ export function mapExecutorEventToAction(
       if (input.status === "completed") {
         return { action: "done", summary: summaryText };
       }
-      if (input.status === "failed" || input.status === "cancelled") {
+      if (input.status === "failed") {
         return { action: "failed", error: summaryText || "unknown error" };
+      }
+      if (input.status === "cancelled") {
+        return { action: "cancelled", reason: summaryText || "cancelled" };
       }
       if (input.status === "waiting") {
         return { action: "waiting" };

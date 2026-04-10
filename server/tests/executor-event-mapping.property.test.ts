@@ -119,6 +119,28 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
     );
   });
 
+  it("job.cancelled always maps to action=cancelled regardless of mode", () => {
+    fc.assert(
+      fc.property(
+        arbMode,
+        arbOptionalProgress,
+        arbOptionalText,
+        arbOptionalText,
+        (_mode, progress, summary, message) => {
+          const input: EventMappingInput = {
+            type: "job.cancelled",
+            progress,
+            summary,
+            message,
+          };
+          const result = mapExecutorEventToAction(input);
+          expect(result.action).toBe("cancelled");
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
+
   // ── 7d: job.progress → action "progress" with clamped value (Req 4.2) ─────
 
   it("job.progress maps to action=progress with progress clamped to [0, 100]", () => {
@@ -177,6 +199,7 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
       "job.progress" as const,
       "job.completed" as const,
       "job.failed" as const,
+      "job.cancelled" as const,
     );
 
     fc.assert(
@@ -219,6 +242,12 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           }
           if (mockResult.action === "failed" && realResult.action === "failed") {
             expect(mockResult.error).toBe(realResult.error);
+          }
+          if (
+            mockResult.action === "cancelled" &&
+            realResult.action === "cancelled"
+          ) {
+            expect(mockResult.reason).toBe(realResult.reason);
           }
         },
       ),

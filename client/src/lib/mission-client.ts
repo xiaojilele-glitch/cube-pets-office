@@ -1,4 +1,6 @@
 import {
+  type CancelMissionRequest,
+  type CancelMissionResponse,
   MISSION_API_ROUTES,
   type CreateMissionRequest,
   type CreateMissionResponse,
@@ -49,6 +51,20 @@ export async function listMissions(limit = 200): Promise<ListMissionsResponse> {
 export async function getMission(id: string): Promise<GetMissionResponse> {
   const response = await fetch(routeFor(MISSION_API_ROUTES.getTask, { id }));
   return parseJson<GetMissionResponse>(response);
+}
+
+export async function cancelMission(
+  id: string,
+  request: CancelMissionRequest
+): Promise<CancelMissionResponse> {
+  const response = await fetch(routeFor(MISSION_API_ROUTES.cancelTask, { id }), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+  return parseJson<CancelMissionResponse>(response);
 }
 
 export async function listMissionEvents(

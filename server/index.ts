@@ -784,13 +784,21 @@ async function startServer() {
       event.status === "failed" ||
       event.status === "cancelled"
     ) {
-      // Req 4.4: job.failed → mission.status = failed
       missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
-      missionRuntime.failMission(
-        missionId,
-        event.summary?.trim() || detail,
-        "executor"
-      );
+      if (event.type === "job.cancelled" || event.status === "cancelled") {
+        missionRuntime.cancelMission(missionId, {
+          reason: event.summary?.trim() || detail,
+          requestedBy: executorName,
+          source: "executor",
+        });
+      } else {
+        // Req 4.4: job.failed → mission.status = failed
+        missionRuntime.failMission(
+          missionId,
+          event.summary?.trim() || detail,
+          "executor"
+        );
+      }
       // Terminal event: clear heartbeat
       heartbeatMonitor.clearHeartbeat(missionId);
     } else {

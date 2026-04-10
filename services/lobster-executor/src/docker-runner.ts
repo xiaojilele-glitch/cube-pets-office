@@ -257,9 +257,14 @@ export class DockerRunner implements JobRunner {
       const oomKilled = !!(inspection.State as Record<string, unknown>).OOMKilled;
       const finishedAt = new Date().toISOString();
       const durationMs = Date.now() - startTime;
+      const cancelReason =
+        record.cancelRequested?.reason?.trim() || "Docker execution cancelled";
 
       // 7. Write result.json before artifact collection so it is exposed to the UI.
-      const resultFile = this.writeResult(record, exitCode, durationMs, timedOut);
+      const resultFile = this.writeResult(record, exitCode, durationMs, timedOut, {
+        outcome: record.cancelRequested ? "cancelled" : undefined,
+        summary: record.cancelRequested ? cancelReason : undefined,
+      });
 
       // 8. Collect artifacts
       const artifacts = this.collectArtifacts(record, workspaceDir, resultFile);
@@ -287,7 +292,9 @@ export class DockerRunner implements JobRunner {
       record.finishedAt = finishedAt;
       record.artifacts = artifacts;
 
-      if (timedOut) {
+      if (record.cancelRequested) {
+        await this.emitCancelled(record, emitEvent, durationMs, artifacts);
+      } else if (timedOut) {
         await this.emitFailed(
           record, emitEvent, "TIMEOUT",
           `Container timed out after ${durationMs}ms`,
@@ -366,6 +373,20 @@ export class DockerRunner implements JobRunner {
         await this.cleanupContainer(container);
       }
     }
+  }
+
+  async cancel(record: StoredJobRecord): Promise<void> {
+    const reason =
+      record.cancelRequested?.reason?.trim() || "Cancellation requested";
+    record.message = reason;
+    this.appendLog(record, `[cancel] ${reason}`);
+
+    if (!record.containerId) {
+      return;
+    }
+
+    const container = this.docker.getContainer(record.containerId);
+    await this.stopOrKillContainer(container, 10, 1500);
   }
 
   /* ── container creation ── */
@@ -548,17 +569,7 @@ export class DockerRunner implements JobRunner {
 
       if (result === "timeout") {
         timedOut = true;
-        // SIGTERM + 10s grace
-        try {
-          await container.stop({ t: 10 });
-        } catch {
-          // If stop fails (already stopped, etc.), try kill
-          try {
-            await container.kill({ signal: "SIGKILL" });
-          } catch {
-            // Container may already be dead
-          }
-        }
+        await this.stopOrKillContainer(container, 10, 1500);
         // Wait for the container to actually finish after stop/kill
         try {
           await container.wait();
@@ -648,17 +659,27 @@ export class DockerRunner implements JobRunner {
     exitCode: number,
     durationMs: number,
     timedOut: boolean,
+    options: {
+      outcome?: "success" | "failed" | "cancelled";
+      summary?: string;
+    } = {},
   ): string {
+    const outcome =
+      options.outcome ??
+      (exitCode === 0 && !timedOut ? "success" : "failed");
+    const summary =
+      options.summary ??
+      (timedOut
+        ? `Container timed out after ${durationMs}ms`
+        : exitCode === 0
+          ? "Docker execution completed successfully"
+          : `Container exited with code ${exitCode}`);
     const resultPayload = {
       missionId: record.request.missionId,
       jobId: record.request.jobId,
       requestId: record.request.requestId,
-      summary: timedOut
-        ? `Container timed out after ${durationMs}ms`
-        : exitCode === 0
-          ? "Docker execution completed successfully"
-          : `Container exited with code ${exitCode}`,
-      outcome: exitCode === 0 && !timedOut ? "success" : "failed",
+      summary,
+      outcome,
       exitCode,
       durationMs,
       timedOut,
@@ -687,6 +708,29 @@ export class DockerRunner implements JobRunner {
         `[DockerRunner] Failed to remove container ${container.id}:`,
         err instanceof Error ? err.message : err,
       );
+    }
+  }
+
+  private async stopOrKillContainer(
+    container: Dockerode.Container,
+    stopSeconds: number,
+    killAfterMs: number,
+  ): Promise<"stopped" | "killed"> {
+    try {
+      await Promise.race([
+        container.stop({ t: stopSeconds }),
+        new Promise<never>((_resolve, reject) => {
+          setTimeout(() => reject(new Error("stop timeout")), killAfterMs);
+        }),
+      ]);
+      return "stopped";
+    } catch {
+      try {
+        await container.kill({ signal: "SIGKILL" });
+      } catch {
+        // Container may already be terminated.
+      }
+      return "killed";
     }
   }
 
@@ -776,6 +820,35 @@ export class DockerRunner implements JobRunner {
       artifacts,
       metrics: { durationMs, passed: 1 },
       payload: eventPayload,
+    });
+    emitEvent(event);
+    await this.sendCallback(record, event);
+  }
+
+  private async emitCancelled(
+    record: StoredJobRecord,
+    emitEvent: (event: ExecutorEvent) => void,
+    durationMs: number,
+    artifacts: ExecutionPlanArtifact[],
+  ): Promise<void> {
+    const summary =
+      record.cancelRequested?.reason?.trim() || "Docker execution cancelled";
+
+    record.status = "cancelled";
+    record.summary = summary;
+    record.message = summary;
+
+    const event = this.createEvent(record, {
+      type: "job.cancelled",
+      status: "cancelled",
+      progress: record.progress,
+      message: summary,
+      summary,
+      artifacts,
+      metrics: { durationMs },
+      payload: {
+        cancelRequested: record.cancelRequested,
+      },
     });
     emitEvent(event);
     await this.sendCallback(record, event);

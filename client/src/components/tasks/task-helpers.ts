@@ -46,6 +46,8 @@ export function missionStatusLabel(status: MissionTaskStatus): string {
       return "Done";
     case "failed":
       return "Failed";
+    case "cancelled":
+      return "Cancelled";
   }
 }
 
@@ -56,8 +58,17 @@ export function missionStatusTone(status: MissionTaskStatus): string {
     status === "running" && "border-amber-200 bg-amber-50 text-amber-700",
     status === "waiting" && "border-sky-200 bg-sky-50 text-sky-700",
     status === "queued" && "border-stone-200 bg-stone-50 text-stone-700",
-    status === "failed" && "border-rose-200 bg-rose-50 text-rose-700"
+    status === "failed" && "border-rose-200 bg-rose-50 text-rose-700",
+    status === "cancelled" && "border-slate-200 bg-slate-50 text-slate-700"
   );
+}
+
+export function isMissionTerminal(status: MissionTaskStatus): boolean {
+  return status === "done" || status === "failed" || status === "cancelled";
+}
+
+export function isMissionCancellable(status: MissionTaskStatus): boolean {
+  return status === "queued" || status === "running" || status === "waiting";
 }
 
 export function timelineTone(level: TimelineLevel): string {

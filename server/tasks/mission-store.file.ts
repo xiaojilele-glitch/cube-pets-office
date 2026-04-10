@@ -286,6 +286,18 @@ function normalizeTask(value: unknown): MissionRecord | null {
       typeof candidate.completedAt === 'number'
         ? candidate.completedAt
         : undefined,
+    cancelledAt:
+      typeof candidate.cancelledAt === 'number'
+        ? candidate.cancelledAt
+        : undefined,
+    cancelledBy:
+      typeof candidate.cancelledBy === 'string'
+        ? candidate.cancelledBy
+        : undefined,
+    cancelReason:
+      typeof candidate.cancelReason === 'string'
+        ? candidate.cancelReason
+        : undefined,
     events,
   };
 }

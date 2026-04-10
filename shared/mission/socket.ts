@@ -14,6 +14,7 @@ export const MISSION_SOCKET_TYPES = {
   recordWaiting: "mission.record.waiting",
   recordCompleted: "mission.record.completed",
   recordFailed: "mission.record.failed",
+  recordCancelled: "mission.record.cancelled",
   planetUpdated: "mission.planet.updated",
   planetEdgeUpdated: "mission.planet.edge.updated",
   executorEvent: "mission.executor.event",
@@ -33,7 +34,8 @@ export interface MissionSocketRecordEvent {
     | typeof MISSION_SOCKET_TYPES.recordUpdated
     | typeof MISSION_SOCKET_TYPES.recordWaiting
     | typeof MISSION_SOCKET_TYPES.recordCompleted
-    | typeof MISSION_SOCKET_TYPES.recordFailed;
+    | typeof MISSION_SOCKET_TYPES.recordFailed
+    | typeof MISSION_SOCKET_TYPES.recordCancelled;
   issuedAt: number;
   missionId: string;
   task: MissionRecord;

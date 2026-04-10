@@ -46,6 +46,7 @@ export default function TasksPage({
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
   const createMission = useTasksStore(state => state.createMission);
+  const cancelMission = useTasksStore(state => state.cancelMission);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
   const tasks = useTasksStore(state => state.tasks);
@@ -55,6 +56,7 @@ export default function TasksPage({
   const ready = useTasksStore(state => state.ready);
   const error = useTasksStore(state => state.error);
   const decisionNotes = useTasksStore(state => state.decisionNotes);
+  const cancellingMissionIds = useTasksStore(state => state.cancellingMissionIds);
   const [search, setSearch] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
@@ -137,6 +139,22 @@ export default function TasksPage({
         error instanceof Error ? error.message : "Failed to create mission.";
       toast.error(message);
       return null;
+    }
+  }
+
+  async function handleCancelMission(payload: { reason?: string }) {
+    if (!activeTaskId) return;
+    try {
+      await cancelMission(activeTaskId, {
+        reason: payload.reason,
+        source: "user",
+      });
+      toast.success("Mission cancellation requested.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to cancel mission.";
+      toast.error(message);
+      throw error;
     }
   }
 
@@ -320,6 +338,8 @@ export default function TasksPage({
               }}
               onLaunchDecision={handleLaunchDecision}
               launchingPresetId={launchingPresetId}
+              onCancelMission={handleCancelMission}
+              cancellingMission={activeTaskId ? cancellingMissionIds[activeTaskId] === true : false}
               onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId || null })}
               className="min-w-0 xl:h-full xl:min-h-0"
             />

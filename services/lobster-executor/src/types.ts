@@ -103,7 +103,7 @@ export interface LobsterExecutorHealthResponse {
     health: true;
     createJob: true;
     jobQuery: true;
-    cancelJob: false;
+    cancelJob: true;
     dockerLifecycle: boolean;
     callbackSigning: boolean;
   };
@@ -132,6 +132,12 @@ export interface StoredJobRecord {
   dataDirectory: string;
   logFile: string;
   containerId?: string;
+  cancelRequested?: {
+    requestedAt: string;
+    requestedBy?: string;
+    reason?: string;
+    source?: string;
+  };
   executionMode: "real" | "mock";
 }
 

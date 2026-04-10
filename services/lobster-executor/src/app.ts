@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { EXECUTOR_CONTRACT_VERSION } from "../../../shared/executor/contracts.js";
 import {
   EXECUTOR_API_ROUTES,
+  type CancelExecutorJobResponse,
   type ExecutorApiErrorResponse,
 } from "../../../shared/executor/api.js";
 import { readLobsterExecutorConfig } from "./config.js";
@@ -94,14 +95,14 @@ export function createLobsterExecutorApp(
         status: dockerStatus,
         host: config.dockerHost,
       },
-      features: {
-        health: true,
-        createJob: true,
-        jobQuery: true,
-        cancelJob: false,
-        dockerLifecycle: config.executionMode === "real",
-        callbackSigning: config.callbackSecret !== "",
-      },
+        features: {
+          health: true,
+          createJob: true,
+          jobQuery: true,
+          cancelJob: true,
+          dockerLifecycle: config.executionMode === "real",
+          callbackSigning: config.callbackSecret !== "",
+        },
       aiCapability: {
         enabled: !!process.env.LLM_API_KEY,
         image: config.aiImage,
@@ -148,12 +149,16 @@ export function createLobsterExecutorApp(
 
   app.post(
     EXECUTOR_API_ROUTES.cancelJob,
-    (_req, res: Response<ExecutorApiErrorResponse>) => {
-      res.status(501).json({
-        ok: false,
-        error:
-          "Cancel route is reserved but not implemented yet. Docker lifecycle and cancellation land in the next Worktree B phase.",
-      });
+    async (
+      req: Request<{ id: string }>,
+      res: Response<CancelExecutorJobResponse | ExecutorApiErrorResponse>
+    ) => {
+      try {
+        const response = await service.cancel(req.params.id, req.body);
+        res.json(response);
+      } catch (error) {
+        sendError(res, error);
+      }
     }
   );
 

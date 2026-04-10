@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, LoaderCircle, Play } from "lucide-react";
+import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
@@ -20,10 +21,12 @@ export default function TaskDetailPage({
   const selectTask = useTasksStore(state => state.selectTask);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
+  const cancelMission = useTasksStore(state => state.cancelMission);
   const refresh = useTasksStore(state => state.refresh);
   const detailsById = useTasksStore(state => state.detailsById);
   const selectedTaskId = useTasksStore(state => state.selectedTaskId);
   const decisionNotes = useTasksStore(state => state.decisionNotes);
+  const cancellingMissionIds = useTasksStore(state => state.cancellingMissionIds);
   const loading = useTasksStore(state => state.loading);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
@@ -51,6 +54,22 @@ export default function TaskDetailPage({
       await launchDecision(activeTaskId, presetId);
     } finally {
       setLaunchingPresetId(null);
+    }
+  }
+
+  async function handleCancelMission(payload: { reason?: string }) {
+    if (!activeTaskId) return;
+    try {
+      await cancelMission(activeTaskId, {
+        reason: payload.reason,
+        source: "user",
+      });
+      toast.success("Mission cancellation requested.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to cancel mission.";
+      toast.error(message);
+      throw error;
     }
   }
 
@@ -109,6 +128,8 @@ export default function TaskDetailPage({
           }}
           onLaunchDecision={handleLaunchDecision}
           launchingPresetId={launchingPresetId}
+          onCancelMission={handleCancelMission}
+          cancellingMission={activeTaskId ? cancellingMissionIds[activeTaskId] === true : false}
           onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId })}
         />
       </div>

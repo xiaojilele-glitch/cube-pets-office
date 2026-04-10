@@ -22,6 +22,7 @@ import { DatabaseMissionSnapshotStore } from '../db/mission-storage.js';
 import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
 import {
   MissionStore,
+  type CancelMissionInput,
   type CreateMissionInput,
   type PatchMissionExecutionInput,
 } from './mission-store.js';
@@ -52,6 +53,7 @@ function resolveSocketEventType(
   if (task.status === 'waiting') return MISSION_SOCKET_TYPES.recordWaiting;
   if (task.status === 'done') return MISSION_SOCKET_TYPES.recordCompleted;
   if (task.status === 'failed') return MISSION_SOCKET_TYPES.recordFailed;
+  if (task.status === 'cancelled') return MISSION_SOCKET_TYPES.recordCancelled;
   return MISSION_SOCKET_TYPES.recordUpdated;
 }
 
@@ -233,6 +235,15 @@ export class MissionRuntime {
     source: MissionEvent['source'] = 'mission-core'
   ): MissionRecord | undefined {
     const task = this.store.markFailed(id, message, source);
+    this.emitMissionUpdate(task);
+    return task;
+  }
+
+  cancelMission(
+    id: string,
+    input: CancelMissionInput = {}
+  ): MissionRecord | undefined {
+    const task = this.store.markCancelled(id, input);
     this.emitMissionUpdate(task);
     return task;
   }

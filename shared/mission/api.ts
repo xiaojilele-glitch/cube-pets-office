@@ -16,6 +16,7 @@ export const MISSION_API_ROUTES = {
   listTasks: "/api/tasks",
   getTask: "/api/tasks/:id",
   listTaskEvents: "/api/tasks/:id/events",
+  cancelTask: "/api/tasks/:id/cancel",
   submitTaskDecision: "/api/tasks/:id/decision",
   listPlanets: "/api/planets",
   getPlanet: "/api/planets/:id",
@@ -55,6 +56,19 @@ export interface CreateMissionResponse {
 
 export interface GetMissionResponse {
   ok: true;
+  task: MissionRecord;
+}
+
+export interface CancelMissionRequest {
+  reason?: string;
+  requestedBy?: string;
+  source?: MissionEvent["source"];
+}
+
+export interface CancelMissionResponse {
+  ok: true;
+  alreadyFinal?: boolean;
+  executorForwarded?: boolean;
   task: MissionRecord;
 }
 

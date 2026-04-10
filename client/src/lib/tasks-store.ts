@@ -17,6 +17,7 @@ import { MISSION_SOCKET_EVENT, MISSION_SOCKET_TYPES, type MissionSocketPayload }
 import { io, type Socket } from "socket.io-client";
 
 import {
+  cancelMission as cancelMissionRequest,
   createMission as createMissionRequest,
   getMission,
   getPlanet,
@@ -55,7 +56,8 @@ export type MissionTaskStatus =
   | "running"
   | "waiting"
   | "done"
-  | "failed";
+  | "failed"
+  | "cancelled";
 
 export type TimelineLevel = "info" | "success" | "warn" | "error";
 export type InteriorStageStatus = "pending" | "running" | "done" | "failed";
@@ -211,6 +213,7 @@ interface TasksStoreState {
   tasks: MissionTaskSummary[];
   detailsById: Record<string, MissionTaskDetail>;
   decisionNotes: Record<string, string>;
+  cancellingMissionIds: Record<string, boolean>;
   lastDecisionLaunch: {
     sourceTaskId: string;
     sourceTaskTitle: string;
@@ -225,6 +228,11 @@ interface TasksStoreState {
     sourceText?: string;
     kind?: string;
     topicId?: string;
+  }) => Promise<string | null>;
+  cancelMission: (taskId: string, payload: {
+    reason?: string;
+    requestedBy?: string;
+    source?: "user" | "brain" | "feishu" | "mission-core" | "executor";
   }) => Promise<string | null>;
   setDecisionNote: (taskId: string, note: string) => void;
   launchDecision: (taskId: string, presetId: string) => Promise<string | null>;
@@ -289,6 +297,7 @@ function workflowStatusFromMission(
 ): SyntheticWfStatus {
   if (status === "queued") return "pending";
   if (status === "done") return "completed";
+  if (status === "cancelled") return "completed_with_errors";
   if (status === "failed") return "failed";
   return "running";
 }
@@ -358,6 +367,10 @@ function missionFailureReasons(
   mission: MissionRecord,
   events: MissionEvent[]
 ): string[] {
+  if (mission.status === "cancelled") {
+    return [];
+  }
+
   const reasons = new Set<string>();
 
   if (mission.status === "failed" && mission.summary) {
@@ -409,12 +422,17 @@ function missionSummaryText(
     return "Mission stopped before the execution chain could complete.";
   }
 
+  if (mission.status === "cancelled") {
+    return trimText(mission.cancelReason, 180) || "Mission was cancelled before the execution chain completed.";
+  }
+
   return "Mission is progressing through the execution pipeline.";
 }
 
 function timelineLevelForMissionEvent(event: MissionEvent): TimelineLevel {
   if (event.type === "done") return "success";
   if (event.type === "failed" || event.level === "error") return "error";
+  if (event.type === "cancelled") return "warn";
   if (event.type === "waiting" || event.level === "warn") return "warn";
   return "info";
 }
@@ -436,6 +454,8 @@ function titleForMissionEvent(
       return "Mission completed";
     case "failed":
       return "Mission failed";
+    case "cancelled":
+      return "Mission cancelled";
     case "log":
     default:
       return stageLabel ? `${stageLabel} signal` : "Mission log";
@@ -534,6 +554,7 @@ function inferMissionCoreAgentStatus(
   if (status === "waiting") return "thinking";
   if (status === "done") return "done";
   if (status === "failed") return "error";
+  if (status === "cancelled") return "idle";
   return "idle";
 }
 
@@ -1395,6 +1416,7 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
   tasks: [],
   detailsById: {},
   decisionNotes: {},
+  cancellingMissionIds: {},
   lastDecisionLaunch: null,
 
   ensureReady: async () => {
@@ -1479,6 +1501,63 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
       preferredTaskId: response.task.id,
     });
     return response.task.id;
+  },
+
+  cancelMission: async (taskId, payload) => {
+    await get().ensureReady();
+
+    set(state => ({
+      error: null,
+      cancellingMissionIds: {
+        ...state.cancellingMissionIds,
+        [taskId]: true,
+      },
+    }));
+
+    try {
+      const response = await cancelMissionRequest(taskId, {
+        reason: payload.reason?.trim() || undefined,
+        requestedBy: payload.requestedBy?.trim() || undefined,
+        source: payload.source ?? "user",
+      });
+
+      const summary = buildSummaryRecord(response.task);
+      const detail = buildDetailRecord(response.task);
+
+      set(state => {
+        const nextTasks = [
+          ...state.tasks.filter(task => task.id !== taskId),
+          summary,
+        ].sort((left, right) => right.updatedAt - left.updatedAt);
+
+        return {
+          tasks: nextTasks,
+          detailsById: {
+            ...state.detailsById,
+            [taskId]: detail,
+          },
+          selectedTaskId: resolveSelectedTaskId(
+            nextTasks,
+            state.selectedTaskId,
+            taskId,
+          ),
+        };
+      });
+
+      return response.task.id;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : "Failed to cancel mission.",
+      });
+      throw error;
+    } finally {
+      set(state => ({
+        cancellingMissionIds: {
+          ...state.cancellingMissionIds,
+          [taskId]: false,
+        },
+      }));
+    }
   },
 
   setDecisionNote: (taskId, note) => {
