@@ -273,31 +273,6 @@ function WallBrandPlaque() {
   );
 }
 
-function ZoneBase({
-  position,
-  color,
-}: {
-  position: [number, number, number];
-  color: string;
-}) {
-  return (
-    <group position={position}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]}>
-        <planeGeometry args={[4.2, 3.3]} />
-        <meshStandardMaterial color={color} transparent opacity={0.13} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -1.46]}>
-        <planeGeometry args={[1.48, 0.1]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.12} transparent opacity={0.28} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.021, -1.46]}>
-        <planeGeometry args={[0.92, 0.04]} />
-        <meshStandardMaterial color="#FFF8ED" transparent opacity={0.42} />
-      </mesh>
-    </group>
-  );
-}
-
 function ZoneBanner({
   position,
   rotation = [0, 0, 0],
@@ -313,48 +288,12 @@ function ZoneBanner({
   subtitle: string;
   wallMounted?: boolean;
 }) {
-  const panelDepth = wallMounted ? 0.04 : 0.08;
-  const accentDepth = wallMounted ? 0.014 : 0.02;
-  const badgeDepth = wallMounted ? 0.028 : 0.04;
-  const htmlZ = wallMounted ? 0.045 : 0.07;
-
   return (
     <group position={position} rotation={rotation}>
-      {wallMounted && (
-        <>
-          <mesh position={[0, 0, -0.016]}>
-            <boxGeometry args={[1.68, 1.02, 0.015]} />
-            <meshStandardMaterial color="#8E765E" roughness={0.94} />
-          </mesh>
-          <mesh position={[0, 0.56, -0.012]}>
-            <boxGeometry args={[0.76, 0.06, 0.01]} />
-            <meshStandardMaterial color="#A98C71" roughness={0.88} />
-          </mesh>
-          {[-0.3, 0.3].map((x) => (
-            <mesh key={x} position={[x, 0.56, -0.002]}>
-              <cylinderGeometry args={[0.02, 0.02, 0.018, 16]} />
-              <meshStandardMaterial color="#D9C4A4" metalness={0.12} roughness={0.42} />
-            </mesh>
-          ))}
-        </>
-      )}
-
-      <mesh>
-        <boxGeometry args={[1.74, 0.84, panelDepth]} />
-        <meshStandardMaterial color="#F4E9DB" roughness={0.92} />
-      </mesh>
-      <mesh position={[0, 0.28, panelDepth / 2 + accentDepth / 2]}>
-        <boxGeometry args={[1.74, 0.14, accentDepth]} />
-        <meshStandardMaterial color={color} roughness={0.65} />
-      </mesh>
-      <mesh position={[-0.64, 0.28, panelDepth / 2 + badgeDepth / 2 + 0.002]}>
-        <cylinderGeometry args={[0.045, 0.045, badgeDepth, 20]} />
-        <meshStandardMaterial color="#FFF7EA" emissive={color} emissiveIntensity={0.26} />
-      </mesh>
-      <Html center position={[0, -0.02, htmlZ + 0.01]} distanceFactor={13} style={{ pointerEvents: 'none' }}>
-        <div className="w-[152px] rounded-2xl border border-white/70 bg-white/92 px-3 py-2 text-center shadow-[0_10px_24px_rgba(74,54,34,0.16)] backdrop-blur-md">
-          <div className="whitespace-nowrap text-[12px] font-bold tracking-[0.08em] text-[#3F3124]">{title}</div>
-          <div className="mt-1 truncate text-[9px] font-medium tracking-[0.04em] text-[#8F7A66]">{subtitle}</div>
+      <Html center position={[0, 0.4, 0]} distanceFactor={12} style={{ pointerEvents: 'none' }}>
+        <div className="flex w-[130px] flex-col items-center justify-center rounded-2xl border border-white/50 bg-white/40 px-3 py-2 text-center shadow-[0_4px_16px_rgba(0,0,0,0.06)] backdrop-blur-md">
+          <div className="whitespace-nowrap text-[12px] font-bold tracking-widest text-stone-800">{title}</div>
+          <div className="mt-0.5 truncate text-[9px] font-semibold tracking-wider" style={{ color }}>{subtitle}</div>
         </div>
       </Html>
     </group>
@@ -424,8 +363,8 @@ function PodDecor({
       />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={slot.floorPosition}>
-        <torusGeometry args={[ringRadius, 0.055, 16, 64]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.14} transparent opacity={0.78} />
+        <torusGeometry args={[ringRadius, 0.035, 16, 64]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.15} transparent opacity={0.4} />
       </mesh>
 
       <group position={slot.decorPosition}>
@@ -773,11 +712,6 @@ export function OfficeRoom() {
       <WallBrandPlaque />
       <CorkBoard />
       <DepartmentDecor departments={sceneDepartments} />
-
-      {sceneDepartments[0] ? <ZoneBase position={[-3.5, 0, -1.8]} color={sceneDepartments[0].color} /> : null}
-      {sceneDepartments[1] ? <ZoneBase position={[3.5, 0, -1.8]} color={sceneDepartments[1].color} /> : null}
-      {sceneDepartments[2] ? <ZoneBase position={[-3.2, 0, 2.35]} color={sceneDepartments[2].color} /> : null}
-      {sceneDepartments[3] ? <ZoneBase position={[3.2, 0, 2.35]} color={sceneDepartments[3].color} /> : null}
 
       <DesktopDesk position={[0, 0, -3.15]} withLamp />
       <FurnitureModel url={FURNITURE_MODELS.rugRounded} position={[0, 0.01, -3.15]} scale={1.05} />

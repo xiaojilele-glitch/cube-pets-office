@@ -83,18 +83,20 @@ function TerminalPreviewInner({
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "linear-gradient(180deg, #111827, #0f172a)",
+        background: "rgba(255, 255, 255, 0.95)",
+        backdropFilter: "blur(24px)",
         padding: 16,
       }
     : {
         width: "100%",
         height: "100%",
         position: "relative",
-        background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-        borderRadius: 12,
+        background: "rgba(255, 255, 255, 0.65)",
+        backdropFilter: "blur(12px)",
+        borderRadius: 16,
         overflow: "hidden",
-        border: "1px solid rgba(148, 163, 184, 0.18)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.24)",
+        border: "1px solid rgba(255, 255, 255, 0.6)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
       };
 
   return (
@@ -107,9 +109,9 @@ function TerminalPreviewInner({
           gap: 8,
           height: 28,
           padding: "0 10px",
-          borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
-          color: "#cbd5e1",
-          background: "rgba(15,23,42,0.78)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
+          color: "#44403c",
+          background: "rgba(255, 255, 255, 0.4)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -117,7 +119,7 @@ function TerminalPreviewInner({
           <span style={{ width: 8, height: 8, borderRadius: 999, background: "#f59e0b" }} />
           <span style={{ width: 8, height: 8, borderRadius: 999, background: "#34d399" }} />
         </div>
-        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#78716c" }}>
           执行终端
         </span>
       </div>
@@ -132,7 +134,7 @@ function TerminalPreviewInner({
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            color: "#94a3b8",
+            color: "#78716c",
             fontSize: 13,
             zIndex: 1,
             pointerEvents: "none",
@@ -140,8 +142,8 @@ function TerminalPreviewInner({
             gap: 6,
           }}
         >
-          <span style={{ fontWeight: 600, color: "#e2e8f0" }}>等待执行</span>
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>运行任务后，这里会显示实时日志</span>
+          <span style={{ fontWeight: 600, color: "#44403c" }}>等待执行</span>
+          <span style={{ fontSize: 11, color: "#a8a29e" }}>运行任务后，这里会显示实时日志</span>
         </div>
       )}
 
@@ -154,9 +156,9 @@ function TerminalPreviewInner({
           position: "absolute",
           top: 4,
           right: 6,
-          background: "rgba(51,65,85,0.55)",
+          background: "rgba(0, 0, 0, 0.05)",
           border: "none",
-          color: "#e2e8f0",
+          color: "#78716c",
           cursor: "pointer",
           padding: "2px 6px",
           borderRadius: 6,

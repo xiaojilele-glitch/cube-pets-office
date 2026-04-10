@@ -276,11 +276,11 @@ function SpeechBubble({
   return (
     <Html position={[0, 3.3, 0]} center distanceFactor={7.6} style={{ pointerEvents: 'none' }}>
       <div
-        className="min-w-[136px] max-w-[176px] rounded-2xl border bg-white/95 px-2 py-1.5 text-center shadow-lg backdrop-blur-sm animate-in fade-in duration-300"
-        style={{ borderColor: `${accent}55` }}
+        className="min-w-[136px] max-w-[176px] rounded-xl border bg-white/80 px-3 py-2 text-center shadow-[0_4px_16px_rgba(0,0,0,0.06)] backdrop-blur-md animate-in fade-in duration-300"
+        style={{ borderColor: `${accent}40` }}
       >
-        <p className="whitespace-pre-line break-words text-[11px] leading-5 text-[#3A3A3A]">{text}</p>
-        <div className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white/95" />
+        <p className="whitespace-pre-line break-words text-[11px] font-medium leading-5 text-stone-700">{text}</p>
+        <div className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white/80" />
       </div>
     </Html>
   );
@@ -409,12 +409,12 @@ function getStatusCategory(status: string): StatusCategory {
 }
 
 const STATUS_TEXT_COLORS: Record<StatusCategory, string> = {
-  working: '#06b6d4',
-  thinking: '#f59e0b',
-  reviewing: '#a855f7',
-  idle: 'rgba(255, 255, 255, 0.6)',
-  done: '#22c55e',
-  error: '#ef4444',
+  working: '#059669', // emerald
+  thinking: '#D97706', // amber
+  reviewing: '#7C3AED', // purple
+  idle: '#78716C', // stone-500
+  done: '#16A34A', // green
+  error: '#DC2626', // red
 };
 
 function getStatusTextColor(status: string): string {
@@ -426,21 +426,18 @@ function getStatusBorderStyle(status: string): CSSProperties {
   switch (category) {
     case 'working':
       return {
-        borderColor: 'rgba(6, 182, 212, 0.5)',
-        boxShadow: '0 0 8px rgba(6, 182, 212, 0.5)',
-        animation: 'breathe-glow 2s ease-in-out infinite',
+        borderColor: 'rgba(16, 185, 129, 0.4)',
+        boxShadow: '0 0 12px rgba(16, 185, 129, 0.2)',
       } as CSSProperties;
     case 'thinking':
       return {
-        borderColor: 'rgba(245, 158, 11, 0.5)',
-        boxShadow: '0 0 8px rgba(245, 158, 11, 0.5)',
-        animation: 'breathe-glow-amber 1.5s ease-in-out infinite',
+        borderColor: 'rgba(245, 158, 11, 0.4)',
+        boxShadow: '0 0 12px rgba(245, 158, 11, 0.2)',
       };
     case 'reviewing':
       return {
-        borderColor: 'rgba(168, 85, 247, 0.5)',
-        boxShadow: '0 0 8px rgba(168, 85, 247, 0.5)',
-        animation: 'breathe-glow-purple 2s ease-in-out infinite',
+        borderColor: 'rgba(168, 85, 247, 0.4)',
+        boxShadow: '0 0 12px rgba(168, 85, 247, 0.2)',
       };
     case 'done':
       return {
@@ -448,13 +445,13 @@ function getStatusBorderStyle(status: string): CSSProperties {
       };
     case 'error':
       return {
-        borderColor: 'rgba(239, 68, 68, 0.5)',
-        boxShadow: '0 0 8px rgba(239, 68, 68, 0.3)',
+        borderColor: 'rgba(239, 68, 68, 0.4)',
+        boxShadow: '0 0 12px rgba(239, 68, 68, 0.2)',
       };
     default:
-      // idle: static semi-transparent white border
+      // idle
       return {
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: 'rgba(255, 255, 255, 0.5)',
       };
   }
 }
@@ -690,24 +687,23 @@ function AgentWorker({ config, leaving }: { config: SceneAgentConfig; leaving?: 
 
       <Html position={[0, 1.8, 0]} center distanceFactor={7} style={{ pointerEvents: 'none' }}>
         <div
-          className={`glass-3d flex whitespace-nowrap items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
-            isActive ? 'scale-110' : ''
+          className={`flex whitespace-nowrap items-center gap-1.5 rounded-lg px-2 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 backdrop-blur-md border ${
+            isActive ? 'scale-110 bg-white/95 border-white/60 text-stone-800' : 'bg-white/60 border-white/40 text-stone-700'
           }`}
-          style={{
-            ...(isActive ? { background: accent } : {}),
-            ...getStatusBorderStyle(agentStatus),
-          }}
+          style={getStatusBorderStyle(agentStatus)}
         >
-          <span className="text-white">
+          <span>
             {config.emoji} {config.shortLabel}
           </span>
           {config.isGuest && (
-            <span className="rounded-full bg-orange-500/80 px-1.5 py-0.5 text-[8px] font-bold text-white tracking-wider">
+            <span className="rounded-md bg-orange-500/90 px-1.5 py-0.5 text-[8px] font-bold text-white tracking-wider">
               Guest
             </span>
           )}
           <span
-            className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold tracking-[0.08em]"
+            className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold tracking-[0.05em] ${
+              isActive ? 'bg-stone-100' : 'bg-white/40'
+            }`}
             style={{ color: getStatusTextColor(agentStatus) }}
           >
             {config.titleLabel}
@@ -795,7 +791,7 @@ function DepartmentMarker({
   return (
     <group position={position}>
       <Html center position={[0, 0.18, 0]} distanceFactor={10} style={{ pointerEvents: 'none' }}>
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-[#FFF9F2]/88 px-3 py-1 text-[10px] font-semibold text-[#4E3C2C] shadow-md backdrop-blur-sm">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-white/60 px-3 py-1 text-[10px] font-semibold text-stone-700 shadow-sm backdrop-blur-md">
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ backgroundColor: color }}

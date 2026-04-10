@@ -48,12 +48,12 @@ export function WaitingDecisionBubble() {
         <div
           ref={scaleRef}
           onClick={handleClick}
-          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 border-amber-400 bg-white/95 shadow-lg backdrop-blur-sm transition-shadow hover:shadow-amber-300/50 hover:shadow-xl"
+          className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-orange-200 bg-white/80 shadow-lg backdrop-blur-md transition-shadow hover:shadow-orange-300/40 hover:shadow-xl"
           title={waitingMission.title}
         >
-          <span className="text-lg font-bold text-amber-500">?</span>
+          <span className="text-lg font-bold text-orange-500">?</span>
           {/* Tail triangle */}
-          <div className="absolute -bottom-1.5 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent border-t-white/95" />
+          <div className="absolute -bottom-1.5 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent border-t-white/80" />
         </div>
       </Html>
     </group>

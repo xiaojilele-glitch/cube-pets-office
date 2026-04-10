@@ -30,16 +30,17 @@ function ScreenshotPreviewInner({
           alignItems: "center",
           justifyContent: "center",
           gap: 6,
-          background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-          color: "#94a3b8",
+          background: "rgba(255, 255, 255, 0.65)",
+          backdropFilter: "blur(12px)",
+          color: "#78716c",
           fontSize: 13,
-          borderRadius: 12,
-          border: "1px solid rgba(148, 163, 184, 0.18)",
-          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.24)",
+          borderRadius: 16,
+          border: "1px solid rgba(255, 255, 255, 0.6)",
+          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
         }}
       >
-        <span style={{ fontWeight: 600, color: "#e2e8f0" }}>暂无浏览器预览</span>
-        <span style={{ fontSize: 11 }}>执行带页面的任务后，这里会显示截图</span>
+        <span style={{ fontWeight: 600, color: "#44403c" }}>暂无浏览器预览</span>
+        <span style={{ fontSize: 11, color: "#a8a29e" }}>执行带页面的任务后，这里会显示截图</span>
       </div>
     );
   }
@@ -51,12 +52,13 @@ function ScreenshotPreviewInner({
         width: "100%",
         height: "100%",
         position: "relative",
-        background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-        borderRadius: 12,
+        background: "rgba(255, 255, 255, 0.65)",
+        backdropFilter: "blur(12px)",
+        borderRadius: 16,
         overflow: "hidden",
         cursor: "pointer",
-        border: "1px solid rgba(148, 163, 184, 0.18)",
-        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.24)",
+        border: "1px solid rgba(255, 255, 255, 0.6)",
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.08)",
       }}
       onClick={onClickZoom}
       role="button"
@@ -78,15 +80,15 @@ function ScreenshotPreviewInner({
           justifyContent: "space-between",
           height: 28,
           padding: "0 10px",
-          borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
-          color: "#cbd5e1",
-          background: "rgba(15,23,42,0.78)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.06)",
+          color: "#44403c",
+          background: "rgba(255, 255, 255, 0.4)",
         }}
       >
-        <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: "#94a3b8" }}>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#78716c" }}>
           浏览器预览
         </span>
-        <span style={{ fontSize: 10, color: "#e2e8f0" }}>点击放大</span>
+        <span style={{ fontSize: 10, color: "#a8a29e" }}>点击放大</span>
       </div>
 
       {/* Previous frame (fading out) */}
