@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   Bot,
   Coins,
-  Download,
   FileText,
   FolderKanban,
   History,
@@ -52,7 +51,6 @@ import {
 } from "@/components/ui/empty";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type {
@@ -73,18 +71,13 @@ import { ArtifactListBlock } from "./ArtifactListBlock";
 import { ArtifactPreviewDialog } from "./ArtifactPreviewDialog";
 import { DecisionHistory } from "./DecisionHistory";
 import { DecisionPanel } from "./DecisionPanel";
-import { OperatorActionBar } from "./OperatorActionBar";
+import { TaskOperationsHero } from "./TaskOperationsHero";
 import { TaskPlanetInterior } from "./TaskPlanetInterior";
 import {
   compactText,
   downloadAttachmentArtifact,
   formatTaskDate,
-  formatTaskRelative,
   isMissionTerminal,
-  missionOperatorStateLabel,
-  missionOperatorStateTone,
-  missionStatusLabel,
-  missionStatusTone,
   timelineTone,
 } from "./task-helpers";
 
@@ -218,13 +211,7 @@ function ExcerptBlock({
   );
 }
 
-function SnapshotTile({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
+function SnapshotTile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-3">
       <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
@@ -275,13 +262,13 @@ function formatTokenCount(v: number): string {
 }
 
 function MissionCostTab() {
-  const snapshot = useCostStore((s) => s.snapshot);
-  const history = useCostStore((s) => s.history);
+  const snapshot = useCostStore(s => s.snapshot);
+  const history = useCostStore(s => s.history);
 
   // Derive per-agent token breakdown for AreaChart
   const agentTokenData = useMemo(() => {
     if (!snapshot?.agentCosts.length) return [];
-    return snapshot.agentCosts.map((a) => ({
+    return snapshot.agentCosts.map(a => ({
       name: a.agentName || a.agentId,
       tokensIn: a.tokensIn,
       tokensOut: a.tokensOut,
@@ -292,7 +279,7 @@ function MissionCostTab() {
   // Derive history cost curve for LineChart
   const historyCurveData = useMemo(() => {
     if (!history.length) return [];
-    return history.map((m) => ({
+    return history.map(m => ({
       name: m.title.length > 12 ? `${m.title.slice(0, 12)}…` : m.title,
       cost: m.totalCost,
       tokens: m.totalTokensIn + m.totalTokensOut,
@@ -381,7 +368,11 @@ function MissionCostTab() {
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={agentTokenData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11 }}
+                  stroke="#a8a29e"
+                />
                 <YAxis tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <Tooltip
                   contentStyle={{
@@ -431,7 +422,11 @@ function MissionCostTab() {
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={historyCurveData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#a8a29e" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11 }}
+                  stroke="#a8a29e"
+                />
                 <YAxis tick={{ fontSize: 11 }} stroke="#a8a29e" />
                 <Tooltip
                   contentStyle={{
@@ -505,9 +500,9 @@ export function TaskDetailView({
   const [downloadingArtifactId, setDownloadingArtifactId] = useState<
     string | null
   >(null);
-  const [previewArtifactIndex, setPreviewArtifactIndex] = useState<number | null>(
-    null
-  );
+  const [previewArtifactIndex, setPreviewArtifactIndex] = useState<
+    number | null
+  >(null);
   const [previewArtifactName, setPreviewArtifactName] = useState("");
   const [previewArtifactFormat, setPreviewArtifactFormat] = useState<
     string | undefined
@@ -572,7 +567,9 @@ export function TaskDetailView({
       const filename =
         filenameMatch?.[1] ||
         artifact.filename ||
-        (artifact.format ? `${artifact.title}.${artifact.format}` : artifact.title);
+        (artifact.format
+          ? `${artifact.title}.${artifact.format}`
+          : artifact.title);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -592,15 +589,6 @@ export function TaskDetailView({
     setPreviewArtifactFormat(artifact.format);
   }
 
-  const summaryText = compactText(detail.summary, isDesktop ? 240 : 420);
-  const liveSignalText = compactText(
-    detail.lastSignal || detail.waitingFor || "No recent signal yet.",
-    160
-  );
-  const summaryDialogNeeded = detail.summary.trim().length > (isDesktop ? 240 : 420);
-  const liveSignalResolved =
-    detail.lastSignal || detail.waitingFor || "No recent signal yet.";
-  const liveSignalDialogNeeded = liveSignalResolved.trim().length > 160;
   const terminalMission = isMissionTerminal(detail.status);
   const decisionEnabled =
     detail.status === "waiting" && detail.decisionPresets.length > 0;
@@ -612,6 +600,9 @@ export function TaskDetailView({
 
   const showStructuredDecisionPanel =
     detail.status === "waiting" && !!detail.decision;
+  const showDecisionFocusSection =
+    detail.status === "waiting" &&
+    (showStructuredDecisionPanel || detail.decisionPresets.length > 0);
   const decisionHistoryEntries = detail.decisionHistory ?? [];
 
   const sourceDirectiveText = detail.sourceText.trim();
@@ -680,7 +671,8 @@ export function TaskDetailView({
               task.deliverable_v2 ||
               task.deliverable ||
               "No deliverable text captured yet.";
-            const managerText = task.manager_feedback || "No manager feedback yet.";
+            const managerText =
+              task.manager_feedback || "No manager feedback yet.";
             const auditText =
               task.meta_audit_feedback || "No audit signal captured yet.";
 
@@ -706,7 +698,10 @@ export function TaskDetailView({
                       </span>
                     </div>
                     <div className="mt-2 text-sm font-medium leading-6 text-stone-900">
-                      {compactText(task.description || "No work brief captured yet.", 118)}
+                      {compactText(
+                        task.description || "No work brief captured yet.",
+                        118
+                      )}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
@@ -961,8 +956,7 @@ export function TaskDetailView({
           Artifacts
         </CardTitle>
         <CardDescription>
-          Mission reports, department summaries, and captured input
-          attachments.
+          Mission reports, department summaries, and captured input attachments.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -994,24 +988,37 @@ export function TaskDetailView({
             Failure Reasons
           </CardTitle>
         </CardHeader>
-      <CardContent className="space-y-2">
-        {detail.failureReasons.map(reason => (
-          <div
-            key={reason}
-            className="rounded-2xl border border-rose-200/80 bg-white/75 px-3 py-3"
-          >
-            <ExcerptBlock
-              title="Failure Signal"
-              description="Full captured failure reason."
-              text={reason}
-              maxLength={160}
-              className="text-rose-900"
-            />
+        <CardContent className="space-y-2">
+          {detail.failureReasons.map(reason => (
+            <div
+              key={reason}
+              className="rounded-2xl border border-rose-200/80 bg-white/75 px-3 py-3"
+            >
+              <ExcerptBlock
+                title="Failure Signal"
+                description="Full captured failure reason."
+                text={reason}
+                maxLength={160}
+                className="text-rose-900"
+              />
             </div>
           ))}
         </CardContent>
       </Card>
     ) : null;
+
+  const decisionFocusSection = showDecisionFocusSection ? (
+    <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      {showStructuredDecisionPanel && detail.decision ? (
+        <DecisionPanel
+          missionId={detail.id}
+          decision={detail.decision}
+          onDecisionSubmitted={onDecisionSubmitted}
+        />
+      ) : null}
+      {detail.decisionPresets.length > 0 ? decisionPanel : null}
+    </section>
+  ) : null;
 
   return (
     <div
@@ -1021,113 +1028,13 @@ export function TaskDetailView({
         className
       )}
     >
-      <section className="shrink-0 overflow-hidden rounded-[28px] border border-stone-200/80 bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_28%),linear-gradient(180deg,#fffdf8,#f7f0e6)] p-5 shadow-[0_24px_70px_rgba(113,83,49,0.1)]">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-4xl">
-            <div className="flex flex-wrap gap-2">
-              <span
-                className={cn(
-                  "rounded-full px-3 py-1 text-xs font-semibold",
-                  missionStatusTone(detail.status)
-                )}
-              >
-                {missionStatusLabel(detail.status)}
-              </span>
-              <span className="rounded-full border border-stone-200 bg-white/70 px-3 py-1 text-xs font-medium text-stone-700">
-                {detail.kind}
-              </span>
-              {detail.operatorState !== "active" ? (
-                <span
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold",
-                    missionOperatorStateTone(detail.operatorState),
-                  )}
-                >
-                  {missionOperatorStateLabel(detail.operatorState)}
-                </span>
-              ) : null}
-              {detail.departmentLabels.map(label => (
-                <span
-                  key={label}
-                  className="rounded-full border border-white/80 bg-white/65 px-3 py-1 text-xs text-stone-600"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
-            <h1 className="mt-3 max-w-4xl text-2xl font-semibold tracking-tight text-stone-900 md:text-3xl">
-              {detail.title}
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-stone-700">
-              {summaryText}
-            </p>
-            {summaryDialogNeeded ? (
-              <div className="mt-3">
-                <DetailTextDialog
-                  title="Mission Summary"
-                  description="Full summary for the selected mission."
-                  text={detail.summary}
-                />
-              </div>
-            ) : null}
-          </div>
+      <TaskOperationsHero
+        detail={detail}
+        loadingByAction={operatorActionLoading}
+        onSubmitOperatorAction={onSubmitOperatorAction}
+      />
 
-          <div className="max-w-[300px] rounded-[22px] border border-white/75 bg-white/72 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-              Live signal
-            </div>
-            <div className="mt-2 text-sm leading-6">{liveSignalText}</div>
-            {liveSignalDialogNeeded ? (
-              <div className="mt-3">
-                <DetailTextDialog
-                  title="Live Signal"
-                  description="Full live signal text."
-                  text={liveSignalResolved}
-                />
-              </div>
-            ) : null}
-            <div className="mt-3 text-xs text-stone-500">
-              Updated {formatTaskRelative(detail.updatedAt)}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <OperatorActionBar
-            detail={detail}
-            loadingByAction={operatorActionLoading}
-            onSubmitAction={onSubmitOperatorAction}
-          />
-        </div>
-
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          <MetricCard
-            label="Progress"
-            value={`${detail.progress}%`}
-            hint={detail.currentStageLabel || "No active stage yet"}
-          />
-          <MetricCard
-            label="Work Packages"
-            value={`${detail.completedTaskCount}/${detail.taskCount}`}
-            hint="Completed versus total tasks"
-          />
-          <MetricCard
-            label="Agents"
-            value={`${detail.activeAgentCount}`}
-            hint="Currently active robots"
-          />
-          <MetricCard
-            label="Messages"
-            value={`${detail.messageCount}`}
-            hint="Observed coordination messages"
-          />
-          <MetricCard
-            label="Artifacts"
-            value={`${detail.artifacts.length}`}
-            hint="Reports and linked references"
-          />
-        </div>
-      </section>
+      {decisionFocusSection}
 
       <Tabs
         defaultValue="overview"
@@ -1164,14 +1071,6 @@ export function TaskDetailView({
               <TaskPlanetInterior detail={detail} />
               <div className="self-start space-y-3">
                 {sourceDirectivePanel}
-                {showStructuredDecisionPanel && detail.decision && (
-                  <DecisionPanel
-                    missionId={detail.id}
-                    decision={detail.decision}
-                    onDecisionSubmitted={onDecisionSubmitted}
-                  />
-                )}
-                {decisionPanel}
                 {runtimeSnapshotPanel}
                 {/* RAG Augmentation Info */}
                 <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
@@ -1182,8 +1081,16 @@ export function TaskDetailView({
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <RAGInfoPanel logs={useRAGStore.getState().taskData[detail.id]?.logs ?? []} />
-                    <RAGDebugPanel logs={useRAGStore.getState().taskData[detail.id]?.logs ?? []} />
+                    <RAGInfoPanel
+                      logs={
+                        useRAGStore.getState().taskData[detail.id]?.logs ?? []
+                      }
+                    />
+                    <RAGDebugPanel
+                      logs={
+                        useRAGStore.getState().taskData[detail.id]?.logs ?? []
+                      }
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -1221,12 +1128,32 @@ export function TaskDetailView({
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    <SnapshotTile label="User" value={detail.securitySummary.user} />
-                    <SnapshotTile label="Network" value={detail.securitySummary.networkMode} />
-                    <SnapshotTile label="Readonly FS" value={detail.securitySummary.readonlyRootfs ? "Yes" : "No"} />
-                    <SnapshotTile label="Memory" value={detail.securitySummary.memoryLimit} />
-                    <SnapshotTile label="CPU" value={detail.securitySummary.cpuLimit} />
-                    <SnapshotTile label="PIDs Limit" value={String(detail.securitySummary.pidsLimit)} />
+                    <SnapshotTile
+                      label="User"
+                      value={detail.securitySummary.user}
+                    />
+                    <SnapshotTile
+                      label="Network"
+                      value={detail.securitySummary.networkMode}
+                    />
+                    <SnapshotTile
+                      label="Readonly FS"
+                      value={
+                        detail.securitySummary.readonlyRootfs ? "Yes" : "No"
+                      }
+                    />
+                    <SnapshotTile
+                      label="Memory"
+                      value={detail.securitySummary.memoryLimit}
+                    />
+                    <SnapshotTile
+                      label="CPU"
+                      value={detail.securitySummary.cpuLimit}
+                    />
+                    <SnapshotTile
+                      label="PIDs Limit"
+                      value={String(detail.securitySummary.pidsLimit)}
+                    />
                   </div>
                 </CardContent>
               </Card>

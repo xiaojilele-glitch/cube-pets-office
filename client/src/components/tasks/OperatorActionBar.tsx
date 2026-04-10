@@ -25,9 +25,11 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  availableMissionOperatorActions,
   compactText,
+  derivePrimaryActions,
   formatTaskRelative,
+  missionOperatorActionDescription,
+  missionOperatorActionLabel,
   missionOperatorStateLabel,
   missionOperatorStateTone,
 } from "./task-helpers";
@@ -41,7 +43,9 @@ export type OperatorActionKind =
 
 type ActionKind = OperatorActionKind;
 
-export function operatorActionRequiresReason(action: OperatorActionKind): boolean {
+export function operatorActionRequiresReason(
+  action: OperatorActionKind
+): boolean {
   return action === "mark-blocked";
 }
 
@@ -49,38 +53,6 @@ export function operatorActionRequiresConfirmation(
   action: OperatorActionKind
 ): boolean {
   return action === "terminate";
-}
-
-function actionLabel(action: ActionKind): string {
-  switch (action) {
-    case "pause":
-      return "Pause";
-    case "resume":
-      return "Resume";
-    case "retry":
-      return "Retry";
-    case "mark-blocked":
-      return "Mark Blocked";
-    case "terminate":
-      return "Terminate";
-  }
-}
-
-function actionDescription(action: ActionKind, detail: MissionTaskDetail): string {
-  switch (action) {
-    case "pause":
-      return detail.status === "queued"
-        ? "Hold this mission before executor work starts."
-        : "Pause the current mission without losing execution context.";
-    case "resume":
-      return "Return this mission to the active execution path.";
-    case "retry":
-      return `Queue a fresh attempt while keeping artifacts, timeline, and action history. Current attempt: ${detail.attempt}.`;
-    case "mark-blocked":
-      return "Flag the mission as blocked without ending it, so the team can see what needs follow-up.";
-    case "terminate":
-      return "Stop the mission by reusing the cancel flow. This is a terminal action.";
-  }
 }
 
 function ActionIcon({
@@ -108,6 +80,7 @@ export function OperatorActionBar({
   detail,
   loadingByAction,
   onSubmitAction,
+  showContextSummary = true,
 }: {
   detail: MissionTaskDetail;
   loadingByAction?: MissionOperatorActionLoadingMap;
@@ -115,6 +88,7 @@ export function OperatorActionBar({
     action: ActionKind;
     reason?: string;
   }) => void | Promise<void>;
+  showContextSummary?: boolean;
 }) {
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [terminateDialogOpen, setTerminateDialogOpen] = useState(false);
@@ -130,14 +104,13 @@ export function OperatorActionBar({
     setInlineError(null);
   }, [detail.id]);
 
-  const availableActions = useMemo(
-    () =>
-      availableMissionOperatorActions(detail.status, detail.operatorState) as ActionKind[],
-    [detail.operatorState, detail.status],
-  );
+  const primaryActions = useMemo(() => derivePrimaryActions(detail), [detail]);
+  const availableActions = primaryActions.normalActions as ActionKind[];
+  const dangerousActions = primaryActions.dangerousActions as ActionKind[];
 
   const latestAction = detail.latestOperatorAction;
-  const blockerVisible = detail.operatorState === "blocked" && detail.blocker;
+  const blockerVisible =
+    showContextSummary && detail.operatorState === "blocked" && detail.blocker;
 
   async function submitAction(action: ActionKind, reason?: string) {
     if (!onSubmitAction) return;
@@ -184,7 +157,7 @@ export function OperatorActionBar({
             <span
               className={cn(
                 "rounded-full px-3 py-1 text-xs font-semibold",
-                missionOperatorStateTone(detail.operatorState),
+                missionOperatorStateTone(detail.operatorState)
               )}
             >
               {missionOperatorStateLabel(detail.operatorState)}
@@ -198,12 +171,15 @@ export function OperatorActionBar({
         {latestAction ? (
           <div className="max-w-[360px] rounded-[18px] border border-stone-200/80 bg-stone-50/75 px-3 py-3 text-xs text-stone-600">
             <div className="font-semibold text-stone-800">
-              Latest action: {actionLabel(latestAction.action as ActionKind)}
+              Latest action:{" "}
+              {missionOperatorActionLabel(latestAction.action as ActionKind)}
             </div>
             <div className="mt-1 leading-5">
               {compactText(
-                latestAction.reason || latestAction.detail || "No extra detail recorded.",
-                160,
+                latestAction.reason ||
+                  latestAction.detail ||
+                  "No extra detail recorded.",
+                160
               )}
             </div>
             <div className="mt-1 text-[11px] text-stone-500">
@@ -232,13 +208,13 @@ export function OperatorActionBar({
         </div>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {availableActions.length === 0 ? (
-          <div className="rounded-full border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-            No operator actions are currently available for this mission state.
-          </div>
-        ) : null}
+      {primaryActions.passiveMessage ? (
+        <div className="mt-4 rounded-[18px] border border-dashed border-stone-300 bg-stone-50/80 px-3 py-2 text-sm text-stone-600">
+          {primaryActions.passiveMessage}
+        </div>
+      ) : null}
 
+      <div className="mt-4 flex flex-wrap gap-2">
         {availableActions.includes("pause") ? (
           <Button
             type="button"
@@ -246,7 +222,7 @@ export function OperatorActionBar({
             className="rounded-full border-stone-200 bg-white"
             disabled={loadingByAction?.pause === true}
             onClick={() => void submitAction("pause")}
-            title={actionDescription("pause", detail)}
+            title={missionOperatorActionDescription("pause", detail)}
           >
             {loadingByAction?.pause ? (
               <LoaderCircle className="size-4 animate-spin" />
@@ -264,7 +240,7 @@ export function OperatorActionBar({
             className="rounded-full border-stone-200 bg-white"
             disabled={loadingByAction?.resume === true}
             onClick={() => void submitAction("resume")}
-            title={actionDescription("resume", detail)}
+            title={missionOperatorActionDescription("resume", detail)}
           >
             {loadingByAction?.resume ? (
               <LoaderCircle className="size-4 animate-spin" />
@@ -282,7 +258,7 @@ export function OperatorActionBar({
             className="rounded-full border-stone-200 bg-white"
             disabled={loadingByAction?.retry === true}
             onClick={() => void submitAction("retry")}
-            title={actionDescription("retry", detail)}
+            title={missionOperatorActionDescription("retry", detail)}
           >
             {loadingByAction?.retry ? (
               <LoaderCircle className="size-4 animate-spin" />
@@ -310,7 +286,7 @@ export function OperatorActionBar({
                 variant="outline"
                 className="rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
                 disabled={loadingByAction?.["mark-blocked"] === true}
-                title={actionDescription("mark-blocked", detail)}
+                title={missionOperatorActionDescription("mark-blocked", detail)}
               >
                 {loadingByAction?.["mark-blocked"] ? (
                   <LoaderCircle className="size-4 animate-spin" />
@@ -362,78 +338,82 @@ export function OperatorActionBar({
             </DialogContent>
           </Dialog>
         ) : null}
+      </div>
 
-        {availableActions.includes("terminate") ? (
-          <Dialog
-            open={terminateDialogOpen}
-            onOpenChange={open => {
-              setTerminateDialogOpen(open);
-              if (!open) {
-                setTerminateReason("");
-                setInlineError(null);
-              }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                variant="destructive"
-                className="rounded-full"
-                disabled={loadingByAction?.terminate === true}
-                title={actionDescription("terminate", detail)}
-              >
-                {loadingByAction?.terminate ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <ActionIcon action="terminate" className="size-4" />
-                )}
-                Terminate
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
-              <DialogHeader>
-                <DialogTitle>Terminate this mission?</DialogTitle>
-                <DialogDescription>
-                  This reuses the cancel flow and will move the mission into a
-                  terminal cancelled state.
-                </DialogDescription>
-              </DialogHeader>
-              <Textarea
-                value={terminateReason}
-                onChange={event => setTerminateReason(event.target.value)}
-                placeholder="Optional termination reason"
-                className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
-                disabled={loadingByAction?.terminate === true}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-full border-stone-200 bg-white"
-                  onClick={() => setTerminateDialogOpen(false)}
-                  disabled={loadingByAction?.terminate === true}
-                >
-                  Keep Running
-                </Button>
+      {dangerousActions.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2 border-t border-stone-200/80 pt-3">
+          {dangerousActions.includes("terminate") ? (
+            <Dialog
+              open={terminateDialogOpen}
+              onOpenChange={open => {
+                setTerminateDialogOpen(open);
+                if (!open) {
+                  setTerminateReason("");
+                  setInlineError(null);
+                }
+              }}
+            >
+              <DialogTrigger asChild>
                 <Button
                   type="button"
                   variant="destructive"
                   className="rounded-full"
-                  onClick={() => void handleTerminateConfirm()}
                   disabled={loadingByAction?.terminate === true}
+                  title={missionOperatorActionDescription("terminate", detail)}
                 >
                   {loadingByAction?.terminate ? (
                     <LoaderCircle className="size-4 animate-spin" />
                   ) : (
                     <ActionIcon action="terminate" className="size-4" />
                   )}
-                  Confirm Termination
+                  Terminate
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        ) : null}
-      </div>
+              </DialogTrigger>
+              <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
+                <DialogHeader>
+                  <DialogTitle>Terminate this mission?</DialogTitle>
+                  <DialogDescription>
+                    This reuses the cancel flow and will move the mission into a
+                    terminal cancelled state.
+                  </DialogDescription>
+                </DialogHeader>
+                <Textarea
+                  value={terminateReason}
+                  onChange={event => setTerminateReason(event.target.value)}
+                  placeholder="Optional termination reason"
+                  className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
+                  disabled={loadingByAction?.terminate === true}
+                />
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-full border-stone-200 bg-white"
+                    onClick={() => setTerminateDialogOpen(false)}
+                    disabled={loadingByAction?.terminate === true}
+                  >
+                    Keep Running
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="rounded-full"
+                    onClick={() => void handleTerminateConfirm()}
+                    disabled={loadingByAction?.terminate === true}
+                  >
+                    {loadingByAction?.terminate ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <ActionIcon action="terminate" className="size-4" />
+                    )}
+                    Confirm Termination
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

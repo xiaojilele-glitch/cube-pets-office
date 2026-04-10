@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import type {
-  MissionOperatorActionRecord,
-  MissionTaskDetail,
-} from "@/lib/tasks-store";
+import type { MissionTaskDetail } from "@/lib/tasks-store";
+import type { MissionOperatorActionRecord } from "@shared/mission/contracts";
 
 import {
   OperatorActionBar,
