@@ -28,7 +28,7 @@
 
 <!-- Frontend -->
 <rect x="198" y="16" width="900" height="96" rx="12" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="648" y="34" text-anchor="middle" fill="#0C447C">Frontend — Holographic Command Deck UI + Task Console (glass-panel + spring animations)</text>
+<text class="ts" x="648" y="34" text-anchor="middle" fill="#0C447C">Frontend — Holographic Command Deck UI + Task Console (control actions + artifacts)</text>
 
 <!-- Frontend boxes -->
 <rect x="210" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
@@ -37,7 +37,7 @@
 
 <rect x="302" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="344" y="58" text-anchor="middle" fill="#0C447C">Task console</text>
-<text class="sm" x="344" y="72" text-anchor="middle" fill="#185FA5">ops + blockers</text>
+<text class="sm" x="344" y="72" text-anchor="middle" fill="#185FA5">ops + owner + next</text>
 
 <rect x="394" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="436" y="58" text-anchor="middle" fill="#0C447C">NL command</text>
@@ -105,7 +105,7 @@
 
 <rect x="216" y="342" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="281" y="358" text-anchor="middle" fill="#27500A">Mission RT</text>
-<text class="sm" x="281" y="372" text-anchor="middle" fill="#3B6D11">6-stage FSM + ops</text>
+<text class="sm" x="281" y="372" text-anchor="middle" fill="#3B6D11">FSM + control actions</text>
 
 <rect x="216" y="392" width="130" height="40" rx="6" fill="#fff" stroke="#97C459" stroke-width="0.5"/>
 <text class="ts" x="281" y="408" text-anchor="middle" fill="#27500A">Guest Agent</text>
@@ -272,7 +272,7 @@
 <!-- ⑪ Executor → Brain: HMAC callback -->
 <path d="M388 534 L388 490 L440 490 L440 466" fill="none" stroke="#D85A30" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#a)"/>
 <rect x="396" y="482" width="70" height="14" rx="3" fill="#FAECE7" stroke="none"/>
-<text class="fl" x="431" y="492" text-anchor="middle" fill="#993C1D">⑪ mission update</text>
+<text class="fl" x="431" y="492" text-anchor="middle" fill="#993C1D">⑪ status / cancel</text>
 
 <!-- Executor internal flow -->
 <line x1="324" y1="554" x2="332" y2="554" stroke="#D85A30" stroke-width="0.8" marker-end="url(#a)"/>
@@ -453,6 +453,6 @@
 <text class="sm" x="500" y="968" fill="#666">Numbered flows: ①–⑮ show the complete data path from user query to execution result</text>
 
 <!-- Version -->
-<text class="sm" x="550" y="984" text-anchor="middle" fill="#999">2026-04-10 snapshot — 57 tracked specs · 37 done / 5 partial · 180K+ lines TypeScript</text>
+<text class="sm" x="550" y="984" text-anchor="middle" fill="#999">2026-04-11 snapshot — 56 tracked specs · 39 done / 8 partial · 180K+ lines TypeScript</text>
 
 </svg>
