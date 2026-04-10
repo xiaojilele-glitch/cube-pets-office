@@ -144,14 +144,14 @@ function useFmt() {
 function getDynamicStageLabel(locale: string, stageId: string, fallback: string) {
   const labels: Record<string, { zh: string; en: string }> = {
     direction: { zh: '任务解构', en: 'Task Framing' },
-    planning: { zh: '组织生成', en: 'Org Assembly' },
-    execution: { zh: '并行执行', en: 'Parallel Run' },
+    planning: { zh: '团队就位', en: 'Team Setup' },
+    execution: { zh: '并行交付', en: 'Parallel Delivery' },
     review: { zh: '主管复核', en: 'Manager Review' },
     meta_audit: { zh: '质量审视', en: 'Quality Audit' },
     revision: { zh: '修订回合', en: 'Revision Loop' },
     verify: { zh: '结果确认', en: 'Verification' },
-    summary: { zh: '部门汇总', en: 'Department Summary' },
-    feedback: { zh: '总负责人总结', en: 'Lead Feedback' },
+    summary: { zh: '交付汇总', en: 'Delivery Handoff' },
+    feedback: { zh: '交付复盘', en: 'Delivery Review' },
     evolution: { zh: '经验沉淀', en: 'Knowledge Update' },
   };
 
@@ -164,37 +164,37 @@ function getDirectiveNarrative(locale: string) {
   return {
     sectionDescription:
       locale === 'zh-CN'
-        ? '输入一个目标后，系统会先分析任务需要哪些角色，再临时组建组织、装配 skills 和 MCP，然后分工执行。'
-        : 'After you enter a goal, the system first decides which roles are needed, then assembles a temporary organization with skills and MCP before execution.',
+        ? '输入一个执行目标后，系统会先判断任务需要哪些角色与能力，再组织执行团队、装配工具并推进交付。'
+        : 'After you enter an execution goal, the system decides which roles and capabilities are needed, organizes the execution team, and moves delivery forward.',
     modeNote:
       locale === 'zh-CN'
-        ? '右侧面板现在展示的是“按需组队”逻辑：先判断要不要新建部门，再决定每个节点该带什么能力和工具。'
-        : 'This panel now reflects an on-demand teaming flow: it first decides whether to create new departments, then assigns the right capabilities and tools to each node.',
-    stepsTitle: locale === 'zh-CN' ? '动态组队工作流' : 'Dynamic Teaming Flow',
+        ? '右侧面板展示的是执行协调逻辑：系统会判断需要哪些协作角色，再为每个节点分配合适的能力和工具。'
+        : 'This panel reflects execution coordination logic: it decides which collaboration roles are needed and then assigns the right capabilities and tools to each node.',
+    stepsTitle: locale === 'zh-CN' ? '执行协同流程' : 'Execution Coordination Flow',
     steps:
       locale === 'zh-CN'
         ? [
             ['1. 解析问题', '先识别任务类型、复杂度、风险和需要覆盖的专业面。'],
-            ['2. 生成组织', '按这次任务临时创建 CEO / manager / worker 结构，而不是套固定编制。'],
+            ['2. 团队就位', '为这次任务组织最合适的 CEO / manager / worker 结构，而不是套固定编制。'],
             ['3. 装配能力', '给每个节点挂上合适的 skills、MCP、模型和并发策略。'],
-            ['4. 下发方向', '总负责人把任务拆成各部门目标和边界。'],
-            ['5. 并行执行', '可并行的角色同时开工，只在关键依赖处串联。'],
+            ['4. 发布简报', '总负责人把目标拆成明确的分工、边界和交付要求。'],
+            ['5. 并行交付', '可并行的角色同时推进，只在关键依赖处串联。'],
             ['6. 主管复核', 'manager 汇总 worker 结果，检查完整性和可执行性。'],
             ['7. 质量审视', '对边界越界、证据不足、格式偏差做统一审视。'],
             ['8. 修订确认', '需要返工的节点进入修订回合，直到达到可交付标准。'],
-            ['9. 汇总交付', '部门先汇总，再由总负责人产出最终结论和建议。'],
+            ['9. 交付汇总', '各角色先汇总，再由总负责人形成统一交付。'],
             ['10. 沉淀复用', '把这次组织和经验写入记忆，方便后续任务复用。'],
           ]
         : [
             ['1. Parse the ask', 'Identify task type, complexity, risk, and the expertise that is actually needed.'],
-            ['2. Assemble the org', 'Create a temporary CEO / manager / worker structure for this task instead of reusing fixed staffing.'],
+            ['2. Set up the team', 'Create the best-fit CEO / manager / worker structure for this task instead of reusing fixed staffing.'],
             ['3. Attach capabilities', 'Bind the right skills, MCP tools, model choices, and concurrency settings to each node.'],
-            ['4. Set direction', 'The lead turns the ask into department goals and explicit boundaries.'],
-            ['5. Run in parallel', 'Independent roles work simultaneously and only serialize on real dependencies.'],
+            ['4. Publish the brief', 'The lead turns the ask into explicit ownership, boundaries, and delivery expectations.'],
+            ['5. Drive parallel delivery', 'Independent roles work simultaneously and only serialize on real dependencies.'],
             ['6. Manager review', 'Managers consolidate worker output and check completeness and actionability.'],
             ['7. Audit quality', 'Review boundary drift, weak evidence, and output quality across the org.'],
             ['8. Revise and confirm', 'Nodes that need rework go through another pass until they are deliverable.'],
-            ['9. Deliver the result', 'Departments summarize first, then the lead produces the final answer and recommendation.'],
+            ['9. Hand off delivery', 'Roles summarize first, then the lead produces the final delivery.'],
             ['10. Reuse the learning', 'Store the organization pattern and lessons so later workflows can build on them.'],
           ],
   };
@@ -203,13 +203,13 @@ function getDirectiveNarrative(locale: string) {
 function getFrontendWorkflowBanner(locale: string, canUseAdvanced: boolean) {
   if (locale === 'zh-CN') {
     return canUseAdvanced
-      ? '当前是浏览器预演视图：你可以先看系统如何理解任务、准备动态组织和展示链路，切到高级模式后才会真正创建临时团队并执行。'
-      : '当前部署是静态预览版：保留了动态组队的界面表达和流程视图，但不会连接服务端执行真实工作流。';
+      ? '当前是浏览器预演视图：你可以先看系统如何准备执行团队、组织分工和展示链路，切到高级模式后才会真正执行。'
+      : '当前部署是静态预览版：保留了执行协同的界面表达和流程视图，但不会连接服务端执行真实工作流。';
   }
 
   return canUseAdvanced
-    ? 'You are in the browser preview layer: it shows how the system interprets the task and prepares a dynamic org, but the real temporary team is only created in Advanced Mode.'
-    : 'This deployment is a static preview: it keeps the dynamic teaming UI and flow visuals, but does not connect to the server to run a real workflow.';
+    ? 'You are in the browser preview layer: it shows how the system prepares the execution team and coordination flow, but the real run only starts in Advanced Mode.'
+    : 'This deployment is a static preview: it keeps the execution-coordination UI and flow visuals, but does not connect to the server to run a real workflow.';
 }
 
 function Section({ title, description }: { title: string; description?: string }) {
@@ -1950,7 +1950,7 @@ function ProgressView() {
                     </p>
                   </>
                 ) : (
-                  <p className="mt-2 text-[10px] text-indigo-300">{t(locale, '当前还没有组织生成结果。', 'No organization summary is available yet.')}</p>
+                  <p className="mt-2 text-[10px] text-indigo-300">{t(locale, '当前还没有团队就位结果。', 'No execution team summary is available yet.')}</p>
                 )}
               </div>
             </div>

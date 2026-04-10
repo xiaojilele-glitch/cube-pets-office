@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { MissionTaskDetail } from "@/lib/tasks-store";
+import { useAppStore } from "@/lib/store";
 import type { MissionOperatorActionRecord } from "@shared/mission/contracts";
 
 import {
@@ -93,15 +94,19 @@ function renderBar(detail: MissionTaskDetail): string {
 }
 
 describe("OperatorActionBar", () => {
+  beforeEach(() => {
+    useAppStore.setState({ locale: "zh-CN" });
+  });
+
   it("shows pause, mark blocked, and terminate for active running missions", () => {
     const markup = renderBar(makeDetail());
 
-    expect(markup).toContain("Operator Actions");
-    expect(markup).toContain("Pause");
-    expect(markup).toContain("Mark Blocked");
-    expect(markup).toContain("Terminate");
-    expect(markup).not.toContain("Resume");
-    expect(markup).not.toContain("Retry");
+    expect(markup).toContain("任务操作");
+    expect(markup).toContain("暂停");
+    expect(markup).toContain("标记阻塞");
+    expect(markup).toContain("终止");
+    expect(markup).not.toContain("恢复");
+    expect(markup).not.toContain("重试");
   });
 
   it("shows blocker context and retry/resume controls for blocked missions", () => {
@@ -122,13 +127,13 @@ describe("OperatorActionBar", () => {
       })
     );
 
-    expect(markup).toContain("Blocked");
-    expect(markup).toContain("Attempt 3");
-    expect(markup).toContain("Current blocker");
+    expect(markup).toContain("已阻塞");
+    expect(markup).toContain("第 3 次尝试");
+    expect(markup).toContain("当前阻塞");
     expect(markup).toContain("Waiting for PM sign-off");
-    expect(markup).toContain("Resume");
-    expect(markup).toContain("Retry");
-    expect(markup).toContain("Terminate");
+    expect(markup).toContain("恢复");
+    expect(markup).toContain("重试");
+    expect(markup).toContain("终止");
   });
 
   it("shows paused state and resume action", () => {
@@ -142,9 +147,9 @@ describe("OperatorActionBar", () => {
       })
     );
 
-    expect(markup).toContain("Paused");
-    expect(markup).toContain("Resume");
-    expect(markup).not.toContain("Mark Blocked");
+    expect(markup).toContain("已暂停");
+    expect(markup).toContain("恢复");
+    expect(markup).not.toContain("标记阻塞");
   });
 
   it("exports interaction requirements for blocker reason and terminate confirmation", () => {

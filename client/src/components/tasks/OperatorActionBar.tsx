@@ -12,6 +12,7 @@ import {
   type MissionOperatorActionLoadingMap,
   type MissionTaskDetail,
 } from "@/lib/tasks-store";
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -90,6 +91,7 @@ export function OperatorActionBar({
   }) => void | Promise<void>;
   showContextSummary?: boolean;
 }) {
+  const { locale, copy } = useI18n();
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [terminateDialogOpen, setTerminateDialogOpen] = useState(false);
   const [blockReason, setBlockReason] = useState("");
@@ -104,7 +106,10 @@ export function OperatorActionBar({
     setInlineError(null);
   }, [detail.id]);
 
-  const primaryActions = useMemo(() => derivePrimaryActions(detail), [detail]);
+  const primaryActions = useMemo(
+    () => derivePrimaryActions(detail, locale),
+    [detail, locale]
+  );
   const availableActions = primaryActions.normalActions as ActionKind[];
   const dangerousActions = primaryActions.dangerousActions as ActionKind[];
 
@@ -123,7 +128,7 @@ export function OperatorActionBar({
 
   async function handleBlockedConfirm() {
     if (!blockReason.trim()) {
-      setInlineError("Blocker reason is required.");
+      setInlineError(copy.tasks.operatorBar.blockerReasonRequired);
       return;
     }
 
@@ -151,7 +156,7 @@ export function OperatorActionBar({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-            Operator Actions
+            {copy.tasks.operatorBar.title}
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
             <span
@@ -160,10 +165,10 @@ export function OperatorActionBar({
                 missionOperatorStateTone(detail.operatorState)
               )}
             >
-              {missionOperatorStateLabel(detail.operatorState)}
+              {missionOperatorStateLabel(detail.operatorState, locale)}
             </span>
             <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-700">
-              Attempt {detail.attempt}
+              {copy.tasks.listPage.attemptCount(detail.attempt)}
             </span>
           </div>
         </div>
@@ -171,19 +176,22 @@ export function OperatorActionBar({
         {latestAction ? (
           <div className="max-w-[360px] rounded-[18px] border border-stone-200/80 bg-stone-50/75 px-3 py-3 text-xs text-stone-600">
             <div className="font-semibold text-stone-800">
-              Latest action:{" "}
-              {missionOperatorActionLabel(latestAction.action as ActionKind)}
+              {copy.tasks.operatorBar.latestAction}:{" "}
+              {missionOperatorActionLabel(
+                latestAction.action as ActionKind,
+                locale
+              )}
             </div>
             <div className="mt-1 leading-5">
               {compactText(
                 latestAction.reason ||
                   latestAction.detail ||
-                  "No extra detail recorded.",
+                  copy.tasks.detailView.noDetail,
                 160
               )}
             </div>
             <div className="mt-1 text-[11px] text-stone-500">
-              {formatTaskRelative(latestAction.createdAt)}
+              {formatTaskRelative(latestAction.createdAt, locale)}
             </div>
           </div>
         ) : null}
@@ -193,11 +201,11 @@ export function OperatorActionBar({
         <div className="mt-4 rounded-[20px] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">
           <div className="flex items-center gap-2 font-semibold">
             <AlertTriangle className="size-4" />
-            Current blocker
+            {copy.tasks.operatorBar.currentBlocker}
           </div>
           <div className="mt-2 leading-6">{detail.blocker?.reason}</div>
           <div className="mt-2 text-xs text-amber-700">
-            Added {formatTaskRelative(detail.blocker?.createdAt || null)}
+            {formatTaskRelative(detail.blocker?.createdAt || null, locale)}
           </div>
         </div>
       ) : null}
@@ -222,14 +230,14 @@ export function OperatorActionBar({
             className="rounded-full border-stone-200 bg-white"
             disabled={loadingByAction?.pause === true}
             onClick={() => void submitAction("pause")}
-            title={missionOperatorActionDescription("pause", detail)}
+            title={missionOperatorActionDescription("pause", detail, locale)}
           >
             {loadingByAction?.pause ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : (
               <ActionIcon action="pause" className="size-4" />
             )}
-            Pause
+            {missionOperatorActionLabel("pause", locale)}
           </Button>
         ) : null}
 
@@ -240,14 +248,14 @@ export function OperatorActionBar({
             className="rounded-full border-stone-200 bg-white"
             disabled={loadingByAction?.resume === true}
             onClick={() => void submitAction("resume")}
-            title={missionOperatorActionDescription("resume", detail)}
+            title={missionOperatorActionDescription("resume", detail, locale)}
           >
             {loadingByAction?.resume ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : (
               <ActionIcon action="resume" className="size-4" />
             )}
-            Resume
+            {missionOperatorActionLabel("resume", locale)}
           </Button>
         ) : null}
 
@@ -258,14 +266,14 @@ export function OperatorActionBar({
             className="rounded-full border-stone-200 bg-white"
             disabled={loadingByAction?.retry === true}
             onClick={() => void submitAction("retry")}
-            title={missionOperatorActionDescription("retry", detail)}
+            title={missionOperatorActionDescription("retry", detail, locale)}
           >
             {loadingByAction?.retry ? (
               <LoaderCircle className="size-4 animate-spin" />
             ) : (
               <ActionIcon action="retry" className="size-4" />
             )}
-            Retry
+            {missionOperatorActionLabel("retry", locale)}
           </Button>
         ) : null}
 
@@ -286,28 +294,31 @@ export function OperatorActionBar({
                 variant="outline"
                 className="rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
                 disabled={loadingByAction?.["mark-blocked"] === true}
-                title={missionOperatorActionDescription("mark-blocked", detail)}
+                title={missionOperatorActionDescription(
+                  "mark-blocked",
+                  detail,
+                  locale
+                )}
               >
                 {loadingByAction?.["mark-blocked"] ? (
                   <LoaderCircle className="size-4 animate-spin" />
                 ) : (
                   <ActionIcon action="mark-blocked" className="size-4" />
                 )}
-                Mark Blocked
+                {missionOperatorActionLabel("mark-blocked", locale)}
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
               <DialogHeader>
-                <DialogTitle>Mark this mission as blocked?</DialogTitle>
+                <DialogTitle>{copy.tasks.operatorBar.blockTitle}</DialogTitle>
                 <DialogDescription>
-                  This does not end the mission. It marks the current state as
-                  blocked so the team can see what follow-up is needed.
+                  {copy.tasks.operatorBar.blockDescription}
                 </DialogDescription>
               </DialogHeader>
               <Textarea
                 value={blockReason}
                 onChange={event => setBlockReason(event.target.value)}
-                placeholder="Required blocker reason"
+                placeholder={copy.tasks.operatorBar.blockPlaceholder}
                 className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
                 disabled={loadingByAction?.["mark-blocked"] === true}
               />
@@ -319,7 +330,7 @@ export function OperatorActionBar({
                   onClick={() => setBlockDialogOpen(false)}
                   disabled={loadingByAction?.["mark-blocked"] === true}
                 >
-                  Keep Active
+                  {copy.tasks.operatorBar.blockCancel}
                 </Button>
                 <Button
                   type="button"
@@ -332,7 +343,7 @@ export function OperatorActionBar({
                   ) : (
                     <ActionIcon action="mark-blocked" className="size-4" />
                   )}
-                  Confirm Blocker
+                  {copy.tasks.operatorBar.blockConfirm}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -359,28 +370,31 @@ export function OperatorActionBar({
                   variant="destructive"
                   className="rounded-full"
                   disabled={loadingByAction?.terminate === true}
-                  title={missionOperatorActionDescription("terminate", detail)}
+                  title={missionOperatorActionDescription(
+                    "terminate",
+                    detail,
+                    locale
+                  )}
                 >
                   {loadingByAction?.terminate ? (
                     <LoaderCircle className="size-4 animate-spin" />
                   ) : (
                     <ActionIcon action="terminate" className="size-4" />
                   )}
-                  Terminate
+                  {missionOperatorActionLabel("terminate", locale)}
                 </Button>
               </DialogTrigger>
               <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
                 <DialogHeader>
-                  <DialogTitle>Terminate this mission?</DialogTitle>
+                  <DialogTitle>{copy.tasks.operatorBar.terminateTitle}</DialogTitle>
                   <DialogDescription>
-                    This reuses the cancel flow and will move the mission into a
-                    terminal cancelled state.
+                    {copy.tasks.operatorBar.terminateDescription}
                   </DialogDescription>
                 </DialogHeader>
                 <Textarea
                   value={terminateReason}
                   onChange={event => setTerminateReason(event.target.value)}
-                  placeholder="Optional termination reason"
+                  placeholder={copy.tasks.operatorBar.terminatePlaceholder}
                   className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
                   disabled={loadingByAction?.terminate === true}
                 />
@@ -392,7 +406,7 @@ export function OperatorActionBar({
                     onClick={() => setTerminateDialogOpen(false)}
                     disabled={loadingByAction?.terminate === true}
                   >
-                    Keep Running
+                    {copy.tasks.operatorBar.terminateCancel}
                   </Button>
                   <Button
                     type="button"
@@ -406,7 +420,7 @@ export function OperatorActionBar({
                     ) : (
                       <ActionIcon action="terminate" className="size-4" />
                     )}
-                    Confirm Termination
+                    {copy.tasks.operatorBar.terminateConfirm}
                   </Button>
                 </DialogFooter>
               </DialogContent>

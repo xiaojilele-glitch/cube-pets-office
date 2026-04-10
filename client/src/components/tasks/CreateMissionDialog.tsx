@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "@/i18n";
 
 type CreateMissionInput = {
   title?: string;
@@ -30,6 +31,7 @@ export function CreateMissionDialog({
   onOpenChange: (open: boolean) => void;
   onCreate: (input: CreateMissionInput) => Promise<string | null>;
 }) {
+  const { copy } = useI18n();
   const [title, setTitle] = useState("");
   const [sourceText, setSourceText] = useState("");
   const [kind, setKind] = useState("chat");
@@ -74,56 +76,63 @@ export function CreateMissionDialog({
         <DialogHeader className="border-b border-stone-200/80 px-6 py-5">
           <DialogTitle className="flex items-center gap-2 text-stone-900">
             <Plus className="size-4 text-amber-600" />
-            New Mission
+            {copy.tasks.createDialog.title}
           </DialogTitle>
           <DialogDescription className="text-sm leading-6 text-stone-500">
-            Create a mission directly from the Worktree A task API and open it in
-            the mission workspace.
+            {copy.tasks.createDialog.description}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 px-6 py-5">
           <div className="grid gap-2">
-            <Label htmlFor="mission-title">Title</Label>
+            <Label htmlFor="mission-title">
+              {copy.tasks.createDialog.titleLabel}
+            </Label>
             <Input
               id="mission-title"
               value={title}
               onChange={event => setTitle(event.target.value)}
-              placeholder="Short mission title"
+              placeholder={copy.tasks.createDialog.titlePlaceholder}
               className="rounded-2xl border-stone-200 bg-stone-50/80"
             />
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="mission-source">Source Text</Label>
+            <Label htmlFor="mission-source">
+              {copy.tasks.createDialog.sourceLabel}
+            </Label>
             <Textarea
               id="mission-source"
               value={sourceText}
               onChange={event => setSourceText(event.target.value)}
-              placeholder="Describe the mission request, constraints, and desired outcome."
+              placeholder={copy.tasks.createDialog.sourcePlaceholder}
               className="min-h-32 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="mission-kind">Kind</Label>
+              <Label htmlFor="mission-kind">
+                {copy.tasks.createDialog.kindLabel}
+              </Label>
               <Input
                 id="mission-kind"
                 value={kind}
                 onChange={event => setKind(event.target.value)}
-                placeholder="chat"
+                placeholder={copy.tasks.createDialog.kindPlaceholder}
                 className="rounded-2xl border-stone-200 bg-stone-50/80"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="mission-topic">Topic / Thread</Label>
+              <Label htmlFor="mission-topic">
+                {copy.tasks.createDialog.topicLabel}
+              </Label>
               <Input
                 id="mission-topic"
                 value={topicId}
                 onChange={event => setTopicId(event.target.value)}
-                placeholder="Optional topicId"
+                placeholder={copy.tasks.createDialog.topicPlaceholder}
                 className="rounded-2xl border-stone-200 bg-stone-50/80"
               />
             </div>
@@ -138,7 +147,7 @@ export function CreateMissionDialog({
             onClick={() => onOpenChange(false)}
             disabled={submitting}
           >
-            Cancel
+            {copy.tasks.createDialog.cancel}
           </Button>
           <Button
             type="button"
@@ -151,7 +160,7 @@ export function CreateMissionDialog({
             ) : (
               <Plus className="size-4" />
             )}
-            Create Mission
+            {copy.tasks.createDialog.submit}
           </Button>
         </DialogFooter>
       </DialogContent>

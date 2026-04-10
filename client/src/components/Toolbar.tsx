@@ -48,9 +48,9 @@ function getRuntimeNarrative(
       heading: runtimeMode === 'frontend' ? '前端预演模式' : '动态执行模式',
       body: canUseAdvanced
         ? runtimeMode === 'frontend'
-          ? '当前先在浏览器里预演动态组队流程：你可以看组织生成、角色分布和界面联动，但不会真正向服务端发起完整执行。'
+          ? '当前先在浏览器里预演执行协同流程：你可以看任务如何拆解、角色如何分工，以及界面如何反馈，但不会真正向服务端发起完整执行。'
           : '当前会把用户问题交给服务端，让系统先分析需要哪些角色，再动态创建组织、装配 skills 与 MCP，并推进真实工作流。'
-        : '当前部署仅保留浏览器内的动态组队预演：可以体验组织生成后的展示和流程，但不会连接服务端执行。',
+        : '当前部署仅保留浏览器内的执行协同预演：可以体验角色就位后的展示和流程，但不会连接服务端执行。',
     };
   }
 
@@ -59,9 +59,9 @@ function getRuntimeNarrative(
     heading: runtimeMode === 'frontend' ? 'Preview Teaming Mode' : 'Dynamic Execution Mode',
     body: canUseAdvanced
       ? runtimeMode === 'frontend'
-        ? 'The browser currently previews the dynamic teaming flow: you can inspect org generation, role placement, and UI reactions without running the full server workflow.'
+        ? 'The browser currently previews the execution coordination flow: you can inspect task framing, role ownership, and UI reactions without running the full server workflow.'
         : 'The server now analyzes the user ask, creates the needed organization, attaches skills and MCP tools, and runs the real workflow.'
-      : 'This deployment keeps only the browser-side dynamic teaming preview: you can inspect the generated org and flow, but it does not connect to the server runtime.',
+      : 'This deployment keeps only the browser-side execution preview: you can inspect the generated team flow, but it does not connect to the server runtime.',
   };
 }
 

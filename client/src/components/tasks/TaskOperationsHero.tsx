@@ -13,6 +13,7 @@ import type {
   MissionOperatorActionLoadingMap,
   MissionTaskDetail,
 } from "@/lib/tasks-store";
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 import { OperatorActionBar } from "./OperatorActionBar";
@@ -98,27 +99,28 @@ export function TaskOperationsHero({
   loadingByAction,
   onSubmitOperatorAction,
 }: TaskOperationsHeroProps) {
+  const { locale, copy } = useI18n();
   const summaryText = compactText(detail.summary || detail.sourceText, 260);
   const liveSignalText = compactText(
-    detail.lastSignal || detail.waitingFor || "No recent signal yet.",
+    detail.lastSignal || detail.waitingFor || copy.tasks.detailView.noDetail,
     140
   );
-  const primaryActions = derivePrimaryActions(detail);
-  const owner = deriveCurrentOwner(detail);
-  const blocker = deriveTaskBlocker(detail);
-  const nextStep = deriveNextStep(detail);
+  const primaryActions = derivePrimaryActions(detail, locale);
+  const owner = deriveCurrentOwner(detail, locale);
+  const blocker = deriveTaskBlocker(detail, locale);
+  const nextStep = deriveNextStep(detail, locale);
 
   const runtimeSummary: TaskInsightSummary = {
-    label: "Current stage / runtime",
-    title: detail.currentStageLabel || missionStatusLabel(detail.status),
+    label: copy.tasks.hero.runtimeLabel,
+    title: detail.currentStageLabel || missionStatusLabel(detail.status, locale),
     detail:
       compactText(
         detail.lastSignal ||
           detail.waitingFor ||
           detail.summary ||
-          "Mission state is waiting for the next runtime signal.",
+          copy.tasks.detailView.noDetail,
         160
-      ) || "Mission state is waiting for the next runtime signal.",
+      ) || copy.tasks.detailView.noDetail,
     meta: [
       `${detail.progress}% progress`,
       detail.executor?.status ? `Executor ${detail.executor.status}` : null,
@@ -142,7 +144,7 @@ export function TaskOperationsHero({
                     missionStatusTone(detail.status)
                   )}
                 >
-                  {missionStatusLabel(detail.status)}
+                  {missionStatusLabel(detail.status, locale)}
                 </span>
                 <span className="rounded-full border border-stone-200 bg-white/70 px-3 py-1 text-xs font-medium text-stone-700">
                   {detail.kind}
@@ -154,7 +156,7 @@ export function TaskOperationsHero({
                       missionOperatorStateTone(detail.operatorState)
                     )}
                   >
-                    {missionOperatorStateLabel(detail.operatorState)}
+                    {missionOperatorStateLabel(detail.operatorState, locale)}
                   </span>
                 ) : null}
                 {detail.departmentLabels.map(label => (
@@ -176,10 +178,10 @@ export function TaskOperationsHero({
 
             <div className="rounded-[20px] border border-white/80 bg-white/72 px-4 py-3 text-sm text-stone-700 shadow-sm backdrop-blur">
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-                Updated
+                {copy.tasks.hero.updated}
               </div>
               <div className="mt-2 text-sm font-medium">
-                {formatTaskRelative(detail.updatedAt)}
+                {formatTaskRelative(detail.updatedAt, locale)}
               </div>
               <div className="mt-2 max-w-[260px] text-xs leading-5 text-stone-500">
                 {liveSignalText}
@@ -191,7 +193,7 @@ export function TaskOperationsHero({
             <div className="rounded-[22px] border border-teal-200/80 bg-teal-50/75 px-4 py-4 text-sm text-teal-900 shadow-sm">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-700">
                 <Sparkles className="size-4" />
-                Recommended now
+                {copy.tasks.hero.recommended}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {primaryActions.recommended.map(action => (
@@ -220,14 +222,14 @@ export function TaskOperationsHero({
             <div className="rounded-[22px] border border-sky-200/80 bg-sky-50/80 px-4 py-4 text-sm text-sky-900 shadow-sm">
               <div className="flex items-center gap-2 font-semibold">
                 <Sparkles className="size-4 text-sky-700" />
-                Pending decision
+                {copy.tasks.hero.pendingDecision}
               </div>
               <div className="mt-2 leading-6">
                 {compactText(
                   detail.waitingFor ||
                     detail.decisionPrompt ||
                     detail.decision?.prompt ||
-                    "Review the pending decision below to continue this mission.",
+                    copy.tasks.detailView.decisionEntryFallback,
                   220
                 )}
               </div>

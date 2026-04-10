@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useI18n } from "@/i18n";
 import { useTasksStore } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ export default function TasksPage({
   initialTaskId?: string | null;
   className?: string;
 }) {
+  const { locale, copy } = useI18n();
   const ensureReady = useTasksStore(state => state.ensureReady);
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
@@ -135,12 +137,12 @@ export default function TasksPage({
     try {
       const missionId = await createMission(input);
       if (missionId) {
-        toast.success("Mission created and loaded into the queue.");
+        toast.success(copy.tasks.listPage.createSuccess);
       }
       return missionId;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to create mission.";
+        error instanceof Error ? error.message : copy.tasks.listPage.createError;
       toast.error(message);
       return null;
     }
@@ -156,12 +158,18 @@ export default function TasksPage({
         action: payload.action,
         reason: payload.reason,
       });
-      toast.success(`${payload.action} applied to mission.`);
+      toast.success(
+        copy.tasks.listPage.actionSuccess(
+          copy.tasks.statuses.action[
+            payload.action === "mark-blocked" ? "markBlocked" : payload.action
+          ]
+        )
+      );
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Failed to submit mission operator action.";
+          : copy.tasks.listPage.actionError;
       toast.error(message);
       throw error;
     }
@@ -179,14 +187,13 @@ export default function TasksPage({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-stone-500">
-                Mission Control
+                {copy.tasks.listPage.eyebrow}
               </div>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-stone-900 md:text-[2rem]">
-                Task Universe
+                {copy.tasks.listPage.title}
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600 md:line-clamp-2">
-                Track mission status, inspect task interiors, review timelines,
-                submit decisions, and open artifacts from one live workspace.
+                {copy.tasks.listPage.description}
               </p>
             </div>
 
@@ -197,7 +204,7 @@ export default function TasksPage({
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="size-4" />
-                New Mission
+                {copy.tasks.listPage.create}
               </Button>
               <Button
                 type="button"
@@ -208,7 +215,7 @@ export default function TasksPage({
                 }
               >
                 <RefreshCw className="size-4" />
-                Refresh
+                {copy.tasks.listPage.refresh}
               </Button>
             </div>
           </div>
@@ -220,10 +227,13 @@ export default function TasksPage({
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold text-stone-900">
-                    Mission Queue
+                    {copy.tasks.listPage.queueTitle}
                   </div>
                   <div className="mt-1 text-xs leading-5 text-stone-500">
-                    {filteredTasks.length} visible / {tasks.length} total
+                    {copy.tasks.listPage.visibleCount(
+                      filteredTasks.length,
+                      tasks.length
+                    )}
                   </div>
                 </div>
                 {loading && !ready ? (
@@ -236,7 +246,7 @@ export default function TasksPage({
                 <Input
                   value={search}
                   onChange={event => setSearch(event.target.value)}
-                  placeholder="Search titles, stages, notes, departments..."
+                  placeholder={copy.tasks.listPage.searchPlaceholder}
                   className="rounded-full border-stone-200 bg-stone-50/80 pl-10"
                 />
               </div>
@@ -256,10 +266,9 @@ export default function TasksPage({
                       <EmptyMedia variant="icon">
                         <FolderKanban />
                       </EmptyMedia>
-                      <EmptyTitle>No missions yet</EmptyTitle>
+                      <EmptyTitle>{copy.tasks.listPage.emptyTitle}</EmptyTitle>
                       <EmptyDescription>
-                        Create a mission here or let the runtime dispatch one,
-                        and it will appear in this queue without reloading.
+                        {copy.tasks.listPage.emptyDescription}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
@@ -292,7 +301,7 @@ export default function TasksPage({
                                 missionStatusTone(task.status)
                               )}
                             >
-                              {missionStatusLabel(task.status)}
+                              {missionStatusLabel(task.status, locale)}
                             </span>
                             {task.operatorState !== "active" ? (
                               <span
@@ -301,12 +310,15 @@ export default function TasksPage({
                                   missionOperatorStateTone(task.operatorState)
                                 )}
                               >
-                                {missionOperatorStateLabel(task.operatorState)}
+                                {missionOperatorStateLabel(
+                                  task.operatorState,
+                                  locale
+                                )}
                               </span>
                             ) : null}
                             {task.hasWarnings ? (
                               <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
-                                warnings
+                                {copy.tasks.listPage.warnings}
                               </span>
                             ) : null}
                           </div>
@@ -317,13 +329,13 @@ export default function TasksPage({
                         <div className="shrink-0 text-right text-xs text-stone-500">
                           <div>{task.progress}%</div>
                           <div className="mt-1">
-                            {formatTaskRelative(task.updatedAt)}
+                            {formatTaskRelative(task.updatedAt, locale)}
                           </div>
                         </div>
                       </div>
 
                       <div className="mt-2.5 text-xs leading-5 text-stone-500">
-                        {task.currentStageLabel || "No stage yet"}
+                        {task.currentStageLabel || copy.tasks.listPage.noStage}
                         {task.waitingFor ? ` • ${task.waitingFor}` : ""}
                       </div>
                       <div className="mt-2 text-sm leading-6 text-stone-600">
@@ -331,17 +343,19 @@ export default function TasksPage({
                       </div>
                       <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-stone-500">
                         <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
-                          {task.taskCount} tasks
+                          {copy.tasks.listPage.tasksCount(task.taskCount)}
                         </span>
                         <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
-                          {task.messageCount} messages
+                          {copy.tasks.listPage.messagesCount(task.messageCount)}
                         </span>
                         <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
-                          {task.attachmentCount} attachments
+                          {copy.tasks.listPage.attachmentsCount(
+                            task.attachmentCount
+                          )}
                         </span>
                         {task.attempt > 1 ? (
                           <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
-                            attempt {task.attempt}
+                            {copy.tasks.listPage.attemptCount(task.attempt)}
                           </span>
                         ) : null}
                       </div>

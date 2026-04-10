@@ -12,6 +12,7 @@ import type {
   DecisionType,
 } from "@shared/mission/contracts";
 
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 import { formatTaskRelative } from "./task-helpers";
@@ -44,6 +45,7 @@ function typeIcon(type: DecisionType) {
 /* ─── Main Component ─── */
 
 export function DecisionHistory({ history }: DecisionHistoryProps) {
+  const { locale, copy } = useI18n();
   const sorted = [...history].sort(
     (a, b) => a.submittedAt - b.submittedAt,
   );
@@ -51,7 +53,7 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
   if (sorted.length === 0) {
     return (
       <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-center text-sm leading-6 text-stone-500">
-        No decisions have been recorded yet.
+        {copy.tasks.decisionHistory.empty}
       </div>
     );
   }
@@ -79,7 +81,7 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
                 {/* Header row: timestamp + stage */}
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-medium text-stone-500">
-                    {formatTaskRelative(entry.submittedAt)}
+                    {formatTaskRelative(entry.submittedAt, locale)}
                   </span>
                   {entry.stageKey && (
                     <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
@@ -110,7 +112,9 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
                 {/* Selected option */}
                 {entry.resolved.optionLabel && (
                   <div className="mt-1.5 flex items-center gap-1.5">
-                    <span className="text-xs text-stone-500">Selected:</span>
+                    <span className="text-xs text-stone-500">
+                      {copy.tasks.decisionHistory.selected}:
+                    </span>
                     <span className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800">
                       {entry.resolved.optionLabel}
                     </span>

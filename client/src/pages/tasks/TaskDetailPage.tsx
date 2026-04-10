@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n";
 import { useTasksStore } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export default function TaskDetailPage({
   onBack?: () => void;
   className?: string;
 }) {
+  const { copy } = useI18n();
   const ensureReady = useTasksStore(state => state.ensureReady);
   const selectTask = useTasksStore(state => state.selectTask);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
@@ -69,12 +71,18 @@ export default function TaskDetailPage({
         action: payload.action,
         reason: payload.reason,
       });
-      toast.success(`${payload.action} applied to mission.`);
+      toast.success(
+        copy.tasks.listPage.actionSuccess(
+          copy.tasks.statuses.action[
+            payload.action === "mark-blocked" ? "markBlocked" : payload.action
+          ]
+        )
+      );
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Failed to submit mission operator action.";
+          : copy.tasks.listPage.actionError;
       toast.error(message);
       throw error;
     }
@@ -91,10 +99,10 @@ export default function TaskDetailPage({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-stone-200/80 bg-white/80 px-5 py-4 shadow-[0_20px_60px_rgba(112,84,51,0.08)] backdrop-blur">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-              Mission Detail
+              {copy.tasks.detailPage.eyebrow}
             </div>
             <div className="mt-1 text-sm text-stone-600">
-              Review mission status, timeline, decisions, logs, and artifacts.
+              {copy.tasks.detailPage.description}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -109,7 +117,7 @@ export default function TaskDetailPage({
                 onClick={() => setLocation(`/replay/${activeTaskId}`)}
               >
                 <Play className="size-4" />
-                View Replay
+                {copy.tasks.detailPage.replay}
               </Button>
             ) : null}
             {onBack ? (
@@ -120,7 +128,7 @@ export default function TaskDetailPage({
                 onClick={onBack}
               >
                 <ArrowLeft className="size-4" />
-                Back
+                {copy.tasks.detailPage.back}
               </Button>
             ) : null}
           </div>

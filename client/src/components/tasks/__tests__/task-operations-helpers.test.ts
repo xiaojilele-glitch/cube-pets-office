@@ -279,6 +279,6 @@ describe("task operation helper derivations", () => {
     expect(primary.passiveMessage).toContain("No manual action is needed");
     expect(owner.title).toBe("Mission complete");
     expect(blocker.title).toBe("No active blocker");
-    expect(nextStep.title).toBe("Review artifacts and share the outcome");
+    expect(nextStep.title).toBe("Review deliverables and share the outcome");
   });
 });

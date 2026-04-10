@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import type { MissionTaskDetail } from "@/lib/tasks-store";
+import { useAppStore } from "@/lib/store";
 import type {
   MissionDecision,
   MissionOperatorActionRecord,
@@ -126,30 +127,33 @@ function renderHero(detail: MissionTaskDetail): string {
 }
 
 describe("TaskOperationsHero", () => {
+  beforeEach(() => {
+    useAppStore.setState({ locale: "zh-CN" });
+  });
+
   it("renders the first-screen modules in the expected order for waiting missions", () => {
     const markup = renderHero(makeDetail());
 
-    expect(markup).toContain("Recommended now");
-    expect(markup).toContain("Pending decision");
-    expect(markup).toContain("Operator Actions");
-    expect(markup).toContain("Current owner");
-    expect(markup).toContain("Blocker / waiting");
-    expect(markup).toContain("Next step");
-    expect(markup).toContain("Current stage / runtime");
-    expect(markup).toContain("User decision required");
-    expect(markup).toContain("Submit the pending decision");
+    expect(markup).toContain("建议优先操作");
+    expect(markup).toContain("任务操作");
+    expect(markup).toContain("当前负责人");
+    expect(markup).toContain("阻塞 / 等待");
+    expect(markup).toContain("下一步动作");
+    expect(markup).toContain("执行阶段 / 运行态");
+    expect(markup).toContain("需要用户决策");
+    expect(markup).toContain("提交待处理决策");
 
-    expect(markup.indexOf("Operator Actions")).toBeLessThan(
-      markup.indexOf("Current owner")
+    expect(markup.indexOf("任务操作")).toBeLessThan(
+      markup.indexOf("当前负责人")
     );
-    expect(markup.indexOf("Current owner")).toBeLessThan(
-      markup.indexOf("Blocker / waiting")
+    expect(markup.indexOf("当前负责人")).toBeLessThan(
+      markup.indexOf("阻塞 / 等待")
     );
-    expect(markup.indexOf("Blocker / waiting")).toBeLessThan(
-      markup.indexOf("Next step")
+    expect(markup.indexOf("阻塞 / 等待")).toBeLessThan(
+      markup.indexOf("下一步动作")
     );
-    expect(markup.indexOf("Next step")).toBeLessThan(
-      markup.indexOf("Current stage / runtime")
+    expect(markup.indexOf("下一步动作")).toBeLessThan(
+      markup.indexOf("执行阶段 / 运行态")
     );
   });
 
@@ -174,9 +178,9 @@ describe("TaskOperationsHero", () => {
       })
     );
 
-    expect(markup).toContain("Blocked");
+    expect(markup).toContain("已阻塞");
     expect(markup).toContain("Need PM sign-off before publishing.");
     expect(markup).toContain("ops-user");
-    expect(markup).not.toContain("Current blocker");
+    expect(markup).not.toContain("当前阻塞");
   });
 });

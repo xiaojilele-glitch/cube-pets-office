@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { MissionTaskDetail } from "@/lib/tasks-store";
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 import {
@@ -40,6 +41,7 @@ export function TaskPlanetInterior({
   detail: MissionTaskDetail;
   className?: string;
 }) {
+  const { locale } = useI18n();
   const ringGradient = detail.stages
     .map(stage => {
       return `${STAGE_COLORS[stage.status]} ${stage.arcStart}deg ${stage.arcEnd}deg`;
@@ -58,18 +60,22 @@ export function TaskPlanetInterior({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-                2D Star Map
+                {locale === "zh-CN" ? "二维星图" : "2D Star Map"}
               </div>
               <div className="mt-1 text-sm font-semibold text-stone-800">
-                Mission orbit view
+                {locale === "zh-CN" ? "任务轨道视图" : "Mission orbit view"}
               </div>
             </div>
             <div className="flex flex-wrap gap-2 text-[11px] text-stone-600">
               <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1">
-                {detail.stages.length} stages
+                {locale === "zh-CN"
+                  ? `${detail.stages.length} 个阶段`
+                  : `${detail.stages.length} stages`}
               </span>
               <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1">
-                {detail.agents.length} crew
+                {locale === "zh-CN"
+                  ? `${detail.agents.length} 名成员`
+                  : `${detail.agents.length} crew`}
               </span>
             </div>
           </div>
@@ -89,16 +95,19 @@ export function TaskPlanetInterior({
               <div className="absolute inset-[34%] flex items-center justify-center">
                 <div className="rounded-[24px] border border-stone-200/90 bg-white/82 px-5 py-4 text-center shadow-[0_14px_36px_rgba(107,77,44,0.12)] backdrop-blur">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-                    Mission Core
+                    {locale === "zh-CN" ? "任务核心" : "Mission Core"}
                   </div>
                   <div className="mt-2 text-3xl font-semibold text-stone-800">
                     {detail.progress}%
                   </div>
                   <div className="mt-1 text-sm text-stone-600">
-                    {detail.currentStageLabel || "Preparing"}
+                    {detail.currentStageLabel ||
+                      (locale === "zh-CN" ? "准备中" : "Preparing")}
                   </div>
                   <div className="mt-2 text-[11px] leading-5 text-stone-500">
-                    {detail.activeAgentCount} active robots
+                    {locale === "zh-CN"
+                      ? `${detail.activeAgentCount} 个活跃执行体`
+                      : `${detail.activeAgentCount} active agents`}
                   </div>
                 </div>
               </div>
@@ -146,26 +155,39 @@ export function TaskPlanetInterior({
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
             <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-2.5">
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                Focus
+                {locale === "zh-CN" ? "当前焦点" : "Focus"}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
-                {detail.currentStageLabel || "No active stage"}
+                {detail.currentStageLabel ||
+                  (locale === "zh-CN" ? "当前无活跃阶段" : "No active stage")}
               </div>
             </div>
             <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-2.5">
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                Waiting
+                {locale === "zh-CN" ? "等待原因" : "Waiting"}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
-                {compactText(detail.waitingFor || "No blocking signal", 42)}
+                {compactText(
+                  detail.waitingFor ||
+                    (locale === "zh-CN"
+                      ? "当前无阻塞信号"
+                      : "No blocking signal"),
+                  42
+                )}
               </div>
             </div>
             <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-2.5">
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                Signal
+                {locale === "zh-CN" ? "最新信号" : "Signal"}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
-                {compactText(detail.lastSignal || "No recent signal", 42)}
+                {compactText(
+                  detail.lastSignal ||
+                    (locale === "zh-CN"
+                      ? "当前没有新的执行信号"
+                      : "No recent signal"),
+                  42
+                )}
               </div>
             </div>
           </div>
@@ -175,10 +197,12 @@ export function TaskPlanetInterior({
           <div className="rounded-[24px] border border-stone-200/80 bg-white/75 p-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-stone-800">
-                Orbit Stages
+                {locale === "zh-CN" ? "执行阶段" : "Orbit Stages"}
               </div>
               <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
-                {detail.stages.length} nodes
+                {locale === "zh-CN"
+                  ? `${detail.stages.length} 个节点`
+                  : `${detail.stages.length} nodes`}
               </span>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -193,7 +217,10 @@ export function TaskPlanetInterior({
                         {stage.label}
                       </div>
                       <div className="mt-1 line-clamp-1 text-[11px] leading-5 text-stone-500">
-                        {stage.detail || "No detail captured yet."}
+                        {stage.detail ||
+                          (locale === "zh-CN"
+                            ? "当前还没有记录详细内容。"
+                            : "No detail captured yet.")}
                       </div>
                     </div>
                     <span
@@ -213,10 +240,12 @@ export function TaskPlanetInterior({
           <div className="rounded-[24px] border border-stone-200/80 bg-white/75 p-4 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-stone-800">
-                Agent Crew
+                {locale === "zh-CN" ? "执行成员" : "Agent Crew"}
               </div>
               <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
-                {detail.agents.length} members
+                {locale === "zh-CN"
+                  ? `${detail.agents.length} 名成员`
+                  : `${detail.agents.length} members`}
               </span>
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -241,7 +270,7 @@ export function TaskPlanetInterior({
                             {agent.name}
                           </div>
                           <div className="mt-0.5 truncate text-[11px] text-stone-500">
-                            {roleLabel(agent.role)} / {agent.department}
+                            {roleLabel(agent.role, locale)} / {agent.department}
                           </div>
                         </div>
                         <span
@@ -250,7 +279,7 @@ export function TaskPlanetInterior({
                             agentStatusTone(agent.status)
                           )}
                         >
-                          {agentStatusLabel(agent.status)}
+                          {agentStatusLabel(agent.status, locale)}
                         </span>
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1.5">

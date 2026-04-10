@@ -27,6 +27,7 @@ import {
 
 import { useViewportTier } from "@/hooks/useViewportTier";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n";
 import {
   Card,
   CardContent,
@@ -496,6 +497,7 @@ export function TaskDetailView({
   onDecisionSubmitted?: () => void;
   className?: string;
 }) {
+  const { locale, copy } = useI18n();
   const { isDesktop } = useViewportTier();
   const [downloadingArtifactId, setDownloadingArtifactId] = useState<
     string | null
@@ -522,18 +524,17 @@ export function TaskDetailView({
           className
         )}
       >
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <FolderKanban />
-          </EmptyMedia>
-          <EmptyTitle>Select a mission</EmptyTitle>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FolderKanban />
+            </EmptyMedia>
+          <EmptyTitle>{copy.tasks.emptyState.selectTitle}</EmptyTitle>
           <EmptyDescription>
-            Pick a task from the left rail to inspect its detail, interior,
-            timeline, artifacts, and decision entry.
+            {copy.tasks.emptyState.selectDescription}
           </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
+          </EmptyHeader>
+        </Empty>
+      );
   }
 
   async function handleArtifactDownload(artifact: TaskArtifact) {
@@ -595,8 +596,8 @@ export function TaskDetailView({
   const decisionTextareaPlaceholder =
     detail.decisionPlaceholder ||
     (detail.decisionAllowsFreeText
-      ? "Optional decision note: add confirmation detail, constraints, or the exact follow-up the mission should respect."
-      : "This mission uses structured decision options only.");
+      ? copy.tasks.detailView.decisionNotePlaceholder
+      : copy.tasks.detailView.decisionStructuredOnly);
 
   const showStructuredDecisionPanel =
     detail.status === "waiting" && !!detail.decision;
@@ -623,17 +624,17 @@ export function TaskDetailView({
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <FileText className="size-4 text-stone-600" />
-          Source Directive
+          {copy.tasks.detailView.sourceTitle}
         </CardTitle>
         <CardDescription>
-          The original request driving this mission.
+          {copy.tasks.detailView.sourceDescription}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3.5 py-3">
           <ExcerptBlock
-            title="Directive Preview"
-            description="Full original mission directive."
+            title={copy.tasks.detailView.sourcePreviewTitle}
+            description={copy.tasks.detailView.sourcePreviewDescription}
             text={sourceDirectiveText}
             maxLength={132}
           />
@@ -647,10 +648,10 @@ export function TaskDetailView({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <Workflow className="size-4 text-amber-600" />
-          Work Packages
+          {copy.tasks.detailView.workPackagesTitle}
         </CardTitle>
         <CardDescription>
-          Delivery snapshots from workers, review loops, revisions, and scores.
+          {copy.tasks.detailView.workPackagesDescription}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2.5">
@@ -662,19 +663,19 @@ export function TaskDetailView({
                 ? String(task.total_score)
                 : "n/a";
             const reviewState = task.meta_audit_feedback
-              ? "Audit flagged"
+              ? copy.tasks.detailView.reviewAudit
               : task.manager_feedback
-                ? "Manager replied"
-                : "Pending";
+                ? copy.tasks.detailView.reviewManager
+                : copy.tasks.detailView.reviewPending;
             const deliverableText =
               task.deliverable_v3 ||
               task.deliverable_v2 ||
               task.deliverable ||
-              "No deliverable text captured yet.";
+              copy.tasks.detailView.noDeliverable;
             const managerText =
-              task.manager_feedback || "No manager feedback yet.";
+              task.manager_feedback || copy.tasks.detailView.noManagerFeedback;
             const auditText =
-              task.meta_audit_feedback || "No audit signal captured yet.";
+              task.meta_audit_feedback || copy.tasks.detailView.noAuditSignal;
 
             return (
               <div
@@ -705,10 +706,10 @@ export function TaskDetailView({
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
-                        {progressValue}% progress
+                        {copy.tasks.detailView.progressLabel(progressValue)}
                       </span>
                       <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
-                        Score {scoreValue}
+                        {copy.tasks.detailView.scoreLabel} {scoreValue}
                       </span>
                       <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
                         {reviewState}
@@ -717,7 +718,7 @@ export function TaskDetailView({
                   </div>
                   <div className="min-w-[184px] max-w-[220px] flex-1 rounded-[16px] border border-stone-200/80 bg-white/80 px-3 py-2.5">
                     <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
-                      <span>Execution lane</span>
+                      <span>{copy.tasks.detailView.executionLane}</span>
                       <span>{progressValue}%</span>
                     </div>
                     <Progress
@@ -725,8 +726,14 @@ export function TaskDetailView({
                       value={progressValue}
                     />
                     <div className="mt-2 grid grid-cols-2 gap-2">
-                      <SnapshotTile label="Score" value={scoreValue} />
-                      <SnapshotTile label="Review" value={reviewState} />
+                      <SnapshotTile
+                        label={copy.tasks.detailView.scoreLabel}
+                        value={scoreValue}
+                      />
+                      <SnapshotTile
+                        label={copy.tasks.detailView.reviewLabel}
+                        value={reviewState}
+                      />
                     </div>
                   </div>
                 </div>
@@ -734,15 +741,15 @@ export function TaskDetailView({
                 <div className="mt-3 grid gap-2.5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.05fr)_minmax(0,0.95fr)]">
                   <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
                     <ExcerptBlock
-                      title="Work Brief"
+                      title={copy.tasks.detailView.workBriefTitle}
                       description={`Full work brief for task #${task.id}.`}
-                      text={task.description || "No work brief captured yet."}
+                      text={task.description || copy.tasks.detailView.noWorkBrief}
                       maxLength={104}
                     />
                   </div>
                   <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
                     <ExcerptBlock
-                      title="Deliverable Preview"
+                      title={copy.tasks.detailView.deliverablePreviewTitle}
                       description={`Full deliverable payload for task #${task.id}.`}
                       text={deliverableText}
                       maxLength={150}
@@ -751,7 +758,7 @@ export function TaskDetailView({
                   <div className="grid gap-2.5">
                     <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
                       <ExcerptBlock
-                        title="Manager Signal"
+                        title={copy.tasks.detailView.managerSignalTitle}
                         description={`Manager review notes for task #${task.id}.`}
                         text={managerText}
                         maxLength={86}
@@ -759,7 +766,7 @@ export function TaskDetailView({
                     </div>
                     <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
                       <ExcerptBlock
-                        title="Audit Signal"
+                        title={copy.tasks.detailView.auditSignalTitle}
                         description={`Audit notes for task #${task.id}.`}
                         text={auditText}
                         maxLength={86}
@@ -772,7 +779,7 @@ export function TaskDetailView({
           })
         ) : (
           <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            The mission has not emitted work packages yet.
+            {copy.tasks.detailView.workPackagesEmpty}
           </div>
         )}
       </CardContent>
@@ -784,11 +791,10 @@ export function TaskDetailView({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <TimerReset className="size-4 text-sky-600" />
-          Timeline
+          {copy.tasks.detailView.timelineTitle}
         </CardTitle>
         <CardDescription>
-          Mission events, task transitions, and the latest coordination
-          messages.
+          {copy.tasks.detailView.timelineDescription}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2.5">
@@ -829,7 +835,7 @@ export function TaskDetailView({
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
-                        {formatTaskDate(event.time)}
+                        {formatTaskDate(event.time, locale)}
                       </span>
                       {event.actor ? (
                         <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
@@ -839,9 +845,9 @@ export function TaskDetailView({
                       {event.description.trim().length > 96 ? (
                         <DetailTextDialog
                           title={event.title}
-                          description="Full timeline event detail."
+                          description={copy.tasks.detailView.timelineEventDescription}
                           text={event.description}
-                          buttonLabel="Detail"
+                          buttonLabel={copy.tasks.detailView.timelineDetailButton}
                         />
                       ) : null}
                     </div>
@@ -852,7 +858,7 @@ export function TaskDetailView({
           ))
         ) : (
           <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            No timeline signals have been captured yet.
+            {copy.tasks.detailView.timelineEmpty}
           </div>
         )}
       </CardContent>
@@ -864,11 +870,11 @@ export function TaskDetailView({
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <Sparkles className="size-4 text-teal-600" />
-          Decision Entry
+          {copy.tasks.detailView.decisionEntryTitle}
         </CardTitle>
         <CardDescription>
           {detail.decisionPrompt ||
-            "Submit the current mission decision and resume execution."}
+            copy.tasks.detailView.decisionEntryFallback}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
@@ -911,8 +917,8 @@ export function TaskDetailView({
         ) : (
           <div className="rounded-[20px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-4 text-sm leading-6 text-stone-500">
             {terminalMission
-              ? "This mission is already in a terminal state, so no further execution decisions are available."
-              : "This mission is not currently waiting for a decision."}
+              ? copy.tasks.detailView.decisionTerminal
+              : copy.tasks.detailView.decisionIdle}
           </div>
         )}
       </CardContent>
@@ -924,10 +930,10 @@ export function TaskDetailView({
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <Bot className="size-4 text-sky-600" />
-          Runtime Snapshot
+          {copy.tasks.detailView.runtimeSnapshotTitle}
         </CardTitle>
         <CardDescription>
-          Compact preview of instance facts and runtime metrics.
+          {copy.tasks.detailView.runtimeSnapshotDescription}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
@@ -938,10 +944,10 @@ export function TaskDetailView({
         </div>
         <div className="flex justify-end">
           <DetailTextDialog
-            title="Runtime Snapshot Details"
-            description="Full instance info and log summary."
+            title={copy.tasks.detailView.runtimeSnapshotDetailsTitle}
+            description={copy.tasks.detailView.runtimeSnapshotDetailsDescription}
             text={runtimeDetailText}
-            buttonLabel="More details"
+            buttonLabel={copy.tasks.detailView.runtimeSnapshotDetailsButton}
           />
         </div>
       </CardContent>
@@ -953,10 +959,10 @@ export function TaskDetailView({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <FileText className="size-4 text-teal-600" />
-          Artifacts
+          {copy.tasks.detailView.artifactsTitle}
         </CardTitle>
         <CardDescription>
-          Mission reports, department summaries, and captured input attachments.
+          {copy.tasks.detailView.artifactsDescription}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -972,7 +978,7 @@ export function TaskDetailView({
           />
         ) : (
           <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            No artifacts are linked to this mission yet.
+            {copy.tasks.detailView.artifactsEmpty}
           </div>
         )}
       </CardContent>
@@ -985,7 +991,7 @@ export function TaskDetailView({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-rose-900">
             <AlertTriangle className="size-4 text-rose-600" />
-            Failure Reasons
+            {copy.tasks.detailView.failureTitle}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -995,8 +1001,8 @@ export function TaskDetailView({
               className="rounded-2xl border border-rose-200/80 bg-white/75 px-3 py-3"
             >
               <ExcerptBlock
-                title="Failure Signal"
-                description="Full captured failure reason."
+                title={copy.tasks.detailView.failureSignalTitle}
+                description={copy.tasks.detailView.failureSignalDescription}
                 text={reason}
                 maxLength={160}
                 className="text-rose-900"
@@ -1043,21 +1049,21 @@ export function TaskDetailView({
         <div className="shrink-0 rounded-[24px] border border-stone-200/80 bg-white/78 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]">
           <TabsList className="grid h-auto w-full grid-cols-5 rounded-[18px] bg-stone-100/80 p-1">
             <TabsTrigger className="rounded-[14px]" value="overview">
-              Overview
+              {copy.tasks.detailView.overviewTab}
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="execution">
-              Execution
+              {copy.tasks.detailView.executionTab}
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="decisions">
               <History className="mr-1.5 size-3.5" />
-              Decisions
+              {copy.tasks.detailView.decisionsTab}
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="artifacts">
-              Artifacts
+              {copy.tasks.detailView.artifactsTab}
             </TabsTrigger>
             <TabsTrigger className="rounded-[14px]" value="cost">
               <Coins className="mr-1.5 size-3.5" />
-              Cost
+              {copy.tasks.detailView.costTab}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -1199,10 +1205,10 @@ export function TaskDetailView({
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-stone-900">
                   <History className="size-4 text-violet-600" />
-                  Decision History
+                  {copy.tasks.detailView.decisionHistoryTitle}
                 </CardTitle>
                 <CardDescription>
-                  Past decisions made during this mission's execution.
+                  {copy.tasks.detailView.decisionHistoryDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent>

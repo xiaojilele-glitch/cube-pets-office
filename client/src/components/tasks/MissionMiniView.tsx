@@ -1,4 +1,5 @@
 import type { MissionTaskSummary } from "@/lib/tasks-store";
+import { useI18n } from "@/i18n";
 
 import { missionStatusLabel, missionStatusTone } from "./task-helpers";
 import { truncateTitle } from "./mission-island-helpers";
@@ -14,28 +15,35 @@ export function MissionMiniView({
   onExpand,
   onCreateMission,
 }: MissionMiniViewProps) {
+  const { locale } = useI18n();
   if (!mission) {
     return (
       <div
         className="flex max-w-[200px] flex-col items-center gap-2 rounded-xl border border-stone-200/80 bg-[linear-gradient(180deg,#fffdf7,#f6efe3)] px-3 py-3 shadow-[0_4px_16px_rgba(120,91,54,0.10)]"
         data-testid="mission-mini-idle"
       >
-        <span className="text-xs text-stone-500">暂无活跃任务</span>
+        <span className="text-xs text-stone-500">
+          {locale === "zh-CN" ? "暂无活跃任务" : "No active mission"}
+        </span>
         <button
           type="button"
           onClick={onCreateMission}
           className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-100"
           data-testid="mission-mini-create"
         >
-          创建任务
+          {locale === "zh-CN" ? "创建任务" : "Create mission"}
         </button>
       </div>
     );
   }
 
   const progressPct = Math.round(mission.progress);
-  const displayTitle = truncateTitle(mission.title || "未命名任务", 40);
-  const phaseLabel = mission.currentStageLabel ?? missionStatusLabel(mission.status);
+  const displayTitle = truncateTitle(
+    mission.title || (locale === "zh-CN" ? "未命名任务" : "Untitled mission"),
+    40
+  );
+  const phaseLabel =
+    mission.currentStageLabel ?? missionStatusLabel(mission.status, locale);
 
   return (
     <button
