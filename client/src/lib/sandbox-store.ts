@@ -34,6 +34,7 @@ export interface ScreenshotFrame {
 // ---------------------------------------------------------------------------
 
 const MAX_LOG_LINES = 500;
+let sandboxSocket: Socket | null = null;
 
 // ---------------------------------------------------------------------------
 // Formatting helpers
@@ -62,7 +63,6 @@ export function formatTimestamp(iso: string): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-
 // ---------------------------------------------------------------------------
 // State interface
 // ---------------------------------------------------------------------------
@@ -79,6 +79,7 @@ interface SandboxStoreState {
   setLogHistory: (lines: LogLine[]) => void;
   updateScreenshot: (frame: ScreenshotFrame) => void;
   setActiveMission: (missionId: string | null) => void;
+  requestLogHistory: (missionId?: string | null) => void;
   setFullscreen: (value: boolean) => void;
   reset: () => void;
   initSocket: (socket: Socket) => void;
@@ -97,10 +98,11 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
   fullscreen: false,
 
   appendLog: (line: LogLine) => {
-    set((s) => {
+    set(s => {
       const next = [...s.logLines, line];
       return {
-        logLines: next.length > MAX_LOG_LINES ? next.slice(-MAX_LOG_LINES) : next,
+        logLines:
+          next.length > MAX_LOG_LINES ? next.slice(-MAX_LOG_LINES) : next,
         isStreaming: true,
       };
     });
@@ -114,7 +116,7 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
   },
 
   updateScreenshot: (frame: ScreenshotFrame) => {
-    set((s) => ({
+    set(s => ({
       previousScreenshot: s.latestScreenshot,
       latestScreenshot: frame,
       isStreaming: true,
@@ -128,6 +130,19 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
       latestScreenshot: null,
       previousScreenshot: null,
       isStreaming: false,
+    });
+    if (sandboxSocket && missionId) {
+      sandboxSocket.emit("request_log_history", { missionId });
+    }
+  },
+
+  requestLogHistory: missionId => {
+    const targetMissionId = missionId ?? get().activeMissionId;
+    if (!sandboxSocket || !targetMissionId) {
+      return;
+    }
+    sandboxSocket.emit("request_log_history", {
+      missionId: targetMissionId,
     });
   },
 
@@ -147,9 +162,13 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
   },
 
   initSocket: (socket: Socket) => {
+    sandboxSocket = socket;
     socket.on("mission_log", (payload: LogLine & { missionId?: string }) => {
       const state = get();
-      if (state.activeMissionId && payload.missionId === state.activeMissionId) {
+      if (
+        state.activeMissionId &&
+        payload.missionId === state.activeMissionId
+      ) {
         state.appendLog(payload);
       }
     });
@@ -158,10 +177,13 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
       "mission_screen",
       (payload: ScreenshotFrame & { missionId?: string }) => {
         const state = get();
-        if (state.activeMissionId && payload.missionId === state.activeMissionId) {
+        if (
+          state.activeMissionId &&
+          payload.missionId === state.activeMissionId
+        ) {
           state.updateScreenshot(payload);
         }
-      },
+      }
     );
 
     socket.on(
@@ -175,15 +197,12 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
         ) {
           state.setLogHistory(payload.lines);
         }
-      },
+      }
     );
 
     // Request history on connect for active mission
     socket.on("connect", () => {
-      const { activeMissionId } = get();
-      if (activeMissionId) {
-        socket.emit("request_log_history", { missionId: activeMissionId });
-      }
+      get().requestLogHistory();
     });
   },
 }));

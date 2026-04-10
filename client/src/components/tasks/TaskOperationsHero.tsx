@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 import {
   AlertTriangle,
@@ -17,6 +18,7 @@ import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 import { OperatorActionBar } from "./OperatorActionBar";
+import { StatusPillStack } from "./StatusPillStack";
 import {
   compactText,
   deriveCurrentOwner,
@@ -66,15 +68,27 @@ function summaryToneForRuntime(detail: MissionTaskDetail): TaskInsightTone {
 function SummaryCard({
   item,
   icon,
+  highlighted = false,
 }: {
   item: TaskInsightSummary;
   icon: ReactNode;
+  highlighted?: boolean;
 }) {
   return (
-    <div
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22, ease: "easeOut" }}
       className={cn(
         "rounded-[22px] border px-4 py-4 shadow-sm backdrop-blur",
-        taskInsightToneClasses(item.tone)
+        taskInsightToneClasses(item.tone),
+        highlighted &&
+          item.tone === "warning" &&
+          "ring-1 ring-amber-200 ring-offset-2 ring-offset-transparent",
+        highlighted &&
+          item.tone === "success" &&
+          "ring-1 ring-emerald-200 ring-offset-2 ring-offset-transparent"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -90,7 +104,7 @@ function SummaryCard({
       {item.meta ? (
         <div className="mt-2 text-xs leading-5 opacity-75">{item.meta}</div>
       ) : null}
-    </div>
+    </motion.div>
   );
 }
 
@@ -109,10 +123,37 @@ export function TaskOperationsHero({
   const owner = deriveCurrentOwner(detail, locale);
   const blocker = deriveTaskBlocker(detail, locale);
   const nextStep = deriveNextStep(detail, locale);
+  const statusItems = [
+    {
+      key: "mission-status",
+      label: missionStatusLabel(detail.status, locale),
+      className: missionStatusTone(detail.status),
+    },
+    {
+      key: "operator-status",
+      label: missionOperatorStateLabel(detail.operatorState, locale),
+      className: missionOperatorStateTone(detail.operatorState),
+    },
+    {
+      key: "kind",
+      label: detail.kind,
+      className: "border-stone-200 bg-white/75 text-stone-700 font-medium",
+    },
+    ...(detail.executor?.status
+      ? [
+          {
+            key: "executor-status",
+            label: `Executor ${detail.executor.status}`,
+            className: "border-sky-200 bg-sky-50 text-sky-700 font-medium",
+          },
+        ]
+      : []),
+  ];
 
   const runtimeSummary: TaskInsightSummary = {
     label: copy.tasks.hero.runtimeLabel,
-    title: detail.currentStageLabel || missionStatusLabel(detail.status, locale),
+    title:
+      detail.currentStageLabel || missionStatusLabel(detail.status, locale),
     detail:
       compactText(
         detail.lastSignal ||
@@ -137,37 +178,21 @@ export function TaskOperationsHero({
         <div className="space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 max-w-4xl">
-              <div className="flex flex-wrap gap-2">
-                <span
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold",
-                    missionStatusTone(detail.status)
-                  )}
-                >
-                  {missionStatusLabel(detail.status, locale)}
-                </span>
-                <span className="rounded-full border border-stone-200 bg-white/70 px-3 py-1 text-xs font-medium text-stone-700">
-                  {detail.kind}
-                </span>
-                {detail.operatorState !== "active" ? (
-                  <span
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-semibold",
-                      missionOperatorStateTone(detail.operatorState)
-                    )}
-                  >
-                    {missionOperatorStateLabel(detail.operatorState, locale)}
-                  </span>
-                ) : null}
-                {detail.departmentLabels.map(label => (
-                  <span
-                    key={label}
-                    className="rounded-full border border-white/80 bg-white/65 px-3 py-1 text-xs text-stone-600"
-                  >
-                    {label}
-                  </span>
-                ))}
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+                {copy.tasks.hero.statusStack}
               </div>
+              <StatusPillStack items={statusItems} className="mt-2" />
+              {detail.departmentLabels.length > 0 ? (
+                <StatusPillStack
+                  items={detail.departmentLabels.map(label => ({
+                    key: `department-${label}`,
+                    label,
+                    className:
+                      "border-white/80 bg-white/65 text-stone-600 font-medium",
+                  }))}
+                  className="mt-2"
+                />
+              ) : null}
               <h1 className="mt-3 max-w-4xl text-2xl font-semibold tracking-tight text-stone-900 md:text-3xl">
                 {detail.title}
               </h1>
@@ -190,7 +215,13 @@ export function TaskOperationsHero({
           </div>
 
           {primaryActions.recommended.length > 0 ? (
-            <div className="rounded-[22px] border border-teal-200/80 bg-teal-50/75 px-4 py-4 text-sm text-teal-900 shadow-sm">
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="rounded-[22px] border border-teal-200/80 bg-teal-50/75 px-4 py-4 text-sm text-teal-900 shadow-sm"
+            >
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-700">
                 <Sparkles className="size-4" />
                 {copy.tasks.hero.recommended}
@@ -215,11 +246,17 @@ export function TaskOperationsHero({
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ) : null}
 
           {primaryActions.decisionRequired ? (
-            <div className="rounded-[22px] border border-sky-200/80 bg-sky-50/80 px-4 py-4 text-sm text-sky-900 shadow-sm">
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="rounded-[22px] border border-sky-200/80 bg-sky-50/80 px-4 py-4 text-sm text-sky-900 shadow-sm"
+            >
               <div className="flex items-center gap-2 font-semibold">
                 <Sparkles className="size-4 text-sky-700" />
                 {copy.tasks.hero.pendingDecision}
@@ -233,7 +270,7 @@ export function TaskOperationsHero({
                   220
                 )}
               </div>
-            </div>
+            </motion.div>
           ) : null}
 
           <OperatorActionBar
@@ -249,10 +286,12 @@ export function TaskOperationsHero({
           <SummaryCard
             item={blocker}
             icon={<AlertTriangle className="size-4" />}
+            highlighted={detail.operatorState === "blocked"}
           />
           <SummaryCard
             item={nextStep}
             icon={<ArrowRightCircle className="size-4" />}
+            highlighted={detail.status === "done"}
           />
           <SummaryCard
             item={runtimeSummary}

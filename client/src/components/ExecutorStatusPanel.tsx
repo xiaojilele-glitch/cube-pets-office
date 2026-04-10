@@ -1,12 +1,7 @@
-/**
- * ExecutorStatusPanel — displays Docker executor status within Mission detail.
- * Shows executor name, Job ID, current status, last event time,
- * a progress bar when running, and a list of artifacts.
- *
- * @see Requirements 5.1, 5.2, 5.3
- */
 import { Box, Clock, FileOutput, Loader2, Server } from "lucide-react";
 
+import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
+import { useI18n } from "@/i18n";
 import { Progress } from "@/components/ui/progress";
 import type {
   MissionArtifact,
@@ -19,42 +14,48 @@ export interface ExecutorStatusPanelProps {
   executor?: MissionExecutorContext;
   instance?: MissionInstanceContext;
   artifacts?: MissionArtifact[];
+  missionStatus?: string;
 }
 
-const STATUS_STYLES: Record<string, { dot: string; badge: string; label: string }> = {
+const STATUS_STYLES: Record<
+  string,
+  {
+    dot: string;
+    badge: string;
+    labelKey:
+      | "statusQueued"
+      | "statusRunning"
+      | "statusCompleted"
+      | "statusFailed"
+      | "statusWarning";
+  }
+> = {
   queued: {
     dot: "bg-stone-400",
     badge: "border-stone-200 bg-stone-50 text-stone-600",
-    label: "Queued",
+    labelKey: "statusQueued",
   },
   running: {
     dot: "bg-sky-500 animate-pulse",
     badge: "border-sky-200 bg-sky-50 text-sky-700",
-    label: "Running",
+    labelKey: "statusRunning",
   },
   completed: {
     dot: "bg-emerald-500",
     badge: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    label: "Completed",
+    labelKey: "statusCompleted",
   },
   failed: {
     dot: "bg-rose-500",
     badge: "border-rose-200 bg-rose-50 text-rose-700",
-    label: "Failed",
+    labelKey: "statusFailed",
+  },
+  warning: {
+    dot: "bg-amber-500",
+    badge: "border-amber-200 bg-amber-50 text-amber-700",
+    labelKey: "statusWarning",
   },
 };
-
-function statusStyle(status: string | undefined) {
-  return STATUS_STYLES[status ?? ""] ?? STATUS_STYLES.queued;
-}
-
-function formatEventTime(ts: number | undefined): string {
-  if (!ts) return "—";
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "medium",
-  }).format(new Date(ts));
-}
 
 const ARTIFACT_KIND_ICON: Record<string, typeof FileOutput> = {
   file: FileOutput,
@@ -63,19 +64,64 @@ const ARTIFACT_KIND_ICON: Record<string, typeof FileOutput> = {
   log: FileOutput,
 };
 
+function statusStyle(status: string | undefined) {
+  const normalized = status?.toLowerCase() ?? "";
+
+  if (
+    normalized.includes("fail") ||
+    normalized.includes("error") ||
+    normalized.includes("unreach") ||
+    normalized.includes("disconnect")
+  ) {
+    return STATUS_STYLES.warning;
+  }
+
+  return STATUS_STYLES[normalized] ?? STATUS_STYLES.queued;
+}
+
+function formatEventTime(ts: number | undefined, fallback: string): string {
+  if (!ts) return fallback;
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "medium",
+  }).format(new Date(ts));
+}
+
+function isExecutorUnavailable(executor?: MissionExecutorContext): boolean {
+  const status = executor?.status?.toLowerCase() ?? "";
+  const lastEventType = executor?.lastEventType?.toLowerCase() ?? "";
+
+  return (
+    status.includes("unreach") ||
+    status.includes("disconnect") ||
+    status.includes("error") ||
+    lastEventType.includes("error") ||
+    lastEventType.includes("disconnect")
+  );
+}
+
 export function ExecutorStatusPanel({
   executor,
   instance,
   artifacts,
+  missionStatus,
 }: ExecutorStatusPanelProps) {
+  const { copy } = useI18n();
+
   if (!executor) return null;
 
   const style = statusStyle(executor.status);
   const isRunning = executor.status === "running";
+  const unavailable = isExecutorUnavailable(executor);
+  const artifactTone =
+    missionStatus === "queued" || missionStatus === "waiting"
+      ? "neutral"
+      : missionStatus === "running"
+        ? "info"
+        : "warning";
 
   return (
     <div className="space-y-3" data-testid="executor-status-panel">
-      {/* Header row: executor name + status badge */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Server className="size-4 text-stone-500" />
@@ -86,66 +132,79 @@ export function ExecutorStatusPanel({
         <span
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
-            style.badge,
+            style.badge
           )}
         >
           <span className={cn("size-1.5 rounded-full", style.dot)} />
-          {style.label}
+          {copy.tasks.executor[style.labelKey]}
         </span>
       </div>
 
-      {/* Info tiles */}
-      <div className="grid gap-2 sm:grid-cols-2">
-        {executor.jobId && (
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {executor.jobId ? (
           <div className="rounded-[16px] border border-stone-200/80 bg-stone-50/70 px-3 py-2">
             <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
-              Job ID
+              {copy.tasks.executor.jobId}
             </div>
             <div className="mt-0.5 truncate text-xs font-medium text-stone-800">
               {executor.jobId}
             </div>
           </div>
-        )}
+        ) : null}
         <div className="rounded-[16px] border border-stone-200/80 bg-stone-50/70 px-3 py-2">
           <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
             <Clock className="size-3" />
-            Last Event
+            {copy.tasks.executor.lastEvent}
           </div>
           <div className="mt-0.5 text-xs font-medium text-stone-800">
-            {formatEventTime(executor.lastEventAt)}
+            {formatEventTime(executor.lastEventAt, copy.common.unavailable)}
+          </div>
+        </div>
+        <div className="rounded-[16px] border border-stone-200/80 bg-stone-50/70 px-3 py-2">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
+            {copy.tasks.executor.lastEventType}
+          </div>
+          <div className="mt-0.5 truncate text-xs font-medium text-stone-800">
+            {executor.lastEventType || copy.common.unavailable}
           </div>
         </div>
       </div>
 
-      {/* Progress bar — visible only when running */}
-      {isRunning && (
+      {unavailable ? (
+        <EmptyHintBlock
+          icon={<Server className="size-4" />}
+          title={copy.tasks.executor.unavailableTitle}
+          description={copy.tasks.executor.unavailableDescription}
+          tone="warning"
+        />
+      ) : null}
+
+      {isRunning ? (
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
             <Loader2 className="size-3 animate-spin text-sky-500" />
-            Executing…
+            {copy.tasks.executor.runningHint}
           </div>
           <Progress className="h-1.5 bg-sky-100" value={undefined} />
         </div>
-      )}
+      ) : null}
 
-      {/* Instance info (if available) */}
-      {instance?.image && (
+      {instance?.image ? (
         <div className="rounded-[16px] border border-stone-200/80 bg-stone-50/70 px-3 py-2">
           <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
             <Box className="size-3" />
-            Container
+            {copy.tasks.executor.container}
           </div>
           <div className="mt-0.5 truncate text-xs font-medium text-stone-800">
             {instance.image}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Artifacts list */}
-      {artifacts && artifacts.length > 0 && (
+      {artifacts && artifacts.length > 0 ? (
         <div className="space-y-1.5">
           <div className="text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
-            Artifacts ({artifacts.length})
+            {copy.tasks.executor.artifacts} ({artifacts.length})
           </div>
           <div className="space-y-1">
             {artifacts.map((artifact, idx) => {
@@ -165,17 +224,32 @@ export function ExecutorStatusPanel({
                         {artifact.kind}
                       </span>
                     </div>
-                    {artifact.description && (
+                    {artifact.description ? (
                       <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-stone-500">
                         {artifact.description}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+      ) : (
+        <EmptyHintBlock
+          icon={<FileOutput className="size-4" />}
+          title={
+            missionStatus === "queued" || missionStatus === "waiting"
+              ? copy.tasks.executor.pendingArtifactsTitle
+              : copy.tasks.executor.noArtifactsTitle
+          }
+          description={
+            missionStatus === "queued" || missionStatus === "waiting"
+              ? copy.tasks.executor.pendingArtifactsDescription
+              : copy.tasks.executor.noArtifactsDescription
+          }
+          tone={artifactTone}
+        />
       )}
     </div>
   );

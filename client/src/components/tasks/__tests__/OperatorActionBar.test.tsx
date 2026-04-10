@@ -9,6 +9,7 @@ import {
   OperatorActionBar,
   operatorActionRequiresConfirmation,
   operatorActionRequiresReason,
+  resolvePrimaryOperatorAction,
 } from "../OperatorActionBar";
 
 function makeOperatorAction(
@@ -150,6 +151,23 @@ describe("OperatorActionBar", () => {
     expect(markup).toContain("已暂停");
     expect(markup).toContain("恢复");
     expect(markup).not.toContain("标记阻塞");
+  });
+
+  it("derives a single primary operator action for the first screen", () => {
+    expect(resolvePrimaryOperatorAction(makeDetail())).toBe("pause");
+    expect(
+      resolvePrimaryOperatorAction(
+        makeDetail({
+          status: "waiting",
+          operatorState: "blocked",
+          blocker: {
+            reason: "Need PM sign-off",
+            createdAt: Date.now(),
+            createdBy: "ops-user",
+          },
+        })
+      )
+    ).toBe("resume");
   });
 
   it("exports interaction requirements for blocker reason and terminate confirmation", () => {

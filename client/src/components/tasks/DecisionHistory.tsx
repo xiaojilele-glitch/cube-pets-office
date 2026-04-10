@@ -15,6 +15,7 @@ import type {
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
+import { EmptyHintBlock } from "./EmptyHintBlock";
 import { formatTaskRelative } from "./task-helpers";
 
 /* ─── Props ─── */
@@ -46,23 +47,22 @@ function typeIcon(type: DecisionType) {
 
 export function DecisionHistory({ history }: DecisionHistoryProps) {
   const { locale, copy } = useI18n();
-  const sorted = [...history].sort(
-    (a, b) => a.submittedAt - b.submittedAt,
-  );
+  const sorted = [...history].sort((a, b) => a.submittedAt - b.submittedAt);
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-center text-sm leading-6 text-stone-500">
-        {copy.tasks.decisionHistory.empty}
-      </div>
+      <EmptyHintBlock
+        icon={<MessageSquare className="size-4" />}
+        title={copy.tasks.decisionHistory.emptyTitle}
+        description={copy.tasks.decisionHistory.emptyDescription}
+      />
     );
   }
 
   return (
     <div className="space-y-0">
       {sorted.map((entry, index) => {
-        const reasonText =
-          entry.resolved.freeText || entry.reason || undefined;
+        const reasonText = entry.resolved.freeText || entry.reason || undefined;
 
         return (
           <div key={entry.decisionId} className="relative pl-6">
@@ -97,7 +97,7 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
                           ? "border-red-200 bg-red-50 text-red-700"
                           : entry.type === "escalate"
                             ? "border-red-200 bg-red-50 text-red-700"
-                            : "border-sky-200 bg-sky-50 text-sky-700",
+                            : "border-sky-200 bg-sky-50 text-sky-700"
                     )}
                   >
                     {entry.type}

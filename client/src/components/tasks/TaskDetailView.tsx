@@ -69,9 +69,11 @@ import { RAGInfoPanel } from "@/components/rag/RAGInfoPanel";
 import { RAGDebugPanel } from "@/components/rag/RAGDebugPanel";
 
 import { ArtifactListBlock } from "./ArtifactListBlock";
+import { EmptyHintBlock } from "./EmptyHintBlock";
 import { ArtifactPreviewDialog } from "./ArtifactPreviewDialog";
 import { DecisionHistory } from "./DecisionHistory";
 import { DecisionPanel } from "./DecisionPanel";
+import { RetryInlineNotice } from "./RetryInlineNotice";
 import { TaskOperationsHero } from "./TaskOperationsHero";
 import { TaskPlanetInterior } from "./TaskPlanetInterior";
 import {
@@ -509,11 +511,16 @@ export function TaskDetailView({
   const [previewArtifactFormat, setPreviewArtifactFormat] = useState<
     string | undefined
   >(undefined);
+  const [artifactError, setArtifactError] = useState<{
+    artifact: TaskArtifact;
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     setPreviewArtifactIndex(null);
     setPreviewArtifactName("");
     setPreviewArtifactFormat(undefined);
+    setArtifactError(null);
   }, [detail?.id]);
 
   if (!detail) {
@@ -524,20 +531,22 @@ export function TaskDetailView({
           className
         )}
       >
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <FolderKanban />
-            </EmptyMedia>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <FolderKanban />
+          </EmptyMedia>
           <EmptyTitle>{copy.tasks.emptyState.selectTitle}</EmptyTitle>
           <EmptyDescription>
             {copy.tasks.emptyState.selectDescription}
           </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      );
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   async function handleArtifactDownload(artifact: TaskArtifact) {
+    setArtifactError(null);
+
     if (artifact.downloadKind === "external") {
       if (artifact.href && typeof window !== "undefined") {
         window.open(artifact.href, "_blank", "noopener,noreferrer");
@@ -546,12 +555,21 @@ export function TaskDetailView({
     }
 
     if (artifact.downloadKind === "attachment") {
-      downloadAttachmentArtifact(artifact);
+      if (!downloadAttachmentArtifact(artifact)) {
+        setArtifactError({
+          artifact,
+          message: copy.tasks.artifacts.downloadFailedDescription,
+        });
+      }
       return;
     }
 
     const downloadUrl = artifact.downloadUrl || artifact.href;
     if (!downloadUrl) {
+      setArtifactError({
+        artifact,
+        message: copy.tasks.artifacts.downloadFailedDescription,
+      });
       return;
     }
 
@@ -559,8 +577,7 @@ export function TaskDetailView({
     try {
       const response = await fetch(downloadUrl);
       if (!response.ok) {
-        console.warn(`Failed to download artifact: ${response.status}`);
-        return;
+        throw new Error(`HTTP ${response.status}`);
       }
       const blob = await response.blob();
       const disposition = response.headers.get("content-disposition");
@@ -579,6 +596,15 @@ export function TaskDetailView({
       link.click();
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : copy.tasks.artifacts.downloadFailedDescription;
+      setArtifactError({
+        artifact,
+        message,
+      });
     } finally {
       setDownloadingArtifactId(null);
     }
@@ -743,7 +769,9 @@ export function TaskDetailView({
                     <ExcerptBlock
                       title={copy.tasks.detailView.workBriefTitle}
                       description={`Full work brief for task #${task.id}.`}
-                      text={task.description || copy.tasks.detailView.noWorkBrief}
+                      text={
+                        task.description || copy.tasks.detailView.noWorkBrief
+                      }
                       maxLength={104}
                     />
                   </div>
@@ -778,9 +806,11 @@ export function TaskDetailView({
             );
           })
         ) : (
-          <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            {copy.tasks.detailView.workPackagesEmpty}
-          </div>
+          <EmptyHintBlock
+            icon={<Workflow className="size-4" />}
+            title={copy.tasks.emptyHints.workPackagesTitle}
+            description={copy.tasks.emptyHints.workPackagesDescription}
+          />
         )}
       </CardContent>
     </Card>
@@ -845,9 +875,13 @@ export function TaskDetailView({
                       {event.description.trim().length > 96 ? (
                         <DetailTextDialog
                           title={event.title}
-                          description={copy.tasks.detailView.timelineEventDescription}
+                          description={
+                            copy.tasks.detailView.timelineEventDescription
+                          }
                           text={event.description}
-                          buttonLabel={copy.tasks.detailView.timelineDetailButton}
+                          buttonLabel={
+                            copy.tasks.detailView.timelineDetailButton
+                          }
                         />
                       ) : null}
                     </div>
@@ -857,9 +891,11 @@ export function TaskDetailView({
             </div>
           ))
         ) : (
-          <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            {copy.tasks.detailView.timelineEmpty}
-          </div>
+          <EmptyHintBlock
+            icon={<TimerReset className="size-4" />}
+            title={copy.tasks.emptyHints.timelineTitle}
+            description={copy.tasks.emptyHints.timelineDescription}
+          />
         )}
       </CardContent>
     </Card>
@@ -873,8 +909,7 @@ export function TaskDetailView({
           {copy.tasks.detailView.decisionEntryTitle}
         </CardTitle>
         <CardDescription>
-          {detail.decisionPrompt ||
-            copy.tasks.detailView.decisionEntryFallback}
+          {detail.decisionPrompt || copy.tasks.detailView.decisionEntryFallback}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
@@ -937,19 +972,35 @@ export function TaskDetailView({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 pt-0">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {runtimePreviewRows.map(row => (
-            <SnapshotTile key={row.label} label={row.label} value={row.value} />
-          ))}
-        </div>
-        <div className="flex justify-end">
-          <DetailTextDialog
-            title={copy.tasks.detailView.runtimeSnapshotDetailsTitle}
-            description={copy.tasks.detailView.runtimeSnapshotDetailsDescription}
-            text={runtimeDetailText}
-            buttonLabel={copy.tasks.detailView.runtimeSnapshotDetailsButton}
+        {runtimePreviewRows.length > 0 ? (
+          <>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {runtimePreviewRows.map(row => (
+                <SnapshotTile
+                  key={row.label}
+                  label={row.label}
+                  value={row.value}
+                />
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <DetailTextDialog
+                title={copy.tasks.detailView.runtimeSnapshotDetailsTitle}
+                description={
+                  copy.tasks.detailView.runtimeSnapshotDetailsDescription
+                }
+                text={runtimeDetailText}
+                buttonLabel={copy.tasks.detailView.runtimeSnapshotDetailsButton}
+              />
+            </div>
+          </>
+        ) : (
+          <EmptyHintBlock
+            icon={<Bot className="size-4" />}
+            title={copy.tasks.detailView.runtimeSnapshotEmptyTitle}
+            description={copy.tasks.detailView.runtimeSnapshotEmptyDescription}
           />
-        </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -966,21 +1017,28 @@ export function TaskDetailView({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {detail.artifacts.length > 0 ? (
-          <ArtifactListBlock
-            missionId={detail.id}
-            artifacts={detail.artifacts}
-            missionStatus={detail.status}
-            variant="full"
-            downloadingArtifactId={downloadingArtifactId}
-            onDownload={handleArtifactDownload}
-            onPreview={handleArtifactPreview}
+        {artifactError ? (
+          <RetryInlineNotice
+            title={copy.tasks.artifacts.downloadFailedTitle}
+            description={
+              artifactError.message ===
+              copy.tasks.artifacts.downloadFailedDescription
+                ? artifactError.message
+                : `${artifactError.message}. ${copy.tasks.artifacts.downloadFailedDescription}`
+            }
+            actionLabel={copy.tasks.artifacts.retryDownload}
+            onRetry={() => void handleArtifactDownload(artifactError.artifact)}
           />
-        ) : (
-          <div className="rounded-[24px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm leading-6 text-stone-500">
-            {copy.tasks.detailView.artifactsEmpty}
-          </div>
-        )}
+        ) : null}
+        <ArtifactListBlock
+          missionId={detail.id}
+          artifacts={detail.artifacts}
+          missionStatus={detail.status}
+          variant="full"
+          downloadingArtifactId={downloadingArtifactId}
+          onDownload={handleArtifactDownload}
+          onPreview={handleArtifactPreview}
+        />
       </CardContent>
     </Card>
   );
@@ -1169,10 +1227,10 @@ export function TaskDetailView({
                 <CardHeader className="space-y-1 pb-3">
                   <CardTitle className="flex items-center gap-2 text-stone-900">
                     <Bot className="size-4 text-sky-600" />
-                    Executor Status
+                    {copy.tasks.executor.title}
                   </CardTitle>
                   <CardDescription>
-                    Docker execution runtime status and artifacts.
+                    {copy.tasks.executor.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -1180,13 +1238,18 @@ export function TaskDetailView({
                     executor={detail.executor}
                     instance={detail.instance}
                     artifacts={detail.missionArtifacts}
+                    missionStatus={detail.status}
                   />
                 </CardContent>
               </Card>
             )}
             {detail.executor && (
               <div className="mb-4">
-                <ExecutorTerminalPanel missionId={detail.id} />
+                <ExecutorTerminalPanel
+                  missionId={detail.id}
+                  missionStatus={detail.status}
+                  executorStatus={detail.executor.status}
+                />
               </div>
             )}
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">

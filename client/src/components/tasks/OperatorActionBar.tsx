@@ -13,6 +13,7 @@ import {
   type MissionTaskDetail,
 } from "@/lib/tasks-store";
 import { useI18n } from "@/i18n";
+import type { AppLocale } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { ActionFeedbackInline } from "./ActionFeedbackInline";
 import {
   compactText,
   derivePrimaryActions,
@@ -43,6 +45,23 @@ export type OperatorActionKind =
   | "terminate";
 
 type ActionKind = OperatorActionKind;
+
+export function resolvePrimaryOperatorAction(
+  detail: MissionTaskDetail,
+  locale: AppLocale = "en-US"
+): ActionKind | null {
+  const primaryActions = derivePrimaryActions(detail, locale);
+  const availableActions = primaryActions.normalActions as ActionKind[];
+  const recommendedAction = primaryActions.recommended.find(action =>
+    availableActions.includes(action.key as ActionKind)
+  );
+
+  return (
+    (recommendedAction?.key as ActionKind | undefined) ??
+    availableActions[0] ??
+    null
+  );
+}
 
 export function operatorActionRequiresReason(
   action: OperatorActionKind
@@ -97,6 +116,15 @@ export function OperatorActionBar({
   const [blockReason, setBlockReason] = useState("");
   const [terminateReason, setTerminateReason] = useState("");
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{
+    tone: "success" | "error";
+    title: string;
+    description: string;
+    retryPayload?: {
+      action: ActionKind;
+      reason?: string;
+    };
+  } | null>(null);
 
   useEffect(() => {
     setBlockDialogOpen(false);
@@ -104,6 +132,7 @@ export function OperatorActionBar({
     setBlockReason("");
     setTerminateReason("");
     setInlineError(null);
+    setFeedback(null);
   }, [detail.id]);
 
   const primaryActions = useMemo(
@@ -112,18 +141,57 @@ export function OperatorActionBar({
   );
   const availableActions = primaryActions.normalActions as ActionKind[];
   const dangerousActions = primaryActions.dangerousActions as ActionKind[];
+  const primaryAction = useMemo(
+    () => resolvePrimaryOperatorAction(detail, locale),
+    [detail, locale]
+  );
+  const secondaryActions = availableActions.filter(
+    action => action !== primaryAction
+  );
 
   const latestAction = detail.latestOperatorAction;
   const blockerVisible =
     showContextSummary && detail.operatorState === "blocked" && detail.blocker;
 
+  function actionTitle(action: ActionKind) {
+    return copy.tasks.listPage.actionSuccess(
+      copy.tasks.statuses.action[
+        action === "mark-blocked" ? "markBlocked" : action
+      ]
+    );
+  }
+
   async function submitAction(action: ActionKind, reason?: string) {
     if (!onSubmitAction) return;
     setInlineError(null);
-    await onSubmitAction({
-      action,
-      reason,
-    });
+    setFeedback(null);
+
+    try {
+      await onSubmitAction({
+        action,
+        reason,
+      });
+      setFeedback({
+        tone: "success",
+        title: actionTitle(action),
+        description: copy.tasks.operatorBar.successHint,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : copy.tasks.listPage.actionError;
+      setFeedback({
+        tone: "error",
+        title: message,
+        description: copy.tasks.operatorBar.errorHint,
+        retryPayload: {
+          action,
+          reason,
+        },
+      });
+      throw error;
+    }
   }
 
   async function handleBlockedConfirm() {
@@ -149,6 +217,113 @@ export function OperatorActionBar({
     } catch {
       // Page-level handler already surfaces the error.
     }
+  }
+
+  function buttonClassName(
+    action: ActionKind,
+    emphasis: "primary" | "secondary"
+  ) {
+    if (emphasis === "primary") {
+      if (action === "mark-blocked") {
+        return "rounded-full bg-amber-600 text-white hover:bg-amber-700";
+      }
+      return "rounded-full bg-[#d07a4f] text-white hover:bg-[#c26d42]";
+    }
+
+    if (action === "mark-blocked") {
+      return "rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100";
+    }
+
+    return "rounded-full border-stone-200 bg-white";
+  }
+
+  function renderSafeAction(
+    action: ActionKind,
+    emphasis: "primary" | "secondary"
+  ) {
+    const isLoading = loadingByAction?.[action] === true;
+    const label = missionOperatorActionLabel(action, locale);
+    const title = missionOperatorActionDescription(action, detail, locale);
+    const button = (
+      <Button
+        type="button"
+        variant={emphasis === "primary" ? undefined : "outline"}
+        className={buttonClassName(action, emphasis)}
+        disabled={isLoading}
+        title={title}
+        onClick={
+          action === "pause" || action === "resume" || action === "retry"
+            ? () => void submitAction(action)
+            : undefined
+        }
+      >
+        {isLoading ? (
+          <LoaderCircle className="size-4 animate-spin" />
+        ) : (
+          <ActionIcon action={action} className="size-4" />
+        )}
+        {label}
+      </Button>
+    );
+
+    if (action === "mark-blocked") {
+      return (
+        <Dialog
+          key={action}
+          open={blockDialogOpen}
+          onOpenChange={open => {
+            setBlockDialogOpen(open);
+            if (!open) {
+              setBlockReason("");
+              setInlineError(null);
+            }
+          }}
+        >
+          <DialogTrigger asChild>{button}</DialogTrigger>
+          <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
+            <DialogHeader>
+              <DialogTitle>{copy.tasks.operatorBar.blockTitle}</DialogTitle>
+              <DialogDescription>
+                {copy.tasks.operatorBar.blockDescription}
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={blockReason}
+              onChange={event => setBlockReason(event.target.value)}
+              placeholder={copy.tasks.operatorBar.blockPlaceholder}
+              className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
+              disabled={loadingByAction?.["mark-blocked"] === true}
+            />
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full border-stone-200 bg-white"
+                onClick={() => setBlockDialogOpen(false)}
+                disabled={loadingByAction?.["mark-blocked"] === true}
+              >
+                {copy.tasks.operatorBar.blockCancel}
+              </Button>
+              <Button
+                type="button"
+                className="rounded-full bg-amber-600 text-white hover:bg-amber-700"
+                onClick={() => void handleBlockedConfirm()}
+                disabled={loadingByAction?.["mark-blocked"] === true}
+              >
+                {loadingByAction?.["mark-blocked"] ? (
+                  <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                  <ActionIcon action="mark-blocked" className="size-4" />
+                )}
+                {copy.tasks.operatorBar.blockConfirm}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+
+    return <div key={action}>{button}</div>;
   }
 
   return (
@@ -211,9 +386,33 @@ export function OperatorActionBar({
       ) : null}
 
       {inlineError ? (
-        <div className="mt-4 rounded-[18px] border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-          {inlineError}
-        </div>
+        <ActionFeedbackInline
+          tone="error"
+          title={inlineError}
+          description={copy.tasks.operatorBar.errorHint}
+          className="mt-4"
+        />
+      ) : null}
+
+      {feedback ? (
+        <ActionFeedbackInline
+          tone={feedback.tone}
+          title={feedback.title}
+          description={feedback.description}
+          actionLabel={
+            feedback.retryPayload ? copy.tasks.operatorBar.retryLast : undefined
+          }
+          onAction={
+            feedback.retryPayload
+              ? () => {
+                  const retryPayload = feedback.retryPayload;
+                  if (!retryPayload) return;
+                  void submitAction(retryPayload.action, retryPayload.reason);
+                }
+              : undefined
+          }
+          className="mt-4"
+        />
       ) : null}
 
       {primaryActions.passiveMessage ? (
@@ -222,210 +421,116 @@ export function OperatorActionBar({
         </div>
       ) : null}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {availableActions.includes("pause") ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full border-stone-200 bg-white"
-            disabled={loadingByAction?.pause === true}
-            onClick={() => void submitAction("pause")}
-            title={missionOperatorActionDescription("pause", detail, locale)}
-          >
-            {loadingByAction?.pause ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <ActionIcon action="pause" className="size-4" />
-            )}
-            {missionOperatorActionLabel("pause", locale)}
-          </Button>
-        ) : null}
+      {primaryAction || secondaryActions.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {primaryAction ? (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+                {copy.tasks.operatorBar.primaryAction}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {renderSafeAction(primaryAction, "primary")}
+              </div>
+            </div>
+          ) : null}
 
-        {availableActions.includes("resume") ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full border-stone-200 bg-white"
-            disabled={loadingByAction?.resume === true}
-            onClick={() => void submitAction("resume")}
-            title={missionOperatorActionDescription("resume", detail, locale)}
-          >
-            {loadingByAction?.resume ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <ActionIcon action="resume" className="size-4" />
-            )}
-            {missionOperatorActionLabel("resume", locale)}
-          </Button>
-        ) : null}
-
-        {availableActions.includes("retry") ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full border-stone-200 bg-white"
-            disabled={loadingByAction?.retry === true}
-            onClick={() => void submitAction("retry")}
-            title={missionOperatorActionDescription("retry", detail, locale)}
-          >
-            {loadingByAction?.retry ? (
-              <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-              <ActionIcon action="retry" className="size-4" />
-            )}
-            {missionOperatorActionLabel("retry", locale)}
-          </Button>
-        ) : null}
-
-        {availableActions.includes("mark-blocked") ? (
-          <Dialog
-            open={blockDialogOpen}
-            onOpenChange={open => {
-              setBlockDialogOpen(open);
-              if (!open) {
-                setBlockReason("");
-                setInlineError(null);
-              }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-full border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100"
-                disabled={loadingByAction?.["mark-blocked"] === true}
-                title={missionOperatorActionDescription(
-                  "mark-blocked",
-                  detail,
-                  locale
+          {secondaryActions.length > 0 ? (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+                {copy.tasks.operatorBar.secondaryActions}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {secondaryActions.map(action =>
+                  renderSafeAction(action, "secondary")
                 )}
-              >
-                {loadingByAction?.["mark-blocked"] ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <ActionIcon action="mark-blocked" className="size-4" />
-                )}
-                {missionOperatorActionLabel("mark-blocked", locale)}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
-              <DialogHeader>
-                <DialogTitle>{copy.tasks.operatorBar.blockTitle}</DialogTitle>
-                <DialogDescription>
-                  {copy.tasks.operatorBar.blockDescription}
-                </DialogDescription>
-              </DialogHeader>
-              <Textarea
-                value={blockReason}
-                onChange={event => setBlockReason(event.target.value)}
-                placeholder={copy.tasks.operatorBar.blockPlaceholder}
-                className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
-                disabled={loadingByAction?.["mark-blocked"] === true}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-full border-stone-200 bg-white"
-                  onClick={() => setBlockDialogOpen(false)}
-                  disabled={loadingByAction?.["mark-blocked"] === true}
-                >
-                  {copy.tasks.operatorBar.blockCancel}
-                </Button>
-                <Button
-                  type="button"
-                  className="rounded-full bg-amber-600 text-white hover:bg-amber-700"
-                  onClick={() => void handleBlockedConfirm()}
-                  disabled={loadingByAction?.["mark-blocked"] === true}
-                >
-                  {loadingByAction?.["mark-blocked"] ? (
-                    <LoaderCircle className="size-4 animate-spin" />
-                  ) : (
-                    <ActionIcon action="mark-blocked" className="size-4" />
-                  )}
-                  {copy.tasks.operatorBar.blockConfirm}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        ) : null}
-      </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {dangerousActions.length > 0 ? (
-        <div className="mt-3 flex flex-wrap gap-2 border-t border-stone-200/80 pt-3">
-          {dangerousActions.includes("terminate") ? (
-            <Dialog
-              open={terminateDialogOpen}
-              onOpenChange={open => {
-                setTerminateDialogOpen(open);
-                if (!open) {
-                  setTerminateReason("");
-                  setInlineError(null);
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="rounded-full"
-                  disabled={loadingByAction?.terminate === true}
-                  title={missionOperatorActionDescription(
-                    "terminate",
-                    detail,
-                    locale
-                  )}
-                >
-                  {loadingByAction?.terminate ? (
-                    <LoaderCircle className="size-4 animate-spin" />
-                  ) : (
-                    <ActionIcon action="terminate" className="size-4" />
-                  )}
-                  {missionOperatorActionLabel("terminate", locale)}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
-                <DialogHeader>
-                  <DialogTitle>{copy.tasks.operatorBar.terminateTitle}</DialogTitle>
-                  <DialogDescription>
-                    {copy.tasks.operatorBar.terminateDescription}
-                  </DialogDescription>
-                </DialogHeader>
-                <Textarea
-                  value={terminateReason}
-                  onChange={event => setTerminateReason(event.target.value)}
-                  placeholder={copy.tasks.operatorBar.terminatePlaceholder}
-                  className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
-                  disabled={loadingByAction?.terminate === true}
-                />
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-full border-stone-200 bg-white"
-                    onClick={() => setTerminateDialogOpen(false)}
-                    disabled={loadingByAction?.terminate === true}
-                  >
-                    {copy.tasks.operatorBar.terminateCancel}
-                  </Button>
+        <div className="mt-3 border-t border-stone-200/80 pt-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+            {copy.tasks.operatorBar.dangerZone}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {dangerousActions.includes("terminate") ? (
+              <Dialog
+                open={terminateDialogOpen}
+                onOpenChange={open => {
+                  setTerminateDialogOpen(open);
+                  if (!open) {
+                    setTerminateReason("");
+                    setInlineError(null);
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
                   <Button
                     type="button"
                     variant="destructive"
                     className="rounded-full"
-                    onClick={() => void handleTerminateConfirm()}
                     disabled={loadingByAction?.terminate === true}
+                    title={missionOperatorActionDescription(
+                      "terminate",
+                      detail,
+                      locale
+                    )}
                   >
                     {loadingByAction?.terminate ? (
                       <LoaderCircle className="size-4 animate-spin" />
                     ) : (
                       <ActionIcon action="terminate" className="size-4" />
                     )}
-                    {copy.tasks.operatorBar.terminateConfirm}
+                    {missionOperatorActionLabel("terminate", locale)}
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          ) : null}
+                </DialogTrigger>
+                <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {copy.tasks.operatorBar.terminateTitle}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {copy.tasks.operatorBar.terminateDescription}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Textarea
+                    value={terminateReason}
+                    onChange={event => setTerminateReason(event.target.value)}
+                    placeholder={copy.tasks.operatorBar.terminatePlaceholder}
+                    className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
+                    disabled={loadingByAction?.terminate === true}
+                  />
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-full border-stone-200 bg-white"
+                      onClick={() => setTerminateDialogOpen(false)}
+                      disabled={loadingByAction?.terminate === true}
+                    >
+                      {copy.tasks.operatorBar.terminateCancel}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      className="rounded-full"
+                      onClick={() => void handleTerminateConfirm()}
+                      disabled={loadingByAction?.terminate === true}
+                    >
+                      {loadingByAction?.terminate ? (
+                        <LoaderCircle className="size-4 animate-spin" />
+                      ) : (
+                        <ActionIcon action="terminate" className="size-4" />
+                      )}
+                      {copy.tasks.operatorBar.terminateConfirm}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

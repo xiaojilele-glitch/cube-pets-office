@@ -46,8 +46,15 @@ describe("ArtifactListBlock", () => {
     useAppStore.setState({ locale: "en-US" });
   });
 
-  it("renders nothing when there are no artifacts", () => {
-    expect(renderBlock([])).toBe("");
+  it("renders an explanatory empty state for the full variant", () => {
+    const markup = renderBlock([]);
+
+    expect(markup).toContain("尚未产生产物");
+    expect(markup).toContain("任务仍在运行中");
+  });
+
+  it("keeps the compact variant silent when there are no artifacts", () => {
+    expect(renderBlock([], "running", "compact")).toBe("");
   });
 
   it("renders the correct action for url artifacts", () => {

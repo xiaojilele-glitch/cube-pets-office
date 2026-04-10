@@ -15,6 +15,7 @@ import { useI18n } from "@/i18n";
 import type { TaskArtifact } from "@/lib/tasks-store";
 
 import { isArtifactPreviewable } from "./artifact-preview";
+import { EmptyHintBlock } from "./EmptyHintBlock";
 
 export interface ArtifactListBlockProps {
   missionId: string;
@@ -22,11 +23,9 @@ export interface ArtifactListBlockProps {
   missionStatus: string;
   variant: "compact" | "full";
   downloadingArtifactId?: string | null;
-  onDownload?: (
-    artifact: TaskArtifact,
-    index: number
-  ) => void | Promise<void>;
+  onDownload?: (artifact: TaskArtifact, index: number) => void | Promise<void>;
   onPreview?: (artifact: TaskArtifact, index: number) => void;
+  showEmptyState?: boolean;
 }
 
 const KIND_ICON: Record<string, typeof FileText> = {
@@ -86,7 +85,9 @@ export function shouldHighlightArtifact(
   artifact: Pick<TaskArtifact, "kind">,
   missionStatus: string
 ): boolean {
-  return artifact.kind === "report" && isArtifactListCompletedStatus(missionStatus);
+  return (
+    artifact.kind === "report" && isArtifactListCompletedStatus(missionStatus)
+  );
 }
 
 function openArtifactUrl(url?: string) {
@@ -105,8 +106,9 @@ export function ArtifactListBlock({
   downloadingArtifactId = null,
   onDownload,
   onPreview,
+  showEmptyState = variant === "full",
 }: ArtifactListBlockProps) {
-  const { locale } = useI18n();
+  const { locale, copy } = useI18n();
   const isCompact = variant === "compact";
   const isRunning = isArtifactListRunningStatus(missionStatus);
   const isCompleted = isArtifactListCompletedStatus(missionStatus);
@@ -136,7 +138,26 @@ export function ArtifactListBlock({
   );
 
   if (artifacts.length === 0) {
-    return null;
+    if (!showEmptyState) {
+      return null;
+    }
+
+    return (
+      <EmptyHintBlock
+        icon={<FileText className="size-4" />}
+        title={
+          isRunning
+            ? copy.tasks.artifacts.emptyRunningTitle
+            : copy.tasks.artifacts.emptyTerminalTitle
+        }
+        description={
+          isRunning
+            ? copy.tasks.artifacts.emptyRunningDescription
+            : copy.tasks.artifacts.emptyTerminalDescription
+        }
+        tone={isRunning ? "info" : isCompleted ? "neutral" : "warning"}
+      />
+    );
   }
 
   return (
@@ -160,15 +181,13 @@ export function ArtifactListBlock({
 
       {isRunning ? (
         <p className="mb-2 text-[10px] text-white/30">
-          {t(
-            locale,
-            "Running now, new artifacts may appear soon.",
-            "Running now, new artifacts may appear soon."
-          )}
+          {copy.tasks.artifacts.runningHint}
         </p>
       ) : null}
 
-      <div className={`space-y-2 ${isCompact ? "max-h-48 overflow-y-auto" : ""}`}>
+      <div
+        className={`space-y-2 ${isCompact ? "max-h-48 overflow-y-auto" : ""}`}
+      >
         <AnimatePresence initial={false}>
           {artifacts.map((artifact, index) => {
             const Icon = KIND_ICON[artifact.kind] ?? FileText;
