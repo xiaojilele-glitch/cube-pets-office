@@ -29,9 +29,9 @@ inclusion: manual
 | executor-integration | 已完成 | WorkflowEngine ↔ Docker 执行桥接 |
 | holographic-ui | 已完成 | 全息 UI 收口 |
 | workflow-artifacts-display | 待最终检查点 | 工作流产物展示与下载（功能开发已完成） |
-| mission-cancel-control | 未开始 | 任务取消端到端闭环 |
-| mission-operator-actions | 未开始 | 任务状态操作栏与动作模型 |
-| task-detail-operations-first | 未开始 | 任务详情页首屏重排 |
+| mission-cancel-control | 已完成 | 任务取消端到端闭环 |
+| mission-operator-actions | 已完成 | 任务状态操作栏与动作模型 |
+| task-detail-operations-first | 已完成 | 任务详情页首屏重排 |
 | execution-language-refresh | 未开始 | 文案从方案叙事收敛到执行协作 |
 | mission-ui-polish | 未开始 | 任务控制台 UI 收尾打磨 |
 | i18n-cleanup | 未开始 | 前端国际化与文案清理 |

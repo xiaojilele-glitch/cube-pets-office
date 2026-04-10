@@ -127,9 +127,9 @@ L12 → L29 → L30
 
 ### 优先级与依赖
 
-- [ ] P0 `mission-cancel-control` — 任务取消端到端可用；补齐用户入口、服务端状态流转、执行器取消、Socket 回传与 UI 反馈闭环。
-- [ ] P0 `mission-operator-actions` — 统一操作动作栏，至少支持暂停 / 恢复 / 重试 / 标记阻塞 / 终止；依赖取消与终止语义先收口。
-- [ ] P1 `task-detail-operations-first` — 重排任务详情页第一屏，把主操作、当前负责人、blocker、下一步动作前置；依赖稳定的操作动作模型。
+- [x] P0 `mission-cancel-control` — 任务取消端到端可用；补齐用户入口、服务端状态流转、执行器取消、Socket 回传与 UI 反馈闭环。
+- [x] P0 `mission-operator-actions` — 统一操作动作栏，至少支持暂停 / 恢复 / 重试 / 标记阻塞 / 终止；依赖取消与终止语义先收口。
+- [x] P1 `task-detail-operations-first` — 重排任务详情页第一屏，把主操作、当前负责人、blocker、下一步动作前置；依赖稳定的操作动作模型。
 - [ ] P1 `execution-language-refresh` — 将“动态组队 / 方案叙事”收敛为“开发执行 / 协作交付 / 当前行动”，可与详情页重排并行推进。
 - [ ] P2 `mission-ui-polish` — 打磨反馈时机、按钮层级、状态可见性、空态与错误态；依赖前述交互语义基本稳定后收尾。
 
