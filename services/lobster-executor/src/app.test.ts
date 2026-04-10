@@ -1,7 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { rmSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
@@ -12,6 +12,7 @@ import { createLobsterExecutorService } from "./service.js";
 import type {
   LobsterExecutorHealthResponse,
   LobsterExecutorJobDetailResponse,
+  StoredJobRecord,
 } from "./types.js";
 
 interface TestHarness {
@@ -128,6 +129,68 @@ async function createHarness(): Promise<TestHarness> {
   };
 }
 
+async function createSeededHarness(
+  status: StoredJobRecord["status"] = "queued"
+): Promise<TestHarness & { jobId: string }> {
+  const dataRoot = join(tmpdir(), `lobster-executor-seeded-${randomUUID()}`);
+  const request = createTestRequest(`seeded-${randomUUID()}`, "success");
+  const receivedAt = new Date().toISOString();
+  const dataDirectory = join(dataRoot, "jobs", request.missionId, request.jobId);
+  const logFile = join(dataDirectory, "executor.log");
+
+  rmSync(dataRoot, { recursive: true, force: true });
+  const seededService = createLobsterExecutorService({ dataRoot });
+  const record: StoredJobRecord = {
+    acceptedResponse: {
+      ok: true,
+      accepted: true,
+      requestId: request.requestId,
+      missionId: request.missionId,
+      jobId: request.jobId,
+      receivedAt,
+    },
+    request,
+    planJob: request.plan.jobs[0],
+    status,
+    progress: status === "running" ? 42 : 0,
+    message: `Job is ${status}`,
+    receivedAt,
+    artifacts: [],
+    events: [],
+    dataDirectory,
+    logFile,
+    executionMode: "mock",
+  };
+
+  mkdirSync(dataDirectory, { recursive: true });
+  writeFileSync(logFile, "", "utf-8");
+  (
+    seededService as unknown as { jobs: Map<string, StoredJobRecord> }
+  ).jobs.set(request.jobId, record);
+
+  const app = createLobsterExecutorApp(seededService);
+  const server = createServer(app);
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    throw new Error("Test server did not expose a TCP address");
+  }
+
+  const close = async () => {
+    await closeServer(server);
+    rmSync(dataRoot, { recursive: true, force: true });
+  };
+  cleanupTasks.push(close);
+
+  return {
+    baseUrl: `http://127.0.0.1:${address.port}`,
+    close,
+    jobId: request.jobId,
+  };
+}
+
 async function waitForJob(
   baseUrl: string,
   jobId: string
@@ -218,5 +281,61 @@ describe("lobster executor app", () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toContain("request.jobId must exist in plan.jobs");
+  });
+
+  it("exposes pause and resume routes for executor jobs", async () => {
+    const harness = await createSeededHarness("queued");
+
+    const pauseResponse = await fetch(
+      `${harness.baseUrl}/api/executor/jobs/${harness.jobId}/pause`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          reason: "Wait before dispatch",
+          requestedBy: "operator",
+          source: "user",
+        }),
+      }
+    );
+
+    const pauseBody = (await pauseResponse.json()) as {
+      pauseRequested?: boolean;
+      status: string;
+      message: string;
+    };
+
+    expect(pauseResponse.status).toBe(200);
+    expect(pauseBody.pauseRequested).toBe(true);
+    expect(pauseBody.status).toBe("queued");
+    expect(pauseBody.message).toBe("Wait before dispatch");
+
+    const resumeResponse = await fetch(
+      `${harness.baseUrl}/api/executor/jobs/${harness.jobId}/resume`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          reason: "Continue dispatch",
+          requestedBy: "operator",
+          source: "user",
+        }),
+      }
+    );
+
+    const resumeBody = (await resumeResponse.json()) as {
+      resumeRequested?: boolean;
+      status: string;
+      message: string;
+    };
+
+    expect(resumeResponse.status).toBe(200);
+    expect(resumeBody.resumeRequested).toBe(true);
+    expect(resumeBody.status).toBe("queued");
+    expect(resumeBody.message).toBe("Continue dispatch");
   });
 });

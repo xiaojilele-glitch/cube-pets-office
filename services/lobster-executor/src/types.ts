@@ -138,6 +138,17 @@ export interface StoredJobRecord {
     reason?: string;
     source?: string;
   };
+  pauseRequested?: {
+    requestedAt: string;
+    requestedBy?: string;
+    reason?: string;
+    source?: string;
+  };
+  pausedAt?: string;
+  resumeWaiter?: {
+    promise: Promise<void>;
+    resolve: () => void;
+  };
   executionMode: "real" | "mock";
 }
 

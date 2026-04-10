@@ -4,6 +4,7 @@ import type { MissionRecord } from "@shared/mission/contracts";
 
 const mockGetMission = vi.fn();
 const mockCancelMission = vi.fn();
+const mockSubmitMissionOperatorAction = vi.fn();
 
 vi.mock("./mission-client", () => ({
   cancelMission: (...args: unknown[]) => mockCancelMission(...args),
@@ -14,6 +15,8 @@ vi.mock("./mission-client", () => ({
   listMissionEvents: vi.fn(),
   listMissions: vi.fn(),
   listPlanets: vi.fn(),
+  submitMissionOperatorAction: (...args: unknown[]) =>
+    mockSubmitMissionOperatorAction(...args),
   submitMissionDecision: vi.fn(),
 }));
 
@@ -70,6 +73,9 @@ function makeMission(
     updatedAt: now,
     events: [],
     artifacts: [],
+    operatorState: "active",
+    operatorActions: [],
+    attempt: 1,
     ...overrides,
   };
 }
@@ -86,6 +92,7 @@ describe("tasks-store artifact helpers", () => {
       detailsById: {},
       decisionNotes: {},
       cancellingMissionIds: {},
+      operatorActionLoadingByMissionId: {},
       lastDecisionLaunch: null,
     });
   });
@@ -223,6 +230,79 @@ describe("tasks-store artifact helpers", () => {
       id: cancelledMission.id,
       status: "cancelled",
       summary: "Stopped by the operator",
+    });
+  });
+
+  it("writes back operator state after submitOperatorAction resolves", async () => {
+    const blockedAt = Date.now();
+    const blockedMission = makeMission("mission-blocked", {
+      status: "running",
+      operatorState: "blocked",
+      blocker: {
+        reason: "Waiting for credential",
+        createdAt: blockedAt,
+        createdBy: "ui-user",
+      },
+      operatorActions: [
+        {
+          id: "action-1",
+          action: "mark-blocked",
+          requestedBy: "ui-user",
+          reason: "Waiting for credential",
+          createdAt: blockedAt,
+          result: "completed",
+          detail: "Mission is blocked pending manual follow-up.",
+        },
+      ],
+    });
+
+    mockSubmitMissionOperatorAction.mockImplementation(async () => {
+      expect(
+        useTasksStore.getState().operatorActionLoadingByMissionId[blockedMission.id]?.[
+          "mark-blocked"
+        ]
+      ).toBe(true);
+
+      return {
+        ok: true,
+        action: blockedMission.operatorActions?.[0],
+        task: blockedMission,
+      };
+    });
+
+    const result = await useTasksStore.getState().submitOperatorAction(
+      blockedMission.id,
+      {
+        action: "mark-blocked",
+        reason: "Waiting for credential",
+        requestedBy: "ui-user",
+      }
+    );
+
+    const state = useTasksStore.getState();
+    expect(result).toBe(blockedMission.id);
+    expect(mockSubmitMissionOperatorAction).toHaveBeenCalledWith(
+      blockedMission.id,
+      {
+        action: "mark-blocked",
+        reason: "Waiting for credential",
+        requestedBy: "ui-user",
+      }
+    );
+    expect(
+      state.operatorActionLoadingByMissionId[blockedMission.id]?.["mark-blocked"]
+    ).toBe(false);
+    expect(state.tasks[0]).toMatchObject({
+      id: blockedMission.id,
+      operatorState: "blocked",
+      attempt: 1,
+    });
+    expect(state.detailsById[blockedMission.id]).toMatchObject({
+      id: blockedMission.id,
+      operatorState: "blocked",
+      blocker: {
+        reason: "Waiting for credential",
+      },
     });
   });
 });

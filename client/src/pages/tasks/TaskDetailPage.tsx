@@ -21,12 +21,14 @@ export default function TaskDetailPage({
   const selectTask = useTasksStore(state => state.selectTask);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
-  const cancelMission = useTasksStore(state => state.cancelMission);
+  const submitOperatorAction = useTasksStore(state => state.submitOperatorAction);
   const refresh = useTasksStore(state => state.refresh);
   const detailsById = useTasksStore(state => state.detailsById);
   const selectedTaskId = useTasksStore(state => state.selectedTaskId);
   const decisionNotes = useTasksStore(state => state.decisionNotes);
-  const cancellingMissionIds = useTasksStore(state => state.cancellingMissionIds);
+  const operatorActionLoadingByMissionId = useTasksStore(
+    state => state.operatorActionLoadingByMissionId
+  );
   const loading = useTasksStore(state => state.loading);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
@@ -57,17 +59,22 @@ export default function TaskDetailPage({
     }
   }
 
-  async function handleCancelMission(payload: { reason?: string }) {
+  async function handleSubmitOperatorAction(payload: {
+    action: "pause" | "resume" | "retry" | "mark-blocked" | "terminate";
+    reason?: string;
+  }) {
     if (!activeTaskId) return;
     try {
-      await cancelMission(activeTaskId, {
+      await submitOperatorAction(activeTaskId, {
+        action: payload.action,
         reason: payload.reason,
-        source: "user",
       });
-      toast.success("Mission cancellation requested.");
+      toast.success(`${payload.action} applied to mission.`);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to cancel mission.";
+        error instanceof Error
+          ? error.message
+          : "Failed to submit mission operator action.";
       toast.error(message);
       throw error;
     }
@@ -128,8 +135,12 @@ export default function TaskDetailPage({
           }}
           onLaunchDecision={handleLaunchDecision}
           launchingPresetId={launchingPresetId}
-          onCancelMission={handleCancelMission}
-          cancellingMission={activeTaskId ? cancellingMissionIds[activeTaskId] === true : false}
+          onSubmitOperatorAction={handleSubmitOperatorAction}
+          operatorActionLoading={
+            activeTaskId
+              ? operatorActionLoadingByMissionId[activeTaskId] ?? {}
+              : {}
+          }
           onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId })}
         />
       </div>

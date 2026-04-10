@@ -6,6 +6,8 @@ import { EXECUTOR_CONTRACT_VERSION } from "../../../shared/executor/contracts.js
 import {
   EXECUTOR_API_ROUTES,
   type CancelExecutorJobResponse,
+  type PauseExecutorJobResponse,
+  type ResumeExecutorJobResponse,
   type ExecutorApiErrorResponse,
 } from "../../../shared/executor/api.js";
 import { readLobsterExecutorConfig } from "./config.js";
@@ -155,6 +157,36 @@ export function createLobsterExecutorApp(
     ) => {
       try {
         const response = await service.cancel(req.params.id, req.body);
+        res.json(response);
+      } catch (error) {
+        sendError(res, error);
+      }
+    }
+  );
+
+  app.post(
+    EXECUTOR_API_ROUTES.pauseJob,
+    async (
+      req: Request<{ id: string }>,
+      res: Response<PauseExecutorJobResponse | ExecutorApiErrorResponse>
+    ) => {
+      try {
+        const response = await service.pause(req.params.id, req.body);
+        res.json(response);
+      } catch (error) {
+        sendError(res, error);
+      }
+    }
+  );
+
+  app.post(
+    EXECUTOR_API_ROUTES.resumeJob,
+    async (
+      req: Request<{ id: string }>,
+      res: Response<ResumeExecutorJobResponse | ExecutorApiErrorResponse>
+    ) => {
+      try {
+        const response = await service.resume(req.params.id, req.body);
         res.json(response);
       } catch (error) {
         sendError(res, error);

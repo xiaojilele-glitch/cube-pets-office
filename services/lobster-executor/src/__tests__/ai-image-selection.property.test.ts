@@ -38,6 +38,13 @@ function makeRunner(
     maxConcurrentJobs: 2,
     callbackSecret: "",
     aiImage,
+    securityLevel: "strict",
+    containerUser: "65534",
+    maxMemory: "512m",
+    maxCpus: "1.0",
+    maxPids: 256,
+    tmpfsSize: "64m",
+    networkWhitelist: [],
   };
   const mockCallbackSender = {
     send: async () => {},
@@ -293,6 +300,13 @@ describe("Property 1: AI 镜像选择正确性", () => {
           maxConcurrentJobs: 2,
           callbackSecret: "",
           aiImage: "",
+          securityLevel: "strict",
+          containerUser: "65534",
+          maxMemory: "512m",
+          maxCpus: "1.0",
+          maxPids: 256,
+          tmpfsSize: "64m",
+          networkWhitelist: [],
         };
         const mockCallbackSender = {
           send: async () => {},

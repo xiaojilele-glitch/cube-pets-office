@@ -239,6 +239,15 @@ export class MissionRuntime {
     return task;
   }
 
+  updateMission(
+    id: string,
+    updater: (task: MissionRecord) => void,
+  ): MissionRecord | undefined {
+    const task = this.store.update(id, updater);
+    this.emitMissionUpdate(task);
+    return task;
+  }
+
   cancelMission(
     id: string,
     input: CancelMissionInput = {}

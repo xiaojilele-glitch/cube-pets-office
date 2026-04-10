@@ -5,6 +5,10 @@ import type {
   TaskArtifact,
   TimelineLevel,
 } from "@/lib/tasks-store";
+import type {
+  MissionOperatorActionType,
+  MissionOperatorState,
+} from "@shared/mission/contracts";
 import { cn } from "@/lib/utils";
 
 export function formatTaskDate(value: number | null): string {
@@ -69,6 +73,65 @@ export function isMissionTerminal(status: MissionTaskStatus): boolean {
 
 export function isMissionCancellable(status: MissionTaskStatus): boolean {
   return status === "queued" || status === "running" || status === "waiting";
+}
+
+export function missionOperatorStateLabel(
+  state: MissionOperatorState
+): string {
+  switch (state) {
+    case "paused":
+      return "Paused";
+    case "blocked":
+      return "Blocked";
+    case "terminating":
+      return "Terminating";
+    case "active":
+    default:
+      return "Active";
+  }
+}
+
+export function missionOperatorStateTone(
+  state: MissionOperatorState
+): string {
+  return cn(
+    "border",
+    state === "active" && "border-stone-200 bg-stone-50 text-stone-700",
+    state === "paused" && "border-sky-200 bg-sky-50 text-sky-700",
+    state === "blocked" && "border-amber-200 bg-amber-50 text-amber-700",
+    state === "terminating" && "border-rose-200 bg-rose-50 text-rose-700",
+  );
+}
+
+export function availableMissionOperatorActions(
+  status: MissionTaskStatus,
+  operatorState: MissionOperatorState
+): MissionOperatorActionType[] {
+  if (status === "failed" || status === "cancelled") {
+    return ["retry"];
+  }
+
+  if (operatorState === "terminating") {
+    return [];
+  }
+
+  if (operatorState === "paused") {
+    return ["resume", "terminate"];
+  }
+
+  if (operatorState === "blocked") {
+    return ["resume", "retry", "terminate"];
+  }
+
+  if (status === "queued" || status === "running") {
+    return ["pause", "mark-blocked", "terminate"];
+  }
+
+  if (status === "waiting") {
+    return ["mark-blocked", "terminate"];
+  }
+
+  return [];
 }
 
 export function timelineTone(level: TimelineLevel): string {

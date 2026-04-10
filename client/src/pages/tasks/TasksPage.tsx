@@ -19,6 +19,8 @@ import { TaskDetailView } from "@/components/tasks/TaskDetailView";
 import {
   compactText,
   formatTaskRelative,
+  missionOperatorStateLabel,
+  missionOperatorStateTone,
   missionStatusLabel,
   missionStatusTone,
 } from "@/components/tasks/task-helpers";
@@ -46,7 +48,7 @@ export default function TasksPage({
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
   const createMission = useTasksStore(state => state.createMission);
-  const cancelMission = useTasksStore(state => state.cancelMission);
+  const submitOperatorAction = useTasksStore(state => state.submitOperatorAction);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
   const tasks = useTasksStore(state => state.tasks);
@@ -56,7 +58,9 @@ export default function TasksPage({
   const ready = useTasksStore(state => state.ready);
   const error = useTasksStore(state => state.error);
   const decisionNotes = useTasksStore(state => state.decisionNotes);
-  const cancellingMissionIds = useTasksStore(state => state.cancellingMissionIds);
+  const operatorActionLoadingByMissionId = useTasksStore(
+    state => state.operatorActionLoadingByMissionId
+  );
   const [search, setSearch] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
@@ -142,17 +146,22 @@ export default function TasksPage({
     }
   }
 
-  async function handleCancelMission(payload: { reason?: string }) {
+  async function handleSubmitOperatorAction(payload: {
+    action: "pause" | "resume" | "retry" | "mark-blocked" | "terminate";
+    reason?: string;
+  }) {
     if (!activeTaskId) return;
     try {
-      await cancelMission(activeTaskId, {
+      await submitOperatorAction(activeTaskId, {
+        action: payload.action,
         reason: payload.reason,
-        source: "user",
       });
-      toast.success("Mission cancellation requested.");
+      toast.success(`${payload.action} applied to mission.`);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "Failed to cancel mission.";
+        error instanceof Error
+          ? error.message
+          : "Failed to submit mission operator action.";
       toast.error(message);
       throw error;
     }
@@ -285,6 +294,16 @@ export default function TasksPage({
                             >
                               {missionStatusLabel(task.status)}
                             </span>
+                            {task.operatorState !== "active" ? (
+                              <span
+                                className={cn(
+                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                                  missionOperatorStateTone(task.operatorState)
+                                )}
+                              >
+                                {missionOperatorStateLabel(task.operatorState)}
+                              </span>
+                            ) : null}
                             {task.hasWarnings ? (
                               <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
                                 warnings
@@ -320,6 +339,11 @@ export default function TasksPage({
                         <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
                           {task.attachmentCount} attachments
                         </span>
+                        {task.attempt > 1 ? (
+                          <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
+                            attempt {task.attempt}
+                          </span>
+                        ) : null}
                       </div>
                     </button>
                   );
@@ -338,8 +362,12 @@ export default function TasksPage({
               }}
               onLaunchDecision={handleLaunchDecision}
               launchingPresetId={launchingPresetId}
-              onCancelMission={handleCancelMission}
-              cancellingMission={activeTaskId ? cancellingMissionIds[activeTaskId] === true : false}
+              onSubmitOperatorAction={handleSubmitOperatorAction}
+              operatorActionLoading={
+                activeTaskId
+                  ? operatorActionLoadingByMissionId[activeTaskId] ?? {}
+                  : {}
+              }
               onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId || null })}
               className="min-w-0 xl:h-full xl:min-h-0"
             />

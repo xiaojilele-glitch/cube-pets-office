@@ -1,6 +1,8 @@
 import type {
   DecisionHistoryEntry,
   MissionEvent,
+  MissionOperatorActionRecord,
+  MissionOperatorActionType,
   MissionDecisionResolved,
   MissionDecisionSubmission,
   MissionPlanetEdge,
@@ -17,6 +19,7 @@ export const MISSION_API_ROUTES = {
   getTask: "/api/tasks/:id",
   listTaskEvents: "/api/tasks/:id/events",
   cancelTask: "/api/tasks/:id/cancel",
+  submitTaskOperatorAction: "/api/tasks/:id/operator-actions",
   submitTaskDecision: "/api/tasks/:id/decision",
   listPlanets: "/api/planets",
   getPlanet: "/api/planets/:id",
@@ -69,6 +72,18 @@ export interface CancelMissionResponse {
   ok: true;
   alreadyFinal?: boolean;
   executorForwarded?: boolean;
+  task: MissionRecord;
+}
+
+export interface SubmitMissionOperatorActionRequest {
+  action: MissionOperatorActionType;
+  reason?: string;
+  requestedBy?: string;
+}
+
+export interface SubmitMissionOperatorActionResponse {
+  ok: true;
+  action: MissionOperatorActionRecord;
   task: MissionRecord;
 }
 

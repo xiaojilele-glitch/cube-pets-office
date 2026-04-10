@@ -13,6 +13,7 @@ import {
   type MissionArtifact,
   type MissionDecision,
   type MissionInstanceContext,
+  type MissionRecord,
 } from "../shared/mission/contracts.js";
 
 dotenv.config();

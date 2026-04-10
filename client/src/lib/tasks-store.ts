@@ -4,10 +4,14 @@ import {
   MISSION_CORE_STAGE_BLUEPRINT,
   type DecisionHistoryEntry,
   type MissionArtifact,
+  type MissionBlocker,
   type MissionDecision,
   type MissionEvent,
   type MissionExecutorContext,
   type MissionInstanceContext,
+  type MissionOperatorActionRecord,
+  type MissionOperatorActionType,
+  type MissionOperatorState,
   type MissionPlanetInteriorData,
   type MissionPlanetOverviewItem,
   type MissionRecord,
@@ -25,6 +29,7 @@ import {
   listMissionEvents,
   listMissions,
   listPlanets,
+  submitMissionOperatorAction as submitMissionOperatorActionRequest,
   submitMissionDecision as submitMissionDecisionRequest,
 } from "./mission-client";
 import { useSandboxStore } from "./sandbox-store";
@@ -74,12 +79,16 @@ export interface MissionTaskSummary {
   kind: string;
   sourceText: string;
   status: MissionTaskStatus;
+  operatorState: MissionOperatorState;
   workflowStatus: SyntheticWfStatus;
   progress: number;
   currentStageKey: string | null;
   currentStageLabel: string | null;
   summary: string;
   waitingFor: string | null;
+  blocker: MissionBlocker | null;
+  attempt: number;
+  latestOperatorAction: MissionOperatorActionRecord | null;
   createdAt: number;
   updatedAt: number;
   startedAt: number | null;
@@ -191,6 +200,7 @@ export interface MissionTaskDetail extends MissionTaskSummary {
   instanceInfo: Array<{ label: string; value: string }>;
   logSummary: Array<{ label: string; value: string }>;
   decisionHistory: DecisionHistoryEntry[];
+  operatorActions: MissionOperatorActionRecord[];
   securitySummary?: {
     level: string;
     user: string;
@@ -205,6 +215,10 @@ export interface MissionTaskDetail extends MissionTaskSummary {
   missionArtifacts?: MissionArtifact[];
 }
 
+export type MissionOperatorActionLoadingMap = Partial<
+  Record<MissionOperatorActionType, boolean>
+>;
+
 interface TasksStoreState {
   ready: boolean;
   loading: boolean;
@@ -214,6 +228,10 @@ interface TasksStoreState {
   detailsById: Record<string, MissionTaskDetail>;
   decisionNotes: Record<string, string>;
   cancellingMissionIds: Record<string, boolean>;
+  operatorActionLoadingByMissionId: Record<
+    string,
+    MissionOperatorActionLoadingMap
+  >;
   lastDecisionLaunch: {
     sourceTaskId: string;
     sourceTaskTitle: string;
@@ -233,6 +251,11 @@ interface TasksStoreState {
     reason?: string;
     requestedBy?: string;
     source?: "user" | "brain" | "feishu" | "mission-core" | "executor";
+  }) => Promise<string | null>;
+  submitOperatorAction: (taskId: string, payload: {
+    action: MissionOperatorActionType;
+    reason?: string;
+    requestedBy?: string;
   }) => Promise<string | null>;
   setDecisionNote: (taskId: string, note: string) => void;
   launchDecision: (taskId: string, presetId: string) => Promise<string | null>;
@@ -363,6 +386,18 @@ function syntheticWorkflowFromMission(mission: MissionRecord): SyntheticWfSnapsh
   };
 }
 
+function missionOperatorStateFromMission(
+  mission: MissionRecord
+): MissionOperatorState {
+  return mission.operatorState ?? "active";
+}
+
+function missionLatestOperatorAction(
+  mission: MissionRecord
+): MissionOperatorActionRecord | null {
+  return mission.operatorActions?.at(-1) ?? null;
+}
+
 function missionFailureReasons(
   mission: MissionRecord,
   events: MissionEvent[]
@@ -397,6 +432,28 @@ function missionSummaryText(
   events: MissionEvent[],
   waitingFor: string | null
 ): string {
+  const operatorState = missionOperatorStateFromMission(mission);
+  const latestOperatorAction = missionLatestOperatorAction(mission);
+
+  if (operatorState === "blocked" && mission.blocker?.reason) {
+    return `Blocked: ${trimText(mission.blocker.reason, 160)}`;
+  }
+
+  if (operatorState === "paused") {
+    return (
+      trimText(latestOperatorAction?.reason, 180) ||
+      trimText(latestOperatorAction?.detail, 180) ||
+      "Mission paused by operator."
+    );
+  }
+
+  if (operatorState === "terminating") {
+    return (
+      trimText(latestOperatorAction?.reason, 180) ||
+      "Mission termination requested."
+    );
+  }
+
   if (trimText(mission.summary, 180)) {
     return trimText(mission.summary, 180);
   }
@@ -548,8 +605,10 @@ function buildMissionInteriorStages(mission: MissionRecord): TaskStageRing[] {
 }
 
 function inferMissionCoreAgentStatus(
-  status: MissionTaskStatus
+  status: MissionTaskStatus,
+  operatorState: MissionOperatorState = "active"
 ): InteriorAgentStatus {
+  if (operatorState === "paused" || operatorState === "blocked") return "idle";
   if (status === "running") return "working";
   if (status === "waiting") return "thinking";
   if (status === "done") return "done";
@@ -688,6 +747,7 @@ function buildMissionInstanceInfo(
     { label: "Executor", value: mission.executor?.name || "n/a" },
     { label: "Executor job", value: mission.executor?.jobId || "n/a" },
     { label: "Executor request", value: mission.executor?.requestId || "n/a" },
+    { label: "Attempt", value: String(summary.attempt) },
     { label: "Instance", value: mission.instance?.id || "n/a" },
     { label: "Workspace", value: mission.instance?.workspaceRoot || "n/a" },
     { label: "Created", value: formatShortDate(summary.createdAt) },
@@ -774,6 +834,7 @@ export function buildPlanetSummaryRecord(
     kind: planet.kind || "general",
     sourceText: planet.sourceText || planet.title,
     status: planet.status === "archived" ? "done" : planet.status,
+    operatorState: mission ? missionOperatorStateFromMission(mission) : "active",
     workflowStatus: workflowStatusFromMission(
       planet.status === "archived" ? "done" : planet.status
     ),
@@ -782,6 +843,9 @@ export function buildPlanetSummaryRecord(
     currentStageLabel,
     summary: summaryText,
     waitingFor,
+    blocker: mission?.blocker ?? null,
+    attempt: Math.max(1, mission?.attempt ?? 1),
+    latestOperatorAction: mission ? missionLatestOperatorAction(mission) : null,
     createdAt: planet.createdAt,
     updatedAt: planet.updatedAt,
     startedAt,
@@ -815,6 +879,8 @@ export function buildPlanetSummaryRecord(
 function buildSummaryRecord(mission: MissionRecord): MissionTaskSummary {
   const currentStageKey = stageKeyFromMission(mission);
   const currentStageLabel = stageLabelFromMission(mission, currentStageKey);
+  const operatorState = missionOperatorStateFromMission(mission);
+  const latestOperatorAction = missionLatestOperatorAction(mission);
   const waitingFor =
     mission.waitingFor ||
     (mission.status === "waiting"
@@ -829,12 +895,16 @@ function buildSummaryRecord(mission: MissionRecord): MissionTaskSummary {
     kind: mission.kind || "general",
     sourceText: mission.sourceText || mission.title,
     status: mission.status,
+    operatorState,
     workflowStatus: workflowStatusFromMission(mission.status),
     progress: clampPercentage(mission.progress),
     currentStageKey,
     currentStageLabel,
     summary: missionSummaryText(mission, mission.events, waitingFor),
     waitingFor,
+    blocker: mission.blocker ?? null,
+    attempt: Math.max(1, mission.attempt ?? 1),
+    latestOperatorAction,
     createdAt: mission.createdAt,
     updatedAt: mission.updatedAt,
     startedAt: missionStartedAt(mission),
@@ -855,8 +925,11 @@ function buildSummaryRecord(mission: MissionRecord): MissionTaskSummary {
     issueCount: failureReasons.length,
     hasWarnings:
       failureReasons.length > 0 ||
+      operatorState === "blocked" ||
       mission.events.some(e => e.level === "warn"),
     lastSignal:
+      trimText(latestOperatorAction?.detail, 96) ||
+      trimText(latestOperatorAction?.reason, 96) ||
       trimText(lastEvent?.message, 96) ||
       trimText(
         mission.messageLog?.[mission.messageLog.length - 1]?.content,
@@ -904,7 +977,10 @@ function buildNativeInteriorAgents(
     role: "orchestrator",
     department: "Mission",
     title: "Mission controller",
-    status: inferMissionCoreAgentStatus(mission.status),
+    status: inferMissionCoreAgentStatus(
+      mission.status,
+      missionOperatorStateFromMission(mission),
+    ),
     stageKey: currentStageKey,
     stageLabel: currentStageLabel,
     progress: clampPercentage(mission.progress),
@@ -960,6 +1036,7 @@ function buildDetailRecord(
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildMissionLogSummary(mission, mission.events),
     decisionHistory: mission.decisionHistory ?? [],
+    operatorActions: mission.operatorActions ?? [],
     securitySummary: mission.securitySummary,
     executor: mission.executor,
     instance: mission.instance,
@@ -1042,6 +1119,7 @@ export function buildPlanetDetailRecord(
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildMissionLogSummary(mission, events),
     decisionHistory: mission.decisionHistory ?? [],
+    operatorActions: mission.operatorActions ?? [],
     securitySummary: mission.securitySummary,
     executor: mission.executor,
     instance: mission.instance,
@@ -1076,6 +1154,7 @@ function buildMissionDetailRecord(
     instanceInfo: buildMissionInstanceInfo(summary, mission),
     logSummary: buildNativeLogSummary(mission),
     decisionHistory: mission.decisionHistory ?? [],
+    operatorActions: mission.operatorActions ?? [],
     securitySummary: mission.securitySummary,
     executor: mission.executor,
     instance: mission.instance,
@@ -1417,6 +1496,7 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
   detailsById: {},
   decisionNotes: {},
   cancellingMissionIds: {},
+  operatorActionLoadingByMissionId: {},
   lastDecisionLaunch: null,
 
   ensureReady: async () => {
@@ -1555,6 +1635,72 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
         cancellingMissionIds: {
           ...state.cancellingMissionIds,
           [taskId]: false,
+        },
+      }));
+    }
+  },
+
+  submitOperatorAction: async (taskId, payload) => {
+    await get().ensureReady();
+
+    set(state => ({
+      error: null,
+      operatorActionLoadingByMissionId: {
+        ...state.operatorActionLoadingByMissionId,
+        [taskId]: {
+          ...(state.operatorActionLoadingByMissionId[taskId] ?? {}),
+          [payload.action]: true,
+        },
+      },
+    }));
+
+    try {
+      const response = await submitMissionOperatorActionRequest(taskId, {
+        action: payload.action,
+        reason: payload.reason?.trim() || undefined,
+        requestedBy: payload.requestedBy?.trim() || undefined,
+      });
+
+      const summary = buildSummaryRecord(response.task);
+      const detail = buildDetailRecord(response.task);
+
+      set(state => {
+        const nextTasks = [
+          ...state.tasks.filter(task => task.id !== taskId),
+          summary,
+        ].sort((left, right) => right.updatedAt - left.updatedAt);
+
+        return {
+          tasks: nextTasks,
+          detailsById: {
+            ...state.detailsById,
+            [taskId]: detail,
+          },
+          selectedTaskId: resolveSelectedTaskId(
+            nextTasks,
+            state.selectedTaskId,
+            taskId,
+          ),
+        };
+      });
+
+      return response.task.id;
+    } catch (error) {
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to submit mission operator action.",
+      });
+      throw error;
+    } finally {
+      set(state => ({
+        operatorActionLoadingByMissionId: {
+          ...state.operatorActionLoadingByMissionId,
+          [taskId]: {
+            ...(state.operatorActionLoadingByMissionId[taskId] ?? {}),
+            [payload.action]: false,
+          },
         },
       }));
     }

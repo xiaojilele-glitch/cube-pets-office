@@ -73,7 +73,9 @@ export class MockRunner implements JobRunner {
     const steps = Math.max(runner.steps, outputLines.length);
 
     for (let index = 0; index < steps; index += 1) {
+      await this.waitWhilePaused(record);
       await this.sleep(runner.delayMs);
+      await this.waitWhilePaused(record);
       if (record.cancelRequested) {
         const finishedAt = this.now().toISOString();
         const durationMs = Date.parse(finishedAt) - Date.parse(record.startedAt!);
@@ -257,6 +259,34 @@ export class MockRunner implements JobRunner {
       },
       payload: eventPayload,
     }));
+  }
+
+  async pause(record: StoredJobRecord): Promise<void> {
+    const reason =
+      record.pauseRequested?.reason?.trim() || "Mock execution paused";
+    record.message = reason;
+    this.appendLog(record, `[pause] ${reason}`);
+  }
+
+  async resume(record: StoredJobRecord): Promise<void> {
+    const reason = "Mock execution resumed";
+    record.message = reason;
+    this.appendLog(record, `[resume] ${reason}`);
+  }
+
+  private async waitWhilePaused(record: StoredJobRecord): Promise<void> {
+    while (record.pausedAt) {
+      if (!record.resumeWaiter) {
+        let resolve!: () => void;
+        const promise = new Promise<void>(nextResolve => {
+          resolve = nextResolve;
+        });
+        record.resumeWaiter = { promise, resolve };
+      }
+
+      await record.resumeWaiter.promise;
+      record.resumeWaiter = undefined;
+    }
   }
 
   private createEvent(

@@ -10,6 +10,8 @@ import {
   type ListMissionEventsResponse,
   type ListMissionPlanetsResponse,
   type ListMissionsResponse,
+  type SubmitMissionOperatorActionRequest,
+  type SubmitMissionOperatorActionResponse,
   type SubmitMissionDecisionRequest,
   type SubmitMissionDecisionResponse,
 } from "@shared/mission/api";
@@ -65,6 +67,23 @@ export async function cancelMission(
     body: JSON.stringify(request),
   });
   return parseJson<CancelMissionResponse>(response);
+}
+
+export async function submitMissionOperatorAction(
+  id: string,
+  request: SubmitMissionOperatorActionRequest
+): Promise<SubmitMissionOperatorActionResponse> {
+  const response = await fetch(
+    routeFor(MISSION_API_ROUTES.submitTaskOperatorAction, { id }),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    }
+  );
+  return parseJson<SubmitMissionOperatorActionResponse>(response);
 }
 
 export async function listMissionEvents(

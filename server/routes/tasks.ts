@@ -10,8 +10,13 @@ import type {
   MissionEvent,
 } from '../../shared/mission/contracts.js';
 import { EXECUTOR_API_ROUTES, type CancelExecutorJobRequest } from '../../shared/executor/api.js';
+import type { SubmitMissionOperatorActionRequest } from '../../shared/mission/api.js';
 import { BUILTIN_DECISION_TEMPLATES } from '../../shared/mission/decision-templates.js';
 import { submitMissionDecision } from '../tasks/mission-decision.js';
+import {
+  MissionOperatorActionError,
+  createMissionOperatorService,
+} from '../tasks/mission-operator-service.js';
 import {
   missionRuntime,
   type MissionRuntime,
@@ -104,6 +109,10 @@ export function createTaskRouter(
     options.executorBaseUrl?.trim() ||
     process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() ||
     DEFAULT_EXECUTOR_BASE_URL;
+  const operatorService = createMissionOperatorService(runtime, {
+    fetchImpl,
+    executorBaseUrl: defaultExecutorBaseUrl,
+  });
 
   async function buildExecutorLogFallback(
     missionId: string,
@@ -356,6 +365,32 @@ export function createTaskRouter(
       executorForwarded,
       task: cancelled,
     });
+  });
+
+  router.post('/:id/operator-actions', async (req, res) => {
+    try {
+      const input = (req.body || {}) as SubmitMissionOperatorActionRequest;
+      const result = await operatorService.submit(req.params.id, input);
+      return res.json({
+        ok: true,
+        action: result.action,
+        task: result.task,
+      });
+    } catch (error) {
+      if (error instanceof MissionOperatorActionError) {
+        return res.status(error.statusCode).json({
+          error: error.message,
+          allowedActions: error.allowedActions,
+        });
+      }
+
+      return res.status(500).json({
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Mission operator action failed',
+      });
+    }
   });
 
   /* ─── Artifact Routes (Task 2.1 / 2.2 / 2.3) ─── */

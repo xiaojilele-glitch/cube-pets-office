@@ -232,4 +232,44 @@ describe("DockerRunner cancellation helpers", () => {
       durationMs: 1234,
     });
   });
+
+  it("pauses and resumes the running container", async () => {
+    const dataRoot = join(tmpdir(), `docker-runner-control-${randomUUID()}`);
+    cleanupPaths.push(dataRoot);
+
+    const pause = vi.fn().mockResolvedValue(undefined);
+    const unpause = vi.fn().mockResolvedValue(undefined);
+    const docker = {
+      getContainer: vi.fn(() => ({
+        pause,
+        unpause,
+      })),
+    };
+
+    const runner = new DockerRunner(
+      createExecutorConfig(dataRoot),
+      { send: vi.fn().mockResolvedValue(undefined) } as never,
+      docker as never,
+    );
+    const record = createStoredRecord(dataRoot, {
+      containerId: "container-pause",
+      pauseRequested: {
+        requestedAt: new Date().toISOString(),
+        reason: "Inspect container state",
+      },
+    });
+
+    await runner.pause(record);
+    await runner.resume(record);
+
+    expect(docker.getContainer).toHaveBeenCalledWith("container-pause");
+    expect(pause).toHaveBeenCalledTimes(1);
+    expect(unpause).toHaveBeenCalledTimes(1);
+    expect(readFileSync(record.logFile, "utf-8")).toContain(
+      "[pause] Inspect container state",
+    );
+    expect(readFileSync(record.logFile, "utf-8")).toContain(
+      "[resume] Resume requested",
+    );
+  });
 });

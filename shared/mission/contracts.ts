@@ -21,6 +21,36 @@ export const MISSION_STATUSES = [
 
 export type MissionStatus = (typeof MISSION_STATUSES)[number];
 
+export const MISSION_OPERATOR_STATES = [
+  "active",
+  "paused",
+  "blocked",
+  "terminating",
+] as const;
+
+export type MissionOperatorState =
+  (typeof MISSION_OPERATOR_STATES)[number];
+
+export const MISSION_OPERATOR_ACTION_TYPES = [
+  "pause",
+  "resume",
+  "retry",
+  "mark-blocked",
+  "terminate",
+] as const;
+
+export type MissionOperatorActionType =
+  (typeof MISSION_OPERATOR_ACTION_TYPES)[number];
+
+export const MISSION_OPERATOR_ACTION_RESULTS = [
+  "accepted",
+  "completed",
+  "rejected",
+] as const;
+
+export type MissionOperatorActionResult =
+  (typeof MISSION_OPERATOR_ACTION_RESULTS)[number];
+
 export const MISSION_EVENT_TYPES = [
   "created",
   "progress",
@@ -136,6 +166,22 @@ export interface MissionArtifact {
   description?: string;
 }
 
+export interface MissionBlocker {
+  reason: string;
+  createdAt: number;
+  createdBy?: string;
+}
+
+export interface MissionOperatorActionRecord {
+  id: string;
+  action: MissionOperatorActionType;
+  requestedBy?: string;
+  reason?: string;
+  createdAt: number;
+  result: MissionOperatorActionResult;
+  detail?: string;
+}
+
 export interface ArtifactListItem extends MissionArtifact {
   index: number;
   downloadUrl: string;
@@ -228,6 +274,10 @@ export interface MissionRecord {
   waitingFor?: string;
   decision?: MissionDecision;
   decisionHistory?: DecisionHistoryEntry[];
+  operatorState?: MissionOperatorState;
+  operatorActions?: MissionOperatorActionRecord[];
+  blocker?: MissionBlocker;
+  attempt?: number;
   /** Security sandbox summary attached from executor job.started event */
   securitySummary?: {
     level: string;

@@ -2,7 +2,6 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
-  Ban,
   Bot,
   Coins,
   Download,
@@ -40,7 +39,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -57,7 +55,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import type { MissionTaskDetail, TaskArtifact } from "@/lib/tasks-store";
+import type {
+  MissionOperatorActionLoadingMap,
+  MissionTaskDetail,
+  TaskArtifact,
+} from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 import { ExecutorStatusPanel } from "@/components/ExecutorStatusPanel";
 import { ExecutorTerminalPanel } from "@/components/ExecutorTerminalPanel";
@@ -71,14 +73,16 @@ import { ArtifactListBlock } from "./ArtifactListBlock";
 import { ArtifactPreviewDialog } from "./ArtifactPreviewDialog";
 import { DecisionHistory } from "./DecisionHistory";
 import { DecisionPanel } from "./DecisionPanel";
+import { OperatorActionBar } from "./OperatorActionBar";
 import { TaskPlanetInterior } from "./TaskPlanetInterior";
 import {
   compactText,
   downloadAttachmentArtifact,
   formatTaskDate,
   formatTaskRelative,
-  isMissionCancellable,
   isMissionTerminal,
+  missionOperatorStateLabel,
+  missionOperatorStateTone,
   missionStatusLabel,
   missionStatusTone,
   timelineTone,
@@ -479,8 +483,8 @@ export function TaskDetailView({
   onDecisionNoteChange,
   onLaunchDecision,
   launchingPresetId,
-  onCancelMission,
-  cancellingMission,
+  onSubmitOperatorAction,
+  operatorActionLoading,
   onDecisionSubmitted,
   className,
 }: {
@@ -489,8 +493,11 @@ export function TaskDetailView({
   onDecisionNoteChange: (next: string) => void;
   onLaunchDecision: (presetId: string) => void | Promise<void>;
   launchingPresetId?: string | null;
-  onCancelMission?: (payload: { reason?: string }) => void | Promise<void>;
-  cancellingMission?: boolean;
+  onSubmitOperatorAction?: (payload: {
+    action: "pause" | "resume" | "retry" | "mark-blocked" | "terminate";
+    reason?: string;
+  }) => void | Promise<void>;
+  operatorActionLoading?: MissionOperatorActionLoadingMap;
   onDecisionSubmitted?: () => void;
   className?: string;
 }) {
@@ -505,15 +512,11 @@ export function TaskDetailView({
   const [previewArtifactFormat, setPreviewArtifactFormat] = useState<
     string | undefined
   >(undefined);
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
 
   useEffect(() => {
     setPreviewArtifactIndex(null);
     setPreviewArtifactName("");
     setPreviewArtifactFormat(undefined);
-    setCancelDialogOpen(false);
-    setCancelReason("");
   }, [detail?.id]);
 
   if (!detail) {
@@ -599,8 +602,6 @@ export function TaskDetailView({
     detail.lastSignal || detail.waitingFor || "No recent signal yet.";
   const liveSignalDialogNeeded = liveSignalResolved.trim().length > 160;
   const terminalMission = isMissionTerminal(detail.status);
-  const canCancelMission =
-    isMissionCancellable(detail.status) && typeof onCancelMission === "function";
   const decisionEnabled =
     detail.status === "waiting" && detail.decisionPresets.length > 0;
   const decisionTextareaPlaceholder =
@@ -625,22 +626,6 @@ export function TaskDetailView({
     "Log Summary",
     ...detail.logSummary.map(row => `${row.label}: ${row.value}`),
   ].join("\n");
-
-  async function handleCancelMissionConfirm() {
-    if (!onCancelMission) {
-      return;
-    }
-
-    try {
-      await onCancelMission({
-        reason: cancelReason.trim() || undefined,
-      });
-      setCancelDialogOpen(false);
-      setCancelReason("");
-    } catch {
-      // The page-level handler already surfaces the error to the operator.
-    }
-  }
 
   const sourceDirectivePanel = (
     <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
@@ -1051,6 +1036,16 @@ export function TaskDetailView({
               <span className="rounded-full border border-stone-200 bg-white/70 px-3 py-1 text-xs font-medium text-stone-700">
                 {detail.kind}
               </span>
+              {detail.operatorState !== "active" ? (
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold",
+                    missionOperatorStateTone(detail.operatorState),
+                  )}
+                >
+                  {missionOperatorStateLabel(detail.operatorState)}
+                </span>
+              ) : null}
               {detail.departmentLabels.map(label => (
                 <span
                   key={label}
@@ -1097,108 +1092,12 @@ export function TaskDetailView({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-white/75 bg-white/72 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur">
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
-              Primary action
-            </div>
-            <div className="mt-1 text-sm font-semibold text-stone-900">
-              {canCancelMission
-                ? "Cancel mission"
-                : detail.status === "cancelled"
-                  ? "Mission cancelled"
-                  : "No primary action available"}
-            </div>
-            <div className="mt-1 text-sm leading-6 text-stone-600">
-              {canCancelMission
-                ? detail.status === "queued"
-                  ? "Stop this mission before the executor starts working on it."
-                  : detail.status === "waiting"
-                    ? "Close the current blocked state and end the mission without resuming execution."
-                    : "Request an immediate stop for the live mission run and persist the cancellation reason."
-                : detail.status === "cancelled"
-                  ? compactText(detail.summary, 168) ||
-                    "This mission has already been cancelled."
-                  : "This mission is already final, so cancellation is no longer available."}
-            </div>
-          </div>
-
-          {canCancelMission ? (
-            <Dialog
-              open={cancelDialogOpen}
-              onOpenChange={open => {
-                setCancelDialogOpen(open);
-                if (!open && !cancellingMission) {
-                  setCancelReason("");
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="rounded-full"
-                  disabled={cancellingMission}
-                >
-                  {cancellingMission ? (
-                    <LoaderCircle className="size-4 animate-spin" />
-                  ) : (
-                    <Ban className="size-4" />
-                  )}
-                  Cancel mission
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="rounded-[28px] border-stone-200 bg-white/96 shadow-[0_30px_90px_rgba(112,84,51,0.18)]">
-                <DialogHeader>
-                  <DialogTitle>Cancel this mission?</DialogTitle>
-                  <DialogDescription>
-                    The mission will move into a terminal cancelled state and
-                    any active executor job will receive a stop request.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-3">
-                  <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-4 py-3 text-sm leading-6 text-stone-600">
-                    Add an optional reason so the timeline, detail page, and
-                    downstream operators can see why this mission was stopped.
-                  </div>
-                  <Textarea
-                    value={cancelReason}
-                    onChange={event => setCancelReason(event.target.value)}
-                    placeholder="Optional cancellation reason"
-                    className="min-h-28 rounded-[20px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
-                    disabled={cancellingMission}
-                  />
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-full border-stone-200 bg-white"
-                    onClick={() => setCancelDialogOpen(false)}
-                    disabled={cancellingMission}
-                  >
-                    Keep mission running
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="rounded-full"
-                    onClick={() => void handleCancelMissionConfirm()}
-                    disabled={cancellingMission}
-                  >
-                    {cancellingMission ? (
-                      <LoaderCircle className="size-4 animate-spin" />
-                    ) : (
-                      <Ban className="size-4" />
-                    )}
-                    Request cancellation
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          ) : null}
+        <div className="mt-4">
+          <OperatorActionBar
+            detail={detail}
+            loadingByAction={operatorActionLoading}
+            onSubmitAction={onSubmitOperatorAction}
+          />
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">

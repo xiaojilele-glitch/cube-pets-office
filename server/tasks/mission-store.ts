@@ -117,6 +117,9 @@ export class MissionStore {
         ...stage,
         status: 'pending',
       })),
+      operatorState: 'active',
+      operatorActions: [],
+      attempt: 1,
       createdAt,
       updatedAt: createdAt,
       events: [

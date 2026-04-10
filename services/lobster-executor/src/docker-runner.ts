@@ -389,6 +389,32 @@ export class DockerRunner implements JobRunner {
     await this.stopOrKillContainer(container, 10, 1500);
   }
 
+  async pause(record: StoredJobRecord): Promise<void> {
+    const reason = record.pauseRequested?.reason?.trim() || "Pause requested";
+    record.message = reason;
+    this.appendLog(record, `[pause] ${reason}`);
+
+    if (!record.containerId) {
+      return;
+    }
+
+    const container = this.docker.getContainer(record.containerId);
+    await container.pause();
+  }
+
+  async resume(record: StoredJobRecord): Promise<void> {
+    const reason = "Resume requested";
+    record.message = reason;
+    this.appendLog(record, `[resume] ${reason}`);
+
+    if (!record.containerId) {
+      return;
+    }
+
+    const container = this.docker.getContainer(record.containerId);
+    await container.unpause();
+  }
+
   /* ── container creation ── */
 
   /**

@@ -4,14 +4,20 @@ import { dirname } from 'node:path';
 import {
   MISSION_EVENT_LEVELS,
   MISSION_EVENT_TYPES,
+  MISSION_OPERATOR_ACTION_RESULTS,
+  MISSION_OPERATOR_ACTION_TYPES,
+  MISSION_OPERATOR_STATES,
   MISSION_STAGE_STATUSES,
   MISSION_STATUSES,
+  type MissionBlocker,
   type MissionArtifact,
   type MissionDecision,
   type MissionDecisionOption,
   type MissionExecutorContext,
   type MissionEvent,
   type MissionInstanceContext,
+  type MissionOperatorActionRecord,
+  type MissionOperatorState,
   type MissionRecord,
   type MissionStage,
 } from '../../shared/mission/contracts.js';
@@ -229,6 +235,70 @@ function normalizeInstanceContext(value: unknown): MissionInstanceContext | unde
   };
 }
 
+function normalizeOperatorState(value: unknown): MissionOperatorState | undefined {
+  if (
+    typeof value === 'string' &&
+    MISSION_OPERATOR_STATES.includes(value as MissionOperatorState)
+  ) {
+    return value as MissionOperatorState;
+  }
+
+  return undefined;
+}
+
+function normalizeBlocker(value: unknown): MissionBlocker | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+
+  const candidate = value as Partial<MissionBlocker>;
+  if (
+    typeof candidate.reason !== 'string' ||
+    !candidate.reason.trim() ||
+    typeof candidate.createdAt !== 'number'
+  ) {
+    return undefined;
+  }
+
+  return {
+    reason: candidate.reason,
+    createdAt: candidate.createdAt,
+    createdBy:
+      typeof candidate.createdBy === 'string' ? candidate.createdBy : undefined,
+  };
+}
+
+function normalizeOperatorAction(
+  value: unknown,
+): MissionOperatorActionRecord | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const candidate = value as Partial<MissionOperatorActionRecord>;
+  if (
+    typeof candidate.id !== 'string' ||
+    typeof candidate.createdAt !== 'number' ||
+    typeof candidate.action !== 'string' ||
+    !MISSION_OPERATOR_ACTION_TYPES.includes(candidate.action as MissionOperatorActionRecord['action']) ||
+    typeof candidate.result !== 'string' ||
+    !MISSION_OPERATOR_ACTION_RESULTS.includes(candidate.result as MissionOperatorActionRecord['result'])
+  ) {
+    return null;
+  }
+
+  return {
+    id: candidate.id,
+    action: candidate.action as MissionOperatorActionRecord['action'],
+    createdAt: candidate.createdAt,
+    result: candidate.result as MissionOperatorActionRecord['result'],
+    requestedBy:
+      typeof candidate.requestedBy === 'string'
+        ? candidate.requestedBy
+        : undefined,
+    reason:
+      typeof candidate.reason === 'string' ? candidate.reason : undefined,
+    detail:
+      typeof candidate.detail === 'string' ? candidate.detail : undefined,
+  };
+}
+
 function normalizeTask(value: unknown): MissionRecord | null {
   if (!value || typeof value !== 'object') return null;
 
@@ -280,6 +350,17 @@ function normalizeTask(value: unknown): MissionRecord | null {
     waitingFor:
       typeof candidate.waitingFor === 'string' ? candidate.waitingFor : undefined,
     decision: normalizeDecision(candidate.decision),
+    operatorState: normalizeOperatorState(candidate.operatorState) ?? 'active',
+    operatorActions: Array.isArray(candidate.operatorActions)
+      ? candidate.operatorActions
+          .map(action => normalizeOperatorAction(action))
+          .filter((action): action is MissionOperatorActionRecord => Boolean(action))
+      : [],
+    blocker: normalizeBlocker(candidate.blocker),
+    attempt:
+      typeof candidate.attempt === 'number' && Number.isFinite(candidate.attempt)
+        ? Math.max(1, Math.trunc(candidate.attempt))
+        : 1,
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
     completedAt:
