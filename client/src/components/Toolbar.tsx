@@ -426,7 +426,7 @@ export function Toolbar() {
         className={`fixed left-1/2 z-[60] -translate-x-1/2 ${isTablet ? 'bottom-5' : 'bottom-6'}`}
         style={{ pointerEvents: 'auto' }}
       >
-        <div className="rounded-[32px] studio-shell px-3 py-2.5">
+        <div className="rounded-3xl bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-3 py-2.5">
           <div className={`grid gap-2 ${isTablet ? 'grid-cols-8' : 'grid-cols-8'}`}>
             {dockButtons.map(button => {
               const Icon = button.icon;
@@ -436,22 +436,22 @@ export function Toolbar() {
                 <button
                   key={button.id}
                   onClick={() => button.onClick()}
-                  className={`group flex ${isTablet ? 'min-w-[102px]' : 'min-w-[138px]'} items-center gap-3 rounded-[22px] px-4 py-2.5 text-left transition-all duration-300 ${
+                  className={`group flex ${isTablet ? 'min-w-[102px]' : 'min-w-[138px]'} items-center gap-3 rounded-2xl px-4 py-2.5 text-left transition-all duration-300 ${
                     button.active
-                      ? '-translate-y-1 shadow-[0_12px_24px_rgba(80,56,36,0.14)]'
-                      : 'hover:-translate-y-1 hover:bg-white/62'
+                      ? '-translate-y-1 shadow-lg'
+                      : 'hover:-translate-y-1 hover:bg-white/60'
                   }`}
                   style={{
                     background: button.active
                       ? `linear-gradient(135deg, ${button.accent}, ${button.accent}CC)`
-                      : 'rgba(255,255,255,0.36)',
-                    color: button.active ? '#FFFFFF' : '#5A4A3A',
+                      : 'transparent',
+                    color: button.active ? '#FFFFFF' : '#44403C',
                   }}
                 >
                   <div
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl shadow-sm"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-sm"
                     style={{
-                      background: button.active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.74)',
+                      background: button.active ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.8)',
                     }}
                   >
                     <Icon className="h-4 w-4" />
@@ -460,7 +460,7 @@ export function Toolbar() {
                     <div className="text-sm font-semibold">{labels.label}</div>
                     <div
                       className="text-[10px] uppercase tracking-[0.16em]"
-                      style={{ color: button.active ? 'rgba(255,255,255,0.78)' : '#A08972' }}
+                      style={{ color: button.active ? 'rgba(255,255,255,0.8)' : '#A8A29E' }}
                     >
                       {labels.sublabel}
                     </div>

@@ -96,140 +96,148 @@ export default function Home() {
 
       {isSceneReady && !isMobile && (
         <>
-          {/* ── Top bar: logo | mode switch | github + locale ── */}
-          <div className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-between px-5 py-3" style={{ pointerEvents: 'auto' }}>
-            {/* Left: Logo */}
-            <div className="flex items-center gap-2 rounded-full studio-surface px-3 py-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#C98257]" />
-              <span className="text-xs font-bold text-[#3A2A1A]">Cube Pets Office</span>
-            </div>
-
-            {/* Center: Mode switch */}
-            <div className="flex items-center gap-1 rounded-full studio-surface p-1">
-              <button
-                onClick={() => void setRuntimeMode('frontend')}
-                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                  runtimeMode === 'frontend'
-                    ? 'bg-[#F8F3ED] text-[#3A2A1A] shadow-sm'
-                    : 'text-[#8B7355] hover:text-[#5A4A3A]'
-                }`}
-              >
-                Frontend
-              </button>
-              {CAN_USE_ADVANCED_RUNTIME && (
-                <button
-                  onClick={() => void setRuntimeMode('advanced')}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                    runtimeMode === 'advanced'
-                      ? 'bg-[#C98257] text-white shadow-sm'
-                      : 'text-[#8B7355] hover:text-[#5A4A3A]'
-                  }`}
-                >
-                  Advanced
-                </button>
-              )}
-            </div>
-
-            {/* Right: GitHub + Locale */}
-            <div className="flex items-center gap-2">
-              {IS_GITHUB_PAGES && <GitHubRepoBadge />}
-              <button
-                onClick={toggleLocale}
-                className="rounded-full studio-surface px-3 py-1.5 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-white/70"
-              >
-                {locale === 'zh-CN' ? 'EN / 中' : 'EN / 中'}
-              </button>
-            </div>
+          {/* ── Outer Layout Wrapper ── */}
+      <div className="absolute inset-0 z-[60] flex flex-col pointer-events-none p-4 md:p-6">
+        
+        {/* ── Top bar: logo | mode switch | github + locale ── */}
+        <div className="flex items-center justify-between w-full pointer-events-auto">
+          {/* Left: Logo */}
+          <div className="flex items-center gap-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm px-4 py-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+            <span className="text-sm font-bold text-stone-800 tracking-tight">Cube Pets Office</span>
           </div>
 
+          {/* Center: Mode switch */}
+          <div className="flex items-center gap-1.5 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm p-1.5">
+            <button
+              onClick={() => void setRuntimeMode('frontend')}
+              className={`rounded-xl px-5 py-1.5 text-xs font-semibold transition-all ${
+                runtimeMode === 'frontend'
+                  ? 'bg-white text-stone-900 shadow-sm border border-stone-200/50'
+                  : 'text-stone-500 hover:text-stone-800'
+              }`}
+            >
+              Frontend
+            </button>
+            {CAN_USE_ADVANCED_RUNTIME && (
+              <button
+                onClick={() => void setRuntimeMode('advanced')}
+                className={`rounded-xl px-5 py-1.5 text-xs font-semibold transition-all ${
+                  runtimeMode === 'advanced'
+                    ? 'bg-stone-900 text-white shadow-sm'
+                    : 'text-stone-500 hover:text-stone-800'
+                }`}
+              >
+                Advanced
+              </button>
+            )}
+          </div>
+
+          {/* Right: GitHub + Locale */}
+          <div className="flex items-center gap-3">
+            {IS_GITHUB_PAGES && <GitHubRepoBadge />}
+            <button
+              onClick={toggleLocale}
+              className="rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm px-4 py-2 text-xs font-semibold text-stone-700 transition-colors hover:bg-white"
+            >
+              {locale === 'zh-CN' ? 'EN / 中' : 'EN / 中'}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Main Content Area (Sidebars) ── */}
+        <div className="flex-1 flex justify-between items-start w-full mt-6 pointer-events-none">
+          
           {/* ── Left sidebar: Mission control + System status ── */}
-          <div className="fixed left-4 top-16 z-[60] flex w-[160px] flex-col gap-3" style={{ pointerEvents: 'auto' }}>
+          <div className="flex flex-col gap-4 w-64 pointer-events-auto">
             {/* Mission control */}
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#C98257]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
+            <div className="rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
                   {locale === 'zh-CN' ? '任务中心' : 'Mission control'}
                 </span>
               </div>
               <button
                 onClick={() => setLocation('/tasks?new=1')}
-                className="mt-2 w-full rounded-xl bg-[#C98257] px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:bg-[#B86F45]"
+                className="w-full rounded-xl bg-stone-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-stone-800 hover:-translate-y-0.5"
               >
                 {locale === 'zh-CN' ? '新建任务' : 'New mission'}
               </button>
               <button
                 onClick={handleStartDemo}
-                className="mt-1.5 w-full text-center text-[11px] font-medium text-[#5E8B72] transition-colors hover:text-[#456B58]"
+                className="mt-2 w-full text-center text-xs font-medium text-stone-500 transition-colors hover:text-stone-900"
               >
                 Live Demo
               </button>
             </div>
 
             {/* System status */}
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
+            <div className="rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
                   {locale === 'zh-CN' ? '系统状态' : 'System status'}
                 </span>
               </div>
-              <div className="mt-2 space-y-1 text-[10px] text-[#5A4A3A]">
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#5E8B72]" />{locale === 'zh-CN' ? 'Agent 在线' : 'Agents online'}</span>
-                  <span className="font-semibold">{agentCount} / 18</span>
+              <div className="space-y-2.5 text-xs text-stone-600">
+                <div className="flex justify-between items-center">
+                  <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{locale === 'zh-CN' ? 'Agent 在线' : 'Agents online'}</span>
+                  <span className="font-semibold text-stone-900">{agentCount} / 18</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />{locale === 'zh-CN' ? '活跃工作流' : 'Active workflows'}</span>
-                  <span className="font-semibold">{activeWorkflows}</span>
+                <div className="flex justify-between items-center">
+                  <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-orange-400" />{locale === 'zh-CN' ? '活跃工作流' : 'Active workflows'}</span>
+                  <span className="font-semibold text-stone-900">{activeWorkflows}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#87AFC7]" />{locale === 'zh-CN' ? '运行模式' : 'Runtime mode'}</span>
-                  <span className="font-semibold">{runtimeMode === 'advanced' ? 'Advanced' : 'Frontend'}</span>
+                <div className="flex justify-between items-center">
+                  <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-purple-400" />{locale === 'zh-CN' ? '运行模式' : 'Runtime mode'}</span>
+                  <span className="font-semibold text-stone-900">{runtimeMode === 'advanced' ? 'Advanced' : 'Frontend'}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* ── Right sidebar: Active agents + Token usage ── */}
-          <div className="fixed right-4 top-16 z-[60] flex w-[170px] flex-col gap-3" style={{ pointerEvents: 'auto' }}>
+          <div className="flex flex-col gap-4 w-64 pointer-events-auto">
             {/* Active agents */}
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#C98257]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
+            <div className="rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
                   {locale === 'zh-CN' ? '活跃 Agent' : 'Active agents'}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-1.5">
                 {managerNames.map(name => (
-                  <span key={name} className="flex items-center gap-1 rounded-full studio-surface px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
+                  <span key={name} className="flex items-center gap-1.5 rounded-lg bg-white/60 border border-white/40 px-2.5 py-1 text-xs font-medium text-stone-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
                     {name}
                   </span>
                 ))}
               </div>
-              <p className="mt-2 text-[9px] text-[#8B7355]">{focusLabel}</p>
+              <p className="mt-3 text-xs text-stone-500 font-medium">{focusLabel}</p>
             </div>
 
             {/* Token usage */}
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
+            <div className="rounded-2xl bg-white/70 backdrop-blur-md border border-white/40 shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="h-2 w-2 rounded-full bg-purple-500" />
+                <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">
                   {locale === 'zh-CN' ? 'Token 用量' : 'Token usage'}
                 </span>
               </div>
-              <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-[10px] text-[#5E8B72]">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs text-stone-500">
                   {(telemetrySnapshot?.totalTokensIn ?? 0).toLocaleString()} tokens
                 </span>
-                <span className="text-[10px] font-semibold text-[#3A2A1A]">
+                <span className="text-lg font-bold text-stone-900">
                   ${(telemetrySnapshot?.totalCost ?? 0).toFixed(4)}
                 </span>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
           <Toolbar />
           <ConfigPanel />
