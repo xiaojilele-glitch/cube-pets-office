@@ -1,10 +1,12 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { ArrowRight } from "lucide-react";
 import { useLocation } from "wouter";
 
 import { ChatPanel } from "@/components/ChatPanel";
 import { GitHubRepoBadge } from "@/components/GitHubRepoBadge";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { AgentDetailDrawer } from "@/components/scene/AgentDetailDrawer";
+import { OfficeNoticeBoard } from "@/components/scene/OfficeNoticeBoard";
 import { Scene3D } from "@/components/Scene3D";
 import { TelemetryDashboard } from "@/components/TelemetryDashboard";
 import { WorkflowPanel } from "@/components/WorkflowPanel";
@@ -13,8 +15,10 @@ import { useDemoMode } from "@/hooks/useDemoMode";
 import { useI18n } from "@/i18n";
 import { getAgentToolbarLabel } from "@/lib/agent-config";
 import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from "@/lib/deploy-target";
+import { buildOfficeNoticeBoardSnapshot } from "@/lib/scene-agent-detail";
 import { useAppStore } from "@/lib/store";
 import { useTelemetryStore } from "@/lib/telemetry-store";
+import { useTasksStore } from "@/lib/tasks-store";
 import { useWorkflowStore } from "@/lib/workflow-store";
 
 export default function Home() {
@@ -25,14 +29,22 @@ export default function Home() {
   const locale = useAppStore(state => state.locale);
   const toggleConfig = useAppStore(state => state.toggleConfig);
   const selectedPet = useAppStore(state => state.selectedPet);
+  const setSelectedPet = useAppStore(state => state.setSelectedPet);
   const fetchTelemetry = useTelemetryStore(state => state.fetchInitial);
   const telemetrySnapshot = useTelemetryStore(state => state.snapshot);
+  const ensureTasksReady = useTasksStore(state => state.ensureReady);
+  const missionTasks = useTasksStore(state => state.tasks);
+  const missionDetailsById = useTasksStore(state => state.detailsById);
+  const selectedTaskId = useTasksStore(state => state.selectedTaskId);
+  const selectTask = useTasksStore(state => state.selectTask);
   const disconnectSocket = useWorkflowStore(state => state.disconnectSocket);
   const agents = useWorkflowStore(state => state.agents);
-  const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
+  const workflows = useWorkflowStore(state => state.workflows);
+  const heartbeatStatuses = useWorkflowStore(state => state.heartbeatStatuses);
   const toggleWorkflowPanel = useWorkflowStore(
     state => state.toggleWorkflowPanel
   );
+  const openWorkflowPanel = useWorkflowStore(state => state.openWorkflowPanel);
   const { isMobile } = useViewportTier();
   const { copy } = useI18n();
   const [, setLocation] = useLocation();
@@ -62,16 +74,71 @@ export default function Home() {
     if (isSceneReady && runtimeMode === "advanced") fetchTelemetry();
   }, [isSceneReady, runtimeMode, fetchTelemetry]);
 
+  useEffect(() => {
+    if (runtimeMode !== "advanced") return;
+    ensureTasksReady().catch(error => {
+      console.warn("[Home] Failed to hydrate mission summaries:", error);
+    });
+  }, [ensureTasksReady, runtimeMode]);
+
   const agentCount = agents.length || 18;
-  const activeWorkflows = currentWorkflow ? 1 : 0;
+  const activeWorkflows =
+    missionTasks.length > 0
+      ? missionTasks.filter(
+          task => task.status === "running" || task.status === "waiting"
+        ).length
+      : workflows.filter(
+          workflow =>
+            workflow.status === "running" || workflow.status === "pending"
+        ).length;
   const focusLabel = selectedPet
     ? getAgentToolbarLabel(selectedPet, locale)
     : locale === "zh-CN"
-      ? "点击 Agent 查看"
-      : "Click agent to inspect";
+      ? "点击 Agent 打开侧栏"
+      : "Tap an agent to open details";
 
-  // Manager names for Active agents card
-  const managerNames = ["CEO", "Pixel", "Nexus", "Echo", "Warden"];
+  const managerNames = useMemo(() => {
+    const liveManagers = agents
+      .filter(agent => agent.role === "ceo" || agent.role === "manager")
+      .slice(0, 5)
+      .map(agent => agent.name.split("·")[0].trim());
+
+    return liveManagers.length > 0
+      ? liveManagers
+      : ["CEO", "Pixel", "Nexus", "Echo", "Warden"];
+  }, [agents]);
+
+  const noticeBoardSnapshot = useMemo(
+    () =>
+      buildOfficeNoticeBoardSnapshot({
+        locale,
+        runtimeMode,
+        missionTasks,
+        missionDetailsById,
+        workflows,
+        heartbeatStatuses,
+        totalTokens:
+          (telemetrySnapshot?.totalTokensIn ?? 0) +
+          (telemetrySnapshot?.totalTokensOut ?? 0),
+        totalCost: telemetrySnapshot?.totalCost ?? 0,
+      }),
+    [
+      locale,
+      runtimeMode,
+      missionTasks,
+      missionDetailsById,
+      workflows,
+      heartbeatStatuses,
+      telemetrySnapshot,
+    ]
+  );
+
+  const handleOpenCurrentMission = selectedTaskId
+    ? () => {
+        selectTask(selectedTaskId);
+        setLocation(`/tasks/${selectedTaskId}`);
+      }
+    : undefined;
 
   return (
     <div className="relative h-[100svh] w-screen overflow-hidden bg-[linear-gradient(180deg,#d8e5f0_0%,#e9dfd2_48%,#e3d2c0_100%)]">
@@ -292,47 +359,38 @@ export default function Home() {
 
           {/* Right sidebar: active agents + token usage */}
           <div
-            className="fixed right-4 top-16 z-[60] flex w-[170px] flex-col gap-3"
+            className="fixed right-4 top-16 z-[60] flex w-[240px] flex-col gap-3"
             style={{ pointerEvents: "auto" }}
           >
-            <div className="rounded-2xl studio-shell p-3">
+            <OfficeNoticeBoard
+              locale={locale}
+              snapshot={noticeBoardSnapshot}
+              onOpenTasks={() => setLocation("/tasks")}
+              onOpenWorkflow={() => openWorkflowPanel()}
+              onOpenCurrentTask={handleOpenCurrentMission}
+            />
+
+            <div className="rounded-[26px] studio-shell p-4">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-[#C98257]" />
                 <span className="text-[11px] font-bold text-[#3A2A1A]">
                   {locale === "zh-CN" ? "活跃 Agent" : "Active agents"}
                 </span>
               </div>
-              <div className="mt-2 flex flex-wrap gap-1">
+              <div className="mt-3 flex flex-wrap gap-1.5">
                 {managerNames.map(name => (
                   <span
                     key={name}
-                    className="flex items-center gap-1 rounded-full studio-surface px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]"
+                    className="flex items-center gap-1 rounded-full studio-surface px-2.5 py-1 text-[10px] font-medium text-[#5A4A3A]"
                   >
                     <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
                     {name}
                   </span>
                 ))}
               </div>
-              <p className="mt-2 text-[9px] text-[#8B7355]">{focusLabel}</p>
-            </div>
-
-            {/* Token usage */}
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
-                  {locale === "zh-CN" ? "Token 用量" : "Token usage"}
-                </span>
-              </div>
-              <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-[10px] text-[#5E8B72]">
-                  {(telemetrySnapshot?.totalTokensIn ?? 0).toLocaleString()}{" "}
-                  tokens
-                </span>
-                <span className="text-[10px] font-semibold text-[#3A2A1A]">
-                  ${(telemetrySnapshot?.totalCost ?? 0).toFixed(4)}
-                </span>
-              </div>
+              <p className="mt-3 text-[10px] leading-5 text-[#8B7355]">
+                {focusLabel}
+              </p>
             </div>
           </div>
 
@@ -344,11 +402,32 @@ export default function Home() {
 
       {isSceneReady && isMobile && (
         <>
+          <div className="pointer-events-none absolute inset-x-0 top-[calc(env(safe-area-inset-top)+270px)] z-[18] px-3">
+            <div className="pointer-events-auto">
+              <OfficeNoticeBoard
+                locale={locale}
+                snapshot={noticeBoardSnapshot}
+                onOpenTasks={() => setLocation("/tasks")}
+                onOpenWorkflow={() => openWorkflowPanel()}
+                onOpenCurrentTask={handleOpenCurrentMission}
+              />
+            </div>
+          </div>
           <ChatPanel />
           <WorkflowPanel />
           <TelemetryDashboard />
         </>
       )}
+
+      <AgentDetailDrawer
+        agentId={selectedPet}
+        open={Boolean(selectedPet)}
+        onOpenChange={nextOpen => {
+          if (!nextOpen) {
+            setSelectedPet(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -1,54 +1,55 @@
-# 实施计划：scene-agent-interaction
+# Implementation Plan: scene-agent-interaction
 
-## 概述
+## Overview
 
-本 spec 负责把办公室场景从“展示层”升级成“可交互态势入口”，让用户点击 Agent 就能继续深入，而不是看完一眼就离开。
+This spec upgrades the office scene from a visual backdrop into an interactive status entry point. Users should be able to click an Agent for context, read the office notice board at a glance, and understand task progress directly from the scene.
 
-## Worktree 并行建议
+## Worktree Parallel Notes
 
-- 建议单独 worktree owner 负责 `Home / Scene3D / three/*`
-- 若导航 worktree 仍在改 `Home.tsx`，先只做 `PetWorkers`、侧栏组件和场景配置，最后再并线
-- 依赖的 Agent 记忆 / 报告接口优先通过稳定 selector 接入，避免直接耦合旧面板实现
+- Prefer a dedicated owner for `Home / Scene3D / three/*`
+- If another worktree is still changing `Home.tsx`, focus first on `PetWorkers`, drawer components, and scene configuration, then merge the wiring last
+- Agent memory and report data should enter through stable selectors instead of binding directly to volatile panel implementations
 
 ## Tasks
 
-- [ ] 1. 定义 Agent 侧栏数据模型
-  - [ ] 1.1 盘点角色、部门、心跳、信誉、当前任务、记忆、报告所需字段
+- [x] 1. Define the Agent drawer data model
+  - [x] 1.1 Inventory the fields needed for role, department, heartbeat, reputation, current task, memory, and reports
     - _Requirements: 1.1.2, 1.1.3_
-  - [ ] 1.2 设计侧栏视图状态与空态
+  - [x] 1.2 Design drawer view states and empty states
     - _Requirements: 4.1.2, 4.1.3_
 
-- [ ] 2. 实现 Agent 详情侧栏
-  - [ ] 2.1 新增 `AgentDetailDrawer` 或等效组件
+- [x] 2. Implement the Agent detail drawer
+  - [x] 2.1 Add `AgentDetailDrawer` or an equivalent component
     - _Requirements: 1.1.1, 1.1.2_
-  - [ ] 2.2 更新 `client/src/components/three/PetWorkers.tsx`
-    - 点击 Agent 打开侧栏
+  - [x] 2.2 Update `client/src/components/three/PetWorkers.tsx`
+    - Clicking an Agent opens the drawer
     - _Requirements: 1.1.1_
-  - [ ] 2.3 更新 `client/src/pages/Home.tsx`
-    - 接入侧栏容器
+  - [x] 2.3 Update `client/src/pages/Home.tsx`
+    - Wire in the drawer container
     - _Requirements: 1.1.3_
 
-- [ ] 3. 实现办公室公告板
-  - [ ] 3.1 新增关键指标摘要组件
-    - 执行中任务数
-    - 阻塞 Agent 数
-    - 成本 / Token 摘要
+- [x] 3. Implement the office notice board
+  - [x] 3.1 Add a key-metrics summary component
+    - Running task count
+    - Blocked Agent count
+    - Cost / token summary
     - _Requirements: 2.1.1, 2.1.2_
-  - [ ] 3.2 提供跳转到相关任务的入口
+  - [x] 3.2 Provide entry points that jump to the related task or page
     - _Requirements: 2.1.3_
 
-- [ ] 4. 实现场景阶段流线
-  - [ ] 4.1 新增 stage-to-zone 映射配置
+- [x] 4. Implement scene stage flowlines
+  - [x] 4.1 Add stable stage-to-zone mapping configuration
     - _Requirements: 3.1.2_
-  - [ ] 4.2 在 `Scene3D.tsx` 或 `OfficeRoom.tsx` 中渲染任务流线
+  - [x] 4.2 Render scene task flowlines in `Scene3D.tsx` or `OfficeRoom.tsx`
     - _Requirements: 3.1.1, 3.1.3_
 
-- [ ] 5. 演示模式与回归验证
-  - [ ] 5.1 补充无服务端时的解释文案
-  - [ ] 5.2 编写场景交互测试
-  - [ ] 5.3 手动验证桌面端 / 移动端侧栏与公告板表现
+- [ ] 5. Demo mode and regression verification
+  - [x] 5.1 Add explanatory copy for no-backend / demo mode
+  - [x] 5.2 Add scene interaction tests
+  - [ ] 5.3 Manually verify desktop / mobile drawer and notice board behavior
 
 ## Notes
 
-- 先让 Agent 侧栏“有用”，再做流线特效；顺序不要反
-- 场景流线必须依赖稳定的 stage 语义，不能变成一次性视觉演示
+- Make the Agent drawer useful before polishing extra scene effects
+- Scene flowlines must depend on stable stage semantics instead of becoming one-off visual decoration
+- Manual verification is still pending because the current environment does not have local frontend tooling installed

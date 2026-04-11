@@ -4,6 +4,7 @@ import * as THREE from 'three';
 
 import { useI18n } from '@/i18n';
 import { FURNITURE_MODELS } from '@/lib/assets';
+import { SCENE_FLOW_ZONES } from '@/lib/scene-stage-flow';
 import { useAppStore } from '@/lib/store';
 import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
 import { useWorkflowStore } from '@/lib/workflow-store';
@@ -696,7 +697,6 @@ function DecorativePlants() {
 export function OfficeRoom() {
   const setSceneReady = useAppStore((state) => state.setSceneReady);
   const setLoadingProgress = useAppStore((state) => state.setLoadingProgress);
-  const { copy } = useI18n();
   const currentWorkflow = useWorkflowStore((state) => state.currentWorkflow);
   const locale = useAppStore((state) => state.locale);
   const organization = useMemo(() => getWorkflowOrganization(currentWorkflow), [currentWorkflow]);
@@ -774,10 +774,10 @@ export function OfficeRoom() {
       <CorkBoard />
       <DepartmentDecor departments={sceneDepartments} />
 
-      {sceneDepartments[0] ? <ZoneBase position={[-3.5, 0, -1.8]} color={sceneDepartments[0].color} /> : null}
-      {sceneDepartments[1] ? <ZoneBase position={[3.5, 0, -1.8]} color={sceneDepartments[1].color} /> : null}
-      {sceneDepartments[2] ? <ZoneBase position={[-3.2, 0, 2.35]} color={sceneDepartments[2].color} /> : null}
-      {sceneDepartments[3] ? <ZoneBase position={[3.2, 0, 2.35]} color={sceneDepartments[3].color} /> : null}
+      {sceneDepartments[0] ? <ZoneBase position={SCENE_FLOW_ZONES.podA.floorPosition} color={sceneDepartments[0].color} /> : null}
+      {sceneDepartments[1] ? <ZoneBase position={SCENE_FLOW_ZONES.podB.floorPosition} color={sceneDepartments[1].color} /> : null}
+      {sceneDepartments[2] ? <ZoneBase position={SCENE_FLOW_ZONES.podC.floorPosition} color={sceneDepartments[2].color} /> : null}
+      {sceneDepartments[3] ? <ZoneBase position={SCENE_FLOW_ZONES.podD.floorPosition} color={sceneDepartments[3].color} /> : null}
 
       <DesktopDesk position={[0, 0, -3.15]} withLamp />
       <FurnitureModel url={FURNITURE_MODELS.rugRounded} position={[0, 0.01, -3.15]} scale={1.05} />

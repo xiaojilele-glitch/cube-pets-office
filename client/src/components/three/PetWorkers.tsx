@@ -14,6 +14,7 @@ import {
 } from '@/lib/agent-config';
 import { PET_MODELS } from '@/lib/assets';
 import type { AppLocale } from '@/lib/locale';
+import { getSceneStageColor } from '@/lib/scene-stage-flow';
 import { useAppStore } from '@/lib/store';
 import type { WorkflowOrganizationSnapshot } from '@/lib/workflow-store';
 import { useTelemetryStore } from '@/lib/telemetry-store';
@@ -459,19 +460,6 @@ function getStatusBorderStyle(status: string): CSSProperties {
   }
 }
 
-const STAGE_FLOW_COLORS: Record<string, string> = {
-  direction: '#F59E0B',
-  planning: '#F97316',
-  execution: '#3B82F6',
-  review: '#A855F7',
-  meta_audit: '#8B5CF6',
-  revision: '#EF4444',
-  verify: '#14B8A6',
-  summary: '#F59E0B',
-  feedback: '#22C55E',
-  evolution: '#EAB308',
-};
-
 function getFlowAnchor(position: [number, number, number]) {
   return new THREE.Vector3(position[0], 0.74, position[2]);
 }
@@ -582,8 +570,6 @@ function AgentWorker({ config, leaving }: { config: SceneAgentConfig; leaving?: 
 
   const selectedPet = useAppStore(state => state.selectedPet);
   const setSelectedPet = useAppStore(state => state.setSelectedPet);
-  const toggleChat = useAppStore(state => state.toggleChat);
-  const isChatOpen = useAppStore(state => state.isChatOpen);
   const agentStatuses = useWorkflowStore(state => state.agentStatuses);
 
   const telemetrySnapshot = useTelemetryStore(state => state.snapshot);
@@ -604,9 +590,8 @@ function AgentWorker({ config, leaving }: { config: SceneAgentConfig; leaving?: 
   const handleClick = useCallback(() => {
     setSelectedPet(config.id);
     setShowBubble(true);
-    if (!isChatOpen) toggleChat();
     window.setTimeout(() => setShowBubble(false), 3500);
-  }, [config.id, isChatOpen, setSelectedPet, toggleChat]);
+  }, [config.id, setSelectedPet]);
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -880,9 +865,7 @@ export function PetWorkers() {
         key: `${message.id}-${message.from_agent}-${message.to_agent}`,
         from: configMap[message.from_agent].position,
         to: configMap[message.to_agent].position,
-        color:
-          STAGE_FLOW_COLORS[message.stage] ||
-          configMap[message.to_agent].color,
+        color: getSceneStageColor(message.stage) || configMap[message.to_agent].color,
         opacity: 0.16 + ((index + 1) / recentMessages.length) * 0.36,
         phase: index * 0.11,
       }));
@@ -907,7 +890,7 @@ export function PetWorkers() {
       from: configMap[fromId]?.position,
       to: configMap[toId]?.position,
       color:
-        STAGE_FLOW_COLORS[currentWorkflow.current_stage || ''] ||
+        getSceneStageColor(currentWorkflow.current_stage || '') ||
         configMap[toId]?.color || '#7C3AED',
       opacity: 0.26,
       phase: index * 0.13,
