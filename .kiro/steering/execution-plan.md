@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description: 
- * @LastEditTime: 2026-04-10 01:09:31
+ * @LastEditTime: 2026-04-11 10:30:00
  * @LastEditors: wangchunji
 -->
 ---
@@ -13,7 +13,7 @@ inclusion: auto
 
 ## 总览
 
-截至 2026-04-10，`.kiro/specs` 共 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点，当前执行面主要收敛到任务控制台主线与工程验收，平台层能力（L31-L38）仍待环境就绪。
+截至 2026-04-11，`.kiro/specs` 共 62 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线已完成，当前新增规划重点转向信息架构收口、任务中台化、场景交互增强与体验统一，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -28,13 +28,14 @@ inclusion: auto
 - [x] P06 `browser-runtime` — 纯前端运行时
 - [x] P07 `frontend-3d` — 3D 场景与前端
 
-## 当前维护快照（2026-04-10）
+## 当前维护快照（2026-04-11）
 
 - 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
 - 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
 - `workflow-artifacts-display` 已完成功能开发：Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、WorkflowPanel / TaskDetailView 集成与 Socket 联动均已落地；当前仅剩 `tasks.md` 中最终检查点未勾选。
 - 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
-- 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish`。
+- 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 已完成。
+- 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已建 spec，待按 wave 方式推进。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
@@ -141,6 +142,51 @@ L12 → L29 → L30
 
 > 目标：把任务页从“执行结果展示”提升为“可操作的执行控制台”。
 
+## L30 后新增主线二：信息架构收口与工作台重构（2026-04-11）
+
+在任务控制台补完主线完成后，当前核心问题不再是“能不能控制任务”，而是“用户打开系统后是否知道先看哪里、下一步做什么”。这一波新增主线聚焦信息架构收口、主操作中心统一、场景交互补位与体验兜底，不改变 L31-L38 的平台级依赖顺序，目标是把系统从“多工具并列”推进到“单主线工作台”。
+
+### 优先级与依赖
+
+- [ ] P0 `navigation-convergence` — 将一级导航收口为“办公室 / 任务 / 更多”；建立主路径骨架，弱化 8 个并列入口。
+- [ ] P0 `task-hub-convergence` — 将命令输入、任务列表、执行进度与人工干预收口到 `/tasks`；与导航收口强协同，是新的唯一主操作中心。
+- [ ] P0 `api-fallback-empty-states` — 统一 fetch 兜底、演示模式提示、空态与错误态；可与前两项并行，但建议先做低冲突 store 与低频页面。
+- [ ] P1 `workflow-panel-decomposition` — 拆解 `WorkflowPanel`，让任务信息回归任务页、Agent 信息回归办公室；依赖任务中台与场景目标落点基本稳定后推进。
+- [ ] P1 `scene-agent-interaction` — 让 3D 场景承接 Agent 详情侧栏、公告板与阶段流线；依赖导航骨架稳定，可与 `workflow-panel-decomposition` 协同。
+- [ ] P2 `workspace-visual-unification` — 统一暖色工作台视觉语言，优先治理 `LineagePage` 与“更多”下低频页面；依赖主路径结构基本稳定后收尾。
+
+### Worktree 并行建议
+
+#### Wave 1：可直接并行
+
+- `navigation-convergence`
+- `task-hub-convergence`
+- `api-fallback-empty-states`（仅第一批：公共请求层 + 低冲突 store + 低频页面空态）
+
+#### Wave 2：等待 Wave 1 骨架稳定后再并行
+
+- `workflow-panel-decomposition`
+- `scene-agent-interaction`
+- `workspace-visual-unification`
+
+### 文件 ownership 边界
+
+- `navigation-convergence` 独占：`client/src/App.tsx`、`client/src/pages/Home.tsx`、`client/src/components/Toolbar.tsx`
+- `task-hub-convergence` 独占：`client/src/pages/tasks/TasksPage.tsx`、`client/src/components/tasks/TaskDetailView.tsx`、`client/src/pages/nl-command/*`、`client/src/components/nl-command/*`
+- `workflow-panel-decomposition` 独占：`client/src/components/WorkflowPanel.tsx`、`client/src/lib/workflow-store.ts`
+- `scene-agent-interaction` 独占：`client/src/components/Scene3D.tsx`、`client/src/components/three/*`
+- `workspace-visual-unification` 优先独占：`client/src/pages/lineage/LineagePage.tsx` 与共享主题层
+- `api-fallback-empty-states` 第一阶段避免同时改任务页高频文件，第二阶段再与主链 worktree 协调接入
+
+### 交付顺序建议
+
+1. 先把导航和任务中台收口，解决“先看哪里、先做什么”的根问题。
+2. 同步补上 API 兜底、演示模式提示和空态/错误态，避免信息架构优化被技术报错抵消。
+3. 再拆 `WorkflowPanel`、增强 3D 办公室交互，让首页和任务页各自承担清晰职责。
+4. 最后统一视觉语言，降低割裂感，收尾低频工具页。
+
+> 目标：把系统从“多个工具入口并列”收口为“办公室看态势、任务做推进、更多收低频”的单主线工作台。
+
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
 
 - [ ] L31 `production-deployment` — Docker Compose 生产部署（中）← 依赖 L22
@@ -179,6 +225,16 @@ git worktree add ../cpo-L16-rag feat/L16-vector-db-rag-pipeline
 
 # 第三层串行
 git worktree add ../cpo-L22-executor feat/L22-lobster-executor-real
+
+# L30 后体验重构 Wave 1
+git worktree add ../cpo-nav feat/navigation-convergence
+git worktree add ../cpo-task-hub feat/task-hub-convergence
+git worktree add ../cpo-api-fallback feat/api-fallback-empty-states
+
+# L30 后体验重构 Wave 2
+git worktree add ../cpo-workflow-panel feat/workflow-panel-decomposition
+git worktree add ../cpo-scene-agent feat/scene-agent-interaction
+git worktree add ../cpo-visual-unify feat/workspace-visual-unification
 ```
 
 ## 推荐执行时间线
@@ -229,6 +285,23 @@ i18n-cleanup 未启动
 frontend-demo-mode 待补 tasks.md
 ```
 
+### Day 5+：信息架构与工作台重构（新增规划）
+```
+Wave 1（可直接并行）:
+  navigation-convergence
+  task-hub-convergence
+  api-fallback-empty-states（第一批低冲突接入）
+
+Wave 2（等待骨架稳定）:
+  workflow-panel-decomposition
+  scene-agent-interaction
+  workspace-visual-unification
+
+并行原则:
+  Home/App/Toolbar、TasksPage/TaskDetailView、WorkflowPanel/workflow-store、Scene3D/three/*
+  各自由单独 worktree owner 负责，避免跨波次同时改同一批核心文件
+```
+
 ## 关键路径
 
 ```
@@ -250,6 +323,12 @@ C01-C08 契约冻结 (已完成)
   ├──→ L14 ✅ ──→ L27 ✅ ──→ L28 ✅ (data-lineage-tracking)
   │
   └──→ L12 ✅ ──→ L29 ✅ ──→ L30 ✅ (agent-marketplace)
+               │
+               └──→ 任务控制台补完主线 ✅
+                        │
+                        └──→ 信息架构与工作台重构
+                              ├──→ Wave 1: navigation-convergence + task-hub-convergence + api-fallback-empty-states
+                              └──→ Wave 2: workflow-panel-decomposition + scene-agent-interaction + workspace-visual-unification
 ```
 
 ## 风险提示
@@ -258,4 +337,6 @@ C01-C08 契约冻结 (已完成)
 2. 第四层（L31-L38）没有真实多节点环境验证无意义，不建议急着做
 3. 并行组内如果跳过阶段 0 的契约冻结，会导致接口不一致需要返工
 4. L20 和 L21 虽然在第二层，但分别依赖第一层的 L09 和 L06，不能真正并行
+5. 新一波体验重构如果不按 ownership 拆 worktree，`Home.tsx`、`TasksPage.tsx`、`TaskDetailView.tsx`、`WorkflowPanel.tsx` 会成为高冲突热点
+6. `api-fallback-empty-states` 可以先并行，但不要一开始就同时改任务页高频请求与 `workflow-store`，否则会与任务中台和面板拆解互相阻塞
 5. 当前 TypeScript 基线未清零，新增 spec 若不控制编译回归，容易把补完型工作拖成全局修复
