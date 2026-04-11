@@ -148,22 +148,22 @@ L12 → L29 → L30
 
 ### 优先级与依赖
 
-- [ ] P0 `navigation-convergence` — 将一级导航收口为“办公室 / 任务 / 更多”；建立主路径骨架，弱化 8 个并列入口。
-- [ ] P0 `task-hub-convergence` — 将命令输入、任务列表、执行进度与人工干预收口到 `/tasks`；与导航收口强协同，是新的唯一主操作中心。
-- [ ] P0 `api-fallback-empty-states` — 统一 fetch 兜底、演示模式提示、空态与错误态；可与前两项并行，但建议先做低冲突 store 与低频页面。
+- [x] P0 `navigation-convergence` — 将一级导航收口为“办公室 / 任务 / 更多”；建立主路径骨架，弱化 8 个并列入口。
+- [x] P0 `task-hub-convergence` — 将命令输入、任务列表、执行进度与人工干预收口到 `/tasks`；与导航收口强协同，是新的唯一主操作中心。
+- [x] P0 `api-fallback-empty-states` — 统一 fetch 兜底、演示模式提示、空态与错误态；可与前两项并行，但建议先做低冲突 store 与低频页面。
 - [ ] P1 `workflow-panel-decomposition` — 拆解 `WorkflowPanel`，让任务信息回归任务页、Agent 信息回归办公室；依赖任务中台与场景目标落点基本稳定后推进。
 - [ ] P1 `scene-agent-interaction` — 让 3D 场景承接 Agent 详情侧栏、公告板与阶段流线；依赖导航骨架稳定，可与 `workflow-panel-decomposition` 协同。
 - [ ] P2 `workspace-visual-unification` — 统一暖色工作台视觉语言，优先治理 `LineagePage` 与“更多”下低频页面；依赖主路径结构基本稳定后收尾。
 
 ### Worktree 并行建议
 
-#### Wave 1：可直接并行
+#### Wave 1：已完成
 
 - `navigation-convergence`
 - `task-hub-convergence`
 - `api-fallback-empty-states`（仅第一批：公共请求层 + 低冲突 store + 低频页面空态）
 
-#### Wave 2：等待 Wave 1 骨架稳定后再并行
+#### Wave 2：等待启动
 
 - `workflow-panel-decomposition`
 - `scene-agent-interaction`
