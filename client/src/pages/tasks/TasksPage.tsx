@@ -3,6 +3,7 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -16,6 +17,7 @@ import { toast } from "sonner";
 
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
+import { TaskHubCommandPanel } from "@/components/nl-command/TaskHubCommandPanel";
 import {
   compactText,
   formatTaskRelative,
@@ -35,8 +37,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useI18n } from "@/i18n";
+import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
 import { useTasksStore } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
+
+import { resolveTaskHubLocationUpdate } from "./task-hub-location";
 
 export default function TasksPage({
   initialTaskId = null,
@@ -50,7 +55,9 @@ export default function TasksPage({
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
   const createMission = useTasksStore(state => state.createMission);
-  const submitOperatorAction = useTasksStore(state => state.submitOperatorAction);
+  const submitOperatorAction = useTasksStore(
+    state => state.submitOperatorAction
+  );
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
   const tasks = useTasksStore(state => state.tasks);
@@ -68,6 +75,10 @@ export default function TasksPage({
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
   );
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(
+    null
+  );
+  const taskButtonRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
@@ -109,6 +120,31 @@ export default function TasksPage({
     });
   }, [deferredSearch, tasks]);
 
+  useEffect(() => {
+    if (!highlightedTaskId) {
+      return;
+    }
+
+    const button = taskButtonRefs.current.get(highlightedTaskId);
+    if (button) {
+      button.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setHighlightedTaskId(current =>
+        current === highlightedTaskId ? null : current
+      );
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [filteredTasks, highlightedTaskId]);
+
   const activeTaskId =
     (selectedTaskId && detailsById[selectedTaskId] ? selectedTaskId : null) ||
     filteredTasks[0]?.id ||
@@ -142,7 +178,9 @@ export default function TasksPage({
       return missionId;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : copy.tasks.listPage.createError;
+        error instanceof Error
+          ? error.message
+          : copy.tasks.listPage.createError;
       toast.error(message);
       return null;
     }
@@ -172,6 +210,29 @@ export default function TasksPage({
           : copy.tasks.listPage.actionError;
       toast.error(message);
       throw error;
+    }
+  }
+
+  function handleTaskHubResolved(result: TaskHubCommandSubmissionResult) {
+    const locationUpdate = resolveTaskHubLocationUpdate({
+      missionId: result.autoSelectedMissionId || result.missionId,
+      currentSearch: search,
+      filteredTaskIds: filteredTasks.map(task => task.id),
+      allTaskIds: tasks.map(task => task.id),
+    });
+
+    if (locationUpdate.nextSearch !== search) {
+      setSearch(locationUpdate.nextSearch);
+    }
+
+    if (locationUpdate.focusTaskId) {
+      startTransition(() => {
+        selectTask(locationUpdate.focusTaskId);
+      });
+    }
+
+    if (locationUpdate.highlightTaskId) {
+      setHighlightedTaskId(locationUpdate.highlightTaskId);
     }
   }
 
@@ -220,6 +281,12 @@ export default function TasksPage({
             </div>
           </div>
         </header>
+
+        <TaskHubCommandPanel
+          createMission={createMission}
+          tasks={tasks}
+          onTaskResolved={handleTaskHubResolved}
+        />
 
         <div className="mt-3 grid min-h-0 flex-1 gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-stone-200/80 bg-white/78 shadow-[0_24px_70px_rgba(112,84,51,0.08)] backdrop-blur">
@@ -280,11 +347,21 @@ export default function TasksPage({
                     <button
                       key={task.id}
                       type="button"
+                      ref={node => {
+                        if (node) {
+                          taskButtonRefs.current.set(task.id, node);
+                          return;
+                        }
+
+                        taskButtonRefs.current.delete(task.id);
+                      }}
                       className={cn(
                         "w-full rounded-[22px] border px-3.5 py-3.5 text-left transition-all",
                         active
                           ? "border-amber-300 bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,243,224,0.94))] shadow-[0_16px_44px_rgba(164,113,29,0.12)]"
-                          : "border-stone-200/80 bg-stone-50/70 hover:border-stone-300 hover:bg-white/85"
+                          : "border-stone-200/80 bg-stone-50/70 hover:border-stone-300 hover:bg-white/85",
+                        task.id === highlightedTaskId &&
+                          "ring-2 ring-amber-300 ring-offset-2 ring-offset-[#fff7eb]"
                       )}
                       onClick={() => {
                         startTransition(() => {
@@ -379,10 +456,12 @@ export default function TasksPage({
               onSubmitOperatorAction={handleSubmitOperatorAction}
               operatorActionLoading={
                 activeTaskId
-                  ? operatorActionLoadingByMissionId[activeTaskId] ?? {}
+                  ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
                   : {}
               }
-              onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId || null })}
+              onDecisionSubmitted={() =>
+                void refresh({ preferredTaskId: activeTaskId || null })
+              }
               className="min-w-0 xl:h-full xl:min-h-0"
             />
           </main>

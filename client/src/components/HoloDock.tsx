@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from "react";
 import {
   Brain,
   Globe2,
@@ -9,15 +9,15 @@ import {
   Shield,
   Terminal,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   motion,
   useMotionValue,
   useSpring,
   useTransform,
   type MotionValue,
-} from 'framer-motion';
-import { useLocation } from 'wouter';
+} from "framer-motion";
+import { useLocation } from "wouter";
 
 import {
   Dialog,
@@ -25,14 +25,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { PermissionPanel } from '@/components/permissions/PermissionPanel';
-import { useViewportTier } from '@/hooks/useViewportTier';
-import { useI18n } from '@/i18n';
-import { useAppStore } from '@/lib/store';
-import { useWorkflowStore } from '@/lib/workflow-store';
+} from "@/components/ui/dialog";
+import { PermissionPanel } from "@/components/permissions/PermissionPanel";
+import { useViewportTier } from "@/hooks/useViewportTier";
+import { useI18n } from "@/i18n";
+import { useAppStore } from "@/lib/store";
+import { useWorkflowStore } from "@/lib/workflow-store";
 
-type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions';
+type DockButtonId =
+  | "config"
+  | "workflow"
+  | "chat"
+  | "help"
+  | "commandCenter"
+  | "permissions";
 
 interface DockItem {
   id: DockButtonId;
@@ -85,15 +91,17 @@ function DockIcon({
       {/* Icon circle */}
       <div
         className={`flex items-center justify-center rounded-2xl transition-colors duration-150 ${
-          isMobileView ? 'h-10 w-10' : 'h-11 w-11 sm:h-12 sm:w-12'
+          isMobileView ? "h-10 w-10" : "h-11 w-11 sm:h-12 sm:w-12"
         } ${
           item.active
-            ? 'bg-white/30 text-white shadow-[0_0_12px_var(--glow-cyan)]'
-            : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+            ? "bg-white/30 text-white shadow-[0_0_12px_var(--glow-cyan)]"
+            : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
         }`}
-        style={isMobileView ? { transform: `scale(${mobileScale})` } : undefined}
+        style={
+          isMobileView ? { transform: `scale(${mobileScale})` } : undefined
+        }
       >
-        <Icon className={isMobileView ? 'h-4 w-4' : 'h-5 w-5'} />
+        <Icon className={isMobileView ? "h-4 w-4" : "h-5 w-5"} />
       </div>
 
       {/* Active glow indicator dot (AC-2.5) */}
@@ -101,8 +109,8 @@ function DockIcon({
         <span
           className="absolute -bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full"
           style={{
-            background: 'var(--status-working)',
-            boxShadow: '0 0 6px var(--glow-cyan), 0 0 12px var(--glow-cyan)',
+            background: "var(--status-working)",
+            boxShadow: "0 0 6px var(--glow-cyan), 0 0 12px var(--glow-cyan)",
           }}
         />
       )}
@@ -119,11 +127,11 @@ function LanguageToggle({ compact = false }: { compact?: boolean }) {
     <button
       onClick={toggleLocale}
       className={`flex items-center justify-center rounded-2xl bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white ${
-        compact ? 'h-10 w-10' : 'h-11 w-11 sm:h-12 sm:w-12'
+        compact ? "h-10 w-10" : "h-11 w-11 sm:h-12 sm:w-12"
       }`}
       title={copy.app.localeSwitch}
     >
-      <Globe2 className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
+      <Globe2 className={compact ? "h-4 w-4" : "h-5 w-5"} />
     </button>
   );
 }
@@ -140,22 +148,20 @@ function MobileDock({
   const [open, setOpen] = useState(false);
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
-  const localeLabel = locale === 'zh-CN' ? copy.common.englishShort : copy.common.chineseShort;
+  const localeLabel =
+    locale === "zh-CN" ? copy.common.englishShort : copy.common.chineseShort;
 
-  const handleClick = useCallback(
-    (item: DockItem) => {
-      item.onClick();
-      setOpen(false);
-    },
-    []
-  );
+  const handleClick = useCallback((item: DockItem) => {
+    item.onClick();
+    setOpen(false);
+  }, []);
 
   return (
     <>
       {/* Floating mobile dock bar */}
       <div
         className="glass-panel-strong fixed inset-x-4 bottom-4 z-[60] flex items-center justify-between rounded-full px-3 py-2"
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: "auto" }}
       >
         <div className="flex items-center gap-1">
           {dockItems.slice(0, 3).map(item => {
@@ -166,8 +172,8 @@ function MobileDock({
                 onClick={() => handleClick(item)}
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
                   item.active
-                    ? 'bg-white/25 text-white shadow-[0_0_8px_var(--glow-cyan)]'
-                    : 'text-white/70 hover:bg-white/15 hover:text-white'
+                    ? "bg-white/25 text-white shadow-[0_0_8px_var(--glow-cyan)]"
+                    : "text-white/70 hover:bg-white/15 hover:text-white"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -204,7 +210,7 @@ function MobileDock({
           />
           <div
             className="glass-panel-strong fixed inset-x-4 bottom-20 z-[61] rounded-3xl p-4"
-            style={{ pointerEvents: 'auto' }}
+            style={{ pointerEvents: "auto" }}
           >
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/50">
               {copy.toolbar.actionsTitle}
@@ -219,12 +225,14 @@ function MobileDock({
                     onClick={() => handleClick(item)}
                     className={`flex flex-col items-center gap-1.5 rounded-2xl px-2 py-3 text-center transition-colors ${
                       item.active
-                        ? 'bg-white/20 text-white shadow-[0_0_10px_var(--glow-cyan)]'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                        ? "bg-white/20 text-white shadow-[0_0_10px_var(--glow-cyan)]"
+                        : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     <Icon className="h-5 w-5" />
-                    <span className="text-[10px] font-semibold leading-tight">{labels.label}</span>
+                    <span className="text-[10px] font-semibold leading-tight">
+                      {labels.label}
+                    </span>
                   </button>
                 );
               })}
@@ -260,37 +268,37 @@ export function HoloDock() {
 
   const dockItems: DockItem[] = [
     {
-      id: 'config',
+      id: "config",
       icon: Settings,
       active: isConfigOpen,
       onClick: () => toggleConfig(),
     },
     {
-      id: 'workflow',
+      id: "workflow",
       icon: Brain,
       active: isWorkflowPanelOpen,
       onClick: () => toggleWorkflowPanel(),
     },
     {
-      id: 'chat',
+      id: "chat",
       icon: MessageCircle,
       active: isChatOpen,
       onClick: () => toggleChat(),
     },
     {
-      id: 'commandCenter',
+      id: "commandCenter",
       icon: Terminal,
-      active: location === '/command-center',
-      onClick: () => setLocation('/command-center'),
+      active: location.startsWith("/tasks"),
+      onClick: () => setLocation("/tasks"),
     },
     {
-      id: 'permissions',
+      id: "permissions",
       icon: Shield,
       active: showPermissions,
       onClick: () => setShowPermissions(prev => !prev),
     },
     {
-      id: 'help',
+      id: "help",
       icon: HelpCircle,
       active: showHelp,
       onClick: () => setShowHelp(prev => !prev),
@@ -309,12 +317,12 @@ export function HoloDock() {
             <DialogHeader className="border-b border-white/10 px-4 py-3">
               <DialogTitle className="flex items-center gap-2 text-sm text-white">
                 <Shield className="size-4 text-cyan-400" />
-                {locale === 'zh-CN' ? 'Agent 权限管理' : 'Agent Permissions'}
+                {locale === "zh-CN" ? "Agent 权限管理" : "Agent Permissions"}
               </DialogTitle>
               <DialogDescription className="text-xs text-white/50">
-                {locale === 'zh-CN'
-                  ? '管理 Agent 权限角色、查看权限矩阵和审计日志'
-                  : 'Manage agent permission roles, view permission matrix and audit logs'}
+                {locale === "zh-CN"
+                  ? "管理 Agent 权限角色、查看权限矩阵和审计日志"
+                  : "Manage agent permission roles, view permission matrix and audit logs"}
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto">
@@ -333,10 +341,12 @@ export function HoloDock() {
       {showHelp && (
         <div
           className="glass-panel fixed bottom-24 right-6 z-[61] w-[300px] rounded-2xl p-4"
-          style={{ pointerEvents: 'auto' }}
+          style={{ pointerEvents: "auto" }}
         >
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-semibold text-white/80">{copy.toolbar.helpTitle}</p>
+            <p className="text-xs font-semibold text-white/80">
+              {copy.toolbar.helpTitle}
+            </p>
             <button
               onClick={() => setShowHelp(false)}
               className="rounded-lg p-1 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
@@ -346,7 +356,10 @@ export function HoloDock() {
           </div>
           <div className="space-y-2">
             {copy.toolbar.quickTips.map(tip => (
-              <p key={tip} className="text-[11px] leading-relaxed text-white/60">
+              <p
+                key={tip}
+                className="text-[11px] leading-relaxed text-white/60"
+              >
                 {tip}
               </p>
             ))}
@@ -357,7 +370,7 @@ export function HoloDock() {
       {/* ── Capsule Dock (AC-2.1, AC-2.2, AC-2.6) ── */}
       <motion.div
         className="fixed bottom-5 left-1/2 z-[60] -translate-x-1/2"
-        style={{ pointerEvents: 'auto' }}
+        style={{ pointerEvents: "auto" }}
         onMouseMove={e => mouseX.set(e.clientX)}
         onMouseLeave={() => mouseX.set(-1)}
       >
@@ -386,15 +399,18 @@ export function HoloDock() {
           <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
             <DialogTitle className="flex items-center gap-2 text-stone-900">
               <Shield className="size-4 text-[#7C3AED]" />
-              {locale === 'zh-CN' ? 'Agent 权限管理' : 'Agent Permissions'}
+              {locale === "zh-CN" ? "Agent 权限管理" : "Agent Permissions"}
             </DialogTitle>
             <DialogDescription className="text-sm text-stone-500">
-              {locale === 'zh-CN'
-                ? '管理 Agent 权限角色、查看权限矩阵和审计日志'
-                : 'Manage agent permission roles, view permission matrix and audit logs'}
+              {locale === "zh-CN"
+                ? "管理 Agent 权限角色、查看权限矩阵和审计日志"
+                : "Manage agent permission roles, view permission matrix and audit logs"}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden" style={{ height: 'calc(600px - 80px)' }}>
+          <div
+            className="flex-1 overflow-hidden"
+            style={{ height: "calc(600px - 80px)" }}
+          >
             <PermissionPanel />
           </div>
         </DialogContent>

@@ -23,16 +23,14 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
-      <Route path={"/tasks"}>
-        {() => <TasksPage />}
-      </Route>
+      <Route path={"/tasks"}>{() => <TasksPage />}</Route>
       <Route path={"/tasks/:taskId"}>
         {params => <TaskDetailRoute taskId={params.taskId} />}
       </Route>
       <Route path={"/replay/:missionId"}>
-        {params => <ReplayPage missionId={params.missionId || ''} />}
+        {params => <ReplayPage missionId={params.missionId || ""} />}
       </Route>
-      <Route path={"/command-center"} component={CommandCenterPage} />
+      <Route path={"/command-center"}>{() => <CommandCenterPage />}</Route>
       <Route path={"/lineage"} component={LineagePage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
@@ -40,11 +38,7 @@ function Router() {
   );
 }
 
-function TaskDetailRoute({
-  taskId,
-}: {
-  taskId?: string;
-}) {
+function TaskDetailRoute({ taskId }: { taskId?: string }) {
   const [, setLocation] = useLocation();
 
   return (
@@ -104,12 +98,12 @@ function App() {
             position="top-center"
             toastOptions={{
               style: {
-                background: 'rgba(255, 248, 240, 0.95)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(232, 221, 208, 0.6)',
-                color: '#3A2A1A',
-                borderRadius: '16px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                background: "rgba(255, 248, 240, 0.95)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(232, 221, 208, 0.6)",
+                color: "#3A2A1A",
+                borderRadius: "16px",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
               },
             }}
           />

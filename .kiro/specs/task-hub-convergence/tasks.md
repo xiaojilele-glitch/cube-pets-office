@@ -12,43 +12,43 @@
 
 ## Tasks
 
-- [ ] 1. 抽取指挥中心可复用能力
-  - [ ] 1.1 盘点 `client/src/pages/nl-command/CommandCenterPage.tsx` 的可迁移区块
+- [x] 1. 抽取指挥中心可复用能力
+  - [x] 1.1 盘点 `client/src/pages/nl-command/CommandCenterPage.tsx` 的可迁移区块
     - 命令输入
     - 计划摘要
     - 澄清问题
     - 监控摘要
     - _Requirements: 1.1.1, 1.1.2_
-  - [ ] 1.2 将 `components/nl-command/*` 抽成可嵌入任务页的组件
+  - [x] 1.2 将 `components/nl-command/*` 抽成可嵌入任务页的组件
     - _Requirements: 1.1.3, 5.1.1_
 
-- [ ] 2. 扩展任务页顶部命令区
-  - [ ] 2.1 更新 `client/src/pages/tasks/TasksPage.tsx`
+- [x] 2. 扩展任务页顶部命令区
+  - [x] 2.1 更新 `client/src/pages/tasks/TasksPage.tsx`
     - 在第一屏接入命令输入区
     - 显示计划摘要与澄清入口
     - _Requirements: 1.1.1, 2.1.1_
-  - [ ] 2.2 保持现有任务列表与详情联动
+  - [x] 2.2 保持现有任务列表与详情联动
     - _Requirements: 2.1.1, 2.1.3_
 
-- [ ] 3. 打通命令与任务闭环
-  - [ ] 3.1 更新 `client/src/lib/nl-command-store.ts`
+- [x] 3. 打通命令与任务闭环
+  - [x] 3.1 更新 `client/src/lib/nl-command-store.ts`
     - 暴露命令提交结果与可定位元数据
     - _Requirements: 4.1.2_
-  - [ ] 3.2 在任务页容器中建立命令提交后的任务定位逻辑
+  - [x] 3.2 在任务页容器中建立命令提交后的任务定位逻辑
     - 新建任务自动选中
     - 相关任务高亮或滚动定位
     - _Requirements: 2.1.2, 4.1.3, 5.1.3_
 
-- [ ] 4. 收口独立指挥中心
-  - [ ] 4.1 更新 `client/src/pages/nl-command/CommandCenterPage.tsx`
+- [x] 4. 收口独立指挥中心
+  - [x] 4.1 更新 `client/src/pages/nl-command/CommandCenterPage.tsx`
     - 改为兼容页、迁移说明页或重定向页
     - _Requirements: 5.1.1, 5.1.2_
-  - [ ] 4.2 更新路由文案与入口说明
+  - [x] 4.2 更新路由文案与入口说明
     - _Requirements: 3.1.1, 3.1.3_
 
 - [ ] 5. 测试与验证
-  - [ ] 5.1 编写命令提交流程测试
-  - [ ] 5.2 编写任务定位与联动测试
+  - [x] 5.1 编写命令提交流程测试
+  - [x] 5.2 编写任务定位与联动测试
   - [ ] 5.3 手动验证“提命令 -> 进任务 -> 做干预”闭环
 
 ## Notes

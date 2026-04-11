@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Brain,
   FileSearch,
@@ -15,53 +15,64 @@ import {
   Terminal,
   Workflow,
   X,
-} from 'lucide-react';
-import { useLocation } from 'wouter';
+} from "lucide-react";
+import { useLocation } from "wouter";
 
-import { GitHubRepoBadge } from '@/components/GitHubRepoBadge';
+import { GitHubRepoBadge } from "@/components/GitHubRepoBadge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { AuditPanel } from '@/components/AuditPanel';
-import { PermissionPanel } from '@/components/permissions/PermissionPanel';
-import { useViewportTier } from '@/hooks/useViewportTier';
-import { useI18n } from '@/i18n';
-import { getAgentToolbarLabel } from '@/lib/agent-config';
-import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from '@/lib/deploy-target';
-import { useAppStore } from '@/lib/store';
-import { useWorkflowStore } from '@/lib/workflow-store';
+} from "@/components/ui/dialog";
+import { AuditPanel } from "@/components/AuditPanel";
+import { PermissionPanel } from "@/components/permissions/PermissionPanel";
+import { useViewportTier } from "@/hooks/useViewportTier";
+import { useI18n } from "@/i18n";
+import { getAgentToolbarLabel } from "@/lib/agent-config";
+import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from "@/lib/deploy-target";
+import { useAppStore } from "@/lib/store";
+import { useWorkflowStore } from "@/lib/workflow-store";
 
-type DockButtonId = 'config' | 'workflow' | 'chat' | 'help' | 'commandCenter' | 'permissions' | 'audit' | 'lineage';
+type DockButtonId =
+  | "config"
+  | "workflow"
+  | "chat"
+  | "help"
+  | "commandCenter"
+  | "permissions"
+  | "audit"
+  | "lineage";
 
 function getRuntimeNarrative(
   locale: string,
-  runtimeMode: 'frontend' | 'advanced',
+  runtimeMode: "frontend" | "advanced",
   canUseAdvanced: boolean
 ) {
-  if (locale === 'zh-CN') {
+  if (locale === "zh-CN") {
     return {
-      title: '组织运行模式',
-      heading: runtimeMode === 'frontend' ? '前端预演模式' : '动态执行模式',
+      title: "组织运行模式",
+      heading: runtimeMode === "frontend" ? "前端预演模式" : "动态执行模式",
       body: canUseAdvanced
-        ? runtimeMode === 'frontend'
-          ? '当前先在浏览器里预演执行协同流程：你可以看任务如何拆解、角色如何分工，以及界面如何反馈，但不会真正向服务端发起完整执行。'
-          : '当前会把用户问题交给服务端，让系统先分析需要哪些角色，再动态创建组织、装配 skills 与 MCP，并推进真实工作流。'
-        : '当前部署仅保留浏览器内的执行协同预演：可以体验角色就位后的展示和流程，但不会连接服务端执行。',
+        ? runtimeMode === "frontend"
+          ? "当前先在浏览器里预演执行协同流程：你可以看任务如何拆解、角色如何分工，以及界面如何反馈，但不会真正向服务端发起完整执行。"
+          : "当前会把用户问题交给服务端，让系统先分析需要哪些角色，再动态创建组织、装配 skills 与 MCP，并推进真实工作流。"
+        : "当前部署仅保留浏览器内的执行协同预演：可以体验角色就位后的展示和流程，但不会连接服务端执行。",
     };
   }
 
   return {
-    title: 'Organization Mode',
-    heading: runtimeMode === 'frontend' ? 'Preview Teaming Mode' : 'Dynamic Execution Mode',
+    title: "Organization Mode",
+    heading:
+      runtimeMode === "frontend"
+        ? "Preview Teaming Mode"
+        : "Dynamic Execution Mode",
     body: canUseAdvanced
-      ? runtimeMode === 'frontend'
-        ? 'The browser currently previews the execution coordination flow: you can inspect task framing, role ownership, and UI reactions without running the full server workflow.'
-        : 'The server now analyzes the user ask, creates the needed organization, attaches skills and MCP tools, and runs the real workflow.'
-      : 'This deployment keeps only the browser-side execution preview: you can inspect the generated team flow, but it does not connect to the server runtime.',
+      ? runtimeMode === "frontend"
+        ? "The browser currently previews the execution coordination flow: you can inspect task framing, role ownership, and UI reactions without running the full server workflow."
+        : "The server now analyzes the user ask, creates the needed organization, attaches skills and MCP tools, and runs the real workflow."
+      : "This deployment keeps only the browser-side execution preview: you can inspect the generated team flow, but it does not connect to the server runtime.",
   };
 }
 
@@ -76,9 +87,13 @@ function RuntimeCard({
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
-  const narrative = getRuntimeNarrative(locale, runtimeMode, CAN_USE_ADVANCED_RUNTIME);
+  const narrative = getRuntimeNarrative(
+    locale,
+    runtimeMode,
+    CAN_USE_ADVANCED_RUNTIME
+  );
 
-  const handleSwitch = async (mode: 'frontend' | 'advanced') => {
+  const handleSwitch = async (mode: "frontend" | "advanced") => {
     await setRuntimeMode(mode);
     onAfterAction?.();
   };
@@ -96,13 +111,15 @@ function RuntimeCard({
         </div>
       </div>
 
-      <div className={`mt-2 grid gap-2 ${compact ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      <div
+        className={`mt-2 grid gap-2 ${compact ? "grid-cols-1" : "grid-cols-2"}`}
+      >
         <button
-          onClick={() => void handleSwitch('frontend')}
+          onClick={() => void handleSwitch("frontend")}
           className={`inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all ${
-            runtimeMode === 'frontend'
-              ? 'bg-[#5E8B72] text-white shadow-sm'
-              : 'studio-surface text-[#6B5A4A] hover:bg-white/65'
+            runtimeMode === "frontend"
+              ? "bg-[#5E8B72] text-white shadow-sm"
+              : "studio-surface text-[#6B5A4A] hover:bg-white/65"
           }`}
         >
           <Monitor className="h-3.5 w-3.5" />
@@ -110,11 +127,11 @@ function RuntimeCard({
         </button>
         {CAN_USE_ADVANCED_RUNTIME ? (
           <button
-            onClick={() => void handleSwitch('advanced')}
+            onClick={() => void handleSwitch("advanced")}
             className={`inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition-all ${
-              runtimeMode === 'advanced'
-                ? 'bg-[#C98257] text-white shadow-sm'
-                : 'studio-surface text-[#6B5A4A] hover:bg-white/65'
+              runtimeMode === "advanced"
+                ? "bg-[#C98257] text-white shadow-sm"
+                : "studio-surface text-[#6B5A4A] hover:bg-white/65"
             }`}
           >
             <Server className="h-3.5 w-3.5" />
@@ -196,64 +213,65 @@ export function Toolbar() {
     onClick: () => void;
   }> = [
     {
-      id: 'config',
+      id: "config",
       icon: Settings,
-      accent: '#5E8B72',
+      accent: "#5E8B72",
       active: isConfigOpen,
       onClick: () => toggleConfig(),
     },
     {
-      id: 'workflow',
+      id: "workflow",
       icon: Brain,
-      accent: '#C98257',
+      accent: "#C98257",
       active: isWorkflowPanelOpen,
       onClick: () => toggleWorkflowPanel(),
     },
     {
-      id: 'chat',
+      id: "chat",
       icon: MessageCircle,
-      accent: '#B77B63',
+      accent: "#B77B63",
       active: isChatOpen,
       onClick: () => toggleChat(),
     },
     {
-      id: 'commandCenter',
+      id: "commandCenter",
       icon: Terminal,
-      accent: '#8B735E',
-      active: location === '/command-center',
-      onClick: () => setLocation('/command-center'),
+      accent: "#8B735E",
+      active: location.startsWith("/tasks"),
+      onClick: () => setLocation("/tasks"),
     },
     {
-      id: 'permissions',
+      id: "permissions",
       icon: Shield,
-      accent: '#836A88',
+      accent: "#836A88",
       active: showPermissions,
       onClick: () => setShowPermissions(prev => !prev),
     },
     {
-      id: 'audit',
+      id: "audit",
       icon: FileSearch,
-      accent: '#6B8E7B',
+      accent: "#6B8E7B",
       active: showAudit,
       onClick: () => setShowAudit(prev => !prev),
     },
     {
-      id: 'lineage',
+      id: "lineage",
       icon: GitBranch,
-      accent: '#4A8BA8',
-      active: location === '/lineage',
-      onClick: () => setLocation('/lineage'),
+      accent: "#4A8BA8",
+      active: location === "/lineage",
+      onClick: () => setLocation("/lineage"),
     },
     {
-      id: 'help',
+      id: "help",
       icon: HelpCircle,
-      accent: '#75604D',
+      accent: "#75604D",
       active: showHelp,
       onClick: () => setShowHelp(prev => !prev),
     },
   ];
 
-  const localeLabel = locale === 'zh-CN' ? copy.common.englishShort : copy.common.chineseShort;
+  const localeLabel =
+    locale === "zh-CN" ? copy.common.englishShort : copy.common.chineseShort;
   const focusLabel = selectedPet
     ? getAgentToolbarLabel(selectedPet, locale)
     : copy.toolbar.focusFallback;
@@ -269,7 +287,7 @@ export function Toolbar() {
       <>
         <div
           className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+12px)] z-[80] rounded-[26px] studio-shell px-3 py-3"
-          style={{ pointerEvents: 'auto' }}
+          style={{ pointerEvents: "auto" }}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -298,7 +316,11 @@ export function Toolbar() {
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#5E8B72] text-white shadow-sm"
                 title={copy.toolbar.mobileMenuTitle}
               >
-                {showMobileMenu ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                {showMobileMenu ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -312,18 +334,22 @@ export function Toolbar() {
               )}
               <span>
                 {CAN_USE_ADVANCED_RUNTIME
-                  ? copy.toolbar.runtimeLabels[runtimeMode === 'advanced' ? 'advanced' : 'frontend']
+                  ? copy.toolbar.runtimeLabels[
+                      runtimeMode === "advanced" ? "advanced" : "frontend"
+                    ]
                   : copy.toolbar.runtimeLabels.frontend}
               </span>
             </div>
-            <span className="max-w-[55%] truncate text-[11px] text-[#8B7355]">{focusLabel}</span>
+            <span className="max-w-[55%] truncate text-[11px] text-[#8B7355]">
+              {focusLabel}
+            </span>
           </div>
         </div>
 
         {showGitHubBadge && !showMobileMenu ? (
           <div
             className="fixed right-3 top-[calc(env(safe-area-inset-top)+88px)] z-[81] max-w-[calc(100vw-1.5rem)]"
-            style={{ pointerEvents: 'auto' }}
+            style={{ pointerEvents: "auto" }}
           >
             <GitHubRepoBadge />
           </div>
@@ -339,7 +365,7 @@ export function Toolbar() {
             />
             <div
               className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+88px)] z-[82] max-h-[calc(100svh-120px)] overflow-y-auto rounded-[30px] studio-shell p-4 animate-in fade-in slide-in-from-top-4 duration-300"
-              style={{ pointerEvents: 'auto' }}
+              style={{ pointerEvents: "auto" }}
             >
               <div className="mb-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#A08972]">
@@ -366,7 +392,9 @@ export function Toolbar() {
                       key={button.id}
                       onClick={() => handleButtonClick(button.id)}
                       className={`flex items-center gap-3 rounded-[22px] px-4 py-3 text-left transition-all ${
-                        button.active ? 'text-white shadow-md' : 'studio-surface text-[#5A4A3A]'
+                        button.active
+                          ? "text-white shadow-md"
+                          : "studio-surface text-[#5A4A3A]"
                       }`}
                       style={{
                         background: button.active
@@ -377,16 +405,24 @@ export function Toolbar() {
                       <div
                         className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl"
                         style={{
-                          background: button.active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.75)',
+                          background: button.active
+                            ? "rgba(255,255,255,0.18)"
+                            : "rgba(255,255,255,0.75)",
                         }}
                       >
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold">{labels.label}</div>
+                        <div className="truncate text-sm font-semibold">
+                          {labels.label}
+                        </div>
                         <div
                           className="text-[10px] uppercase tracking-[0.16em]"
-                          style={{ color: button.active ? 'rgba(255,255,255,0.78)' : '#A08972' }}
+                          style={{
+                            color: button.active
+                              ? "rgba(255,255,255,0.78)"
+                              : "#A08972",
+                          }}
                         >
                           {labels.sublabel}
                         </div>
@@ -397,7 +433,10 @@ export function Toolbar() {
               </div>
 
               <div className="mt-4">
-                <RuntimeCard compact onAfterAction={() => setShowMobileMenu(false)} />
+                <RuntimeCard
+                  compact
+                  onAfterAction={() => setShowMobileMenu(false)}
+                />
               </div>
 
               <div className="mt-4">
@@ -416,18 +455,20 @@ export function Toolbar() {
       {showHelp && (
         <div
           className="fixed right-6 bottom-24 z-[61] w-[320px]"
-          style={{ pointerEvents: 'auto' }}
+          style={{ pointerEvents: "auto" }}
         >
           <HelpCard onClose={() => setShowHelp(false)} />
         </div>
       )}
 
       <div
-        className={`fixed left-1/2 z-[60] -translate-x-1/2 ${isTablet ? 'bottom-5' : 'bottom-6'}`}
-        style={{ pointerEvents: 'auto' }}
+        className={`fixed left-1/2 z-[60] -translate-x-1/2 ${isTablet ? "bottom-5" : "bottom-6"}`}
+        style={{ pointerEvents: "auto" }}
       >
         <div className="rounded-[32px] studio-shell px-3 py-2.5">
-          <div className={`grid gap-2 ${isTablet ? 'grid-cols-8' : 'grid-cols-8'}`}>
+          <div
+            className={`grid gap-2 ${isTablet ? "grid-cols-8" : "grid-cols-8"}`}
+          >
             {dockButtons.map(button => {
               const Icon = button.icon;
               const labels = copy.toolbar.dockButtons[button.id];
@@ -436,22 +477,24 @@ export function Toolbar() {
                 <button
                   key={button.id}
                   onClick={() => button.onClick()}
-                  className={`group flex ${isTablet ? 'min-w-[102px]' : 'min-w-[138px]'} items-center gap-3 rounded-[22px] px-4 py-2.5 text-left transition-all duration-300 ${
+                  className={`group flex ${isTablet ? "min-w-[102px]" : "min-w-[138px]"} items-center gap-3 rounded-[22px] px-4 py-2.5 text-left transition-all duration-300 ${
                     button.active
-                      ? '-translate-y-1 shadow-[0_12px_24px_rgba(80,56,36,0.14)]'
-                      : 'hover:-translate-y-1 hover:bg-white/62'
+                      ? "-translate-y-1 shadow-[0_12px_24px_rgba(80,56,36,0.14)]"
+                      : "hover:-translate-y-1 hover:bg-white/62"
                   }`}
                   style={{
                     background: button.active
                       ? `linear-gradient(135deg, ${button.accent}, ${button.accent}CC)`
-                      : 'rgba(255,255,255,0.36)',
-                    color: button.active ? '#FFFFFF' : '#5A4A3A',
+                      : "rgba(255,255,255,0.36)",
+                    color: button.active ? "#FFFFFF" : "#5A4A3A",
                   }}
                 >
                   <div
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl shadow-sm"
                     style={{
-                      background: button.active ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.74)',
+                      background: button.active
+                        ? "rgba(255,255,255,0.18)"
+                        : "rgba(255,255,255,0.74)",
                     }}
                   >
                     <Icon className="h-4 w-4" />
@@ -460,7 +503,11 @@ export function Toolbar() {
                     <div className="text-sm font-semibold">{labels.label}</div>
                     <div
                       className="text-[10px] uppercase tracking-[0.16em]"
-                      style={{ color: button.active ? 'rgba(255,255,255,0.78)' : '#A08972' }}
+                      style={{
+                        color: button.active
+                          ? "rgba(255,255,255,0.78)"
+                          : "#A08972",
+                      }}
                     >
                       {labels.sublabel}
                     </div>
@@ -478,15 +525,18 @@ export function Toolbar() {
           <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
             <DialogTitle className="flex items-center gap-2 text-stone-900">
               <Shield className="size-4 text-[#7C3AED]" />
-              {locale === 'zh-CN' ? 'Agent 权限管理' : 'Agent Permissions'}
+              {locale === "zh-CN" ? "Agent 权限管理" : "Agent Permissions"}
             </DialogTitle>
             <DialogDescription className="text-sm text-stone-500">
-              {locale === 'zh-CN'
-                ? '管理 Agent 权限角色、查看权限矩阵和审计日志'
-                : 'Manage agent permission roles, view permission matrix and audit logs'}
+              {locale === "zh-CN"
+                ? "管理 Agent 权限角色、查看权限矩阵和审计日志"
+                : "Manage agent permission roles, view permission matrix and audit logs"}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden" style={{ height: 'calc(600px - 80px)' }}>
+          <div
+            className="flex-1 overflow-hidden"
+            style={{ height: "calc(600px - 80px)" }}
+          >
             <PermissionPanel />
           </div>
         </DialogContent>
@@ -498,15 +548,18 @@ export function Toolbar() {
           <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
             <DialogTitle className="flex items-center gap-2 text-stone-900">
               <FileSearch className="size-4 text-[#6B8E7B]" />
-              {locale === 'zh-CN' ? '审计链日志' : 'Audit Chain Log'}
+              {locale === "zh-CN" ? "审计链日志" : "Audit Chain Log"}
             </DialogTitle>
             <DialogDescription className="text-sm text-stone-500">
-              {locale === 'zh-CN'
-                ? '查看审计事件、验证哈希链完整性、管理异常告警'
-                : 'View audit events, verify hash chain integrity, manage anomaly alerts'}
+              {locale === "zh-CN"
+                ? "查看审计事件、验证哈希链完整性、管理异常告警"
+                : "View audit events, verify hash chain integrity, manage anomaly alerts"}
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden" style={{ height: 'calc(600px - 80px)' }}>
+          <div
+            className="flex-1 overflow-hidden"
+            style={{ height: "calc(600px - 80px)" }}
+          >
             <AuditPanel />
           </div>
         </DialogContent>

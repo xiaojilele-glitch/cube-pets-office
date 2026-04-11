@@ -8,16 +8,20 @@
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5
  */
 
+import { nanoid } from "nanoid";
 import { create } from "zustand";
 import type { Socket } from "socket.io-client";
 
 import type {
   StrategicCommand,
   CommandAnalysis,
+  CommandConstraint,
   NLExecutionPlan,
   Alert,
   Comment,
   ClarificationDialog,
+  ClarificationAnswer,
+  ClarificationQuestion,
   MissionDecomposition,
   FinalizedCommand,
   PlanApprovalRequest,
@@ -54,6 +58,511 @@ import type {
 
 import * as api from "./nl-command-client";
 
+export interface TaskHubCreateMissionInput {
+  kind?: string;
+  title?: string;
+  sourceText?: string;
+  topicId?: string;
+}
+
+export type TaskHubCreateMission = (
+  input: TaskHubCreateMissionInput
+) => Promise<string | null>;
+
+export interface TaskHubCommandSubmissionResult {
+  commandId: string;
+  commandText: string;
+  missionId: string | null;
+  relatedMissionIds: string[];
+  autoSelectedMissionId: string | null;
+  status: "needs_clarification" | "created";
+  createdAt: number;
+}
+
+export interface SubmitTaskHubCommandRequest extends SubmitCommandRequest {
+  createMission: TaskHubCreateMission;
+}
+
+interface SubmitTaskHubClarificationOptions {
+  createMission: TaskHubCreateMission;
+}
+
+function normalizeCommandText(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function compactCommandText(value: string, maxLength = 72): string {
+  const normalized = normalizeCommandText(value);
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+function deriveMissionTitle(commandText: string): string {
+  const normalized = normalizeCommandText(commandText);
+  if (!normalized) {
+    return "New mission";
+  }
+
+  const sentence =
+    normalized.split(/[。！？.!?]/).find(part => part.trim().length > 0) ||
+    normalized;
+
+  return compactCommandText(sentence, 54);
+}
+
+function uniqueStrings(values: Array<string | undefined | null>): string[] {
+  return Array.from(
+    new Set(
+      values
+        .map(value => value?.trim())
+        .filter((value): value is string => Boolean(value))
+    )
+  );
+}
+
+function hasTimelineSignal(text: string): boolean {
+  return /今天|明天|本周|下周|月底|本月|本季度|截止|deadline|launch|release|ship|before|by\s+\w+/i.test(
+    text
+  );
+}
+
+function hasConstraintSignal(text: string): boolean {
+  return /零停机|zero downtime|回滚|rollback|预算|budget|风险|risk|约束|constraint|兼容|compliance|sla|测试|test/i.test(
+    text
+  );
+}
+
+function hasOutcomeSignal(text: string): boolean {
+  return /交付|deliverable|结果|outcome|验收|acceptance|完成标准|metric|指标|目标|success/i.test(
+    text
+  );
+}
+
+function inferRequiredSkills(text: string): string[] {
+  const skills = ["planning"];
+
+  if (/重构|refactor|模块|module|api|service|code|代码/i.test(text)) {
+    skills.push("implementation");
+  }
+  if (/部署|release|ship|上线|rollout|launch/i.test(text)) {
+    skills.push("release");
+  }
+  if (/测试|test|qa|验证|verify/i.test(text)) {
+    skills.push("qa");
+  }
+  if (/文档|report|summary|复盘|handoff/i.test(text)) {
+    skills.push("documentation");
+  }
+
+  return uniqueStrings(skills);
+}
+
+function buildTaskHubObjectives(text: string): string[] {
+  const sentences = text
+    .split(/[。！？.!?\n]/)
+    .map(part => normalizeCommandText(part))
+    .filter(Boolean);
+
+  const objectives = sentences.slice(0, 3);
+  if (objectives.length > 0) {
+    return objectives;
+  }
+
+  return [compactCommandText(text, 80)];
+}
+
+function buildTaskHubConstraints(text: string): CommandConstraint[] {
+  const constraints: CommandConstraint[] = [];
+
+  if (/零停机|zero downtime/i.test(text)) {
+    constraints.push({
+      type: "quality",
+      description: "Maintain zero-downtime or user-transparent delivery.",
+    });
+  }
+
+  if (/回滚|rollback/i.test(text)) {
+    constraints.push({
+      type: "quality",
+      description: "Keep an explicit rollback path available.",
+    });
+  }
+
+  if (/预算|budget|成本/i.test(text)) {
+    constraints.push({
+      type: "budget",
+      description: "Respect the stated budget and execution-cost boundaries.",
+    });
+  }
+
+  if (/今天|明天|本周|下周|月底|本月|deadline|before|by\s+\w+/i.test(text)) {
+    constraints.push({
+      type: "time",
+      description: "Keep delivery aligned with the requested timeline.",
+    });
+  }
+
+  return constraints;
+}
+
+function buildTaskHubAnalysis(req: SubmitCommandRequest): {
+  analysis: CommandAnalysis;
+  questions: ClarificationQuestion[];
+} {
+  const commandText = normalizeCommandText(req.commandText);
+  const missingTopics = [
+    !hasOutcomeSignal(commandText) ? "outcome" : null,
+    !hasTimelineSignal(commandText) ? "timeline" : null,
+    !hasConstraintSignal(commandText) ? "constraints" : null,
+  ].filter((topic): topic is string => Boolean(topic));
+
+  const needsClarification =
+    commandText.length < 36 || missingTopics.length >= 2;
+  const questions = needsClarification
+    ? missingTopics.slice(0, 2).map(topic => {
+        if (topic === "outcome") {
+          return {
+            questionId: `outcome:${nanoid(8)}`,
+            text: "What concrete outcome or deliverable matters most for this command?",
+            type: "free_text" as const,
+            context:
+              "Adding the success criteria makes the task landing much clearer.",
+          };
+        }
+        if (topic === "timeline") {
+          return {
+            questionId: `timeline:${nanoid(8)}`,
+            text: "Does this work have a clear time window or deadline?",
+            type: "free_text" as const,
+            context:
+              "For example: today, this week, before release, or before a milestone.",
+          };
+        }
+        return {
+          questionId: `constraints:${nanoid(8)}`,
+          text: "Are there constraints, risk boundaries, or rollback requirements we must keep?",
+          type: "free_text" as const,
+          context:
+            "For example: zero downtime, compatibility, budget, audit, or a rollback path.",
+        };
+      })
+    : [];
+
+  const constraints = buildTaskHubConstraints(commandText);
+  const objectives = uniqueStrings([
+    ...buildTaskHubObjectives(commandText),
+    ...(req.objectives || []),
+  ]);
+  const assumptions = uniqueStrings([
+    missingTopics.includes("outcome")
+      ? "Success criteria should be confirmed inside the task workspace."
+      : "The requested outcome is clear enough to open execution immediately.",
+    missingTopics.includes("timeline")
+      ? "Timeline is flexible until the operator adds a deadline."
+      : "Timeline expectations are already embedded in the command.",
+  ]);
+
+  return {
+    analysis: {
+      intent: deriveMissionTitle(commandText),
+      entities: [
+        {
+          name: deriveMissionTitle(commandText),
+          type: "concept",
+          description: "Primary execution target inferred from the command.",
+        },
+      ],
+      constraints,
+      objectives,
+      risks: [
+        {
+          id: `risk-${nanoid(8)}`,
+          description: needsClarification
+            ? "Scope drift is likely until the command is clarified."
+            : "Execution quality depends on keeping the task brief aligned with the command.",
+          level: needsClarification ? "medium" : "low",
+          probability: needsClarification ? 0.58 : 0.26,
+          impact: needsClarification ? 0.72 : 0.34,
+          mitigation:
+            "Use the task detail panel to confirm scope, blockers, and operator decisions.",
+        },
+      ],
+      assumptions,
+      confidence: needsClarification ? 0.64 : 0.86,
+      needsClarification,
+      clarificationTopics: needsClarification ? missingTopics : undefined,
+    },
+    questions,
+  };
+}
+
+function buildRefinedCommandText(
+  commandText: string,
+  answers: ClarificationAnswer[]
+): string {
+  const normalized = normalizeCommandText(commandText);
+  if (answers.length === 0) {
+    return normalized;
+  }
+
+  const clarificationSummary = answers
+    .map(answer => normalizeCommandText(answer.text))
+    .filter(Boolean)
+    .join("；");
+
+  return `${normalized} | Extra context: ${clarificationSummary}`;
+}
+
+function buildTaskHubFinalizedCommand(
+  command: StrategicCommand,
+  analysis: CommandAnalysis,
+  answers: ClarificationAnswer[]
+): FinalizedCommand {
+  return {
+    commandId: command.commandId,
+    originalText: command.commandText,
+    refinedText: buildRefinedCommandText(command.commandText, answers),
+    analysis,
+    clarificationSummary:
+      answers.length > 0
+        ? answers.map(answer => normalizeCommandText(answer.text)).join("；")
+        : undefined,
+    finalizedAt: Date.now(),
+  };
+}
+
+function applyClarificationToAnalysis(
+  analysis: CommandAnalysis,
+  answer: ClarificationAnswer
+): CommandAnalysis {
+  const topic = answer.questionId.split(":")[0];
+  const answerText = normalizeCommandText(answer.text);
+
+  const nextObjectives =
+    topic === "outcome"
+      ? uniqueStrings([answerText, ...analysis.objectives])
+      : analysis.objectives;
+  const nextConstraints =
+    topic === "timeline"
+      ? [
+          ...analysis.constraints,
+          {
+            type: "time" as const,
+            description: answerText,
+          },
+        ]
+      : topic === "constraints"
+        ? [
+            ...analysis.constraints,
+            {
+              type: "custom" as const,
+              description: answerText,
+            },
+          ]
+        : analysis.constraints;
+
+  return {
+    ...analysis,
+    objectives: nextObjectives,
+    constraints: nextConstraints,
+    assumptions: uniqueStrings([
+      ...analysis.assumptions,
+      `Clarified ${topic}: ${answerText}`,
+    ]),
+    confidence: Math.min(0.96, analysis.confidence + 0.12),
+  };
+}
+
+function buildTaskHubMissionInput(
+  command: StrategicCommand,
+  analysis: CommandAnalysis,
+  answers: ClarificationAnswer[]
+): TaskHubCreateMissionInput {
+  const sections = [
+    `Command: ${command.commandText}`,
+    analysis.objectives.length > 0
+      ? `Objectives:\n- ${analysis.objectives.join("\n- ")}`
+      : null,
+    analysis.constraints.length > 0
+      ? `Constraints:\n- ${analysis.constraints
+          .map(item => item.description)
+          .join("\n- ")}`
+      : null,
+    answers.length > 0
+      ? `Clarifications:\n- ${answers
+          .map(answer => normalizeCommandText(answer.text))
+          .join("\n- ")}`
+      : null,
+  ].filter(Boolean);
+
+  return {
+    kind: "nl-command",
+    title: deriveMissionTitle(command.commandText),
+    sourceText: sections.join("\n\n"),
+  };
+}
+
+function buildTaskHubPlan(params: {
+  command: StrategicCommand;
+  analysis: CommandAnalysis;
+  answers: ClarificationAnswer[];
+  missionId?: string | null;
+  status: NLExecutionPlan["status"];
+}): NLExecutionPlan {
+  const { command, analysis, answers, missionId = null, status } = params;
+  const now = Date.now();
+  const missionKey = missionId || `draft-${command.commandId}`;
+  const skills = inferRequiredSkills(command.commandText);
+  const objectives = analysis.objectives.length
+    ? analysis.objectives
+    : [command.commandText];
+  const mission = {
+    missionId: missionKey,
+    title: deriveMissionTitle(command.commandText),
+    description: buildRefinedCommandText(command.commandText, answers),
+    objectives,
+    constraints: analysis.constraints,
+    estimatedDuration: 150,
+    estimatedCost: 180,
+    priority: command.priority,
+  };
+  const tasks = [
+    {
+      taskId: `${missionKey}:scope`,
+      title: "Lock scope and acceptance",
+      description:
+        "Translate the command into an execution-ready brief and confirm success criteria.",
+      objectives: [objectives[0]],
+      constraints: analysis.constraints,
+      estimatedDuration: 35,
+      estimatedCost: 40,
+      requiredSkills: uniqueStrings(["planning", "coordination"]),
+      priority: command.priority,
+    },
+    {
+      taskId: `${missionKey}:execute`,
+      title: mission.title,
+      description:
+        "Carry out the main workstream and keep the task detail panel updated with blockers.",
+      objectives,
+      constraints: analysis.constraints,
+      estimatedDuration: 80,
+      estimatedCost: 95,
+      requiredSkills: skills,
+      priority: command.priority,
+    },
+    {
+      taskId: `${missionKey}:review`,
+      title: "Review outcome and operator handoff",
+      description:
+        "Verify the result, summarize remaining risks, and prepare the next operator action.",
+      objectives: ["Review deliverables and confirm the next operator action."],
+      constraints: [],
+      estimatedDuration: 35,
+      estimatedCost: 45,
+      requiredSkills: uniqueStrings(["review", "documentation"]),
+      priority: "medium" as const,
+    },
+  ];
+  const totalBudget = tasks.reduce(
+    (sum, item) => sum + item.estimatedCost,
+    mission.estimatedCost
+  );
+  const startDate = new Date(now).toISOString();
+  const endDate = new Date(now + 150 * 60_000).toISOString();
+
+  return {
+    planId: `task-hub-plan-${missionKey}`,
+    commandId: command.commandId,
+    status,
+    missions: [mission],
+    tasks,
+    timeline: {
+      startDate,
+      endDate,
+      criticalPath: [mission.missionId, ...tasks.map(task => task.taskId)],
+      milestones: [
+        {
+          id: `${missionKey}:brief`,
+          label: "Brief aligned",
+          date: startDate,
+          entityId: tasks[0].taskId,
+        },
+        {
+          id: `${missionKey}:handoff`,
+          label: "Operator handoff ready",
+          date: endDate,
+          entityId: tasks[2].taskId,
+        },
+      ],
+      entries: tasks.map((task, index) => ({
+        entityId: task.taskId,
+        entityType: "task" as const,
+        startTime: now + index * 45 * 60_000,
+        endTime: now + (index + 1) * 45 * 60_000,
+        duration: task.estimatedDuration,
+        isCriticalPath: index !== 0,
+        parallelGroup: index === 1 ? 1 : undefined,
+      })),
+    },
+    resourceAllocation: {
+      entries: tasks.map(task => ({
+        taskId: task.taskId,
+        agentType: task.requiredSkills[0] || "operator",
+        agentCount: 1,
+        requiredSkills: task.requiredSkills,
+        startTime: now,
+        endTime: now + task.estimatedDuration * 60_000,
+      })),
+      totalAgents: 3,
+      peakConcurrency: 2,
+    },
+    riskAssessment: {
+      risks: analysis.risks,
+      overallRiskLevel: analysis.needsClarification ? "medium" : "low",
+    },
+    costBudget: {
+      totalBudget,
+      missionCosts: { [mission.missionId]: mission.estimatedCost },
+      taskCosts: Object.fromEntries(
+        tasks.map(task => [task.taskId, task.estimatedCost])
+      ),
+      agentCosts: {
+        operator: 65,
+        specialist: 70,
+        reviewer: 45,
+      },
+      modelCosts: {
+        "task-hub-preview": 12,
+      },
+      currency: "USD",
+    },
+    contingencyPlan: {
+      alternatives: [
+        {
+          id: `${missionKey}:fallback`,
+          description: "Fall back to a smaller scoped delivery slice.",
+          trigger: "Timeline or blocker pressure rises during execution.",
+          action:
+            "Trim non-critical work and keep the operator-visible task active.",
+          estimatedImpact: "Lower scope, faster recovery.",
+        },
+      ],
+      degradationStrategies: [
+        "Keep the mission open in the task queue and defer secondary scope.",
+        "Use operator actions to pause, retry, or mark blocked without losing context.",
+      ],
+      rollbackPlan:
+        "If execution quality regresses, pause the mission and resume from the last stable operator checkpoint.",
+    },
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // State interface
 // ---------------------------------------------------------------------------
@@ -72,10 +581,24 @@ interface NLCommandState {
   alerts: Alert[];
   comments: Comment[];
   dashboard: DashboardResponse | null;
+  draftText: string;
+  lastSubmission: TaskHubCommandSubmissionResult | null;
 
   // UI state
   loading: boolean;
   error: string | null;
+
+  // Actions - task hub
+  setDraftText: (value: string) => void;
+  submitTaskHubCommand: (
+    req: SubmitTaskHubCommandRequest
+  ) => Promise<TaskHubCommandSubmissionResult>;
+  submitTaskHubClarification: (
+    commandId: string,
+    req: SubmitClarificationRequest,
+    options: SubmitTaskHubClarificationOptions
+  ) => Promise<TaskHubCommandSubmissionResult | null>;
+  clearTaskHubSession: () => void;
 
   // Actions — commands
   submitCommand: (req: SubmitCommandRequest) => Promise<void>;
@@ -83,7 +606,10 @@ interface NLCommandState {
   loadCommand: (id: string) => Promise<void>;
 
   // Actions — clarification
-  submitClarification: (commandId: string, req: SubmitClarificationRequest) => Promise<void>;
+  submitClarification: (
+    commandId: string,
+    req: SubmitClarificationRequest
+  ) => Promise<void>;
   loadDialog: (commandId: string) => Promise<void>;
 
   // Actions — plans
@@ -129,16 +655,296 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
   alerts: [],
   comments: [],
   dashboard: null,
+  draftText: "",
+  lastSubmission: null,
   loading: false,
   error: null,
 
+  setDraftText: value => {
+    set({ draftText: value });
+  },
+
+  submitTaskHubCommand: async req => {
+    const { createMission, ...commandRequest } = req;
+    const normalizedText = normalizeCommandText(commandRequest.commandText);
+    const commandId = `task-hub-${nanoid(10)}`;
+    const { analysis, questions } = buildTaskHubAnalysis(commandRequest);
+    const command: StrategicCommand = {
+      commandId,
+      commandText: normalizedText,
+      userId: commandRequest.userId,
+      timestamp: Date.now(),
+      status: questions.length > 0 ? "clarifying" : "executing",
+      parsedIntent: analysis.intent,
+      constraints: analysis.constraints,
+      objectives: analysis.objectives,
+      priority: commandRequest.priority ?? "medium",
+      timeframe: commandRequest.timeframe,
+    };
+    const dialog =
+      questions.length > 0
+        ? {
+            dialogId: `dialog-${commandId}`,
+            commandId,
+            questions,
+            answers: [],
+            clarificationRounds: 0,
+            status: "active" as const,
+          }
+        : null;
+    const previewPlan = buildTaskHubPlan({
+      command,
+      analysis,
+      answers: [],
+      status: questions.length > 0 ? "draft" : "executing",
+    });
+
+    set(state => ({
+      loading: true,
+      error: null,
+      currentCommand: command,
+      currentAnalysis: analysis,
+      currentDialog: dialog,
+      currentFinalized: questions.length
+        ? null
+        : buildTaskHubFinalizedCommand(command, analysis, []),
+      currentPlan: previewPlan,
+      draftText: "",
+      lastSubmission: null,
+      commands: [
+        command,
+        ...state.commands.filter(item => item.commandId !== command.commandId),
+      ],
+    }));
+
+    if (questions.length > 0) {
+      const result: TaskHubCommandSubmissionResult = {
+        commandId,
+        commandText: normalizedText,
+        missionId: null,
+        relatedMissionIds: [],
+        autoSelectedMissionId: null,
+        status: "needs_clarification",
+        createdAt: Date.now(),
+      };
+
+      set({ loading: false, lastSubmission: result });
+      return result;
+    }
+
+    try {
+      const missionId = await createMission(
+        buildTaskHubMissionInput(command, analysis, [])
+      );
+      const result: TaskHubCommandSubmissionResult = {
+        commandId,
+        commandText: normalizedText,
+        missionId,
+        relatedMissionIds: missionId ? [missionId] : [],
+        autoSelectedMissionId: missionId,
+        status: "created",
+        createdAt: Date.now(),
+      };
+
+      set(state => ({
+        loading: false,
+        currentPlan: buildTaskHubPlan({
+          command,
+          analysis,
+          answers: [],
+          missionId,
+          status: missionId ? "executing" : "approved",
+        }),
+        currentFinalized: buildTaskHubFinalizedCommand(command, analysis, []),
+        lastSubmission: result,
+        commands: state.commands.map(item =>
+          item.commandId === commandId
+            ? {
+                ...item,
+                status: missionId ? "executing" : "finalized",
+              }
+            : item
+        ),
+      }));
+
+      return result;
+    } catch (error) {
+      set({
+        loading: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create a mission from the command.",
+      });
+      throw error;
+    }
+  },
+
+  submitTaskHubClarification: async (commandId, req, options) => {
+    const currentCommand = get().currentCommand;
+    const currentDialog = get().currentDialog;
+    const currentAnalysis = get().currentAnalysis;
+
+    if (
+      !currentCommand ||
+      currentCommand.commandId !== commandId ||
+      !currentDialog ||
+      !currentAnalysis
+    ) {
+      set({ error: "No active task-hub clarification session." });
+      return null;
+    }
+
+    const nextAnswer: ClarificationAnswer = {
+      ...req.answer,
+      text: normalizeCommandText(req.answer.text),
+      timestamp: req.answer.timestamp || Date.now(),
+    };
+    const nextAnswers = [
+      ...currentDialog.answers.filter(
+        answer => answer.questionId !== nextAnswer.questionId
+      ),
+      nextAnswer,
+    ];
+    const nextAnalysis = applyClarificationToAnalysis(
+      currentAnalysis,
+      nextAnswer
+    );
+    const unansweredQuestions = currentDialog.questions.filter(
+      question =>
+        !nextAnswers.some(answer => answer.questionId === question.questionId)
+    );
+    const nextDialog: ClarificationDialog = {
+      ...currentDialog,
+      answers: nextAnswers,
+      clarificationRounds: nextAnswers.length,
+      status: unansweredQuestions.length === 0 ? "completed" : "active",
+    };
+    const finalizedAnalysis = {
+      ...nextAnalysis,
+      needsClarification: unansweredQuestions.length > 0,
+      clarificationTopics:
+        unansweredQuestions.length > 0
+          ? unansweredQuestions.map(
+              question => question.questionId.split(":")[0]
+            )
+          : undefined,
+    };
+
+    set({
+      loading: true,
+      error: null,
+      currentDialog: nextDialog,
+      currentAnalysis: finalizedAnalysis,
+      currentPlan: buildTaskHubPlan({
+        command: currentCommand,
+        analysis: finalizedAnalysis,
+        answers: nextAnswers,
+        status: unansweredQuestions.length > 0 ? "draft" : "approved",
+      }),
+      lastSubmission:
+        unansweredQuestions.length > 0
+          ? {
+              commandId,
+              commandText: currentCommand.commandText,
+              missionId: null,
+              relatedMissionIds: [],
+              autoSelectedMissionId: null,
+              status: "needs_clarification",
+              createdAt: Date.now(),
+            }
+          : get().lastSubmission,
+    });
+
+    if (unansweredQuestions.length > 0) {
+      set({ loading: false });
+      return {
+        commandId,
+        commandText: currentCommand.commandText,
+        missionId: null,
+        relatedMissionIds: [],
+        autoSelectedMissionId: null,
+        status: "needs_clarification",
+        createdAt: Date.now(),
+      };
+    }
+
+    try {
+      const missionId = await options.createMission(
+        buildTaskHubMissionInput(currentCommand, finalizedAnalysis, nextAnswers)
+      );
+      const result: TaskHubCommandSubmissionResult = {
+        commandId,
+        commandText: currentCommand.commandText,
+        missionId,
+        relatedMissionIds: missionId ? [missionId] : [],
+        autoSelectedMissionId: missionId,
+        status: "created",
+        createdAt: Date.now(),
+      };
+
+      set(state => ({
+        loading: false,
+        currentFinalized: buildTaskHubFinalizedCommand(
+          currentCommand,
+          finalizedAnalysis,
+          nextAnswers
+        ),
+        currentPlan: buildTaskHubPlan({
+          command: currentCommand,
+          analysis: finalizedAnalysis,
+          answers: nextAnswers,
+          missionId,
+          status: missionId ? "executing" : "approved",
+        }),
+        lastSubmission: result,
+        commands: state.commands.map(item =>
+          item.commandId === commandId
+            ? {
+                ...item,
+                status: missionId ? "executing" : "finalized",
+                constraints: finalizedAnalysis.constraints,
+                objectives: finalizedAnalysis.objectives,
+              }
+            : item
+        ),
+      }));
+
+      return result;
+    } catch (error) {
+      set({
+        loading: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create a mission from the clarification flow.",
+      });
+      throw error;
+    }
+  },
+
+  clearTaskHubSession: () => {
+    set({
+      draftText: "",
+      currentCommand: null,
+      currentAnalysis: null,
+      currentDialog: null,
+      currentFinalized: null,
+      currentDecomposition: null,
+      currentPlan: null,
+      lastSubmission: null,
+      error: null,
+      loading: false,
+    });
+  },
+
   // ── Commands ──────────────────────────────────────────────────────────
 
-  submitCommand: async (req) => {
+  submitCommand: async req => {
     set({ loading: true, error: null });
     try {
       const res = await api.submitCommand(req);
-      set((s) => ({
+      set(s => ({
         commands: [res.command, ...s.commands],
         currentCommand: res.command,
         currentAnalysis: res.analysis,
@@ -149,7 +955,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  loadCommands: async (params) => {
+  loadCommands: async params => {
     set({ loading: true, error: null });
     try {
       const res = await api.listCommands(params);
@@ -159,7 +965,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  loadCommand: async (id) => {
+  loadCommand: async id => {
     set({ loading: true, error: null });
     try {
       const res = await api.getCommand(id);
@@ -193,7 +999,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  loadDialog: async (commandId) => {
+  loadDialog: async commandId => {
     set({ loading: true, error: null });
     try {
       const res = await api.getDialog(commandId);
@@ -205,7 +1011,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
 
   // ── Plans ────────────────────────────────────────────────────────────
 
-  loadPlan: async (planId) => {
+  loadPlan: async planId => {
     set({ loading: true, error: null });
     try {
       const res = await api.getPlan(planId);
@@ -238,7 +1044,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await api.adjustPlan(planId, req);
-      set((s) => ({
+      set(s => ({
         currentPlan: res.updatedPlan,
         currentAdjustments: [...s.currentAdjustments, res.adjustment],
         loading: false,
@@ -260,7 +1066,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  loadAlerts: async (params) => {
+  loadAlerts: async params => {
     set({ loading: true, error: null });
     try {
       const res = await api.listAlerts(params);
@@ -270,7 +1076,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  createAlertRule: async (req) => {
+  createAlertRule: async req => {
     set({ loading: true, error: null });
     try {
       await api.createAlertRule(req);
@@ -282,11 +1088,11 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
 
   // ── Collaboration ───────────────────────────────────────────────────
 
-  addComment: async (req) => {
+  addComment: async req => {
     set({ loading: true, error: null });
     try {
       const res = await api.addComment(req);
-      set((s) => ({
+      set(s => ({
         comments: [...s.comments, res.comment],
         loading: false,
       }));
@@ -295,7 +1101,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  loadComments: async (params) => {
+  loadComments: async params => {
     set({ loading: true, error: null });
     try {
       const res = await api.listComments(params);
@@ -307,7 +1113,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
 
   // ── Reports & Templates ─────────────────────────────────────────────
 
-  generateReport: async (req) => {
+  generateReport: async req => {
     set({ loading: true, error: null });
     try {
       await api.generateReport(req);
@@ -317,7 +1123,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     }
   },
 
-  saveTemplate: async (req) => {
+  saveTemplate: async req => {
     set({ loading: true, error: null });
     try {
       await api.saveTemplate(req);
@@ -333,10 +1139,13 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
     socket.on(
       NL_COMMAND_SOCKET_EVENTS.commandCreated,
       (event: NLCommandCreatedEvent) => {
-        set((s) => ({
-          commands: [event.command, ...s.commands.filter((c) => c.commandId !== event.command.commandId)],
+        set(s => ({
+          commands: [
+            event.command,
+            ...s.commands.filter(c => c.commandId !== event.command.commandId),
+          ],
         }));
-      },
+      }
     );
 
     socket.on(
@@ -346,7 +1155,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
         if (cur && cur.commandId === event.commandId) {
           set({ currentAnalysis: event.analysis });
         }
-      },
+      }
     );
 
     socket.on(
@@ -354,7 +1163,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
       (event: NLClarificationQuestionEvent) => {
         const cur = get().currentCommand;
         if (cur && cur.commandId === event.commandId) {
-          set((s) => {
+          set(s => {
             const dialog = s.currentDialog ?? {
               dialogId: `dialog-${event.commandId}`,
               commandId: event.commandId,
@@ -371,7 +1180,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
             };
           });
         }
-      },
+      }
     );
 
     socket.on(
@@ -381,7 +1190,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
         if (cur && cur.commandId === event.commandId) {
           set({ currentDecomposition: event.decomposition });
         }
-      },
+      }
     );
 
     socket.on(
@@ -391,7 +1200,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
         if (cur && cur.commandId === event.commandId) {
           set({ currentPlan: event.plan });
         }
-      },
+      }
     );
 
     socket.on(
@@ -401,7 +1210,7 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
         if (plan && plan.planId === event.planId) {
           set({ currentPlan: { ...plan, status: "approved" } });
         }
-      },
+      }
     );
 
     socket.on(
@@ -409,16 +1218,19 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
       (event: NLPlanAdjustedEvent) => {
         const plan = get().currentPlan;
         if (plan && plan.planId === event.planId) {
-          set((s) => ({
+          set(s => ({
             currentAdjustments: [...s.currentAdjustments, event.adjustment],
           }));
         }
-      },
+      }
     );
 
     socket.on(NL_COMMAND_SOCKET_EVENTS.alert, (event: NLAlertEvent) => {
-      set((s) => ({
-        alerts: [event.alert, ...s.alerts.filter((a) => a.alertId !== event.alert.alertId)],
+      set(s => ({
+        alerts: [
+          event.alert,
+          ...s.alerts.filter(a => a.alertId !== event.alert.alertId),
+        ],
       }));
     });
 
@@ -426,14 +1238,14 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
       NL_COMMAND_SOCKET_EVENTS.progressUpdate,
       (event: NLProgressUpdateEvent) => {
         // Update the command status in the commands list
-        set((s) => ({
-          commands: s.commands.map((c) =>
+        set(s => ({
+          commands: s.commands.map(c =>
             c.commandId === event.commandId
               ? { ...c, status: event.status as StrategicCommand["status"] }
-              : c,
+              : c
           ),
         }));
-      },
+      }
     );
   },
 
