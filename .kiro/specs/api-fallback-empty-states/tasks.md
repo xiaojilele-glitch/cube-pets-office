@@ -12,36 +12,37 @@
 
 ## Tasks
 
-- [ ] 1. 建立公共请求兜底层
-  - [ ] 1.1 新增轻量 `fetchJsonSafe` 或等效工具
+- [x] 1. 建立公共请求兜底层
+  - [x] 1.1 新增轻量 `fetchJsonSafe` 或等效工具
     - 识别 HTML fallback、非 JSON 响应、网络错误
     - _Requirements: 1.1.1, 1.1.2_
-  - [ ] 1.2 定义统一错误模型
+  - [x] 1.2 定义统一错误模型
     - 区分 demo/offline/error
     - _Requirements: 1.1.3, 3.1.2, 3.1.3_
 
-- [ ] 2. 接入低冲突 store
-  - [ ] 2.1 改造 `lineage-store / audit-store / permission-store / reputation-store`
+- [x] 2. 接入低冲突 store
+  - [x] 2.1 改造 `lineage-store / audit-store / permission-store / reputation-store`
     - _Requirements: 1.1.2, 3.1.1_
-  - [ ] 2.2 改造 `telemetry-store / cost-store`
+  - [x] 2.2 改造 `telemetry-store / cost-store`
     - _Requirements: 1.1.2, 3.1.1_
 
-- [ ] 3. 补重点页面空态与错误态
-  - [ ] 3.1 更新血缘页、历史会话、报告等空态
+- [x] 3. 补重点页面空态与错误态
+  - [x] 3.1 更新血缘页、历史会话、报告等空态
     - _Requirements: 2.1.1, 2.1.2, 2.1.3_
-  - [ ] 3.2 为错误态增加 retry 入口与建议动作
+  - [x] 3.2 为错误态增加 retry 入口与建议动作
     - _Requirements: 3.1.1, 3.1.2_
 
-- [ ] 4. 接入高频路径
-  - [ ] 4.1 与主路径 worktree 协调后接入 `workflow-store`
+- [x] 4. 接入高频路径
+  - [x] 4.1 与主路径 worktree 协调后接入 `workflow-store`
     - _Requirements: 1.1.2, 3.1.3_
-  - [ ] 4.2 协调接入任务页高频请求与 `ChatPanel`
+  - [x] 4.2 协调接入任务页高频请求与 `ChatPanel`
     - _Requirements: 1.1.2, 3.1.1_
 
-- [ ] 5. 测试与验证
-  - [ ] 5.1 编写请求兜底单元测试
-  - [ ] 5.2 编写空态 / 错误态交互测试
-  - [ ] 5.3 手动验证离线 / 演示模式文案
+- [x] 5. 测试与验证
+  - [x] 5.1 编写请求兜底单元测试
+  - [x] 5.2 编写空态 / 错误态交互测试（已补首批组件 / store 覆盖，并补第二批 `workflow-store / mission-client / ChatPanel / WorkflowErrorNotice / RetryInlineNotice` 回归与交互覆盖）
+  - [x] 5.3 手动验证离线 / 演示模式文案
+    - 文档见 `manual-verification.md`
 
 ## Notes
 

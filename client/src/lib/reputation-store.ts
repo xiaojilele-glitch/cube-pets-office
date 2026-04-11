@@ -1,25 +1,15 @@
-/**
- * Reputation Zustand store.
- *
- * Manages Agent reputation data, listens to WebSocket events,
- * and provides fetch methods for reputation and leaderboard.
- *
- * @see Requirements 9.1, 9.2, 9.3, 9.6
- */
-
 import { create } from "zustand";
 import type { Socket } from "socket.io-client";
+
 import type {
-  ReputationProfile,
+  DimensionScores,
   ReputationChangeEvent,
   ReputationGrade,
+  ReputationProfile,
   TrustTier,
-  DimensionScores,
 } from "@shared/reputation";
 
-// ---------------------------------------------------------------------------
-// Leaderboard entry (mirrors server)
-// ---------------------------------------------------------------------------
+import { fetchJsonSafe, type ApiRequestError } from "./api-client";
 
 export interface LeaderboardEntry {
   agentId: string;
@@ -30,96 +20,128 @@ export interface LeaderboardEntry {
   totalTasks: number;
 }
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-
-interface ReputationState {
-  /** Cached profiles keyed by agentId */
-  profiles: Record<string, ReputationProfile>;
-  /** Recent change events per agent */
-  events: Record<string, ReputationChangeEvent[]>;
-  /** Leaderboard entries */
-  leaderboard: LeaderboardEntry[];
-
-  /** Fetch a single agent's reputation from the API */
-  fetchReputation: (agentId: string) => Promise<void>;
-  /** Fetch the leaderboard from the API */
-  fetchLeaderboard: () => Promise<void>;
-  /** Initialize WebSocket listeners */
-  initSocket: (socket: Socket) => void;
+interface ReputationEventsResponse {
+  agentId: string;
+  events?: ReputationChangeEvent[];
 }
 
-// ---------------------------------------------------------------------------
-// Store
-// ---------------------------------------------------------------------------
+interface ReputationLeaderboardResponse {
+  leaderboard?: LeaderboardEntry[];
+}
+
+interface ReputationState {
+  profiles: Record<string, ReputationProfile>;
+  events: Record<string, ReputationChangeEvent[]>;
+  leaderboard: LeaderboardEntry[];
+  loadingByAgent: Record<string, boolean>;
+  loadedByAgent: Record<string, boolean>;
+  errorsByAgent: Record<string, ApiRequestError | null>;
+  loadingLeaderboard: boolean;
+  leaderboardError: ApiRequestError | null;
+
+  fetchReputation: (agentId: string) => Promise<void>;
+  fetchLeaderboard: () => Promise<void>;
+  initSocket: (socket: Socket) => void;
+}
 
 export const useReputationStore = create<ReputationState>((set, get) => ({
   profiles: {},
   events: {},
   leaderboard: [],
+  loadingByAgent: {},
+  loadedByAgent: {},
+  errorsByAgent: {},
+  loadingLeaderboard: false,
+  leaderboardError: null,
 
   async fetchReputation(agentId: string) {
-    try {
-      const res = await fetch(`/api/agents/${agentId}/reputation`);
-      if (!res.ok) return;
-      const profile: ReputationProfile = await res.json();
-      set((s) => ({
-        profiles: { ...s.profiles, [agentId]: profile },
-      }));
+    set(state => ({
+      loadingByAgent: { ...state.loadingByAgent, [agentId]: true },
+      errorsByAgent: { ...state.errorsByAgent, [agentId]: null },
+    }));
 
-      // Also fetch recent events
-      const eventsRes = await fetch(
-        `/api/admin/reputation/trends?agentId=${agentId}&limit=50`
-      );
-      if (eventsRes.ok) {
-        const data = await eventsRes.json();
-        set((s) => ({
-          events: { ...s.events, [agentId]: data.events ?? [] },
-        }));
+    try {
+      const [profileResult, eventsResult] = await Promise.all([
+        fetchJsonSafe<ReputationProfile>(
+          `/api/agents/${encodeURIComponent(agentId)}/reputation`
+        ),
+        fetchJsonSafe<ReputationEventsResponse>(
+          `/api/admin/reputation/trends?agentId=${encodeURIComponent(agentId)}&limit=50`
+        ),
+      ]);
+
+      const nextState: Partial<ReputationState> = {
+        loadedByAgent: { ...get().loadedByAgent, [agentId]: true },
+      };
+
+      if (profileResult.ok) {
+        nextState.profiles = {
+          ...get().profiles,
+          [agentId]: profileResult.data,
+        };
+      } else if (
+        profileResult.error.status &&
+        profileResult.error.status !== 404
+      ) {
+        nextState.errorsByAgent = {
+          ...get().errorsByAgent,
+          [agentId]: profileResult.error,
+        };
       }
-    } catch {
-      // silently ignore fetch errors
+
+      if (eventsResult.ok) {
+        nextState.events = {
+          ...get().events,
+          [agentId]: eventsResult.data.events ?? [],
+        };
+      } else if (!profileResult.ok && profileResult.error.status !== 404) {
+        nextState.errorsByAgent = {
+          ...get().errorsByAgent,
+          [agentId]: eventsResult.error,
+        };
+      }
+
+      set(state => ({
+        ...nextState,
+        errorsByAgent: nextState.errorsByAgent ?? {
+          ...state.errorsByAgent,
+          [agentId]: null,
+        },
+      }));
+    } finally {
+      set(state => ({
+        loadingByAgent: { ...state.loadingByAgent, [agentId]: false },
+      }));
     }
   },
 
   async fetchLeaderboard() {
+    set({ loadingLeaderboard: true, leaderboardError: null });
     try {
-      const res = await fetch("/api/admin/reputation/leaderboard?limit=100");
-      if (!res.ok) return;
-      const data = await res.json();
-      set({ leaderboard: data.leaderboard ?? [] });
-    } catch {
-      // silently ignore
+      const result = await fetchJsonSafe<ReputationLeaderboardResponse>(
+        "/api/admin/reputation/leaderboard?limit=100"
+      );
+      if (!result.ok) {
+        set({ leaderboardError: result.error });
+        return;
+      }
+
+      set({
+        leaderboard: result.data.leaderboard ?? [],
+        leaderboardError: null,
+      });
+    } finally {
+      set({ loadingLeaderboard: false });
     }
   },
 
   initSocket(socket: Socket) {
-    socket.on(
-      "agent.reputationChanged",
-      (payload: {
-        agentId: string;
-        oldScore: number;
-        newScore: number;
-        grade: string;
-        dimensionDeltas: Record<string, number>;
-      }) => {
-        // Refresh the profile for this agent
-        get().fetchReputation(payload.agentId);
-      }
-    );
+    socket.on("agent.reputationChanged", (payload: { agentId: string }) => {
+      void get().fetchReputation(payload.agentId);
+    });
 
-    socket.on(
-      "agent.trustTierChanged",
-      (payload: {
-        agentId: string;
-        oldTier: string;
-        newTier: string;
-        reason: string;
-      }) => {
-        // Refresh the profile for this agent
-        get().fetchReputation(payload.agentId);
-      }
-    );
+    socket.on("agent.trustTierChanged", (payload: { agentId: string }) => {
+      void get().fetchReputation(payload.agentId);
+    });
   },
 }));

@@ -39,6 +39,7 @@ import { ReputationHistory } from '@/components/reputation/ReputationHistory';
 import { useReputationStore } from '@/lib/reputation-store';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useI18n } from '@/i18n';
+import { fetchJsonSafe, type ApiRequestError } from '@/lib/api-client';
 import { prepareWorkflowAttachments } from '@/lib/workflow-attachments';
 import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
 import { useAppStore } from '@/lib/store';
@@ -227,6 +228,59 @@ function EmptyState({ title, description }: { title: string; description: string
       <Network className="mb-3 h-10 w-10 text-white/30" />
       <p className="text-sm font-medium text-white/80">{title}</p>
       <p className="mt-1 text-[10px] text-white/50">{description}</p>
+    </div>
+  );
+}
+
+export function WorkflowErrorNotice({
+  error,
+  onRetry,
+  className,
+}: {
+  error: ApiRequestError;
+  onRetry?: () => void;
+  className?: string;
+}) {
+  const { copy } = useI18n();
+  const locale = useAppStore(state => state.locale);
+
+  const title =
+    error.kind === 'demo'
+      ? t(locale, '当前显示的是回退内容', 'Showing fallback preview data')
+      : error.kind === 'offline'
+        ? t(locale, '后端暂时不可用', 'The backend is temporarily unavailable')
+        : t(locale, '这部分内容暂时无法更新', 'This panel could not refresh');
+
+  return (
+    <div
+      className={`rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3 text-amber-100 ${
+        className || ''
+      }`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 text-[11px] font-semibold">
+            <AlertTriangle className="h-4 w-4 text-amber-300" />
+            <span>{title}</span>
+          </div>
+          <p className="mt-2 text-[11px] leading-5 text-amber-100">
+            {error.message}
+          </p>
+          <p className="mt-1 text-[10px] leading-5 text-amber-200/80">
+            {error.detail}
+          </p>
+        </div>
+        {onRetry && error.retryable ? (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-amber-300/30 bg-white/10 px-3 py-2 text-[10px] font-semibold text-amber-100 transition-colors hover:bg-white/20"
+          >
+            <Loader2 className="h-3.5 w-3.5" />
+            <span>{copy.tasks.statuses.action.retry}</span>
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -483,7 +537,7 @@ function DirectiveView() {
   const locale = useAppStore(state => state.locale);
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
-  const { submitDirective, isSubmitting } = useWorkflowStore();
+  const { submitDirective, isSubmitting, submitError } = useWorkflowStore();
   const [directive, setDirective] = useState('');
   const [attachments, setAttachments] = useState<WorkflowInputAttachment[]>([]);
   const [isPreparingFiles, setIsPreparingFiles] = useState(false);
@@ -499,10 +553,15 @@ function DirectiveView() {
       await setRuntimeMode('advanced');
       return;
     }
-    await submitDirective({ directive: directive.trim(), attachments });
-    setDirective('');
-    setAttachments([]);
-    setAttachmentError(null);
+    const workflowId = await submitDirective({
+      directive: directive.trim(),
+      attachments,
+    });
+    if (workflowId) {
+      setDirective('');
+      setAttachments([]);
+      setAttachmentError(null);
+    }
   };
 
   const handlePickFiles = () => {
@@ -567,6 +626,16 @@ function DirectiveView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.directive.title} description={narrative.sectionDescription} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {submitError ? (
+          <WorkflowErrorNotice
+            error={submitError}
+            onRetry={() => {
+              void handleSubmit();
+            }}
+            className="mb-4"
+          />
+        ) : null}
+
         {isFrontend ? (
           <div className="mb-4 rounded-2xl glass-panel p-3 text-[11px] leading-5 text-white/60">
             <p className="font-bold text-white">
@@ -707,8 +776,10 @@ function OrgView() {
   const locale = useAppStore(state => state.locale);
   const {
     agents,
+    agentsError,
     agentStatuses,
     currentWorkflow,
+    fetchAgents,
     setActiveView,
     setSelectedMemoryAgent,
   } = useWorkflowStore();
@@ -727,6 +798,16 @@ function OrgView() {
       <div className="flex h-full flex-col">
         <Section title={copy.workflow.org.title} description={copy.workflow.org.description} />
         <div className="flex-1 overflow-y-auto px-4 py-3">
+          {agentsError ? (
+            <WorkflowErrorNotice
+              error={agentsError}
+              onRetry={() => {
+                void fetchAgents();
+              }}
+              className="mb-4"
+            />
+          ) : null}
+
           <div className="mb-4 rounded-2xl glass-panel border-indigo-400/20 bg-indigo-500/10 p-4">
             <div className="flex flex-wrap gap-2">
               <Pill>{organization.source}</Pill>
@@ -850,6 +931,16 @@ function OrgView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.org.title} description={copy.workflow.org.description} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {agentsError ? (
+          <WorkflowErrorNotice
+            error={agentsError}
+            onRetry={() => {
+              void fetchAgents();
+            }}
+            className="mb-4"
+          />
+        ) : null}
+
         {ceo ? (
           <button onClick={() => openMemory(ceo.id)} className="mb-4 flex w-full items-center gap-3 rounded-2xl glass-panel border-amber-400/20 bg-amber-500/10 px-3 py-3 text-left">
             <div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
@@ -1395,7 +1486,18 @@ function ProgressView() {
   const { copy } = useI18n();
   const locale = useAppStore(state => state.locale);
   const fmt = useFmt();
-  const { currentWorkflow, tasks, messages, stages, downloadWorkflowReport, downloadDepartmentReport } = useWorkflowStore();
+  const {
+    currentWorkflow,
+    currentWorkflowId,
+    tasks,
+    messages,
+    stages,
+    workflowDetailError,
+    downloadWorkflowReport,
+    downloadDepartmentReport,
+    fetchWorkflowDetail,
+    fetchWorkflows,
+  } = useWorkflowStore();
   const workflowMissionDetail = useTasksStore(state => {
     const missionId = currentWorkflow?.missionId;
     return missionId ? state.detailsById[missionId] ?? null : null;
@@ -1534,7 +1636,37 @@ function ProgressView() {
   }, [currentWorkflow?.created_at, currentWorkflow?.started_at, locale, messages, nodeMap, tasks]);
 
   if (!currentWorkflow) {
-    return <EmptyState title={copy.workflow.progress.emptyTitle} description={copy.workflow.progress.emptyDescription} />;
+    return (
+      <div className="flex h-full flex-col">
+        <Section
+          title={copy.workflow.progress.overview}
+          description={t(
+            locale,
+            '先看整体进度，再展开角色摘要与关键事件。',
+            'Start with the overall progress, then expand role summaries and key events.'
+          )}
+        />
+        <div className="flex flex-1 flex-col px-4 py-3">
+          {workflowDetailError ? (
+            <WorkflowErrorNotice
+              error={workflowDetailError}
+              onRetry={() => {
+                if (currentWorkflowId) {
+                  void fetchWorkflowDetail(currentWorkflowId);
+                  return;
+                }
+                void fetchWorkflows();
+              }}
+              className="mb-3"
+            />
+          ) : null}
+          <EmptyState
+            title={copy.workflow.progress.emptyTitle}
+            description={copy.workflow.progress.emptyDescription}
+          />
+        </div>
+      </div>
+    );
   }
 
   const currentStageLabel = getDynamicStageLabel(
@@ -1589,6 +1721,15 @@ function ProgressView() {
         )}
       />
       <div className="flex-1 space-y-4 overflow-y-auto px-4 py-3">
+        {workflowDetailError ? (
+          <WorkflowErrorNotice
+            error={workflowDetailError}
+            onRetry={() => {
+              void fetchWorkflowDetail(currentWorkflow.id);
+            }}
+          />
+        ) : null}
+
         <div className="rounded-2xl glass-panel p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -1980,7 +2121,21 @@ function MemoryView() {
   const locale = useAppStore(state => state.locale);
   const fmt = useFmt();
   const isDemoActive = useDemoStore(s => s.isActive);
-  const { agents, currentWorkflow, currentWorkflowId, selectedMemoryAgentId, setSelectedMemoryAgent, agentMemoryRecent, agentMemorySearchResults, memoryQuery, isMemoryLoading, setMemoryQuery, fetchAgentRecentMemory, searchAgentMemory } = useWorkflowStore();
+  const {
+    agents,
+    currentWorkflow,
+    currentWorkflowId,
+    selectedMemoryAgentId,
+    setSelectedMemoryAgent,
+    agentMemoryRecent,
+    agentMemorySearchResults,
+    memoryQuery,
+    isMemoryLoading,
+    memoryError,
+    setMemoryQuery,
+    fetchAgentRecentMemory,
+    searchAgentMemory,
+  } = useWorkflowStore();
   const [draft, setDraft] = useState(memoryQuery);
   const organization = getOrganization(currentWorkflow);
   const nodeMap = useMemo(() => getNodeMap(organization), [organization]);
@@ -2053,6 +2208,20 @@ function MemoryView() {
         ) : null}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {memoryError && selectedAgent ? (
+          <WorkflowErrorNotice
+            error={memoryError}
+            onRetry={() => {
+              if (memoryQuery.trim()) {
+                void searchAgentMemory(selectedAgent.id, memoryQuery, 6);
+                return;
+              }
+              void fetchAgentRecentMemory(selectedAgent.id, currentWorkflowId, 10);
+            }}
+            className="mb-4"
+          />
+        ) : null}
+
         {selectedAgent ? (
           <div className="mb-4 space-y-3">
             {(() => {
@@ -2115,7 +2284,16 @@ function ReportCard({ item }: { item: HeartbeatReportInfo }) {
 function ReportsView() {
   const { copy } = useI18n();
   const fmt = useFmt();
-  const { heartbeatStatuses, heartbeatReports, fetchHeartbeatStatuses, fetchHeartbeatReports, runHeartbeat, runningHeartbeatAgentId, isHeartbeatLoading } = useWorkflowStore();
+  const {
+    heartbeatStatuses,
+    heartbeatReports,
+    heartbeatError,
+    fetchHeartbeatStatuses,
+    fetchHeartbeatReports,
+    runHeartbeat,
+    runningHeartbeatAgentId,
+    isHeartbeatLoading,
+  } = useWorkflowStore();
   useEffect(() => { void fetchHeartbeatStatuses(); void fetchHeartbeatReports(undefined, 12); }, [fetchHeartbeatReports, fetchHeartbeatStatuses]);
   const enabled = heartbeatStatuses.filter(item => item.enabled).length;
   const running = heartbeatStatuses.filter(item => item.state === 'running').length;
@@ -2123,6 +2301,17 @@ function ReportsView() {
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.reports.title} description={copy.workflow.reports.description} />
       <div className="flex-1 overflow-y-auto px-4 py-3">
+        {heartbeatError ? (
+          <WorkflowErrorNotice
+            error={heartbeatError}
+            onRetry={() => {
+              void fetchHeartbeatStatuses();
+              void fetchHeartbeatReports(undefined, 12);
+            }}
+            className="mb-3"
+          />
+        ) : null}
+
         <div className="mb-3 grid grid-cols-3 gap-2"><div className="rounded-xl glass-panel px-3 py-2"><p className="text-[9px] text-white/50">{copy.workflow.reports.enabled}</p><p className="mt-1 text-sm font-bold text-white font-data">{enabled}</p></div><div className="rounded-xl glass-panel px-3 py-2"><p className="text-[9px] text-white/50">{copy.workflow.reports.running}</p><p className="mt-1 text-sm font-bold text-white font-data">{running}</p></div><div className="rounded-xl glass-panel px-3 py-2"><p className="text-[9px] text-white/50">{copy.workflow.reports.latest}</p><p className="mt-1 text-[10px] font-semibold text-white">{fmt(heartbeatReports[0]?.generatedAt || null)}</p></div></div>
         <div className="mb-4"><div className="mb-1.5 flex items-center justify-between"><h4 className="text-[11px] font-bold text-white/50">{copy.workflow.reports.statusList}</h4>{isHeartbeatLoading ? <span className="flex items-center gap-1 text-[10px] text-white/40"><Loader2 className="h-3 w-3 animate-spin" />{copy.common.loading}</span> : null}</div>{heartbeatStatuses.length === 0 ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.reports.emptyStatuses}</div> : <div className="space-y-2">{heartbeatStatuses.map(item => <div key={item.agentId} className="rounded-xl glass-panel p-3"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex items-center gap-2"><p className="text-[11px] font-semibold text-white">{item.agentName}</p><span className={`rounded-full px-2 py-0.5 text-[8px] font-medium ${hbBadge[item.state] || hbBadge.idle}`}>{copy.workflow.statuses.heartbeat[item.state as keyof typeof copy.workflow.statuses.heartbeat] || item.state}</span></div><p className="mt-0.5 text-[9px] text-white/50">{item.department} · {item.intervalMinutes} min · {item.reportCount}</p></div><button onClick={() => void runHeartbeat(item.agentId)} disabled={!item.enabled || runningHeartbeatAgentId === item.agentId} className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-cyan-500/15 px-2.5 py-1.5 text-[9px] font-medium text-cyan-400 disabled:opacity-50">{runningHeartbeatAgentId === item.agentId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}{runningHeartbeatAgentId === item.agentId ? copy.workflow.reports.runningNow : copy.workflow.reports.triggerNow}</button></div><div className="mt-2 rounded-lg bg-white/5 px-2.5 py-2 text-[9px] text-white/60"><p>{copy.workflow.reports.focus}: {item.focus}</p><p className="mt-1">{copy.workflow.reports.keywords}: {item.keywords.length > 0 ? item.keywords.join(' / ') : copy.common.unavailable}</p><p className="mt-1">{copy.workflow.reports.lastSuccess}: {fmt(item.lastSuccessAt)}</p><p className="mt-1">{copy.workflow.reports.nextRun}: {fmt(item.nextRunAt)}</p>{item.lastReportTitle ? <p className="mt-1">{copy.workflow.reports.lastReport}: {item.lastReportTitle}</p> : null}{item.lastError ? <p className="mt-1 text-red-400">{copy.workflow.reports.error}: {item.lastError}</p> : null}</div></div>)}</div>}</div>
         <div><h4 className="mb-1.5 text-[11px] font-bold text-white/50">{copy.workflow.reports.reportsList}</h4>{heartbeatReports.length === 0 ? <div className="rounded-2xl bg-white/5 px-3 py-4 text-center text-[11px] text-white/50">{copy.workflow.reports.emptyReports}</div> : <div className="space-y-2">{heartbeatReports.map(item => <ReportCard key={`${item.agentId}-${item.reportId}`} item={item} />)}</div>}</div>
@@ -2134,12 +2323,27 @@ function ReportsView() {
 function HistoryView() {
   const { copy } = useI18n();
   const fmt = useFmt();
-  const { workflows, setCurrentWorkflow, setActiveView, fetchWorkflows } = useWorkflowStore();
+  const {
+    workflows,
+    workflowsError,
+    setCurrentWorkflow,
+    setActiveView,
+    fetchWorkflows,
+  } = useWorkflowStore();
   useEffect(() => { void fetchWorkflows(); }, [fetchWorkflows]);
   return (
     <div className="flex h-full flex-col">
       <Section title={copy.workflow.history.title} />
       <div className="flex-1 space-y-2 overflow-y-auto px-4 py-3">
+        {workflowsError ? (
+          <WorkflowErrorNotice
+            error={workflowsError}
+            onRetry={() => {
+              void fetchWorkflows();
+            }}
+          />
+        ) : null}
+
         {workflows.length === 0 ? <div className="py-8 text-center text-xs text-white/50">{copy.workflow.history.empty}</div> : workflows.map(workflow => <button key={workflow.id} onClick={() => { setCurrentWorkflow(workflow.id); setActiveView('workflow'); }} className="w-full rounded-xl glass-panel p-3 text-left hover:bg-white/10"><div className="mb-1 flex items-center justify-between gap-2"><span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${wfBadge[workflow.status] || wfBadge.pending}`}>{copy.workflow.statuses.workflow[workflow.status as keyof typeof copy.workflow.statuses.workflow] || workflow.status}</span><span className="text-[9px] text-white/40">{fmt(workflow.created_at)}</span></div><p className="line-clamp-2 text-xs text-white">{workflow.directive}</p></button>)}
       </div>
     </div>
@@ -2193,8 +2397,8 @@ export function WorkflowPanel({ embedded = false }: { embedded?: boolean }) {
     async function initTts() {
       let config: ClientVoiceConfig = { tts: { available: false }, stt: { available: false } };
       try {
-        const res = await fetch('/api/voice/config');
-        if (res.ok) config = await res.json();
+        const result = await fetchJsonSafe<ClientVoiceConfig>('/api/voice/config');
+        if (result.ok) config = result.data;
       } catch { /* server unavailable */ }
       if (cancelled) return;
       ttsEngineRef.current = createTTSEngine(config);

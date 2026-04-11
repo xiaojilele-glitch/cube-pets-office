@@ -8,6 +8,7 @@ import {
   getAgentEmoji,
   getAgentLabel,
 } from '@/lib/agent-config';
+import { fetchJsonSafe, type ApiRequestError } from '@/lib/api-client';
 import { callBrowserLLM } from '@/lib/browser-llm';
 import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
 import { createSTTEngine, type STTEngine } from '@/lib/stt-engine';
@@ -68,6 +69,34 @@ function getModeLabel(
   }
 
   return browserDirect ? copy.chat.modeLabels.browserDirect : copy.chat.modeLabels.serverProxy;
+}
+
+function isApiRequestError(error: unknown): error is ApiRequestError {
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as Partial<ApiRequestError>;
+  return (
+    typeof candidate.endpoint === 'string' &&
+    typeof candidate.message === 'string' &&
+    typeof candidate.detail === 'string'
+  );
+}
+
+export function buildChatErrorContent(
+  error: unknown,
+  copy: ReturnType<typeof useI18n>['copy']
+) {
+  if (isApiRequestError(error)) {
+    return `${copy.chat.errorTitle}\n${error.message}\n${error.detail}`;
+  }
+
+  const safeMessage =
+    error instanceof Error &&
+    error.message &&
+    !error.message.includes('Unexpected token')
+      ? error.message
+      : copy.chat.errorHint;
+
+  return `${copy.chat.errorTitle}\n${safeMessage}`;
 }
 
 export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
@@ -134,9 +163,9 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
       // Server config check
       let serverConfig: ClientVoiceConfig = { tts: { available: false }, stt: { available: false } };
       try {
-        const res = await fetch('/api/voice/config');
-        if (res.ok) {
-          serverConfig = await res.json();
+        const result = await fetchJsonSafe<ClientVoiceConfig>('/api/voice/config');
+        if (result.ok) {
+          serverConfig = result.data;
         }
       } catch {
         // Server unavailable — rely on browser APIs only
@@ -273,7 +302,7 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
         });
         assistantContent = data.content || assistantContent;
       } else {
-        const response = await fetch('/api/chat', {
+        const result = await fetchJsonSafe<{ content?: string }>('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -283,13 +312,11 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
           }),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text().catch(() => '');
-          throw new Error(`API ${response.status}: ${errorText.substring(0, 120)}`);
+        if (!result.ok) {
+          throw result.error;
         }
 
-        const data = await response.json();
-        assistantContent = data.content || assistantContent;
+        assistantContent = result.data.content || assistantContent;
       }
 
       addMessage({
@@ -298,10 +325,10 @@ export function ChatPanel({ embedded = false }: { embedded?: boolean }) {
         petName: agentId,
         timestamp: Date.now(),
       });
-    } catch (error: any) {
+    } catch (error) {
       addMessage({
         role: 'assistant',
-        content: `${copy.chat.errorTitle}\n${error?.message || copy.chat.errorHint}`,
+        content: buildChatErrorContent(error, copy),
         petName: agentId,
         timestamp: Date.now(),
       });

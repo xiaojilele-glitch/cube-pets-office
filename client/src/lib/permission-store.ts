@@ -1,61 +1,70 @@
-/**
- * Permission Zustand store.
- *
- * Manages Agent permission data (roles, policies, templates, audit trail)
- * and provides REST API integration for the permission management UI.
- *
- * @see Requirements 13.1, 13.2, 13.3, 13.4, 13.5
- */
-
 import { create } from "zustand";
+
 import type {
-  AgentRole,
   AgentPermissionPolicy,
-  PermissionTemplate,
-  PermissionAuditEntry,
+  AgentRole,
   Permission,
+  PermissionAuditEntry,
+  PermissionTemplate,
 } from "@shared/permission/contracts";
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
+import { fetchJsonSafe, type ApiRequestError } from "./api-client";
+
+interface PermissionRolesResponse {
+  ok?: boolean;
+  roles?: AgentRole[];
+}
+
+interface PermissionPolicyResponse {
+  ok?: boolean;
+  policy?: AgentPermissionPolicy;
+}
+
+interface PermissionTemplatesResponse {
+  ok?: boolean;
+  templates?: PermissionTemplate[];
+}
+
+interface PermissionAuditResponse {
+  ok?: boolean;
+  trail?: PermissionAuditEntry[];
+}
+
+interface PermissionMutationResponse {
+  ok?: boolean;
+}
 
 interface PermissionState {
-  /** All permission roles */
   roles: AgentRole[];
-  /** Agent permission policies keyed by agentId */
   policies: Record<string, AgentPermissionPolicy>;
-  /** Permission templates */
   templates: PermissionTemplate[];
-  /** Audit trail entries keyed by agentId */
   auditTrail: Record<string, PermissionAuditEntry[]>;
-  /** Loading flags */
   loadingRoles: boolean;
   loadingPolicies: boolean;
   loadingTemplates: boolean;
   loadingAudit: boolean;
+  rolesError: ApiRequestError | null;
+  templatesError: ApiRequestError | null;
+  policyErrors: Record<string, ApiRequestError | null>;
+  auditErrors: Record<string, ApiRequestError | null>;
 
-  /** Fetch all roles */
   fetchRoles: () => Promise<void>;
-  /** Fetch policy for a specific agent */
   fetchPolicy: (agentId: string) => Promise<void>;
-  /** Fetch all templates */
   fetchTemplates: () => Promise<void>;
-  /** Fetch audit trail for a specific agent */
   fetchAuditTrail: (agentId: string) => Promise<void>;
-  /** Update an agent's policy (role assignment, custom permissions) */
-  updatePolicy: (agentId: string, updates: Partial<AgentPermissionPolicy>) => Promise<void>;
-  /** Grant temporary permission */
-  grantTemp: (agentId: string, permission: Permission, durationMs: number) => Promise<void>;
-  /** Revoke a permission */
+  updatePolicy: (
+    agentId: string,
+    updates: Partial<AgentPermissionPolicy>
+  ) => Promise<void>;
+  grantTemp: (
+    agentId: string,
+    permission: Permission,
+    durationMs: number
+  ) => Promise<void>;
   revoke: (agentId: string, permission: Permission) => Promise<void>;
 }
 
-// ---------------------------------------------------------------------------
-// Store
-// ---------------------------------------------------------------------------
-
-export const usePermissionStore = create<PermissionState>((set) => ({
+export const usePermissionStore = create<PermissionState>((set, get) => ({
   roles: [],
   policies: {},
   templates: [],
@@ -64,105 +73,170 @@ export const usePermissionStore = create<PermissionState>((set) => ({
   loadingPolicies: false,
   loadingTemplates: false,
   loadingAudit: false,
+  rolesError: null,
+  templatesError: null,
+  policyErrors: {},
+  auditErrors: {},
 
   async fetchRoles() {
-    set({ loadingRoles: true });
+    set({ loadingRoles: true, rolesError: null });
     try {
-      const res = await fetch("/api/permissions/roles");
-      if (!res.ok) return;
-      const data = await res.json();
-      set({ roles: data.roles ?? data ?? [] });
-    } catch {
-      // silently ignore
+      const result = await fetchJsonSafe<PermissionRolesResponse>(
+        "/api/permissions/roles"
+      );
+      if (!result.ok) {
+        set({ rolesError: result.error });
+        return;
+      }
+
+      set({ roles: result.data.roles ?? [], rolesError: null });
     } finally {
       set({ loadingRoles: false });
     }
   },
 
   async fetchPolicy(agentId: string) {
-    set({ loadingPolicies: true });
+    set({
+      loadingPolicies: true,
+      policyErrors: { ...get().policyErrors, [agentId]: null },
+    });
+
     try {
-      const res = await fetch(`/api/permissions/policies/${agentId}`);
-      if (!res.ok) return;
-      const policy: AgentPermissionPolicy = await res.json();
-      set((s) => ({
-        policies: { ...s.policies, [agentId]: policy },
+      const result = await fetchJsonSafe<PermissionPolicyResponse>(
+        `/api/permissions/policies/${encodeURIComponent(agentId)}`
+      );
+      if (!result.ok) {
+        set(state => ({
+          policyErrors: { ...state.policyErrors, [agentId]: result.error },
+        }));
+        return;
+      }
+
+      const policy = result.data.policy;
+      if (!policy) return;
+
+      set(state => ({
+        policies: { ...state.policies, [agentId]: policy },
+        policyErrors: { ...state.policyErrors, [agentId]: null },
       }));
-    } catch {
-      // silently ignore
     } finally {
       set({ loadingPolicies: false });
     }
   },
 
   async fetchTemplates() {
-    set({ loadingTemplates: true });
+    set({ loadingTemplates: true, templatesError: null });
     try {
-      const res = await fetch("/api/permissions/templates");
-      if (!res.ok) return;
-      const data = await res.json();
-      set({ templates: data.templates ?? data ?? [] });
-    } catch {
-      // silently ignore
+      const result = await fetchJsonSafe<PermissionTemplatesResponse>(
+        "/api/permissions/templates"
+      );
+      if (!result.ok) {
+        set({ templatesError: result.error });
+        return;
+      }
+
+      set({ templates: result.data.templates ?? [], templatesError: null });
     } finally {
       set({ loadingTemplates: false });
     }
   },
 
   async fetchAuditTrail(agentId: string) {
-    set({ loadingAudit: true });
+    set({
+      loadingAudit: true,
+      auditErrors: { ...get().auditErrors, [agentId]: null },
+    });
+
     try {
-      const res = await fetch(`/api/permissions/audit/${agentId}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      set((s) => ({
-        auditTrail: { ...s.auditTrail, [agentId]: data.entries ?? data ?? [] },
+      const result = await fetchJsonSafe<PermissionAuditResponse>(
+        `/api/permissions/audit/${encodeURIComponent(agentId)}`
+      );
+      if (!result.ok) {
+        set(state => ({
+          auditErrors: { ...state.auditErrors, [agentId]: result.error },
+        }));
+        return;
+      }
+
+      set(state => ({
+        auditTrail: { ...state.auditTrail, [agentId]: result.data.trail ?? [] },
+        auditErrors: { ...state.auditErrors, [agentId]: null },
       }));
-    } catch {
-      // silently ignore
     } finally {
       set({ loadingAudit: false });
     }
   },
 
   async updatePolicy(agentId: string, updates: Partial<AgentPermissionPolicy>) {
-    try {
-      const res = await fetch(`/api/permissions/policies/${agentId}`, {
+    const result = await fetchJsonSafe<PermissionPolicyResponse>(
+      `/api/permissions/policies/${encodeURIComponent(agentId)}`,
+      {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
-      });
-      if (!res.ok) return;
-      const policy: AgentPermissionPolicy = await res.json();
-      set((s) => ({
-        policies: { ...s.policies, [agentId]: policy },
+      }
+    );
+
+    if (!result.ok) {
+      set(state => ({
+        policyErrors: { ...state.policyErrors, [agentId]: result.error },
       }));
-    } catch {
-      // silently ignore
+      return;
     }
+
+    const policy = result.data.policy;
+    if (!policy) return;
+
+    set(state => ({
+      policies: { ...state.policies, [agentId]: policy },
+      policyErrors: { ...state.policyErrors, [agentId]: null },
+    }));
+    await get().fetchAuditTrail(agentId);
   },
 
   async grantTemp(agentId: string, permission: Permission, durationMs: number) {
-    try {
-      await fetch("/api/permissions/grant-temp", {
+    const result = await fetchJsonSafe<PermissionMutationResponse>(
+      "/api/permissions/grant-temp",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ agentId, permission, durationMs }),
-      });
-    } catch {
-      // silently ignore
+      }
+    );
+
+    if (!result.ok) {
+      set(state => ({
+        policyErrors: { ...state.policyErrors, [agentId]: result.error },
+      }));
+      return;
     }
+
+    await Promise.all([
+      get().fetchPolicy(agentId),
+      get().fetchAuditTrail(agentId),
+    ]);
   },
 
   async revoke(agentId: string, permission: Permission) {
-    try {
-      await fetch("/api/permissions/revoke", {
+    const result = await fetchJsonSafe<PermissionMutationResponse>(
+      "/api/permissions/revoke",
+      {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ agentId, permission }),
-      });
-    } catch {
-      // silently ignore
+      }
+    );
+
+    if (!result.ok) {
+      set(state => ({
+        policyErrors: { ...state.policyErrors, [agentId]: result.error },
+      }));
+      return;
     }
+
+    await Promise.all([
+      get().fetchPolicy(agentId),
+      get().fetchAuditTrail(agentId),
+    ]);
   },
 }));

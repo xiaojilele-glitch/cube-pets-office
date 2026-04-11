@@ -1,16 +1,3 @@
-/**
- * Cost observability Zustand store.
- *
- * Manages CostSnapshot, MissionCostSummary history, and dashboard visibility.
- * Integrates with Socket.IO for real-time cost.update / cost.alert events
- * and REST API for initial data loading, budget updates, and degradation release.
- *
- * In pure frontend mode (runtimeMode === "frontend"), the store reads from
- * IndexedDB via browser-cost-store instead of the REST API.
- *
- * @see Requirements 8.3, 12.1, 12.2, 12.3, 13.2
- */
-
 import { create } from "zustand";
 import type { Socket } from "socket.io-client";
 
@@ -25,16 +12,16 @@ import {
   computeBrowserCostSnapshot,
   saveBrowserBudget,
 } from "./browser-cost-store";
+import { fetchJsonSafe, type ApiRequestError } from "./api-client";
 import { useAppStore } from "./store";
-
-// ---------------------------------------------------------------------------
-// State interface
-// ---------------------------------------------------------------------------
 
 interface CostState {
   snapshot: CostSnapshot | null;
   history: MissionCostSummary[];
   dashboardOpen: boolean;
+  loading: boolean;
+  hasLoaded: boolean;
+  error: ApiRequestError | null;
 
   toggleDashboard: () => void;
   initSocket: (socket: Socket) => void;
@@ -43,37 +30,42 @@ interface CostState {
   releaseDegradation: () => Promise<void>;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function isFrontendMode(): boolean {
   return useAppStore.getState().runtimeMode === "frontend";
 }
 
-// ---------------------------------------------------------------------------
-// Store
-// ---------------------------------------------------------------------------
+function createStorageError(message: string, detail: string): ApiRequestError {
+  return {
+    kind: "demo",
+    source: "storage",
+    endpoint: "browser-cost-store",
+    message,
+    detail,
+    retryable: true,
+  };
+}
 
 export const useCostStore = create<CostState>((set, get) => ({
   snapshot: null,
   history: [],
   dashboardOpen: false,
+  loading: false,
+  hasLoaded: false,
+  error: null,
 
-  toggleDashboard: () => set((s) => ({ dashboardOpen: !s.dashboardOpen })),
+  toggleDashboard: () =>
+    set(state => ({ dashboardOpen: !state.dashboardOpen })),
 
   initSocket: (socket: Socket) => {
     socket.on("cost.update", (snapshot: CostSnapshot) => {
-      set({ snapshot });
+      set({ snapshot, error: null, hasLoaded: true });
     });
 
     socket.on("cost.alert", (alert: CostAlert) => {
       const current = get().snapshot;
       if (!current) return;
 
-      // Merge the new alert into the existing snapshot alerts list,
-      // replacing any alert with the same id.
-      const existing = current.alerts.filter((a) => a.id !== alert.id);
+      const existing = current.alerts.filter(item => item.id !== alert.id);
       set({
         snapshot: {
           ...current,
@@ -84,90 +76,106 @@ export const useCostStore = create<CostState>((set, get) => ({
   },
 
   fetchInitial: async () => {
-    if (isFrontendMode()) {
-      // Pure frontend mode — load from IndexedDB
-      try {
-        const snapshot = await computeBrowserCostSnapshot();
-        set({ snapshot, history: [] });
-      } catch {
-        // IndexedDB unavailable — keep current state
-      }
-      return;
-    }
+    set({ loading: true, error: null });
 
     try {
-      const [liveRes, historyRes] = await Promise.all([
-        fetch("/api/cost/live"),
-        fetch("/api/cost/history"),
+      if (isFrontendMode()) {
+        try {
+          const snapshot = await computeBrowserCostSnapshot();
+          set({ snapshot, history: [], hasLoaded: true, error: null });
+        } catch {
+          set({
+            hasLoaded: true,
+            error: createStorageError(
+              "Local cost metrics are unavailable right now.",
+              "The browser preview could not read cached cost data. Retry after storage is available again."
+            ),
+          });
+        }
+        return;
+      }
+
+      const [liveResult, historyResult] = await Promise.all([
+        fetchJsonSafe<CostSnapshot>("/api/cost/live"),
+        fetchJsonSafe<MissionCostSummary[]>("/api/cost/history"),
       ]);
 
-      if (liveRes.ok) {
-        const snapshot: CostSnapshot = await liveRes.json();
-        set({ snapshot });
+      if (liveResult.ok) {
+        set({ snapshot: liveResult.data, hasLoaded: true, error: null });
+      } else {
+        set({
+          hasLoaded: true,
+          error: get().snapshot ? null : liveResult.error,
+        });
       }
 
-      if (historyRes.ok) {
-        const history: MissionCostSummary[] = await historyRes.json();
-        set({ history });
+      if (historyResult.ok) {
+        set({ history: historyResult.data });
       }
-    } catch {
-      // Network error — keep current state, dashboard will show stale/empty data
+    } finally {
+      set({ loading: false });
     }
   },
 
   updateBudget: async (budget: Partial<Budget>) => {
     const current = get().snapshot?.budget;
     const merged: Budget = {
-      maxCost: budget.maxCost ?? current?.maxCost ?? 1.0,
+      maxCost: budget.maxCost ?? current?.maxCost ?? 1,
       maxTokens: budget.maxTokens ?? current?.maxTokens ?? 100000,
-      warningThreshold: budget.warningThreshold ?? current?.warningThreshold ?? 0.8,
+      warningThreshold:
+        budget.warningThreshold ?? current?.warningThreshold ?? 0.8,
     };
 
     if (isFrontendMode()) {
-      // Pure frontend mode — persist to IndexedDB and recompute snapshot
-      await saveBrowserBudget(merged);
-      const snapshot = await computeBrowserCostSnapshot(merged);
-      set({ snapshot });
-      return;
+      try {
+        await saveBrowserBudget(merged);
+        const snapshot = await computeBrowserCostSnapshot(merged);
+        set({ snapshot, error: null, hasLoaded: true });
+        return;
+      } catch {
+        const error = createStorageError(
+          "Budget settings could not be saved locally.",
+          "The browser preview failed to persist the updated budget."
+        );
+        set({ error });
+        throw new Error(error.message);
+      }
     }
 
-    const response = await fetch("/api/cost/budget", {
+    const result = await fetchJsonSafe<Budget>("/api/cost/budget", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(merged),
     });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(
-        (data as { error?: string }).error ?? `Budget update failed (${response.status})`
-      );
+    if (!result.ok) {
+      set({ error: result.error });
+      throw new Error(result.error.message);
     }
 
-    // Refresh snapshot to pick up re-evaluated alerts / budget state
+    set({ error: null });
     await get().fetchInitial();
   },
 
   releaseDegradation: async () => {
     if (isFrontendMode()) {
-      // No server-side degradation in frontend mode — just refresh snapshot
       await get().fetchInitial();
       return;
     }
 
-    const response = await fetch("/api/cost/downgrade/release", {
+    const result = await fetchJsonSafe<{
+      ok?: boolean;
+      downgradeLevel?: string;
+    }>("/api/cost/downgrade/release", {
       method: "POST",
     });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(
-        (data as { error?: string }).error ??
-          `Degradation release failed (${response.status})`
-      );
+    if (!result.ok) {
+      set({ error: result.error });
+      throw new Error(result.error.message);
     }
 
-    // Refresh snapshot to reflect updated downgrade level
+    set({ error: null });
     await get().fetchInitial();
   },
 }));

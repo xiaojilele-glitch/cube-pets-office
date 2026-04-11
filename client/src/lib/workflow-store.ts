@@ -9,6 +9,7 @@ import {
 } from "@shared/workflow-input";
 
 import { useAppStore } from "@/lib/store";
+import { fetchJsonSafe, type ApiRequestError } from "./api-client";
 import {
   getAgentsSnapshot,
   getHeartbeatReportsSnapshot,
@@ -61,6 +62,51 @@ export type {
 export interface DirectiveSubmissionInput {
   directive: string;
   attachments?: WorkflowInputAttachment[];
+}
+
+interface WorkflowAgentsResponse {
+  agents?: AgentInfo[];
+}
+
+interface WorkflowStagesResponse {
+  stages?: StageInfo[];
+}
+
+interface WorkflowListResponse {
+  workflows?: WorkflowInfo[];
+}
+
+interface WorkflowDetailResponse {
+  workflow?: WorkflowInfo | null;
+  tasks?: TaskInfo[];
+  messages?: MessageInfo[];
+  report?: unknown | null;
+}
+
+interface WorkflowRecentMemoryResponse {
+  entries?: AgentMemoryEntry[];
+}
+
+interface WorkflowSearchMemoryResponse {
+  memories?: AgentMemorySummary[];
+}
+
+interface WorkflowHeartbeatStatusesResponse {
+  statuses?: HeartbeatStatusInfo[];
+}
+
+interface WorkflowHeartbeatReportsResponse {
+  reports?: HeartbeatReportInfo[];
+}
+
+interface WorkflowHeartbeatRunResponse {
+  ok?: boolean;
+  error?: string;
+}
+
+interface WorkflowCreateResponse {
+  workflowId?: string;
+  error?: string;
 }
 
 export type PanelView =
@@ -161,6 +207,28 @@ async function downloadFromUrl(url: string, fallbackFilename: string) {
   saveBlob(getDownloadFilename(response, fallbackFilename), blob);
 }
 
+function isApiRequestError(error: unknown): error is ApiRequestError {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as Partial<ApiRequestError>;
+  return (
+    typeof candidate.endpoint === "string" &&
+    typeof candidate.message === "string" &&
+    typeof candidate.detail === "string"
+  );
+}
+
+async function fetchAdvancedJsonOrThrow<T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<T> {
+  const result = await fetchJsonSafe<T>(input, init);
+  if (!result.ok) {
+    throw result.error;
+  }
+
+  return result.data;
+}
+
 let runtimeUnsubscribe: (() => void) | null = null;
 let runtimeInitPromise: Promise<void> | null = null;
 
@@ -168,20 +236,26 @@ interface WorkflowState {
   socket: Socket | null;
   connected: boolean;
   agents: AgentInfo[];
+  agentsError: ApiRequestError | null;
   agentStatuses: Record<string, string>;
   currentWorkflowId: string | null;
   workflows: WorkflowInfo[];
+  workflowsError: ApiRequestError | null;
   currentWorkflow: WorkflowInfo | null;
+  workflowDetailError: ApiRequestError | null;
   tasks: TaskInfo[];
   messages: MessageInfo[];
   agentMemoryRecent: AgentMemoryEntry[];
   agentMemorySearchResults: AgentMemorySummary[];
+  memoryError: ApiRequestError | null;
   heartbeatStatuses: HeartbeatStatusInfo[];
   heartbeatReports: HeartbeatReportInfo[];
+  heartbeatError: ApiRequestError | null;
   stages: StageInfo[];
   isWorkflowPanelOpen: boolean;
   activeView: PanelView;
   isSubmitting: boolean;
+  submitError: ApiRequestError | null;
   lastSubmittedInputSignature: string | null;
   lastSubmittedAt: number | null;
   isMemoryLoading: boolean;
@@ -391,20 +465,26 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   socket: null,
   connected: false,
   agents: [],
+  agentsError: null,
   agentStatuses: {},
   currentWorkflowId: null,
   workflows: [],
+  workflowsError: null,
   currentWorkflow: null,
+  workflowDetailError: null,
   tasks: [],
   messages: [],
   agentMemoryRecent: [],
   agentMemorySearchResults: [],
+  memoryError: null,
   heartbeatStatuses: [],
   heartbeatReports: [],
+  heartbeatError: null,
   stages: FALLBACK_STAGES,
   isWorkflowPanelOpen: false,
   activeView: "directive",
   isSubmitting: false,
+  submitError: null,
   lastSubmittedInputSignature: null,
   lastSubmittedAt: null,
   isMemoryLoading: false,
@@ -506,8 +586,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchAgents: async () => {
     try {
       if (isAdvancedMode()) {
-        const response = await fetch("/api/agents");
-        const data = await response.json();
+        const data = await fetchAdvancedJsonOrThrow<WorkflowAgentsResponse>(
+          "/api/agents"
+        );
         const agents = (data.agents || []).map((agent: any) => ({
           ...agent,
           isActive: agent.isActive ?? true,
@@ -516,7 +597,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         void persistAgents(agents).catch(storageError => {
           console.warn("[Store] Failed to persist agents snapshot:", storageError);
         });
-        set({ agents });
+        set({ agents, agentsError: null });
         return;
       }
 
@@ -529,9 +610,13 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       void persistAgents(agents).catch(storageError => {
         console.warn("[Store] Failed to persist agents snapshot:", storageError);
       });
-      set({ agents });
+      set({ agents, agentsError: null });
     } catch (err) {
       console.error("[Store] Failed to fetch agents:", err);
+      const agentsError = isApiRequestError(err) ? err : null;
+      if (agentsError) {
+        set({ agentsError });
+      }
       try {
         const agents = await getAgentsSnapshot();
         if (agents.length > 0) {
@@ -541,6 +626,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
               isActive: agent.isActive ?? true,
               status: get().agentStatuses[agent.id] || agent.status || "idle",
             })),
+            agentsError,
           });
         }
       } catch (storageError) {
@@ -552,8 +638,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchStages: async () => {
     try {
       if (isAdvancedMode()) {
-        const response = await fetch("/api/config/stages");
-        const data = await response.json();
+        const data = await fetchAdvancedJsonOrThrow<WorkflowStagesResponse>(
+          "/api/config/stages"
+        );
         set({ stages: data.stages || FALLBACK_STAGES });
         return;
       }
@@ -569,7 +656,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchWorkflows: async () => {
     try {
       const data = isAdvancedMode()
-        ? await fetch("/api/workflows").then(res => res.json())
+        ? await fetchAdvancedJsonOrThrow<WorkflowListResponse>(
+            "/api/workflows"
+          )
         : await localRuntime.listWorkflows();
       void persistWorkflows(data.workflows || []).catch(storageError => {
         console.warn(
@@ -577,13 +666,17 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           storageError
         );
       });
-      set({ workflows: data.workflows || [] });
+      set({ workflows: data.workflows || [], workflowsError: null });
     } catch (err) {
       console.error("[Store] Failed to fetch workflows:", err);
+      const workflowsError = isApiRequestError(err) ? err : null;
+      if (workflowsError) {
+        set({ workflowsError });
+      }
       try {
         const workflows = await getWorkflowsSnapshot();
         if (workflows.length > 0) {
-          set({ workflows });
+          set({ workflows, workflowsError });
         }
       } catch (storageError) {
         console.warn("[Store] Failed to load workflow snapshots:", storageError);
@@ -594,7 +687,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchWorkflowDetail: async (id: string) => {
     try {
       const data = isAdvancedMode()
-        ? await fetch(`/api/workflows/${id}`).then(res => res.json())
+        ? await fetchAdvancedJsonOrThrow<WorkflowDetailResponse>(
+            `/api/workflows/${id}`
+          )
         : await localRuntime.getWorkflowDetail(id);
       void persistWorkflowDetail({
         id,
@@ -613,9 +708,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         tasks: data.tasks || [],
         messages: data.messages || [],
         currentWorkflowId: id,
+        workflowDetailError: null,
       });
     } catch (err) {
       console.error("[Store] Failed to fetch workflow detail:", err);
+      const workflowDetailError = isApiRequestError(err) ? err : null;
+      if (workflowDetailError) {
+        set({ workflowDetailError });
+      }
       try {
         const snapshot = await getWorkflowDetailSnapshot(id);
         if (snapshot) {
@@ -624,6 +724,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             tasks: snapshot.tasks || [],
             messages: snapshot.messages || [],
             currentWorkflowId: id,
+            workflowDetailError,
           });
         }
       } catch (storageError) {
@@ -638,7 +739,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     limit: number = 10
   ) => {
     if (!agentId) return;
-    set({ isMemoryLoading: true });
+    set({ isMemoryLoading: true, memoryError: null });
 
     try {
       const data = isAdvancedMode()
@@ -648,9 +749,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             if (workflowId) {
               params.set("workflowId", workflowId);
             }
-            return fetch(
+            return fetchAdvancedJsonOrThrow<WorkflowRecentMemoryResponse>(
               `/api/agents/${agentId}/memory/recent?${params.toString()}`
-            ).then(res => res.json());
+            );
           })()
         : await localRuntime.getAgentRecentMemory(agentId, workflowId, limit);
       void persistRecentMemory(agentId, workflowId || null, data.entries || []).catch(
@@ -661,18 +762,24 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       set({
         agentMemoryRecent: data.entries || [],
         isMemoryLoading: false,
+        memoryError: null,
       });
     } catch (err) {
       console.error("[Store] Failed to fetch recent memory:", err);
+      const memoryError = isApiRequestError(err) ? err : null;
+      if (memoryError) {
+        set({ memoryError });
+      }
       try {
         const snapshot = await getRecentMemorySnapshot(agentId, workflowId || null);
         set({
           agentMemoryRecent: snapshot?.entries || [],
           isMemoryLoading: false,
+          memoryError,
         });
       } catch (storageError) {
         console.warn("[Store] Failed to load recent memory snapshot:", storageError);
-        set({ agentMemoryRecent: [], isMemoryLoading: false });
+        set({ agentMemoryRecent: [], isMemoryLoading: false, memoryError });
       }
     }
   },
@@ -683,7 +790,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     topK: number = 5
   ) => {
     if (!agentId) return;
-    set({ isMemoryLoading: true, memoryQuery: query });
+    set({ isMemoryLoading: true, memoryQuery: query, memoryError: null });
 
     try {
       const data = isAdvancedMode()
@@ -691,9 +798,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             const params = new URLSearchParams();
             params.set("query", query);
             params.set("topK", String(topK));
-            return fetch(
+            return fetchAdvancedJsonOrThrow<WorkflowSearchMemoryResponse>(
               `/api/agents/${agentId}/memory/search?${params.toString()}`
-            ).then(res => res.json());
+            );
           })()
         : await localRuntime.searchAgentMemory(agentId, query, topK);
       void persistMemorySearch(agentId, query, data.memories || []).catch(
@@ -704,18 +811,28 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       set({
         agentMemorySearchResults: data.memories || [],
         isMemoryLoading: false,
+        memoryError: null,
       });
     } catch (err) {
       console.error("[Store] Failed to search memory:", err);
+      const memoryError = isApiRequestError(err) ? err : null;
+      if (memoryError) {
+        set({ memoryError });
+      }
       try {
         const snapshot = await getMemorySearchSnapshot(agentId, query);
         set({
           agentMemorySearchResults: snapshot?.results || [],
           isMemoryLoading: false,
+          memoryError,
         });
       } catch (storageError) {
         console.warn("[Store] Failed to load memory search snapshot:", storageError);
-        set({ agentMemorySearchResults: [], isMemoryLoading: false });
+        set({
+          agentMemorySearchResults: [],
+          isMemoryLoading: false,
+          memoryError,
+        });
       }
     }
   },
@@ -723,7 +840,9 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchHeartbeatStatuses: async () => {
     try {
       const data = isAdvancedMode()
-        ? await fetch("/api/reports/heartbeat/status").then(res => res.json())
+        ? await fetchAdvancedJsonOrThrow<WorkflowHeartbeatStatusesResponse>(
+            "/api/reports/heartbeat/status"
+          )
         : await localRuntime.getHeartbeatStatuses();
       void persistHeartbeatStatuses(data.statuses || []).catch(storageError => {
         console.warn(
@@ -731,12 +850,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           storageError
         );
       });
-      set({ heartbeatStatuses: data.statuses || [] });
+      set({ heartbeatStatuses: data.statuses || [], heartbeatError: null });
     } catch (err) {
       console.error("[Store] Failed to fetch heartbeat statuses:", err);
+      const heartbeatError = isApiRequestError(err) ? err : null;
+      if (heartbeatError) {
+        set({ heartbeatError });
+      }
       try {
         const statuses = await getHeartbeatStatusesSnapshot();
-        set({ heartbeatStatuses: statuses || [] });
+        set({ heartbeatStatuses: statuses || [], heartbeatError });
       } catch (storageError) {
         console.warn("[Store] Failed to load heartbeat status snapshots:", storageError);
       }
@@ -747,7 +870,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     agentId?: string | null,
     limit: number = 12
   ) => {
-    set({ isHeartbeatLoading: true });
+    set({ isHeartbeatLoading: true, heartbeatError: null });
 
     try {
       const data = isAdvancedMode()
@@ -757,8 +880,8 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             if (agentId) {
               params.set("agentId", agentId);
             }
-            return fetch(`/api/reports/heartbeat?${params.toString()}`).then(res =>
-              res.json()
+            return fetchAdvancedJsonOrThrow<WorkflowHeartbeatReportsResponse>(
+              `/api/reports/heartbeat?${params.toString()}`
             );
           })()
         : await localRuntime.getHeartbeatReports(agentId, limit);
@@ -778,35 +901,44 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       set({
         heartbeatReports: data.reports || [],
         isHeartbeatLoading: false,
+        heartbeatError: null,
       });
     } catch (err) {
       console.error("[Store] Failed to fetch heartbeat reports:", err);
+      const heartbeatError = isApiRequestError(err) ? err : null;
+      if (heartbeatError) {
+        set({ heartbeatError });
+      }
       try {
         const reports = await getHeartbeatReportsSnapshot(agentId || null);
         set({
           heartbeatReports: reports.map(item => item.summary),
           isHeartbeatLoading: false,
+          heartbeatError,
         });
       } catch (storageError) {
         console.warn("[Store] Failed to load heartbeat report snapshots:", storageError);
-        set({ heartbeatReports: [], isHeartbeatLoading: false });
+        set({
+          heartbeatReports: [],
+          isHeartbeatLoading: false,
+          heartbeatError,
+        });
       }
     }
   },
 
   runHeartbeat: async (agentId: string) => {
     if (!agentId) return false;
-    set({ runningHeartbeatAgentId: agentId });
+    set({ runningHeartbeatAgentId: agentId, heartbeatError: null });
 
     try {
       if (isAdvancedMode()) {
-        const response = await fetch(`/api/reports/heartbeat/${agentId}/run`, {
-          method: "POST",
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Heartbeat run failed");
-        }
+        await fetchAdvancedJsonOrThrow<WorkflowHeartbeatRunResponse>(
+          `/api/reports/heartbeat/${agentId}/run`,
+          {
+            method: "POST",
+          }
+        );
       } else {
         await localRuntime.runHeartbeat(agentId);
       }
@@ -817,7 +949,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       return true;
     } catch (err) {
       console.error("[Store] Failed to run heartbeat:", err);
-      set({ runningHeartbeatAgentId: null });
+      set({
+        runningHeartbeatAgentId: null,
+        heartbeatError: isApiRequestError(err) ? err : get().heartbeatError,
+      });
       return false;
     }
   },
@@ -865,6 +1000,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
     set({
       isSubmitting: true,
+      submitError: null,
       lastSubmittedInputSignature: inputSignature,
       lastSubmittedAt: now,
     });
@@ -872,19 +1008,17 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
     try {
       const data = isAdvancedMode()
         ? await (async () => {
-            const response = await fetch("/api/workflows", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                directive: normalizedDirective,
-                attachments,
-              }),
-            });
-            const payload = await response.json();
-            if (!response.ok) {
-              throw new Error(payload.error || "Workflow start failed");
-            }
-            return payload;
+            return fetchAdvancedJsonOrThrow<WorkflowCreateResponse>(
+              "/api/workflows",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  directive: normalizedDirective,
+                  attachments,
+                }),
+              }
+            );
           })()
         : await localRuntime.submitDirective(normalizedDirective, attachments);
 
@@ -893,6 +1027,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           currentWorkflowId: data.workflowId,
           activeView: "workflow",
           isSubmitting: false,
+          submitError: null,
           lastSubmittedInputSignature: inputSignature,
           lastSubmittedAt: Date.now(),
         });
@@ -901,11 +1036,14 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         return data.workflowId;
       }
 
-      set({ isSubmitting: false });
+      set({ isSubmitting: false, submitError: null });
       return null;
     } catch (err) {
       console.error("[Store] Failed to submit directive:", err);
-      set({ isSubmitting: false });
+      set({
+        isSubmitting: false,
+        submitError: isApiRequestError(err) ? err : null,
+      });
       return null;
     }
   },

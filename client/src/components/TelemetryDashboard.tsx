@@ -7,20 +7,17 @@
  * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 8.3
  */
 
+import { useEffect } from "react";
+
+import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
+import { RetryInlineNotice } from "@/components/tasks/RetryInlineNotice";
 import { useTelemetryStore } from "@/lib/telemetry-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Activity,
-  AlertTriangle,
-  Clock,
-  Users,
-  X,
-  Zap,
-} from "lucide-react";
+import { Activity, AlertTriangle, Clock, Users, X, Zap } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -55,10 +52,10 @@ function fmtMs(ms: number): string {
 function hasAlert(
   alerts: TelemetrySnapshot["alerts"],
   type: string,
-  agentId?: string,
+  agentId?: string
 ): boolean {
   return alerts.some(
-    (a) => a.type === type && !a.resolved && (!agentId || a.agentId === agentId),
+    a => a.type === type && !a.resolved && (!agentId || a.agentId === agentId)
   );
 }
 
@@ -87,7 +84,10 @@ function TokenCostCard({ snapshot }: { snapshot: TelemetrySnapshot }) {
           </span>
           <span>{fmtCost(snapshot.totalCost)}</span>
         </div>
-        <Progress value={pct} className={overBudget ? "[&>*]:bg-red-500" : ""} />
+        <Progress
+          value={pct}
+          className={overBudget ? "[&>*]:bg-red-500" : ""}
+        />
         <div className="flex justify-between text-[10px] text-[#6B5A4A]/70 font-data">
           <span>In: {snapshot.totalTokensIn.toLocaleString()}</span>
           <span>Out: {snapshot.totalTokensOut.toLocaleString()}</span>
@@ -146,7 +146,10 @@ function BottleneckAgentsCard({ snapshot }: { snapshot: TelemetrySnapshot }) {
                 {agent.agentName}
                 {isSlow && <AlertTriangle className="h-3 w-3 text-red-500" />}
               </span>
-              <Badge variant={isSlow ? "destructive" : "secondary"} className="text-[10px] font-data">
+              <Badge
+                variant={isSlow ? "destructive" : "secondary"}
+                className="text-[10px] font-data"
+              >
                 {fmtMs(agent.avgDurationMs)}
               </Badge>
             </div>
@@ -161,7 +164,7 @@ function BottleneckAgentsCard({ snapshot }: { snapshot: TelemetrySnapshot }) {
 function StageTimingChart({ snapshot }: { snapshot: TelemetrySnapshot }) {
   if (snapshot.missionStageTimings.length === 0) return null;
 
-  const data = snapshot.missionStageTimings.map((s) => ({
+  const data = snapshot.missionStageTimings.map(s => ({
     name: s.stageLabel,
     duration: +(s.durationMs / 1000).toFixed(1),
   }));
@@ -176,9 +179,17 @@ function StageTimingChart({ snapshot }: { snapshot: TelemetrySnapshot }) {
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={140}>
-          <BarChart data={data} layout="vertical" margin={{ left: 0, right: 8 }}>
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ left: 0, right: 8 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#e5d5c5" />
-            <XAxis type="number" tick={{ fontSize: 10, fill: "#6B5A4A" }} unit="s" />
+            <XAxis
+              type="number"
+              tick={{ fontSize: 10, fill: "#6B5A4A" }}
+              unit="s"
+            />
             <YAxis
               type="category"
               dataKey="name"
@@ -215,11 +226,32 @@ function ActiveAgentCard({ count }: { count: number }) {
 }
 
 /** Section 5: History Trend LineChart (last 5 missions) */
-function HistoryTrendChart({ history }: { history: MissionTelemetrySummary[] }) {
+function HistoryTrendChart({
+  history,
+}: {
+  history: MissionTelemetrySummary[];
+}) {
   const recent = history.slice(-5);
-  if (recent.length === 0) return null;
+  if (recent.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Activity className="h-4 w-4 text-[#D07A4F]" />
+            History Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs text-[#6B5A4A]/70">
+            Complete a few missions in advanced mode to populate the telemetry
+            trend line.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const data = recent.map((m) => ({
+  const data = recent.map(m => ({
     name: m.title.length > 12 ? m.title.slice(0, 12) + "…" : m.title,
     cost: +m.totalCost.toFixed(4),
     calls: m.totalCalls,
@@ -278,7 +310,7 @@ function HistoryTrendChart({ history }: { history: MissionTelemetrySummary[] }) 
 
 /** Section 6: Alerts */
 function AlertsSection({ snapshot }: { snapshot: TelemetrySnapshot }) {
-  const active = snapshot.alerts.filter((a) => !a.resolved);
+  const active = snapshot.alerts.filter(a => !a.resolved);
   if (active.length === 0) return null;
 
   return (
@@ -290,7 +322,7 @@ function AlertsSection({ snapshot }: { snapshot: TelemetrySnapshot }) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-1">
-        {active.map((alert) => (
+        {active.map(alert => (
           <p key={alert.id} className="text-xs text-amber-900">
             • {alert.message}
           </p>
@@ -341,8 +373,22 @@ function RAGTelemetryCard() {
 // ---------------------------------------------------------------------------
 
 export function TelemetryDashboard() {
-  const { snapshot, history, dashboardOpen, toggleDashboard } =
-    useTelemetryStore();
+  const {
+    snapshot,
+    history,
+    dashboardOpen,
+    toggleDashboard,
+    fetchInitial,
+    loading,
+    hasLoaded,
+    error,
+  } = useTelemetryStore();
+
+  useEffect(() => {
+    if (dashboardOpen && !loading && (!hasLoaded || (!snapshot && !error))) {
+      void fetchInitial();
+    }
+  }, [dashboardOpen, error, fetchInitial, hasLoaded, loading, snapshot]);
 
   return (
     <AnimatePresence>
@@ -373,11 +419,62 @@ export function TelemetryDashboard() {
           {/* Body */}
           <ScrollArea className="flex-1">
             <div className="space-y-3 p-4">
-              {!snapshot ? (
-                <p className="py-8 text-center text-xs text-[#6B5A4A]/70">
-                  No telemetry data yet
-                </p>
-              ) : (
+              {error && snapshot ? (
+                <RetryInlineNotice
+                  title="Telemetry refresh failed"
+                  description={error.message}
+                  actionLabel="Retry"
+                  onRetry={() => void fetchInitial()}
+                />
+              ) : null}
+
+              {!snapshot && loading ? (
+                <EmptyHintBlock
+                  tone="info"
+                  icon={<Activity className="size-5" />}
+                  title="Loading telemetry"
+                  description="Requesting the latest live telemetry snapshot and history from the backend."
+                  hint="If the advanced runtime is still starting, retry in a moment."
+                />
+              ) : null}
+
+              {!snapshot && !loading && error ? (
+                <EmptyHintBlock
+                  tone={error.kind === "error" ? "danger" : "warning"}
+                  icon={<AlertTriangle className="size-5" />}
+                  title={
+                    error.kind === "demo"
+                      ? "Telemetry is unavailable in preview mode"
+                      : error.kind === "offline"
+                        ? "Telemetry service is unavailable"
+                        : "Telemetry request failed"
+                  }
+                  description={
+                    error.kind === "demo"
+                      ? "The frontend is running without the live telemetry backend, so the dashboard stays in a safe preview state."
+                      : error.kind === "offline"
+                        ? "The telemetry backend is currently unreachable, so the live dashboard could not load."
+                        : "The telemetry API returned an unexpected result, and the raw parser error was hidden from the UI."
+                  }
+                  hint={error.message}
+                  actionLabel="Retry"
+                  onAction={() => void fetchInitial()}
+                />
+              ) : null}
+
+              {!snapshot && !loading && !error && hasLoaded ? (
+                <EmptyHintBlock
+                  tone="info"
+                  icon={<Activity className="size-5" />}
+                  title="No telemetry data yet"
+                  description="The dashboard is connected, but no live telemetry snapshot has been emitted yet."
+                  hint="Run a workflow or wait for the next telemetry update to populate these cards."
+                  actionLabel="Refresh"
+                  onAction={() => void fetchInitial()}
+                />
+              ) : null}
+
+              {snapshot ? (
                 <>
                   <TokenCostCard snapshot={snapshot} />
                   <BottleneckAgentsCard snapshot={snapshot} />
@@ -385,7 +482,7 @@ export function TelemetryDashboard() {
                   <ActiveAgentCard count={snapshot.activeAgentCount} />
                   <AlertsSection snapshot={snapshot} />
                 </>
-              )}
+              ) : null}
               <HistoryTrendChart history={history} />
 
               {/* RAG Telemetry */}
