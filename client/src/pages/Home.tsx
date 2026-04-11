@@ -8,8 +8,10 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { Scene3D } from "@/components/Scene3D";
 import { TelemetryDashboard } from "@/components/TelemetryDashboard";
 import { WorkflowPanel } from "@/components/WorkflowPanel";
+import { OfficeAgentInspectorPanel } from "@/components/office/OfficeAgentInspectorPanel";
 import { useViewportTier } from "@/hooks/useViewportTier";
 import { useDemoMode } from "@/hooks/useDemoMode";
+import { useWorkflowRuntimeBootstrap } from "@/hooks/useWorkflowRuntimeBootstrap";
 import { useI18n } from "@/i18n";
 import { getAgentToolbarLabel } from "@/lib/agent-config";
 import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from "@/lib/deploy-target";
@@ -27,7 +29,6 @@ export default function Home() {
   const selectedPet = useAppStore(state => state.selectedPet);
   const fetchTelemetry = useTelemetryStore(state => state.fetchInitial);
   const telemetrySnapshot = useTelemetryStore(state => state.snapshot);
-  const disconnectSocket = useWorkflowStore(state => state.disconnectSocket);
   const agents = useWorkflowStore(state => state.agents);
   const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
   const toggleWorkflowPanel = useWorkflowStore(
@@ -37,6 +38,8 @@ export default function Home() {
   const { copy } = useI18n();
   const [, setLocation] = useLocation();
   const { startDemo } = useDemoMode();
+
+  useWorkflowRuntimeBootstrap({ heartbeatReportLimit: 18 });
 
   const handleStartDemo = useCallback(async () => {
     try {
@@ -53,10 +56,6 @@ export default function Home() {
       console.error("[Home] Failed to load AI config:", error);
     });
   }, [hydrateAIConfig]);
-
-  useEffect(() => {
-    if (runtimeMode === "frontend") disconnectSocket();
-  }, [disconnectSocket, runtimeMode]);
 
   useEffect(() => {
     if (isSceneReady && runtimeMode === "advanced") fetchTelemetry();
@@ -292,29 +291,35 @@ export default function Home() {
 
           {/* Right sidebar: active agents + token usage */}
           <div
-            className="fixed right-4 top-16 z-[60] flex w-[170px] flex-col gap-3"
+            className={`fixed right-4 top-16 z-[60] flex flex-col gap-3 ${
+              selectedPet ? "w-[min(340px,calc(100vw-2rem))]" : "w-[170px]"
+            }`}
             style={{ pointerEvents: "auto" }}
           >
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#C98257]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
-                  {locale === "zh-CN" ? "活跃 Agent" : "Active agents"}
-                </span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {managerNames.map(name => (
-                  <span
-                    key={name}
-                    className="flex items-center gap-1 rounded-full studio-surface px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
-                    {name}
+            {selectedPet ? (
+              <OfficeAgentInspectorPanel />
+            ) : (
+              <div className="rounded-2xl studio-shell p-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-[#C98257]" />
+                  <span className="text-[11px] font-bold text-[#3A2A1A]">
+                    {locale === "zh-CN" ? "活跃 Agent" : "Active agents"}
                   </span>
-                ))}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {managerNames.map(name => (
+                    <span
+                      key={name}
+                      className="flex items-center gap-1 rounded-full studio-surface px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]"
+                    >
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
+                      {name}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-2 text-[9px] text-[#8B7355]">{focusLabel}</p>
               </div>
-              <p className="mt-2 text-[9px] text-[#8B7355]">{focusLabel}</p>
-            </div>
+            )}
 
             {/* Token usage */}
             <div className="rounded-2xl studio-shell p-3">
@@ -344,6 +349,14 @@ export default function Home() {
 
       {isSceneReady && isMobile && (
         <>
+          {selectedPet ? (
+            <div
+              className="fixed bottom-[calc(env(safe-area-inset-bottom)+90px)] left-3 right-3 z-[62]"
+              style={{ pointerEvents: "auto" }}
+            >
+              <OfficeAgentInspectorPanel />
+            </div>
+          ) : null}
           <ChatPanel />
           <WorkflowPanel />
           <TelemetryDashboard />

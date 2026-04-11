@@ -12,40 +12,40 @@
 
 ## Tasks
 
-- [ ] 1. 建立 tab 迁移映射与共享 selector
-  - [ ] 1.1 盘点 `WorkflowPanel.tsx` 中各视图的数据依赖
+- [x] 1. 建立 tab 迁移映射与共享 selector
+  - [x] 1.1 盘点 `WorkflowPanel.tsx` 中各视图的数据依赖
     - _Requirements: 1.1.1, 2.1.1, 3.1.1_
-  - [ ] 1.2 在 `client/src/lib/workflow-store.ts` 或辅助模块中提炼可复用 selector
+  - [x] 1.2 在 `client/src/lib/workflow-store.ts` 或辅助模块中提炼可复用 selector
     - _Requirements: 4.1.1_
 
-- [ ] 2. 迁移任务相关视图
-  - [ ] 2.1 将 `workflow` 内容迁入任务页执行区
+- [x] 2. 迁移任务相关视图
+  - [x] 2.1 将 `workflow` 内容迁入任务页执行区
     - _Requirements: 1.1.1, 1.1.3_
-  - [ ] 2.2 将 `review` 内容迁入任务详情评审区
+  - [x] 2.2 将 `review` 内容迁入任务详情评审区
     - _Requirements: 1.1.1_
-  - [ ] 2.3 将 `history` 迁入任务列表筛选或历史视图
+  - [x] 2.3 将 `history` 迁入任务列表筛选或历史视图
     - _Requirements: 1.1.2_
 
-- [ ] 3. 迁移 Agent 相关视图
-  - [ ] 3.1 将 `org` 迁入办公室场景的 Agent/组织信息层
+- [x] 3. 迁移 Agent 相关视图
+  - [x] 3.1 将 `org` 迁入办公室场景的 Agent/组织信息层
     - _Requirements: 2.1.1_
-  - [ ] 3.2 将 `memory` 与 `reports` 迁入 Agent 详情侧栏
+  - [x] 3.2 将 `memory` 与 `reports` 迁入 Agent 详情侧栏
     - _Requirements: 2.1.2, 2.1.3_
 
-- [ ] 4. 收口命令与会话视图
-  - [ ] 4.1 将 `directive` 收口到任务页命令区
+- [x] 4. 收口命令与会话视图
+  - [x] 4.1 将 `directive` 收口到任务页命令区
     - _Requirements: 3.1.1_
-  - [ ] 4.2 将 `sessions` 收口到任务上下文会话或兼容历史区
+  - [x] 4.2 将 `sessions` 收口到任务上下文会话或兼容历史区
     - _Requirements: 3.1.2_
 
-- [ ] 5. 降级旧 WorkflowPanel
-  - [ ] 5.1 将 `WorkflowPanel` 改为兼容层或迁移说明层
+- [x] 5. 降级旧 WorkflowPanel
+  - [x] 5.1 将 `WorkflowPanel` 改为兼容层或迁移说明层
     - _Requirements: 4.1.1, 4.1.2_
-  - [ ] 5.2 从首页主路径中移除其一级依赖
+  - [x] 5.2 从首页主路径中移除其一级依赖
     - _Requirements: 4.1.3_
 
 - [ ] 6. 测试与验证
-  - [ ] 6.1 编写兼容跳转与迁移测试
+  - [x] 6.1 编写兼容跳转与迁移测试
   - [ ] 6.2 手动验证各类信息仍可达
   - [ ] 6.3 回归首页、任务页与 Agent 详情路径
 
