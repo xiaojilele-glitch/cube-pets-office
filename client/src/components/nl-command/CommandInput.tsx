@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { Send } from "lucide-react";
 
 import { GlowButton } from "@/components/ui/GlowButton";
@@ -18,10 +24,25 @@ export interface CommandInputProps {
   loading?: boolean;
   /** Previous command texts for auto-complete suggestions */
   commandHistory?: string[];
+  label?: string;
+  placeholder?: string;
+  submitLabel?: string;
+  sendingLabel?: string;
+  onTextChange?: (value: string) => void;
   className?: string;
 }
 
-export function CommandInput({ onSubmit, loading, commandHistory = [], className }: CommandInputProps) {
+export function CommandInput({
+  onSubmit,
+  loading,
+  commandHistory = [],
+  label = "Enter strategic command",
+  placeholder = 'e.g. "Refactor the payment module with zero downtime"',
+  submitLabel = "Send",
+  sendingLabel = "Sending...",
+  onTextChange,
+  className,
+}: CommandInputProps) {
   const [text, setText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -31,7 +52,9 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
     const trimmed = text.trim().toLowerCase();
     if (!trimmed || trimmed.length < 2) return [];
     const unique = Array.from(new Set(commandHistory));
-    return unique.filter((cmd) => cmd.toLowerCase().includes(trimmed)).slice(0, 5);
+    return unique
+      .filter(cmd => cmd.toLowerCase().includes(trimmed))
+      .slice(0, 5);
   }, [text, commandHistory]);
 
   const handleSubmit = useCallback(async () => {
@@ -39,21 +62,26 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
     if (!trimmed || loading) return;
     await onSubmit(trimmed);
     setText("");
+    onTextChange?.("");
     setShowSuggestions(false);
     setSelectedIndex(-1);
-  }, [text, loading, onSubmit]);
+  }, [text, loading, onSubmit, onTextChange]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
       if (showSuggestions && suggestions.length > 0) {
         if (e.key === "ArrowDown") {
           e.preventDefault();
-          setSelectedIndex((i: number) => (i < suggestions.length - 1 ? i + 1 : 0));
+          setSelectedIndex((i: number) =>
+            i < suggestions.length - 1 ? i + 1 : 0
+          );
           return;
         }
         if (e.key === "ArrowUp") {
           e.preventDefault();
-          setSelectedIndex((i: number) => (i > 0 ? i - 1 : suggestions.length - 1));
+          setSelectedIndex((i: number) =>
+            i > 0 ? i - 1 : suggestions.length - 1
+          );
           return;
         }
         if (e.key === "Enter" && !e.shiftKey && selectedIndex >= 0) {
@@ -76,14 +104,18 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
         void handleSubmit();
       }
     },
-    [showSuggestions, suggestions, selectedIndex, handleSubmit],
+    [showSuggestions, suggestions, selectedIndex, handleSubmit]
   );
 
-  const handleChange = useCallback((value: string) => {
-    setText(value);
-    setShowSuggestions(value.trim().length >= 2);
-    setSelectedIndex(-1);
-  }, []);
+  const handleChange = useCallback(
+    (value: string) => {
+      setText(value);
+      onTextChange?.(value);
+      setShowSuggestions(value.trim().length >= 2);
+      setSelectedIndex(-1);
+    },
+    [onTextChange]
+  );
 
   const selectSuggestion = useCallback((suggestion: string) => {
     setText(suggestion);
@@ -95,21 +127,21 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
   return (
     <div className={cn("relative", className)}>
       <label className="mb-1.5 block text-xs font-medium text-stone-500">
-        Enter strategic command
+        {label}
       </label>
       <div className="flex items-end gap-2">
         <div className="relative flex-1">
           <textarea
             ref={inputRef}
             value={text}
-            onChange={(e) => handleChange(e.target.value)}
+            onChange={e => handleChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => text.trim().length >= 2 && setShowSuggestions(true)}
             onBlur={() => {
               // Delay to allow click on suggestion
               setTimeout(() => setShowSuggestions(false), 150);
             }}
-            placeholder='e.g. "Refactor the payment module with zero downtime"'
+            placeholder={placeholder}
             rows={2}
             disabled={loading}
             className="w-full resize-none rounded-xl border border-stone-200 bg-stone-50/60 px-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-50"
@@ -133,9 +165,9 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
                     "cursor-pointer px-3 py-2 text-sm text-stone-700 transition-colors",
                     index === selectedIndex
                       ? "bg-indigo-50 text-indigo-800"
-                      : "hover:bg-stone-50",
+                      : "hover:bg-stone-50"
                   )}
-                  onMouseDown={(e) => {
+                  onMouseDown={e => {
                     e.preventDefault();
                     selectSuggestion(suggestion);
                   }}
@@ -154,7 +186,7 @@ export function CommandInput({ onSubmit, loading, commandHistory = [], className
           onClick={() => void handleSubmit()}
         >
           <Send className="size-4" />
-          {loading ? "Sending..." : "Send"}
+          {loading ? sendingLabel : submitLabel}
         </GlowButton>
       </div>
     </div>
