@@ -6,31 +6,35 @@ import { ACESFilmicToneMapping } from 'three';
 import { useViewportTier } from '@/hooks/useViewportTier';
 import { useTasksStore } from '@/lib/tasks-store';
 
+import { CrossFrameworkParticles } from './three/CrossFrameworkParticles';
+import { CrossPodParticles } from './three/CrossPodParticles';
 import { MissionIsland } from './three/MissionIsland';
 import { OfficeRoom } from './three/OfficeRoom';
 import { PetWorkers } from './three/PetWorkers';
 import { SandboxMonitor } from './three/SandboxMonitor';
-import { CrossPodParticles } from './three/CrossPodParticles';
+import { SceneStageFlow } from './three/SceneStageFlow';
 import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
-import { CrossFrameworkParticles } from './three/CrossFrameworkParticles';
 
 export function Scene3D() {
   const { isMobile, isTablet } = useViewportTier();
 
-  // Sandbox shield: show when selected mission runs at strict security level
+  // Sandbox shield: show when the selected mission runs at strict security level.
   const isStrictSandbox = useTasksStore(state => {
     const detail = state.selectedTaskId ? state.detailsById[state.selectedTaskId] : null;
-    return detail?.securitySummary?.level === "strict" && detail?.status === "running";
+    return detail?.securitySummary?.level === 'strict' && detail?.status === 'running';
   });
 
-  // Recovery overlay state
   const [isRecovering, setIsRecovering] = useState(false);
+
   useEffect(() => {
-    (globalThis as any).__sceneSetRecovering = (value: boolean) => {
-      setIsRecovering(value);
-    };
+    (globalThis as { __sceneSetRecovering?: (value: boolean) => void }).__sceneSetRecovering =
+      (value: boolean) => {
+        setIsRecovering(value);
+      };
+
     return () => {
-      delete (globalThis as any).__sceneSetRecovering;
+      delete (globalThis as { __sceneSetRecovering?: (value: boolean) => void })
+        .__sceneSetRecovering;
     };
   }, []);
 
@@ -94,6 +98,7 @@ export function Scene3D() {
           />
 
           <OfficeRoom />
+          <SceneStageFlow />
           <PetWorkers />
           <MissionIsland />
           <SandboxMonitor />
@@ -112,7 +117,6 @@ export function Scene3D() {
         </Suspense>
       </Canvas>
 
-      {/* Recovery overlay */}
       {isRecovering && (
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm"
@@ -121,20 +125,23 @@ export function Scene3D() {
         >
           <div className="mb-4 size-8 animate-spin rounded-full border-4 border-white/30 border-t-white" />
           <p className="text-base font-medium text-white drop-shadow-md">
-            正在恢复上一次任务…
+            Recovering previous task...
           </p>
         </div>
       )}
 
-      {/* Sandbox shield indicator */}
       {isStrictSandbox && (
         <div
           className="pointer-events-none absolute left-4 top-4 z-10 flex items-center gap-2 rounded-2xl border border-rose-200/60 bg-white/80 px-3.5 py-2 shadow-lg backdrop-blur-sm"
           role="status"
           aria-live="polite"
         >
-          <span className="text-lg" aria-hidden="true">🛡️</span>
-          <span className="text-xs font-semibold text-rose-700">沙箱保护中</span>
+          <span className="text-lg" aria-hidden="true">
+            {"\uD83D\uDEE1\uFE0F"}
+          </span>
+          <span className="text-xs font-semibold text-rose-700">
+            Sandbox Protected
+          </span>
         </div>
       )}
     </div>
