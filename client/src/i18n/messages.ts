@@ -30,7 +30,22 @@ export const messages = {
       description: (progress: number) => `小宠物们正在搬家具 ${progress}%`,
     },
     home: {
-      mobileHint: "点击左上角菜单可展开导航与核心面板。",
+      mobileHint:
+        "这里是办公室首页，你可以从这里进入任务、打开工作流或调整运行时配置。",
+      officeEyebrow: "办公室",
+      officeTitle: "先看全局，再进入任务主线。",
+      officeDescription:
+        "办公室负责总览团队状态、运行模式和演示环境；真正推进执行时，再进入任务主路径。",
+      enterTasks: "进入任务",
+      openWorkflow: "打开工作流",
+      openConfig: "运行时配置",
+      runtimeChip: (label: string) => `当前模式：${label}`,
+      agentChip: (count: number) => `在线 Agent：${count}`,
+      workflowChip: (count: number) => `活跃工作流：${count}`,
+      desktopOfficeLabel: "Cube Pets Office / 办公室",
+      taskHubTitle: "任务主路径",
+      newMission: "新建任务",
+      liveDemo: "载入演示",
     },
     pdf: {
       title: "从单条指令到整组协作",
@@ -45,6 +60,7 @@ export const messages = {
       exitFullscreen: "退出全屏",
     },
     toolbar: {
+      navigationLabel: "主路径导航",
       modeTitle: "运行模式",
       modeDescription:
         "默认先进入前端模式，保留 3D 场景、本地工作流演示和浏览器侧 AI 配置。",
@@ -56,6 +72,51 @@ export const messages = {
       currentFocus: "当前焦点",
       mobileMenuTitle: "导航菜单",
       mobileMenuDescription: "打开核心面板或切换语言。",
+      moreDrawerEyebrow: "更多",
+      moreDrawerTitle: "低频入口与治理工具",
+      moreDrawerDescription:
+        "把低频入口收纳进这里，主路径只保留办公室和任务两条线。",
+      mainPathsTitle: "返回主路径",
+      moreActionsTitle: "更多入口",
+      primaryNav: {
+        office: {
+          label: "办公室",
+          sublabel: "OFFICE",
+          description: "查看运行模式、团队状态和办公室总览。",
+        },
+        tasks: {
+          label: "任务",
+          sublabel: "TASKS",
+          description: "进入任务台，创建任务并推进执行主线。",
+        },
+        more: {
+          label: "更多",
+          sublabel: "MORE",
+          description: "打开配置、权限、审计、血缘和帮助等低频入口。",
+        },
+      },
+      moreActions: {
+        config: {
+          label: "配置",
+          description: "调整运行时、模型来源和浏览器同步设置。",
+        },
+        permissions: {
+          label: "权限",
+          description: "查看角色权限矩阵并管理治理边界。",
+        },
+        audit: {
+          label: "审计",
+          description: "检查审计链路、异常告警和事件记录。",
+        },
+        lineage: {
+          label: "血缘",
+          description: "进入数据血缘视图，查看上下游和影响范围。",
+        },
+        help: {
+          label: "帮助",
+          description: "快速回顾关键入口与使用建议。",
+        },
+      },
       dockButtons: {
         paper: { label: "论文", sublabel: "PAPER" },
         config: { label: "配置", sublabel: "MODEL" },
@@ -77,6 +138,21 @@ export const messages = {
         advanced: "高级模式",
       },
       focusFallback: "未选中 Agent",
+    },
+    legacyRoutes: {
+      commandCenter: {
+        eyebrow: "旧入口兼容",
+        title: "指挥中心已收敛到任务主路径。",
+        description:
+          "旧的 /command-center 书签仍然可访问，但新的主入口已经迁移到任务页。继续推进执行时，请优先进入任务主线。",
+        primaryCta: "前往任务",
+        secondaryCta: "返回办公室",
+        legacyCta: "继续打开 legacy 视图",
+        legacyDescription: "保留原指挥中心页面，方便短期过渡。",
+        noteTitle: "为什么这样调整",
+        noteBody:
+          "这次收敛的目标不是减少按钮数量，而是让用户自然进入“办公室”或“任务”两条主路径，把配置、治理和帮助类入口放到更多里。",
+      },
     },
     notFound: {
       title: "页面不存在",
@@ -707,7 +783,21 @@ export const messages = {
     },
     home: {
       mobileHint:
-        "Open the menu in the top-left corner for navigation and core panels.",
+        "This is the Office home. Start from here to enter Tasks, open the workflow, or adjust runtime settings.",
+      officeEyebrow: "Office",
+      officeTitle: "Start from the office, then move into task execution.",
+      officeDescription:
+        "The Office is for orientation, team status, and runtime context. When you are ready to execute, continue into the Tasks path.",
+      enterTasks: "Open Tasks",
+      openWorkflow: "Open Workflow",
+      openConfig: "Runtime Config",
+      runtimeChip: (label: string) => `Mode: ${label}`,
+      agentChip: (count: number) => `Agents online: ${count}`,
+      workflowChip: (count: number) => `Active workflows: ${count}`,
+      desktopOfficeLabel: "Cube Pets Office / Office",
+      taskHubTitle: "Task Path",
+      newMission: "New Mission",
+      liveDemo: "Load Demo",
     },
     pdf: {
       title: "From One Instruction to Coordinated Work",
@@ -722,6 +812,7 @@ export const messages = {
       exitFullscreen: "Exit fullscreen",
     },
     toolbar: {
+      navigationLabel: "Primary Navigation",
       modeTitle: "Run Mode",
       modeDescription:
         "The app starts in Frontend Mode by default, keeping the 3D scene, paper browser, local workflow demo, and browser-side AI settings available.",
@@ -734,6 +825,55 @@ export const messages = {
       currentFocus: "Current Focus",
       mobileMenuTitle: "Navigation",
       mobileMenuDescription: "Open a core panel or switch language.",
+      moreDrawerEyebrow: "More",
+      moreDrawerTitle: "Low-frequency tools",
+      moreDrawerDescription:
+        "Keep the primary path focused on Office and Tasks while collecting governance and support tools here.",
+      mainPathsTitle: "Main paths",
+      moreActionsTitle: "More destinations",
+      primaryNav: {
+        office: {
+          label: "Office",
+          sublabel: "OFFICE",
+          description:
+            "Review runtime context, team status, and the office overview.",
+        },
+        tasks: {
+          label: "Tasks",
+          sublabel: "TASKS",
+          description: "Create missions and continue the main execution flow.",
+        },
+        more: {
+          label: "More",
+          sublabel: "MORE",
+          description: "Open configuration, governance, lineage, and help.",
+        },
+      },
+      moreActions: {
+        config: {
+          label: "Config",
+          description:
+            "Adjust runtime mode, model source, and browser sync settings.",
+        },
+        permissions: {
+          label: "Permissions",
+          description: "Inspect role permissions and governance boundaries.",
+        },
+        audit: {
+          label: "Audit",
+          description:
+            "Review the audit chain, anomaly alerts, and event history.",
+        },
+        lineage: {
+          label: "Lineage",
+          description:
+            "Open the lineage workspace to inspect dependencies and impact.",
+        },
+        help: {
+          label: "Help",
+          description: "Review the key entry points and usage guidance.",
+        },
+      },
       dockButtons: {
         paper: { label: "Paper", sublabel: "PAPER" },
         config: { label: "Config", sublabel: "MODEL" },
@@ -755,6 +895,22 @@ export const messages = {
         advanced: "Advanced Mode",
       },
       focusFallback: "No agent selected",
+    },
+    legacyRoutes: {
+      commandCenter: {
+        eyebrow: "Legacy Route",
+        title: "Command Center now lives under the Tasks path.",
+        description:
+          "Your old /command-center bookmark still works, but the primary execution entry point has moved to Tasks. Continue there first for the new main flow.",
+        primaryCta: "Go to Tasks",
+        secondaryCta: "Back to Office",
+        legacyCta: "Open legacy view",
+        legacyDescription:
+          "Keep using the original Command Center while the transition is in progress.",
+        noteTitle: "Why this changed",
+        noteBody:
+          "The goal of this convergence is not fewer buttons. It is a clearer path into either Office or Tasks, with configuration, governance, and help grouped under More.",
+      },
     },
     notFound: {
       title: "Page Not Found",
