@@ -7,7 +7,7 @@
  * @see Requirements 8.1, 8.2, 8.4, 8.5, 8.6
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -36,6 +36,7 @@ import {
 import { useCostStore } from "../lib/cost-store";
 import type { Budget } from "@shared/cost";
 
+import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -80,24 +81,85 @@ function pct(value: number): number {
 // ---------------------------------------------------------------------------
 
 export function CostDashboard() {
-  const { snapshot, history, dashboardOpen, toggleDashboard, updateBudget, releaseDegradation } =
-    useCostStore();
+  const {
+    snapshot,
+    history,
+    dashboardOpen,
+    toggleDashboard,
+    updateBudget,
+    releaseDegradation,
+    fetchInitial,
+    loading,
+    hasLoaded,
+    error,
+  } = useCostStore();
 
   const [budgetForm, setBudgetForm] = useState<Partial<Budget>>({});
   const [saving, setSaving] = useState(false);
 
-  // Nothing to show yet
-  if (!snapshot) {
+  useEffect(() => {
+    if (!hasLoaded && !loading) {
+      void fetchInitial();
+    }
+  }, [fetchInitial, hasLoaded, loading]);
+
+  if (!snapshot && loading) {
     return (
       <Card className="mx-2 my-2">
         <CardContent className="py-4 text-center text-sm text-muted-foreground">
-          No cost data available
+          Loading cost metrics...
         </CardContent>
       </Card>
     );
   }
 
-  const activeAlerts = snapshot.alerts.filter((a) => !a.resolved);
+  if (!snapshot && error) {
+    return (
+      <Card className="mx-2 my-2">
+        <CardContent className="py-4">
+          <EmptyHintBlock
+            tone={error.kind === "error" ? "danger" : "warning"}
+            title={
+              error.kind === "demo"
+                ? "Cost metrics are unavailable in preview mode"
+                : error.kind === "offline"
+                  ? "Cost service is unavailable"
+                  : "Cost request failed"
+            }
+            description={
+              error.kind === "demo"
+                ? "The frontend preview does not have live backend cost telemetry yet."
+                : error.kind === "offline"
+                  ? "The backend cost service is currently unreachable, so the dashboard could not load."
+                  : "The cost API returned an unexpected result, and the raw parser error was hidden from the UI."
+            }
+            hint={error.message}
+            actionLabel="Retry"
+            onAction={() => void fetchInitial()}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!snapshot) {
+    return (
+      <Card className="mx-2 my-2">
+        <CardContent className="py-4">
+          <EmptyHintBlock
+            tone="info"
+            title="No cost data available yet"
+            description="Cost metrics will appear after the next mission emits usage data."
+            hint="Use the retry action after the runtime starts producing token and spend metrics."
+            actionLabel="Refresh"
+            onAction={() => void fetchInitial()}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const activeAlerts = snapshot.alerts.filter(a => !a.resolved);
   const budgetPct = pct(snapshot.budgetUsedPercent);
   const tokenPct = pct(snapshot.tokenUsedPercent);
 
@@ -109,7 +171,8 @@ export function CostDashboard() {
       await updateBudget({
         maxCost: budgetForm.maxCost ?? snapshot.budget.maxCost,
         maxTokens: budgetForm.maxTokens ?? snapshot.budget.maxTokens,
-        warningThreshold: budgetForm.warningThreshold ?? snapshot.budget.warningThreshold,
+        warningThreshold:
+          budgetForm.warningThreshold ?? snapshot.budget.warningThreshold,
       });
       setBudgetForm({});
     } catch {
@@ -132,7 +195,10 @@ export function CostDashboard() {
             </span>
             <span className="flex items-center gap-1 font-data">
               <Zap className="size-3.5 text-indigo-500" />
-              {formatTokens(snapshot.totalTokensIn + snapshot.totalTokensOut)} tokens
+              {formatTokens(
+                snapshot.totalTokensIn + snapshot.totalTokensOut
+              )}{" "}
+              tokens
             </span>
             <span className="flex items-center gap-1 font-data">
               <Percent className="size-3.5 text-emerald-500" />
@@ -140,7 +206,9 @@ export function CostDashboard() {
             </span>
             {snapshot.downgradeLevel !== "none" && (
               <Badge variant="destructive" className="text-xs">
-                {snapshot.downgradeLevel === "soft" ? "Soft downgrade" : "Hard downgrade"}
+                {snapshot.downgradeLevel === "soft"
+                  ? "Soft downgrade"
+                  : "Hard downgrade"}
               </Badge>
             )}
             {activeAlerts.length > 0 && (
@@ -159,7 +227,7 @@ export function CostDashboard() {
   // ---- Expanded mode ----
 
   // Prepare history chart data
-  const historyData = history.map((m) => ({
+  const historyData = history.map(m => ({
     name: m.title.length > 12 ? m.title.slice(0, 12) + "…" : m.title,
     cost: Number(m.totalCost.toFixed(4)),
     tokens: m.totalTokensIn + m.totalTokensOut,
@@ -176,9 +244,19 @@ export function CostDashboard() {
       </div>
 
       {/* Alert banners */}
+      {error ? (
+        <Alert>
+          <AlertTriangle className="size-4" />
+          <AlertTitle className="text-xs font-semibold uppercase">
+            Latest refresh failed
+          </AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      ) : null}
+
       {activeAlerts.length > 0 && (
         <div className="space-y-2">
-          {activeAlerts.map((alert) => (
+          {activeAlerts.map(alert => (
             <Alert key={alert.id} variant="destructive">
               <AlertTriangle className="size-4" />
               <AlertTitle className="text-xs font-semibold uppercase">
@@ -222,13 +300,16 @@ export function CostDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-2xl font-bold font-data">{formatCost(snapshot.totalCost)}</p>
+            <p className="text-2xl font-bold font-data">
+              {formatCost(snapshot.totalCost)}
+            </p>
             <Progress
               value={budgetPct}
               className={`h-2 ${budgetPct >= 80 ? "[&>[data-slot=progress-indicator]]:bg-red-500" : ""}`}
             />
             <p className="text-right text-xs text-muted-foreground font-data">
-              {formatCost(snapshot.totalCost)} / {formatCost(snapshot.budget.maxCost)} ({budgetPct}%)
+              {formatCost(snapshot.totalCost)} /{" "}
+              {formatCost(snapshot.budget.maxCost)} ({budgetPct}%)
             </p>
           </CardContent>
         </Card>
@@ -250,7 +331,8 @@ export function CostDashboard() {
               {100 - budgetPct}%
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              <span className="font-data">{snapshot.totalCalls}</span> calls this mission
+              <span className="font-data">{snapshot.totalCalls}</span> calls
+              this mission
             </p>
           </CardContent>
         </Card>
@@ -265,7 +347,9 @@ export function CostDashboard() {
           </CardHeader>
           <CardContent>
             {snapshot.agentCosts.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No agent data</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No agent data
+              </p>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
@@ -295,11 +379,15 @@ export function CostDashboard() {
         {/* History trend line chart */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Cost History (Last 10 Missions)</CardTitle>
+            <CardTitle className="text-sm">
+              Cost History (Last 10 Missions)
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {historyData.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">No history yet</p>
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No history yet
+              </p>
             ) : (
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={historyData}>
@@ -331,17 +419,21 @@ export function CostDashboard() {
         <CardContent>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <label className="space-y-1">
-              <span className="text-xs text-muted-foreground">Max Cost ($)</span>
+              <span className="text-xs text-muted-foreground">
+                Max Cost ($)
+              </span>
               <Input
                 type="number"
                 step="0.1"
                 min="0"
                 placeholder={String(snapshot.budget.maxCost)}
                 value={budgetForm.maxCost ?? ""}
-                onChange={(e) =>
-                  setBudgetForm((f) => ({
+                onChange={e =>
+                  setBudgetForm(f => ({
                     ...f,
-                    maxCost: e.target.value ? Number(e.target.value) : undefined,
+                    maxCost: e.target.value
+                      ? Number(e.target.value)
+                      : undefined,
                   }))
                 }
               />
@@ -354,16 +446,20 @@ export function CostDashboard() {
                 min="0"
                 placeholder={String(snapshot.budget.maxTokens)}
                 value={budgetForm.maxTokens ?? ""}
-                onChange={(e) =>
-                  setBudgetForm((f) => ({
+                onChange={e =>
+                  setBudgetForm(f => ({
                     ...f,
-                    maxTokens: e.target.value ? Number(e.target.value) : undefined,
+                    maxTokens: e.target.value
+                      ? Number(e.target.value)
+                      : undefined,
                   }))
                 }
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs text-muted-foreground">Warning Threshold (%)</span>
+              <span className="text-xs text-muted-foreground">
+                Warning Threshold (%)
+              </span>
               <Input
                 type="number"
                 step="5"
@@ -375,8 +471,8 @@ export function CostDashboard() {
                     ? budgetForm.warningThreshold * 100
                     : ""
                 }
-                onChange={(e) =>
-                  setBudgetForm((f) => ({
+                onChange={e =>
+                  setBudgetForm(f => ({
                     ...f,
                     warningThreshold: e.target.value
                       ? Number(e.target.value) / 100
@@ -387,7 +483,11 @@ export function CostDashboard() {
             </label>
           </div>
           <div className="mt-3 flex justify-end">
-            <Button size="sm" onClick={() => void handleBudgetSave()} disabled={saving}>
+            <Button
+              size="sm"
+              onClick={() => void handleBudgetSave()}
+              disabled={saving}
+            >
               {saving ? "Saving…" : "Save Budget"}
             </Button>
           </div>

@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
+import { RetryInlineNotice } from "@/components/tasks/RetryInlineNotice";
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
 import { TaskHubCommandPanel } from "@/components/nl-command/TaskHubCommandPanel";
 import {
@@ -322,9 +323,14 @@ export default function TasksPage({
             <ScrollArea className="min-h-0 flex-1">
               <div className="space-y-2.5 px-3 py-3">
                 {error ? (
-                  <div className="rounded-[24px] border border-rose-200 bg-rose-50/80 px-4 py-4 text-sm leading-6 text-rose-800">
-                    {error}
-                  </div>
+                  <RetryInlineNotice
+                    title={copy.chat.errorTitle}
+                    description={error}
+                    actionLabel={copy.tasks.listPage.refresh}
+                    onRetry={() =>
+                      void refresh({ preferredTaskId: activeTaskId || null })
+                    }
+                  />
                 ) : null}
 
                 {!error && filteredTasks.length === 0 && !loading ? (

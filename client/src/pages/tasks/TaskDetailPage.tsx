@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 
 import { TaskDetailView } from "@/components/tasks/TaskDetailView";
+import { RetryInlineNotice } from "@/components/tasks/RetryInlineNotice";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n";
 import { useTasksStore } from "@/lib/tasks-store";
@@ -32,6 +33,7 @@ export default function TaskDetailPage({
     state => state.operatorActionLoadingByMissionId
   );
   const loading = useTasksStore(state => state.loading);
+  const error = useTasksStore(state => state.error);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
   );
@@ -134,6 +136,19 @@ export default function TaskDetailPage({
           </div>
         </div>
 
+        {error ? (
+          <div className="mb-4">
+            <RetryInlineNotice
+              title={copy.chat.errorTitle}
+              description={error}
+              actionLabel={copy.tasks.listPage.refresh}
+              onRetry={() =>
+                void refresh({ preferredTaskId: activeTaskId || null })
+              }
+            />
+          </div>
+        ) : null}
+
         <TaskDetailView
           detail={detail}
           decisionNote={decisionNote}
@@ -149,7 +164,9 @@ export default function TaskDetailPage({
               ? operatorActionLoadingByMissionId[activeTaskId] ?? {}
               : {}
           }
-          onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId })}
+          onDecisionSubmitted={() =>
+            void refresh({ preferredTaskId: activeTaskId })
+          }
         />
       </div>
     </div>

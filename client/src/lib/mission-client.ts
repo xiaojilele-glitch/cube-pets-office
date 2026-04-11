@@ -16,6 +16,18 @@ import {
   type SubmitMissionDecisionResponse,
 } from "@shared/mission/api";
 
+import { fetchJsonSafe, type ApiRequestError } from "./api-client";
+
+export class MissionApiError extends Error {
+  requestError: ApiRequestError;
+
+  constructor(requestError: ApiRequestError) {
+    super(requestError.message);
+    this.name = "MissionApiError";
+    this.requestError = requestError;
+  }
+}
+
 function withQuery(path: string, query?: Record<string, string | number | null | undefined>) {
   if (!query) return path;
   const params = new URLSearchParams();
@@ -33,47 +45,57 @@ function routeFor(path: string, params: Record<string, string>) {
   }, path);
 }
 
-async function parseJson<T>(response: Response): Promise<T> {
-  const data = await response.json();
-  if (!response.ok) {
-    const error =
-      typeof data?.error === "string" ? data.error : `Mission API ${response.status}`;
-    throw new Error(error);
+export function getMissionApiError(
+  error: unknown
+): ApiRequestError | null {
+  return error instanceof MissionApiError ? error.requestError : null;
+}
+
+async function requestJson<T>(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<T> {
+  const result = await fetchJsonSafe<T>(input, init);
+  if (!result.ok) {
+    throw new MissionApiError(result.error);
   }
-  return data as T;
+
+  return result.data;
 }
 
 export async function listMissions(limit = 200): Promise<ListMissionsResponse> {
-  const response = await fetch(
+  return requestJson<ListMissionsResponse>(
     withQuery(MISSION_API_ROUTES.listTasks, { limit })
   );
-  return parseJson<ListMissionsResponse>(response);
 }
 
 export async function getMission(id: string): Promise<GetMissionResponse> {
-  const response = await fetch(routeFor(MISSION_API_ROUTES.getTask, { id }));
-  return parseJson<GetMissionResponse>(response);
+  return requestJson<GetMissionResponse>(
+    routeFor(MISSION_API_ROUTES.getTask, { id })
+  );
 }
 
 export async function cancelMission(
   id: string,
   request: CancelMissionRequest
 ): Promise<CancelMissionResponse> {
-  const response = await fetch(routeFor(MISSION_API_ROUTES.cancelTask, { id }), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
-  return parseJson<CancelMissionResponse>(response);
+  return requestJson<CancelMissionResponse>(
+    routeFor(MISSION_API_ROUTES.cancelTask, { id }),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 export async function submitMissionOperatorAction(
   id: string,
   request: SubmitMissionOperatorActionRequest
 ): Promise<SubmitMissionOperatorActionResponse> {
-  const response = await fetch(
+  return requestJson<SubmitMissionOperatorActionResponse>(
     routeFor(MISSION_API_ROUTES.submitTaskOperatorAction, { id }),
     {
       method: "POST",
@@ -83,59 +105,59 @@ export async function submitMissionOperatorAction(
       body: JSON.stringify(request),
     }
   );
-  return parseJson<SubmitMissionOperatorActionResponse>(response);
 }
 
 export async function listMissionEvents(
   id: string,
   limit = 40
 ): Promise<ListMissionEventsResponse> {
-  const response = await fetch(
+  return requestJson<ListMissionEventsResponse>(
     withQuery(routeFor(MISSION_API_ROUTES.listTaskEvents, { id }), { limit })
   );
-  return parseJson<ListMissionEventsResponse>(response);
 }
 
 export async function createMission(
   request: CreateMissionRequest
 ): Promise<CreateMissionResponse> {
-  const response = await fetch(MISSION_API_ROUTES.createTask, {
+  return requestJson<CreateMissionResponse>(MISSION_API_ROUTES.createTask, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(request),
   });
-  return parseJson<CreateMissionResponse>(response);
 }
 
 export async function submitMissionDecision(
   id: string,
   request: SubmitMissionDecisionRequest
 ): Promise<SubmitMissionDecisionResponse> {
-  const response = await fetch(routeFor(MISSION_API_ROUTES.submitTaskDecision, { id }), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request),
-  });
-  return parseJson<SubmitMissionDecisionResponse>(response);
+  return requestJson<SubmitMissionDecisionResponse>(
+    routeFor(MISSION_API_ROUTES.submitTaskDecision, { id }),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    }
+  );
 }
 
 export async function listPlanets(limit = 200): Promise<ListMissionPlanetsResponse> {
-  const response = await fetch(
+  return requestJson<ListMissionPlanetsResponse>(
     withQuery(MISSION_API_ROUTES.listPlanets, { limit })
   );
-  return parseJson<ListMissionPlanetsResponse>(response);
 }
 
 export async function getPlanet(id: string): Promise<GetMissionPlanetResponse> {
-  const response = await fetch(routeFor(MISSION_API_ROUTES.getPlanet, { id }));
-  return parseJson<GetMissionPlanetResponse>(response);
+  return requestJson<GetMissionPlanetResponse>(
+    routeFor(MISSION_API_ROUTES.getPlanet, { id })
+  );
 }
 
 export async function getPlanetInterior(id: string): Promise<GetMissionPlanetInteriorResponse> {
-  const response = await fetch(routeFor(MISSION_API_ROUTES.getPlanetInterior, { id }));
-  return parseJson<GetMissionPlanetInteriorResponse>(response);
+  return requestJson<GetMissionPlanetInteriorResponse>(
+    routeFor(MISSION_API_ROUTES.getPlanetInterior, { id })
+  );
 }

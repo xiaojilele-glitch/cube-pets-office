@@ -1,32 +1,40 @@
-/**
- * Audit chain Zustand store.
- *
- * Manages audit log entries, verification results, anomaly alerts,
- * and integrates with Socket.IO for real-time audit events.
- *
- * @see Requirements AC-12.1, AC-12.2, AC-12.3, AC-12.4, AC-12.5
- */
-
 import { create } from "zustand";
 import type { Socket } from "socket.io-client";
 
 import type {
+  AnomalyAlert,
   AuditLogEntry,
   AuditQueryFilters,
   PageOptions,
   VerificationResult,
-  AnomalyAlert,
 } from "@shared/audit/contracts.js";
 import { AUDIT_SOCKET_EVENTS } from "@shared/audit/socket.js";
 import type {
-  AuditEventPayload,
   AuditAnomalyPayload,
+  AuditEventPayload,
   AuditVerificationPayload,
 } from "@shared/audit/socket.js";
 
-// ---------------------------------------------------------------------------
-// State interface
-// ---------------------------------------------------------------------------
+import { fetchJsonSafe, type ApiRequestError } from "./api-client";
+
+interface AuditEventsResponse {
+  ok?: boolean;
+  entries?: AuditLogEntry[];
+  total?: number;
+  page?: PageOptions;
+}
+
+interface AuditVerificationResponse {
+  ok?: boolean;
+  result?: VerificationResult;
+  valid?: null;
+}
+
+interface AuditAnomaliesResponse {
+  ok?: boolean;
+  alerts?: AnomalyAlert[];
+  alert?: AnomalyAlert;
+}
 
 export interface AuditState {
   entries: AuditLogEntry[];
@@ -38,6 +46,15 @@ export interface AuditState {
   anomalies: AnomalyAlert[];
   panelOpen: boolean;
   activeTab: "events" | "timeline" | "verify" | "anomalies";
+  loadingEvents: boolean;
+  loadingVerification: boolean;
+  loadingAnomalies: boolean;
+  hasLoadedEvents: boolean;
+  hasLoadedVerification: boolean;
+  hasLoadedAnomalies: boolean;
+  eventsError: ApiRequestError | null;
+  verificationError: ApiRequestError | null;
+  anomaliesError: ApiRequestError | null;
 
   togglePanel: () => void;
   setActiveTab: (tab: AuditState["activeTab"]) => void;
@@ -55,10 +72,6 @@ export interface AuditState {
   initSocket: (socket: Socket) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Store
-// ---------------------------------------------------------------------------
-
 export const useAuditStore = create<AuditState>((set, get) => ({
   entries: [],
   total: 0,
@@ -69,131 +82,199 @@ export const useAuditStore = create<AuditState>((set, get) => ({
   anomalies: [],
   panelOpen: false,
   activeTab: "events",
+  loadingEvents: false,
+  loadingVerification: false,
+  loadingAnomalies: false,
+  hasLoadedEvents: false,
+  hasLoadedVerification: false,
+  hasLoadedAnomalies: false,
+  eventsError: null,
+  verificationError: null,
+  anomaliesError: null,
 
-  togglePanel: () => set((s) => ({ panelOpen: !s.panelOpen })),
+  togglePanel: () => set(state => ({ panelOpen: !state.panelOpen })),
 
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveTab: tab => set({ activeTab: tab }),
 
-  setFilters: (filters) =>
-    set((s) => ({ filters: { ...s.filters, ...filters } })),
+  setFilters: filters =>
+    set(state => ({
+      filters: { ...state.filters, ...filters },
+      page: { ...state.page, pageNum: 1 },
+    })),
 
-  setPage: (page) =>
-    set((s) => ({ page: { ...s.page, ...page } })),
+  setPage: page => set(state => ({ page: { ...state.page, ...page } })),
 
-  selectEntry: (entry) => set({ selectedEntry: entry }),
+  selectEntry: entry => set({ selectedEntry: entry }),
 
   fetchEvents: async () => {
+    set({ loadingEvents: true, eventsError: null });
     try {
       const { filters, page } = get();
       const params = new URLSearchParams();
+
       if (filters.eventType) {
         const types = Array.isArray(filters.eventType)
           ? filters.eventType
           : [filters.eventType];
-        types.forEach((t) => params.append("eventType", t));
+        types.forEach(eventType => params.append("eventType", eventType));
       }
+
       if (filters.severity) params.set("severity", filters.severity);
       if (filters.keyword) params.set("keyword", filters.keyword);
       params.set("pageSize", String(page.pageSize));
       params.set("pageNum", String(page.pageNum));
 
-      const res = await fetch(`/api/audit/events?${params.toString()}`);
-      if (!res.ok) return;
-      const data = await res.json();
+      const result = await fetchJsonSafe<AuditEventsResponse>(
+        `/api/audit/events?${params.toString()}`
+      );
+      if (!result.ok) {
+        set({ eventsError: result.error, hasLoadedEvents: true });
+        return;
+      }
+
       set({
-        entries: data.entries ?? [],
-        total: data.total ?? 0,
-        page: data.page ?? get().page,
+        entries: result.data.entries ?? [],
+        total: result.data.total ?? 0,
+        page: result.data.page ?? get().page,
+        hasLoadedEvents: true,
+        eventsError: null,
       });
-    } catch {
-      // network error — keep current state
+    } finally {
+      set({ loadingEvents: false });
     }
   },
 
   searchEvents: async (keyword: string) => {
+    set({ loadingEvents: true, eventsError: null });
     try {
       const { page } = get();
       const params = new URLSearchParams({
-        keyword,
+        q: keyword,
         pageSize: String(page.pageSize),
         pageNum: String(page.pageNum),
       });
-      const res = await fetch(`/api/audit/events/search?${params.toString()}`);
-      if (!res.ok) return;
-      const data = await res.json();
+
+      const result = await fetchJsonSafe<AuditEventsResponse>(
+        `/api/audit/events/search?${params.toString()}`
+      );
+      if (!result.ok) {
+        set({ eventsError: result.error, hasLoadedEvents: true });
+        return;
+      }
+
       set({
-        entries: data.entries ?? [],
-        total: data.total ?? 0,
+        entries: result.data.entries ?? [],
+        total: result.data.total ?? 0,
+        hasLoadedEvents: true,
+        eventsError: null,
       });
-    } catch {
-      // silently ignore
+    } finally {
+      set({ loadingEvents: false });
     }
   },
 
   fetchVerification: async () => {
+    set({ loadingVerification: true, verificationError: null });
     try {
-      const res = await fetch("/api/audit/verify/status");
-      if (!res.ok) return;
-      const result: VerificationResult = await res.json();
-      set({ verificationResult: result });
-    } catch {
-      // silently ignore
+      const result = await fetchJsonSafe<AuditVerificationResponse>(
+        "/api/audit/verify/status"
+      );
+      if (!result.ok) {
+        set({ verificationError: result.error, hasLoadedVerification: true });
+        return;
+      }
+
+      set({
+        verificationResult: result.data.result ?? null,
+        hasLoadedVerification: true,
+        verificationError: null,
+      });
+    } finally {
+      set({ loadingVerification: false });
     }
   },
 
   triggerVerification: async () => {
+    set({ loadingVerification: true, verificationError: null });
     try {
-      const res = await fetch("/api/audit/verify", { method: "POST" });
-      if (!res.ok) return;
-      const result: VerificationResult = await res.json();
-      set({ verificationResult: result });
-    } catch {
-      // silently ignore
+      const result = await fetchJsonSafe<AuditVerificationResponse>(
+        "/api/audit/verify",
+        {
+          method: "POST",
+        }
+      );
+      if (!result.ok) {
+        set({ verificationError: result.error, hasLoadedVerification: true });
+        return;
+      }
+
+      set({
+        verificationResult: result.data.result ?? null,
+        hasLoadedVerification: true,
+        verificationError: null,
+      });
+    } finally {
+      set({ loadingVerification: false });
     }
   },
 
   fetchAnomalies: async () => {
+    set({ loadingAnomalies: true, anomaliesError: null });
     try {
-      const res = await fetch("/api/audit/anomalies");
-      if (!res.ok) return;
-      const data = await res.json();
-      set({ anomalies: data.alerts ?? data ?? [] });
-    } catch {
-      // silently ignore
+      const result = await fetchJsonSafe<AuditAnomaliesResponse>(
+        "/api/audit/anomalies"
+      );
+      if (!result.ok) {
+        set({ anomaliesError: result.error, hasLoadedAnomalies: true });
+        return;
+      }
+
+      set({
+        anomalies: result.data.alerts ?? [],
+        hasLoadedAnomalies: true,
+        anomaliesError: null,
+      });
+    } finally {
+      set({ loadingAnomalies: false });
     }
   },
 
   updateAnomalyStatus: async (alertId: string, status: string) => {
-    try {
-      const res = await fetch(`/api/audit/anomalies/${alertId}`, {
+    set({ anomaliesError: null });
+
+    const result = await fetchJsonSafe<AuditAnomaliesResponse>(
+      `/api/audit/anomalies/${alertId}`,
+      {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
-      });
-      if (!res.ok) return;
-      // Refresh anomalies list
-      await get().fetchAnomalies();
-    } catch {
-      // silently ignore
+      }
+    );
+
+    if (!result.ok) {
+      set({ anomaliesError: result.error });
+      return;
     }
+
+    await get().fetchAnomalies();
   },
 
   initSocket: (socket: Socket) => {
-    socket.on(
-      AUDIT_SOCKET_EVENTS.auditEvent,
-      (payload: AuditEventPayload) => {
-        set((s) => ({
-          entries: [payload.entry, ...s.entries].slice(0, s.page.pageSize),
-          total: s.total + 1,
-        }));
-      }
-    );
+    socket.on(AUDIT_SOCKET_EVENTS.auditEvent, (payload: AuditEventPayload) => {
+      set(state => ({
+        entries: [payload.entry, ...state.entries].slice(
+          0,
+          state.page.pageSize
+        ),
+        total: state.total + 1,
+      }));
+    });
 
     socket.on(
       AUDIT_SOCKET_EVENTS.auditAnomaly,
       (payload: AuditAnomalyPayload) => {
-        set((s) => ({
-          anomalies: [payload.alert, ...s.anomalies],
+        set(state => ({
+          anomalies: [payload.alert, ...state.anomalies],
         }));
       }
     );
@@ -201,7 +282,11 @@ export const useAuditStore = create<AuditState>((set, get) => ({
     socket.on(
       AUDIT_SOCKET_EVENTS.auditVerification,
       (payload: AuditVerificationPayload) => {
-        set({ verificationResult: payload.result });
+        set({
+          verificationResult: payload.result,
+          hasLoadedVerification: true,
+          verificationError: null,
+        });
       }
     );
   },

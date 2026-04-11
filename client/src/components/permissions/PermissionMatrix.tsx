@@ -1,44 +1,34 @@
-/**
- * Permission matrix heatmap view.
- *
- * Displays a grid: rows = resourceTypes, columns = actions.
- * Cells are colored: green = allowed, red = denied, gray = no rule.
- *
- * @see Requirements 13.2
- */
-
 import { useEffect } from "react";
-import { Grid3X3 } from "lucide-react";
+import { Grid3X3, TriangleAlert } from "lucide-react";
 
+import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
 import { useAppStore } from "@/lib/store";
 import { usePermissionStore } from "@/lib/permission-store";
-import { RESOURCE_TYPES, ACTIONS } from "@shared/permission/contracts";
+import { ACTIONS, RESOURCE_TYPES } from "@shared/permission/contracts";
 import type { Permission } from "@shared/permission/contracts";
 
 function t(locale: string, zh: string, en: string) {
   return locale === "zh-CN" ? zh : en;
 }
 
-/** Resolve the effective cell state from a flat permission list. */
 function getCellEffect(
   permissions: Permission[],
   resourceType: string,
-  action: string,
+  action: string
 ): "allow" | "deny" | "none" {
-  // Deny takes priority
   const deny = permissions.find(
-    (p) =>
-      p.resourceType === resourceType &&
-      p.action === action &&
-      p.effect === "deny",
+    permission =>
+      permission.resourceType === resourceType &&
+      permission.action === action &&
+      permission.effect === "deny"
   );
   if (deny) return "deny";
 
   const allow = permissions.find(
-    (p) =>
-      p.resourceType === resourceType &&
-      p.action === action &&
-      p.effect === "allow",
+    permission =>
+      permission.resourceType === resourceType &&
+      permission.action === action &&
+      permission.effect === "allow"
   );
   if (allow) return "allow";
 
@@ -48,20 +38,24 @@ function getCellEffect(
 const CELL_COLORS: Record<string, string> = {
   allow: "bg-green-500/80",
   deny: "bg-red-500/80",
-  none: "bg-gray-200",
+  none: "bg-gray-200 text-gray-500",
 };
 
 const CELL_LABELS: Record<string, string> = {
-  allow: "✓",
-  deny: "✗",
-  none: "—",
+  allow: "A",
+  deny: "D",
+  none: "-",
 };
 
 export function PermissionMatrix({ agentId }: { agentId: string }) {
-  const locale = useAppStore((s) => s.locale);
-  const policy = usePermissionStore((s) => s.policies[agentId]);
-  const roles = usePermissionStore((s) => s.roles);
-  const fetchPolicy = usePermissionStore((s) => s.fetchPolicy);
+  const locale = useAppStore(state => state.locale);
+  const policy = usePermissionStore(state => state.policies[agentId]);
+  const roles = usePermissionStore(state => state.roles);
+  const loadingPolicies = usePermissionStore(state => state.loadingPolicies);
+  const policyError = usePermissionStore(
+    state => state.policyErrors[agentId] ?? null
+  );
+  const fetchPolicy = usePermissionStore(state => state.fetchPolicy);
 
   useEffect(() => {
     if (agentId && !policy) {
@@ -69,45 +63,104 @@ export function PermissionMatrix({ agentId }: { agentId: string }) {
     }
   }, [agentId, policy, fetchPolicy]);
 
-  if (!policy) {
+  if (loadingPolicies && !policy) {
     return (
       <div className="flex items-center justify-center py-8 text-[11px] text-[#B08F72]">
-        {t(locale, "加载中…", "Loading…")}
+        {t(locale, "正在加载权限矩阵…", "Loading permission matrix...")}
       </div>
     );
   }
 
-  // Merge all permissions: role permissions + custom - denied
+  if (policyError && !policy) {
+    return (
+      <EmptyHintBlock
+        tone={policyError.kind === "error" ? "danger" : "warning"}
+        icon={<TriangleAlert className="size-5" />}
+        title={t(
+          locale,
+          "权限矩阵暂时不可用",
+          "Permission matrix is unavailable"
+        )}
+        description={
+          policyError.kind === "demo"
+            ? t(
+                locale,
+                "当前仍在演示模式，这个 Agent 还没有可读取的服务端权限策略。",
+                "The app is still in preview mode, so this agent does not have a live server-side policy yet."
+              )
+            : policyError.kind === "offline"
+              ? t(
+                  locale,
+                  "权限服务暂时不可达，无法读取最新策略。",
+                  "The permission service is currently unreachable, so the latest policy could not be loaded."
+                )
+              : t(
+                  locale,
+                  "权限接口返回了异常结果，界面已经拦截了原始技术报错。",
+                  "The permission API returned an unexpected result, and the raw parser error was suppressed."
+                )
+        }
+        hint={policyError.message}
+        actionLabel={t(locale, "重试加载", "Retry")}
+        onAction={() => void fetchPolicy(agentId)}
+      />
+    );
+  }
+
+  if (!policy) {
+    return (
+      <EmptyHintBlock
+        tone="info"
+        icon={<Grid3X3 className="size-5" />}
+        title={t(locale, "还没有权限矩阵", "No permission matrix yet")}
+        description={t(
+          locale,
+          "选中一个已经下发策略的 Agent 后，这里会展示它的资源和动作矩阵。",
+          "Select an agent with an assigned policy to view its resource and action matrix here."
+        )}
+      />
+    );
+  }
+
   const allPermissions: Permission[] = [];
 
-  // Collect role permissions
   for (const roleId of policy.assignedRoles) {
-    const role = roles.find((r) => r.roleId === roleId);
+    const role = roles.find(entry => entry.roleId === roleId);
     if (role) {
       allPermissions.push(...role.permissions);
     }
   }
-  // Add custom permissions
+
   allPermissions.push(...policy.customPermissions);
-  // Add denied permissions
   allPermissions.push(...policy.deniedPermissions);
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-3">
+      <div className="mb-3 flex items-center gap-2">
         <Grid3X3 className="h-3.5 w-3.5 text-[#8B7355]" />
         <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8B7355]">
-          {t(locale, "权限矩阵", "Permission Matrix")}
+          {t(locale, "权限矩阵", "Permission matrix")}
         </p>
       </div>
 
-      {/* Legend */}
-      <div className="flex gap-3 mb-3">
+      <div className="mb-3 flex gap-3">
         {[
-          { key: "allow", label: t(locale, "允许", "Allowed"), color: "bg-green-500/80" },
-          { key: "deny", label: t(locale, "拒绝", "Denied"), color: "bg-red-500/80" },
-          { key: "none", label: t(locale, "无规则", "No Rule"), color: "bg-gray-200" },
-        ].map((item) => (
+          {
+            key: "allow",
+            label: t(locale, "允许", "Allowed"),
+            color: "bg-green-500/80",
+          },
+          {
+            key: "deny",
+            label: t(locale, "拒绝", "Denied"),
+            color: "bg-red-500/80",
+          },
+          {
+            key: "none",
+            label: t(locale, "未配置", "No rule"),
+            color: "bg-gray-200",
+          },
+        ].map(item => (
           <div key={item.key} className="flex items-center gap-1.5">
             <span className={`h-3 w-3 rounded ${item.color}`} />
             <span className="text-[10px] text-[#6B5A4A]">{item.label}</span>
@@ -115,18 +168,17 @@ export function PermissionMatrix({ agentId }: { agentId: string }) {
         ))}
       </div>
 
-      {/* Matrix grid */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-[10px]">
           <thead>
             <tr>
-              <th className="px-2 py-1.5 text-left font-semibold text-[#8B7355] border-b border-[#E8DDD0]">
-                {t(locale, "资源类型", "Resource")}
+              <th className="border-b border-[#E8DDD0] px-2 py-1.5 text-left font-semibold text-[#8B7355]">
+                {t(locale, "资源", "Resource")}
               </th>
-              {ACTIONS.map((action) => (
+              {ACTIONS.map(action => (
                 <th
                   key={action}
-                  className="px-2 py-1.5 text-center font-semibold text-[#8B7355] border-b border-[#E8DDD0]"
+                  className="border-b border-[#E8DDD0] px-2 py-1.5 text-center font-semibold text-[#8B7355]"
                 >
                   {action}
                 </th>
@@ -134,16 +186,24 @@ export function PermissionMatrix({ agentId }: { agentId: string }) {
             </tr>
           </thead>
           <tbody>
-            {RESOURCE_TYPES.map((rt) => (
-              <tr key={rt} className="border-b border-[#F0E8E0]">
-                <td className="px-2 py-1.5 font-medium text-[#3A2A1A]">{rt}</td>
-                {ACTIONS.map((action) => {
-                  const effect = getCellEffect(allPermissions, rt, action);
+            {RESOURCE_TYPES.map(resourceType => (
+              <tr key={resourceType} className="border-b border-[#F0E8E0]">
+                <td className="px-2 py-1.5 font-medium text-[#3A2A1A]">
+                  {resourceType}
+                </td>
+                {ACTIONS.map(action => {
+                  const effect = getCellEffect(
+                    allPermissions,
+                    resourceType,
+                    action
+                  );
                   return (
                     <td key={action} className="px-1 py-1 text-center">
                       <span
-                        className={`inline-flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold text-white ${CELL_COLORS[effect]}`}
-                        title={`${rt} / ${action}: ${effect}`}
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold ${CELL_COLORS[effect]} ${
+                          effect === "none" ? "" : "text-white"
+                        }`}
+                        title={`${resourceType} / ${action}: ${effect}`}
                       >
                         {CELL_LABELS[effect]}
                       </span>

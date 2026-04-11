@@ -34,6 +34,13 @@ function makeGraph(nodes: DataLineageNode[] = []): LineageGraph {
   return { nodes, edges: [] };
 }
 
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 function makeSocket() {
   const handlers: Record<string, Function> = {};
   return {
@@ -79,10 +86,9 @@ describe("useLineageStore", () => {
 
   it("fetchUpstream should populate graph", async () => {
     const node = makeNode();
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true, graph: makeGraph([node]) }),
-    });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ ok: true, graph: makeGraph([node]) })
+    );
 
     await useLineageStore.getState().fetchUpstream("data-1", 3);
 
@@ -90,19 +96,25 @@ describe("useLineageStore", () => {
     expect(state.graph).not.toBeNull();
     expect(state.graph!.nodes).toHaveLength(1);
     expect(state.loading).toBe(false);
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
       expect.stringContaining("/api/lineage/data-1/upstream"),
+      undefined
     );
   });
 
   it("fetchUpstream should set loading during fetch", async () => {
     let resolve: Function;
-    fetchMock.mockReturnValueOnce(new Promise((r) => { resolve = r; }));
+    fetchMock.mockReturnValueOnce(
+      new Promise(r => {
+        resolve = r;
+      })
+    );
 
     const promise = useLineageStore.getState().fetchUpstream("data-1");
     expect(useLineageStore.getState().loading).toBe(true);
 
-    resolve!({ ok: true, json: async () => ({ ok: true, graph: makeGraph() }) });
+    resolve!(jsonResponse({ ok: true, graph: makeGraph() }));
     await promise;
     expect(useLineageStore.getState().loading).toBe(false);
   });
@@ -118,32 +130,36 @@ describe("useLineageStore", () => {
 
   it("fetchDownstream should populate graph", async () => {
     const node = makeNode({ lineageId: "node-2", type: "transformation" });
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true, graph: makeGraph([node]) }),
-    });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ ok: true, graph: makeGraph([node]) })
+    );
 
     await useLineageStore.getState().fetchDownstream("data-1", 2);
 
     expect(useLineageStore.getState().graph!.nodes[0].lineageId).toBe("node-2");
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
       expect.stringContaining("/api/lineage/data-1/downstream"),
+      undefined
     );
   });
 
   // -- 11.1 fetchFullPath ---------------------------------------------------
 
   it("fetchFullPath should populate graph", async () => {
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true, graph: makeGraph([makeNode()]) }),
-    });
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ ok: true, graph: makeGraph([makeNode()]) })
+    );
 
     await useLineageStore.getState().fetchFullPath("src-1", "dec-1");
 
     expect(useLineageStore.getState().graph).not.toBeNull();
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/api/lineage/path?sourceId=src-1&decisionId=dec-1"),
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining(
+        "/api/lineage/path?sourceId=src-1&decisionId=dec-1"
+      ),
+      undefined
     );
   });
 
@@ -156,16 +172,15 @@ describe("useLineageStore", () => {
       riskLevel: "low" as const,
       paths: makeGraph(),
     };
-    fetchMock.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true, result }),
-    });
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ok: true, result }));
 
     await useLineageStore.getState().fetchImpactAnalysis("data-1");
 
     expect(useLineageStore.getState().impactResult).toEqual(result);
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
       expect.stringContaining("/api/lineage/data-1/impact"),
+      undefined
     );
   });
 
