@@ -1,0 +1,427 @@
+<svg width="3840" height="2160" viewBox="0 0 3840 2160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Cube Pets Office 已完成执行计划全景逻辑图（4K 中文版）</title>
+  <desc id="desc">基于 execution-plan 中已经完成或已经形成主线能力的模块，按 UI 层、运行时层、编排层、智能层、执行层、治理层和互操作层绘制的 4K 中文 SVG 总览图，用于后续 UI 改版与逻辑升级。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 58px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 24px; font-weight: 500; fill: #334155; }
+    .section-title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 30px; font-weight: 800; fill: #0f172a; }
+    .lane-title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 28px; font-weight: 800; fill: #102541; }
+    .card-title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 24px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 20px; font-weight: 500; fill: #334155; }
+    .meta { font-family: "JetBrains Mono", "Cascadia Mono", monospace; font-size: 16px; font-weight: 600; fill: #64748b; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .tiny { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 16px; font-weight: 500; fill: #64748b; }
+    .chip { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 700; fill: #0f172a; }
+    .flow-title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #0f172a; }
+    .flow-text { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #334155; }
+    .note-title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="55%" stop-color="#f6f7fb" />
+      <stop offset="100%" stop-color="#fdf7f4" />
+    </linearGradient>
+    <linearGradient id="topCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <linearGradient id="foundation" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#eef2ff" />
+      <stop offset="50%" stop-color="#ecfeff" />
+      <stop offset="100%" stop-color="#fff7ed" />
+    </linearGradient>
+    <linearGradient id="laneBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e9f2ff" />
+      <stop offset="100%" stop-color="#f8fbff" />
+    </linearGradient>
+    <linearGradient id="laneTeal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8fbfb" />
+      <stop offset="100%" stop-color="#f7fefe" />
+    </linearGradient>
+    <linearGradient id="laneGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ecfdf3" />
+      <stop offset="100%" stop-color="#f9fefb" />
+    </linearGradient>
+    <linearGradient id="laneAmber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff5e8" />
+      <stop offset="100%" stop-color="#fffdf7" />
+    </linearGradient>
+    <linearGradient id="lanePurple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3efff" />
+      <stop offset="100%" stop-color="#fbfaff" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0 L0 0 0 48" fill="none" stroke="#dbe4f0" stroke-width="1" opacity="0.55" />
+    </pattern>
+  </defs>
+
+  <rect x="0" y="0" width="3840" height="2160" fill="url(#bg)" />
+  <rect x="0" y="0" width="3840" height="2160" fill="url(#grid)" opacity="0.45" />
+
+  <text class="title" x="60" y="96">Cube Pets Office 已完成执行计划全景逻辑图</text>
+  <text class="subtitle" x="60" y="136">基于 execution-plan 已落地主线能力生成，聚焦 UI 层、逻辑层、执行链路、治理链路与后续升级切入点。适合作为产品改版、领域拆分、代码梳理与平台化升级的总底图。</text>
+  <text class="subtitle" x="60" y="170">收录范围：C01-C08 契约底板、P00-P07 基座、L01-L30 已完成链路、任务控制台补完 P0/P1/P2，以及已形成可用能力的 workflow-artifacts-display / holographic-ui / executor-integration / ai-enabled-sandbox。</text>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="208" width="1180" height="150" rx="28" fill="url(#topCard)" stroke="#bfd3ea" />
+    <rect x="1330" y="208" width="1180" height="150" rx="28" fill="url(#topCard)" stroke="#bfd3ea" />
+    <rect x="2600" y="208" width="1180" height="150" rx="28" fill="url(#topCard)" stroke="#bfd3ea" />
+  </g>
+  <text class="card-title" x="96" y="258">这张图怎么读</text>
+  <text class="body" x="96" y="294">
+    <tspan x="96" dy="0">先看中部 5 列：从左到右分别是入口/UI、运行时/状态、编排主脑、智能+执行、治理+互操作。</tspan>
+    <tspan x="96" dy="30">再看底部 5 条端到端主链与依赖主链，最后看右下角升级切入点。</tspan>
+  </text>
+  <text class="card-title" x="1366" y="258">为什么适合做升级底图</text>
+  <text class="body" x="1366" y="294">
+    <tspan x="1366" dy="0">它不是单纯的“架构分层图”，而是把已经合并的 spec 能力、真实执行路径、状态回传和 UI 展示同时放在一张图里。</tspan>
+    <tspan x="1366" dy="30">后续做 UI 改版、任务控制台重构、执行器增强、治理收口时，可以直接对照定位影响范围。</tspan>
+  </text>
+  <text class="card-title" x="2636" y="258">边界说明</text>
+  <text class="body" x="2636" y="294">
+    <tspan x="2636" dy="0">未启动的 L31-L38（生产部署、多租户、K8s、边缘、多区域、VR）没有画进主链，只在升级建议里作为下一阶段观察项保留。</tspan>
+    <tspan x="2636" dy="30">部分 spec 在 tasks.md 层面仍有补测/验收尾项，但由于主线能力已经可用，因此纳入本图。</tspan>
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="396" width="3720" height="144" rx="28" fill="url(#foundation)" stroke="#cbd5e1" />
+  </g>
+  <text class="section-title" x="92" y="444">阶段 0 契约底板：所有已完成主线的共同依赖</text>
+  <text class="small" x="92" y="478">这些契约是后续升级最不能轻易打破的“稳定面”：前端状态、服务端编排、执行器、知识检索、跨框架导出和技能系统都从这里取约束。</text>
+
+  <g>
+    <rect x="96" y="496" width="420" height="32" rx="16" fill="#eef2ff" stroke="#a5b4fc" />
+    <text class="chip" x="114" y="518">C01 演示数据契约 · shared/demo/contracts.ts</text>
+    <rect x="534" y="496" width="420" height="32" rx="16" fill="#ecfeff" stroke="#67e8f9" />
+    <text class="chip" x="552" y="518">C02 遥测/恢复契约 · shared/telemetry/contracts.ts</text>
+    <rect x="972" y="496" width="390" height="32" rx="16" fill="#eff6ff" stroke="#93c5fd" />
+    <text class="chip" x="990" y="518">C03 记忆读写契约 · shared/memory/contracts.ts</text>
+    <rect x="1380" y="496" width="430" height="32" rx="16" fill="#ecfdf3" stroke="#86efac" />
+    <text class="chip" x="1398" y="518">C04 Mission 丰富化契约 · shared/mission/enrichment.ts</text>
+    <rect x="1828" y="496" width="430" height="32" rx="16" fill="#fff7ed" stroke="#fdba74" />
+    <text class="chip" x="1846" y="518">C05 跨框架导出契约 · shared/export/contracts.ts</text>
+    <rect x="2276" y="496" width="360" height="32" rx="16" fill="#f5f3ff" stroke="#c4b5fd" />
+    <text class="chip" x="2294" y="518">C06 LLM 契约 · shared/llm/contracts.ts</text>
+    <rect x="2654" y="496" width="350" height="32" rx="16" fill="#fefce8" stroke="#fde68a" />
+    <text class="chip" x="2672" y="518">C07 RAG 契约 · shared/rag/contracts.ts</text>
+    <rect x="3022" y="496" width="340" height="32" rx="16" fill="#fdf2f8" stroke="#f9a8d4" />
+    <text class="chip" x="3040" y="518">C08 Skill 契约 · shared/skill/contracts.ts</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="580" width="660" height="860" rx="32" fill="url(#laneBlue)" stroke="#9ec5fe" />
+    <rect x="760" y="580" width="660" height="860" rx="32" fill="url(#laneTeal)" stroke="#7dd3fc" />
+    <rect x="1460" y="580" width="740" height="860" rx="32" fill="url(#laneGreen)" stroke="#86efac" />
+    <rect x="2240" y="580" width="740" height="860" rx="32" fill="url(#laneAmber)" stroke="#fdba74" />
+    <rect x="3020" y="580" width="760" height="860" rx="32" fill="url(#lanePurple)" stroke="#c4b5fd" />
+  </g>
+  <text class="lane-title" x="92" y="628">① 入口与体验层</text>
+  <text class="lane-title" x="792" y="628">② 浏览器运行时与状态层</text>
+  <text class="lane-title" x="1492" y="628">③ 编排主脑与任务控制层</text>
+  <text class="lane-title" x="2272" y="628">④ 智能层与执行闭环</text>
+  <text class="lane-title" x="3052" y="628">⑤ 治理、生态与持久化层</text>
+
+  <g filter="url(#shadow)">
+    <rect x="88" y="664" width="604" height="132" rx="22" fill="#ffffff" stroke="#bfd3ea" />
+    <rect x="88" y="818" width="604" height="164" rx="22" fill="#ffffff" stroke="#bfd3ea" />
+    <rect x="88" y="1004" width="604" height="212" rx="22" fill="#ffffff" stroke="#bfd3ea" />
+    <rect x="88" y="1238" width="604" height="170" rx="22" fill="#ffffff" stroke="#bfd3ea" />
+  </g>
+  <text class="card-title" x="116" y="708">用户入口与外部触达</text>
+  <text class="meta" x="116" y="734">P05 feishu-bridge · P06 browser-runtime · P07 frontend-3d</text>
+  <text class="body" x="116" y="764">
+    <tspan x="116" dy="0">自然语言输入、飞书 Relay、在线 Demo、本地开发入口统一汇入系统。</tspan>
+    <tspan x="116" dy="28">同一条问题既可以走纯浏览器预演，也可以走服务端完整执行。</tspan>
+  </text>
+  <text class="card-title" x="116" y="862">全息交互外壳</text>
+  <text class="meta" x="116" y="888">frontend-3d · holographic-ui · L03 scene-mission-fusion</text>
+  <text class="body" x="116" y="918">
+    <tspan x="116" dy="0">3D 办公室、HoloDock、HoloDrawer、Glass Panel、GlowButton、呼吸光晕。</tspan>
+    <tspan x="116" dy="28">Mission 与 Agent 状态被映射为场景动效与空间位置，让执行过程可视化。</tspan>
+    <tspan x="116" dy="28">这是“产品第一印象”的主要承载层，也是 UI 改版影响最大的层。</tspan>
+  </text>
+  <text class="card-title" x="116" y="1048">任务驾驶舱与详情首屏</text>
+  <text class="meta" x="116" y="1074">mission-cancel-control · mission-operator-actions · task-detail-operations-first · execution-language-refresh · mission-ui-polish</text>
+  <text class="body" x="116" y="1104">
+    <tspan x="116" dy="0">任务列表、主操作、负责人、blocker、下一步动作、状态回显已经从“观察面板”升级为“执行控制台”。</tspan>
+    <tspan x="116" dy="28">支持取消、暂停、恢复、重试、标记阻塞、终止，并把语义收口到开发执行 / 协作交付 / 当前行动。</tspan>
+    <tspan x="116" dy="28">这里是近期产品体验主战场，也是后续 UI 与交互设计升级的核心板块。</tspan>
+  </text>
+  <text class="card-title" x="116" y="1282">辅助观察面板</text>
+  <text class="meta" x="116" y="1308">workflow-artifacts-display · L05 telemetry-dashboard · L06 cost-observability · L08 collaboration-replay · L09 multi-modal-vision</text>
+  <text class="body" x="116" y="1338">
+    <tspan x="116" dy="0">WorkflowPanel、Artifact 预览下载、AuditPanel、Lineage DAG、Telemetry、Cost Dashboard、Replay、Vision 附件能力在这里汇合。</tspan>
+    <tspan x="116" dy="28">这层决定“执行是否看得懂、查得到、复盘得出来”。</tspan>
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="788" y="664" width="604" height="168" rx="22" fill="#ffffff" stroke="#99e2f5" />
+    <rect x="788" y="854" width="604" height="188" rx="22" fill="#ffffff" stroke="#99e2f5" />
+    <rect x="788" y="1064" width="604" height="188" rx="22" fill="#ffffff" stroke="#99e2f5" />
+    <rect x="788" y="1274" width="604" height="134" rx="22" fill="#ffffff" stroke="#99e2f5" />
+  </g>
+  <text class="card-title" x="816" y="708">浏览器运行时与 Demo 模式</text>
+  <text class="meta" x="816" y="734">P06 browser-runtime · L01 demo-data-engine · L02 demo-guided-experience</text>
+  <text class="body" x="816" y="764">
+    <tspan x="816" dy="0">BrowserRuntime、Web Worker、DemoDataBundle、引导体验与 IndexedDB 组合成“零配置预演链”。</tspan>
+    <tspan x="816" dy="28">它让系统在没有 API Key、没有 Docker 的情况下也能完整演示 UI 和流程。</tspan>
+    <tspan x="816" dy="28">对 onboarding、分享、产品演示和 UI 原型迭代非常关键。</tspan>
+  </text>
+  <text class="card-title" x="816" y="898">前端状态单源与投影</text>
+  <text class="meta" x="816" y="924">L10 workflow-decoupling · L11 mission-native-projection · shared/mission/enrichment.ts</text>
+  <text class="body" x="816" y="954">
+    <tspan x="816" dy="0">tasks-store 从历史双轨收口为 mission-first，前端状态围绕 MissionRecord / enrichments 组织。</tspan>
+    <tspan x="816" dy="28">/api/planets 与前端数据源切换把“服务端真实状态”投影回 UI，减少前后端语义分裂。</tspan>
+    <tspan x="816" dy="28">后续只要做任务页、详情页、控制台重构，都应从这里开始看数据结构。</tspan>
+  </text>
+  <text class="card-title" x="816" y="1108">恢复、回放与客户端持久化</text>
+  <text class="meta" x="816" y="1134">L07 state-persistence-recovery · L08 collaboration-replay · shared/telemetry/contracts.ts</text>
+  <text class="body" x="816" y="1164">
+    <tspan x="816" dy="0">长任务恢复、断点续跑、时间线回放、浏览器快照与 IndexedDB 落盘让前端不再是“纯展示壳”。</tspan>
+    <tspan x="816" dy="28">这层是用户关闭页面、网络波动、演示回看时还能接住状态的关键支点。</tspan>
+    <tspan x="816" dy="28">任何 UI 性能优化都要注意不要破坏恢复与回放用到的状态边界。</tspan>
+  </text>
+  <text class="card-title" x="816" y="1318">实时事件接线层</text>
+  <text class="meta" x="816" y="1344">Socket.IO · mission_event · audit_event · lineage_event · terminal/artifact update</text>
+  <text class="body" x="816" y="1374">
+    <tspan x="816" dy="0">前端所有“活着的变化”都依赖这条接线层：任务状态、执行器回传、审计、血缘、遥测、终端流和工件更新。</tspan>
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="1488" y="664" width="684" height="186" rx="22" fill="#ffffff" stroke="#86efac" />
+    <rect x="1488" y="872" width="684" height="214" rx="22" fill="#ffffff" stroke="#86efac" />
+    <rect x="1488" y="1108" width="684" height="300" rx="22" fill="#ffffff" stroke="#86efac" />
+  </g>
+  <text class="card-title" x="1516" y="708">十阶段工作流主脑</text>
+  <text class="meta" x="1516" y="734">P00 workflow-engine · P01 dynamic-organization · server/core/workflow-engine.ts</text>
+  <text class="body" x="1516" y="764">
+    <tspan x="1516" dy="0">WorkflowEngine 负责 direction → planning → execution → review → meta_audit → revision → verify → summary → feedback → evolution。</tspan>
+    <tspan x="1516" dy="28">DynamicOrganization 决定 CEO / 经理 / Worker 的团队结构，AgentDirectory 与 MessageBus 承担执行编排和通信。</tspan>
+    <tspan x="1516" dy="28">这是所有“工作流型任务”的中心控制器，也是服务端逻辑改造时最需要谨慎的核心域。</tspan>
+  </text>
+  <text class="card-title" x="1516" y="916">Mission 任务域与执行控制</text>
+  <text class="meta" x="1516" y="942">P04 mission-runtime · L24.5 executor-integration · server/tasks/mission-store.ts</text>
+  <text class="body" x="1516" y="972">
+    <tspan x="1516" dy="0">MissionStore、MissionOrchestrator、ExecutionPlanBuilder 与 ExecutorClient 把“任务对象”推进成结构化 ExecutionPlan。</tspan>
+    <tspan x="1516" dy="28">这条链同时接住任务驾驶舱动作：取消、暂停、恢复、重试、阻塞、终止，以及详情页首屏需要的负责人 / blocker / 下一步。</tspan>
+    <tspan x="1516" dy="28">任务控制台不是独立产品层，而是 Mission Runtime 暴露给 UI 的可操作投影。</tspan>
+  </text>
+  <text class="card-title" x="1516" y="1152">命令、审批、角色、技能、成本与评审</text>
+  <text class="meta" x="1516" y="1178">L12 plugin-skill-system · L13 dynamic-role-system · L14 human-in-the-loop · L17 nl-command-center · L21 cost-governance-strategy · L25 agent-permission-model</text>
+  <text class="body" x="1516" y="1208">
+    <tspan x="1516" dy="0">NL Command 把自然语言变成结构化命令；Human-in-the-loop 处理审批、决策等待；Skill / Dynamic Role 负责能力插拔和运行期角色切换。</tspan>
+    <tspan x="1516" dy="28">Cost Governance 提供预算、告警和灰度降级；Permission RBAC 约束 Agent 与执行器能做什么；20 分评审与元审计维持交付质量。</tspan>
+    <tspan x="1516" dy="28">这一层决定“系统如何做判断、如何要求人参与、如何控制成本、如何把动作合法化”。</tspan>
+    <tspan x="1516" dy="28">做逻辑重构时，优先确认命令入口、审批边界、权限边界和任务动作模型是否被同时更新。</tspan>
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="2268" y="664" width="684" height="194" rx="22" fill="#ffffff" stroke="#fdba74" />
+    <rect x="2268" y="880" width="684" height="214" rx="22" fill="#ffffff" stroke="#fdba74" />
+    <rect x="2268" y="1116" width="684" height="292" rx="22" fill="#ffffff" stroke="#fdba74" />
+  </g>
+  <text class="card-title" x="2296" y="708">记忆、知识图谱与 RAG 检索</text>
+  <text class="meta" x="2296" y="734">P02 memory-system · L15 knowledge-graph · L16 vector-db-rag-pipeline</text>
+  <text class="body" x="2296" y="764">
+    <tspan x="2296" dy="0">SessionStore 保存短期记忆，VectorStore 汇总中期记忆，SoulStore 沉淀长期人设；Knowledge Graph 与 Vector DB + RAG 提供结构化知识与召回。</tspan>
+    <tspan x="2296" dy="28">这条链让 Agent 不只是一次性回答，而是能带着上下文、知识和历史经验持续工作。</tspan>
+    <tspan x="2296" dy="28">后续想做推理增强、记忆治理、知识更新策略时，应该以这里为中心展开。</tspan>
+  </text>
+  <text class="card-title" x="2296" y="924">自治、信誉、进化与多模态</text>
+  <text class="meta" x="2296" y="950">P03 evolution-heartbeat · L18 agent-autonomy-upgrade · L19 agent-reputation · L20 multi-modal-agent · L09 multi-modal-vision</text>
+  <text class="body" x="2296" y="980">
+    <tspan x="2296" dy="0">工作流结束后会沉淀反馈并进化人设；自治能力支持自评估与竞争执行；信誉评分让历史表现反向影响未来任务选择。</tspan>
+    <tspan x="2296" dy="28">Vision / 语音能力把多模态输入并入统一编排，使系统既能看图，也能处理更复杂的输入信号。</tspan>
+    <tspan x="2296" dy="28">这层定义的是“Agent 为什么越来越聪明、越来越会挑任务、越来越会组合能力”。</tspan>
+  </text>
+  <text class="card-title" x="2296" y="1160">Docker 执行闭环</text>
+  <text class="meta" x="2296" y="1186">L22 lobster-executor-real · L22.5 ai-enabled-sandbox · L23 secure-sandbox · L24 sandbox-live-preview · L24.5 executor-integration</text>
+  <text class="body" x="2296" y="1216">
+    <tspan x="2296" dy="0">Mission 侧生成 ExecutionPlan 后，由 ExecutorClient 下发到 Lobster Executor；dockerode 驱动真实容器生命周期。</tspan>
+    <tspan x="2296" dy="28">AI inject 负责凭证安全注入，Secure Sandbox 负责 seccomp/AppArmor 与能力裁剪，Live Preview 把终端输出与截图实时回传。</tspan>
+    <tspan x="2296" dy="28">HMAC 回调把状态、日志与工件回传给 MissionStore，再经 Socket 推回 UI，形成“真实执行而不是纯文案”的闭环。</tspan>
+    <tspan x="2296" dy="28">这是系统和传统多智能体 Demo 拉开差距的关键：计划不是停在屏幕上，而是进容器、产生日志、回传结果。</tspan>
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="3048" y="664" width="704" height="196" rx="22" fill="#ffffff" stroke="#c4b5fd" />
+    <rect x="3048" y="882" width="704" height="222" rx="22" fill="#ffffff" stroke="#c4b5fd" />
+    <rect x="3048" y="1126" width="704" height="282" rx="22" fill="#ffffff" stroke="#c4b5fd" />
+  </g>
+  <text class="card-title" x="3076" y="708">审计、血缘、遥测与成本观察</text>
+  <text class="meta" x="3076" y="734">L05 telemetry-dashboard · L06 cost-observability · L27 audit-chain · L28 data-lineage-tracking</text>
+  <text class="body" x="3076" y="764">
+    <tspan x="3076" dy="0">AuditCollector → AuditChain 记录不可篡改日志；LineageCollector → DAG 追踪数据上下游；Telemetry 与 Cost Dashboard 让运行指标可见。</tspan>
+    <tspan x="3076" dy="28">这层解决的不是“怎么做”，而是“做了什么、花了多少、从哪来、出了问题能否回查”。</tspan>
+    <tspan x="3076" dy="28">当系统复杂度继续上升时，治理层往往比 UI 层更早成为瓶颈，因此必须提前在这层留出升级空间。</tspan>
+  </text>
+  <text class="card-title" x="3076" y="926">跨框架导出、Guest Agent、A2A 与 Swarm</text>
+  <text class="meta" x="3076" y="952">L04 cross-framework-export · L26 autonomous-swarm · L29 a2a-protocol · L30 agent-marketplace</text>
+  <text class="body" x="3076" y="982">
+    <tspan x="3076" dy="0">Cross-framework export 解决“导出到 CrewAI / LangGraph / AutoGen”；A2A 协议解决“和外部 Agent 对话”；Guest Agent 解决“临时接入外部能力”。</tspan>
+    <tspan x="3076" dy="28">Swarm 负责跨 Pod 的发现、委派和共识，让系统不再局限于单进程单节点内协作。</tspan>
+    <tspan x="3076" dy="28">这一层是生态扩展面的主入口，后续要走平台化，L34 交易市场平台也会从这里长出来。</tspan>
+    <tspan x="3076" dy="28">对外互联相关改造，一定要同步检查 export 契约、A2A 协议、Guest 生命周期与权限约束。</tspan>
+  </text>
+  <text class="card-title" x="3076" y="1170">持久化与工作空间</text>
+  <text class="meta" x="3076" y="1196">database.json · data/lineage · 审计日志 · 浏览器 IndexedDB · Agent 工作空间</text>
+  <text class="body" x="3076" y="1226">
+    <tspan x="3076" dy="0">服务端把任务、工作流、审计与血缘落到 JSON / 文件存储；浏览器侧则依赖 IndexedDB 保留预演和恢复状态。</tspan>
+    <tspan x="3076" dy="28">工件、日志、快照和工作空间共同构成了“系统可以继续追溯和继续演进”的数据底座。</tspan>
+    <tspan x="3076" dy="28">这里也是后续做 L31-L38 平台化能力时，最先要被替换或抽象的一层。</tspan>
+    <tspan x="3076" dy="28">暂不建议现在直接做生产部署类重构，除非先把这层的数据边界梳理清楚。</tspan>
+  </text>
+
+  <g filter="url(#shadow)">
+    <rect x="60" y="1484" width="3720" height="318" rx="30" fill="#ffffff" stroke="#cbd5e1" />
+    <rect x="60" y="1832" width="2200" height="268" rx="30" fill="#ffffff" stroke="#cbd5e1" />
+    <rect x="2300" y="1832" width="1480" height="268" rx="30" fill="#ffffff" stroke="#cbd5e1" />
+  </g>
+
+  <text class="section-title" x="92" y="1532">5 条端到端主链：后续 UI / 逻辑升级时最值得反复对照的执行路径</text>
+  <circle cx="114" cy="1586" r="20" fill="#dbeafe" stroke="#2563eb" />
+  <text class="flow-title" x="106" y="1594">1</text>
+  <text class="flow-title" x="150" y="1594">浏览器预演链</text>
+  <text class="flow-text" x="334" y="1594">用户 → DemoData / BrowserRuntime → BrowserWorkflowRepository → Zustand / IndexedDB → 3D 场景与 WorkflowPanel</text>
+  <line x1="142" y1="1606" x2="3710" y2="1606" stroke="#bfdbfe" stroke-width="2" />
+
+  <circle cx="114" cy="1648" r="20" fill="#dcfce7" stroke="#16a34a" />
+  <text class="flow-title" x="106" y="1656">2</text>
+  <text class="flow-title" x="150" y="1656">服务端工作流链</text>
+  <text class="flow-text" x="334" y="1656">用户 / NL Command → WorkflowEngine.startWorkflow() → DynamicOrganization → 十阶段执行 / 评审 / 修订 / 验证 → Socket.IO → UI</text>
+  <line x1="142" y1="1668" x2="3710" y2="1668" stroke="#bbf7d0" stroke-width="2" />
+
+  <circle cx="114" cy="1710" r="20" fill="#ffedd5" stroke="#ea580c" />
+  <text class="flow-title" x="106" y="1718">3</text>
+  <text class="flow-title" x="150" y="1718">Mission 执行链</text>
+  <text class="flow-text" x="334" y="1718">任务驾驶舱 → MissionOrchestrator → ExecutionPlanBuilder → ExecutorClient → Lobster Executor → HMAC 回调 → MissionStore → Artifact / 状态 / Feishu 回传</text>
+  <line x1="142" y1="1730" x2="3710" y2="1730" stroke="#fed7aa" stroke-width="2" />
+
+  <circle cx="114" cy="1772" r="20" fill="#fef3c7" stroke="#d97706" />
+  <text class="flow-title" x="106" y="1780">4</text>
+  <text class="flow-title" x="150" y="1780">记忆与进化链</text>
+  <text class="flow-text" x="334" y="1780">Agent.invoke() → SessionStore / MessageBus → VectorStore 摘要化 → SoulStore 学习行为 → CapabilityRegistry → HeartbeatScheduler 报告</text>
+
+  <circle cx="1920" cy="1586" r="20" fill="#ede9fe" stroke="#7c3aed" />
+  <text class="flow-title" x="1912" y="1594">5</text>
+  <text class="flow-title" x="1956" y="1594">审计 / 血缘 / 互操作链</text>
+  <text class="flow-text" x="2238" y="1594">AuditCollector / LineageCollector / A2AServer / GuestLifecycle / SwarmOrchestrator → 审计面板、血缘图、外部框架与生态能力</text>
+
+  <text class="section-title" x="92" y="1880">关键依赖主链：真正决定系统结构的几条骨架</text>
+  <text class="small" x="92" y="1910">如果后续升级要做领域拆分、模块重构或接口收口，优先沿着这些链路梳理，不要只看单个页面或单个组件。</text>
+  <rect x="100" y="1938" width="270" height="34" rx="17" fill="#eef2ff" stroke="#a5b4fc" />
+  <text class="chip" x="118" y="1961">C01-C08 契约冻结</text>
+  <line x1="370" y1="1955" x2="446" y2="1955" stroke="#4f46e5" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="446" y="1938" width="290" height="34" rx="17" fill="#ecfeff" stroke="#67e8f9" />
+  <text class="chip" x="464" y="1961">L10 workflow-decoupling</text>
+  <line x1="736" y1="1955" x2="812" y2="1955" stroke="#0891b2" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="812" y="1938" width="310" height="34" rx="17" fill="#ecfeff" stroke="#67e8f9" />
+  <text class="chip" x="830" y="1961">L11 mission-native-projection</text>
+  <line x1="1122" y1="1955" x2="1208" y2="1955" stroke="#0891b2" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="1208" y="1938" width="354" height="34" rx="17" fill="#dcfce7" stroke="#86efac" />
+  <text class="chip" x="1226" y="1961">mission-first 前端 / 服务端状态单源</text>
+
+  <rect x="100" y="1988" width="300" height="34" rx="17" fill="#dcfce7" stroke="#86efac" />
+  <text class="chip" x="118" y="2011">P00 + P01 工作流主脑</text>
+  <line x1="400" y1="2005" x2="476" y2="2005" stroke="#16a34a" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="476" y="1988" width="282" height="34" rx="17" fill="#dcfce7" stroke="#86efac" />
+  <text class="chip" x="494" y="2011">P04 Mission Runtime</text>
+  <line x1="758" y1="2005" x2="834" y2="2005" stroke="#16a34a" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="834" y="1988" width="310" height="34" rx="17" fill="#fff7ed" stroke="#fdba74" />
+  <text class="chip" x="852" y="2011">L24.5 executor-integration</text>
+  <line x1="1144" y1="2005" x2="1228" y2="2005" stroke="#ea580c" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="1228" y="1988" width="470" height="34" rx="17" fill="#dbeafe" stroke="#93c5fd" />
+  <text class="chip" x="1246" y="2011">P0/P1/P2 任务控制台闭环（取消 / 动作 / 首屏 / 文案 / UI）</text>
+
+  <rect x="100" y="2038" width="286" height="34" rx="17" fill="#fef3c7" stroke="#fde68a" />
+  <text class="chip" x="118" y="2061">P02 记忆系统</text>
+  <line x1="386" y1="2055" x2="462" y2="2055" stroke="#ca8a04" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="462" y="2038" width="270" height="34" rx="17" fill="#fef3c7" stroke="#fde68a" />
+  <text class="chip" x="480" y="2061">L15 知识图谱</text>
+  <line x1="732" y1="2055" x2="808" y2="2055" stroke="#ca8a04" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="808" y="2038" width="308" height="34" rx="17" fill="#fef3c7" stroke="#fde68a" />
+  <text class="chip" x="826" y="2061">L16 Vector DB + RAG</text>
+  <line x1="1116" y1="2055" x2="1192" y2="2055" stroke="#ca8a04" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="1192" y="2038" width="470" height="34" rx="17" fill="#fff7ed" stroke="#fdba74" />
+  <text class="chip" x="1210" y="2061">P03 + L18/L19/L20 自治 / 信誉 / 进化 / 多模态</text>
+
+  <rect x="1692" y="1938" width="232" height="34" rx="17" fill="#dcfce7" stroke="#86efac" />
+  <text class="chip" x="1710" y="1961">L14 HITL</text>
+  <line x1="1924" y1="1955" x2="1998" y2="1955" stroke="#16a34a" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="1998" y="1938" width="232" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd" />
+  <text class="chip" x="2016" y="1961">L27 Audit</text>
+  <line x1="2230" y1="1955" x2="2304" y2="1955" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="2304" y="1938" width="286" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd" />
+  <text class="chip" x="2322" y="1961">L28 Data Lineage</text>
+
+  <rect x="1692" y="1988" width="250" height="34" rx="17" fill="#fdf2f8" stroke="#f9a8d4" />
+  <text class="chip" x="1710" y="2011">L12 Skill</text>
+  <line x1="1942" y1="2005" x2="2016" y2="2005" stroke="#ec4899" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="2016" y="1988" width="232" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd" />
+  <text class="chip" x="2034" y="2011">L29 A2A</text>
+  <line x1="2248" y1="2005" x2="2322" y2="2005" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="2322" y="1988" width="270" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd" />
+  <text class="chip" x="2340" y="2011">L30 Guest Agent</text>
+
+  <rect x="1692" y="2038" width="260" height="34" rx="17" fill="#fff7ed" stroke="#fdba74" />
+  <text class="chip" x="1710" y="2061">L18 自治升级</text>
+  <line x1="1952" y1="2055" x2="2026" y2="2055" stroke="#ea580c" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="2026" y="2038" width="270" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd" />
+  <text class="chip" x="2044" y="2061">L26 Swarm</text>
+  <line x1="2296" y1="2055" x2="2370" y2="2055" stroke="#7c3aed" stroke-width="3" marker-end="url(#arrow)" />
+  <rect x="2370" y="2038" width="320" height="34" rx="17" fill="#fff7ed" stroke="#fdba74" />
+  <text class="chip" x="2388" y="2061">L04 导出 / 生态适配</text>
+
+  <text class="section-title" x="2332" y="1880">升级切入点：后续你做 UI 和逻辑升级时最值得先看的地方</text>
+  <text class="small" x="2332" y="1910">这里故意按“改造视角”而不是按“技术层”组织，方便后续拆任务、定优先级和评估影响范围。</text>
+  <g filter="url(#shadow)">
+    <rect x="2332" y="1940" width="334" height="126" rx="20" fill="#eff6ff" stroke="#93c5fd" />
+    <rect x="2682" y="1940" width="334" height="126" rx="20" fill="#ecfdf3" stroke="#86efac" />
+    <rect x="3032" y="1940" width="334" height="126" rx="20" fill="#fff7ed" stroke="#fdba74" />
+    <rect x="3382" y="1940" width="370" height="126" rx="20" fill="#f5f3ff" stroke="#c4b5fd" />
+  </g>
+  <text class="note-title" x="2354" y="1970">UI 改版先看</text>
+  <text class="tiny" x="2354" y="1996">Task Console、TaskDetailView、WorkflowPanel、Artifacts、Scene3D、HoloDock</text>
+  <text class="tiny" x="2354" y="2022">优先确认：状态层级、操作层级、空间映射、工件预览信息架构。</text>
+  <text class="note-title" x="2704" y="1970">逻辑重构先看</text>
+  <text class="tiny" x="2704" y="1996">WorkflowEngine、MissionStore、MissionOrchestrator、ExecutionPlanBuilder、MessageBus</text>
+  <text class="tiny" x="2704" y="2022">优先确认：命令入口、任务动作模型、状态单源、审批与权限边界。</text>
+  <text class="note-title" x="3054" y="1970">执行增强先看</text>
+  <text class="tiny" x="3054" y="1996">ExecutorClient、Lobster Executor、HMAC callback、Secure Sandbox、Live Preview</text>
+  <text class="tiny" x="3054" y="2022">优先确认：取消语义、回调幂等、日志/工件同步、权限裁剪。</text>
+  <text class="note-title" x="3404" y="1970">治理与平台化先看</text>
+  <text class="tiny" x="3404" y="1996">AuditCollector、LineageCollector、Telemetry、A2A、Guest、Swarm、存储边界</text>
+  <text class="tiny" x="3404" y="2022">等这层边界稳定后，再进入 L31-L38 的生产部署 / 多租户 / K8s / 边缘。</text>
+
+  <path d="M692 730 C748 730 748 730 788 730" fill="none" stroke="#2563eb" stroke-width="4" marker-end="url(#arrow)" />
+  <rect x="698" y="702" width="170" height="28" rx="14" fill="#eff6ff" />
+  <text class="tiny" x="714" y="721">入口事件 / 交互状态</text>
+  <path d="M1392 950 C1430 950 1440 950 1488 950" fill="none" stroke="#0f766e" stroke-width="4" marker-end="url(#arrow)" />
+  <rect x="1322" y="920" width="162" height="28" rx="14" fill="#ecfeff" />
+  <text class="tiny" x="1338" y="939">mission-first 状态</text>
+  <path d="M2172 760 C2200 760 2220 760 2268 760" fill="none" stroke="#15803d" stroke-width="4" marker-end="url(#arrow)" />
+  <rect x="2080" y="730" width="172" height="28" rx="14" fill="#ecfdf3" />
+  <text class="tiny" x="2096" y="749">上下文 / 记忆 / 检索</text>
+  <path d="M2172 990 C2250 990 2230 1170 2268 1170" fill="none" stroke="#ea580c" stroke-width="4" marker-end="url(#arrow)" />
+  <rect x="2120" y="1020" width="150" height="28" rx="14" fill="#fff7ed" />
+  <text class="tiny" x="2136" y="1039">执行计划下发</text>
+  <path d="M2172 1240 C2520 1240 2760 980 3048 980" fill="none" stroke="#7c3aed" stroke-width="4" marker-end="url(#arrow)" />
+  <rect x="2440" y="1204" width="172" height="28" rx="14" fill="#f5f3ff" />
+  <text class="tiny" x="2456" y="1223">审计 / 生态 / 治理</text>
+  <path d="M3048 760 C2870 760 2870 1398 620 1288" fill="none" stroke="#7c3aed" stroke-width="3.5" stroke-dasharray="10 10" marker-end="url(#arrow)" />
+  <rect x="2360" y="1376" width="270" height="28" rx="14" fill="#faf5ff" />
+  <text class="tiny" x="2378" y="1395">审计 / 血缘 / 遥测回流到观察面板</text>
+  <path d="M2268 1268 C1900 1480 1090 1490 390 1400" fill="none" stroke="#ea580c" stroke-width="3.5" stroke-dasharray="10 10" marker-end="url(#arrow)" />
+  <rect x="1410" y="1412" width="280" height="28" rx="14" fill="#fff7ed" />
+  <text class="tiny" x="1428" y="1431">执行器状态 / 终端 / 工件回推 UI</text>
+
+  <text class="small" x="60" y="2130">版本：2026-04-11 · 输出文件：docs/execution-plan-complete-map-4k.svg · 用途：面向后续 UI 改版、逻辑梳理与平台升级的全景底图</text>
+</svg>
