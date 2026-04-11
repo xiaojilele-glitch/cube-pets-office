@@ -14,6 +14,10 @@ import type {
   MissionOperatorActionLoadingMap,
   MissionTaskDetail,
 } from "@/lib/tasks-store";
+import {
+  workspaceCalloutClass,
+  workspaceStatusClass,
+} from "@/components/workspace/workspace-tone";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -47,11 +51,13 @@ interface TaskOperationsHeroProps {
 function recommendedToneClasses(
   tone: "primary" | "secondary" | "danger"
 ): string {
-  return cn(
-    "rounded-full border px-3 py-1 text-xs font-semibold",
-    tone === "primary" && "border-teal-200 bg-teal-50 text-teal-800",
-    tone === "secondary" && "border-stone-200 bg-stone-50 text-stone-700",
-    tone === "danger" && "border-rose-200 bg-rose-50 text-rose-800"
+  return workspaceStatusClass(
+    tone === "primary"
+      ? "success"
+      : tone === "secondary"
+        ? "neutral"
+        : "danger",
+    "px-3 py-1 text-xs"
   );
 }
 
@@ -81,7 +87,7 @@ function SummaryCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: "easeOut" }}
       className={cn(
-        "rounded-[22px] border px-4 py-4 shadow-sm backdrop-blur",
+        "workspace-callout rounded-[22px] px-4 py-4",
         taskInsightToneClasses(item.tone),
         highlighted &&
           item.tone === "warning" &&
@@ -137,14 +143,14 @@ export function TaskOperationsHero({
     {
       key: "kind",
       label: detail.kind,
-      className: "border-stone-200 bg-white/75 text-stone-700 font-medium",
+      className: "workspace-tone-neutral bg-white/75 font-medium",
     },
     ...(detail.executor?.status
       ? [
           {
             key: "executor-status",
             label: `Executor ${detail.executor.status}`,
-            className: "border-sky-200 bg-sky-50 text-sky-700 font-medium",
+            className: "workspace-tone-info font-medium",
           },
         ]
       : []),
@@ -187,8 +193,7 @@ export function TaskOperationsHero({
                   items={detail.departmentLabels.map(label => ({
                     key: `department-${label}`,
                     label,
-                    className:
-                      "border-white/80 bg-white/65 text-stone-600 font-medium",
+                    className: "workspace-tone-neutral bg-white/65 font-medium",
                   }))}
                   className="mt-2"
                 />
@@ -220,9 +225,12 @@ export function TaskOperationsHero({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="rounded-[22px] border border-teal-200/80 bg-teal-50/75 px-4 py-4 text-sm text-teal-900 shadow-sm"
+              className={cn(
+                workspaceCalloutClass("success"),
+                "px-4 py-4 text-sm"
+              )}
             >
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-teal-700">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--workspace-success)]">
                 <Sparkles className="size-4" />
                 {copy.tasks.hero.recommended}
               </div>
@@ -240,7 +248,7 @@ export function TaskOperationsHero({
                 {primaryActions.recommended.map(action => (
                   <div
                     key={`${action.key}-detail`}
-                    className="rounded-[18px] border border-white/70 bg-white/75 px-3 py-3 text-sm leading-6 text-teal-900"
+                    className="rounded-[18px] border border-white/70 bg-white/75 px-3 py-3 text-sm leading-6 text-[var(--workspace-text)]"
                   >
                     {action.description}
                   </div>
@@ -255,13 +263,13 @@ export function TaskOperationsHero({
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className="rounded-[22px] border border-sky-200/80 bg-sky-50/80 px-4 py-4 text-sm text-sky-900 shadow-sm"
+              className={cn(workspaceCalloutClass("info"), "px-4 py-4 text-sm")}
             >
-              <div className="flex items-center gap-2 font-semibold">
-                <Sparkles className="size-4 text-sky-700" />
+              <div className="flex items-center gap-2 font-semibold text-[var(--workspace-text-strong)]">
+                <Sparkles className="size-4 text-[var(--workspace-info)]" />
                 {copy.tasks.hero.pendingDecision}
               </div>
-              <div className="mt-2 leading-6">
+              <div className="mt-2 leading-6 text-[var(--workspace-text)]">
                 {compactText(
                   detail.waitingFor ||
                     detail.decisionPrompt ||

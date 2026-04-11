@@ -8,9 +8,18 @@
  */
 import { describe, it, expect, vi } from "vitest";
 
-import type { MissionTaskDetail, TaskTimelineEvent, TaskInteriorAgent } from "@/lib/tasks-store";
+import type {
+  MissionTaskDetail,
+  TaskTimelineEvent,
+  TaskInteriorAgent,
+} from "@/lib/tasks-store";
 import { sliceRecentEvents } from "@/components/tasks/mission-island-helpers";
-import { agentStatusLabel, agentStatusTone, formatTaskRelative, timelineTone } from "@/components/tasks/task-helpers";
+import {
+  agentStatusLabel,
+  agentStatusTone,
+  formatTaskRelative,
+  timelineTone,
+} from "@/components/tasks/task-helpers";
 
 /* ─── Helpers ─── */
 
@@ -72,7 +81,14 @@ function makeDetail(overrides?: Partial<MissionTaskDetail>): MissionTaskDetail {
     issueCount: 0,
     hasWarnings: false,
     lastSignal: null,
-    workflow: { id: "w", directive: "", status: "running", stages: [], currentStageKey: null, progress: 0 },
+    workflow: {
+      id: "w",
+      directive: "",
+      status: "running",
+      stages: [],
+      currentStageKey: null,
+      progress: 0,
+    },
     tasks: [],
     messages: [],
     report: null,
@@ -153,7 +169,7 @@ describe("MissionDetailOverlay null detail", () => {
 describe("MissionDetailOverlay timeline", () => {
   it("slices timeline to 10 most recent events", () => {
     const events = Array.from({ length: 20 }, (_, i) =>
-      makeEvent({ id: `evt-${i}`, time: 1000 + i }),
+      makeEvent({ id: `evt-${i}`, time: 1000 + i })
     );
     const detail = makeDetail({ timeline: events });
     const recent = sliceRecentEvents(detail.timeline);
@@ -171,10 +187,10 @@ describe("MissionDetailOverlay timeline", () => {
   });
 
   it("timeline tone returns correct classes for each level", () => {
-    expect(timelineTone("info")).toContain("sky");
-    expect(timelineTone("success")).toContain("emerald");
-    expect(timelineTone("warn")).toContain("amber");
-    expect(timelineTone("error")).toContain("rose");
+    expect(timelineTone("info")).toContain("workspace-tone-info");
+    expect(timelineTone("success")).toContain("workspace-tone-success");
+    expect(timelineTone("warn")).toContain("workspace-tone-warning");
+    expect(timelineTone("error")).toContain("workspace-tone-danger");
   });
 
   it("formatTaskRelative returns a human-readable string", () => {
@@ -196,11 +212,11 @@ describe("MissionDetailOverlay agent list", () => {
   });
 
   it("agent status tones contain expected color tokens", () => {
-    expect(agentStatusTone("working")).toContain("amber");
-    expect(agentStatusTone("thinking")).toContain("sky");
-    expect(agentStatusTone("done")).toContain("emerald");
-    expect(agentStatusTone("error")).toContain("rose");
-    expect(agentStatusTone("idle")).toContain("stone");
+    expect(agentStatusTone("working")).toContain("workspace-tone-warning");
+    expect(agentStatusTone("thinking")).toContain("workspace-tone-info");
+    expect(agentStatusTone("done")).toContain("workspace-tone-success");
+    expect(agentStatusTone("error")).toContain("workspace-tone-danger");
+    expect(agentStatusTone("idle")).toContain("workspace-tone-neutral");
   });
 
   it("empty agents list shows no agents", () => {

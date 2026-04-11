@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DatabaseZap, SearchCode, TriangleAlert } from "lucide-react";
+import {
+  DatabaseZap,
+  GitBranch,
+  RefreshCw,
+  SearchCode,
+  TriangleAlert,
+} from "lucide-react";
 
 import LineageDAGView from "@/components/lineage/LineageDAGView";
 import LineageExportButton from "@/components/lineage/LineageExportButton";
@@ -8,16 +14,33 @@ import LineageNodeDetail from "@/components/lineage/LineageNodeDetail";
 import LineageTimeline from "@/components/lineage/LineageTimeline";
 import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
 import { RetryInlineNotice } from "@/components/tasks/RetryInlineNotice";
-import { useViewportTier } from "@/hooks/useViewportTier";
+import { Button } from "@/components/ui/button";
+import {
+  WorkspacePageShell,
+  WorkspacePanel,
+} from "@/components/workspace/WorkspacePageShell";
 import { useLineageStore } from "@/lib/lineage-store";
+import { cn } from "@/lib/utils";
 import type { LineageNodeType } from "@shared/lineage/contracts.js";
 
 type ViewTab = "dag" | "timeline" | "heatmap";
 
-const TABS: Array<{ key: ViewTab; label: string }> = [
-  { key: "dag", label: "DAG" },
-  { key: "timeline", label: "Timeline" },
-  { key: "heatmap", label: "Heatmap" },
+const TABS: Array<{ key: ViewTab; label: string; description: string }> = [
+  {
+    key: "dag",
+    label: "DAG",
+    description: "Explore upstream and downstream dependencies",
+  },
+  {
+    key: "timeline",
+    label: "Timeline",
+    description: "Follow events in execution order",
+  },
+  {
+    key: "heatmap",
+    label: "Heatmap",
+    description: "Spot dense sources and active agents",
+  },
 ];
 
 const NODE_TYPES: Array<{ value: LineageNodeType | ""; label: string }> = [
@@ -28,8 +51,9 @@ const NODE_TYPES: Array<{ value: LineageNodeType | ""; label: string }> = [
 ];
 
 export default function LineagePage() {
-  const { isMobile } = useViewportTier();
   const [activeTab, setActiveTab] = useState<ViewTab>("dag");
+  const dagCanvasRef = useRef<HTMLCanvasElement>(null);
+
   const graph = useLineageStore(state => state.graph);
   const selectedNodeId = useLineageStore(state => state.selectedNodeId);
   const filters = useLineageStore(state => state.filters);
@@ -39,10 +63,6 @@ export default function LineagePage() {
   const error = useLineageStore(state => state.error);
   const fetchRecentGraph = useLineageStore(state => state.fetchRecentGraph);
   const retryLastRequest = useLineageStore(state => state.retryLastRequest);
-
-  const pagePaddingTop = isMobile ? 96 : 16;
-  const pagePaddingBottom = isMobile ? 120 : 112;
-  const dagCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     void fetchRecentGraph();
@@ -74,90 +94,30 @@ export default function LineagePage() {
   const isEmpty =
     hasLoaded && !loading && (graph?.nodes.length ?? 0) === 0 && !error;
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        paddingTop: pagePaddingTop,
-        paddingBottom: pagePaddingBottom,
-        background: "#f9fafb",
-        boxSizing: "border-box",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: `calc(100vh - ${pagePaddingTop + pagePaddingBottom}px)`,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "8px 16px",
-            borderBottom: "1px solid #e5e7eb",
-            background: "#fff",
-            flexShrink: 0,
-          }}
-        >
-          <span
-            style={{
-              fontWeight: 600,
-              fontSize: 15,
-              color: "#111827",
-              marginRight: 8,
-            }}
-          >
-            Data Lineage
-          </span>
+  const activeTabMeta = TABS.find(tab => tab.key === activeTab) ?? TABS[0];
 
-          <div
-            style={{
-              display: "flex",
-              gap: 2,
-              background: "#f3f4f6",
-              borderRadius: 6,
-              padding: 2,
-            }}
-          >
-            {TABS.map(tab => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                style={{
-                  padding: "4px 14px",
-                  fontSize: 12,
-                  borderRadius: 4,
-                  border: "none",
-                  background: activeTab === tab.key ? "#fff" : "transparent",
-                  color: activeTab === tab.key ? "#111827" : "#6b7280",
-                  fontWeight: activeTab === tab.key ? 600 : 400,
-                  cursor: "pointer",
-                  boxShadow:
-                    activeTab === tab.key
-                      ? "0 1px 2px rgba(0,0,0,0.06)"
-                      : "none",
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+  const toolbar = (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-wrap gap-2">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              type="button"
+              className="workspace-pill rounded-full px-4 py-2 text-sm font-semibold"
+              data-active={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          <div style={{ flex: 1 }} />
-
+        <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:justify-end">
           <select
             value={filters.nodeType ?? ""}
             onChange={handleTypeFilter}
-            style={{
-              fontSize: 12,
-              padding: "4px 8px",
-              borderRadius: 4,
-              border: "1px solid #d1d5db",
-            }}
+            className="workspace-control h-11 rounded-full px-4 text-sm"
           >
             {NODE_TYPES.map(option => (
               <option key={option.value} value={option.value}>
@@ -171,13 +131,7 @@ export default function LineagePage() {
             placeholder="Agent ID"
             value={filters.agentId ?? ""}
             onChange={handleAgentFilter}
-            style={{
-              fontSize: 12,
-              padding: "4px 8px",
-              borderRadius: 4,
-              border: "1px solid #d1d5db",
-              width: 120,
-            }}
+            className="workspace-control h-11 rounded-full px-4 text-sm placeholder:text-[var(--workspace-text-subtle)]"
           />
 
           <input
@@ -185,137 +139,172 @@ export default function LineagePage() {
             placeholder="Search node or source"
             value={filters.searchText ?? ""}
             onChange={handleSearchFilter}
-            style={{
-              fontSize: 12,
-              padding: "4px 8px",
-              borderRadius: 4,
-              border: "1px solid #d1d5db",
-              width: 180,
-            }}
+            className="workspace-control h-11 rounded-full px-4 text-sm placeholder:text-[var(--workspace-text-subtle)] sm:col-span-2 xl:min-w-[260px]"
           />
-
-          <LineageExportButton canvasRef={dagCanvasRef} />
-
-          <button
-            type="button"
-            onClick={() => void retryLastRequest()}
-            style={{
-              border: "1px solid #d1d5db",
-              borderRadius: 999,
-              padding: "6px 12px",
-              background: "#fff",
-              color: "#374151",
-              fontSize: 12,
-              cursor: "pointer",
-            }}
-          >
-            Reload
-          </button>
-
-          {loading ? (
-            <span style={{ fontSize: 11, color: "#9ca3af" }}>Loading...</span>
-          ) : null}
         </div>
+      </div>
 
-        {error && graph ? (
-          <div className="border-b border-amber-200 bg-white px-4 py-3">
-            <RetryInlineNotice
-              title="Lineage refresh failed"
-              description={error.message}
-              actionLabel="Retry"
-              onRetry={() => void retryLastRequest()}
-            />
-          </div>
-        ) : null}
-
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-          {loading && !graph ? (
-            <div className="flex flex-1 items-center justify-center px-6">
-              <EmptyHintBlock
-                tone="info"
-                icon={<DatabaseZap className="size-5" />}
-                title="Loading lineage graph"
-                description="Fetching the latest lineage nodes so the DAG, timeline, and heatmap can render meaningful data."
-                hint="If the backend is starting up, this can take a moment."
-              />
-            </div>
-          ) : null}
-
-          {!loading && error && !graph ? (
-            <div className="flex flex-1 items-center justify-center px-6">
-              <EmptyHintBlock
-                tone={error.kind === "error" ? "danger" : "warning"}
-                icon={<TriangleAlert className="size-5" />}
-                title={
-                  error.kind === "demo"
-                    ? "Lineage is running in preview mode"
-                    : error.kind === "offline"
-                      ? "Lineage service is unavailable"
-                      : "Lineage request failed"
-                }
-                description={
-                  error.kind === "demo"
-                    ? "The frontend received a fallback page instead of live lineage JSON, so the page stayed in a safe preview state."
-                    : error.kind === "offline"
-                      ? "The backend could not be reached, so the lineage graph cannot load yet."
-                      : "The lineage API returned an unexpected result, and the raw parser error was hidden from the UI."
-                }
-                hint={error.message}
-                actionLabel="Retry"
-                onAction={() => void retryLastRequest()}
-              />
-            </div>
-          ) : null}
-
-          {!loading && isEmpty ? (
-            <div className="flex flex-1 items-center justify-center px-6">
-              <EmptyHintBlock
-                tone="info"
-                icon={<SearchCode className="size-5" />}
-                title="No lineage nodes matched"
-                description={
-                  filters.agentId || filters.nodeType || filters.searchText
-                    ? "The current filters did not match any recent lineage node."
-                    : "No recent lineage node has been recorded yet, so the graph is still empty."
-                }
-                hint={
-                  filters.agentId || filters.nodeType || filters.searchText
-                    ? "Clear or relax the filters, then retry to load a broader graph."
-                    : "Run a workflow or ingest data through the backend, then come back to explore the resulting lineage."
-                }
-                actionLabel="Reload"
-                onAction={() => void retryLastRequest()}
-              />
-            </div>
-          ) : null}
-
-          {graph && graph.nodes.length > 0 ? (
-            <>
-              <div
-                style={{ flex: 1, position: "relative", overflow: "hidden" }}
-              >
-                {activeTab === "dag" ? <LineageDAGView /> : null}
-                {activeTab === "timeline" ? <LineageTimeline /> : null}
-                {activeTab === "heatmap" ? <LineageHeatmap /> : null}
-              </div>
-
-              {showDetail ? (
-                <div
-                  style={{
-                    width: 300,
-                    borderLeft: "1px solid #e5e7eb",
-                    background: "#fff",
-                    overflowY: "auto",
-                    flexShrink: 0,
-                  }}
-                >
-                  <LineageNodeDetail />
-                </div>
-              ) : null}
-            </>
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <p className="text-sm leading-6 text-[var(--workspace-text-muted)]">
+          {activeTabMeta.description}
+        </p>
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <span
+            className="workspace-badge"
+            data-tone={loading ? "info" : error ? "warning" : "success"}
+          >
+            {loading
+              ? "Refreshing graph"
+              : error
+                ? "Fallback state"
+                : "Recent lineage ready"}
+          </span>
+          {filters.agentId || filters.nodeType || filters.searchText ? (
+            <span className="workspace-badge">Filtered view</span>
           ) : null}
         </div>
       </div>
     </div>
+  );
+
+  const actions = (
+    <>
+      <LineageExportButton canvasRef={dagCanvasRef} />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="workspace-control rounded-full px-4 text-sm font-semibold"
+        onClick={() => void retryLastRequest()}
+      >
+        <RefreshCw className="size-4" />
+        Reload
+      </Button>
+    </>
+  );
+
+  return (
+    <WorkspacePageShell
+      eyebrow="More / Governance"
+      title="Data Lineage"
+      description="Bring the lineage graph, execution trace, and node context into the same warm workspace language as the rest of the product, without losing the tooling feel."
+      actions={actions}
+      toolbar={toolbar}
+    >
+      {error && graph ? (
+        <WorkspacePanel className="p-3">
+          <RetryInlineNotice
+            title="Lineage refresh failed"
+            description={error.message}
+            actionLabel="Retry"
+            onRetry={() => void retryLastRequest()}
+          />
+        </WorkspacePanel>
+      ) : null}
+
+      <div
+        className={cn(
+          "grid gap-4",
+          showDetail ? "xl:grid-cols-[minmax(0,1fr)_340px]" : "grid-cols-1"
+        )}
+      >
+        <WorkspacePanel
+          strong
+          className="min-h-[560px] overflow-hidden p-4 md:p-5"
+        >
+          <div className="flex h-full min-h-[520px] flex-col overflow-hidden rounded-[24px] bg-white/22">
+            {loading && !graph ? (
+              <div className="flex flex-1 items-center justify-center px-6 py-8">
+                <EmptyHintBlock
+                  tone="info"
+                  icon={<DatabaseZap className="size-5" />}
+                  title="Loading lineage graph"
+                  description="Fetching recent lineage nodes so the graph, timeline, and heatmap can render a meaningful view."
+                  hint="If the backend is still starting up, this can take a moment."
+                />
+              </div>
+            ) : null}
+
+            {!loading && error && !graph ? (
+              <div className="flex flex-1 items-center justify-center px-6 py-8">
+                <EmptyHintBlock
+                  tone={error.kind === "error" ? "danger" : "warning"}
+                  icon={<TriangleAlert className="size-5" />}
+                  title={
+                    error.kind === "demo"
+                      ? "Lineage is running in preview mode"
+                      : error.kind === "offline"
+                        ? "Lineage service is unavailable"
+                        : "Lineage request failed"
+                  }
+                  description={
+                    error.kind === "demo"
+                      ? "The frontend received a fallback page instead of live lineage JSON, so the page stayed in a safe preview state."
+                      : error.kind === "offline"
+                        ? "The backend could not be reached, so the lineage graph cannot load yet."
+                        : "The lineage API returned an unexpected result, and the raw parser error was hidden from the UI."
+                  }
+                  hint={error.message}
+                  actionLabel="Retry"
+                  onAction={() => void retryLastRequest()}
+                />
+              </div>
+            ) : null}
+
+            {!loading && isEmpty ? (
+              <div className="flex flex-1 items-center justify-center px-6 py-8">
+                <EmptyHintBlock
+                  tone="info"
+                  icon={<SearchCode className="size-5" />}
+                  title="No lineage nodes matched"
+                  description={
+                    filters.agentId || filters.nodeType || filters.searchText
+                      ? "The current filters did not match any recent lineage node."
+                      : "No recent lineage node has been recorded yet, so the graph is still empty."
+                  }
+                  hint={
+                    filters.agentId || filters.nodeType || filters.searchText
+                      ? "Clear or relax the filters, then retry to load a broader graph."
+                      : "Run a workflow or ingest data through the backend, then come back to explore the resulting lineage."
+                  }
+                  actionLabel="Reload"
+                  onAction={() => void retryLastRequest()}
+                />
+              </div>
+            ) : null}
+
+            {graph && graph.nodes.length > 0 ? (
+              <div className="flex flex-1 flex-col">
+                <div className="flex items-center justify-between border-b border-[var(--workspace-panel-border)] px-4 py-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-[var(--workspace-text)]">
+                    <GitBranch className="size-4 text-[var(--studio-accent-strong)]" />
+                    {activeTabMeta.label} View
+                  </div>
+                  <div className="font-data text-xs text-[var(--workspace-text-subtle)]">
+                    {graph.nodes.length} nodes
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 p-3 md:p-4">
+                  <div className="h-full rounded-[24px] border border-[var(--workspace-panel-border)] bg-[rgba(255,251,246,0.88)] p-2 md:p-3">
+                    {activeTab === "dag" ? (
+                      <LineageDAGView canvasRef={dagCanvasRef} />
+                    ) : null}
+                    {activeTab === "timeline" ? <LineageTimeline /> : null}
+                    {activeTab === "heatmap" ? <LineageHeatmap /> : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </WorkspacePanel>
+
+        {showDetail ? (
+          <WorkspacePanel className="min-h-[560px] overflow-hidden">
+            <LineageNodeDetail />
+          </WorkspacePanel>
+        ) : null}
+      </div>
+    </WorkspacePageShell>
   );
 }

@@ -6,6 +6,11 @@ import {
 } from "lucide-react";
 
 import type { MissionTaskSummary } from "@/lib/tasks-store";
+import {
+  workspaceCalloutClass,
+  workspaceToneClass,
+  type WorkspaceTone,
+} from "@/components/workspace/workspace-tone";
 import { cn } from "@/lib/utils";
 
 function MetricTile({
@@ -15,10 +20,15 @@ function MetricTile({
 }: {
   label: string;
   value: number;
-  tone: string;
+  tone: WorkspaceTone;
 }) {
   return (
-    <div className={cn("rounded-[20px] border px-3 py-3", tone)}>
+    <div
+      className={cn(
+        "rounded-[20px] border px-3 py-3",
+        workspaceToneClass(tone)
+      )}
+    >
       <div className="text-[10px] font-semibold uppercase tracking-[0.18em]">
         {label}
       </div>
@@ -61,40 +71,31 @@ export function CommandMonitorSummary({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <MetricTile
-          label="Running"
-          value={running}
-          tone="border-sky-200 bg-sky-50/70 text-sky-800"
-        />
-        <MetricTile
-          label="Waiting"
-          value={waiting}
-          tone="border-amber-200 bg-amber-50/70 text-amber-800"
-        />
-        <MetricTile
-          label="Completed"
-          value={completed}
-          tone="border-emerald-200 bg-emerald-50/70 text-emerald-800"
-        />
-        <MetricTile
-          label="Warnings"
-          value={warnings}
-          tone="border-rose-200 bg-rose-50/70 text-rose-800"
-        />
+        <MetricTile label="Running" value={running} tone="warning" />
+        <MetricTile label="Waiting" value={waiting} tone="info" />
+        <MetricTile label="Completed" value={completed} tone="success" />
+        <MetricTile label="Warnings" value={warnings} tone="danger" />
       </div>
 
-      <div className="mt-4 rounded-[22px] border border-stone-200/80 bg-stone-50/70 px-4 py-3 text-sm leading-6 text-stone-600">
-        <div className="flex items-center gap-2 font-semibold text-stone-800">
+      <div
+        className={cn(
+          workspaceCalloutClass(
+            warnings > 0 ? "warning" : completed > 0 ? "success" : "info"
+          ),
+          "mt-4 px-4 py-3 text-sm leading-6"
+        )}
+      >
+        <div className="flex items-center gap-2 font-semibold text-[var(--workspace-text-strong)]">
           {warnings > 0 ? (
-            <AlertTriangle className="size-4 text-amber-600" />
+            <AlertTriangle className="size-4 text-[var(--workspace-warning)]" />
           ) : completed > 0 ? (
-            <CheckCircle2 className="size-4 text-emerald-600" />
+            <CheckCircle2 className="size-4 text-[var(--workspace-success)]" />
           ) : (
-            <Clock3 className="size-4 text-sky-600" />
+            <Clock3 className="size-4 text-[var(--workspace-info)]" />
           )}
           Current cadence
         </div>
-        <div className="mt-2">
+        <div className="mt-2 text-[var(--workspace-text)]">
           After a command is submitted, it lands back into the same task thread
           so you can observe, intervene, and close the loop below.
         </div>

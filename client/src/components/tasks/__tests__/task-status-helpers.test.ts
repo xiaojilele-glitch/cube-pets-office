@@ -13,7 +13,7 @@ import {
 describe("task status helpers", () => {
   it("returns the expected label and tone for cancelled missions", () => {
     expect(missionStatusLabel("cancelled")).toBe("Cancelled");
-    expect(missionStatusTone("cancelled")).toContain("slate");
+    expect(missionStatusTone("cancelled")).toContain("workspace-tone-neutral");
   });
 
   it("marks queued, running, and waiting missions as cancellable", () => {
@@ -32,9 +32,13 @@ describe("task status helpers", () => {
   it("returns operator state labels and tones", () => {
     expect(missionOperatorStateLabel("paused")).toBe("Paused");
     expect(missionOperatorStateLabel("blocked")).toBe("Blocked");
-    expect(missionOperatorStateTone("paused")).toContain("sky");
-    expect(missionOperatorStateTone("blocked")).toContain("amber");
-    expect(missionOperatorStateTone("terminating")).toContain("rose");
+    expect(missionOperatorStateTone("paused")).toContain("workspace-tone-info");
+    expect(missionOperatorStateTone("blocked")).toContain(
+      "workspace-tone-warning"
+    );
+    expect(missionOperatorStateTone("terminating")).toContain(
+      "workspace-tone-danger"
+    );
   });
 
   it("resolves available operator actions from mission and operator state", () => {

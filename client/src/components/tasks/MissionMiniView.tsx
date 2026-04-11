@@ -28,7 +28,7 @@ export function MissionMiniView({
         <button
           type="button"
           onClick={onCreateMission}
-          className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-100"
+          className="workspace-control rounded-lg px-3 py-1 text-xs font-medium"
           data-testid="mission-mini-create"
         >
           {locale === "zh-CN" ? "创建任务" : "Create mission"}
@@ -64,7 +64,9 @@ export function MissionMiniView({
       {/* Phase label + progress percentage */}
       <div className="flex items-center justify-between gap-1">
         <span
-          className={`inline-block truncate rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-tight ${missionStatusTone(mission.status)}`}
+          className={`workspace-status truncate px-1.5 py-0.5 text-[10px] font-medium leading-tight ${missionStatusTone(
+            mission.status
+          )}`}
           data-testid="mission-mini-phase"
         >
           {phaseLabel}
@@ -102,7 +104,7 @@ export function MissionMiniView({
               >
                 🤖
               </span>
-            ),
+            )
           )}
           {mission.activeAgentCount > 3 && (
             <span className="ml-0.5 text-[10px] text-stone-500">

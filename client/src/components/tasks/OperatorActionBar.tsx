@@ -17,6 +17,10 @@ import type { AppLocale } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
+  workspaceCalloutClass,
+  workspaceStatusClass,
+} from "@/components/workspace/workspace-tone";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -336,13 +340,18 @@ export function OperatorActionBar({
           <div className="mt-2 flex flex-wrap gap-2">
             <span
               className={cn(
-                "rounded-full px-3 py-1 text-xs font-semibold",
+                "workspace-status px-3 py-1 text-xs",
                 missionOperatorStateTone(detail.operatorState)
               )}
             >
               {missionOperatorStateLabel(detail.operatorState, locale)}
             </span>
-            <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-medium text-stone-700">
+            <span
+              className={workspaceStatusClass(
+                "neutral",
+                "px-3 py-1 text-xs font-medium"
+              )}
+            >
               {copy.tasks.listPage.attemptCount(detail.attempt)}
             </span>
           </div>
@@ -373,13 +382,20 @@ export function OperatorActionBar({
       </div>
 
       {blockerVisible ? (
-        <div className="mt-4 rounded-[20px] border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-900">
-          <div className="flex items-center gap-2 font-semibold">
+        <div
+          className={cn(
+            workspaceCalloutClass("warning"),
+            "mt-4 px-4 py-3 text-sm"
+          )}
+        >
+          <div className="flex items-center gap-2 font-semibold text-[var(--workspace-text-strong)]">
             <AlertTriangle className="size-4" />
             {copy.tasks.operatorBar.currentBlocker}
           </div>
-          <div className="mt-2 leading-6">{detail.blocker?.reason}</div>
-          <div className="mt-2 text-xs text-amber-700">
+          <div className="mt-2 leading-6 text-[var(--workspace-text)]">
+            {detail.blocker?.reason}
+          </div>
+          <div className="mt-2 text-xs text-[var(--workspace-text-muted)]">
             {formatTaskRelative(detail.blocker?.createdAt || null, locale)}
           </div>
         </div>
@@ -416,7 +432,12 @@ export function OperatorActionBar({
       ) : null}
 
       {primaryActions.passiveMessage ? (
-        <div className="mt-4 rounded-[18px] border border-dashed border-stone-300 bg-stone-50/80 px-3 py-2 text-sm text-stone-600">
+        <div
+          className={cn(
+            workspaceCalloutClass("neutral"),
+            "mt-4 border-dashed px-3 py-2 text-sm text-[var(--workspace-text-muted)]"
+          )}
+        >
           {primaryActions.passiveMessage}
         </div>
       ) : null}

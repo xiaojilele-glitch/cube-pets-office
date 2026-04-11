@@ -7,6 +7,10 @@ import { CommandMonitorSummary } from "@/components/nl-command/CommandMonitorSum
 import { CommandPlanSummary } from "@/components/nl-command/CommandPlanSummary";
 import { Button } from "@/components/ui/button";
 import {
+  workspaceCalloutClass,
+  workspaceStatusClass,
+} from "@/components/workspace/workspace-tone";
+import {
   useNLCommandStore,
   type TaskHubCommandSubmissionResult,
   type TaskHubCreateMission,
@@ -114,12 +118,10 @@ export function TaskHubCommandPanel({
         className
       )}
     >
-      <div className="rounded-[28px] border border-stone-200/80 bg-white/78 px-4 py-4 shadow-[0_24px_70px_rgba(112,84,51,0.08)] backdrop-blur md:px-5">
+      <div className="workspace-panel workspace-panel-strong rounded-[28px] px-4 py-4 md:px-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-              Task Command Entry
-            </div>
+            <div className="workspace-eyebrow">Task Command Entry</div>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-stone-900">
               Issue commands, clarify, and review the plan without leaving tasks
             </h2>
@@ -131,18 +133,37 @@ export function TaskHubCommandPanel({
           </div>
 
           {lastSubmission?.missionId ? (
-            <div className="rounded-[22px] border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800">
+            <div
+              className={workspaceCalloutClass(
+                "success",
+                "px-4 py-3 text-sm text-[var(--workspace-success)]"
+              )}
+            >
               <div className="flex items-center gap-2 font-semibold">
                 <CheckCircle2 className="size-4" />
                 Linked to task context
               </div>
-              <div className="mt-1">{lastSubmission.missionId}</div>
+              <div className="mt-2">
+                <span
+                  className={workspaceStatusClass(
+                    "neutral",
+                    "bg-white/75 px-2.5 py-1 text-[11px] font-semibold text-stone-700"
+                  )}
+                >
+                  {lastSubmission.missionId}
+                </span>
+              </div>
             </div>
           ) : null}
         </div>
 
         {error ? (
-          <div className="mt-4 flex items-start justify-between gap-3 rounded-[22px] border border-rose-200 bg-rose-50/80 px-4 py-3 text-sm leading-6 text-rose-800">
+          <div
+            className={workspaceCalloutClass(
+              "danger",
+              "mt-4 flex items-start justify-between gap-3 px-4 py-3 text-sm leading-6 text-[var(--workspace-danger)]"
+            )}
+          >
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <span>{error}</span>
@@ -151,7 +172,7 @@ export function TaskHubCommandPanel({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-auto rounded-full px-3 py-1 text-rose-700 hover:bg-rose-100"
+              className="workspace-control h-auto rounded-full px-3 py-1 text-[var(--workspace-danger)] hover:bg-white/70"
               onClick={clearError}
             >
               Dismiss

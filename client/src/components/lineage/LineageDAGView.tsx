@@ -1,44 +1,20 @@
-/**
- * LineageDAGView — Canvas 2D DAG visualization for data lineage.
- *
- * Renders lineage nodes as a layered DAG with:
- * - Nodes colored by type: source=blue, transformation=green, decision=orange
- * - Directed edges with arrows
- * - Click-to-select with full path highlighting
- * - Zoom (mouse wheel) and pan (drag)
- *
- * @see Requirements AC-7.1, AC-7.2
- */
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useRef, useEffect, useCallback, useState } from "react";
-import type { DataLineageNode, LineageEdge } from "@shared/lineage/contracts.js";
+import type {
+  DataLineageNode,
+  LineageEdge,
+} from "@shared/lineage/contracts.js";
+
 import { useLineageStore } from "@/lib/lineage-store";
+import { cn } from "@/lib/utils";
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+import { LINEAGE_NEUTRAL, getLineageTypeMeta } from "./lineage-theme";
 
-const NODE_W = 140;
-const NODE_H = 44;
-const LAYER_GAP_X = 200;
-const LANE_GAP_Y = 70;
-const PADDING = 60;
-
-const TYPE_COLORS: Record<string, string> = {
-  source: "#3B82F6",
-  transformation: "#10B981",
-  decision: "#F59E0B",
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  source: "SRC",
-  transformation: "TFM",
-  decision: "DEC",
-};
-
-// ---------------------------------------------------------------------------
-// Layout helpers
-// ---------------------------------------------------------------------------
+const NODE_W = 152;
+const NODE_H = 52;
+const LAYER_GAP_X = 220;
+const LANE_GAP_Y = 86;
+const PADDING = 72;
 
 interface LayoutNode {
   id: string;
@@ -49,316 +25,355 @@ interface LayoutNode {
   y: number;
 }
 
-/** Topological sort + layer assignment for DAG layout. */
 function computeLayout(
   nodes: DataLineageNode[],
-  edges: LineageEdge[],
+  edges: LineageEdge[]
 ): LayoutNode[] {
   if (nodes.length === 0) return [];
 
-  const nodeMap = new Map(nodes.map((n) => [n.lineageId, n]));
-  const inDeg = new Map<string, number>();
-  const adj = new Map<string, string[]>();
+  const nodeMap = new Map(nodes.map(node => [node.lineageId, node]));
+  const inDegree = new Map<string, number>();
+  const adjacency = new Map<string, string[]>();
 
-  for (const n of nodes) {
-    inDeg.set(n.lineageId, 0);
-    adj.set(n.lineageId, []);
-  }
-  for (const e of edges) {
-    if (nodeMap.has(e.fromId) && nodeMap.has(e.toId)) {
-      adj.get(e.fromId)!.push(e.toId);
-      inDeg.set(e.toId, (inDeg.get(e.toId) ?? 0) + 1);
-    }
+  for (const node of nodes) {
+    inDegree.set(node.lineageId, 0);
+    adjacency.set(node.lineageId, []);
   }
 
-  // BFS topological sort
+  for (const edge of edges) {
+    if (!nodeMap.has(edge.fromId) || !nodeMap.has(edge.toId)) continue;
+    adjacency.get(edge.fromId)?.push(edge.toId);
+    inDegree.set(edge.toId, (inDegree.get(edge.toId) ?? 0) + 1);
+  }
+
   const queue: string[] = [];
-  const layerOf = new Map<string, number>();
-  for (const [id, deg] of inDeg) {
-    if (deg === 0) {
-      queue.push(id);
-      layerOf.set(id, 0);
+  const layerByNodeId = new Map<string, number>();
+
+  for (const [nodeId, degree] of Array.from(inDegree.entries())) {
+    if (degree !== 0) continue;
+    queue.push(nodeId);
+    layerByNodeId.set(nodeId, 0);
+  }
+
+  let queueIndex = 0;
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex++];
+    const currentLayer = layerByNodeId.get(current) ?? 0;
+
+    for (const next of adjacency.get(current) ?? []) {
+      layerByNodeId.set(
+        next,
+        Math.max(layerByNodeId.get(next) ?? 0, currentLayer + 1)
+      );
+      inDegree.set(next, (inDegree.get(next) ?? 0) - 1);
+      if (inDegree.get(next) === 0) queue.push(next);
     }
   }
 
-  let head = 0;
-  while (head < queue.length) {
-    const cur = queue[head++];
-    const curLayer = layerOf.get(cur) ?? 0;
-    for (const next of adj.get(cur) ?? []) {
-      const newLayer = curLayer + 1;
-      layerOf.set(next, Math.max(layerOf.get(next) ?? 0, newLayer));
-      inDeg.set(next, (inDeg.get(next) ?? 0) - 1);
-      if (inDeg.get(next) === 0) queue.push(next);
+  for (const node of nodes) {
+    if (!layerByNodeId.has(node.lineageId)) {
+      layerByNodeId.set(node.lineageId, 0);
     }
   }
 
-  // Assign layers for any unvisited nodes (cycles / disconnected)
-  for (const n of nodes) {
-    if (!layerOf.has(n.lineageId)) layerOf.set(n.lineageId, 0);
-  }
-
-  // Group by layer, assign lane index
   const layers = new Map<number, DataLineageNode[]>();
-  for (const n of nodes) {
-    const l = layerOf.get(n.lineageId) ?? 0;
-    if (!layers.has(l)) layers.set(l, []);
-    layers.get(l)!.push(n);
+  for (const node of nodes) {
+    const layer = layerByNodeId.get(node.lineageId) ?? 0;
+    if (!layers.has(layer)) {
+      layers.set(layer, []);
+    }
+    layers.get(layer)?.push(node);
   }
 
   const result: LayoutNode[] = [];
-  for (const [layer, group] of layers) {
-    group.forEach((node, idx) => {
+  for (const [layer, group] of Array.from(layers.entries())) {
+    group.forEach((node: DataLineageNode, index: number) => {
       result.push({
         id: node.lineageId,
         node,
         layer,
-        laneIdx: idx,
+        laneIdx: index,
         x: PADDING + layer * LAYER_GAP_X,
-        y: PADDING + idx * LANE_GAP_Y,
+        y: PADDING + index * LANE_GAP_Y,
       });
     });
   }
+
   return result;
 }
 
-/** Collect all node IDs on the full path (upstream + downstream) of a selected node. */
 function collectPathIds(
   selectedId: string,
   nodes: DataLineageNode[],
-  edges: LineageEdge[],
-): Set<string> {
-  const nodeSet = new Set(nodes.map((n) => n.lineageId));
-  const fwd = new Map<string, string[]>();
-  const bwd = new Map<string, string[]>();
-  for (const e of edges) {
-    if (nodeSet.has(e.fromId) && nodeSet.has(e.toId)) {
-      if (!fwd.has(e.fromId)) fwd.set(e.fromId, []);
-      fwd.get(e.fromId)!.push(e.toId);
-      if (!bwd.has(e.toId)) bwd.set(e.toId, []);
-      bwd.get(e.toId)!.push(e.fromId);
-    }
+  edges: LineageEdge[]
+) {
+  const nodeIds = new Set(nodes.map(node => node.lineageId));
+  const forward = new Map<string, string[]>();
+  const backward = new Map<string, string[]>();
+
+  for (const edge of edges) {
+    if (!nodeIds.has(edge.fromId) || !nodeIds.has(edge.toId)) continue;
+
+    if (!forward.has(edge.fromId)) forward.set(edge.fromId, []);
+    if (!backward.has(edge.toId)) backward.set(edge.toId, []);
+    forward.get(edge.fromId)?.push(edge.toId);
+    backward.get(edge.toId)?.push(edge.fromId);
   }
 
   const visited = new Set<string>();
-  const bfs = (start: string, adjMap: Map<string, string[]>) => {
-    const q = [start];
-    let h = 0;
-    while (h < q.length) {
-      const c = q[h++];
-      if (visited.has(c)) continue;
-      visited.add(c);
-      for (const nb of adjMap.get(c) ?? []) q.push(nb);
+
+  const walk = (start: string, adjacency: Map<string, string[]>) => {
+    const queue = [start];
+    let index = 0;
+
+    while (index < queue.length) {
+      const current = queue[index++];
+      if (visited.has(current)) continue;
+      visited.add(current);
+      queue.push(...(adjacency.get(current) ?? []));
     }
   };
-  bfs(selectedId, fwd);
-  bfs(selectedId, bwd);
+
+  walk(selectedId, forward);
+  walk(selectedId, backward);
+
   return visited;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+function truncateLabel(label: string, limit: number) {
+  if (label.length <= limit) return label;
+  return `${label.slice(0, Math.max(limit - 1, 3))}\u2026`;
+}
 
-export default function LineageDAGView() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export interface LineageDAGViewProps {
+  canvasRef?: React.RefObject<HTMLCanvasElement | null>;
+}
+
+export default function LineageDAGView({
+  canvasRef: externalCanvasRef,
+}: LineageDAGViewProps) {
+  const internalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = externalCanvasRef ?? internalCanvasRef;
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const graph = useLineageStore((s) => s.graph);
-  const selectedNodeId = useLineageStore((s) => s.selectedNodeId);
-  const selectNode = useLineageStore((s) => s.selectNode);
+  const graph = useLineageStore(state => state.graph);
+  const selectedNodeId = useLineageStore(state => state.selectedNodeId);
+  const selectNode = useLineageStore(state => state.selectNode);
 
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [dragging, setDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragOrigin, setDragOrigin] = useState({ x: 0, y: 0 });
 
   const layoutRef = useRef<LayoutNode[]>([]);
 
-  // Recompute layout when graph changes
   useEffect(() => {
-    if (graph) {
-      layoutRef.current = computeLayout(graph.nodes, graph.edges);
-    } else {
-      layoutRef.current = [];
-    }
+    layoutRef.current = graph ? computeLayout(graph.nodes, graph.edges) : [];
   }, [graph]);
 
-  // Draw
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    canvas.width = rect.width * devicePixelRatio;
+    canvas.height = rect.height * devicePixelRatio;
+    context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    context.clearRect(0, 0, rect.width, rect.height);
 
-    ctx.clearRect(0, 0, rect.width, rect.height);
-    ctx.save();
-    ctx.translate(offset.x, offset.y);
-    ctx.scale(zoom, zoom);
+    context.save();
+    context.translate(offset.x, offset.y);
+    context.scale(zoom, zoom);
 
-    const layout = layoutRef.current;
-    const posMap = new Map(layout.map((l) => [l.id, l]));
     const nodes = graph?.nodes ?? [];
     const edges = graph?.edges ?? [];
-
-    const highlightIds = selectedNodeId
+    const positions = new Map(layoutRef.current.map(node => [node.id, node]));
+    const highlightedIds = selectedNodeId
       ? collectPathIds(selectedNodeId, nodes, edges)
       : null;
 
-    // Draw edges
     for (const edge of edges) {
-      const from = posMap.get(edge.fromId);
-      const to = posMap.get(edge.toId);
+      const from = positions.get(edge.fromId);
+      const to = positions.get(edge.toId);
       if (!from || !to) continue;
 
       const isHighlighted =
-        highlightIds && highlightIds.has(edge.fromId) && highlightIds.has(edge.toId);
-      const dimmed = highlightIds && !isHighlighted;
+        highlightedIds &&
+        highlightedIds.has(edge.fromId) &&
+        highlightedIds.has(edge.toId);
+      const isDimmed = highlightedIds !== null && !isHighlighted;
 
-      ctx.beginPath();
-      ctx.strokeStyle = dimmed ? "#e5e7eb" : "#94a3b8";
-      ctx.lineWidth = isHighlighted ? 2 : 1;
       const x1 = from.x + NODE_W;
       const y1 = from.y + NODE_H / 2;
       const x2 = to.x;
       const y2 = to.y + NODE_H / 2;
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
 
-      // Arrow head
+      context.beginPath();
+      context.strokeStyle = isDimmed
+        ? LINEAGE_NEUTRAL.canvasEdgeMuted
+        : LINEAGE_NEUTRAL.canvasEdge;
+      context.lineWidth = isHighlighted ? 2.2 : 1.1;
+      context.moveTo(x1, y1);
+      context.bezierCurveTo(x1 + 36, y1, x2 - 36, y2, x2, y2);
+      context.stroke();
+
       const angle = Math.atan2(y2 - y1, x2 - x1);
-      const arrowLen = 8;
-      ctx.beginPath();
-      ctx.fillStyle = dimmed ? "#e5e7eb" : "#94a3b8";
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(
-        x2 - arrowLen * Math.cos(angle - Math.PI / 6),
-        y2 - arrowLen * Math.sin(angle - Math.PI / 6),
+      context.beginPath();
+      context.fillStyle = isDimmed
+        ? LINEAGE_NEUTRAL.canvasEdgeMuted
+        : LINEAGE_NEUTRAL.canvasEdge;
+      context.moveTo(x2, y2);
+      context.lineTo(
+        x2 - 10 * Math.cos(angle - Math.PI / 7),
+        y2 - 10 * Math.sin(angle - Math.PI / 7)
       );
-      ctx.lineTo(
-        x2 - arrowLen * Math.cos(angle + Math.PI / 6),
-        y2 - arrowLen * Math.sin(angle + Math.PI / 6),
+      context.lineTo(
+        x2 - 10 * Math.cos(angle + Math.PI / 7),
+        y2 - 10 * Math.sin(angle + Math.PI / 7)
       );
-      ctx.closePath();
-      ctx.fill();
+      context.closePath();
+      context.fill();
     }
 
-    // Draw nodes
-    for (const ln of layout) {
-      const isSelected = ln.id === selectedNodeId;
-      const dimmed = highlightIds && !highlightIds.has(ln.id);
-      const color = TYPE_COLORS[ln.node.type] ?? "#6b7280";
+    for (const layoutNode of layoutRef.current) {
+      const meta = getLineageTypeMeta(layoutNode.node.type);
+      const isSelected = layoutNode.id === selectedNodeId;
+      const isDimmed =
+        highlightedIds !== null && !highlightedIds.has(layoutNode.id);
 
-      // Node rect
-      ctx.beginPath();
-      ctx.roundRect(ln.x, ln.y, NODE_W, NODE_H, 6);
-      ctx.fillStyle = dimmed ? "#f3f4f6" : color + "22";
-      ctx.fill();
-      ctx.strokeStyle = isSelected ? color : dimmed ? "#e5e7eb" : color + "88";
-      ctx.lineWidth = isSelected ? 2.5 : 1;
-      ctx.stroke();
+      context.beginPath();
+      context.roundRect(layoutNode.x, layoutNode.y, NODE_W, NODE_H, 14);
+      context.fillStyle = isDimmed ? "#f6efe7" : meta.softColor;
+      context.fill();
+      context.strokeStyle = isSelected
+        ? meta.color
+        : isDimmed
+          ? LINEAGE_NEUTRAL.canvasEdgeMuted
+          : meta.borderColor;
+      context.lineWidth = isSelected ? 2.4 : 1.2;
+      context.stroke();
 
-      // Type badge
-      ctx.fillStyle = dimmed ? "#d1d5db" : color;
-      ctx.font = "bold 9px sans-serif";
-      ctx.fillText(TYPE_LABELS[ln.node.type] ?? "?", ln.x + 6, ln.y + 14);
+      context.fillStyle = isDimmed ? LINEAGE_NEUTRAL.empty : meta.color;
+      context.font = "700 10px 'DM Sans', sans-serif";
+      context.fillText(meta.shortLabel, layoutNode.x + 12, layoutNode.y + 18);
 
-      // Label
-      ctx.fillStyle = dimmed ? "#d1d5db" : "#1f2937";
-      ctx.font = "11px sans-serif";
       const label =
-        ln.node.sourceName ?? ln.node.agentId ?? ln.node.decisionId ?? ln.id.slice(0, 8);
-      const maxTextW = NODE_W - 12;
-      let displayLabel = label;
-      while (ctx.measureText(displayLabel).width > maxTextW && displayLabel.length > 4) {
-        displayLabel = displayLabel.slice(0, -2) + "…";
-      }
-      ctx.fillText(displayLabel, ln.x + 6, ln.y + 32);
+        layoutNode.node.sourceName ??
+        layoutNode.node.agentId ??
+        layoutNode.node.decisionId ??
+        layoutNode.id.slice(0, 8);
+      const shortLabel = truncateLabel(label, 20);
+
+      context.fillStyle = isDimmed
+        ? LINEAGE_NEUTRAL.textSubtle
+        : LINEAGE_NEUTRAL.text;
+      context.font = "600 12px 'DM Sans', sans-serif";
+      context.fillText(shortLabel, layoutNode.x + 12, layoutNode.y + 34);
+
+      context.fillStyle = LINEAGE_NEUTRAL.textMuted;
+      context.font = "500 10px 'JetBrains Mono', monospace";
+      context.fillText(
+        truncateLabel(layoutNode.id, 18),
+        layoutNode.x + 12,
+        layoutNode.y + 46
+      );
     }
 
-    ctx.restore();
-  }, [graph, selectedNodeId, offset, zoom]);
+    context.restore();
+  }, [canvasRef, graph, offset, selectedNodeId, zoom]);
 
   useEffect(() => {
     draw();
   }, [draw]);
 
-  // Resize observer
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const ro = new ResizeObserver(() => draw());
-    ro.observe(container);
-    return () => ro.disconnect();
+
+    const resizeObserver = new ResizeObserver(() => draw());
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
   }, [draw]);
 
-  // --- Interaction handlers ---
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    setZoom((z) => Math.max(0.2, Math.min(3, z - e.deltaY * 0.001)));
+  const handleWheel = useCallback((event: React.WheelEvent) => {
+    event.preventDefault();
+    setZoom(currentZoom =>
+      Math.max(0.28, Math.min(2.5, currentZoom - event.deltaY * 0.001))
+    );
   }, []);
 
   const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.button === 0) {
-        setDragging(true);
-        setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
-      }
+    (event: React.MouseEvent) => {
+      if (event.button !== 0) return;
+      setDragging(true);
+      setDragOrigin({
+        x: event.clientX - offset.x,
+        y: event.clientY - offset.y,
+      });
     },
-    [offset],
+    [offset.x, offset.y]
   );
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (dragging) {
-        setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
-      }
+    (event: React.MouseEvent) => {
+      if (!dragging) return;
+      setOffset({
+        x: event.clientX - dragOrigin.x,
+        y: event.clientY - dragOrigin.y,
+      });
     },
-    [dragging, dragStart],
+    [dragOrigin.x, dragOrigin.y, dragging]
   );
 
-  const handleMouseUp = useCallback(() => setDragging(false), []);
+  const handleMouseUp = useCallback(() => {
+    setDragging(false);
+  }, []);
 
   const handleClick = useCallback(
-    (e: React.MouseEvent) => {
+    (event: React.MouseEvent) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = (e.clientX - rect.left - offset.x) / zoom;
-      const my = (e.clientY - rect.top - offset.y) / zoom;
 
-      for (const ln of layoutRef.current) {
-        if (mx >= ln.x && mx <= ln.x + NODE_W && my >= ln.y && my <= ln.y + NODE_H) {
-          selectNode(ln.id === selectedNodeId ? null : ln.id);
-          return;
-        }
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = (event.clientX - rect.left - offset.x) / zoom;
+      const mouseY = (event.clientY - rect.top - offset.y) / zoom;
+
+      for (const node of layoutRef.current) {
+        const withinX = mouseX >= node.x && mouseX <= node.x + NODE_W;
+        const withinY = mouseY >= node.y && mouseY <= node.y + NODE_H;
+        if (!withinX || !withinY) continue;
+        selectNode(node.id === selectedNodeId ? null : node.id);
+        return;
       }
+
       selectNode(null);
     },
-    [offset, zoom, selectNode, selectedNodeId],
+    [canvasRef, offset.x, offset.y, selectNode, selectedNodeId, zoom]
   );
 
   if (!graph || graph.nodes.length === 0) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9ca3af" }}>
-        No lineage data to display
+      <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[var(--workspace-text-subtle)]">
+        No lineage data to display yet.
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div
+      ref={containerRef}
+      className="relative h-full w-full overflow-hidden rounded-[24px]"
+    >
       <canvas
         ref={canvasRef}
-        style={{ width: "100%", height: "100%", cursor: dragging ? "grabbing" : "grab" }}
+        className={cn(
+          "h-full w-full",
+          dragging ? "cursor-grabbing" : "cursor-grab"
+        )}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -366,14 +381,29 @@ export default function LineageDAGView() {
         onMouseLeave={handleMouseUp}
         onClick={handleClick}
       />
-      {/* Legend */}
-      <div style={{ position: "absolute", bottom: 8, left: 8, display: "flex", gap: 12, fontSize: 11, color: "#6b7280" }}>
-        {Object.entries(TYPE_COLORS).map(([type, color]) => (
-          <span key={type} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: color, display: "inline-block" }} />
-            {type}
-          </span>
-        ))}
+
+      <div className="pointer-events-none absolute bottom-4 left-4 flex flex-wrap gap-2">
+        {(["source", "transformation", "decision"] as const).map(type => {
+          const meta = getLineageTypeMeta(type);
+
+          return (
+            <span
+              key={type}
+              className="workspace-badge text-[11px] font-semibold"
+              style={{
+                background: meta.softColor,
+                borderColor: meta.borderColor,
+                color: meta.color,
+              }}
+            >
+              <span
+                className="inline-block size-2.5 rounded-full"
+                style={{ background: meta.color }}
+              />
+              {meta.label}
+            </span>
+          );
+        })}
       </div>
     </div>
   );

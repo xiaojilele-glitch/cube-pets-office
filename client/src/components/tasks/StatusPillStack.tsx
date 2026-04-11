@@ -23,13 +23,7 @@ export function StatusPillStack({
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
       {items.map(item => (
-        <span
-          key={item.key}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold",
-            item.className
-          )}
-        >
+        <span key={item.key} className={cn("workspace-status", item.className)}>
           {item.icon ? <span className="shrink-0">{item.icon}</span> : null}
           {item.label}
         </span>

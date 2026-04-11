@@ -27,16 +27,11 @@ import {
   missionStatusLabel,
   missionStatusTone,
 } from "@/components/tasks/task-helpers";
+import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
 import { Button } from "@/components/ui/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { workspaceStatusClass } from "@/components/workspace/workspace-tone";
 import { useI18n } from "@/i18n";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
 import { useTasksStore } from "@/lib/tasks-store";
@@ -240,21 +235,21 @@ export default function TasksPage({
   return (
     <div
       className={cn(
-        "min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1),transparent_26%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.1),transparent_22%),linear-gradient(180deg,#fffdf8,#f3ecdf)] pb-28 pt-[calc(env(safe-area-inset-top)+96px)] text-stone-900 md:pb-36 md:pt-0 xl:h-[100svh] xl:overflow-hidden",
+        "workspace-page min-h-screen pb-28 pt-[calc(env(safe-area-inset-top)+96px)] text-stone-900 md:pb-36 md:pt-0 xl:h-[100svh] xl:overflow-hidden",
         className
       )}
     >
       <div className="mx-auto flex min-h-screen max-w-[1680px] flex-col px-3 py-3 md:px-5 md:py-4 xl:h-full xl:min-h-0">
-        <header className="shrink-0 rounded-[28px] border border-stone-200/80 bg-white/75 px-4 py-4 shadow-[0_20px_60px_rgba(112,84,51,0.08)] backdrop-blur md:px-5">
+        <header className="workspace-shell shrink-0 rounded-[28px] px-4 py-4 md:px-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.26em] text-stone-500">
+              <div className="workspace-eyebrow">
                 {copy.tasks.listPage.eyebrow}
               </div>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-stone-900 md:text-[2rem]">
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--workspace-text-strong)] md:text-[2rem]">
                 {copy.tasks.listPage.title}
               </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-stone-600 md:line-clamp-2">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--workspace-text-muted)] md:line-clamp-2">
                 {copy.tasks.listPage.description}
               </p>
             </div>
@@ -262,7 +257,7 @@ export default function TasksPage({
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                className="rounded-full bg-[#d07a4f] text-white hover:bg-[#c26d42]"
+                className="rounded-full bg-[linear-gradient(180deg,#c98257,#b86f45)] text-white shadow-[0_14px_28px_rgba(184,111,69,0.22)] hover:brightness-105"
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="size-4" />
@@ -271,7 +266,7 @@ export default function TasksPage({
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-full border-stone-200 bg-white/80"
+                className="workspace-control rounded-full"
                 onClick={() =>
                   void refresh({ preferredTaskId: activeTaskId || null })
                 }
@@ -290,14 +285,14 @@ export default function TasksPage({
         />
 
         <div className="mt-3 grid min-h-0 flex-1 gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="flex min-h-0 flex-col overflow-hidden rounded-[28px] border border-stone-200/80 bg-white/78 shadow-[0_24px_70px_rgba(112,84,51,0.08)] backdrop-blur">
+          <aside className="workspace-panel workspace-panel-strong flex min-h-0 flex-col overflow-hidden rounded-[28px]">
             <div className="shrink-0 border-b border-stone-200/80 px-4 py-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-stone-900">
+                  <div className="text-sm font-semibold text-[var(--workspace-text-strong)]">
                     {copy.tasks.listPage.queueTitle}
                   </div>
-                  <div className="mt-1 text-xs leading-5 text-stone-500">
+                  <div className="mt-1 text-xs leading-5 text-[var(--workspace-text-muted)]">
                     {copy.tasks.listPage.visibleCount(
                       filteredTasks.length,
                       tasks.length
@@ -315,7 +310,7 @@ export default function TasksPage({
                   value={search}
                   onChange={event => setSearch(event.target.value)}
                   placeholder={copy.tasks.listPage.searchPlaceholder}
-                  className="rounded-full border-stone-200 bg-stone-50/80 pl-10"
+                  className="workspace-control rounded-full border-none pl-10"
                 />
               </div>
             </div>
@@ -334,17 +329,13 @@ export default function TasksPage({
                 ) : null}
 
                 {!error && filteredTasks.length === 0 && !loading ? (
-                  <Empty className="rounded-[28px] border-stone-300/90 bg-stone-50/70">
-                    <EmptyHeader>
-                      <EmptyMedia variant="icon">
-                        <FolderKanban />
-                      </EmptyMedia>
-                      <EmptyTitle>{copy.tasks.listPage.emptyTitle}</EmptyTitle>
-                      <EmptyDescription>
-                        {copy.tasks.listPage.emptyDescription}
-                      </EmptyDescription>
-                    </EmptyHeader>
-                  </Empty>
+                  <EmptyHintBlock
+                    icon={<FolderKanban className="size-5" />}
+                    title={copy.tasks.listPage.emptyTitle}
+                    description={copy.tasks.listPage.emptyDescription}
+                    hint={copy.tasks.listPage.searchPlaceholder}
+                    tone="info"
+                  />
                 ) : null}
 
                 {filteredTasks.map(task => {
@@ -364,8 +355,8 @@ export default function TasksPage({
                       className={cn(
                         "w-full rounded-[22px] border px-3.5 py-3.5 text-left transition-all",
                         active
-                          ? "border-amber-300 bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,243,224,0.94))] shadow-[0_16px_44px_rgba(164,113,29,0.12)]"
-                          : "border-stone-200/80 bg-stone-50/70 hover:border-stone-300 hover:bg-white/85",
+                          ? "border-[rgba(201,130,87,0.32)] bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,243,224,0.94))] shadow-[0_16px_44px_rgba(164,113,29,0.12)]"
+                          : "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.52)] hover:border-[rgba(151,120,90,0.3)] hover:bg-[rgba(255,255,255,0.72)]",
                         task.id === highlightedTaskId &&
                           "ring-2 ring-amber-300 ring-offset-2 ring-offset-[#fff7eb]"
                       )}
@@ -380,7 +371,7 @@ export default function TasksPage({
                           <div className="flex flex-wrap gap-2">
                             <span
                               className={cn(
-                                "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                                "workspace-status px-2.5 py-1 text-[11px]",
                                 missionStatusTone(task.status)
                               )}
                             >
@@ -389,7 +380,7 @@ export default function TasksPage({
                             {task.operatorState !== "active" ? (
                               <span
                                 className={cn(
-                                  "rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                                  "workspace-status px-2.5 py-1 text-[11px]",
                                   missionOperatorStateTone(task.operatorState)
                                 )}
                               >
@@ -400,7 +391,12 @@ export default function TasksPage({
                               </span>
                             ) : null}
                             {task.hasWarnings ? (
-                              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700">
+                              <span
+                                className={workspaceStatusClass(
+                                  "warning",
+                                  "px-2.5 py-1 text-[11px]"
+                                )}
+                              >
                                 {copy.tasks.listPage.warnings}
                               </span>
                             ) : null}
@@ -425,19 +421,39 @@ export default function TasksPage({
                         {compactText(task.summary || task.sourceText, 160)}
                       </div>
                       <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-stone-500">
-                        <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
+                        <span
+                          className={workspaceStatusClass(
+                            "neutral",
+                            "px-2.5 py-1 text-[11px] font-medium"
+                          )}
+                        >
                           {copy.tasks.listPage.tasksCount(task.taskCount)}
                         </span>
-                        <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
+                        <span
+                          className={workspaceStatusClass(
+                            "neutral",
+                            "px-2.5 py-1 text-[11px] font-medium"
+                          )}
+                        >
                           {copy.tasks.listPage.messagesCount(task.messageCount)}
                         </span>
-                        <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
+                        <span
+                          className={workspaceStatusClass(
+                            "neutral",
+                            "px-2.5 py-1 text-[11px] font-medium"
+                          )}
+                        >
                           {copy.tasks.listPage.attachmentsCount(
                             task.attachmentCount
                           )}
                         </span>
                         {task.attempt > 1 ? (
-                          <span className="rounded-full border border-white/80 bg-white/70 px-2.5 py-1">
+                          <span
+                            className={workspaceStatusClass(
+                              "neutral",
+                              "px-2.5 py-1 text-[11px] font-medium"
+                            )}
+                          >
                             {copy.tasks.listPage.attemptCount(task.attempt)}
                           </span>
                         ) : null}

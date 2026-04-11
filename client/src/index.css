@@ -67,35 +67,89 @@
   --accent-foreground: oklch(0.2 0.03 60);
   --destructive: oklch(0.58 0.24 27);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.90 0.01 80);
-  --input: oklch(0.90 0.01 80);
+  --border: oklch(0.9 0.01 80);
+  --input: oklch(0.9 0.01 80);
   --ring: oklch(0.45 0.08 160);
   --sidebar: oklch(0.98 0.005 80);
   --sidebar-foreground: oklch(0.25 0.03 60);
   --sidebar-accent: oklch(0.94 0.01 80);
   --sidebar-accent-foreground: oklch(0.2 0.03 60);
-  --sidebar-border: oklch(0.90 0.01 80);
+  --sidebar-border: oklch(0.9 0.01 80);
   --sidebar-ring: oklch(0.45 0.08 160);
 
   /* 毛玻璃背景 */
   --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-bg-hover: rgba(255, 255, 255, 0.90);
+  --glass-bg-hover: rgba(255, 255, 255, 0.9);
   --glass-bg-active: rgba(255, 255, 255, 0.95);
-  --glass-border: rgba(255, 255, 255, 0.50);
-  --glass-border-hover: rgba(255, 255, 255, 0.60);
-  --studio-shell-bg: linear-gradient(180deg, rgba(255, 248, 241, 0.9), rgba(241, 232, 220, 0.84));
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-border-hover: rgba(255, 255, 255, 0.6);
+  --studio-shell-bg: linear-gradient(
+    180deg,
+    rgba(255, 248, 241, 0.9),
+    rgba(241, 232, 220, 0.84)
+  );
   --studio-shell-border: rgba(151, 120, 90, 0.18);
   --studio-surface-bg: rgba(255, 255, 255, 0.42);
   --studio-surface-strong: rgba(255, 255, 255, 0.58);
   --studio-surface-border: rgba(255, 255, 255, 0.48);
-  --studio-ink: #4A3727;
-  --studio-ink-soft: #7D6856;
-  --studio-accent: #C98257;
-  --studio-accent-strong: #B86F45;
-  --studio-sage: #5E8B72;
-  --studio-sage-strong: #456B58;
-  --studio-plum: #836A88;
-  --studio-sky: #87AFC7;
+  --studio-ink: #4a3727;
+  --studio-ink-soft: #7d6856;
+  --studio-accent: #c98257;
+  --studio-accent-strong: #b86f45;
+  --studio-sage: #5e8b72;
+  --studio-sage-strong: #456b58;
+  --studio-plum: #836a88;
+  --studio-sky: #87afc7;
+  --workspace-page-bg:
+    radial-gradient(
+      circle at top left,
+      rgba(94, 139, 114, 0.16),
+      transparent 26%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(201, 130, 87, 0.18),
+      transparent 28%
+    ),
+    linear-gradient(180deg, #fffdf8 0%, #f3ebdf 52%, #efe4d6 100%);
+  --workspace-shell-bg: linear-gradient(
+    180deg,
+    rgba(255, 250, 244, 0.94),
+    rgba(243, 234, 222, 0.9)
+  );
+  --workspace-shell-border: rgba(156, 123, 94, 0.18);
+  --workspace-panel-bg: linear-gradient(
+    180deg,
+    rgba(255, 252, 248, 0.9),
+    rgba(246, 238, 229, 0.86)
+  );
+  --workspace-panel-strong-bg: linear-gradient(
+    180deg,
+    rgba(255, 253, 250, 0.96),
+    rgba(245, 236, 226, 0.92)
+  );
+  --workspace-panel-inset-bg: rgba(255, 255, 255, 0.52);
+  --workspace-panel-border: rgba(174, 146, 120, 0.22);
+  --workspace-panel-shadow:
+    0 22px 56px rgba(88, 61, 39, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.48);
+  --workspace-panel-shadow-soft:
+    0 14px 34px rgba(88, 61, 39, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --workspace-control-bg: rgba(255, 255, 255, 0.72);
+  --workspace-control-bg-hover: rgba(255, 255, 255, 0.9);
+  --workspace-control-border: rgba(171, 141, 111, 0.22);
+  --workspace-control-text: #4a3727;
+  --workspace-text-strong: #3a2a1a;
+  --workspace-text: #4a3727;
+  --workspace-text-muted: #7d6856;
+  --workspace-text-subtle: #a08972;
+  --workspace-info: #5b89a5;
+  --workspace-info-soft: rgba(91, 137, 165, 0.14);
+  --workspace-success: #5e8b72;
+  --workspace-success-soft: rgba(94, 139, 114, 0.14);
+  --workspace-warning: #c98257;
+  --workspace-warning-soft: rgba(201, 130, 87, 0.16);
+  --workspace-danger: #b45d4d;
+  --workspace-danger-soft: rgba(180, 93, 77, 0.14);
 
   /* 发光色 */
   --glow-cyan: rgba(6, 182, 212, 0.5);
@@ -112,9 +166,9 @@
   --status-error: #ef4444;
 
   /* 字体 */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-body: "DM Sans", system-ui, sans-serif;
 }
 
 @layer base {
@@ -129,7 +183,10 @@
   }
 
   /* ── Typography: display font for headings (AC-6.1) ── */
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
   }
 
@@ -189,7 +246,11 @@
 /* ── Holographic Glass Utility Classes (Sub-task 1.2) ── */
 
 .glass-panel {
-  background: linear-gradient(180deg, rgba(255, 250, 245, 0.54), rgba(244, 235, 224, 0.46));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 245, 0.54),
+    rgba(244, 235, 224, 0.46)
+  );
   backdrop-filter: blur(24px) saturate(1.18);
   -webkit-backdrop-filter: blur(24px) saturate(1.18);
   border: 1px solid rgba(255, 255, 255, 0.42);
@@ -200,7 +261,11 @@
 }
 
 .glass-panel-strong {
-  background: linear-gradient(180deg, rgba(255, 250, 244, 0.94), rgba(244, 236, 226, 0.88));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 244, 0.94),
+    rgba(244, 236, 226, 0.88)
+  );
   backdrop-filter: blur(40px) saturate(1.35);
   -webkit-backdrop-filter: blur(40px) saturate(1.35);
   border: 1px solid rgba(255, 255, 255, 0.56);
@@ -220,7 +285,8 @@
 /* ── Holographic Keyframe Animations (Sub-task 1.3) ── */
 
 @keyframes breathe-glow {
-  0%, 100% {
+  0%,
+  100% {
     border-color: var(--glow-cyan);
     box-shadow: 0 0 8px var(--glow-cyan);
   }
@@ -231,7 +297,8 @@
 }
 
 @keyframes breathe-glow-amber {
-  0%, 100% {
+  0%,
+  100% {
     border-color: rgba(245, 158, 11, 0.4);
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
   }
@@ -242,7 +309,8 @@
 }
 
 @keyframes breathe-glow-purple {
-  0%, 100% {
+  0%,
+  100% {
     border-color: rgba(168, 85, 247, 0.4);
     box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
   }
@@ -344,12 +412,233 @@
   color: var(--studio-ink-soft);
 }
 
+.workspace-page {
+  background: var(--workspace-page-bg);
+  color: var(--workspace-text);
+}
+
+.workspace-shell {
+  background: var(--workspace-shell-bg);
+  border: 1px solid var(--workspace-shell-border);
+  box-shadow:
+    0 24px 64px rgba(88, 61, 39, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.52);
+  backdrop-filter: blur(28px) saturate(1.08);
+  -webkit-backdrop-filter: blur(28px) saturate(1.08);
+}
+
+.workspace-panel {
+  background: var(--workspace-panel-bg);
+  border: 1px solid var(--workspace-panel-border);
+  box-shadow: var(--workspace-panel-shadow-soft);
+  backdrop-filter: blur(22px) saturate(1.03);
+  -webkit-backdrop-filter: blur(22px) saturate(1.03);
+}
+
+.workspace-panel-strong {
+  background: var(--workspace-panel-strong-bg);
+  box-shadow: var(--workspace-panel-shadow);
+}
+
+.workspace-panel-inset {
+  background: var(--workspace-panel-inset-bg);
+}
+
+.workspace-eyebrow {
+  color: var(--workspace-text-subtle);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.workspace-title {
+  color: var(--workspace-text-strong);
+  font-size: clamp(1.8rem, 2.6vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin-top: 0.65rem;
+}
+
+.workspace-description {
+  color: var(--workspace-text-muted);
+}
+
+.workspace-control {
+  background: var(--workspace-control-bg);
+  border: 1px solid var(--workspace-control-border);
+  color: var(--workspace-control-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.workspace-control:hover {
+  background: var(--workspace-control-bg-hover);
+  border-color: rgba(151, 120, 90, 0.32);
+}
+
+.workspace-control:focus-visible {
+  outline: none;
+  border-color: rgba(94, 139, 114, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    0 0 0 4px rgba(94, 139, 114, 0.12);
+}
+
+.workspace-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.workspace-callout {
+  border-radius: 24px;
+  border: 1px solid transparent;
+  box-shadow: var(--workspace-panel-shadow-soft);
+  backdrop-filter: blur(20px) saturate(1.03);
+  -webkit-backdrop-filter: blur(20px) saturate(1.03);
+}
+
+.workspace-tone-neutral {
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(171, 141, 111, 0.2);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--workspace-text-muted);
+}
+
+.workspace-tone-info {
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(91, 137, 165, 0.24);
+  background: var(--workspace-info-soft);
+  color: var(--workspace-info);
+}
+
+.workspace-tone-success {
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(94, 139, 114, 0.24);
+  background: var(--workspace-success-soft);
+  color: var(--workspace-success);
+}
+
+.workspace-tone-warning {
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(201, 130, 87, 0.24);
+  background: var(--workspace-warning-soft);
+  color: var(--workspace-warning);
+}
+
+.workspace-tone-danger {
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(180, 93, 77, 0.24);
+  background: var(--workspace-danger-soft);
+  color: var(--workspace-danger);
+}
+
+.workspace-pill {
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(171, 141, 111, 0.18);
+  color: var(--workspace-text-muted);
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.workspace-pill:hover {
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--workspace-text-strong);
+}
+
+.workspace-pill[data-active="true"] {
+  background: linear-gradient(
+    180deg,
+    var(--studio-sage),
+    var(--studio-sage-strong)
+  );
+  border-color: rgba(69, 107, 88, 0.3);
+  box-shadow: 0 10px 24px rgba(94, 139, 114, 0.24);
+  color: #fff9f4;
+}
+
+.workspace-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--workspace-panel-border);
+  background: rgba(255, 255, 255, 0.54);
+  padding: 0.35rem 0.75rem;
+  color: var(--workspace-text-muted);
+}
+
+.workspace-badge[data-tone="info"] {
+  background: var(--workspace-info-soft);
+  border-color: rgba(91, 137, 165, 0.24);
+  color: var(--workspace-info);
+}
+
+.workspace-badge[data-tone="success"] {
+  background: var(--workspace-success-soft);
+  border-color: rgba(94, 139, 114, 0.24);
+  color: var(--workspace-success);
+}
+
+.workspace-badge[data-tone="warning"] {
+  background: var(--workspace-warning-soft);
+  border-color: rgba(201, 130, 87, 0.24);
+  color: var(--workspace-warning);
+}
+
+.workspace-badge[data-tone="danger"] {
+  background: var(--workspace-danger-soft);
+  border-color: rgba(180, 93, 77, 0.24);
+  color: var(--workspace-danger);
+}
+
+.workspace-data-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.workspace-data-table th {
+  color: var(--workspace-text-subtle);
+  font-weight: 600;
+}
+
+.workspace-data-table td {
+  color: var(--workspace-text);
+}
+
 .workflow-studio {
   color: var(--studio-ink);
 }
 
 .workflow-studio .glass-panel {
-  background: linear-gradient(180deg, rgba(255, 250, 245, 0.74), rgba(243, 234, 223, 0.68));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 245, 0.74),
+    rgba(243, 234, 223, 0.68)
+  );
   border: 1px solid rgba(171, 141, 111, 0.18);
   box-shadow:
     0 12px 30px rgba(88, 61, 39, 0.08),
@@ -360,13 +649,13 @@
 .workflow-studio .text-white,
 .workflow-studio .text-white\/90,
 .workflow-studio .text-white\/80 {
-  color: #4A3727;
+  color: #4a3727;
 }
 
 .workflow-studio .text-white\/60,
 .workflow-studio .text-white\/50,
 .workflow-studio .text-white\/40 {
-  color: #7D6856;
+  color: #7d6856;
 }
 
 .workflow-studio .bg-white\/5,
@@ -412,7 +701,7 @@
 .workflow-studio .hover\:text-white\/60:hover,
 .workflow-studio .hover\:text-white\/80:hover,
 .workflow-studio .hover\:text-white:hover {
-  color: #4A3727;
+  color: #4a3727;
 }
 
 /* Smooth transitions for all panels */

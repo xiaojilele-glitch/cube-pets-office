@@ -11,6 +11,10 @@ import type {
   MissionOperatorActionType,
   MissionOperatorState,
 } from "@shared/mission/contracts";
+import {
+  workspaceToneClass,
+  type WorkspaceTone,
+} from "@/components/workspace/workspace-tone";
 import type { AppLocale } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 
@@ -175,7 +179,8 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       resume: "让任务回到活跃执行路径。",
       retry: attempt =>
         `保留交付物、时间线和操作历史，排队开始新一轮尝试。当前为第 ${attempt} 次。`,
-      markBlocked: "将任务标记为阻塞，但不结束它，让团队知道需要先处理什么依赖。",
+      markBlocked:
+        "将任务标记为阻塞，但不结束它，让团队知道需要先处理什么依赖。",
       terminate: "复用取消链路停止任务。这是一个终态操作。",
     },
     summaryLabels: {
@@ -236,7 +241,8 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       submitDecisionFallback: "使用下方决策控件继续推进执行。",
       decisionRequired: "需要决策",
       resolveBlockerTitle: "解决阻塞后恢复任务",
-      resolveBlockerWithReason: reason => `先处理“${reason}”，再恢复或重试这次尝试。`,
+      resolveBlockerWithReason: reason =>
+        `先处理“${reason}”，再恢复或重试这次尝试。`,
       resolveBlockerFallback: "先解决阻塞，再恢复或重试这次尝试。",
       attempt: attempt => `第 ${attempt} 次尝试`,
       resumeWhenReadyTitle: "准备好后恢复任务",
@@ -315,8 +321,10 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       resume: "Return this mission to the active execution path.",
       retry: attempt =>
         `Queue a fresh attempt while keeping deliverables, timeline, and action history. Current attempt: ${attempt}.`,
-      markBlocked: "Flag the mission as blocked without ending it, so the team can see what follow-up is needed.",
-      terminate: "Stop the mission by reusing the cancel flow. This is a terminal action.",
+      markBlocked:
+        "Flag the mission as blocked without ending it, so the team can see what follow-up is needed.",
+      terminate:
+        "Stop the mission by reusing the cancel flow. This is a terminal action.",
     },
     summaryLabels: {
       currentOwner: "Current owner",
@@ -324,32 +332,40 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       nextStep: "Next step",
     },
     passive: {
-      pendingDecision: "A pending decision needs attention in the first screen below.",
-      terminating: "Termination is already in progress. No further manual action is needed right now.",
-      completed: "No manual action is needed right now. Review the completed outcome below.",
-      running: "The mission is currently running without a manual action requirement.",
+      pendingDecision:
+        "A pending decision needs attention in the first screen below.",
+      terminating:
+        "Termination is already in progress. No further manual action is needed right now.",
+      completed:
+        "No manual action is needed right now. Review the completed outcome below.",
+      running:
+        "The mission is currently running without a manual action requirement.",
       generic: "The current state does not require manual intervention.",
     },
     primaryActions: {
       submitDecision: "Submit decision",
-      submitDecisionFallback: "Review the pending decision and continue the mission.",
+      submitDecisionFallback:
+        "Review the pending decision and continue the mission.",
     },
     owner: {
       humanOperator: "Human operator",
       userDecisionRequired: "User decision required",
-      decisionWaitingFallback: "Mission is waiting for manual input before it can continue.",
+      decisionWaitingFallback:
+        "Mission is waiting for manual input before it can continue.",
       waitingMeta: "Waiting",
       activeAgentFallback: (role, stage) => `${role} is handling ${stage}.`,
       blockedDetail: "Manual follow-up is currently holding this mission.",
       pausedDetail: "Execution is paused under manual control.",
       executorRuntime: "Executor runtime",
-      executorFallback: status => `Executor ${status} is handling the current attempt.`,
+      executorFallback: status =>
+        `Executor ${status} is handling the current attempt.`,
       humanFollowUp: "Human follow-up",
       humanFollowUpDetail: "A human should review the failure before retrying.",
       missionComplete: "Mission complete",
       missionCompleteDetail: "No active owner is required right now.",
       missionCoordination: "Mission coordination",
-      missionCoordinationDetail: "The mission is waiting for the next runtime update.",
+      missionCoordinationDetail:
+        "The mission is waiting for the next runtime update.",
       completedMeta: relative => `Completed ${relative}`,
     },
     blocker: {
@@ -366,35 +382,48 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       requestedBy: name => `Requested by ${name}`,
       noActiveBlocker: "No active blocker",
       clearToContinue: "Clear to continue",
-      completedWithoutBlocker: "This mission has completed without an active blocker.",
-      clearToContinueDetail: "No blocker or waiting condition is recorded right now.",
+      completedWithoutBlocker:
+        "This mission has completed without an active blocker.",
+      clearToContinueDetail:
+        "No blocker or waiting condition is recorded right now.",
     },
     nextStep: {
       waitForTerminationTitle: "Wait for termination to finish",
-      waitForTerminationDetail: "The cancel flow is already in progress for this mission.",
+      waitForTerminationDetail:
+        "The cancel flow is already in progress for this mission.",
       submitDecisionTitle: "Submit the pending decision",
-      submitDecisionFallback: "Use the decision controls below to continue execution.",
+      submitDecisionFallback:
+        "Use the decision controls below to continue execution.",
       decisionRequired: "Decision required",
       resolveBlockerTitle: "Resolve the blocker and resume mission",
-      resolveBlockerWithReason: reason => `Clear "${reason}" and then resume or retry this attempt.`,
-      resolveBlockerFallback: "Resolve the blocker and then resume or retry this attempt.",
+      resolveBlockerWithReason: reason =>
+        `Clear "${reason}" and then resume or retry this attempt.`,
+      resolveBlockerFallback:
+        "Resolve the blocker and then resume or retry this attempt.",
       attempt: attempt => `Attempt ${attempt}`,
       resumeWhenReadyTitle: "Resume the mission when ready",
-      resumeWhenReadyDetail: "Execution context is preserved. Resume to continue from the current point.",
+      resumeWhenReadyDetail:
+        "Execution context is preserved. Resume to continue from the current point.",
       waitExecutionTitle: "Wait for execution to start",
-      queuedAccepted: "The executor has already accepted the job and should start soon.",
+      queuedAccepted:
+        "The executor has already accepted the job and should start soon.",
       queuedFallback: "The mission is queued for the next available runtime.",
       runningExecutorTitle: "Wait for the next executor update",
       runningStageTitle: "Let the current stage continue",
-      runningExecutorFallback: "The runtime is still working and will publish the next artifact or signal.",
-      runningStageFallback: "The mission is progressing automatically through the current stage.",
+      runningExecutorFallback:
+        "The runtime is still working and will publish the next artifact or signal.",
+      runningStageFallback:
+        "The mission is progressing automatically through the current stage.",
       reviewFailureTitle: "Review failure details and retry if appropriate",
       failureFallback: "The mission stopped before it could complete.",
       cancelledTitle: "Decide whether to retry this mission",
-      cancelledDetail: "The mission was cancelled. Retry to queue a new attempt when you're ready.",
+      cancelledDetail:
+        "The mission was cancelled. Retry to queue a new attempt when you're ready.",
       reviewDeliverablesTitle: "Review deliverables and share the outcome",
-      deliverablesCount: count => `There are ${count} linked deliverables ready for review.`,
-      completedFallback: "The mission completed successfully and is ready for handoff.",
+      deliverablesCount: count =>
+        `There are ${count} linked deliverables ready for review.`,
+      completedFallback:
+        "The mission completed successfully and is ready for handoff.",
       completedMeta: relative => `Completed ${relative}`,
     },
     role: {
@@ -462,14 +491,16 @@ export function missionStatusLabel(
 }
 
 export function missionStatusTone(status: MissionTaskStatus): string {
-  return cn(
-    "border",
-    status === "done" && "border-emerald-200 bg-emerald-50 text-emerald-700",
-    status === "running" && "border-amber-200 bg-amber-50 text-amber-700",
-    status === "waiting" && "border-sky-200 bg-sky-50 text-sky-700",
-    status === "queued" && "border-stone-200 bg-stone-50 text-stone-700",
-    status === "failed" && "border-rose-200 bg-rose-50 text-rose-700",
-    status === "cancelled" && "border-slate-200 bg-slate-50 text-slate-700"
+  return workspaceToneClass(
+    status === "done"
+      ? "success"
+      : status === "running"
+        ? "warning"
+        : status === "waiting"
+          ? "info"
+          : status === "failed"
+            ? "danger"
+            : "neutral"
   );
 }
 
@@ -489,21 +520,18 @@ export function missionOperatorStateLabel(
 }
 
 export function missionOperatorStateTone(state: MissionOperatorState): string {
-  return cn(
-    "border",
-    state === "active" && "border-stone-200 bg-stone-50 text-stone-700",
-    state === "paused" && "border-sky-200 bg-sky-50 text-sky-700",
-    state === "blocked" && "border-amber-200 bg-amber-50 text-amber-700",
-    state === "terminating" && "border-rose-200 bg-rose-50 text-rose-700"
+  return workspaceToneClass(
+    state === "paused"
+      ? "info"
+      : state === "blocked"
+        ? "warning"
+        : state === "terminating"
+          ? "danger"
+          : "neutral"
   );
 }
 
-export type TaskInsightTone =
-  | "neutral"
-  | "info"
-  | "warning"
-  | "danger"
-  | "success";
+export type TaskInsightTone = WorkspaceTone;
 
 export interface TaskInsightSummary {
   label: string;
@@ -529,14 +557,7 @@ export interface DerivedPrimaryActions {
 }
 
 export function taskInsightToneClasses(tone: TaskInsightTone): string {
-  return cn(
-    "border",
-    tone === "neutral" && "border-stone-200 bg-stone-50/80 text-stone-700",
-    tone === "info" && "border-sky-200 bg-sky-50/85 text-sky-800",
-    tone === "warning" && "border-amber-200 bg-amber-50/90 text-amber-900",
-    tone === "danger" && "border-rose-200 bg-rose-50/90 text-rose-900",
-    tone === "success" && "border-emerald-200 bg-emerald-50/85 text-emerald-800"
-  );
+  return workspaceToneClass(tone);
 }
 
 export function missionOperatorActionLabel(
@@ -740,8 +761,7 @@ export function deriveCurrentOwner(
           activeAgent.currentAction ||
             copy.owner.activeAgentFallback(role, activeAgent.stageLabel),
           140
-        ) ||
-        copy.owner.activeAgentFallback(role, activeAgent.stageLabel),
+        ) || copy.owner.activeAgentFallback(role, activeAgent.stageLabel),
       meta: [activeAgent.department, activeAgent.stageLabel]
         .filter(Boolean)
         .join(" / "),
@@ -782,8 +802,7 @@ export function deriveCurrentOwner(
           detail.lastSignal ||
             copy.owner.executorFallback(detail.executor.status || "runtime"),
           140
-        ) ||
-        copy.owner.executorFallback(detail.executor.status || "runtime"),
+        ) || copy.owner.executorFallback(detail.executor.status || "runtime"),
       meta: [detail.executor.status, detail.currentStageLabel]
         .filter(Boolean)
         .join(" / "),
@@ -1002,8 +1021,7 @@ export function deriveNextStep(
       title: copy.nextStep.reviewFailureTitle,
       detail:
         compactText(
-          detail.failureReasons[0] ||
-            copy.nextStep.failureFallback,
+          detail.failureReasons[0] || copy.nextStep.failureFallback,
           160
         ) || copy.nextStep.failureFallback,
       meta: copy.nextStep.attempt(detail.attempt),
@@ -1039,22 +1057,26 @@ export function deriveNextStep(
 }
 
 export function timelineTone(level: TimelineLevel): string {
-  return cn(
-    "border",
-    level === "success" && "border-emerald-200 bg-emerald-50 text-emerald-700",
-    level === "info" && "border-sky-200 bg-sky-50 text-sky-700",
-    level === "warn" && "border-amber-200 bg-amber-50 text-amber-700",
-    level === "error" && "border-rose-200 bg-rose-50 text-rose-700"
+  return workspaceToneClass(
+    level === "success"
+      ? "success"
+      : level === "info"
+        ? "info"
+        : level === "warn"
+          ? "warning"
+          : "danger"
   );
 }
 
 export function stageTone(status: InteriorStageStatus): string {
-  return cn(
-    "border",
-    status === "done" && "border-emerald-200 bg-emerald-50 text-emerald-700",
-    status === "running" && "border-amber-200 bg-amber-50 text-amber-700",
-    status === "pending" && "border-stone-200 bg-stone-50 text-stone-600",
-    status === "failed" && "border-rose-200 bg-rose-50 text-rose-700"
+  return workspaceToneClass(
+    status === "done"
+      ? "success"
+      : status === "running"
+        ? "warning"
+        : status === "failed"
+          ? "danger"
+          : "neutral"
   );
 }
 
@@ -1066,13 +1088,16 @@ export function agentStatusLabel(
 }
 
 export function agentStatusTone(status: InteriorAgentStatus): string {
-  return cn(
-    "border",
-    status === "done" && "border-emerald-200 bg-emerald-50 text-emerald-700",
-    status === "working" && "border-amber-200 bg-amber-50 text-amber-700",
-    status === "thinking" && "border-sky-200 bg-sky-50 text-sky-700",
-    status === "idle" && "border-stone-200 bg-stone-50 text-stone-600",
-    status === "error" && "border-rose-200 bg-rose-50 text-rose-700"
+  return workspaceToneClass(
+    status === "done"
+      ? "success"
+      : status === "working"
+        ? "warning"
+        : status === "thinking"
+          ? "info"
+          : status === "error"
+            ? "danger"
+            : "neutral"
   );
 }
 

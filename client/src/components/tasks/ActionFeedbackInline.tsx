@@ -1,42 +1,20 @@
 import { CheckCircle2, Info, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  workspaceCalloutClass,
+  workspaceStatusClass,
+  type WorkspaceTone,
+} from "@/components/workspace/workspace-tone";
 import { cn } from "@/lib/utils";
 
 type ActionFeedbackTone = "success" | "error" | "info";
 
-const FEEDBACK_STYLES: Record<
-  ActionFeedbackTone,
-  {
-    container: string;
-    icon: string;
-    title: string;
-    description: string;
-    button: string;
-  }
-> = {
-  success: {
-    container: "border-emerald-200 bg-emerald-50/85 text-emerald-900",
-    icon: "text-emerald-700",
-    title: "text-emerald-950",
-    description: "text-emerald-800",
-    button: "border-emerald-200 bg-white text-emerald-900 hover:bg-emerald-100",
-  },
-  error: {
-    container: "border-rose-200 bg-rose-50/90 text-rose-900",
-    icon: "text-rose-700",
-    title: "text-rose-950",
-    description: "text-rose-800",
-    button: "border-rose-200 bg-white text-rose-900 hover:bg-rose-100",
-  },
-  info: {
-    container: "border-sky-200 bg-sky-50/90 text-sky-900",
-    icon: "text-sky-700",
-    title: "text-sky-950",
-    description: "text-sky-800",
-    button: "border-sky-200 bg-white text-sky-900 hover:bg-sky-100",
-  },
-};
+function toWorkspaceTone(tone: ActionFeedbackTone): WorkspaceTone {
+  if (tone === "success") return "success";
+  if (tone === "error") return "danger";
+  return "info";
+}
 
 function FeedbackIcon({ tone }: { tone: ActionFeedbackTone }) {
   if (tone === "success") {
@@ -63,13 +41,13 @@ export function ActionFeedbackInline({
   onAction?: () => void;
   className?: string;
 }) {
-  const styles = FEEDBACK_STYLES[tone];
+  const workspaceTone = toWorkspaceTone(tone);
 
   return (
     <div
       className={cn(
-        "rounded-[20px] border px-4 py-3 text-sm",
-        styles.container,
+        workspaceCalloutClass(workspaceTone),
+        "px-4 py-3 text-sm",
         className
       )}
     >
@@ -77,17 +55,16 @@ export function ActionFeedbackInline({
         <div className="min-w-0 flex-1">
           <div
             className={cn(
-              "flex items-center gap-2 font-semibold",
-              styles.title
+              "flex items-center gap-2 font-semibold text-[var(--workspace-text-strong)]"
             )}
           >
-            <span className={styles.icon}>
+            <span className={workspaceStatusClass(workspaceTone, "p-0")}>
               <FeedbackIcon tone={tone} />
             </span>
             {title}
           </div>
           {description ? (
-            <div className={cn("mt-1 text-sm leading-6", styles.description)}>
+            <div className="mt-1 text-sm leading-6 text-[var(--workspace-text)]">
               {description}
             </div>
           ) : null}
@@ -97,7 +74,7 @@ export function ActionFeedbackInline({
             type="button"
             variant="outline"
             size="sm"
-            className={cn("rounded-full", styles.button)}
+            className="workspace-control rounded-full"
             onClick={onAction}
           >
             {actionLabel}
