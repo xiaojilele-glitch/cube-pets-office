@@ -50,7 +50,9 @@ export default function TasksPage({
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
   const createMission = useTasksStore(state => state.createMission);
-  const submitOperatorAction = useTasksStore(state => state.submitOperatorAction);
+  const submitOperatorAction = useTasksStore(
+    state => state.submitOperatorAction
+  );
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
   const tasks = useTasksStore(state => state.tasks);
@@ -142,7 +144,9 @@ export default function TasksPage({
       return missionId;
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : copy.tasks.listPage.createError;
+        error instanceof Error
+          ? error.message
+          : copy.tasks.listPage.createError;
       toast.error(message);
       return null;
     }
@@ -178,7 +182,7 @@ export default function TasksPage({
   return (
     <div
       className={cn(
-        "min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1),transparent_26%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.1),transparent_22%),linear-gradient(180deg,#fffdf8,#f3ecdf)] text-stone-900 xl:h-[100svh] xl:overflow-hidden",
+        "min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(251,191,36,0.1),transparent_26%),radial-gradient(circle_at_top_right,rgba(56,189,248,0.1),transparent_22%),linear-gradient(180deg,#fffdf8,#f3ecdf)] pb-28 pt-[calc(env(safe-area-inset-top)+96px)] text-stone-900 md:pb-36 md:pt-0 xl:h-[100svh] xl:overflow-hidden",
         className
       )}
     >
@@ -379,10 +383,12 @@ export default function TasksPage({
               onSubmitOperatorAction={handleSubmitOperatorAction}
               operatorActionLoading={
                 activeTaskId
-                  ? operatorActionLoadingByMissionId[activeTaskId] ?? {}
+                  ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
                   : {}
               }
-              onDecisionSubmitted={() => void refresh({ preferredTaskId: activeTaskId || null })}
+              onDecisionSubmitted={() =>
+                void refresh({ preferredTaskId: activeTaskId || null })
+              }
               className="min-w-0 xl:h-full xl:min-h-0"
             />
           </main>
