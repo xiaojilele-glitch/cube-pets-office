@@ -12,6 +12,7 @@ import type {
   DecisionType,
 } from "@shared/mission/contracts";
 
+import { workspaceStatusClass } from "@/components/workspace/workspace-tone";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,12 @@ function typeIcon(type: DecisionType) {
     default:
       return <Send className="size-4 text-stone-600" />;
   }
+}
+
+function decisionTypeTone(type: DecisionType) {
+  if (type === "approve") return "success";
+  if (type === "reject" || type === "escalate") return "danger";
+  return "info";
 }
 
 /* ─── Main Component ─── */
@@ -77,27 +84,23 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
             </div>
 
             <div className="pb-4">
-              <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/70 px-3.5 py-2.5">
+              <div className="workspace-panel-inset rounded-[18px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.66)] px-3.5 py-2.5">
                 {/* Header row: timestamp + stage */}
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-medium text-stone-500">
                     {formatTaskRelative(entry.submittedAt, locale)}
                   </span>
                   {entry.stageKey && (
-                    <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                    <span className="workspace-status workspace-tone-neutral bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
                       {entry.stageKey}
                     </span>
                   )}
                   <span
                     className={cn(
-                      "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
-                      entry.type === "approve"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : entry.type === "reject"
-                          ? "border-red-200 bg-red-50 text-red-700"
-                          : entry.type === "escalate"
-                            ? "border-red-200 bg-red-50 text-red-700"
-                            : "border-sky-200 bg-sky-50 text-sky-700"
+                      workspaceStatusClass(
+                        decisionTypeTone(entry.type),
+                        "px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                      )
                     )}
                   >
                     {entry.type}
@@ -115,7 +118,12 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
                     <span className="text-xs text-stone-500">
                       {copy.tasks.decisionHistory.selected}:
                     </span>
-                    <span className="rounded-full border border-teal-200 bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-800">
+                    <span
+                      className={workspaceStatusClass(
+                        "success",
+                        "px-2.5 py-0.5 text-xs font-medium"
+                      )}
+                    >
                       {entry.resolved.optionLabel}
                     </span>
                   </div>

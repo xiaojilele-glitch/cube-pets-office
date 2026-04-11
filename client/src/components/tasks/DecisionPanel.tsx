@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -25,18 +25,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import {
+  workspaceCalloutClass,
+  workspaceToneClass,
+  type WorkspaceTone,
+} from "@/components/workspace/workspace-tone";
 import { submitMissionDecision } from "@/lib/mission-client";
-
-/* ─── Props ─── */
+import { cn } from "@/lib/utils";
 
 interface DecisionPanelProps {
   missionId: string;
   decision: MissionDecision;
   onDecisionSubmitted?: () => void;
 }
-
-/* ─── Helpers ─── */
 
 function resolveDecisionType(decision: MissionDecision): DecisionType {
   return decision.type ?? "custom-action";
@@ -45,14 +46,32 @@ function resolveDecisionType(decision: MissionDecision): DecisionType {
 function severityClasses(severity?: "info" | "warn" | "danger"): string {
   switch (severity) {
     case "info":
-      return "border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100";
+      return `${workspaceToneClass("info")} hover:bg-[rgba(91,137,165,0.22)]`;
     case "warn":
-      return "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100";
+      return `${workspaceToneClass("warning")} hover:bg-[rgba(201,130,87,0.22)]`;
     case "danger":
-      return "border-red-200 bg-red-50 text-red-800 hover:bg-red-100";
+      return `${workspaceToneClass("danger")} hover:bg-[rgba(180,93,77,0.2)]`;
     default:
-      return "border-stone-200 bg-stone-50 text-stone-800 hover:bg-stone-100";
+      return `${workspaceToneClass("neutral")} hover:bg-[rgba(255,255,255,0.82)]`;
   }
+}
+
+function surfaceTextareaClass(size: "md" | "lg" | "xl" = "md"): string {
+  return cn(
+    "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.68)] text-sm text-stone-700",
+    size === "md"
+      ? "min-h-16 rounded-[14px]"
+      : size === "lg"
+        ? "min-h-20 rounded-[18px] leading-6"
+        : "min-h-24 rounded-[18px] leading-6"
+  );
+}
+
+function decisionTone(type: DecisionType): WorkspaceTone {
+  if (type === "approve") return "success";
+  if (type === "reject" || type === "escalate") return "danger";
+  if (type === "request-info" || type === "multi-choice") return "info";
+  return "neutral";
 }
 
 function typeIcon(type: DecisionType) {
@@ -71,8 +90,6 @@ function typeIcon(type: DecisionType) {
       return <Send className="size-4 text-stone-600" />;
   }
 }
-
-/* ─── Option Card ─── */
 
 function OptionCard({
   option,
@@ -96,9 +113,9 @@ function OptionCard({
       className={cn(
         "w-full rounded-[18px] border px-3.5 py-3 text-left transition-colors",
         selected
-          ? "ring-2 ring-teal-400 border-teal-300 bg-teal-50"
+          ? "workspace-tone-success ring-2 ring-[rgba(94,139,114,0.22)] ring-offset-2 ring-offset-transparent"
           : severityClasses(option.severity),
-        disabled && "opacity-50 cursor-not-allowed",
+        disabled && "cursor-not-allowed opacity-50"
       )}
     >
       <div className="text-sm font-semibold">{option.label}</div>
@@ -110,8 +127,6 @@ function OptionCard({
     </button>
   );
 }
-
-/* ─── Approve / Reject Layout ─── */
 
 function ApproveRejectLayout({
   options,
@@ -127,19 +142,23 @@ function ApproveRejectLayout({
   onCommentChange: (optionId: string, text: string) => void;
 }) {
   const approveOpt = options.find(
-    (o) => o.action === "approve" || /approve|通过|批准/i.test(o.label),
+    option =>
+      option.action === "approve" ||
+      /approve|\u901a\u8fc7|\u6279\u51c6/i.test(option.label)
   );
   const rejectOpt = options.find(
-    (o) => o.action === "reject" || /reject|拒绝|驳回/i.test(o.label),
+    option =>
+      option.action === "reject" ||
+      /reject|\u62d2\u7edd|\u9a73\u56de/i.test(option.label)
   );
   const remaining = options.filter(
-    (o) => o !== approveOpt && o !== rejectOpt,
+    option => option !== approveOpt && option !== rejectOpt
   );
 
   return (
     <div className="space-y-3">
       <div className="grid gap-2 sm:grid-cols-2">
-        {approveOpt && (
+        {approveOpt ? (
           <div className="space-y-2">
             <Button
               type="button"
@@ -148,7 +167,7 @@ function ApproveRejectLayout({
               onClick={() =>
                 onSubmit(approveOpt.id, commentTexts[approveOpt.id])
               }
-              className="w-full rounded-[18px] border border-emerald-300 bg-emerald-500 text-white hover:bg-emerald-600"
+              className="w-full rounded-[18px] border border-[rgba(94,139,114,0.28)] bg-[var(--workspace-success)] text-white hover:bg-[#537860]"
             >
               {submitting ? (
                 <LoaderCircle className="size-4 animate-spin" />
@@ -157,30 +176,29 @@ function ApproveRejectLayout({
               )}
               {approveOpt.label}
             </Button>
-            {approveOpt.requiresComment && (
+            {approveOpt.requiresComment ? (
               <Textarea
                 value={commentTexts[approveOpt.id] ?? ""}
-                onChange={(e) =>
-                  onCommentChange(approveOpt.id, e.target.value)
+                onChange={event =>
+                  onCommentChange(approveOpt.id, event.target.value)
                 }
                 placeholder="Required: provide a reason"
                 aria-label={`Comment for ${approveOpt.label}`}
                 aria-required="true"
-                className="min-h-16 rounded-[14px] border-stone-200 bg-stone-50/80 text-sm"
+                className={surfaceTextareaClass()}
               />
-            )}
+            ) : null}
           </div>
-        )}
-        {rejectOpt && (
+        ) : null}
+
+        {rejectOpt ? (
           <div className="space-y-2">
             <Button
               type="button"
               disabled={submitting}
               aria-label={rejectOpt.label}
-              onClick={() =>
-                onSubmit(rejectOpt.id, commentTexts[rejectOpt.id])
-              }
-              className="w-full rounded-[18px] border border-red-300 bg-red-500 text-white hover:bg-red-600"
+              onClick={() => onSubmit(rejectOpt.id, commentTexts[rejectOpt.id])}
+              className="w-full rounded-[18px] border border-[rgba(180,93,77,0.28)] bg-[var(--workspace-danger)] text-white hover:bg-[#a85445]"
             >
               {submitting ? (
                 <LoaderCircle className="size-4 animate-spin" />
@@ -189,52 +207,52 @@ function ApproveRejectLayout({
               )}
               {rejectOpt.label}
             </Button>
-            {rejectOpt.requiresComment && (
+            {rejectOpt.requiresComment ? (
               <Textarea
                 value={commentTexts[rejectOpt.id] ?? ""}
-                onChange={(e) =>
-                  onCommentChange(rejectOpt.id, e.target.value)
+                onChange={event =>
+                  onCommentChange(rejectOpt.id, event.target.value)
                 }
                 placeholder="Required: provide a reason"
                 aria-label={`Comment for ${rejectOpt.label}`}
                 aria-required="true"
-                className="min-h-16 rounded-[14px] border-stone-200 bg-stone-50/80 text-sm"
+                className={surfaceTextareaClass()}
               />
-            )}
+            ) : null}
           </div>
-        )}
+        ) : null}
       </div>
-      {remaining.map((opt) => (
-        <div key={opt.id} className="space-y-2">
+
+      {remaining.map(option => (
+        <div key={option.id} className="space-y-2">
           <button
             type="button"
             disabled={submitting}
-            aria-label={opt.label}
-            onClick={() => onSubmit(opt.id, commentTexts[opt.id])}
+            aria-label={option.label}
+            onClick={() => onSubmit(option.id, commentTexts[option.id])}
             className={cn(
               "w-full rounded-[18px] border px-3.5 py-3 text-left text-sm font-semibold transition-colors",
-              severityClasses(opt.severity),
+              severityClasses(option.severity),
+              submitting && "cursor-not-allowed opacity-50"
             )}
           >
-            {opt.label}
+            {option.label}
           </button>
-          {opt.requiresComment && (
+          {option.requiresComment ? (
             <Textarea
-              value={commentTexts[opt.id] ?? ""}
-              onChange={(e) => onCommentChange(opt.id, e.target.value)}
+              value={commentTexts[option.id] ?? ""}
+              onChange={event => onCommentChange(option.id, event.target.value)}
               placeholder="Required: provide a reason"
-              aria-label={`Comment for ${opt.label}`}
+              aria-label={`Comment for ${option.label}`}
               aria-required="true"
-              className="min-h-16 rounded-[14px] border-stone-200 bg-stone-50/80 text-sm"
+              className={surfaceTextareaClass()}
             />
-          )}
+          ) : null}
         </div>
       ))}
     </div>
   );
 }
-
-/* ─── Multi-Choice Layout ─── */
 
 function MultiChoiceLayout({
   options,
@@ -250,29 +268,34 @@ function MultiChoiceLayout({
   onCommentChange: (optionId: string, text: string) => void;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const selected = options.find((o) => o.id === selectedId);
 
   return (
     <div className="space-y-3">
-      <div role="radiogroup" aria-label="Decision options" className="grid gap-2">
-        {options.map((opt) => (
-          <div key={opt.id} className="space-y-2">
+      <div
+        role="radiogroup"
+        aria-label="Decision options"
+        className="grid gap-2"
+      >
+        {options.map(option => (
+          <div key={option.id} className="space-y-2">
             <OptionCard
-              option={opt}
-              selected={selectedId === opt.id}
+              option={option}
+              selected={selectedId === option.id}
               disabled={submitting}
               onSelect={setSelectedId}
             />
-            {opt.requiresComment && selectedId === opt.id && (
+            {option.requiresComment && selectedId === option.id ? (
               <Textarea
-                value={commentTexts[opt.id] ?? ""}
-                onChange={(e) => onCommentChange(opt.id, e.target.value)}
+                value={commentTexts[option.id] ?? ""}
+                onChange={event =>
+                  onCommentChange(option.id, event.target.value)
+                }
                 placeholder="Required: provide a reason"
-                aria-label={`Comment for ${opt.label}`}
+                aria-label={`Comment for ${option.label}`}
                 aria-required="true"
-                className="min-h-16 rounded-[14px] border-stone-200 bg-stone-50/80 text-sm"
+                className={surfaceTextareaClass()}
               />
-            )}
+            ) : null}
           </div>
         ))}
       </div>
@@ -295,8 +318,6 @@ function MultiChoiceLayout({
   );
 }
 
-/* ─── Request-Info Layout ─── */
-
 function RequestInfoLayout({
   decision,
   submitting,
@@ -312,11 +333,13 @@ function RequestInfoLayout({
     <div className="space-y-3">
       <Textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
-        placeholder={decision.placeholder ?? "Provide the requested information…"}
+        onChange={event => setText(event.target.value)}
+        placeholder={
+          decision.placeholder ?? "Provide the requested information..."
+        }
         aria-label="Information response"
         aria-required="true"
-        className="min-h-24 rounded-[18px] border-stone-200 bg-stone-50/80 text-sm leading-6"
+        className={surfaceTextareaClass("xl")}
       />
       <Button
         type="button"
@@ -335,8 +358,6 @@ function RequestInfoLayout({
   );
 }
 
-/* ─── Escalate Layout ─── */
-
 function EscalateLayout({
   options,
   submitting,
@@ -354,24 +375,30 @@ function EscalateLayout({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 rounded-[18px] border border-red-200 bg-red-50 px-3.5 py-2.5">
-        <AlertTriangle className="size-4 text-red-600 shrink-0" />
+      <div
+        className={workspaceCalloutClass(
+          "danger",
+          "flex items-center gap-2 px-3.5 py-2.5 text-[var(--workspace-danger)]"
+        )}
+      >
+        <AlertTriangle className="size-4 shrink-0 text-red-600" />
         <span className="text-sm font-medium text-red-800">
-          High priority — this decision requires immediate attention
+          High priority: this decision requires immediate attention
         </span>
       </div>
-      {options.map((opt) => (
-        <div key={opt.id} className="space-y-2">
+
+      {options.map(option => (
+        <div key={option.id} className="space-y-2">
           <Button
             type="button"
             disabled={submitting}
-            aria-label={opt.label}
-            onClick={() => onSubmit(opt.id, commentTexts[opt.id])}
+            aria-label={option.label}
+            onClick={() => onSubmit(option.id, commentTexts[option.id])}
             className={cn(
               "w-full rounded-[18px]",
-              opt === primary
-                ? "border border-red-300 bg-red-500 text-white hover:bg-red-600"
-                : "border border-stone-200 bg-white text-stone-800 hover:bg-stone-50",
+              option === primary
+                ? "border border-[rgba(180,93,77,0.28)] bg-[var(--workspace-danger)] text-white hover:bg-[#a85445]"
+                : "workspace-control border-[var(--workspace-panel-border)] bg-white/70 text-stone-800 hover:bg-white/85"
             )}
           >
             {submitting ? (
@@ -379,25 +406,23 @@ function EscalateLayout({
             ) : (
               <ShieldAlert className="size-4" />
             )}
-            {opt.label}
+            {option.label}
           </Button>
-          {opt.requiresComment && (
+          {option.requiresComment ? (
             <Textarea
-              value={commentTexts[opt.id] ?? ""}
-              onChange={(e) => onCommentChange(opt.id, e.target.value)}
+              value={commentTexts[option.id] ?? ""}
+              onChange={event => onCommentChange(option.id, event.target.value)}
               placeholder="Required: provide a reason"
-              aria-label={`Comment for ${opt.label}`}
+              aria-label={`Comment for ${option.label}`}
               aria-required="true"
-              className="min-h-16 rounded-[14px] border-stone-200 bg-stone-50/80 text-sm"
+              className={surfaceTextareaClass()}
             />
-          )}
+          ) : null}
         </div>
       ))}
     </div>
   );
 }
-
-/* ─── Custom-Action (default) Layout ─── */
 
 function CustomActionLayout({
   options,
@@ -418,69 +443,70 @@ function CustomActionLayout({
 
   return (
     <div className="space-y-3">
-      {decision.allowFreeText && (
+      {decision.allowFreeText ? (
         <Textarea
           value={freeText}
-          onChange={(e) => setFreeText(e.target.value)}
-          placeholder={decision.placeholder ?? "Optional note…"}
+          onChange={event => setFreeText(event.target.value)}
+          placeholder={decision.placeholder ?? "Optional note..."}
           aria-label="Decision note"
-          className="min-h-20 rounded-[18px] border-stone-200 bg-stone-50/80 text-sm leading-6"
+          className={surfaceTextareaClass("lg")}
         />
-      )}
+      ) : null}
+
       <div className="grid gap-2 sm:grid-cols-2">
-        {options.map((opt) => (
-          <div key={opt.id} className="space-y-2">
+        {options.map(option => (
+          <div key={option.id} className="space-y-2">
             <button
               type="button"
               disabled={submitting}
-              aria-label={opt.label}
+              aria-label={option.label}
               onClick={() =>
                 onSubmit(
-                  opt.id,
-                  commentTexts[opt.id] ||
-                    (decision.allowFreeText ? freeText : undefined),
+                  option.id,
+                  commentTexts[option.id] ||
+                    (decision.allowFreeText ? freeText : undefined)
                 )
               }
               className={cn(
                 "w-full rounded-[18px] border px-3.5 py-3 text-left transition-colors",
-                severityClasses(opt.severity),
-                submitting && "opacity-50 cursor-not-allowed",
+                severityClasses(option.severity),
+                submitting && "cursor-not-allowed opacity-50"
               )}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-sm font-semibold">{opt.label}</div>
-                  {opt.description && (
+                  <div className="text-sm font-semibold">{option.label}</div>
+                  {option.description ? (
                     <div className="mt-1 line-clamp-2 text-xs leading-5 opacity-80">
-                      {opt.description}
+                      {option.description}
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 {submitting ? (
-                  <LoaderCircle className="size-4 animate-spin shrink-0" />
+                  <LoaderCircle className="size-4 shrink-0 animate-spin" />
                 ) : (
                   <Send className="size-4 shrink-0 opacity-50" />
                 )}
               </div>
             </button>
-            {opt.requiresComment && (
+            {option.requiresComment ? (
               <Textarea
-                value={commentTexts[opt.id] ?? ""}
-                onChange={(e) => onCommentChange(opt.id, e.target.value)}
+                value={commentTexts[option.id] ?? ""}
+                onChange={event =>
+                  onCommentChange(option.id, event.target.value)
+                }
                 placeholder="Required: provide a reason"
-                aria-label={`Comment for ${opt.label}`}
+                aria-label={`Comment for ${option.label}`}
                 aria-required="true"
-                className="min-h-16 rounded-[14px] border-stone-200 bg-stone-50/80 text-sm"
+                className={surfaceTextareaClass()}
               />
-            )}
+            ) : null}
           </div>
         ))}
       </div>
     </div>
   );
 }
-
-/* ─── Main DecisionPanel ─── */
 
 export function DecisionPanel({
   missionId,
@@ -494,17 +520,13 @@ export function DecisionPanel({
   const type = resolveDecisionType(decision);
   const options = decision.options ?? [];
 
-  const handleCommentChange = useCallback(
-    (optionId: string, text: string) => {
-      setCommentTexts((prev) => ({ ...prev, [optionId]: text }));
-    },
-    [],
-  );
+  const handleCommentChange = useCallback((optionId: string, text: string) => {
+    setCommentTexts(previous => ({ ...previous, [optionId]: text }));
+  }, []);
 
   const handleSubmit = useCallback(
     async (optionId: string, freeText?: string) => {
-      // Validate requiresComment
-      const option = options.find((o) => o.id === optionId);
+      const option = options.find(current => current.id === optionId);
       if (option?.requiresComment && (!freeText || !freeText.trim())) {
         setError(`A comment is required for "${option.label}".`);
         return;
@@ -519,15 +541,15 @@ export function DecisionPanel({
           freeText: freeText?.trim() || undefined,
         });
         onDecisionSubmitted?.();
-      } catch (err) {
+      } catch (error) {
         setError(
-          err instanceof Error ? err.message : "Failed to submit decision",
+          error instanceof Error ? error.message : "Failed to submit decision"
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [missionId, options, onDecisionSubmitted],
+    [missionId, onDecisionSubmitted, options]
   );
 
   const handleSubmitFreeText = useCallback(
@@ -540,24 +562,24 @@ export function DecisionPanel({
           freeText: freeText.trim(),
         });
         onDecisionSubmitted?.();
-      } catch (err) {
+      } catch (error) {
         setError(
-          err instanceof Error ? err.message : "Failed to submit decision",
+          error instanceof Error ? error.message : "Failed to submit decision"
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [missionId, onDecisionSubmitted],
+    [missionId, onDecisionSubmitted]
   );
 
   return (
     <Card
       className={cn(
-        "rounded-[28px] shadow-[0_24px_60px_rgba(112,84,51,0.08)]",
+        "workspace-panel rounded-[28px] shadow-[0_24px_60px_rgba(112,84,51,0.08)]",
         type === "escalate"
-          ? "border-red-200/80 bg-red-50/40"
-          : "border-stone-200/80 bg-white/90",
+          ? "border-[rgba(180,93,77,0.24)] bg-[linear-gradient(180deg,rgba(255,251,249,0.96),rgba(248,233,229,0.92))]"
+          : "border-[var(--workspace-panel-border)]"
       )}
     >
       <CardHeader className="space-y-1 pb-3">
@@ -565,8 +587,16 @@ export function DecisionPanel({
           {typeIcon(type)}
           Decision Required
         </CardTitle>
-        <CardDescription>{decision.prompt}</CardDescription>
+        <CardDescription
+          className={cn(
+            "text-sm leading-6",
+            workspaceToneClass(decisionTone(type))
+          )}
+        >
+          {decision.prompt}
+        </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-3 pt-0">
         {type === "approve" || type === "reject" ? (
           <ApproveRejectLayout
@@ -609,14 +639,17 @@ export function DecisionPanel({
           />
         )}
 
-        {error && (
+        {error ? (
           <div
             role="alert"
-            className="rounded-[14px] border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            className={workspaceCalloutClass(
+              "danger",
+              "px-3 py-2 text-sm text-[var(--workspace-danger)]"
+            )}
           >
             {error}
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   );

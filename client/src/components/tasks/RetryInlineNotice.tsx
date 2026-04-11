@@ -1,6 +1,7 @@
 import { RotateCcw, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { workspaceCalloutClass } from "@/components/workspace/workspace-tone";
 import { cn } from "@/lib/utils";
 
 export function RetryInlineNotice({
@@ -19,16 +20,17 @@ export function RetryInlineNotice({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm text-amber-900",
+        workspaceCalloutClass("warning"),
+        "flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm",
         className
       )}
     >
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 font-semibold">
-          <TriangleAlert className="size-4 text-amber-700" />
+        <div className="flex items-center gap-2 font-semibold text-[var(--workspace-text-strong)]">
+          <TriangleAlert className="size-4 text-[var(--workspace-warning)]" />
           {title}
         </div>
-        <div className="mt-1 text-sm leading-6 text-amber-800">
+        <div className="mt-1 text-sm leading-6 text-[var(--workspace-text)]">
           {description}
         </div>
       </div>
@@ -36,7 +38,7 @@ export function RetryInlineNotice({
         type="button"
         variant="outline"
         size="sm"
-        className="rounded-full border-amber-200 bg-white text-amber-900 hover:bg-amber-100"
+        className="workspace-control rounded-full"
         onClick={onRetry}
       >
         <RotateCcw className="size-4" />

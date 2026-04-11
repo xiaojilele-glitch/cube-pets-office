@@ -1,147 +1,155 @@
-/**
- * LineageHeatmap — Heatmap marking high-frequency data sources and key agents.
- *
- * Grid layout: rows = agents/sources, columns = time buckets.
- * Color depth represents importance (frequency of access).
- *
- * @see Requirements AC-7.4
- */
-
 import { useMemo } from "react";
+
 import type { DataLineageNode } from "@shared/lineage/contracts.js";
+
 import { useLineageStore } from "@/lib/lineage-store";
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+import { LINEAGE_NEUTRAL } from "./lineage-theme";
 
 const TIME_BUCKETS = 10;
-const CELL_W = 48;
-const CELL_H = 32;
-const LABEL_W = 120;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function interpolateColor(ratio: number): string {
-  // 0 → light gray, 1 → deep blue
-  const r = Math.round(219 - ratio * 160);
-  const g = Math.round(234 - ratio * 140);
-  const b = Math.round(254 - ratio * 40);
-  return `rgb(${r},${g},${b})`;
-}
+const CELL_WIDTH = 52;
+const CELL_HEIGHT = 36;
+const LABEL_WIDTH = 160;
 
 interface HeatmapData {
   rowLabels: string[];
-  colLabels: string[];
-  cells: number[][]; // [row][col] = count
+  columnLabels: string[];
+  cells: number[][];
   maxCount: number;
+}
+
+function interpolateColor(ratio: number) {
+  const red = Math.round(248 - ratio * 70);
+  const green = Math.round(236 - ratio * 82);
+  const blue = Math.round(223 - ratio * 106);
+  return `rgb(${red},${green},${blue})`;
 }
 
 function buildHeatmap(nodes: DataLineageNode[]): HeatmapData {
   if (nodes.length === 0) {
-    return { rowLabels: [], colLabels: [], cells: [], maxCount: 0 };
+    return {
+      rowLabels: [],
+      columnLabels: [],
+      cells: [],
+      maxCount: 0,
+    };
   }
 
-  // Collect unique row keys (agentId or sourceName)
-  const rowKeySet = new Set<string>();
-  for (const n of nodes) {
-    const key = n.agentId ?? n.sourceName ?? n.decisionId ?? "unknown";
-    rowKeySet.add(key);
-  }
-  const rowLabels = [...rowKeySet].sort();
-
-  // Time range → buckets
-  const timestamps = nodes.map((n) => n.timestamp);
-  const minTs = Math.min(...timestamps);
-  const maxTs = Math.max(...timestamps);
-  const range = Math.max(maxTs - minTs, 1);
-  const bucketSize = range / TIME_BUCKETS;
-
-  const colLabels: string[] = [];
-  for (let i = 0; i < TIME_BUCKETS; i++) {
-    const t = new Date(minTs + i * bucketSize);
-    colLabels.push(
-      `${t.getHours().toString().padStart(2, "0")}:${t.getMinutes().toString().padStart(2, "0")}`,
+  const rowLabelSet = new Set<string>();
+  for (const node of nodes) {
+    rowLabelSet.add(
+      node.agentId ?? node.sourceName ?? node.decisionId ?? "unknown"
     );
   }
 
-  // Count
-  const cells: number[][] = rowLabels.map(() => new Array(TIME_BUCKETS).fill(0));
+  const rowLabels = Array.from(rowLabelSet).sort();
+  const timestamps = nodes.map(node => node.timestamp);
+  const minTimestamp = Math.min(...timestamps);
+  const maxTimestamp = Math.max(...timestamps);
+  const timestampRange = Math.max(maxTimestamp - minTimestamp, 1);
+  const bucketSize = timestampRange / TIME_BUCKETS;
+
+  const columnLabels = Array.from({ length: TIME_BUCKETS }, (_, index) => {
+    const date = new Date(minTimestamp + index * bucketSize);
+    return `${date.getHours().toString().padStart(2, "0")}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
+  });
+
+  const cells = rowLabels.map(() => new Array(TIME_BUCKETS).fill(0));
   let maxCount = 0;
-  for (const n of nodes) {
-    const key = n.agentId ?? n.sourceName ?? n.decisionId ?? "unknown";
-    const rowIdx = rowLabels.indexOf(key);
-    const colIdx = Math.min(Math.floor((n.timestamp - minTs) / bucketSize), TIME_BUCKETS - 1);
-    if (rowIdx >= 0) {
-      cells[rowIdx][colIdx]++;
-      maxCount = Math.max(maxCount, cells[rowIdx][colIdx]);
-    }
+
+  for (const node of nodes) {
+    const key = node.agentId ?? node.sourceName ?? node.decisionId ?? "unknown";
+    const rowIndex = rowLabels.indexOf(key);
+    const columnIndex = Math.min(
+      Math.floor((node.timestamp - minTimestamp) / bucketSize),
+      TIME_BUCKETS - 1
+    );
+
+    if (rowIndex < 0) continue;
+    cells[rowIndex][columnIndex] += 1;
+    maxCount = Math.max(maxCount, cells[rowIndex][columnIndex]);
   }
 
-  return { rowLabels, colLabels, cells, maxCount };
+  return {
+    rowLabels,
+    columnLabels,
+    cells,
+    maxCount,
+  };
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-
 export default function LineageHeatmap() {
-  const graph = useLineageStore((s) => s.graph);
+  const graph = useLineageStore(state => state.graph);
 
-  const heatmap = useMemo(
-    () => buildHeatmap(graph?.nodes ?? []),
-    [graph],
-  );
+  const heatmap = useMemo(() => buildHeatmap(graph?.nodes ?? []), [graph]);
 
   if (heatmap.rowLabels.length === 0) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9ca3af" }}>
-        No heatmap data
+      <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[var(--workspace-text-subtle)]">
+        No heatmap data yet.
       </div>
     );
   }
 
   return (
-    <div style={{ overflow: "auto", padding: 12 }}>
-      <table style={{ borderCollapse: "collapse", fontSize: 11 }}>
+    <div className="h-full overflow-auto rounded-[24px] bg-white/28 p-3">
+      <table className="workspace-data-table min-w-full text-[11px]">
         <thead>
           <tr>
-            <th style={{ width: LABEL_W, textAlign: "left", padding: "4px 8px", color: "#6b7280", fontWeight: 500 }}>
+            <th
+              className="sticky left-0 z-10 rounded-l-[16px] bg-[#fbf6ef] px-3 py-2 text-left"
+              style={{ minWidth: LABEL_WIDTH }}
+            >
               Agent / Source
             </th>
-            {heatmap.colLabels.map((label, i) => (
-              <th key={i} style={{ width: CELL_W, textAlign: "center", padding: "4px 2px", color: "#9ca3af", fontWeight: 400 }}>
+            {heatmap.columnLabels.map(label => (
+              <th key={label} className="px-1.5 py-2 text-center font-medium">
                 {label}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {heatmap.rowLabels.map((row, ri) => (
-            <tr key={row}>
-              <td style={{ padding: "2px 8px", color: "#374151", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: LABEL_W }}>
-                {row}
+          {heatmap.rowLabels.map((rowLabel, rowIndex) => (
+            <tr key={rowLabel}>
+              <td
+                className="sticky left-0 z-10 border-b border-[var(--workspace-panel-border)] bg-[#fffaf4]/95 px-3 py-2 font-medium text-[var(--workspace-text)]"
+                style={{ maxWidth: LABEL_WIDTH }}
+                title={rowLabel}
+              >
+                <div className="truncate">{rowLabel}</div>
               </td>
-              {heatmap.cells[ri].map((count, ci) => {
-                const ratio = heatmap.maxCount > 0 ? count / heatmap.maxCount : 0;
+
+              {heatmap.cells[rowIndex].map((count, columnIndex) => {
+                const ratio =
+                  heatmap.maxCount === 0 ? 0 : count / heatmap.maxCount;
+                const background =
+                  count > 0 ? interpolateColor(ratio) : "#f9f2ea";
+                const color =
+                  ratio > 0.58 ? "#fffaf4" : LINEAGE_NEUTRAL.textMuted;
+
                 return (
-                  <td
-                    key={ci}
-                    title={`${row} — ${heatmap.colLabels[ci]}: ${count}`}
-                    style={{
-                      width: CELL_W,
-                      height: CELL_H,
-                      background: count > 0 ? interpolateColor(ratio) : "#f9fafb",
-                      border: "1px solid #e5e7eb",
-                      textAlign: "center",
-                      color: ratio > 0.6 ? "#fff" : "#6b7280",
-                      fontWeight: ratio > 0.6 ? 600 : 400,
-                      cursor: "default",
-                    }}
-                  >
-                    {count > 0 ? count : ""}
+                  <td key={`${rowLabel}-${columnIndex}`} className="p-1">
+                    <div
+                      className="flex items-center justify-center rounded-[14px] border text-center font-semibold"
+                      style={{
+                        width: CELL_WIDTH,
+                        minWidth: CELL_WIDTH,
+                        height: CELL_HEIGHT,
+                        background,
+                        borderColor:
+                          count > 0
+                            ? "rgba(151, 120, 90, 0.22)"
+                            : LINEAGE_NEUTRAL.border,
+                        color,
+                      }}
+                      title={`${rowLabel} - ${heatmap.columnLabels[columnIndex]}: ${count}`}
+                    >
+                      {count > 0 ? count : ""}
+                    </div>
                   </td>
                 );
               })}
@@ -150,12 +158,15 @@ export default function LineageHeatmap() {
         </tbody>
       </table>
 
-      {/* Color legend */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 10, color: "#9ca3af" }}>
+      <div className="mt-4 flex items-center gap-3 text-[10px] text-[var(--workspace-text-subtle)]">
         <span>Low</span>
-        <div style={{ display: "flex" }}>
-          {[0, 0.25, 0.5, 0.75, 1].map((r) => (
-            <div key={r} style={{ width: 20, height: 12, background: interpolateColor(r) }} />
+        <div className="flex overflow-hidden rounded-full border border-[var(--workspace-panel-border)]">
+          {[0, 0.25, 0.5, 0.75, 1].map(step => (
+            <div
+              key={step}
+              className="h-3 w-6"
+              style={{ background: interpolateColor(step) }}
+            />
           ))}
         </div>
         <span>High</span>

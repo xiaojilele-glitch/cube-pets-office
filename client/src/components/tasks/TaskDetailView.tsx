@@ -43,17 +43,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+import { Empty } from "@/components/ui/empty";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  workspaceCalloutClass,
+  workspaceStatusClass,
+  workspaceToneClass,
+  type WorkspaceTone,
+} from "@/components/workspace/workspace-tone";
 import type {
   MissionOperatorActionLoadingMap,
   MissionTaskDetail,
@@ -96,20 +96,40 @@ const WORK_PACKAGE_PROGRESS: Record<string, number> = {
   failed: 36,
 };
 
+const DETAIL_CARD_CLASS = "workspace-panel rounded-[28px]";
+const DETAIL_CARD_STRONG_CLASS =
+  "workspace-panel workspace-panel-strong rounded-[28px]";
+const DETAIL_INSET_CLASS =
+  "workspace-panel-inset rounded-[20px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.66)]";
+const DETAIL_INSET_SOFT_CLASS =
+  "workspace-panel-inset rounded-[18px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)]";
+const DETAIL_TEXTAREA_CLASS =
+  "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.68)] text-sm text-stone-700";
+
 function workPackageProgress(status: string): number {
   return WORK_PACKAGE_PROGRESS[status] || 12;
+}
+
+function workPackageTone(status: string): WorkspaceTone {
+  if (status === "verified" || status === "passed") return "success";
+  if (status === "failed") return "danger";
+  if (status === "executing" || status === "revising") return "warning";
+  if (status === "submitted" || status === "reviewed" || status === "audited") {
+    return "info";
+  }
+  return "neutral";
 }
 
 function toneFromDecisionTone(
   tone: "primary" | "secondary" | "warning"
 ): string {
   if (tone === "warning") {
-    return "border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100";
+    return workspaceCalloutClass("warning", "hover:bg-[rgba(201,130,87,0.22)]");
   }
   if (tone === "secondary") {
-    return "border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100";
+    return workspaceCalloutClass("info", "hover:bg-[rgba(91,137,165,0.22)]");
   }
-  return "border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100";
+  return workspaceCalloutClass("success", "hover:bg-[rgba(94,139,114,0.22)]");
 }
 
 function MetricCard({
@@ -122,7 +142,12 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="rounded-[20px] border border-white/70 bg-white/72 px-3.5 py-3.5 shadow-sm backdrop-blur">
+    <div
+      className={cn(
+        DETAIL_INSET_CLASS,
+        "px-3.5 py-3.5 shadow-sm backdrop-blur"
+      )}
+    >
       <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">
         {label}
       </div>
@@ -152,12 +177,12 @@ function DetailTextDialog({
           type="button"
           variant="outline"
           size="sm"
-          className="rounded-full border-stone-200 bg-white/80 text-xs"
+          className="workspace-control rounded-full border-[var(--workspace-panel-border)] bg-white/80 text-xs"
         >
           {buttonLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl rounded-[24px] border-stone-200 bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
+      <DialogContent className="workspace-panel workspace-panel-strong max-w-3xl rounded-[24px] border-[var(--workspace-panel-border)] bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
         <DialogHeader className="border-b border-stone-200/80 px-6 py-5">
           <DialogTitle className="text-stone-900">{title}</DialogTitle>
           {description ? (
@@ -216,7 +241,7 @@ function ExcerptBlock({
 
 function SnapshotTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-3">
+    <div className={cn(DETAIL_INSET_SOFT_CLASS, "px-3 py-3")}>
       <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
         {label}
       </div>
@@ -239,7 +264,12 @@ function DetailTabViewport({
   }
 
   return (
-    <div className="h-full min-h-0 overflow-hidden rounded-[28px] border border-stone-200/80 bg-white/55 p-2 shadow-[0_24px_60px_rgba(112,84,51,0.06)]">
+    <div
+      className={cn(
+        DETAIL_CARD_CLASS,
+        "h-full min-h-0 overflow-hidden p-2 shadow-[0_24px_60px_rgba(112,84,51,0.06)]"
+      )}
+    >
       <ScrollArea className="h-full w-full">
         <div className="space-y-4 p-1 pr-3">{children}</div>
       </ScrollArea>
@@ -291,7 +321,7 @@ function MissionCostTab() {
 
   if (!snapshot) {
     return (
-      <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <Card className={DETAIL_CARD_CLASS}>
         <CardContent className="py-10 text-center text-sm text-stone-500">
           No cost data available. Cost metrics will appear once LLM calls are
           recorded.
@@ -330,7 +360,7 @@ function MissionCostTab() {
       </div>
 
       {/* Budget progress */}
-      <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+      <Card className={DETAIL_CARD_CLASS}>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-stone-900">
             <Coins className="size-4 text-amber-600" />
@@ -357,7 +387,7 @@ function MissionCostTab() {
 
       {/* Token consumption timeline — AreaChart by agent */}
       {agentTokenData.length > 0 && (
-        <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+        <Card className={DETAIL_CARD_CLASS}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-stone-900">
               <Coins className="size-4 text-indigo-600" />
@@ -410,7 +440,7 @@ function MissionCostTab() {
 
       {/* Cost accumulation curve — LineChart from history */}
       {historyCurveData.length > 0 && (
-        <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+        <Card className={DETAIL_CARD_CLASS}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-stone-900">
               <Coins className="size-4 text-orange-600" />
@@ -459,10 +489,15 @@ function MissionCostTab() {
 
       {/* Downgrade status */}
       {snapshot.downgradeLevel !== "none" && (
-        <Card className="rounded-[28px] border-amber-200/80 bg-amber-50/70 shadow-[0_24px_60px_rgba(175,140,69,0.08)]">
+        <Card
+          className={cn(
+            DETAIL_CARD_STRONG_CLASS,
+            "border-[rgba(201,130,87,0.24)] bg-[linear-gradient(180deg,rgba(255,250,246,0.96),rgba(249,238,228,0.92))]"
+          )}
+        >
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="size-5 text-amber-600" />
-            <span className="text-sm font-medium text-amber-900">
+            <span className="text-sm font-medium text-[var(--workspace-text-strong)]">
               Degradation active:{" "}
               <span className="font-semibold uppercase">
                 {snapshot.downgradeLevel}
@@ -527,19 +562,17 @@ export function TaskDetailView({
     return (
       <Empty
         className={cn(
-          "flex h-full items-center justify-center rounded-[28px] border-stone-200/80 bg-stone-50/80",
+          "workspace-panel flex h-full items-center justify-center rounded-[28px] bg-[rgba(255,255,255,0.62)]",
           className
         )}
       >
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <FolderKanban />
-          </EmptyMedia>
-          <EmptyTitle>{copy.tasks.emptyState.selectTitle}</EmptyTitle>
-          <EmptyDescription>
-            {copy.tasks.emptyState.selectDescription}
-          </EmptyDescription>
-        </EmptyHeader>
+        <EmptyHintBlock
+          icon={<FolderKanban className="size-5" />}
+          title={copy.tasks.emptyState.selectTitle}
+          description={copy.tasks.emptyState.selectDescription}
+          tone="info"
+          className="max-w-lg"
+        />
       </Empty>
     );
   }
@@ -646,7 +679,7 @@ export function TaskDetailView({
   ].join("\n");
 
   const sourceDirectivePanel = (
-    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+    <Card className={DETAIL_CARD_CLASS}>
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <FileText className="size-4 text-stone-600" />
@@ -657,7 +690,7 @@ export function TaskDetailView({
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3.5 py-3">
+        <div className={cn(DETAIL_INSET_CLASS, "px-3.5 py-3")}>
           <ExcerptBlock
             title={copy.tasks.detailView.sourcePreviewTitle}
             description={copy.tasks.detailView.sourcePreviewDescription}
@@ -670,7 +703,7 @@ export function TaskDetailView({
   );
 
   const workPackagesPanel = (
-    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+    <Card className={DETAIL_CARD_CLASS}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <Workflow className="size-4 text-amber-600" />
@@ -704,23 +737,25 @@ export function TaskDetailView({
               task.meta_audit_feedback || copy.tasks.detailView.noAuditSignal;
 
             return (
-              <div
-                key={task.id}
-                className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 p-3.5"
-              >
+              <div key={task.id} className={cn(DETAIL_INSET_CLASS, "p-3.5")}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-stone-700">
+                      <span className="workspace-status workspace-tone-neutral bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-stone-700">
                         #{task.id}
                       </span>
-                      <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
+                      <span className="workspace-status workspace-tone-neutral bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
                         {task.department}
                       </span>
-                      <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
+                      <span className="workspace-status workspace-tone-neutral bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
                         v{task.version}
                       </span>
-                      <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-800">
+                      <span
+                        className={workspaceStatusClass(
+                          workPackageTone(task.status),
+                          "px-2.5 py-1 text-[11px] font-medium"
+                        )}
+                      >
                         {task.status}
                       </span>
                     </div>
@@ -731,18 +766,28 @@ export function TaskDetailView({
                       )}
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
+                      <span
+                        className={workspaceStatusClass(
+                          "info",
+                          "px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em]"
+                        )}
+                      >
                         {copy.tasks.detailView.progressLabel(progressValue)}
                       </span>
-                      <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
+                      <span className="workspace-status workspace-tone-neutral bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
                         {copy.tasks.detailView.scoreLabel} {scoreValue}
                       </span>
-                      <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
+                      <span className="workspace-status workspace-tone-neutral bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-600">
                         {reviewState}
                       </span>
                     </div>
                   </div>
-                  <div className="min-w-[184px] max-w-[220px] flex-1 rounded-[16px] border border-stone-200/80 bg-white/80 px-3 py-2.5">
+                  <div
+                    className={cn(
+                      DETAIL_INSET_SOFT_CLASS,
+                      "min-w-[184px] max-w-[220px] flex-1 px-3 py-2.5"
+                    )}
+                  >
                     <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">
                       <span>{copy.tasks.detailView.executionLane}</span>
                       <span>{progressValue}%</span>
@@ -765,7 +810,7 @@ export function TaskDetailView({
                 </div>
 
                 <div className="mt-3 grid gap-2.5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.05fr)_minmax(0,0.95fr)]">
-                  <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                  <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                     <ExcerptBlock
                       title={copy.tasks.detailView.workBriefTitle}
                       description={`Full work brief for task #${task.id}.`}
@@ -775,7 +820,7 @@ export function TaskDetailView({
                       maxLength={104}
                     />
                   </div>
-                  <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                  <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                     <ExcerptBlock
                       title={copy.tasks.detailView.deliverablePreviewTitle}
                       description={`Full deliverable payload for task #${task.id}.`}
@@ -784,7 +829,7 @@ export function TaskDetailView({
                     />
                   </div>
                   <div className="grid gap-2.5">
-                    <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                    <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                       <ExcerptBlock
                         title={copy.tasks.detailView.managerSignalTitle}
                         description={`Manager review notes for task #${task.id}.`}
@@ -792,7 +837,7 @@ export function TaskDetailView({
                         maxLength={86}
                       />
                     </div>
-                    <div className="rounded-[18px] border border-stone-200/80 bg-white/84 p-3">
+                    <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                       <ExcerptBlock
                         title={copy.tasks.detailView.auditSignalTitle}
                         description={`Audit notes for task #${task.id}.`}
@@ -817,7 +862,7 @@ export function TaskDetailView({
   );
 
   const timelinePanel = (
-    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+    <Card className={DETAIL_CARD_CLASS}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <TimerReset className="size-4 text-sky-600" />
@@ -831,14 +876,14 @@ export function TaskDetailView({
         {detail.timeline.length > 0 ? (
           detail.timeline.map(event => (
             <div key={event.id} className="relative pl-6">
-              <div className="absolute left-[6px] top-0 h-full w-px bg-stone-200" />
+              <div className="absolute left-[6px] top-0 h-full w-px bg-[rgba(174,146,120,0.28)]" />
               <div
                 className={cn(
                   "absolute left-0 top-1.5 size-[13px] rounded-full border shadow-sm",
                   timelineTone(event.level)
                 )}
               />
-              <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/70 px-3.5 py-2.5">
+              <div className={cn(DETAIL_INSET_CLASS, "px-3.5 py-2.5")}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -847,14 +892,8 @@ export function TaskDetailView({
                       </div>
                       <span
                         className={cn(
-                          "rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
-                          event.level === "error"
-                            ? "border-rose-200 bg-rose-50 text-rose-700"
-                            : event.level === "warn"
-                              ? "border-amber-200 bg-amber-50 text-amber-700"
-                              : event.level === "success"
-                                ? "border-teal-200 bg-teal-50 text-teal-700"
-                                : "border-sky-200 bg-sky-50 text-sky-700"
+                          "workspace-status px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                          timelineTone(event.level)
                         )}
                       >
                         {event.level}
@@ -864,11 +903,11 @@ export function TaskDetailView({
                       {compactText(event.description, 96)}
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                      <span className="workspace-status workspace-tone-neutral bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
                         {formatTaskDate(event.time, locale)}
                       </span>
                       {event.actor ? (
-                        <span className="rounded-full border border-stone-200 bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                        <span className="workspace-status workspace-tone-neutral bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
                           {event.actor}
                         </span>
                       ) : null}
@@ -902,7 +941,7 @@ export function TaskDetailView({
   );
 
   const decisionPanel = (
-    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+    <Card className={DETAIL_CARD_CLASS}>
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <Sparkles className="size-4 text-teal-600" />
@@ -916,7 +955,10 @@ export function TaskDetailView({
         <Textarea
           value={decisionNote}
           onChange={event => onDecisionNoteChange(event.target.value)}
-          className="min-h-20 rounded-[18px] border-stone-200 bg-stone-50/80 text-sm leading-6 text-stone-700"
+          className={cn(
+            DETAIL_TEXTAREA_CLASS,
+            "min-h-20 rounded-[18px] leading-6"
+          )}
           placeholder={decisionTextareaPlaceholder}
           disabled={!detail.decisionAllowsFreeText}
         />
@@ -950,7 +992,7 @@ export function TaskDetailView({
             ))}
           </div>
         ) : (
-          <div className="rounded-[20px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-4 text-sm leading-6 text-stone-500">
+          <div className="rounded-[20px] border border-dashed border-[rgba(174,146,120,0.34)] bg-[rgba(255,255,255,0.56)] px-4 py-4 text-sm leading-6 text-stone-500">
             {terminalMission
               ? copy.tasks.detailView.decisionTerminal
               : copy.tasks.detailView.decisionIdle}
@@ -961,7 +1003,7 @@ export function TaskDetailView({
   );
 
   const runtimeSnapshotPanel = (
-    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+    <Card className={DETAIL_CARD_CLASS}>
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <Bot className="size-4 text-sky-600" />
@@ -1006,7 +1048,7 @@ export function TaskDetailView({
   );
 
   const artifactsPanel = (
-    <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+    <Card className={DETAIL_CARD_CLASS}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-stone-900">
           <FileText className="size-4 text-teal-600" />
@@ -1045,10 +1087,15 @@ export function TaskDetailView({
 
   const failurePanel =
     detail.failureReasons.length > 0 ? (
-      <Card className="rounded-[28px] border-rose-200/80 bg-rose-50/70 shadow-[0_24px_60px_rgba(175,69,95,0.08)]">
+      <Card
+        className={cn(
+          DETAIL_CARD_STRONG_CLASS,
+          "border-[rgba(180,93,77,0.24)] bg-[linear-gradient(180deg,rgba(255,250,249,0.96),rgba(249,233,230,0.92))]"
+        )}
+      >
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-rose-900">
-            <AlertTriangle className="size-4 text-rose-600" />
+          <CardTitle className="flex items-center gap-2 text-[var(--workspace-text-strong)]">
+            <AlertTriangle className="size-4 text-[var(--workspace-danger)]" />
             {copy.tasks.detailView.failureTitle}
           </CardTitle>
         </CardHeader>
@@ -1056,14 +1103,14 @@ export function TaskDetailView({
           {detail.failureReasons.map(reason => (
             <div
               key={reason}
-              className="rounded-2xl border border-rose-200/80 bg-white/75 px-3 py-3"
+              className="workspace-callout workspace-tone-danger rounded-2xl bg-white/70 px-3 py-3"
             >
               <ExcerptBlock
                 title={copy.tasks.detailView.failureSignalTitle}
                 description={copy.tasks.detailView.failureSignalDescription}
                 text={reason}
                 maxLength={160}
-                className="text-rose-900"
+                className="text-[var(--workspace-text-strong)]"
               />
             </div>
           ))}
@@ -1104,8 +1151,13 @@ export function TaskDetailView({
         defaultValue="overview"
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
-        <div className="shrink-0 rounded-[24px] border border-stone-200/80 bg-white/78 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]">
-          <TabsList className="grid h-auto w-full grid-cols-5 rounded-[18px] bg-stone-100/80 p-1">
+        <div
+          className={cn(
+            DETAIL_CARD_CLASS,
+            "shrink-0 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]"
+          )}
+        >
+          <TabsList className="grid h-auto w-full grid-cols-5 rounded-[18px] bg-[rgba(255,255,255,0.58)] p-1">
             <TabsTrigger className="rounded-[14px]" value="overview">
               {copy.tasks.detailView.overviewTab}
             </TabsTrigger>
@@ -1137,7 +1189,7 @@ export function TaskDetailView({
                 {sourceDirectivePanel}
                 {runtimeSnapshotPanel}
                 {/* RAG Augmentation Info */}
-                <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+                <Card className={DETAIL_CARD_CLASS}>
                   <CardHeader className="space-y-1 pb-3">
                     <CardTitle className="flex items-center gap-2 text-stone-900">
                       <Sparkles className="size-4 text-stone-600" />
@@ -1168,7 +1220,7 @@ export function TaskDetailView({
         >
           <DetailTabViewport isDesktop={isDesktop}>
             {detail.securitySummary && (
-              <Card className="mb-4 rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+              <Card className={cn(DETAIL_CARD_CLASS, "mb-4")}>
                 <CardHeader className="space-y-1 pb-3">
                   <CardTitle className="flex items-center gap-2 text-stone-900">
                     <Shield className="size-4 text-stone-600" />
@@ -1180,10 +1232,10 @@ export function TaskDetailView({
                       className={cn(
                         "rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
                         detail.securitySummary.level === "strict"
-                          ? "border border-rose-200 bg-rose-50 text-rose-700"
+                          ? workspaceToneClass("danger")
                           : detail.securitySummary.level === "balanced"
-                            ? "border border-amber-200 bg-amber-50 text-amber-700"
-                            : "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                            ? workspaceToneClass("warning")
+                            : workspaceToneClass("success")
                       )}
                     >
                       {detail.securitySummary.level}
@@ -1223,7 +1275,7 @@ export function TaskDetailView({
               </Card>
             )}
             {detail.executor && (
-              <Card className="mb-4 rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+              <Card className={cn(DETAIL_CARD_CLASS, "mb-4")}>
                 <CardHeader className="space-y-1 pb-3">
                   <CardTitle className="flex items-center gap-2 text-stone-900">
                     <Bot className="size-4 text-sky-600" />
@@ -1264,7 +1316,7 @@ export function TaskDetailView({
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
           <DetailTabViewport isDesktop={isDesktop}>
-            <Card className="rounded-[28px] border-stone-200/80 bg-white/90 shadow-[0_24px_60px_rgba(112,84,51,0.08)]">
+            <Card className={DETAIL_CARD_CLASS}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-stone-900">
                   <History className="size-4 text-violet-600" />

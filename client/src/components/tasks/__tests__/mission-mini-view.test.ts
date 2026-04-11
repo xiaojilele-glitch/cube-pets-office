@@ -11,11 +11,16 @@ import { describe, it, expect, vi } from "vitest";
 
 import type { MissionTaskSummary } from "@/lib/tasks-store";
 import { truncateTitle } from "@/components/tasks/mission-island-helpers";
-import { missionStatusLabel, missionStatusTone } from "@/components/tasks/task-helpers";
+import {
+  missionStatusLabel,
+  missionStatusTone,
+} from "@/components/tasks/task-helpers";
 
 /* ─── Helpers ─── */
 
-function makeMission(overrides?: Partial<MissionTaskSummary>): MissionTaskSummary {
+function makeMission(
+  overrides?: Partial<MissionTaskSummary>
+): MissionTaskSummary {
   return {
     id: "m-1",
     title: "Test Mission Title",
@@ -66,7 +71,8 @@ describe("MissionMiniView idle state", () => {
 
 describe("MissionMiniView active state", () => {
   it("title is truncated to 40 characters", () => {
-    const longTitle = "This is a very long mission title that exceeds forty characters limit";
+    const longTitle =
+      "This is a very long mission title that exceeds forty characters limit";
     const mission = makeMission({ title: longTitle });
     const displayTitle = truncateTitle(mission.title || "未命名任务", 40);
 
@@ -97,24 +103,26 @@ describe("MissionMiniView active state", () => {
 
   it("phase label uses currentStageLabel when available", () => {
     const mission = makeMission({ currentStageLabel: "执行中" });
-    const phaseLabel = mission.currentStageLabel ?? missionStatusLabel(mission.status);
+    const phaseLabel =
+      mission.currentStageLabel ?? missionStatusLabel(mission.status);
 
     expect(phaseLabel).toBe("执行中");
   });
 
   it("phase label falls back to status label when currentStageLabel is null", () => {
     const mission = makeMission({ currentStageLabel: null, status: "running" });
-    const phaseLabel = mission.currentStageLabel ?? missionStatusLabel(mission.status);
+    const phaseLabel =
+      mission.currentStageLabel ?? missionStatusLabel(mission.status);
 
     expect(phaseLabel).toBe("Running");
   });
 
   it("status tone returns correct class for each status", () => {
-    expect(missionStatusTone("running")).toContain("amber");
-    expect(missionStatusTone("done")).toContain("emerald");
-    expect(missionStatusTone("failed")).toContain("rose");
-    expect(missionStatusTone("waiting")).toContain("sky");
-    expect(missionStatusTone("queued")).toContain("stone");
+    expect(missionStatusTone("running")).toContain("workspace-tone-warning");
+    expect(missionStatusTone("done")).toContain("workspace-tone-success");
+    expect(missionStatusTone("failed")).toContain("workspace-tone-danger");
+    expect(missionStatusTone("waiting")).toContain("workspace-tone-info");
+    expect(missionStatusTone("queued")).toContain("workspace-tone-neutral");
   });
 
   it("agent emoji count is capped at 3", () => {
@@ -126,7 +134,8 @@ describe("MissionMiniView active state", () => {
 
   it("overflow agent count is shown when > 3", () => {
     const mission = makeMission({ activeAgentCount: 5 });
-    const overflow = mission.activeAgentCount > 3 ? mission.activeAgentCount - 3 : 0;
+    const overflow =
+      mission.activeAgentCount > 3 ? mission.activeAgentCount - 3 : 0;
 
     expect(overflow).toBe(2);
   });

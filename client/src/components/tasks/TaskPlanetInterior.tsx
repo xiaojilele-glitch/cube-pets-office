@@ -19,6 +19,15 @@ const STAGE_COLORS: Record<string, string> = {
   failed: "rgba(244, 63, 94, 0.95)",
 };
 
+const PLANET_PANEL_CLASS =
+  "workspace-panel-inset rounded-[24px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.72)] p-4 shadow-sm";
+const PLANET_TILE_CLASS =
+  "workspace-panel-inset rounded-[18px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)] px-3 py-2.5";
+const PLANET_LIST_CARD_CLASS =
+  "workspace-panel-inset rounded-[16px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)] px-3 py-2.5";
+const PLANET_PILL_CLASS =
+  "workspace-status workspace-tone-neutral bg-white/75 px-2.5 py-1 text-[11px] text-stone-600";
+
 function orbitStyle(angle: number, radius: number): CSSProperties {
   const radians = ((angle - 90) * Math.PI) / 180;
   const x = Math.cos(radians) * radius;
@@ -51,12 +60,12 @@ export function TaskPlanetInterior({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-[28px] border border-stone-200/80 bg-[radial-gradient(circle_at_top_left,rgba(252,211,77,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#fffdf7,#f6efe3)] p-4 shadow-[0_24px_70px_rgba(120,91,54,0.12)]",
+        "workspace-panel workspace-panel-strong overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(252,211,77,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#fffdf7,#f6efe3)] p-4 shadow-[0_24px_70px_rgba(120,91,54,0.12)]",
         className
       )}
     >
       <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1.12fr)_320px]">
-        <div className="self-start rounded-[24px] border border-white/75 bg-white/70 p-4 shadow-sm">
+        <div className={cn("self-start", PLANET_PANEL_CLASS)}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
@@ -67,12 +76,12 @@ export function TaskPlanetInterior({
               </div>
             </div>
             <div className="flex flex-wrap gap-2 text-[11px] text-stone-600">
-              <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1">
+              <span className={PLANET_PILL_CLASS}>
                 {locale === "zh-CN"
                   ? `${detail.stages.length} 个阶段`
                   : `${detail.stages.length} stages`}
               </span>
-              <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1">
+              <span className={PLANET_PILL_CLASS}>
                 {locale === "zh-CN"
                   ? `${detail.agents.length} 名成员`
                   : `${detail.agents.length} crew`}
@@ -93,7 +102,7 @@ export function TaskPlanetInterior({
               <div className="absolute inset-[28%] rounded-full border border-white/70 bg-[radial-gradient(circle,rgba(255,250,244,0.96),rgba(246,236,221,0.94))] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_32px_rgba(124,95,62,0.12)]" />
 
               <div className="absolute inset-[34%] flex items-center justify-center">
-                <div className="rounded-[24px] border border-stone-200/90 bg-white/82 px-5 py-4 text-center shadow-[0_14px_36px_rgba(107,77,44,0.12)] backdrop-blur">
+                <div className="workspace-panel-inset rounded-[24px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.82)] px-5 py-4 text-center shadow-[0_14px_36px_rgba(107,77,44,0.12)] backdrop-blur">
                   <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
                     {locale === "zh-CN" ? "任务核心" : "Mission Core"}
                   </div>
@@ -120,7 +129,7 @@ export function TaskPlanetInterior({
                 >
                   <div
                     className={cn(
-                      "min-w-[82px] rounded-full px-2.5 py-1.5 text-center text-[10px] font-medium shadow-sm backdrop-blur",
+                      "workspace-status min-w-[82px] px-2.5 py-1.5 text-center text-[10px] font-medium shadow-sm backdrop-blur",
                       stageTone(stage.status)
                     )}
                   >
@@ -153,7 +162,7 @@ export function TaskPlanetInterior({
           </div>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-2.5">
+            <div className={PLANET_TILE_CLASS}>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
                 {locale === "zh-CN" ? "当前焦点" : "Focus"}
               </div>
@@ -162,7 +171,7 @@ export function TaskPlanetInterior({
                   (locale === "zh-CN" ? "当前无活跃阶段" : "No active stage")}
               </div>
             </div>
-            <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-2.5">
+            <div className={PLANET_TILE_CLASS}>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
                 {locale === "zh-CN" ? "等待原因" : "Waiting"}
               </div>
@@ -176,7 +185,7 @@ export function TaskPlanetInterior({
                 )}
               </div>
             </div>
-            <div className="rounded-[18px] border border-stone-200/80 bg-stone-50/80 px-3 py-2.5">
+            <div className={PLANET_TILE_CLASS}>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
                 {locale === "zh-CN" ? "最新信号" : "Signal"}
               </div>
@@ -194,12 +203,12 @@ export function TaskPlanetInterior({
         </div>
 
         <div className="grid content-start gap-3">
-          <div className="rounded-[24px] border border-stone-200/80 bg-white/75 p-4 shadow-sm">
+          <div className={PLANET_PANEL_CLASS}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-stone-800">
                 {locale === "zh-CN" ? "执行阶段" : "Orbit Stages"}
               </div>
-              <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
+              <span className={PLANET_PILL_CLASS}>
                 {locale === "zh-CN"
                   ? `${detail.stages.length} 个节点`
                   : `${detail.stages.length} nodes`}
@@ -207,10 +216,7 @@ export function TaskPlanetInterior({
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {detail.stages.map(stage => (
-                <div
-                  key={stage.key}
-                  className="rounded-[16px] border border-stone-200/80 bg-stone-50/85 px-3 py-2.5"
-                >
+                <div key={stage.key} className={PLANET_LIST_CARD_CLASS}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-stone-800">
@@ -225,7 +231,7 @@ export function TaskPlanetInterior({
                     </div>
                     <span
                       className={cn(
-                        "shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold",
+                        "workspace-status shrink-0 px-2 py-1 text-[10px] font-semibold",
                         stageTone(stage.status)
                       )}
                     >
@@ -237,12 +243,12 @@ export function TaskPlanetInterior({
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-stone-200/80 bg-white/75 p-4 shadow-sm">
+          <div className={PLANET_PANEL_CLASS}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-stone-800">
                 {locale === "zh-CN" ? "执行成员" : "Agent Crew"}
               </div>
-              <span className="rounded-full border border-stone-200 bg-white/80 px-2.5 py-1 text-[11px] text-stone-600">
+              <span className={PLANET_PILL_CLASS}>
                 {locale === "zh-CN"
                   ? `${detail.agents.length} 名成员`
                   : `${detail.agents.length} members`}
@@ -250,10 +256,7 @@ export function TaskPlanetInterior({
             </div>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {detail.agents.map(agent => (
-                <div
-                  key={agent.id}
-                  className="rounded-[16px] border border-stone-200/80 bg-stone-50/85 px-3 py-2.5"
-                >
+                <div key={agent.id} className={PLANET_LIST_CARD_CLASS}>
                   <div className="flex items-start gap-2.5">
                     <div
                       className={cn(
@@ -275,7 +278,7 @@ export function TaskPlanetInterior({
                         </div>
                         <span
                           className={cn(
-                            "shrink-0 rounded-full px-2 py-1 text-[10px] font-medium",
+                            "workspace-status shrink-0 px-2 py-1 text-[10px] font-medium",
                             agentStatusTone(agent.status)
                           )}
                         >
@@ -283,11 +286,11 @@ export function TaskPlanetInterior({
                         </span>
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        <span className="rounded-full border border-stone-200 bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                        <span className="workspace-status workspace-tone-neutral bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
                           {compactText(agent.stageLabel, 16)}
                         </span>
                         {typeof agent.progress === "number" ? (
-                          <span className="rounded-full border border-stone-200 bg-white/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                          <span className="workspace-status workspace-tone-neutral bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-500">
                             {agent.progress}%
                           </span>
                         ) : null}
