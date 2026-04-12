@@ -3,13 +3,17 @@ import { X } from "lucide-react";
 
 import type { DataLineageNode } from "@shared/lineage/contracts.js";
 
+import { useI18n } from "@/i18n";
 import { useLineageStore } from "@/lib/lineage-store";
 
+import {
+  formatLineageBoolean,
+  formatLineageDuration,
+  formatLineageSize,
+  formatLineageTimestamp,
+  getLineageCopy,
+} from "./lineage-copy";
 import { getLineageTypeMeta } from "./lineage-theme";
-
-function formatTimestamp(timestamp: number) {
-  return new Date(timestamp).toLocaleString();
-}
 
 function DetailField({
   label,
@@ -82,6 +86,8 @@ function LinkedIds({
 }
 
 export default function LineageNodeDetail() {
+  const { locale } = useI18n();
+  const copy = getLineageCopy(locale);
   const graph = useLineageStore(state => state.graph);
   const selectedNodeId = useLineageStore(state => state.selectedNodeId);
   const selectNode = useLineageStore(state => state.selectNode);
@@ -94,12 +100,12 @@ export default function LineageNodeDetail() {
   if (!node) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[var(--workspace-text-subtle)]">
-        Select a node to inspect its lineage context.
+        {copy.detail.noSelection}
       </div>
     );
   }
 
-  const meta = getLineageTypeMeta(node.type);
+  const meta = getLineageTypeMeta(node.type, locale);
 
   return (
     <div className="h-full overflow-y-auto p-4">
@@ -128,22 +134,22 @@ export default function LineageNodeDetail() {
           type="button"
           className="workspace-control inline-flex size-9 items-center justify-center rounded-2xl"
           onClick={() => selectNode(null)}
-          aria-label="Close details"
+          aria-label={copy.detail.closeDetails}
         >
           <X className="size-4" />
         </button>
       </div>
 
       <div className="mt-4 space-y-4">
-        <DetailSection title="General">
-          <DetailField label="Type" value={meta.label} />
+        <DetailSection title={copy.detail.sections.general}>
+          <DetailField label={copy.detail.fields.type} value={meta.label} />
           <DetailField
-            label="Timestamp"
-            value={formatTimestamp(node.timestamp)}
+            label={copy.detail.fields.timestamp}
+            value={formatLineageTimestamp(node.timestamp, locale)}
           />
           {node.complianceTags && node.complianceTags.length > 0 ? (
             <DetailField
-              label="Compliance Tags"
+              label={copy.detail.fields.complianceTags}
               value={
                 <span className="flex flex-wrap gap-2">
                   {node.complianceTags.map(tag => (
@@ -162,27 +168,57 @@ export default function LineageNodeDetail() {
         </DetailSection>
 
         {node.context ? (
-          <DetailSection title="Context">
-            <DetailField label="Session ID" value={node.context.sessionId} />
-            <DetailField label="User ID" value={node.context.userId} />
-            <DetailField label="Request ID" value={node.context.requestId} />
-            <DetailField label="Environment" value={node.context.environment} />
-            <DetailField label="Mission ID" value={node.context.missionId} />
-            <DetailField label="Workflow ID" value={node.context.workflowId} />
+          <DetailSection title={copy.detail.sections.context}>
+            <DetailField
+              label={copy.detail.fields.sessionId}
+              value={node.context.sessionId}
+            />
+            <DetailField
+              label={copy.detail.fields.userId}
+              value={node.context.userId}
+            />
+            <DetailField
+              label={copy.detail.fields.requestId}
+              value={node.context.requestId}
+            />
+            <DetailField
+              label={copy.detail.fields.environment}
+              value={node.context.environment}
+            />
+            <DetailField
+              label={copy.detail.fields.missionId}
+              value={node.context.missionId}
+            />
+            <DetailField
+              label={copy.detail.fields.workflowId}
+              value={node.context.workflowId}
+            />
           </DetailSection>
         ) : null}
 
         {node.type === "source" ? (
-          <DetailSection title="Source">
-            <DetailField label="Source ID" value={node.sourceId} />
-            <DetailField label="Source Name" value={node.sourceName} />
-            <DetailField label="Query" value={node.queryText} />
-            <DetailField label="Result Hash" value={node.resultHash} />
+          <DetailSection title={copy.detail.sections.source}>
             <DetailField
-              label="Result Size"
+              label={copy.detail.fields.sourceId}
+              value={node.sourceId}
+            />
+            <DetailField
+              label={copy.detail.fields.sourceName}
+              value={node.sourceName}
+            />
+            <DetailField
+              label={copy.detail.fields.query}
+              value={node.queryText}
+            />
+            <DetailField
+              label={copy.detail.fields.resultHash}
+              value={node.resultHash}
+            />
+            <DetailField
+              label={copy.detail.fields.resultSize}
               value={
                 node.resultSize !== undefined
-                  ? `${node.resultSize} bytes`
+                  ? formatLineageSize(node.resultSize, locale)
                   : undefined
               }
             />
@@ -190,29 +226,38 @@ export default function LineageNodeDetail() {
         ) : null}
 
         {node.type === "transformation" ? (
-          <DetailSection title="Transformation">
-            <DetailField label="Agent ID" value={node.agentId} />
-            <DetailField label="Operation" value={node.operation} />
-            <DetailField label="Code Location" value={node.codeLocation} />
+          <DetailSection title={copy.detail.sections.transformation}>
             <DetailField
-              label="Data Changed"
+              label={copy.detail.fields.agentId}
+              value={node.agentId}
+            />
+            <DetailField
+              label={copy.detail.fields.operation}
+              value={node.operation}
+            />
+            <DetailField
+              label={copy.detail.fields.codeLocation}
+              value={node.codeLocation}
+            />
+            <DetailField
+              label={copy.detail.fields.dataChanged}
               value={
                 node.dataChanged !== undefined
-                  ? String(node.dataChanged)
+                  ? formatLineageBoolean(node.dataChanged, locale)
                   : undefined
               }
             />
             <DetailField
-              label="Execution Time"
+              label={copy.detail.fields.executionTime}
               value={
                 node.executionTimeMs !== undefined
-                  ? `${node.executionTimeMs} ms`
+                  ? formatLineageDuration(node.executionTimeMs, locale)
                   : undefined
               }
             />
             {node.parameters ? (
               <DetailField
-                label="Parameters"
+                label={copy.detail.fields.parameters}
                 value={
                   <pre className="overflow-x-auto rounded-[16px] bg-[#f9f1e8] p-3 text-[11px] leading-5 text-[var(--workspace-text)]">
                     {JSON.stringify(node.parameters, null, 2)}
@@ -224,41 +269,53 @@ export default function LineageNodeDetail() {
         ) : null}
 
         {node.type === "decision" ? (
-          <DetailSection title="Decision">
-            <DetailField label="Decision ID" value={node.decisionId} />
-            <DetailField label="Logic" value={node.decisionLogic} />
-            <DetailField label="Result" value={node.result} />
+          <DetailSection title={copy.detail.sections.decision}>
             <DetailField
-              label="Confidence"
+              label={copy.detail.fields.decisionId}
+              value={node.decisionId}
+            />
+            <DetailField
+              label={copy.detail.fields.logic}
+              value={node.decisionLogic}
+            />
+            <DetailField
+              label={copy.detail.fields.result}
+              value={node.result}
+            />
+            <DetailField
+              label={copy.detail.fields.confidence}
               value={
                 node.confidence !== undefined
                   ? `${(node.confidence * 100).toFixed(1)}%`
                   : undefined
               }
             />
-            <DetailField label="Model Version" value={node.modelVersion} />
+            <DetailField
+              label={copy.detail.fields.modelVersion}
+              value={node.modelVersion}
+            />
           </DetailSection>
         ) : null}
 
-        <DetailSection title="Links">
+        <DetailSection title={copy.detail.sections.links}>
           <LinkedIds
-            label="Upstream"
+            label={copy.detail.fields.upstream}
             ids={node.upstream ?? []}
             onSelect={selectNode}
           />
           <LinkedIds
-            label="Downstream"
+            label={copy.detail.fields.downstream}
             ids={node.downstream ?? []}
             onSelect={selectNode}
           />
           <LinkedIds
-            label="Input Lineage IDs"
+            label={copy.detail.fields.inputLineageIds}
             ids={node.inputLineageIds ?? []}
             onSelect={selectNode}
           />
           {node.outputLineageId ? (
             <DetailField
-              label="Output Lineage ID"
+              label={copy.detail.fields.outputLineageId}
               value={
                 <button
                   type="button"
@@ -273,7 +330,7 @@ export default function LineageNodeDetail() {
         </DetailSection>
 
         {node.metadata && Object.keys(node.metadata).length > 0 ? (
-          <DetailSection title="Metadata">
+          <DetailSection title={copy.detail.sections.metadata}>
             <pre className="overflow-x-auto rounded-[16px] bg-[#f9f1e8] p-3 text-[11px] leading-5 text-[var(--workspace-text)]">
               {JSON.stringify(node.metadata, null, 2)}
             </pre>

@@ -12,6 +12,12 @@ import LineageExportButton from "@/components/lineage/LineageExportButton";
 import LineageHeatmap from "@/components/lineage/LineageHeatmap";
 import LineageNodeDetail from "@/components/lineage/LineageNodeDetail";
 import LineageTimeline from "@/components/lineage/LineageTimeline";
+import {
+  getLineageCopy,
+  getLineageNodeTypeOptions,
+  getLineageTabs,
+  type LineageViewTab,
+} from "@/components/lineage/lineage-copy";
 import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
 import { RetryInlineNotice } from "@/components/tasks/RetryInlineNotice";
 import { Button } from "@/components/ui/button";
@@ -19,39 +25,17 @@ import {
   WorkspacePageShell,
   WorkspacePanel,
 } from "@/components/workspace/WorkspacePageShell";
+import { useI18n } from "@/i18n";
 import { useLineageStore } from "@/lib/lineage-store";
 import { cn } from "@/lib/utils";
 import type { LineageNodeType } from "@shared/lineage/contracts.js";
 
-type ViewTab = "dag" | "timeline" | "heatmap";
-
-const TABS: Array<{ key: ViewTab; label: string; description: string }> = [
-  {
-    key: "dag",
-    label: "DAG",
-    description: "Explore upstream and downstream dependencies",
-  },
-  {
-    key: "timeline",
-    label: "Timeline",
-    description: "Follow events in execution order",
-  },
-  {
-    key: "heatmap",
-    label: "Heatmap",
-    description: "Spot dense sources and active agents",
-  },
-];
-
-const NODE_TYPES: Array<{ value: LineageNodeType | ""; label: string }> = [
-  { value: "", label: "All Types" },
-  { value: "source", label: "Source" },
-  { value: "transformation", label: "Transformation" },
-  { value: "decision", label: "Decision" },
-];
-
 export default function LineagePage() {
-  const [activeTab, setActiveTab] = useState<ViewTab>("dag");
+  const { locale } = useI18n();
+  const copy = getLineageCopy(locale);
+  const tabs = getLineageTabs(locale);
+  const nodeTypeOptions = getLineageNodeTypeOptions(locale);
+  const [activeTab, setActiveTab] = useState<LineageViewTab>("dag");
   const dagCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const graph = useLineageStore(state => state.graph);
@@ -94,13 +78,13 @@ export default function LineagePage() {
   const isEmpty =
     hasLoaded && !loading && (graph?.nodes.length ?? 0) === 0 && !error;
 
-  const activeTabMeta = TABS.find(tab => tab.key === activeTab) ?? TABS[0];
+  const activeTabMeta = tabs.find(tab => tab.key === activeTab) ?? tabs[0];
 
   const toolbar = (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-wrap gap-2">
-          {TABS.map(tab => (
+          {tabs.map(tab => (
             <button
               key={tab.key}
               type="button"
@@ -119,7 +103,7 @@ export default function LineagePage() {
             onChange={handleTypeFilter}
             className="workspace-control h-11 rounded-full px-4 text-sm"
           >
-            {NODE_TYPES.map(option => (
+            {nodeTypeOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -128,7 +112,7 @@ export default function LineagePage() {
 
           <input
             type="text"
-            placeholder="Agent ID"
+            placeholder={copy.page.agentIdPlaceholder}
             value={filters.agentId ?? ""}
             onChange={handleAgentFilter}
             className="workspace-control h-11 rounded-full px-4 text-sm placeholder:text-[var(--workspace-text-subtle)]"
@@ -136,7 +120,7 @@ export default function LineagePage() {
 
           <input
             type="text"
-            placeholder="Search node or source"
+            placeholder={copy.page.searchPlaceholder}
             value={filters.searchText ?? ""}
             onChange={handleSearchFilter}
             className="workspace-control h-11 rounded-full px-4 text-sm placeholder:text-[var(--workspace-text-subtle)] sm:col-span-2 xl:min-w-[260px]"
@@ -154,13 +138,13 @@ export default function LineagePage() {
             data-tone={loading ? "info" : error ? "warning" : "success"}
           >
             {loading
-              ? "Refreshing graph"
+              ? copy.page.refreshingStatus
               : error
-                ? "Fallback state"
-                : "Recent lineage ready"}
+                ? copy.page.fallbackStatus
+                : copy.page.readyStatus}
           </span>
           {filters.agentId || filters.nodeType || filters.searchText ? (
-            <span className="workspace-badge">Filtered view</span>
+            <span className="workspace-badge">{copy.page.filteredView}</span>
           ) : null}
         </div>
       </div>
@@ -178,25 +162,25 @@ export default function LineagePage() {
         onClick={() => void retryLastRequest()}
       >
         <RefreshCw className="size-4" />
-        Reload
+        {copy.page.reload}
       </Button>
     </>
   );
 
   return (
     <WorkspacePageShell
-      eyebrow="More / Governance"
-      title="Data Lineage"
-      description="Bring the lineage graph, execution trace, and node context into the same warm workspace language as the rest of the product, without losing the tooling feel."
+      eyebrow={copy.page.eyebrow}
+      title={copy.page.title}
+      description={copy.page.description}
       actions={actions}
       toolbar={toolbar}
     >
       {error && graph ? (
         <WorkspacePanel className="p-3">
           <RetryInlineNotice
-            title="Lineage refresh failed"
+            title={copy.page.refreshFailed}
             description={error.message}
-            actionLabel="Retry"
+            actionLabel={copy.page.retry}
             onRetry={() => void retryLastRequest()}
           />
         </WorkspacePanel>
@@ -218,9 +202,9 @@ export default function LineagePage() {
                 <EmptyHintBlock
                   tone="info"
                   icon={<DatabaseZap className="size-5" />}
-                  title="Loading lineage graph"
-                  description="Fetching recent lineage nodes so the graph, timeline, and heatmap can render a meaningful view."
-                  hint="If the backend is still starting up, this can take a moment."
+                  title={copy.page.loadingTitle}
+                  description={copy.page.loadingDescription}
+                  hint={copy.page.loadingHint}
                 />
               </div>
             ) : null}
@@ -232,20 +216,20 @@ export default function LineagePage() {
                   icon={<TriangleAlert className="size-5" />}
                   title={
                     error.kind === "demo"
-                      ? "Lineage is running in preview mode"
+                      ? copy.page.previewModeTitle
                       : error.kind === "offline"
-                        ? "Lineage service is unavailable"
-                        : "Lineage request failed"
+                        ? copy.page.serviceUnavailableTitle
+                        : copy.page.requestFailedTitle
                   }
                   description={
                     error.kind === "demo"
-                      ? "The frontend received a fallback page instead of live lineage JSON, so the page stayed in a safe preview state."
+                      ? copy.page.previewModeDescription
                       : error.kind === "offline"
-                        ? "The backend could not be reached, so the lineage graph cannot load yet."
-                        : "The lineage API returned an unexpected result, and the raw parser error was hidden from the UI."
+                        ? copy.page.serviceUnavailableDescription
+                        : copy.page.requestFailedDescription
                   }
                   hint={error.message}
-                  actionLabel="Retry"
+                  actionLabel={copy.page.retry}
                   onAction={() => void retryLastRequest()}
                 />
               </div>
@@ -256,18 +240,18 @@ export default function LineagePage() {
                 <EmptyHintBlock
                   tone="info"
                   icon={<SearchCode className="size-5" />}
-                  title="No lineage nodes matched"
+                  title={copy.page.emptyTitle}
                   description={
                     filters.agentId || filters.nodeType || filters.searchText
-                      ? "The current filters did not match any recent lineage node."
-                      : "No recent lineage node has been recorded yet, so the graph is still empty."
+                      ? copy.page.emptyFilteredDescription
+                      : copy.page.emptyDefaultDescription
                   }
                   hint={
                     filters.agentId || filters.nodeType || filters.searchText
-                      ? "Clear or relax the filters, then retry to load a broader graph."
-                      : "Run a workflow or ingest data through the backend, then come back to explore the resulting lineage."
+                      ? copy.page.emptyFilteredHint
+                      : copy.page.emptyDefaultHint
                   }
-                  actionLabel="Reload"
+                  actionLabel={copy.page.reload}
                   onAction={() => void retryLastRequest()}
                 />
               </div>
@@ -278,10 +262,10 @@ export default function LineagePage() {
                 <div className="flex items-center justify-between border-b border-[var(--workspace-panel-border)] px-4 py-3">
                   <div className="flex items-center gap-2 text-sm font-semibold text-[var(--workspace-text)]">
                     <GitBranch className="size-4 text-[var(--studio-accent-strong)]" />
-                    {activeTabMeta.label} View
+                    {activeTabMeta.label} {copy.page.viewSuffix}
                   </div>
                   <div className="font-data text-xs text-[var(--workspace-text-subtle)]">
-                    {graph.nodes.length} nodes
+                    {copy.page.nodesCount(graph.nodes.length)}
                   </div>
                 </div>
 

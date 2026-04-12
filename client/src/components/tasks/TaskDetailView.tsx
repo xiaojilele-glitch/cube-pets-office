@@ -65,6 +65,7 @@ import { ExecutorTerminalPanel } from "@/components/ExecutorTerminalPanel";
 
 import { useCostStore } from "@/lib/cost-store";
 import { useRAGStore } from "@/lib/rag-store";
+import { localizeTaskHubBriefText } from "@/lib/task-hub-copy";
 import { RAGInfoPanel } from "@/components/rag/RAGInfoPanel";
 import { RAGDebugPanel } from "@/components/rag/RAGDebugPanel";
 
@@ -763,7 +764,10 @@ export function TaskDetailView({
     (showStructuredDecisionPanel || detail.decisionPresets.length > 0);
   const decisionHistoryEntries = detail.decisionHistory ?? [];
 
-  const sourceDirectiveText = detail.sourceText.trim();
+  const sourceDirectiveText = localizeTaskHubBriefText(
+    detail.sourceText.trim(),
+    locale
+  );
   const runtimePreviewRows = [
     ...detail.instanceInfo.slice(0, 4),
     ...detail.logSummary.slice(0, 4),

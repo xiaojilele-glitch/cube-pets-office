@@ -34,6 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { workspaceStatusClass } from "@/components/workspace/workspace-tone";
 import { useI18n } from "@/i18n";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
+import { localizeTaskHubBriefText } from "@/lib/task-hub-copy";
 import { useTasksStore } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
@@ -236,11 +237,11 @@ export default function TasksPage({
   return (
     <div
       className={cn(
-        "workspace-page min-h-screen pb-28 pt-[calc(env(safe-area-inset-top)+96px)] text-stone-900 md:pb-36 md:pt-0 xl:h-[100svh] xl:overflow-hidden",
+        "workspace-page min-h-screen pb-28 pt-[calc(env(safe-area-inset-top)+96px)] text-stone-900 md:pb-36 md:pt-0",
         className
       )}
     >
-      <div className="mx-auto flex min-h-screen max-w-[1680px] flex-col px-3 py-3 md:px-5 md:py-4 xl:h-full xl:min-h-0">
+      <div className="mx-auto flex min-h-screen max-w-[1680px] flex-col px-3 py-3 md:px-5 md:py-4">
         <header className="workspace-shell shrink-0 rounded-[28px] px-4 py-4 md:px-5">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -285,7 +286,7 @@ export default function TasksPage({
           onTaskResolved={handleTaskHubResolved}
         />
 
-        <div className="mt-3 grid min-h-0 flex-1 gap-3 xl:grid-cols-[320px_minmax(0,1fr)]">
+        <div className="mt-3 grid gap-3 xl:items-start xl:grid-cols-[320px_minmax(0,1fr)]">
           <aside className="workspace-panel workspace-panel-strong flex min-h-0 flex-col overflow-hidden rounded-[28px]">
             <div className="shrink-0 border-b border-stone-200/80 px-4 py-4">
               <div className="flex items-center justify-between gap-3">
@@ -419,7 +420,13 @@ export default function TasksPage({
                         {task.waitingFor ? ` • ${task.waitingFor}` : ""}
                       </div>
                       <div className="mt-2 text-sm leading-6 text-stone-600">
-                        {compactText(task.summary || task.sourceText, 160)}
+                        {compactText(
+                          localizeTaskHubBriefText(
+                            task.summary || task.sourceText,
+                            locale
+                          ),
+                          160
+                        )}
                       </div>
                       <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-stone-500">
                         <span
@@ -466,7 +473,7 @@ export default function TasksPage({
             </ScrollArea>
           </aside>
 
-          <main className="min-w-0 xl:min-h-0 xl:overflow-hidden">
+          <main className="min-w-0">
             <TaskDetailView
               detail={selectedDetail || null}
               decisionNote={decisionNote}
@@ -485,7 +492,7 @@ export default function TasksPage({
               onDecisionSubmitted={() =>
                 void refresh({ preferredTaskId: activeTaskId || null })
               }
-              className="min-w-0 xl:h-full xl:min-h-0"
+              className="min-w-0"
             />
           </main>
         </div>

@@ -2,8 +2,10 @@ import { useMemo } from "react";
 
 import type { DataLineageNode } from "@shared/lineage/contracts.js";
 
+import { useI18n } from "@/i18n";
 import { useLineageStore } from "@/lib/lineage-store";
 
+import { getLineageCopy } from "./lineage-copy";
 import { LINEAGE_NEUTRAL } from "./lineage-theme";
 
 const TIME_BUCKETS = 10;
@@ -25,7 +27,10 @@ function interpolateColor(ratio: number) {
   return `rgb(${red},${green},${blue})`;
 }
 
-function buildHeatmap(nodes: DataLineageNode[]): HeatmapData {
+function buildHeatmap(
+  nodes: DataLineageNode[],
+  unknownLabel: string
+): HeatmapData {
   if (nodes.length === 0) {
     return {
       rowLabels: [],
@@ -38,7 +43,7 @@ function buildHeatmap(nodes: DataLineageNode[]): HeatmapData {
   const rowLabelSet = new Set<string>();
   for (const node of nodes) {
     rowLabelSet.add(
-      node.agentId ?? node.sourceName ?? node.decisionId ?? "unknown"
+      node.agentId ?? node.sourceName ?? node.decisionId ?? unknownLabel
     );
   }
 
@@ -61,7 +66,8 @@ function buildHeatmap(nodes: DataLineageNode[]): HeatmapData {
   let maxCount = 0;
 
   for (const node of nodes) {
-    const key = node.agentId ?? node.sourceName ?? node.decisionId ?? "unknown";
+    const key =
+      node.agentId ?? node.sourceName ?? node.decisionId ?? unknownLabel;
     const rowIndex = rowLabels.indexOf(key);
     const columnIndex = Math.min(
       Math.floor((node.timestamp - minTimestamp) / bucketSize),
@@ -82,14 +88,19 @@ function buildHeatmap(nodes: DataLineageNode[]): HeatmapData {
 }
 
 export default function LineageHeatmap() {
+  const { locale } = useI18n();
+  const copy = getLineageCopy(locale);
   const graph = useLineageStore(state => state.graph);
 
-  const heatmap = useMemo(() => buildHeatmap(graph?.nodes ?? []), [graph]);
+  const heatmap = useMemo(
+    () => buildHeatmap(graph?.nodes ?? [], copy.heatmap.unknownLabel),
+    [copy.heatmap.unknownLabel, graph]
+  );
 
   if (heatmap.rowLabels.length === 0) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[var(--workspace-text-subtle)]">
-        No heatmap data yet.
+        {copy.heatmap.empty}
       </div>
     );
   }
@@ -103,7 +114,7 @@ export default function LineageHeatmap() {
               className="sticky left-0 z-10 rounded-l-[16px] bg-[#fbf6ef] px-3 py-2 text-left"
               style={{ minWidth: LABEL_WIDTH }}
             >
-              Agent / Source
+              {copy.heatmap.rowLabel}
             </th>
             {heatmap.columnLabels.map(label => (
               <th key={label} className="px-1.5 py-2 text-center font-medium">
@@ -146,7 +157,11 @@ export default function LineageHeatmap() {
                             : LINEAGE_NEUTRAL.border,
                         color,
                       }}
-                      title={`${rowLabel} - ${heatmap.columnLabels[columnIndex]}: ${count}`}
+                      title={copy.heatmap.cellTooltip(
+                        rowLabel,
+                        heatmap.columnLabels[columnIndex],
+                        count
+                      )}
                     >
                       {count > 0 ? count : ""}
                     </div>
@@ -159,7 +174,7 @@ export default function LineageHeatmap() {
       </table>
 
       <div className="mt-4 flex items-center gap-3 text-[10px] text-[var(--workspace-text-subtle)]">
-        <span>Low</span>
+        <span>{copy.heatmap.low}</span>
         <div className="flex overflow-hidden rounded-full border border-[var(--workspace-panel-border)]">
           {[0, 0.25, 0.5, 0.75, 1].map(step => (
             <div
@@ -169,7 +184,7 @@ export default function LineageHeatmap() {
             />
           ))}
         </div>
-        <span>High</span>
+        <span>{copy.heatmap.high}</span>
       </div>
     </div>
   );

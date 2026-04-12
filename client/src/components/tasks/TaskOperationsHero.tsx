@@ -19,6 +19,7 @@ import {
   workspaceStatusClass,
 } from "@/components/workspace/workspace-tone";
 import { useI18n } from "@/i18n";
+import { localizeTaskHubBriefText } from "@/lib/task-hub-copy";
 import { cn } from "@/lib/utils";
 
 import { OperatorActionBar } from "./OperatorActionBar";
@@ -141,7 +142,10 @@ export function TaskOperationsHero({
   onSubmitOperatorAction,
 }: TaskOperationsHeroProps) {
   const { locale, copy } = useI18n();
-  const summaryText = compactText(detail.summary || detail.sourceText, 260);
+  const summaryText = compactText(
+    localizeTaskHubBriefText(detail.summary || detail.sourceText, locale),
+    260
+  );
   const liveSignalText = compactText(
     detail.lastSignal || detail.waitingFor || copy.tasks.detailView.noDetail,
     140

@@ -7,9 +7,12 @@ import type {
 } from "@shared/lineage/contracts.js";
 
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/i18n";
 import { useLineageStore } from "@/lib/lineage-store";
+import type { AppLocale } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 
+import { getLineageCopy } from "./lineage-copy";
 import { getLineageTypeMeta } from "./lineage-theme";
 
 const NODE_W = 152;
@@ -107,7 +110,11 @@ function computeSimpleLayout(nodes: DataLineageNode[], edges: LineageEdge[]) {
   return result;
 }
 
-function generateSVG(nodes: DataLineageNode[], edges: LineageEdge[]) {
+function generateSVG(
+  nodes: DataLineageNode[],
+  edges: LineageEdge[],
+  locale: AppLocale
+) {
   const layout = computeSimpleLayout(nodes, edges);
   const positions = new Map(layout.map(node => [node.id, node]));
 
@@ -142,7 +149,7 @@ function generateSVG(nodes: DataLineageNode[], edges: LineageEdge[]) {
   );
 
   for (const layoutNode of layout) {
-    const meta = getLineageTypeMeta(layoutNode.node.type);
+    const meta = getLineageTypeMeta(layoutNode.node.type, locale);
     const label =
       layoutNode.node.sourceName ??
       layoutNode.node.agentId ??
@@ -175,6 +182,8 @@ export interface LineageExportButtonProps {
 export default function LineageExportButton({
   canvasRef,
 }: LineageExportButtonProps) {
+  const { locale } = useI18n();
+  const copy = getLineageCopy(locale);
   const graph = useLineageStore(state => state.graph);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -205,10 +214,10 @@ export default function LineageExportButton({
 
   const exportSVG = useCallback(() => {
     if (!graph) return;
-    const svg = generateSVG(graph.nodes, graph.edges);
+    const svg = generateSVG(graph.nodes, graph.edges, locale);
     download(new Blob([svg], { type: "image/svg+xml" }), "lineage-dag.svg");
     setOpen(false);
-  }, [graph]);
+  }, [graph, locale]);
 
   const disabled = !graph || graph.nodes.length === 0;
 
@@ -226,7 +235,7 @@ export default function LineageExportButton({
         onClick={() => setOpen(current => !current)}
       >
         <Download className="size-4" />
-        Export
+        {copy.export.button}
         <ChevronDown className="size-4" />
       </Button>
 
@@ -238,9 +247,9 @@ export default function LineageExportButton({
             className="flex w-full items-center justify-between rounded-[16px] px-3 py-2 text-left text-sm font-medium text-[var(--workspace-text)] transition hover:bg-white/60 disabled:cursor-not-allowed disabled:opacity-45"
             onClick={exportPNG}
           >
-            Export PNG
+            {copy.export.exportPng}
             <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-              Canvas
+              {copy.export.canvas}
             </span>
           </button>
           <button
@@ -248,9 +257,9 @@ export default function LineageExportButton({
             className="mt-1 flex w-full items-center justify-between rounded-[16px] px-3 py-2 text-left text-sm font-medium text-[var(--workspace-text)] transition hover:bg-white/60"
             onClick={exportSVG}
           >
-            Export SVG
+            {copy.export.exportSvg}
             <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-              Vector
+              {copy.export.vector}
             </span>
           </button>
         </div>

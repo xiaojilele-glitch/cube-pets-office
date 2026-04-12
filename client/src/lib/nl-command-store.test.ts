@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useNLCommandStore } from "./nl-command-store";
+import { useAppStore } from "./store";
 
 function resetNLCommandStore() {
   useNLCommandStore.getState().clearTaskHubSession();
@@ -16,6 +17,7 @@ function resetNLCommandStore() {
 
 describe("useNLCommandStore task-hub flow", () => {
   beforeEach(() => {
+    useAppStore.setState({ locale: "zh-CN" });
     resetNLCommandStore();
   });
 
@@ -36,6 +38,7 @@ describe("useNLCommandStore task-hub flow", () => {
     expect(createMission).not.toHaveBeenCalled();
     expect(state.currentDialog?.status).toBe("active");
     expect(state.currentDialog?.questions.length).toBeGreaterThan(0);
+    expect(state.currentDialog?.questions[0]?.text).toContain("这");
     expect(state.currentPlan?.status).toBe("draft");
     expect(state.lastSubmission?.status).toBe("needs_clarification");
   });
@@ -78,7 +81,8 @@ describe("useNLCommandStore task-hub flow", () => {
 
     expect(createMission).toHaveBeenCalledTimes(1);
     expect(state.currentDialog?.status).toBe("completed");
-    expect(state.currentFinalized?.refinedText).toContain("Extra context:");
+    expect(state.currentFinalized?.refinedText).toContain("补充上下文：");
+    expect(createMission.mock.calls[0]?.[0]?.sourceText).toContain("指令：");
     expect(state.currentPlan?.status).toBe("executing");
     expect(state.lastSubmission?.missionId).toBe("mission-42");
   });

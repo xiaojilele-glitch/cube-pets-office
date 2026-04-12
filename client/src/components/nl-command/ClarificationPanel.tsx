@@ -3,6 +3,7 @@ import { MessageCircleQuestion, Send } from "lucide-react";
 
 import { GlowButton } from "@/components/ui/GlowButton";
 import { useI18n } from "@/i18n";
+import { localizeTaskHubQuestion } from "@/lib/task-hub-copy";
 import { cn } from "@/lib/utils";
 import type {
   ClarificationDialog,
@@ -113,14 +114,18 @@ function QuestionCard({
   const [freeText, setFreeText] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [submitting, setSubmitting] = useState(false);
+  const resolvedQuestion = localizeTaskHubQuestion(
+    question,
+    locale === "zh-CN" ? "zh-CN" : "en-US"
+  );
 
-  const isFreeText = question.type === "free_text";
-  const isSingleChoice = question.type === "single_choice";
-  const isMultiChoice = question.type === "multi_choice";
+  const isFreeText = resolvedQuestion.type === "free_text";
+  const isSingleChoice = resolvedQuestion.type === "single_choice";
+  const isMultiChoice = resolvedQuestion.type === "multi_choice";
   const hasOptions =
     (isSingleChoice || isMultiChoice) &&
-    question.options &&
-    question.options.length > 0;
+    resolvedQuestion.options &&
+    resolvedQuestion.options.length > 0;
 
   const toggleOption = useCallback(
     (option: string) => {
@@ -157,15 +162,19 @@ function QuestionCard({
 
   return (
     <div className="rounded-lg border border-amber-100 bg-white/80 p-3">
-      <p className="text-sm font-medium text-stone-800">{question.text}</p>
-      {question.context && (
-        <p className="mt-1 text-xs text-stone-500">{question.context}</p>
+      <p className="text-sm font-medium text-stone-800">
+        {resolvedQuestion.text}
+      </p>
+      {resolvedQuestion.context && (
+        <p className="mt-1 text-xs text-stone-500">
+          {resolvedQuestion.context}
+        </p>
       )}
 
       <div className="mt-2">
         {hasOptions ? (
           <div className="flex flex-wrap gap-2">
-            {question.options!.map(option => (
+            {resolvedQuestion.options!.map(option => (
               <button
                 key={option}
                 type="button"
@@ -190,8 +199,8 @@ function QuestionCard({
             className="w-full resize-none rounded-lg border border-stone-200 bg-stone-50/60 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             aria-label={
               locale === "zh-CN"
-                ? `回答：${question.text}`
-                : `Answer for: ${question.text}`
+                ? `回答：${resolvedQuestion.text}`
+                : `Answer for: ${resolvedQuestion.text}`
             }
             onKeyDown={e => {
               if (e.key === "Enter" && !e.shiftKey && canSubmit) {

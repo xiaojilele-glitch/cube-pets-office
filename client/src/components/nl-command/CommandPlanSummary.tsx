@@ -8,6 +8,7 @@ import type {
 
 import { useI18n } from "@/i18n";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
+import { localizeTaskHubText } from "@/lib/task-hub-copy";
 import { cn } from "@/lib/utils";
 
 function SummaryList({
@@ -200,7 +201,9 @@ export function CommandPlanSummary({
             {text.executionShape}
           </div>
           <div className="mt-2 text-sm leading-6 text-stone-600">
-            {text.executionShapeValue(plan.missions.length, plan.tasks.length)}
+            {isZh
+              ? `${plan.missions.length} 个任务主线 / ${plan.tasks.length} 个执行阶段`
+              : text.executionShapeValue(plan.missions.length, plan.tasks.length)}
           </div>
         </div>
 
@@ -218,12 +221,16 @@ export function CommandPlanSummary({
       <div className="mt-4 space-y-4">
         <SummaryList
           title={text.objectives}
-          items={analysis.objectives}
+          items={analysis.objectives.map(item =>
+            localizeTaskHubText(item, locale)
+          )}
           emptyLabel={text.noObjectives}
         />
         <SummaryList
           title={text.constraints}
-          items={analysis.constraints.map(item => item.description)}
+          items={analysis.constraints.map(item =>
+            localizeTaskHubText(item.description, locale)
+          )}
           emptyLabel={text.noConstraints}
         />
       </div>

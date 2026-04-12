@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DataLineageNode } from "@shared/lineage/contracts.js";
 
+import { useI18n } from "@/i18n";
 import { useLineageStore } from "@/lib/lineage-store";
 
+import { formatLineageClock, getLineageCopy } from "./lineage-copy";
 import { LINEAGE_NEUTRAL, getLineageTypeMeta } from "./lineage-theme";
 
 const LANE_ORDER = ["source", "transformation", "decision"] as const;
@@ -12,20 +14,14 @@ const HEADER_WIDTH = 108;
 const NODE_RADIUS = 16;
 const TOP_PADDING = 42;
 
-function formatTime(timestamp: number) {
-  const date = new Date(timestamp);
-  return `${date.getHours().toString().padStart(2, "0")}:${date
-    .getMinutes()
-    .toString()
-    .padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}`;
-}
-
 function truncateLabel(label: string, limit: number) {
   if (label.length <= limit) return label;
   return `${label.slice(0, Math.max(limit - 1, 3))}\u2026`;
 }
 
 export default function LineageTimeline() {
+  const { locale } = useI18n();
+  const copy = getLineageCopy(locale);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -65,7 +61,7 @@ export default function LineageTimeline() {
     const contentWidth = Math.max(rect.width - HEADER_WIDTH - 52, 480);
 
     LANE_ORDER.forEach((type, index) => {
-      const meta = getLineageTypeMeta(type);
+      const meta = getLineageTypeMeta(type, locale);
       const top = TOP_PADDING + index * LANE_HEIGHT;
 
       context.fillStyle =
@@ -107,7 +103,11 @@ export default function LineageTimeline() {
         scrollX;
       if (x < HEADER_WIDTH - 24 || x > rect.width - 12) continue;
 
-      context.fillText(formatTime(timestamp), x - 24, axisY - 6);
+      context.fillText(
+        formatLineageClock(timestamp, locale),
+        x - 24,
+        axisY - 6
+      );
       context.beginPath();
       context.moveTo(x, axisY);
       context.lineTo(x, axisY + 6);
@@ -118,7 +118,7 @@ export default function LineageTimeline() {
       const laneIndex = LANE_ORDER.indexOf(node.type);
       if (laneIndex < 0) continue;
 
-      const meta = getLineageTypeMeta(node.type);
+      const meta = getLineageTypeMeta(node.type, locale);
       const x =
         HEADER_WIDTH +
         ((node.timestamp - minTimestamp) / timestampRange) * contentWidth +
@@ -148,7 +148,7 @@ export default function LineageTimeline() {
       context.font = "700 9px 'DM Sans', sans-serif";
       context.fillText(shortLabel, x - labelWidth / 2, y + 3);
     }
-  }, [graph, scrollX, selectedNodeId]);
+  }, [graph, locale, scrollX, selectedNodeId]);
 
   useEffect(() => {
     draw();
@@ -208,7 +208,7 @@ export default function LineageTimeline() {
   if (!graph || graph.nodes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[var(--workspace-text-subtle)]">
-        No timeline data yet.
+        {copy.timeline.empty}
       </div>
     );
   }

@@ -5,9 +5,11 @@ import type {
   LineageEdge,
 } from "@shared/lineage/contracts.js";
 
+import { useI18n } from "@/i18n";
 import { useLineageStore } from "@/lib/lineage-store";
 import { cn } from "@/lib/utils";
 
+import { getLineageCopy } from "./lineage-copy";
 import { LINEAGE_NEUTRAL, getLineageTypeMeta } from "./lineage-theme";
 
 const NODE_W = 152;
@@ -152,6 +154,8 @@ export interface LineageDAGViewProps {
 export default function LineageDAGView({
   canvasRef: externalCanvasRef,
 }: LineageDAGViewProps) {
+  const { locale } = useI18n();
+  const copy = getLineageCopy(locale);
   const internalCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasRef = externalCanvasRef ?? internalCanvasRef;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -240,7 +244,7 @@ export default function LineageDAGView({
     }
 
     for (const layoutNode of layoutRef.current) {
-      const meta = getLineageTypeMeta(layoutNode.node.type);
+      const meta = getLineageTypeMeta(layoutNode.node.type, locale);
       const isSelected = layoutNode.id === selectedNodeId;
       const isDimmed =
         highlightedIds !== null && !highlightedIds.has(layoutNode.id);
@@ -284,7 +288,7 @@ export default function LineageDAGView({
     }
 
     context.restore();
-  }, [canvasRef, graph, offset, selectedNodeId, zoom]);
+  }, [canvasRef, graph, locale, offset, selectedNodeId, zoom]);
 
   useEffect(() => {
     draw();
@@ -358,7 +362,7 @@ export default function LineageDAGView({
   if (!graph || graph.nodes.length === 0) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-[var(--workspace-text-subtle)]">
-        No lineage data to display yet.
+        {copy.dag.empty}
       </div>
     );
   }
@@ -384,7 +388,7 @@ export default function LineageDAGView({
 
       <div className="pointer-events-none absolute bottom-4 left-4 flex flex-wrap gap-2">
         {(["source", "transformation", "decision"] as const).map(type => {
-          const meta = getLineageTypeMeta(type);
+          const meta = getLineageTypeMeta(type, locale);
 
           return (
             <span

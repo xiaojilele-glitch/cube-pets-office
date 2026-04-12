@@ -57,6 +57,12 @@ import type {
 } from "@shared/nl-command/socket";
 
 import * as api from "./nl-command-client";
+import {
+  buildPreviewClarificationQuestion,
+  getCurrentTaskHubLocale,
+  getTaskHubCopy,
+  type TaskHubClarificationTopic,
+} from "./task-hub-copy";
 
 export interface TaskHubCreateMissionInput {
   kind?: string;
@@ -104,7 +110,7 @@ function compactCommandText(value: string, maxLength = 72): string {
 function deriveMissionTitle(commandText: string): string {
   const normalized = normalizeCommandText(commandText);
   if (!normalized) {
-    return "New mission";
+    return getTaskHubCopy(getCurrentTaskHubLocale()).defaultMissionTitle;
   }
 
   const sentence =
@@ -176,33 +182,34 @@ function buildTaskHubObjectives(text: string): string[] {
 }
 
 function buildTaskHubConstraints(text: string): CommandConstraint[] {
+  const copy = getTaskHubCopy(getCurrentTaskHubLocale());
   const constraints: CommandConstraint[] = [];
 
   if (/零停机|zero downtime/i.test(text)) {
     constraints.push({
       type: "quality",
-      description: "Maintain zero-downtime or user-transparent delivery.",
+      description: copy.constraints.zeroDowntime,
     });
   }
 
   if (/回滚|rollback/i.test(text)) {
     constraints.push({
       type: "quality",
-      description: "Keep an explicit rollback path available.",
+      description: copy.constraints.rollback,
     });
   }
 
   if (/预算|budget|成本/i.test(text)) {
     constraints.push({
       type: "budget",
-      description: "Respect the stated budget and execution-cost boundaries.",
+      description: copy.constraints.budget,
     });
   }
 
   if (/今天|明天|本周|下周|月底|本月|deadline|before|by\s+\w+/i.test(text)) {
     constraints.push({
       type: "time",
-      description: "Keep delivery aligned with the requested timeline.",
+      description: copy.constraints.timeline,
     });
   }
 
@@ -213,6 +220,8 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
   analysis: CommandAnalysis;
   questions: ClarificationQuestion[];
 } {
+  const locale = getCurrentTaskHubLocale();
+  const copy = getTaskHubCopy(locale);
   const commandText = normalizeCommandText(req.commandText);
   const missingTopics = [
     !hasOutcomeSignal(commandText) ? "outcome" : null,
@@ -223,33 +232,13 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
   const needsClarification =
     commandText.length < 36 || missingTopics.length >= 2;
   const questions = needsClarification
-    ? missingTopics.slice(0, 2).map(topic => {
-        if (topic === "outcome") {
-          return {
-            questionId: `outcome:${nanoid(8)}`,
-            text: "What concrete outcome or deliverable matters most for this command?",
-            type: "free_text" as const,
-            context:
-              "Adding the success criteria makes the task landing much clearer.",
-          };
-        }
-        if (topic === "timeline") {
-          return {
-            questionId: `timeline:${nanoid(8)}`,
-            text: "Does this work have a clear time window or deadline?",
-            type: "free_text" as const,
-            context:
-              "For example: today, this week, before release, or before a milestone.",
-          };
-        }
-        return {
-          questionId: `constraints:${nanoid(8)}`,
-          text: "Are there constraints, risk boundaries, or rollback requirements we must keep?",
-          type: "free_text" as const,
-          context:
-            "For example: zero downtime, compatibility, budget, audit, or a rollback path.",
-        };
-      })
+    ? missingTopics.slice(0, 2).map(topic => ({
+        ...buildPreviewClarificationQuestion(
+          topic as TaskHubClarificationTopic,
+          locale
+        ),
+        questionId: `${topic}:${nanoid(8)}`,
+      }))
     : [];
 
   const constraints = buildTaskHubConstraints(commandText);
@@ -259,11 +248,11 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
   ]);
   const assumptions = uniqueStrings([
     missingTopics.includes("outcome")
-      ? "Success criteria should be confirmed inside the task workspace."
-      : "The requested outcome is clear enough to open execution immediately.",
+      ? copy.assumptions.pendingOutcome
+      : copy.assumptions.readyOutcome,
     missingTopics.includes("timeline")
-      ? "Timeline is flexible until the operator adds a deadline."
-      : "Timeline expectations are already embedded in the command.",
+      ? copy.assumptions.pendingTimeline
+      : copy.assumptions.readyTimeline,
   ]);
 
   return {
@@ -273,7 +262,7 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
         {
           name: deriveMissionTitle(commandText),
           type: "concept",
-          description: "Primary execution target inferred from the command.",
+          description: copy.entityDescription,
         },
       ],
       constraints,
@@ -282,13 +271,12 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
         {
           id: `risk-${nanoid(8)}`,
           description: needsClarification
-            ? "Scope drift is likely until the command is clarified."
-            : "Execution quality depends on keeping the task brief aligned with the command.",
+            ? copy.risks.pendingScope
+            : copy.risks.alignedScope,
           level: needsClarification ? "medium" : "low",
           probability: needsClarification ? 0.58 : 0.26,
           impact: needsClarification ? 0.72 : 0.34,
-          mitigation:
-            "Use the task detail panel to confirm scope, blockers, and operator decisions.",
+          mitigation: copy.risks.mitigation,
         },
       ],
       assumptions,
@@ -305,16 +293,28 @@ function buildRefinedCommandText(
   answers: ClarificationAnswer[]
 ): string {
   const normalized = normalizeCommandText(commandText);
-  if (answers.length === 0) {
+  const clarificationSummary = buildTaskHubClarificationSummary(answers);
+
+  if (!clarificationSummary) {
     return normalized;
   }
 
-  const clarificationSummary = answers
+  const copy = getTaskHubCopy(getCurrentTaskHubLocale());
+  return `${normalized} | ${copy.refinedExtraContextPrefix} ${clarificationSummary}`;
+}
+
+function buildTaskHubClarificationSummary(
+  answers: ClarificationAnswer[]
+): string | undefined {
+  if (answers.length === 0) {
+    return undefined;
+  }
+
+  const locale = getCurrentTaskHubLocale();
+  return answers
     .map(answer => normalizeCommandText(answer.text))
     .filter(Boolean)
-    .join("；");
-
-  return `${normalized} | Extra context: ${clarificationSummary}`;
+    .join(locale === "zh-CN" ? "；" : "; ");
 }
 
 function buildTaskHubFinalizedCommand(
@@ -327,10 +327,7 @@ function buildTaskHubFinalizedCommand(
     originalText: command.commandText,
     refinedText: buildRefinedCommandText(command.commandText, answers),
     analysis,
-    clarificationSummary:
-      answers.length > 0
-        ? answers.map(answer => normalizeCommandText(answer.text)).join("；")
-        : undefined,
+    clarificationSummary: buildTaskHubClarificationSummary(answers),
     finalizedAt: Date.now(),
   };
 }
@@ -339,6 +336,7 @@ function applyClarificationToAnalysis(
   analysis: CommandAnalysis,
   answer: ClarificationAnswer
 ): CommandAnalysis {
+  const copy = getTaskHubCopy(getCurrentTaskHubLocale());
   const topic = answer.questionId.split(":")[0];
   const answerText = normalizeCommandText(answer.text);
 
@@ -371,7 +369,9 @@ function applyClarificationToAnalysis(
     constraints: nextConstraints,
     assumptions: uniqueStrings([
       ...analysis.assumptions,
-      `Clarified ${topic}: ${answerText}`,
+      `${
+        copy.clarifiedTopics[topic as TaskHubClarificationTopic] ?? topic
+      }: ${answerText}`,
     ]),
     confidence: Math.min(0.96, analysis.confidence + 0.12),
   };
@@ -382,18 +382,19 @@ function buildTaskHubMissionInput(
   analysis: CommandAnalysis,
   answers: ClarificationAnswer[]
 ): TaskHubCreateMissionInput {
+  const copy = getTaskHubCopy(getCurrentTaskHubLocale());
   const sections = [
-    `Command: ${command.commandText}`,
+    `${copy.missionBrief.command} ${command.commandText}`,
     analysis.objectives.length > 0
-      ? `Objectives:\n- ${analysis.objectives.join("\n- ")}`
+      ? `${copy.missionBrief.objectives}\n- ${analysis.objectives.join("\n- ")}`
       : null,
     analysis.constraints.length > 0
-      ? `Constraints:\n- ${analysis.constraints
+      ? `${copy.missionBrief.constraints}\n- ${analysis.constraints
           .map(item => item.description)
           .join("\n- ")}`
       : null,
     answers.length > 0
-      ? `Clarifications:\n- ${answers
+      ? `${copy.missionBrief.clarifications}\n- ${answers
           .map(answer => normalizeCommandText(answer.text))
           .join("\n- ")}`
       : null,
@@ -414,6 +415,7 @@ function buildTaskHubPlan(params: {
   missionId?: string | null;
   status: NLExecutionPlan["status"];
 }): NLExecutionPlan {
+  const copy = getTaskHubCopy(getCurrentTaskHubLocale());
   const { command, analysis, answers, missionId = null, status } = params;
   const now = Date.now();
   const missionKey = missionId || `draft-${command.commandId}`;
@@ -434,9 +436,8 @@ function buildTaskHubPlan(params: {
   const tasks = [
     {
       taskId: `${missionKey}:scope`,
-      title: "Lock scope and acceptance",
-      description:
-        "Translate the command into an execution-ready brief and confirm success criteria.",
+      title: copy.plan.scopeTitle,
+      description: copy.plan.scopeDescription,
       objectives: [objectives[0]],
       constraints: analysis.constraints,
       estimatedDuration: 35,
@@ -447,8 +448,7 @@ function buildTaskHubPlan(params: {
     {
       taskId: `${missionKey}:execute`,
       title: mission.title,
-      description:
-        "Carry out the main workstream and keep the task detail panel updated with blockers.",
+      description: copy.plan.executeDescription,
       objectives,
       constraints: analysis.constraints,
       estimatedDuration: 80,
@@ -458,10 +458,9 @@ function buildTaskHubPlan(params: {
     },
     {
       taskId: `${missionKey}:review`,
-      title: "Review outcome and operator handoff",
-      description:
-        "Verify the result, summarize remaining risks, and prepare the next operator action.",
-      objectives: ["Review deliverables and confirm the next operator action."],
+      title: copy.plan.reviewTitle,
+      description: copy.plan.reviewDescription,
+      objectives: [copy.plan.reviewObjective],
       constraints: [],
       estimatedDuration: 35,
       estimatedCost: 45,
@@ -489,13 +488,13 @@ function buildTaskHubPlan(params: {
       milestones: [
         {
           id: `${missionKey}:brief`,
-          label: "Brief aligned",
+          label: copy.plan.briefAligned,
           date: startDate,
           entityId: tasks[0].taskId,
         },
         {
           id: `${missionKey}:handoff`,
-          label: "Operator handoff ready",
+          label: copy.plan.handoffReady,
           date: endDate,
           entityId: tasks[2].taskId,
         },
@@ -546,19 +545,14 @@ function buildTaskHubPlan(params: {
       alternatives: [
         {
           id: `${missionKey}:fallback`,
-          description: "Fall back to a smaller scoped delivery slice.",
-          trigger: "Timeline or blocker pressure rises during execution.",
-          action:
-            "Trim non-critical work and keep the operator-visible task active.",
-          estimatedImpact: "Lower scope, faster recovery.",
+          description: copy.plan.fallbackDescription,
+          trigger: copy.plan.fallbackTrigger,
+          action: copy.plan.fallbackAction,
+          estimatedImpact: copy.plan.fallbackImpact,
         },
       ],
-      degradationStrategies: [
-        "Keep the mission open in the task queue and defer secondary scope.",
-        "Use operator actions to pause, retry, or mark blocked without losing context.",
-      ],
-      rollbackPlan:
-        "If execution quality regresses, pause the mission and resume from the last stable operator checkpoint.",
+      degradationStrategies: [...copy.plan.degradationStrategies],
+      rollbackPlan: copy.plan.rollbackPlan,
     },
     createdAt: now,
     updatedAt: now,
@@ -776,7 +770,8 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
         error:
           error instanceof Error
             ? error.message
-            : "Failed to create a mission from the command.",
+            : getTaskHubCopy(getCurrentTaskHubLocale()).errors
+                .createMissionFromCommand,
       });
       throw error;
     }
@@ -793,7 +788,9 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
       !currentDialog ||
       !currentAnalysis
     ) {
-      set({ error: "No active task-hub clarification session." });
+      set({
+        error: getTaskHubCopy(getCurrentTaskHubLocale()).errors.noActiveSession,
+      });
       return null;
     }
 
@@ -919,7 +916,8 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
         error:
           error instanceof Error
             ? error.message
-            : "Failed to create a mission from the clarification flow.",
+            : getTaskHubCopy(getCurrentTaskHubLocale()).errors
+                .createMissionFromClarification,
       });
       throw error;
     }
