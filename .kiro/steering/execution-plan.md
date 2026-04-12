@@ -41,6 +41,10 @@ inclusion: auto
 
 ## 阶段 0：契约先行（并行前必须完成）
 
+<p align="center">
+  <img src="../../docs/execution-plan/stage-0-contract-foundation.svg" alt="阶段 0：契约先行架构图" width="100%" />
+</p>
+
 - [x] C01 `demo-data-engine` 数据包 schema 冻结 → `shared/demo/contracts.ts`
 - [x] C02 事件总线格式统一 → `shared/telemetry/contracts.ts`
 - [x] C03 Memory 读写接口分层 → `shared/memory/contracts.ts`
@@ -51,6 +55,10 @@ inclusion: auto
 - [x] C08 Skill 注册制 → `shared/skill/contracts.ts`
 
 ## 第一层：无依赖，可独立并行，纯前端可执行
+
+<p align="center">
+  <img src="../../docs/execution-plan/layer-1-browser-parallel.svg" alt="第一层架构图" width="100%" />
+</p>
 
 ### 并行组 A：Frontend Mode 极致化（核心优先）
 - [x] L01 `demo-data-engine` — 预录演示数据引擎 ✅ 已合并 (13 files, +1317)
@@ -70,6 +78,10 @@ inclusion: auto
 - [x] L09 `multi-modal-vision` — 图片理解能力，前端附件扩展 ✅ 已合并 (19 files, +1478)
 
 ## 第二层：需要服务端，不需要 Docker
+
+<p align="center">
+  <img src="../../docs/execution-plan/layer-2-server-without-docker.svg" alt="第二层架构图" width="100%" />
+</p>
 
 ### 并行组 D：技术债清理（应优先，⚠️ C04 必须先完成）
 - [x] L10 `workflow-decoupling` — tasks-store 从双轨收口到 mission-first ✅ 已合并 (17 files, +1027/-2166)
@@ -92,6 +104,10 @@ inclusion: auto
 - [x] L21 `cost-governance-strategy` — 主动成本治理 ✅ 已合并 (10 files, +1850)
 
 ## 第三层：Docker 执行链路（严格串行，无法并行）
+
+<p align="center">
+  <img src="../../docs/execution-plan/layer-3-docker-execution-chain.svg" alt="第三层 Docker 执行链路架构图" width="100%" />
+</p>
 
 ```
 串行执行顺序（不可跳过）：
@@ -124,6 +140,10 @@ L12 → L29 → L30
 
 ## L30 后新增主线：任务控制台补完（2026-04-09）
 
+<p align="center">
+  <img src="../../docs/execution-plan/post-l30-task-console.svg" alt="L30 后新增主线：任务控制台补完架构图" width="100%" />
+</p>
+
 在 Docker 执行闭环与 Artifact 回传跑通后，近期优先级从“能执行”转向“可运营、可协作、可交付”。这条新增主线落在现有 `/tasks` 与任务详情页之上，不改变 L31-L38 的平台级依赖顺序，目标是把任务页从“结果观察面板”推进为“执行控制台”。
 
 ### 优先级与依赖
@@ -143,6 +163,10 @@ L12 → L29 → L30
 > 目标：把任务页从“执行结果展示”提升为“可操作的执行控制台”。
 
 ## L30 后新增主线二：信息架构收口与工作台重构（2026-04-11）
+
+<p align="center">
+  <img src="../../docs/execution-plan/post-l30-workspace-restructure.svg" alt="L30 后新增主线二：信息架构收口与工作台重构架构图" width="100%" />
+</p>
 
 在任务控制台补完主线完成后，当前核心问题不再是“能不能控制任务”，而是“用户打开系统后是否知道先看哪里、下一步做什么”。这一波新增主线聚焦信息架构收口、主操作中心统一、场景交互补位与体验兜底，不改变 L31-L38 的平台级依赖顺序，目标是把系统从“多工具并列”推进到“单主线工作台”。
 
@@ -188,6 +212,10 @@ L12 → L29 → L30
 > 目标：把系统从“多个工具入口并列”收口为“办公室看态势、任务做推进、更多收低频”的单主线工作台。
 
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
+
+<p align="center">
+  <img src="../../docs/execution-plan/layer-4-platform-capabilities.svg" alt="第四层平台级能力架构图" width="100%" />
+</p>
 
 - [ ] L31 `production-deployment` — Docker Compose 生产部署（中）← 依赖 L22
 - [ ] L32 `multi-user-office` — 多人实时协作（大）

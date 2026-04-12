@@ -1,0 +1,133 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">第一层：无依赖纯前端并行架构图</title>
+  <desc id="desc">展示第一层并行组 A/B/C、独立项 L08/L09、输入依赖、输出结果和升级关注点。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 34px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .label { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .section { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+    .cardTitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 19px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 500; fill: #334155; }
+    .meta { font-family: "JetBrains Mono", "Cascadia Mono", monospace; font-size: 14px; font-weight: 600; fill: #64748b; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="50%" stop-color="#f8f9fc" />
+      <stop offset="100%" stop-color="#fdf7f2" />
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e0f2fe" />
+      <stop offset="50%" stop-color="#eef2ff" />
+      <stop offset="100%" stop-color="#ecfdf5" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 L0 0 0 40" fill="none" stroke="#d9e4f1" stroke-width="1" opacity="0.6" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#grid)" opacity="0.45" />
+
+  <g filter="url(#shadow)">
+    <rect x="36" y="30" width="1528" height="128" rx="28" fill="url(#hero)" stroke="#cbd5e1" />
+  </g>
+  <text class="title" x="68" y="78">第一层：无依赖，可独立并行，纯前端可执行</text>
+  <text class="subtitle" x="68" y="110">目标：在不等待服务端和 Docker 的前提下，把可演示、可回放、可观测的前端工作台先跑起来。</text>
+  <rect x="1286" y="56" width="224" height="38" rx="19" fill="#dcfce7" stroke="#86efac" />
+  <text class="label" x="1338" y="81">状态：已完成</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="206" width="260" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="336" y="206" width="996" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="1360" y="206" width="192" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="48" y="670" width="1504" height="182" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+  </g>
+
+  <text class="section" x="76" y="246">输入依赖</text>
+  <text class="body" x="76" y="286">
+    <tspan x="76" dy="0">阶段 0 契约已冻结，</tspan>
+    <tspan x="76" dy="28">浏览器端可直接消费</tspan>
+    <tspan x="76" dy="28">统一数据包、事件总线、</tspan>
+    <tspan x="76" dy="28">Memory / Skill / Vision 接口。</tspan>
+  </text>
+  <rect x="76" y="452" width="204" height="126" rx="18" fill="#eff6ff" stroke="#93c5fd" />
+  <text class="cardTitle" x="96" y="486">前提</text>
+  <text class="small" x="96" y="516">
+    <tspan x="96" dy="0">纯前端可跑</tspan>
+    <tspan x="96" dy="22">不依赖后端新接口</tspan>
+    <tspan x="96" dy="22">适合多 worktree 并行</tspan>
+  </text>
+
+  <text class="section" x="368" y="246">并行组与独立项</text>
+
+  <rect x="368" y="278" width="280" height="152" rx="22" fill="#e0f2fe" stroke="#7dd3fc" />
+  <text class="cardTitle" x="390" y="314">并行组 A</text>
+  <text class="meta" x="390" y="340">L01 demo-data-engine / L02 demo-guided-experience</text>
+  <text class="small" x="390" y="372">
+    <tspan x="390" dy="0">把演示数据引擎、回放引导 UI</tspan>
+    <tspan x="390" dy="22">先做成稳定入口，保证“打开就能演示”。</tspan>
+  </text>
+
+  <rect x="676" y="278" width="280" height="152" rx="22" fill="#eef2ff" stroke="#a5b4fc" />
+  <text class="cardTitle" x="698" y="314">并行组 B</text>
+  <text class="meta" x="698" y="340">L03 scene-mission-fusion / L04 cross-framework-export</text>
+  <text class="small" x="698" y="372">
+    <tspan x="698" dy="0">把 3D 办公室和导出能力</tspan>
+    <tspan x="698" dy="22">接进同一套 Mission 语义。</tspan>
+  </text>
+
+  <rect x="984" y="278" width="320" height="152" rx="22" fill="#ecfdf5" stroke="#86efac" />
+  <text class="cardTitle" x="1006" y="314">并行组 C</text>
+  <text class="meta" x="1006" y="340">L05 telemetry / L06 cost / L07 recovery</text>
+  <text class="small" x="1006" y="372">
+    <tspan x="1006" dy="0">实时遥测、成本追踪、浏览器长任务恢复</tspan>
+    <tspan x="1006" dy="22">共同把“可观测、可继续”补齐。</tspan>
+  </text>
+
+  <rect x="368" y="458" width="936" height="134" rx="22" fill="#f8fafc" stroke="#cbd5e1" />
+  <text class="cardTitle" x="392" y="494">独立可做</text>
+  <text class="body" x="392" y="526">
+    <tspan x="392" dy="0">L08 collaboration-replay：执行过程录制与回放。</tspan>
+    <tspan x="392" dy="28">L09 multi-modal-vision：图片理解与附件扩展。</tspan>
+    <tspan x="392" dy="28">两项都能直接叠加到前端工作流，不阻塞其他并行组。</tspan>
+  </text>
+
+  <text class="section" x="1386" y="246">输出</text>
+  <text class="body" x="1386" y="286">
+    <tspan x="1386" dy="0">得到一个</tspan>
+    <tspan x="1386" dy="28">“纯前端可跑”的</tspan>
+    <tspan x="1386" dy="28">演示与协作基线。</tspan>
+  </text>
+  <rect x="1382" y="402" width="148" height="176" rx="18" fill="#f0fdf4" stroke="#86efac" />
+  <text class="cardTitle" x="1400" y="438">去向</text>
+  <text class="small" x="1400" y="468">
+    <tspan x="1400" dy="0">进入第二层：</tspan>
+    <tspan x="1400" dy="22">服务端数据源</tspan>
+    <tspan x="1400" dy="22">Agent 能力增强</tspan>
+    <tspan x="1400" dy="22">RAG / Memory 升级</tspan>
+  </text>
+
+  <path d="M308 420 C320 420 322 360 336 360" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M1332 420 C1342 420 1346 420 1360 420" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="76" y="712">升级关注点</text>
+  <text class="body" x="76" y="748">
+    <tspan x="76" dy="0">1. 如果后续要升级首页或演示体验，优先复用组 A 的数据与引导框架，不要再造第二套 demo 流。</tspan>
+    <tspan x="76" dy="28">2. 若 3D 场景与任务页继续融合，优先沿 L03 的 Mission 状态映射扩展，而不是绕开状态层直连 UI。</tspan>
+    <tspan x="76" dy="28">3. 可观测性升级优先挂到 L05-L07 的事件与恢复链路，确保后端能力接入后前后端口径仍一致。</tspan>
+    <tspan x="76" dy="28">4. 新的前端附件或回放能力，优先挂在 L08/L09 的扩展点，保持“纯前端可跑”特性。</tspan>
+  </text>
+</svg>

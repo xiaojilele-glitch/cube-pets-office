@@ -1,0 +1,137 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">L30 后新增主线：任务控制台补完架构图</title>
+  <desc id="desc">展示 P0、P1、P2 围绕 /tasks、operator actions、任务详情首屏形成的补完主线。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 34px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .label { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .section { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+    .cardTitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 19px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 500; fill: #334155; }
+    .meta { font-family: "JetBrains Mono", "Cascadia Mono", monospace; font-size: 14px; font-weight: 600; fill: #64748b; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="55%" stop-color="#f7f8fc" />
+      <stop offset="100%" stop-color="#fdf7f2" />
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="50%" stop-color="#ffedd5" />
+      <stop offset="100%" stop-color="#fee2e2" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 L0 0 0 40" fill="none" stroke="#d9e4f1" stroke-width="1" opacity="0.6" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#grid)" opacity="0.45" />
+
+  <g filter="url(#shadow)">
+    <rect x="36" y="30" width="1528" height="128" rx="28" fill="url(#hero)" stroke="#cbd5e1" />
+  </g>
+  <text class="title" x="68" y="78">L30 后新增主线：任务控制台补完（2026-04-09）</text>
+  <text class="subtitle" x="68" y="110">目标：把 `/tasks` 从结果观察面板升级成真正可操作、可运营、可协作的执行控制台。</text>
+  <rect x="1286" y="56" width="224" height="38" rx="19" fill="#dcfce7" stroke="#86efac" />
+  <text class="label" x="1338" y="81">状态：已完成</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="206" width="260" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="336" y="206" width="996" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="1360" y="206" width="192" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="48" y="670" width="1504" height="182" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+  </g>
+
+  <text class="section" x="76" y="246">输入依赖</text>
+  <text class="body" x="76" y="286">
+    <tspan x="76" dy="0">第三层已经跑通</tspan>
+    <tspan x="76" dy="28">Docker 执行闭环、</tspan>
+    <tspan x="76" dy="28">状态回传、Artifact 回流，</tspan>
+    <tspan x="76" dy="28">因此页面重点转向运营控制。</tspan>
+  </text>
+  <rect x="76" y="452" width="204" height="126" rx="18" fill="#fff7ed" stroke="#fdba74" />
+  <text class="cardTitle" x="96" y="486">锚点</text>
+  <text class="small" x="96" y="516">
+    <tspan x="96" dy="0">/tasks 入口已存在</tspan>
+    <tspan x="96" dy="22">详情页可见但不够可操作</tspan>
+    <tspan x="96" dy="22">需要统一 operator actions</tspan>
+  </text>
+
+  <text class="section" x="368" y="246">主线链路</text>
+
+  <rect x="368" y="286" width="280" height="160" rx="22" fill="#fee2e2" stroke="#fca5a5" />
+  <text class="cardTitle" x="390" y="322">P0 控制闭环</text>
+  <text class="meta" x="390" y="348">mission-cancel-control / mission-operator-actions</text>
+  <text class="small" x="390" y="380">
+    <tspan x="390" dy="0">先打通取消、暂停、恢复、重试、</tspan>
+    <tspan x="390" dy="22">标记阻塞、终止这些操作动作。</tspan>
+    <tspan x="390" dy="22">这是控制台成立的最低前提。</tspan>
+  </text>
+
+  <rect x="688" y="286" width="292" height="160" rx="22" fill="#ffedd5" stroke="#fdba74" />
+  <text class="cardTitle" x="710" y="322">P1 首屏重排</text>
+  <text class="meta" x="710" y="348">task-detail-operations-first / execution-language-refresh</text>
+  <text class="small" x="710" y="380">
+    <tspan x="710" dy="0">让第一屏先显示主操作、负责人、</tspan>
+    <tspan x="710" dy="22">blocker 与下一步动作，</tspan>
+    <tspan x="710" dy="22">把叙事语言收敛为执行语言。</tspan>
+  </text>
+
+  <rect x="1020" y="286" width="284" height="160" rx="22" fill="#fef3c7" stroke="#fbbf24" />
+  <text class="cardTitle" x="1042" y="322">P2 体验收尾</text>
+  <text class="meta" x="1042" y="348">mission-ui-polish</text>
+  <text class="small" x="1042" y="380">
+    <tspan x="1042" dy="0">统一反馈时机、按钮层级、</tspan>
+    <tspan x="1042" dy="22">状态可见性、空态与错误态。</tspan>
+    <tspan x="1042" dy="22">避免控制语义稳定后再返工。</tspan>
+  </text>
+
+  <rect x="368" y="478" width="936" height="114" rx="22" fill="#f8fafc" stroke="#cbd5e1" />
+  <text class="cardTitle" x="392" y="514">控制台核心形态</text>
+  <text class="body" x="392" y="546">
+    <tspan x="392" dy="0">/tasks 成为唯一高频操作中心，operator actions 成为统一动作模型，任务详情首屏承载决策信息与下一步操作。</tspan>
+  </text>
+
+  <path d="M648 366 L688 366" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M980 366 L1020 366" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="1386" y="246">输出</text>
+  <text class="body" x="1386" y="286">
+    <tspan x="1386" dy="0">任务页从</tspan>
+    <tspan x="1386" dy="28">“观察结果”</tspan>
+    <tspan x="1386" dy="28">升级为“执行控制台”</tspan>
+  </text>
+  <rect x="1382" y="402" width="148" height="176" rx="18" fill="#f0fdf4" stroke="#86efac" />
+  <text class="cardTitle" x="1400" y="438">去向</text>
+  <text class="small" x="1400" y="468">
+    <tspan x="1400" dy="0">主线二：</tspan>
+    <tspan x="1400" dy="22">信息架构收口</tspan>
+    <tspan x="1400" dy="22">工作台重构</tspan>
+    <tspan x="1400" dy="22">视觉统一</tspan>
+  </text>
+
+  <path d="M308 420 C320 420 322 366 336 366" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M1332 420 C1342 420 1346 420 1360 420" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="76" y="712">升级关注点</text>
+  <text class="body" x="76" y="748">
+    <tspan x="76" dy="0">1. 后续新增任务操作，优先挂到 operator actions 统一模型，不要分散到各页面独立实现。</tspan>
+    <tspan x="76" dy="28">2. 详情页如果继续扩展，优先保证“负责人、阻塞点、下一步动作”仍留在首屏，不被展示性模块挤下去。</tspan>
+    <tspan x="76" dy="28">3. 控制语义发生变化时，先修 P0 状态流转，再修文案和按钮，不要反过来补。</tspan>
+    <tspan x="76" dy="28">4. 这条主线的成果会直接影响主线二的信息架构，因此 `/tasks` 应继续保持单一主操作中心定位。</tspan>
+  </text>
+</svg>

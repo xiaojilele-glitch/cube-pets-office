@@ -1,0 +1,134 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">L30 后新增主线二：信息架构收口与工作台重构架构图</title>
+  <desc id="desc">展示导航收口、任务中台、API fallback、WorkflowPanel 拆解、Scene 交互和视觉统一之间的关系。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 34px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .label { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .section { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+    .cardTitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 19px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 500; fill: #334155; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="55%" stop-color="#f7f8fc" />
+      <stop offset="100%" stop-color="#fdf7f2" />
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fef3c7" />
+      <stop offset="50%" stop-color="#fde68a" />
+      <stop offset="100%" stop-color="#fed7aa" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 L0 0 0 40" fill="none" stroke="#d9e4f1" stroke-width="1" opacity="0.6" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#grid)" opacity="0.45" />
+
+  <g filter="url(#shadow)">
+    <rect x="36" y="30" width="1528" height="128" rx="28" fill="url(#hero)" stroke="#cbd5e1" />
+  </g>
+  <text class="title" x="68" y="78">L30 后新增主线二：信息架构收口与工作台重构（2026-04-11）</text>
+  <text class="subtitle" x="68" y="110">目标：把系统从多个工具并列，收口成“办公室看态势、任务做推进、更多收低频”的单主线工作台。</text>
+  <rect x="1286" y="56" width="224" height="38" rx="19" fill="#dcfce7" stroke="#86efac" />
+  <text class="label" x="1338" y="81">状态：已完成</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="206" width="260" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="336" y="206" width="996" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="1360" y="206" width="192" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="48" y="670" width="1504" height="182" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+  </g>
+
+  <text class="section" x="76" y="246">输入依赖</text>
+  <text class="body" x="76" y="286">
+    <tspan x="76" dy="0">任务控制台主线已完成，</tspan>
+    <tspan x="76" dy="28">现在重点从“能操作任务”</tspan>
+    <tspan x="76" dy="28">转向“用户是否知道先看哪里、</tspan>
+    <tspan x="76" dy="28">下一步做什么”。</tspan>
+  </text>
+  <rect x="76" y="452" width="204" height="126" rx="18" fill="#fff7ed" stroke="#fdba74" />
+  <text class="cardTitle" x="96" y="486">落点</text>
+  <text class="small" x="96" y="516">
+    <tspan x="96" dy="0">导航收口</tspan>
+    <tspan x="96" dy="22">任务中台</tspan>
+    <tspan x="96" dy="22">视觉与交互统一</tspan>
+  </text>
+
+  <text class="section" x="368" y="246">核心模块</text>
+
+  <rect x="368" y="278" width="282" height="130" rx="22" fill="#fee2e2" stroke="#fca5a5" />
+  <text class="cardTitle" x="390" y="314">P0 导航收口</text>
+  <text class="small" x="390" y="346">
+    <tspan x="390" dy="0">navigation-convergence</tspan>
+    <tspan x="390" dy="22">task-hub-convergence</tspan>
+    <tspan x="390" dy="22">把主路径收口到办公室 / 任务 / 更多</tspan>
+  </text>
+
+  <rect x="680" y="278" width="282" height="130" rx="22" fill="#ffedd5" stroke="#fdba74" />
+  <text class="cardTitle" x="702" y="314">P0 API 兜底</text>
+  <text class="small" x="702" y="346">
+    <tspan x="702" dy="0">api-fallback-empty-states</tspan>
+    <tspan x="702" dy="22">统一 fetch fallback、空态、错误态</tspan>
+    <tspan x="702" dy="22">防止信息架构提升被报错抵消</tspan>
+  </text>
+
+  <rect x="992" y="278" width="312" height="130" rx="22" fill="#fef3c7" stroke="#fbbf24" />
+  <text class="cardTitle" x="1014" y="314">P1-P2 工作台补位</text>
+  <text class="small" x="1014" y="346">
+    <tspan x="1014" dy="0">workflow-panel-decomposition</tspan>
+    <tspan x="1014" dy="22">scene-agent-interaction / workspace-visual-unification</tspan>
+    <tspan x="1014" dy="22">让首页、任务页、低频页职责清晰</tspan>
+  </text>
+
+  <rect x="368" y="438" width="936" height="154" rx="22" fill="#f8fafc" stroke="#cbd5e1" />
+  <text class="cardTitle" x="392" y="474">主线收口结果</text>
+  <text class="body" x="392" y="506">
+    <tspan x="392" dy="0">导航只保留核心路径，`/tasks` 变成唯一高频任务中台，Workflow 信息和 Agent 信息各回各位，</tspan>
+    <tspan x="392" dy="28">Scene 承接办公室态势与 Agent 互动，低频工具页统一暖色工作台视觉语言。</tspan>
+  </text>
+
+  <path d="M650 344 L680 344" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M962 344 L992 344" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="1386" y="246">输出</text>
+  <text class="body" x="1386" y="286">
+    <tspan x="1386" dy="0">系统默认工作流</tspan>
+    <tspan x="1386" dy="28">从多入口并列</tspan>
+    <tspan x="1386" dy="28">变为单主线工作台</tspan>
+  </text>
+  <rect x="1382" y="402" width="148" height="176" rx="18" fill="#f0fdf4" stroke="#86efac" />
+  <text class="cardTitle" x="1400" y="438">去向</text>
+  <text class="small" x="1400" y="468">
+    <tspan x="1400" dy="0">第四层：</tspan>
+    <tspan x="1400" dy="22">环境就绪后</tspan>
+    <tspan x="1400" dy="22">再上平台能力</tspan>
+    <tspan x="1400" dy="22">不打乱当前主线</tspan>
+  </text>
+
+  <path d="M308 420 C320 420 322 344 336 344" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M1332 420 C1342 420 1346 420 1360 420" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="76" y="712">升级关注点</text>
+  <text class="body" x="76" y="748">
+    <tspan x="76" dy="0">1. 后续页面扩展优先遵守“办公室 / 任务 / 更多”三段式入口，不再长出新的一级并列导航。</tspan>
+    <tspan x="76" dy="28">2. 任务相关信息优先回到 `/tasks`，不要再把执行进度、操作入口、命令输入散落回其他页面。</tspan>
+    <tspan x="76" dy="28">3. Scene 交互升级时，应继续承接态势与 Agent 信息，而不是重新塞回 WorkflowPanel 这种聚合大组件。</tspan>
+    <tspan x="76" dy="28">4. 视觉统一要保持工作台语义优先，低频页跟随主线语言，而不是各页独立重新设计。</tspan>
+  </text>
+</svg>

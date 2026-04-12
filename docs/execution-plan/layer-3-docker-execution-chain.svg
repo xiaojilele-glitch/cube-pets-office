@@ -1,0 +1,164 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">第三层：Docker 执行链路架构图</title>
+  <desc id="desc">展示 L22 到 L25 的主执行链，以及 L18-L26、L14-L27-L28、L12-L29-L30 的串行侧链。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 34px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .label { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .section { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+    .cardTitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 500; fill: #334155; }
+    .meta { font-family: "JetBrains Mono", "Cascadia Mono", monospace; font-size: 13px; font-weight: 600; fill: #64748b; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="55%" stop-color="#f6f7fb" />
+      <stop offset="100%" stop-color="#fdf7f2" />
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef2ff" />
+      <stop offset="50%" stop-color="#e0f2fe" />
+      <stop offset="100%" stop-color="#fff7ed" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 L0 0 0 40" fill="none" stroke="#d9e4f1" stroke-width="1" opacity="0.6" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#grid)" opacity="0.45" />
+
+  <g filter="url(#shadow)">
+    <rect x="36" y="30" width="1528" height="128" rx="28" fill="url(#hero)" stroke="#cbd5e1" />
+  </g>
+  <text class="title" x="68" y="78">第三层：Docker 执行链路（严格串行，无法并行）</text>
+  <text class="subtitle" x="68" y="110">目标：把任务编排真正落到容器执行、回传、预览、权限和互操作主链上，形成可交付闭环。</text>
+  <rect x="1286" y="56" width="224" height="38" rx="19" fill="#dcfce7" stroke="#86efac" />
+  <text class="label" x="1338" y="81">状态：已完成</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="206" width="250" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="326" y="206" width="1016" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="1370" y="206" width="182" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="48" y="670" width="1504" height="182" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+  </g>
+
+  <text class="section" x="74" y="246">输入依赖</text>
+  <text class="body" x="74" y="286">
+    <tspan x="74" dy="0">第二层提供任务服务端、</tspan>
+    <tspan x="74" dy="28">Agent 控制语义、</tspan>
+    <tspan x="74" dy="28">RAG / Skill / 审批链。</tspan>
+  </text>
+  <rect x="74" y="408" width="198" height="170" rx="18" fill="#eff6ff" stroke="#93c5fd" />
+  <text class="cardTitle" x="94" y="444">严格约束</text>
+  <text class="small" x="94" y="474">
+    <tspan x="94" dy="0">主链不能跳步</tspan>
+    <tspan x="94" dy="22">L22 打底后再做安全</tspan>
+    <tspan x="94" dy="22">安全稳定后再做预览</tspan>
+    <tspan x="94" dy="22">桥接和权限依附主链成熟度</tspan>
+  </text>
+
+  <text class="section" x="356" y="246">主执行链</text>
+
+  <rect x="356" y="286" width="168" height="120" rx="22" fill="#e0f2fe" stroke="#7dd3fc" />
+  <text class="cardTitle" x="378" y="322">L22</text>
+  <text class="meta" x="378" y="346">lobster-executor-real</text>
+  <text class="small" x="378" y="376">
+    <tspan x="378" dy="0">真实容器生命周期</tspan>
+    <tspan x="378" dy="22">为后续链路提供执行底座</tspan>
+  </text>
+
+  <rect x="572" y="286" width="168" height="120" rx="22" fill="#eef2ff" stroke="#a5b4fc" />
+  <text class="cardTitle" x="594" y="322">L23</text>
+  <text class="meta" x="594" y="346">secure-sandbox</text>
+  <text class="small" x="594" y="376">
+    <tspan x="594" dy="0">收紧容器权限</tspan>
+    <tspan x="594" dy="22">把执行环境纳入安全边界</tspan>
+  </text>
+
+  <rect x="788" y="286" width="168" height="120" rx="22" fill="#ecfdf5" stroke="#86efac" />
+  <text class="cardTitle" x="810" y="322">L24</text>
+  <text class="meta" x="810" y="346">sandbox-live-preview</text>
+  <text class="small" x="810" y="376">
+    <tspan x="810" dy="0">实时终端与截图预览</tspan>
+    <tspan x="810" dy="22">让容器执行变得可观察</tspan>
+  </text>
+
+  <rect x="1004" y="254" width="146" height="88" rx="20" fill="#fff7ed" stroke="#fdba74" />
+  <text class="cardTitle" x="1026" y="288">L24.5</text>
+  <text class="meta" x="1026" y="310">executor-integration</text>
+  <rect x="1004" y="354" width="146" height="88" rx="20" fill="#fef2f2" stroke="#fca5a5" />
+  <text class="cardTitle" x="1038" y="388">L25</text>
+  <text class="meta" x="1038" y="410">agent-permission-model</text>
+
+  <rect x="356" y="466" width="794" height="126" rx="22" fill="#f8fafc" stroke="#cbd5e1" />
+  <text class="cardTitle" x="380" y="502">辅助主链</text>
+  <text class="body" x="380" y="534">
+    <tspan x="380" dy="0">L22.5 ai-enabled-sandbox：给容器注入 AI 能力，与主执行底座并行演进，但依然建立在 L22 之上。</tspan>
+    <tspan x="380" dy="28">L24.5 负责 WorkflowEngine ↔ Docker 的桥接，L25 负责把操作权限和执行边界正式收口。</tspan>
+  </text>
+
+  <path d="M524 346 L572 346" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M740 346 L788 346" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M956 346 L1004 298" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M956 346 L1004 398" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M440 406 L440 466" fill="none" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <text class="section" x="1180" y="246">侧链</text>
+  <rect x="1180" y="286" width="160" height="90" rx="18" fill="#eff6ff" stroke="#93c5fd" />
+  <text class="cardTitle" x="1200" y="320">L18 → L26</text>
+  <text class="small" x="1200" y="346">
+    <tspan x="1200" dy="0">自评估升级为</tspan>
+    <tspan x="1200" dy="22">自主 swarm</tspan>
+  </text>
+  <rect x="1180" y="392" width="160" height="90" rx="18" fill="#eef2ff" stroke="#a5b4fc" />
+  <text class="cardTitle" x="1200" y="426">L14 → L27 → L28</text>
+  <text class="small" x="1200" y="452">
+    <tspan x="1200" dy="0">审批语义延展成</tspan>
+    <tspan x="1200" dy="22">审计与血缘链</tspan>
+  </text>
+  <rect x="1180" y="498" width="160" height="90" rx="18" fill="#ecfdf5" stroke="#86efac" />
+  <text class="cardTitle" x="1200" y="532">L12 → L29 → L30</text>
+  <text class="small" x="1200" y="558">
+    <tspan x="1200" dy="0">Skill 体系延展成</tspan>
+    <tspan x="1200" dy="22">A2A 与 marketplace</tspan>
+  </text>
+
+  <text class="section" x="1394" y="246">输出</text>
+  <text class="body" x="1394" y="286">
+    <tspan x="1394" dy="0">容器执行闭环</tspan>
+    <tspan x="1394" dy="28">任务可观测</tspan>
+    <tspan x="1394" dy="28">权限和回传稳定</tspan>
+  </text>
+  <rect x="1392" y="402" width="138" height="176" rx="18" fill="#f0fdf4" stroke="#86efac" />
+  <text class="cardTitle" x="1410" y="438">去向</text>
+  <text class="small" x="1410" y="468">
+    <tspan x="1410" dy="0">/tasks 控制台</tspan>
+    <tspan x="1410" dy="22">Artifact 回传</tspan>
+    <tspan x="1410" dy="22">平台级能力前置</tspan>
+  </text>
+
+  <path d="M298 420 C310 420 314 346 326 346" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M1342 420 C1354 420 1358 420 1370 420" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="74" y="712">升级关注点</text>
+  <text class="body" x="74" y="748">
+    <tspan x="74" dy="0">1. 后续升级执行器时，优先沿 L22-L25 主链排查，不要把 bridge、preview、permission 混成一层。</tspan>
+    <tspan x="74" dy="28">2. AI sandbox 增强优先挂在 L22.5，不要直接侵入权限矩阵和安全沙箱核心边界。</tspan>
+    <tspan x="74" dy="28">3. 任务控制台和运营动作若失效，先看 L24/L24.5 的回传与桥接，再看上层页面。</tspan>
+    <tspan x="74" dy="28">4. 平台级能力启动前，要先确认主链的容器生命周期、预览、权限模型已经稳定可复用。</tspan>
+  </text>
+</svg>

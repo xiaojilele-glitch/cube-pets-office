@@ -1,0 +1,131 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">第四层：平台级能力架构图</title>
+  <desc id="desc">展示 L31-L38 的能力地图、前置依赖、暂缓状态和后续升级入口。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 34px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .label { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .section { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+    .cardTitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 19px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 500; fill: #334155; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="55%" stop-color="#f7f8fc" />
+      <stop offset="100%" stop-color="#fdf7f2" />
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ede9fe" />
+      <stop offset="50%" stop-color="#e0f2fe" />
+      <stop offset="100%" stop-color="#ecfdf5" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 L0 0 0 40" fill="none" stroke="#d9e4f1" stroke-width="1" opacity="0.6" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#grid)" opacity="0.45" />
+
+  <g filter="url(#shadow)">
+    <rect x="36" y="30" width="1528" height="128" rx="28" fill="url(#hero)" stroke="#cbd5e1" />
+  </g>
+  <text class="title" x="68" y="78">第四层：平台级能力（环境就绪后再做，不设时间承诺）</text>
+  <text class="subtitle" x="68" y="110">目标：在执行链、权限、任务主线稳定后，再推进生产部署、多租户、K8s、边缘、多区域与 VR 这些平台能力。</text>
+  <rect x="1272" y="56" width="238" height="38" rx="19" fill="#fef3c7" stroke="#fbbf24" />
+  <text class="label" x="1324" y="81">状态：暂缓 / 未启动</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="206" width="260" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="336" y="206" width="996" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="1360" y="206" width="192" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="48" y="670" width="1504" height="182" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+  </g>
+
+  <text class="section" x="76" y="246">输入依赖</text>
+  <text class="body" x="76" y="286">
+    <tspan x="76" dy="0">前提不是“想做就做”，</tspan>
+    <tspan x="76" dy="28">而是先有稳定执行链。</tspan>
+    <tspan x="76" dy="28">L22、L25、L30、L19、L03</tspan>
+    <tspan x="76" dy="28">分别为部署、权限、市场、信誉、VR 提供前置依赖。</tspan>
+  </text>
+  <rect x="76" y="452" width="204" height="126" rx="18" fill="#ede9fe" stroke="#c4b5fd" />
+  <text class="cardTitle" x="96" y="486">节奏</text>
+  <text class="small" x="96" y="516">
+    <tspan x="96" dy="0">先稳主链</tspan>
+    <tspan x="96" dy="22">再上平台</tspan>
+    <tspan x="96" dy="22">不做时间承诺</tspan>
+  </text>
+
+  <text class="section" x="368" y="246">能力地图</text>
+
+  <rect x="368" y="278" width="286" height="136" rx="22" fill="#eff6ff" stroke="#93c5fd" />
+  <text class="cardTitle" x="390" y="314">部署与协作基线</text>
+  <text class="small" x="390" y="346">
+    <tspan x="390" dy="0">L31 production-deployment</tspan>
+    <tspan x="390" dy="22">L32 multi-user-office</tspan>
+    <tspan x="390" dy="22">先把生产部署和多人协作打底</tspan>
+  </text>
+
+  <rect x="682" y="278" width="286" height="136" rx="22" fill="#eef2ff" stroke="#a5b4fc" />
+  <text class="cardTitle" x="704" y="314">商业与治理扩展</text>
+  <text class="small" x="704" y="346">
+    <tspan x="704" dy="0">L33 multi-tenant-architecture</tspan>
+    <tspan x="704" dy="22">L34 agent-marketplace-platform</tspan>
+    <tspan x="704" dy="22">多租户与市场平台依赖权限和 marketplace 主线</tspan>
+  </text>
+
+  <rect x="996" y="278" width="308" height="136" rx="22" fill="#ecfdf5" stroke="#86efac" />
+  <text class="cardTitle" x="1018" y="314">基础设施外延</text>
+  <text class="small" x="1018" y="346">
+    <tspan x="1018" dy="0">L35 k8s-agent-operator / L36 edge-brain-deployment</tspan>
+    <tspan x="1018" dy="22">L37 multi-region-disaster-recovery</tspan>
+    <tspan x="1018" dy="22">建立在生产部署成熟之后</tspan>
+  </text>
+
+  <rect x="368" y="446" width="936" height="146" rx="22" fill="#f8fafc" stroke="#cbd5e1" />
+  <text class="cardTitle" x="392" y="482">体验外延</text>
+  <text class="body" x="392" y="514">
+    <tspan x="392" dy="0">L38 vr-extension 依赖 L03 的场景能力，是体验扩展而不是当前主执行线的一部分。</tspan>
+    <tspan x="392" dy="28">因此第四层应被视为能力地图，不是下一周必须完成的排期承诺。</tspan>
+  </text>
+
+  <text class="section" x="1386" y="246">输出</text>
+  <text class="body" x="1386" y="286">
+    <tspan x="1386" dy="0">给未来升级</tspan>
+    <tspan x="1386" dy="28">保留清晰入口</tspan>
+    <tspan x="1386" dy="28">但不打断当前主线</tspan>
+  </text>
+  <rect x="1382" y="402" width="148" height="176" rx="18" fill="#f5f3ff" stroke="#c4b5fd" />
+  <text class="cardTitle" x="1400" y="438">去向</text>
+  <text class="small" x="1400" y="468">
+    <tspan x="1400" dy="0">环境就绪后</tspan>
+    <tspan x="1400" dy="22">择机拆分</tspan>
+    <tspan x="1400" dy="22">单独立项推进</tspan>
+    <tspan x="1400" dy="22">不挤占当前维护主线</tspan>
+  </text>
+
+  <path d="M308 420 C320 420 322 344 336 344" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M1332 420 C1342 420 1346 420 1360 420" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="76" y="712">升级关注点</text>
+  <text class="body" x="76" y="748">
+    <tspan x="76" dy="0">1. 若要启动 L31-L37，先重新核对 L22/L25/L30 是否已经足够稳定，避免平台化建立在摇晃主链之上。</tspan>
+    <tspan x="76" dy="28">2. 多租户与市场平台要优先复用现有权限、信誉、marketplace 语义，不要重做第二套治理模型。</tspan>
+    <tspan x="76" dy="28">3. K8s、边缘、多区域应被看作部署拓展，不应提前侵入当前本地 Docker 主链实现。</tspan>
+    <tspan x="76" dy="28">4. VR 扩展继续依附 L03 的 3D 场景层演进，避免单独长出与办公室语义脱节的交互系统。</tspan>
+  </text>
+</svg>

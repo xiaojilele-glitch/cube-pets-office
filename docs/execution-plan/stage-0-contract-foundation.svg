@@ -1,0 +1,141 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">阶段 0：契约先行架构图</title>
+  <desc id="desc">展示 C01-C08 契约冻结、不可破坏面、下游影响面以及后续阶段升级入口的阶段图。</desc>
+  <style>
+    .title { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 34px; font-weight: 800; fill: #0f172a; }
+    .subtitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 18px; font-weight: 500; fill: #475569; }
+    .label { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 700; fill: #0f172a; }
+    .section { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 22px; font-weight: 800; fill: #102541; }
+    .cardTitle { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 20px; font-weight: 800; fill: #0f172a; }
+    .body { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 17px; font-weight: 500; fill: #334155; }
+    .meta { font-family: "JetBrains Mono", "Cascadia Mono", monospace; font-size: 14px; font-weight: 600; fill: #64748b; }
+    .small { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif; font-size: 15px; font-weight: 500; fill: #475569; }
+  </style>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fbff" />
+      <stop offset="55%" stop-color="#f7f8fc" />
+      <stop offset="100%" stop-color="#fdf7f2" />
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef2ff" />
+      <stop offset="50%" stop-color="#ecfeff" />
+      <stop offset="100%" stop-color="#fff7ed" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0f172a" flood-opacity="0.08" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.4" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="context-stroke" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0 L0 0 0 40" fill="none" stroke="#d9e4f1" stroke-width="1" opacity="0.6" />
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)" />
+  <rect width="1600" height="900" fill="url(#grid)" opacity="0.45" />
+
+  <g filter="url(#shadow)">
+    <rect x="36" y="30" width="1528" height="128" rx="28" fill="url(#hero)" stroke="#cbd5e1" />
+  </g>
+  <text class="title" x="68" y="78">阶段 0：契约先行（并行前必须完成）</text>
+  <text class="subtitle" x="68" y="110">目标：先冻结 C01-C08 稳定面，再让后续前端、服务端、Docker 链路安全并行推进。</text>
+  <rect x="1300" y="56" width="210" height="38" rx="19" fill="#dcfce7" stroke="#86efac" />
+  <text class="label" x="1362" y="81">状态：已完成</text>
+
+  <g filter="url(#shadow)">
+    <rect x="48" y="206" width="300" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="376" y="206" width="834" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="1238" y="206" width="314" height="430" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+    <rect x="48" y="670" width="1504" height="182" rx="28" fill="url(#panel)" stroke="#bfd3ea" />
+  </g>
+
+  <text class="section" x="78" y="246">输入依赖</text>
+  <text class="body" x="78" y="286">
+    <tspan x="78" dy="0">共享域模型先对齐：</tspan>
+    <tspan x="78" dy="28">事件、Memory、Mission、</tspan>
+    <tspan x="78" dy="28">LLM、RAG、Skill 命名统一。</tspan>
+  </text>
+  <text class="small" x="78" y="386">
+    <tspan x="78" dy="0">这一步不是功能开发，</tspan>
+    <tspan x="78" dy="24">而是给后续所有 worktree</tspan>
+    <tspan x="78" dy="24">提供不会轻易打破的边界。</tspan>
+  </text>
+  <rect x="78" y="468" width="240" height="110" rx="18" fill="#eff6ff" stroke="#93c5fd" />
+  <text class="cardTitle" x="96" y="502">前置共识</text>
+  <text class="small" x="96" y="532">
+    <tspan x="96" dy="0">shared/* 合同落点明确</tspan>
+    <tspan x="96" dy="22">跨模块命名一致</tspan>
+    <tspan x="96" dy="22">下游不得绕过契约直连</tspan>
+  </text>
+
+  <text class="section" x="408" y="246">核心冻结面</text>
+
+  <rect x="408" y="278" width="238" height="158" rx="22" fill="#eef2ff" stroke="#a5b4fc" />
+  <text class="cardTitle" x="430" y="314">C01-C03 基础数据面</text>
+  <text class="meta" x="430" y="340">demo / telemetry / memory</text>
+  <text class="small" x="430" y="372">
+    <tspan x="430" dy="0">冻结 schema、事件格式、</tspan>
+    <tspan x="430" dy="22">读写接口分层。</tspan>
+    <tspan x="430" dy="22">这是前端可回放与长任务恢复的底座。</tspan>
+  </text>
+
+  <rect x="674" y="278" width="238" height="158" rx="22" fill="#ecfeff" stroke="#67e8f9" />
+  <text class="cardTitle" x="696" y="314">C04-C06 编排接口面</text>
+  <text class="meta" x="696" y="340">mission / export / llm</text>
+  <text class="small" x="696" y="372">
+    <tspan x="696" dy="0">统一任务富化结构、</tspan>
+    <tspan x="696" dy="22">跨框架导出格式、</tspan>
+    <tspan x="696" dy="22">多提供商 LLM 抽象。</tspan>
+  </text>
+
+  <rect x="940" y="278" width="238" height="158" rx="22" fill="#fff7ed" stroke="#fdba74" />
+  <text class="cardTitle" x="962" y="314">C07-C08 扩展能力面</text>
+  <text class="meta" x="962" y="340">rag / skill</text>
+  <text class="small" x="962" y="372">
+    <tspan x="962" dy="0">定义 RAG 步骤链与</tspan>
+    <tspan x="962" dy="22">Skill 注册机制。</tspan>
+    <tspan x="962" dy="22">保证后续能力插拔不撕裂主链。</tspan>
+  </text>
+
+  <rect x="408" y="464" width="770" height="128" rx="22" fill="#f8fafc" stroke="#cbd5e1" />
+  <text class="cardTitle" x="432" y="500">不可破坏面</text>
+  <text class="body" x="432" y="532">
+    <tspan x="432" dy="0">1. 前端状态与服务端回传必须遵守同一事件语义。</tspan>
+    <tspan x="432" dy="28">2. Workflow / Export / LLM / RAG / Skill 只能沿共享契约扩展。</tspan>
+    <tspan x="432" dy="28">3. 后续改造先升级 contract，再升级实现，避免反向破坏下游。</tspan>
+  </text>
+
+  <text class="section" x="1268" y="246">输出结果</text>
+  <text class="body" x="1268" y="286">
+    <tspan x="1268" dy="0">下游影响面：</tspan>
+    <tspan x="1268" dy="28">第一层前端并行可直接开工</tspan>
+    <tspan x="1268" dy="28">第二层服务端能力不会重命名返工</tspan>
+    <tspan x="1268" dy="28">第三层 Docker 桥接能稳定接协议</tspan>
+  </text>
+  <rect x="1268" y="414" width="252" height="164" rx="18" fill="#f0fdf4" stroke="#86efac" />
+  <text class="cardTitle" x="1288" y="448">下一阶段去向</text>
+  <text class="small" x="1288" y="478">
+    <tspan x="1288" dy="0">第一层：L01-L09</tspan>
+    <tspan x="1288" dy="22">第二层：L10-L21</tspan>
+    <tspan x="1288" dy="22">第三层：L22-L30</tspan>
+    <tspan x="1288" dy="22">全部默认建立在 C01-C08 上</tspan>
+  </text>
+
+  <path d="M348 420 C364 420 364 356 376 356" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+  <path d="M1210 420 C1224 420 1224 420 1238 420" fill="none" stroke="#64748b" stroke-width="3" marker-end="url(#arrow)" />
+
+  <text class="section" x="78" y="712">升级关注点</text>
+  <text class="body" x="78" y="748">
+    <tspan x="78" dy="0">1. 新能力优先补 shared contract，再触达 client / server / executor。</tspan>
+    <tspan x="78" dy="28">2. 如果未来替换模型供应商或 RAG 存储，尽量只改 C06 / C07 背后的适配层。</tspan>
+    <tspan x="78" dy="28">3. 若要扩展多租户、市场化或外部插件市场，继续沿 C05 / C08 扩展导出与注册机制。</tspan>
+    <tspan x="78" dy="28">4. 执行计划升级时，先检查“不可破坏面”是否仍成立，再决定后续阶段是否可并行。</tspan>
+  </text>
+</svg>
