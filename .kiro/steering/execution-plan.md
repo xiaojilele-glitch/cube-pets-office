@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description: 
- * @LastEditTime: 2026-04-11 10:30:00
+ * @LastEditTime: 2026-04-11 20:20:00
  * @LastEditors: wangchunji
 -->
 ---
@@ -35,7 +35,7 @@ inclusion: auto
 - `workflow-artifacts-display` 已完成功能开发：Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、WorkflowPanel / TaskDetailView 集成与 Socket 联动均已落地；当前仅剩 `tasks.md` 中最终检查点未勾选。
 - 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
 - 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 已完成。
-- 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已建 spec，待按 wave 方式推进。
+- 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已完成并合并到 `main`。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
@@ -151,9 +151,9 @@ L12 → L29 → L30
 - [x] P0 `navigation-convergence` — 将一级导航收口为“办公室 / 任务 / 更多”；建立主路径骨架，弱化 8 个并列入口。
 - [x] P0 `task-hub-convergence` — 将命令输入、任务列表、执行进度与人工干预收口到 `/tasks`；与导航收口强协同，是新的唯一主操作中心。
 - [x] P0 `api-fallback-empty-states` — 统一 fetch 兜底、演示模式提示、空态与错误态；可与前两项并行，但建议先做低冲突 store 与低频页面。
-- [ ] P1 `workflow-panel-decomposition` — 拆解 `WorkflowPanel`，让任务信息回归任务页、Agent 信息回归办公室；依赖任务中台与场景目标落点基本稳定后推进。
-- [ ] P1 `scene-agent-interaction` — 让 3D 场景承接 Agent 详情侧栏、公告板与阶段流线；依赖导航骨架稳定，可与 `workflow-panel-decomposition` 协同。
-- [ ] P2 `workspace-visual-unification` — 统一暖色工作台视觉语言，优先治理 `LineagePage` 与“更多”下低频页面；依赖主路径结构基本稳定后收尾。
+- [x] P1 `workflow-panel-decomposition` — 拆解 `WorkflowPanel`，让任务信息回归任务页、Agent 信息回归办公室；已完成并合并到 `main`。
+- [x] P1 `scene-agent-interaction` — 让 3D 场景承接 Agent 详情侧栏、公告板与阶段流线；已完成并合并到 `main`。
+- [x] P2 `workspace-visual-unification` — 统一暖色工作台视觉语言，优先治理 `LineagePage` 与“更多”下低频页面；已完成并合并到 `main`。
 
 ### Worktree 并行建议
 
@@ -163,7 +163,7 @@ L12 → L29 → L30
 - `task-hub-convergence`
 - `api-fallback-empty-states`（仅第一批：公共请求层 + 低冲突 store + 低频页面空态）
 
-#### Wave 2：等待启动
+#### Wave 2：已完成
 
 - `workflow-panel-decomposition`
 - `scene-agent-interaction`
@@ -292,7 +292,7 @@ Wave 1（可直接并行）:
   task-hub-convergence
   api-fallback-empty-states（第一批低冲突接入）
 
-Wave 2（等待骨架稳定）:
+Wave 2（已完成并合并）:
   workflow-panel-decomposition
   scene-agent-interaction
   workspace-visual-unification
