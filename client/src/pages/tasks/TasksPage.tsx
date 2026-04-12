@@ -3,38 +3,17 @@ import {
   useDeferredValue,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
-import {
-  FolderKanban,
-  LoaderCircle,
-  Plus,
-  RefreshCw,
-  Search,
-} from "lucide-react";
 import { toast } from "sonner";
 
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
-import { RetryInlineNotice } from "@/components/tasks/RetryInlineNotice";
-import { TaskDetailView } from "@/components/tasks/TaskDetailView";
-import { TaskHubCommandPanel } from "@/components/nl-command/TaskHubCommandPanel";
-import {
-  compactText,
-  formatTaskRelative,
-  missionOperatorStateLabel,
-  missionOperatorStateTone,
-  missionStatusLabel,
-  missionStatusTone,
-} from "@/components/tasks/task-helpers";
-import { EmptyHintBlock } from "@/components/tasks/EmptyHintBlock";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { workspaceStatusClass } from "@/components/workspace/workspace-tone";
+import { TasksCockpitDetail } from "@/components/tasks/TasksCockpitDetail";
+import { TasksCommandDock } from "@/components/tasks/TasksCommandDock";
+import { TasksQueueRail } from "@/components/tasks/TasksQueueRail";
+import { useViewportTier } from "@/hooks/useViewportTier";
 import { useI18n } from "@/i18n";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
-import { localizeTaskHubBriefText } from "@/lib/task-hub-copy";
 import { useTasksStore } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +26,8 @@ export default function TasksPage({
   initialTaskId?: string | null;
   className?: string;
 }) {
-  const { locale, copy } = useI18n();
+  const { copy } = useI18n();
+  const { width, isMobile } = useViewportTier();
   const ensureReady = useTasksStore(state => state.ensureReady);
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
@@ -67,6 +47,7 @@ export default function TasksPage({
   const operatorActionLoadingByMissionId = useTasksStore(
     state => state.operatorActionLoadingByMissionId
   );
+
   const [search, setSearch] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
@@ -75,9 +56,10 @@ export default function TasksPage({
   const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(
     null
   );
-  const taskButtonRefs = useRef(new Map<string, HTMLButtonElement>());
 
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+  const isWideDesktop = width >= 1280;
+  const isLockedCockpit = width >= 1440 && !isMobile;
 
   useEffect(() => {
     void ensureReady();
@@ -99,6 +81,22 @@ export default function TasksPage({
     }
   }, []);
 
+  useEffect(() => {
+    if (!highlightedTaskId || typeof window === "undefined") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setHighlightedTaskId(current =>
+        current === highlightedTaskId ? null : current
+      );
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [highlightedTaskId]);
+
   const filteredTasks = useMemo(() => {
     if (!deferredSearch) return tasks;
     return tasks.filter(task => {
@@ -117,38 +115,13 @@ export default function TasksPage({
     });
   }, [deferredSearch, tasks]);
 
-  useEffect(() => {
-    if (!highlightedTaskId) {
-      return;
-    }
-
-    const button = taskButtonRefs.current.get(highlightedTaskId);
-    if (button) {
-      button.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      setHighlightedTaskId(current =>
-        current === highlightedTaskId ? null : current
-      );
-    }, 2400);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [filteredTasks, highlightedTaskId]);
-
   const activeTaskId =
     (selectedTaskId && detailsById[selectedTaskId] ? selectedTaskId : null) ||
     filteredTasks[0]?.id ||
     null;
-  const selectedDetail = activeTaskId
-    ? detailsById[activeTaskId] || null
-    : null;
+  const selectedDetail = activeTaskId ? detailsById[activeTaskId] || null : null;
+  const selectedTaskSummary =
+    tasks.find(task => task.id === activeTaskId) || null;
   const decisionNote = activeTaskId ? decisionNotes[activeTaskId] || "" : "";
 
   async function handleLaunchDecision(presetId: string) {
@@ -174,10 +147,10 @@ export default function TasksPage({
         toast.success(copy.tasks.listPage.createSuccess);
       }
       return missionId;
-    } catch (error) {
+    } catch (createError) {
       const message =
-        error instanceof Error
-          ? error.message
+        createError instanceof Error
+          ? createError.message
           : copy.tasks.listPage.createError;
       toast.error(message);
       return null;
@@ -201,13 +174,13 @@ export default function TasksPage({
           ]
         )
       );
-    } catch (error) {
+    } catch (submitError) {
       const message =
-        error instanceof Error
-          ? error.message
+        submitError instanceof Error
+          ? submitError.message
           : copy.tasks.listPage.actionError;
       toast.error(message);
-      throw error;
+      throw submitError;
     }
   }
 
@@ -234,248 +207,118 @@ export default function TasksPage({
     }
   }
 
+  const refreshCurrent = () =>
+    void refresh({ preferredTaskId: activeTaskId || null });
+
   return (
     <div
       className={cn(
-        "workspace-page min-h-screen pb-28 pt-[calc(env(safe-area-inset-top)+96px)] text-stone-900 md:pb-36 md:pt-0",
+        "workspace-page text-stone-900",
+        isMobile
+          ? "min-h-screen pb-28 pt-[calc(env(safe-area-inset-top)+96px)]"
+          : isLockedCockpit
+            ? "h-screen overflow-hidden"
+            : "min-h-screen pb-32 pt-3",
         className
       )}
     >
-      <div className="mx-auto flex min-h-screen max-w-[1680px] flex-col px-3 py-3 md:px-5 md:py-4">
-        <header className="workspace-shell shrink-0 rounded-[28px] px-4 py-4 md:px-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="workspace-eyebrow">
-                {copy.tasks.listPage.eyebrow}
-              </div>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--workspace-text-strong)] md:text-[2rem]">
-                {copy.tasks.listPage.title}
-              </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--workspace-text-muted)] md:line-clamp-2">
-                {copy.tasks.listPage.description}
-              </p>
-            </div>
+      <div
+        className={cn(
+          "mx-auto flex w-full max-w-[1720px] flex-col px-3 md:px-4",
+          isLockedCockpit ? "h-full py-4" : "min-h-screen py-3"
+        )}
+      >
+        {isWideDesktop ? (
+          <div
+            className={cn(
+              "grid min-h-0 flex-1 gap-3 xl:grid-cols-[296px_minmax(0,1fr)]",
+              isLockedCockpit && "overflow-hidden"
+            )}
+          >
+            <TasksQueueRail
+              tasks={filteredTasks}
+              totalCount={tasks.length}
+              activeTaskId={activeTaskId}
+              highlightedTaskId={highlightedTaskId}
+              loading={loading}
+              ready={ready}
+              error={error}
+              search={search}
+              onSearchChange={setSearch}
+              onSelectTask={taskId => {
+                startTransition(() => {
+                  selectTask(taskId);
+                });
+              }}
+              onRefresh={refreshCurrent}
+              className={cn(isLockedCockpit ? "h-full min-h-0" : "min-h-[640px]")}
+            />
 
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                className="rounded-full bg-[linear-gradient(180deg,#c98257,#b86f45)] text-white shadow-[0_14px_28px_rgba(184,111,69,0.22)] hover:brightness-105"
-                onClick={() => setCreateDialogOpen(true)}
-              >
-                <Plus className="size-4" />
-                {copy.tasks.listPage.create}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="workspace-control rounded-full"
-                onClick={() =>
-                  void refresh({ preferredTaskId: activeTaskId || null })
+            <div className="min-w-0 flex min-h-0 flex-col gap-3">
+              <TasksCommandDock
+                createMission={createMission}
+                tasks={tasks}
+                activeTask={selectedTaskSummary}
+                onTaskResolved={handleTaskHubResolved}
+                onOpenCreateDialog={() => setCreateDialogOpen(true)}
+                onRefresh={refreshCurrent}
+                refreshing={loading && ready}
+                className={cn(isLockedCockpit && "shrink-0 xl:h-[220px]")}
+              />
+
+              <TasksCockpitDetail
+                detail={selectedDetail}
+                decisionNote={decisionNote}
+                onDecisionNoteChange={value => {
+                  if (!activeTaskId) return;
+                  setDecisionNote(activeTaskId, value);
+                }}
+                onLaunchDecision={handleLaunchDecision}
+                launchingPresetId={launchingPresetId}
+                onSubmitOperatorAction={handleSubmitOperatorAction}
+                operatorActionLoading={
+                  activeTaskId
+                    ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
+                    : {}
                 }
-              >
-                <RefreshCw className="size-4" />
-                {copy.tasks.listPage.refresh}
-              </Button>
+                onDecisionSubmitted={refreshCurrent}
+                className="min-h-0 flex-1"
+              />
             </div>
           </div>
-        </header>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <TasksCommandDock
+              createMission={createMission}
+              tasks={tasks}
+              activeTask={selectedTaskSummary}
+              onTaskResolved={handleTaskHubResolved}
+              onOpenCreateDialog={() => setCreateDialogOpen(true)}
+              onRefresh={refreshCurrent}
+              refreshing={loading && ready}
+            />
 
-        <TaskHubCommandPanel
-          createMission={createMission}
-          tasks={tasks}
-          onTaskResolved={handleTaskHubResolved}
-        />
+            <TasksQueueRail
+              tasks={filteredTasks}
+              totalCount={tasks.length}
+              activeTaskId={activeTaskId}
+              highlightedTaskId={highlightedTaskId}
+              loading={loading}
+              ready={ready}
+              error={error}
+              search={search}
+              onSearchChange={setSearch}
+              onSelectTask={taskId => {
+                startTransition(() => {
+                  selectTask(taskId);
+                });
+              }}
+              onRefresh={refreshCurrent}
+              className="min-h-[320px] max-h-[460px]"
+            />
 
-        <div className="mt-3 grid gap-3 xl:items-start xl:grid-cols-[320px_minmax(0,1fr)]">
-          <aside className="workspace-panel workspace-panel-strong flex min-h-0 flex-col overflow-hidden rounded-[28px]">
-            <div className="shrink-0 border-b border-stone-200/80 px-4 py-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-[var(--workspace-text-strong)]">
-                    {copy.tasks.listPage.queueTitle}
-                  </div>
-                  <div className="mt-1 text-xs leading-5 text-[var(--workspace-text-muted)]">
-                    {copy.tasks.listPage.visibleCount(
-                      filteredTasks.length,
-                      tasks.length
-                    )}
-                  </div>
-                </div>
-                {loading && !ready ? (
-                  <LoaderCircle className="size-4 animate-spin text-stone-500" />
-                ) : null}
-              </div>
-
-              <div className="relative mt-3">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-stone-400" />
-                <Input
-                  value={search}
-                  onChange={event => setSearch(event.target.value)}
-                  placeholder={copy.tasks.listPage.searchPlaceholder}
-                  className="workspace-control rounded-full border-none pl-10"
-                />
-              </div>
-            </div>
-
-            <ScrollArea className="min-h-0 flex-1">
-              <div className="space-y-2.5 px-3 py-3">
-                {error ? (
-                  <RetryInlineNotice
-                    title={copy.chat.errorTitle}
-                    description={error}
-                    actionLabel={copy.tasks.listPage.refresh}
-                    onRetry={() =>
-                      void refresh({ preferredTaskId: activeTaskId || null })
-                    }
-                  />
-                ) : null}
-
-                {!error && filteredTasks.length === 0 && !loading ? (
-                  <EmptyHintBlock
-                    icon={<FolderKanban className="size-5" />}
-                    title={copy.tasks.listPage.emptyTitle}
-                    description={copy.tasks.listPage.emptyDescription}
-                    hint={copy.tasks.listPage.searchPlaceholder}
-                    tone="info"
-                  />
-                ) : null}
-
-                {filteredTasks.map(task => {
-                  const active = task.id === activeTaskId;
-                  return (
-                    <button
-                      key={task.id}
-                      type="button"
-                      ref={node => {
-                        if (node) {
-                          taskButtonRefs.current.set(task.id, node);
-                          return;
-                        }
-
-                        taskButtonRefs.current.delete(task.id);
-                      }}
-                      className={cn(
-                        "w-full rounded-[22px] border px-3.5 py-3.5 text-left transition-all",
-                        active
-                          ? "border-[rgba(201,130,87,0.32)] bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,243,224,0.94))] shadow-[0_16px_44px_rgba(164,113,29,0.12)]"
-                          : "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.52)] hover:border-[rgba(151,120,90,0.3)] hover:bg-[rgba(255,255,255,0.72)]",
-                        task.id === highlightedTaskId &&
-                          "ring-2 ring-amber-300 ring-offset-2 ring-offset-[#fff7eb]"
-                      )}
-                      onClick={() => {
-                        startTransition(() => {
-                          selectTask(task.id);
-                        });
-                      }}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap gap-2">
-                            <span
-                              className={cn(
-                                "workspace-status px-2.5 py-1 text-[11px]",
-                                missionStatusTone(task.status)
-                              )}
-                            >
-                              {missionStatusLabel(task.status, locale)}
-                            </span>
-                            {task.operatorState !== "active" ? (
-                              <span
-                                className={cn(
-                                  "workspace-status px-2.5 py-1 text-[11px]",
-                                  missionOperatorStateTone(task.operatorState)
-                                )}
-                              >
-                                {missionOperatorStateLabel(
-                                  task.operatorState,
-                                  locale
-                                )}
-                              </span>
-                            ) : null}
-                            {task.hasWarnings ? (
-                              <span
-                                className={workspaceStatusClass(
-                                  "warning",
-                                  "px-2.5 py-1 text-[11px]"
-                                )}
-                              >
-                                {copy.tasks.listPage.warnings}
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="mt-2.5 line-clamp-2 text-sm font-medium leading-6 text-stone-900">
-                            {task.title}
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-right text-xs text-stone-500">
-                          <div>{task.progress}%</div>
-                          <div className="mt-1">
-                            {formatTaskRelative(task.updatedAt, locale)}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-2.5 text-xs leading-5 text-stone-500">
-                        {task.currentStageLabel || copy.tasks.listPage.noStage}
-                        {task.waitingFor ? ` • ${task.waitingFor}` : ""}
-                      </div>
-                      <div className="mt-2 text-sm leading-6 text-stone-600">
-                        {compactText(
-                          localizeTaskHubBriefText(
-                            task.summary || task.sourceText,
-                            locale
-                          ),
-                          160
-                        )}
-                      </div>
-                      <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-stone-500">
-                        <span
-                          className={workspaceStatusClass(
-                            "neutral",
-                            "px-2.5 py-1 text-[11px] font-medium"
-                          )}
-                        >
-                          {copy.tasks.listPage.tasksCount(task.taskCount)}
-                        </span>
-                        <span
-                          className={workspaceStatusClass(
-                            "neutral",
-                            "px-2.5 py-1 text-[11px] font-medium"
-                          )}
-                        >
-                          {copy.tasks.listPage.messagesCount(task.messageCount)}
-                        </span>
-                        <span
-                          className={workspaceStatusClass(
-                            "neutral",
-                            "px-2.5 py-1 text-[11px] font-medium"
-                          )}
-                        >
-                          {copy.tasks.listPage.attachmentsCount(
-                            task.attachmentCount
-                          )}
-                        </span>
-                        {task.attempt > 1 ? (
-                          <span
-                            className={workspaceStatusClass(
-                              "neutral",
-                              "px-2.5 py-1 text-[11px] font-medium"
-                            )}
-                          >
-                            {copy.tasks.listPage.attemptCount(task.attempt)}
-                          </span>
-                        ) : null}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </ScrollArea>
-          </aside>
-
-          <main className="min-w-0">
-            <TaskDetailView
-              detail={selectedDetail || null}
+            <TasksCockpitDetail
+              detail={selectedDetail}
               decisionNote={decisionNote}
               onDecisionNoteChange={value => {
                 if (!activeTaskId) return;
@@ -489,13 +332,10 @@ export default function TasksPage({
                   ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
                   : {}
               }
-              onDecisionSubmitted={() =>
-                void refresh({ preferredTaskId: activeTaskId || null })
-              }
-              className="min-w-0"
+              onDecisionSubmitted={refreshCurrent}
             />
-          </main>
-        </div>
+          </div>
+        )}
       </div>
 
       <CreateMissionDialog

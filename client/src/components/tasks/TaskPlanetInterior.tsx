@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
-import type { MissionTaskDetail } from "@/lib/tasks-store";
 import { useI18n } from "@/i18n";
+import type { MissionTaskDetail } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
 import {
@@ -20,13 +20,17 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 const PLANET_PANEL_CLASS =
-  "workspace-panel-inset rounded-[24px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.72)] p-4 shadow-sm";
+  "workspace-panel-inset rounded-[24px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.72)] shadow-sm";
 const PLANET_TILE_CLASS =
   "workspace-panel-inset rounded-[18px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)] px-3 py-2.5";
 const PLANET_LIST_CARD_CLASS =
   "workspace-panel-inset rounded-[16px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)] px-3 py-2.5";
 const PLANET_PILL_CLASS =
   "workspace-status workspace-tone-neutral bg-white/75 px-2.5 py-1 text-[11px] text-stone-600";
+
+function t(locale: string, zh: string, en: string) {
+  return locale === "zh-CN" ? zh : en;
+}
 
 function orbitStyle(angle: number, radius: number): CSSProperties {
   const radians = ((angle - 90) * Math.PI) / 180;
@@ -46,51 +50,75 @@ function agentBadge(agentName: string): string {
 export function TaskPlanetInterior({
   detail,
   className,
+  compact = false,
 }: {
   detail: MissionTaskDetail;
   className?: string;
+  compact?: boolean;
 }) {
   const { locale } = useI18n();
   const ringGradient = detail.stages
-    .map(stage => {
-      return `${STAGE_COLORS[stage.status]} ${stage.arcStart}deg ${stage.arcEnd}deg`;
-    })
+    .map(
+      stage =>
+        `${STAGE_COLORS[stage.status]} ${stage.arcStart}deg ${stage.arcEnd}deg`
+    )
     .join(", ");
+  const stageRadius = compact ? 82 : 118;
+  const agentRadius = compact ? 112 : 150;
 
   return (
     <section
       className={cn(
-        "workspace-panel workspace-panel-strong overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(252,211,77,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#fffdf7,#f6efe3)] p-4 shadow-[0_24px_70px_rgba(120,91,54,0.12)]",
+        "workspace-panel workspace-panel-strong overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(252,211,77,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#fffdf7,#f6efe3)] shadow-[0_24px_70px_rgba(120,91,54,0.12)]",
+        compact ? "p-3 xl:max-h-[360px]" : "p-4",
         className
       )}
     >
-      <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1.12fr)_320px]">
-        <div className={cn("self-start", PLANET_PANEL_CLASS)}>
+      <div
+        className={cn(
+          "grid xl:items-start",
+          compact
+            ? "gap-3 xl:grid-cols-[minmax(0,1fr)_260px]"
+            : "gap-4 xl:grid-cols-[minmax(0,1.12fr)_320px]"
+        )}
+      >
+        <div className={cn(PLANET_PANEL_CLASS, compact ? "p-3" : "p-4")}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-                {locale === "zh-CN" ? "二维星图" : "2D Star Map"}
+                {t(locale, "二维星图", "2D Star Map")}
               </div>
-              <div className="mt-1 text-sm font-semibold text-stone-800">
-                {locale === "zh-CN" ? "任务轨道视图" : "Mission orbit view"}
+              <div
+                className={cn(
+                  "mt-1 font-semibold text-stone-800",
+                  compact ? "text-[13px]" : "text-sm"
+                )}
+              >
+                {t(locale, "任务轨道视图", "Mission orbit view")}
               </div>
             </div>
             <div className="flex flex-wrap gap-2 text-[11px] text-stone-600">
               <span className={PLANET_PILL_CLASS}>
-                {locale === "zh-CN"
-                  ? `${detail.stages.length} 个阶段`
-                  : `${detail.stages.length} stages`}
+                {t(locale, `${detail.stages.length} 个阶段`, `${detail.stages.length} stages`)}
               </span>
               <span className={PLANET_PILL_CLASS}>
-                {locale === "zh-CN"
-                  ? `${detail.agents.length} 名成员`
-                  : `${detail.agents.length} crew`}
+                {t(locale, `${detail.agents.length} 名成员`, `${detail.agents.length} crew`)}
               </span>
             </div>
           </div>
 
-          <div className="mt-4 flex min-w-0 items-center justify-center">
-            <div className="relative aspect-square w-full max-w-[334px]">
+          <div
+            className={cn(
+              "flex min-w-0 items-center justify-center",
+              compact ? "mt-3" : "mt-4"
+            )}
+          >
+            <div
+              className={cn(
+                "relative aspect-square w-full",
+                compact ? "max-w-[236px]" : "max-w-[334px]"
+              )}
+            >
               <div className="absolute inset-5 rounded-full bg-[radial-gradient(circle,rgba(255,250,240,0.96)_0%,rgba(255,245,231,0.92)_34%,rgba(240,231,214,0.96)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" />
               <div
                 className="absolute inset-7 rounded-full p-[8px] shadow-[0_18px_44px_rgba(99,71,41,0.12)]"
@@ -98,25 +126,40 @@ export function TaskPlanetInterior({
               >
                 <div className="size-full rounded-full border border-white/75 bg-[radial-gradient(circle,#fffdf8_0%,#f9f2e6_72%,#efe3cf_100%)]" />
               </div>
-
               <div className="absolute inset-[28%] rounded-full border border-white/70 bg-[radial-gradient(circle,rgba(255,250,244,0.96),rgba(246,236,221,0.94))] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_32px_rgba(124,95,62,0.12)]" />
 
               <div className="absolute inset-[34%] flex items-center justify-center">
-                <div className="workspace-panel-inset rounded-[24px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.82)] px-5 py-4 text-center shadow-[0_14px_36px_rgba(107,77,44,0.12)] backdrop-blur">
+                <div
+                  className={cn(
+                    "workspace-panel-inset border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.82)] text-center shadow-[0_14px_36px_rgba(107,77,44,0.12)] backdrop-blur",
+                    compact ? "rounded-[20px] px-3.5 py-3" : "rounded-[24px] px-5 py-4"
+                  )}
+                >
                   <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-                    {locale === "zh-CN" ? "任务核心" : "Mission Core"}
+                    {t(locale, "任务核心", "Mission Core")}
                   </div>
-                  <div className="mt-2 text-3xl font-semibold text-stone-800">
+                  <div
+                    className={cn(
+                      "mt-2 font-semibold text-stone-800",
+                      compact ? "text-2xl" : "text-3xl"
+                    )}
+                  >
                     {detail.progress}%
                   </div>
-                  <div className="mt-1 text-sm text-stone-600">
-                    {detail.currentStageLabel ||
-                      (locale === "zh-CN" ? "准备中" : "Preparing")}
+                  <div
+                    className={cn(
+                      "mt-1 text-stone-600",
+                      compact ? "text-xs" : "text-sm"
+                    )}
+                  >
+                    {detail.currentStageLabel || t(locale, "准备中", "Preparing")}
                   </div>
                   <div className="mt-2 text-[11px] leading-5 text-stone-500">
-                    {locale === "zh-CN"
-                      ? `${detail.activeAgentCount} 个活跃执行体`
-                      : `${detail.activeAgentCount} active agents`}
+                    {t(
+                      locale,
+                      `${detail.activeAgentCount} 个活跃执行体`,
+                      `${detail.activeAgentCount} active agents`
+                    )}
                   </div>
                 </div>
               </div>
@@ -125,11 +168,12 @@ export function TaskPlanetInterior({
                 <div
                   key={stage.key}
                   className="absolute z-10"
-                  style={orbitStyle(stage.midAngle, 118)}
+                  style={orbitStyle(stage.midAngle, stageRadius)}
                 >
                   <div
                     className={cn(
-                      "workspace-status min-w-[82px] px-2.5 py-1.5 text-center text-[10px] font-medium shadow-sm backdrop-blur",
+                      "workspace-status text-center text-[10px] font-medium shadow-sm backdrop-blur",
+                      compact ? "min-w-[62px] px-2 py-1" : "min-w-[82px] px-2.5 py-1.5",
                       stageTone(stage.status)
                     )}
                   >
@@ -145,11 +189,12 @@ export function TaskPlanetInterior({
                 <div
                   key={agent.id}
                   className="absolute z-20"
-                  style={orbitStyle(agent.angle, 150)}
+                  style={orbitStyle(agent.angle, agentRadius)}
                 >
                   <div
                     className={cn(
-                      "flex size-8 items-center justify-center rounded-full border text-[11px] font-semibold shadow-sm backdrop-blur",
+                      "flex items-center justify-center rounded-full border text-[11px] font-semibold shadow-sm backdrop-blur",
+                      compact ? "size-7" : "size-8",
                       agentStatusTone(agent.status)
                     )}
                     title={`${agent.name} - ${agent.stageLabel}`}
@@ -161,40 +206,38 @@ export function TaskPlanetInterior({
             </div>
           </div>
 
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div
+            className={cn(
+              "grid gap-2 sm:grid-cols-3",
+              compact ? "mt-3" : "mt-4"
+            )}
+          >
             <div className={PLANET_TILE_CLASS}>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                {locale === "zh-CN" ? "当前焦点" : "Focus"}
+                {t(locale, "当前焦点", "Focus")}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
-                {detail.currentStageLabel ||
-                  (locale === "zh-CN" ? "当前无活跃阶段" : "No active stage")}
+                {detail.currentStageLabel || t(locale, "当前无活跃阶段", "No active stage")}
               </div>
             </div>
             <div className={PLANET_TILE_CLASS}>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                {locale === "zh-CN" ? "等待原因" : "Waiting"}
+                {t(locale, "等待原因", "Waiting")}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
                 {compactText(
-                  detail.waitingFor ||
-                    (locale === "zh-CN"
-                      ? "当前无阻塞信号"
-                      : "No blocking signal"),
+                  detail.waitingFor || t(locale, "当前无阻塞信号", "No blocking signal"),
                   42
                 )}
               </div>
             </div>
             <div className={PLANET_TILE_CLASS}>
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                {locale === "zh-CN" ? "最新信号" : "Signal"}
+                {t(locale, "最新信号", "Signal")}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
                 {compactText(
-                  detail.lastSignal ||
-                    (locale === "zh-CN"
-                      ? "当前没有新的执行信号"
-                      : "No recent signal"),
+                  detail.lastSignal || t(locale, "当前没有新的执行信号", "No recent signal"),
                   42
                 )}
               </div>
@@ -203,18 +246,21 @@ export function TaskPlanetInterior({
         </div>
 
         <div className="grid content-start gap-3">
-          <div className={PLANET_PANEL_CLASS}>
+          <div className={cn(PLANET_PANEL_CLASS, compact ? "p-3" : "p-4")}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-stone-800">
-                {locale === "zh-CN" ? "执行阶段" : "Orbit Stages"}
+                {t(locale, "执行阶段", "Orbit Stages")}
               </div>
               <span className={PLANET_PILL_CLASS}>
-                {locale === "zh-CN"
-                  ? `${detail.stages.length} 个节点`
-                  : `${detail.stages.length} nodes`}
+                {t(locale, `${detail.stages.length} 个节点`, `${detail.stages.length} nodes`)}
               </span>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div
+              className={cn(
+                "mt-3 grid gap-2 sm:grid-cols-2",
+                compact && "max-h-[116px] overflow-y-auto pr-1"
+              )}
+            >
               {detail.stages.map(stage => (
                 <div key={stage.key} className={PLANET_LIST_CARD_CLASS}>
                   <div className="flex items-start justify-between gap-2">
@@ -223,10 +269,7 @@ export function TaskPlanetInterior({
                         {stage.label}
                       </div>
                       <div className="mt-1 line-clamp-1 text-[11px] leading-5 text-stone-500">
-                        {stage.detail ||
-                          (locale === "zh-CN"
-                            ? "当前还没有记录详细内容。"
-                            : "No detail captured yet.")}
+                        {stage.detail || t(locale, "当前还没有记录详细内容。", "No detail captured yet.")}
                       </div>
                     </div>
                     <span
@@ -243,24 +286,28 @@ export function TaskPlanetInterior({
             </div>
           </div>
 
-          <div className={PLANET_PANEL_CLASS}>
+          <div className={cn(PLANET_PANEL_CLASS, compact ? "p-3" : "p-4")}>
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-stone-800">
-                {locale === "zh-CN" ? "执行成员" : "Agent Crew"}
+                {t(locale, "执行成员", "Agent Crew")}
               </div>
               <span className={PLANET_PILL_CLASS}>
-                {locale === "zh-CN"
-                  ? `${detail.agents.length} 名成员`
-                  : `${detail.agents.length} members`}
+                {t(locale, `${detail.agents.length} 名成员`, `${detail.agents.length} members`)}
               </span>
             </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div
+              className={cn(
+                "mt-3 grid gap-2 sm:grid-cols-2",
+                compact && "max-h-[132px] overflow-y-auto pr-1"
+              )}
+            >
               {detail.agents.map(agent => (
                 <div key={agent.id} className={PLANET_LIST_CARD_CLASS}>
                   <div className="flex items-start gap-2.5">
                     <div
                       className={cn(
-                        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold shadow-sm",
+                        "mt-0.5 flex shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold shadow-sm",
+                        compact ? "size-7" : "size-8",
                         agentStatusTone(agent.status)
                       )}
                     >

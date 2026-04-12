@@ -105,6 +105,7 @@ export function OperatorActionBar({
   loadingByAction,
   onSubmitAction,
   showContextSummary = true,
+  variant = "default",
 }: {
   detail: MissionTaskDetail;
   loadingByAction?: MissionOperatorActionLoadingMap;
@@ -113,8 +114,10 @@ export function OperatorActionBar({
     reason?: string;
   }) => void | Promise<void>;
   showContextSummary?: boolean;
+  variant?: "default" | "compact";
 }) {
   const { locale, copy } = useI18n();
+  const isCompact = variant === "compact";
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
   const [terminateDialogOpen, setTerminateDialogOpen] = useState(false);
   const [blockReason, setBlockReason] = useState("");
@@ -331,7 +334,14 @@ export function OperatorActionBar({
   }
 
   return (
-    <div className="rounded-[24px] border border-white/75 bg-white/72 px-4 py-4 text-sm text-stone-700 shadow-sm backdrop-blur">
+    <div
+      className={cn(
+        "border text-sm text-stone-700 shadow-sm backdrop-blur",
+        isCompact
+          ? "rounded-[22px] border-stone-200/80 bg-white/82 px-3.5 py-3"
+          : "rounded-[24px] border-white/75 bg-white/72 px-4 py-4"
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
@@ -357,7 +367,7 @@ export function OperatorActionBar({
           </div>
         </div>
 
-        {latestAction ? (
+        {latestAction && !isCompact ? (
           <div className="max-w-[360px] rounded-[18px] border border-stone-200/80 bg-stone-50/75 px-3 py-3 text-xs text-stone-600">
             <div className="font-semibold text-stone-800">
               {copy.tasks.operatorBar.latestAction}:{" "}
@@ -380,6 +390,23 @@ export function OperatorActionBar({
           </div>
         ) : null}
       </div>
+
+      {latestAction && isCompact ? (
+        <div className="mt-2 text-xs leading-5 text-stone-500">
+          <span className="font-semibold text-stone-700">
+            {copy.tasks.operatorBar.latestAction}:{" "}
+          </span>
+          {missionOperatorActionLabel(latestAction.action as ActionKind, locale)}
+          {latestAction.reason || latestAction.detail
+            ? ` / ${compactText(
+                latestAction.reason ||
+                  latestAction.detail ||
+                  copy.tasks.detailView.noDetail,
+                80
+              )}`
+            : ""}
+        </div>
+      ) : null}
 
       {blockerVisible ? (
         <div
@@ -443,7 +470,7 @@ export function OperatorActionBar({
       ) : null}
 
       {primaryAction || secondaryActions.length > 0 ? (
-        <div className="mt-4 space-y-3">
+        <div className={cn("space-y-3", isCompact ? "mt-3" : "mt-4")}>
           {primaryAction ? (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">

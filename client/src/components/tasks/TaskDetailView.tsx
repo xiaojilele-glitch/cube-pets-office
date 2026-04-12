@@ -609,6 +609,14 @@ function MissionCostTab() {
   );
 }
 
+type TaskDetailViewVariant = "default" | "cockpit";
+type TaskDetailTabKey =
+  | "overview"
+  | "execution"
+  | "decisions"
+  | "artifacts"
+  | "cost";
+
 export function TaskDetailView({
   detail,
   decisionNote,
@@ -618,6 +626,7 @@ export function TaskDetailView({
   onSubmitOperatorAction,
   operatorActionLoading,
   onDecisionSubmitted,
+  variant = "default",
   className,
 }: {
   detail: MissionTaskDetail | null;
@@ -631,10 +640,12 @@ export function TaskDetailView({
   }) => void | Promise<void>;
   operatorActionLoading?: MissionOperatorActionLoadingMap;
   onDecisionSubmitted?: () => void;
+  variant?: TaskDetailViewVariant;
   className?: string;
 }) {
   const { locale, copy } = useI18n();
   const { isDesktop } = useViewportTier();
+  const isCockpit = variant === "cockpit";
   const [downloadingArtifactId, setDownloadingArtifactId] = useState<
     string | null
   >(null);
@@ -649,6 +660,7 @@ export function TaskDetailView({
     artifact: TaskArtifact;
     message: string;
   } | null>(null);
+  const [activeTab, setActiveTab] = useState<TaskDetailTabKey>("overview");
 
   useEffect(() => {
     setPreviewArtifactIndex(null);
@@ -762,7 +774,13 @@ export function TaskDetailView({
   const showDecisionFocusSection =
     detail.status === "waiting" &&
     (showStructuredDecisionPanel || detail.decisionPresets.length > 0);
+  const defaultTab: TaskDetailTabKey =
+    isCockpit && showDecisionFocusSection ? "decisions" : "overview";
   const decisionHistoryEntries = detail.decisionHistory ?? [];
+
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab, detail.id]);
 
   const sourceDirectiveText = localizeTaskHubBriefText(
     detail.sourceText.trim(),
@@ -1241,7 +1259,7 @@ export function TaskDetailView({
       </Card>
     ) : null;
 
-  const decisionFocusSection = showDecisionFocusSection ? (
+  const decisionFocusSection = !isCockpit && showDecisionFocusSection ? (
     <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       {showStructuredDecisionPanel && detail.decision ? (
         <DecisionPanel
@@ -1254,6 +1272,33 @@ export function TaskDetailView({
     </section>
   ) : null;
 
+  const decisionsWorkspace = (
+    <div className="space-y-4">
+      {isCockpit && showStructuredDecisionPanel && detail.decision ? (
+        <DecisionPanel
+          missionId={detail.id}
+          decision={detail.decision}
+          onDecisionSubmitted={onDecisionSubmitted}
+        />
+      ) : null}
+      {isCockpit && detail.decisionPresets.length > 0 ? decisionPanel : null}
+      <Card className={DETAIL_CARD_CLASS}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-stone-900">
+            <History className="size-4 text-violet-600" />
+            {copy.tasks.detailView.decisionHistoryTitle}
+          </CardTitle>
+          <CardDescription>
+            {copy.tasks.detailView.decisionHistoryDescription}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DecisionHistory history={decisionHistoryEntries} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <div
       className={cn(
@@ -1262,25 +1307,34 @@ export function TaskDetailView({
         className
       )}
     >
-      <TaskOperationsHero
-        detail={detail}
-        loadingByAction={operatorActionLoading}
-        onSubmitOperatorAction={onSubmitOperatorAction}
-      />
+      {!isCockpit ? (
+        <TaskOperationsHero
+          detail={detail}
+          loadingByAction={operatorActionLoading}
+          onSubmitOperatorAction={onSubmitOperatorAction}
+        />
+      ) : null}
 
       {decisionFocusSection}
 
       <Tabs
-        defaultValue="overview"
+        value={activeTab}
+        onValueChange={value => setActiveTab(value as TaskDetailTabKey)}
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <div
           className={cn(
             DETAIL_CARD_CLASS,
-            "shrink-0 p-2 shadow-[0_18px_50px_rgba(112,84,51,0.06)]"
+            "shrink-0 shadow-[0_18px_50px_rgba(112,84,51,0.06)]",
+            isCockpit ? "p-1.5" : "p-2"
           )}
         >
-          <TabsList className="grid h-auto w-full grid-cols-5 rounded-[18px] bg-[rgba(255,255,255,0.58)] p-1">
+          <TabsList
+            className={cn(
+              "grid h-auto w-full grid-cols-5 bg-[rgba(255,255,255,0.58)] p-1",
+              isCockpit ? "rounded-[16px]" : "rounded-[18px]"
+            )}
+          >
             <TabsTrigger className="rounded-[14px]" value="overview">
               {copy.tasks.detailView.overviewTab}
             </TabsTrigger>
@@ -1306,8 +1360,15 @@ export function TaskDetailView({
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
           <DetailTabViewport isDesktop={isDesktop}>
-            <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1.12fr)_380px]">
-              <TaskPlanetInterior detail={detail} />
+            <div
+              className={cn(
+                "grid gap-4 xl:items-start",
+                isCockpit
+                  ? "xl:grid-cols-[minmax(0,1.02fr)_360px]"
+                  : "xl:grid-cols-[minmax(0,1.12fr)_380px]"
+              )}
+            >
+              <TaskPlanetInterior detail={detail} compact={isCockpit} />
               <div className="self-start space-y-3">
                 {sourceDirectivePanel}
                 {runtimeSnapshotPanel}
@@ -1448,20 +1509,7 @@ export function TaskDetailView({
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
           <DetailTabViewport isDesktop={isDesktop}>
-            <Card className={DETAIL_CARD_CLASS}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-stone-900">
-                  <History className="size-4 text-violet-600" />
-                  {copy.tasks.detailView.decisionHistoryTitle}
-                </CardTitle>
-                <CardDescription>
-                  {copy.tasks.detailView.decisionHistoryDescription}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <DecisionHistory history={decisionHistoryEntries} />
-              </CardContent>
-            </Card>
+            {decisionsWorkspace}
           </DetailTabViewport>
         </TabsContent>
 
