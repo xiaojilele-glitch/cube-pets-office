@@ -30,6 +30,7 @@ import {
   workspaceToneClass,
   type WorkspaceTone,
 } from "@/components/workspace/workspace-tone";
+import { useI18n } from "@/i18n";
 import { submitMissionDecision } from "@/lib/mission-client";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,10 @@ interface DecisionPanelProps {
   missionId: string;
   decision: MissionDecision;
   onDecisionSubmitted?: () => void;
+}
+
+function t(locale: string, zh: string, en: string) {
+  return locale === "zh-CN" ? zh : en;
 }
 
 function resolveDecisionType(decision: MissionDecision): DecisionType {
@@ -134,12 +139,14 @@ function ApproveRejectLayout({
   onSubmit,
   commentTexts,
   onCommentChange,
+  locale,
 }: {
   options: MissionDecisionOption[];
   submitting: boolean;
   onSubmit: (optionId: string, freeText?: string) => void;
   commentTexts: Record<string, string>;
   onCommentChange: (optionId: string, text: string) => void;
+  locale: string;
 }) {
   const approveOpt = options.find(
     option =>
@@ -182,8 +189,16 @@ function ApproveRejectLayout({
                 onChange={event =>
                   onCommentChange(approveOpt.id, event.target.value)
                 }
-                placeholder="Required: provide a reason"
-                aria-label={`Comment for ${approveOpt.label}`}
+                placeholder={t(
+                  locale,
+                  "必须填写原因",
+                  "Required: provide a reason"
+                )}
+                aria-label={t(
+                  locale,
+                  `${approveOpt.label} 的补充说明`,
+                  `Comment for ${approveOpt.label}`
+                )}
                 aria-required="true"
                 className={surfaceTextareaClass()}
               />
@@ -213,8 +228,16 @@ function ApproveRejectLayout({
                 onChange={event =>
                   onCommentChange(rejectOpt.id, event.target.value)
                 }
-                placeholder="Required: provide a reason"
-                aria-label={`Comment for ${rejectOpt.label}`}
+                placeholder={t(
+                  locale,
+                  "必须填写原因",
+                  "Required: provide a reason"
+                )}
+                aria-label={t(
+                  locale,
+                  `${rejectOpt.label} 的补充说明`,
+                  `Comment for ${rejectOpt.label}`
+                )}
                 aria-required="true"
                 className={surfaceTextareaClass()}
               />
@@ -242,8 +265,16 @@ function ApproveRejectLayout({
             <Textarea
               value={commentTexts[option.id] ?? ""}
               onChange={event => onCommentChange(option.id, event.target.value)}
-              placeholder="Required: provide a reason"
-              aria-label={`Comment for ${option.label}`}
+              placeholder={t(
+                locale,
+                "必须填写原因",
+                "Required: provide a reason"
+              )}
+              aria-label={t(
+                locale,
+                `${option.label} 的补充说明`,
+                `Comment for ${option.label}`
+              )}
               aria-required="true"
               className={surfaceTextareaClass()}
             />
@@ -260,12 +291,14 @@ function MultiChoiceLayout({
   onSubmit,
   commentTexts,
   onCommentChange,
+  locale,
 }: {
   options: MissionDecisionOption[];
   submitting: boolean;
   onSubmit: (optionId: string, freeText?: string) => void;
   commentTexts: Record<string, string>;
   onCommentChange: (optionId: string, text: string) => void;
+  locale: string;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -273,7 +306,7 @@ function MultiChoiceLayout({
     <div className="space-y-3">
       <div
         role="radiogroup"
-        aria-label="Decision options"
+        aria-label={t(locale, "决策选项", "Decision options")}
         className="grid gap-2"
       >
         {options.map(option => (
@@ -290,8 +323,16 @@ function MultiChoiceLayout({
                 onChange={event =>
                   onCommentChange(option.id, event.target.value)
                 }
-                placeholder="Required: provide a reason"
-                aria-label={`Comment for ${option.label}`}
+                placeholder={t(
+                  locale,
+                  "必须填写原因",
+                  "Required: provide a reason"
+                )}
+                aria-label={t(
+                  locale,
+                  `${option.label} 的补充说明`,
+                  `Comment for ${option.label}`
+                )}
                 aria-required="true"
                 className={surfaceTextareaClass()}
               />
@@ -312,7 +353,7 @@ function MultiChoiceLayout({
         ) : (
           <Send className="size-4" />
         )}
-        Submit Selection
+        {t(locale, "提交选择", "Submit Selection")}
       </Button>
     </div>
   );
@@ -322,10 +363,12 @@ function RequestInfoLayout({
   decision,
   submitting,
   onSubmitFreeText,
+  locale,
 }: {
   decision: MissionDecision;
   submitting: boolean;
   onSubmitFreeText: (freeText: string) => void;
+  locale: string;
 }) {
   const [text, setText] = useState("");
 
@@ -335,9 +378,10 @@ function RequestInfoLayout({
         value={text}
         onChange={event => setText(event.target.value)}
         placeholder={
-          decision.placeholder ?? "Provide the requested information..."
+          decision.placeholder ??
+          t(locale, "请补充所需信息...", "Provide the requested information...")
         }
-        aria-label="Information response"
+        aria-label={t(locale, "补充信息", "Information response")}
         aria-required="true"
         className={surfaceTextareaClass("xl")}
       />
@@ -352,7 +396,7 @@ function RequestInfoLayout({
         ) : (
           <Send className="size-4" />
         )}
-        Submit Information
+        {t(locale, "提交信息", "Submit Information")}
       </Button>
     </div>
   );
@@ -364,12 +408,14 @@ function EscalateLayout({
   onSubmit,
   commentTexts,
   onCommentChange,
+  locale,
 }: {
   options: MissionDecisionOption[];
   submitting: boolean;
   onSubmit: (optionId: string, freeText?: string) => void;
   commentTexts: Record<string, string>;
   onCommentChange: (optionId: string, text: string) => void;
+  locale: string;
 }) {
   const primary = options[0];
 
@@ -383,7 +429,11 @@ function EscalateLayout({
       >
         <AlertTriangle className="size-4 shrink-0 text-red-600" />
         <span className="text-sm font-medium text-red-800">
-          High priority: this decision requires immediate attention
+          {t(
+            locale,
+            "高优先级：这条决策需要立刻处理",
+            "High priority: this decision requires immediate attention"
+          )}
         </span>
       </div>
 
@@ -412,8 +462,16 @@ function EscalateLayout({
             <Textarea
               value={commentTexts[option.id] ?? ""}
               onChange={event => onCommentChange(option.id, event.target.value)}
-              placeholder="Required: provide a reason"
-              aria-label={`Comment for ${option.label}`}
+              placeholder={t(
+                locale,
+                "必须填写原因",
+                "Required: provide a reason"
+              )}
+              aria-label={t(
+                locale,
+                `${option.label} 的补充说明`,
+                `Comment for ${option.label}`
+              )}
               aria-required="true"
               className={surfaceTextareaClass()}
             />
@@ -431,6 +489,7 @@ function CustomActionLayout({
   onSubmit,
   commentTexts,
   onCommentChange,
+  locale,
 }: {
   options: MissionDecisionOption[];
   decision: MissionDecision;
@@ -438,6 +497,7 @@ function CustomActionLayout({
   onSubmit: (optionId: string, freeText?: string) => void;
   commentTexts: Record<string, string>;
   onCommentChange: (optionId: string, text: string) => void;
+  locale: string;
 }) {
   const [freeText, setFreeText] = useState("");
 
@@ -447,8 +507,11 @@ function CustomActionLayout({
         <Textarea
           value={freeText}
           onChange={event => setFreeText(event.target.value)}
-          placeholder={decision.placeholder ?? "Optional note..."}
-          aria-label="Decision note"
+          placeholder={
+            decision.placeholder ??
+            t(locale, "可选：补充说明...", "Optional note...")
+          }
+          aria-label={t(locale, "决策备注", "Decision note")}
           className={surfaceTextareaClass("lg")}
         />
       ) : null}
@@ -495,8 +558,16 @@ function CustomActionLayout({
                 onChange={event =>
                   onCommentChange(option.id, event.target.value)
                 }
-                placeholder="Required: provide a reason"
-                aria-label={`Comment for ${option.label}`}
+                placeholder={t(
+                  locale,
+                  "必须填写原因",
+                  "Required: provide a reason"
+                )}
+                aria-label={t(
+                  locale,
+                  `${option.label} 的补充说明`,
+                  `Comment for ${option.label}`
+                )}
                 aria-required="true"
                 className={surfaceTextareaClass()}
               />
@@ -513,6 +584,7 @@ export function DecisionPanel({
   decision,
   onDecisionSubmitted,
 }: DecisionPanelProps) {
+  const { locale } = useI18n();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
@@ -528,7 +600,13 @@ export function DecisionPanel({
     async (optionId: string, freeText?: string) => {
       const option = options.find(current => current.id === optionId);
       if (option?.requiresComment && (!freeText || !freeText.trim())) {
-        setError(`A comment is required for "${option.label}".`);
+        setError(
+          t(
+            locale,
+            `选项“${option.label}”必须填写原因。`,
+            `A comment is required for "${option.label}".`
+          )
+        );
         return;
       }
 
@@ -543,13 +621,15 @@ export function DecisionPanel({
         onDecisionSubmitted?.();
       } catch (error) {
         setError(
-          error instanceof Error ? error.message : "Failed to submit decision"
+          error instanceof Error
+            ? error.message
+            : t(locale, "提交决策失败", "Failed to submit decision")
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [missionId, onDecisionSubmitted, options]
+    [locale, missionId, onDecisionSubmitted, options]
   );
 
   const handleSubmitFreeText = useCallback(
@@ -564,13 +644,15 @@ export function DecisionPanel({
         onDecisionSubmitted?.();
       } catch (error) {
         setError(
-          error instanceof Error ? error.message : "Failed to submit decision"
+          error instanceof Error
+            ? error.message
+            : t(locale, "提交决策失败", "Failed to submit decision")
         );
       } finally {
         setSubmitting(false);
       }
     },
-    [missionId, onDecisionSubmitted]
+    [locale, missionId, onDecisionSubmitted]
   );
 
   return (
@@ -585,7 +667,7 @@ export function DecisionPanel({
       <CardHeader className="space-y-1 pb-3">
         <CardTitle className="flex items-center gap-2 text-stone-900">
           {typeIcon(type)}
-          Decision Required
+          {t(locale, "需要人工决策", "Decision Required")}
         </CardTitle>
         <CardDescription
           className={cn(
@@ -605,6 +687,7 @@ export function DecisionPanel({
             onSubmit={handleSubmit}
             commentTexts={commentTexts}
             onCommentChange={handleCommentChange}
+            locale={locale}
           />
         ) : type === "multi-choice" ? (
           <MultiChoiceLayout
@@ -613,12 +696,14 @@ export function DecisionPanel({
             onSubmit={handleSubmit}
             commentTexts={commentTexts}
             onCommentChange={handleCommentChange}
+            locale={locale}
           />
         ) : type === "request-info" ? (
           <RequestInfoLayout
             decision={decision}
             submitting={submitting}
             onSubmitFreeText={handleSubmitFreeText}
+            locale={locale}
           />
         ) : type === "escalate" ? (
           <EscalateLayout
@@ -627,6 +712,7 @@ export function DecisionPanel({
             onSubmit={handleSubmit}
             commentTexts={commentTexts}
             onCommentChange={handleCommentChange}
+            locale={locale}
           />
         ) : (
           <CustomActionLayout
@@ -636,6 +722,7 @@ export function DecisionPanel({
             onSubmit={handleSubmit}
             commentTexts={commentTexts}
             onCommentChange={handleCommentChange}
+            locale={locale}
           />
         )}
 

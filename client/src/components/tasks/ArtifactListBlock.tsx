@@ -59,12 +59,12 @@ function t(locale: string, zh: string, en: string): string {
 function kindLabel(kind: string, locale: string): string {
   return (
     {
-      attachment: t(locale, "Attachment", "Attachment"),
-      department_report: t(locale, "Dept Report", "Dept Report"),
-      file: t(locale, "File", "File"),
-      log: t(locale, "Log", "Log"),
-      report: t(locale, "Report", "Report"),
-      url: t(locale, "Link", "Link"),
+      attachment: t(locale, "附件", "Attachment"),
+      department_report: t(locale, "部门报告", "Dept Report"),
+      file: t(locale, "文件", "File"),
+      log: t(locale, "日志", "Log"),
+      report: t(locale, "报告", "Report"),
+      url: t(locale, "链接", "Link"),
     }[kind] ?? kind
   );
 }
@@ -169,7 +169,7 @@ export function ArtifactListBlock({
       <div className="mb-2 flex items-center gap-2">
         <FileText className="h-4 w-4 text-white/40" />
         <span className="text-[11px] font-semibold text-white/50">
-          {t(locale, "Artifacts", "Artifacts")} · {artifacts.length}
+          {t(locale, "产物", "Artifacts")} · {artifacts.length}
         </span>
         {isRunning ? (
           <span className="relative ml-auto flex h-2.5 w-2.5">
@@ -250,7 +250,7 @@ export function ArtifactListBlock({
                       onClick={() => handlePreview(artifact, index)}
                     >
                       <Eye className="mr-1 h-3 w-3" />
-                      {!isCompact ? t(locale, "Preview", "Preview") : null}
+                      {!isCompact ? t(locale, "预览", "Preview") : null}
                     </GlowButton>
                   ) : null}
 
@@ -267,7 +267,7 @@ export function ArtifactListBlock({
                       ) : (
                         <Download className="mr-1 h-3 w-3" />
                       )}
-                      {!isCompact ? t(locale, "Download", "Download") : null}
+                      {!isCompact ? t(locale, "下载", "Download") : null}
                     </GlowButton>
                   ) : null}
 
@@ -279,7 +279,7 @@ export function ArtifactListBlock({
                       className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-2 py-1 text-[10px] font-semibold text-white/70 transition-colors hover:bg-white/10"
                     >
                       <ExternalLink className="h-3 w-3" />
-                      {!isCompact ? t(locale, "Open Link", "Open Link") : null}
+                      {!isCompact ? t(locale, "打开链接", "Open Link") : null}
                     </a>
                   ) : null}
                 </div>

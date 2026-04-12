@@ -48,6 +48,27 @@ interface TaskOperationsHeroProps {
   }) => void | Promise<void>;
 }
 
+function t(locale: string, zh: string, en: string) {
+  return locale === "zh-CN" ? zh : en;
+}
+
+function localizedExecutorStatus(locale: string, status: string) {
+  switch (status) {
+    case "queued":
+      return t(locale, "排队中", "Queued");
+    case "running":
+      return t(locale, "执行中", "Running");
+    case "completed":
+      return t(locale, "已完成", "Completed");
+    case "failed":
+      return t(locale, "失败", "Failed");
+    case "warning":
+      return t(locale, "需关注", "Needs attention");
+    default:
+      return status;
+  }
+}
+
 function recommendedToneClasses(
   tone: "primary" | "secondary" | "danger"
 ): string {
@@ -149,7 +170,7 @@ export function TaskOperationsHero({
       ? [
           {
             key: "executor-status",
-            label: `Executor ${detail.executor.status}`,
+            label: `${t(locale, "执行器", "Executor")} ${localizedExecutorStatus(locale, detail.executor.status)}`,
             className: "workspace-tone-info font-medium",
           },
         ]
@@ -169,8 +190,10 @@ export function TaskOperationsHero({
         160
       ) || copy.tasks.detailView.noDetail,
     meta: [
-      `${detail.progress}% progress`,
-      detail.executor?.status ? `Executor ${detail.executor.status}` : null,
+      copy.tasks.detailView.progressLabel(detail.progress),
+      detail.executor?.status
+        ? `${t(locale, "执行器", "Executor")} ${localizedExecutorStatus(locale, detail.executor.status)}`
+        : null,
       detail.instance?.image || null,
     ]
       .filter(Boolean)

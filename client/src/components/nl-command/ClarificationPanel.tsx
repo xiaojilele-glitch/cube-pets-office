@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { MessageCircleQuestion, Send } from "lucide-react";
 
 import { GlowButton } from "@/components/ui/GlowButton";
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 import type {
   ClarificationDialog,
@@ -34,16 +35,25 @@ export interface ClarificationPanelProps {
 export function ClarificationPanel({
   dialog,
   onAnswer,
-  title = "Clarification Needed",
-  answerPlaceholder = "Type your answer...",
-  answerLabel = "Answer",
-  answeringLabel = "Submitting...",
+  title,
+  answerPlaceholder,
+  answerLabel,
+  answeringLabel,
   className,
 }: ClarificationPanelProps) {
+  const { locale } = useI18n();
+  const isZh = locale === "zh-CN";
   const answeredIds = new Set(dialog.answers.map(a => a.questionId));
   const unanswered = dialog.questions.filter(
     q => !answeredIds.has(q.questionId)
   );
+  const resolvedTitle =
+    title ?? (isZh ? "需要补充信息" : "Clarification Needed");
+  const resolvedAnswerPlaceholder =
+    answerPlaceholder ?? (isZh ? "请填写你的回答..." : "Type your answer...");
+  const resolvedAnswerLabel = answerLabel ?? (isZh ? "提交回答" : "Answer");
+  const resolvedAnsweringLabel =
+    answeringLabel ?? (isZh ? "提交中..." : "Submitting...");
 
   if (unanswered.length === 0) return null;
 
@@ -56,7 +66,9 @@ export function ClarificationPanel({
     >
       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-800">
         <MessageCircleQuestion className="size-4" />
-        {title} ({unanswered.length} question{unanswered.length > 1 ? "s" : ""})
+        {isZh
+          ? `${resolvedTitle}（${unanswered.length} 个问题）`
+          : `${resolvedTitle} (${unanswered.length} question${unanswered.length > 1 ? "s" : ""})`}
       </div>
       <div className="space-y-3">
         {unanswered.map(question => (
@@ -64,9 +76,10 @@ export function ClarificationPanel({
             key={question.questionId}
             question={question}
             onAnswer={onAnswer}
-            answerPlaceholder={answerPlaceholder}
-            answerLabel={answerLabel}
-            answeringLabel={answeringLabel}
+            answerPlaceholder={resolvedAnswerPlaceholder}
+            answerLabel={resolvedAnswerLabel}
+            answeringLabel={resolvedAnsweringLabel}
+            locale={locale}
           />
         ))}
       </div>
@@ -84,6 +97,7 @@ function QuestionCard({
   answerPlaceholder,
   answerLabel,
   answeringLabel,
+  locale,
 }: {
   question: ClarificationQuestion;
   onAnswer: (
@@ -94,6 +108,7 @@ function QuestionCard({
   answerPlaceholder: string;
   answerLabel: string;
   answeringLabel: string;
+  locale: string;
 }) {
   const [freeText, setFreeText] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -173,7 +188,11 @@ function QuestionCard({
             placeholder={answerPlaceholder}
             rows={2}
             className="w-full resize-none rounded-lg border border-stone-200 bg-stone-50/60 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-            aria-label={`Answer for: ${question.text}`}
+            aria-label={
+              locale === "zh-CN"
+                ? `回答：${question.text}`
+                : `Answer for: ${question.text}`
+            }
             onKeyDown={e => {
               if (e.key === "Enter" && !e.shiftKey && canSubmit) {
                 e.preventDefault();

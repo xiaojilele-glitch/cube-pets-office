@@ -6,6 +6,7 @@ import type {
   StrategicCommand,
 } from "@shared/nl-command/contracts";
 
+import { useI18n } from "@/i18n";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +57,57 @@ export function CommandPlanSummary({
   submission: TaskHubCommandSubmissionResult | null;
   className?: string;
 }) {
+  const { locale } = useI18n();
+  const isZh = locale === "zh-CN";
+  const text = {
+    eyebrow: isZh ? "计划摘要" : "Plan Summary",
+    emptyDescription: isZh
+      ? "提交指令后，这里会显示任务落点、执行形态和关键约束。"
+      : "After a command is submitted, this area shows the task landing, execution shape, and key constraints.",
+    heading: isZh
+      ? "这条指令已经进入任务上下文"
+      : "The command is now inside task context",
+    live: isZh ? "已进入任务" : "Live in Tasks",
+    needsClarification: isZh ? "需要补充信息" : "Needs Clarification",
+    ready: isZh ? "可创建任务" : "Ready",
+    landing: isZh ? "任务落点" : "Task Landing",
+    landingCreated: (missionId: string) =>
+      isZh
+        ? `已创建并关联到 ${missionId}`
+        : `Created and linked to ${missionId}`,
+    landingWaiting: isZh
+      ? "还在等待补充信息，任务暂未创建。"
+      : "Waiting for clarification before the mission is created.",
+    executionShape: isZh ? "执行形态" : "Execution Shape",
+    executionShapeValue: (missionCount: number, taskCount: number) =>
+      isZh
+        ? `${missionCount} 个 mission / ${taskCount} 个执行阶段`
+        : `${missionCount} mission / ${taskCount} execution stages`,
+    riskLevel: isZh ? "风险等级" : "Risk Level",
+    objectives: isZh ? "目标" : "Objectives",
+    constraints: isZh ? "约束" : "Constraints",
+    noObjectives: isZh ? "暂未识别出明确目标。" : "No explicit objectives yet.",
+    noConstraints: isZh
+      ? "暂未识别出明确约束。"
+      : "No explicit constraints yet.",
+  };
+
+  function riskLabel(level: string) {
+    if (!isZh) return level;
+    switch (level) {
+      case "low":
+        return "低";
+      case "medium":
+        return "中";
+      case "high":
+        return "高";
+      case "critical":
+        return "极高";
+      default:
+        return level;
+    }
+  }
+
   if (!command || !analysis || !plan) {
     return (
       <section
@@ -65,11 +117,10 @@ export function CommandPlanSummary({
         )}
       >
         <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-          Plan Summary
+          {text.eyebrow}
         </div>
         <div className="mt-3 rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-5 text-sm leading-6 text-stone-500">
-          After a command is submitted, this area shows the task landing,
-          execution shape, and key constraints.
+          {text.emptyDescription}
         </div>
       </section>
     );
@@ -77,10 +128,10 @@ export function CommandPlanSummary({
 
   const badgeLabel =
     submission?.status === "created"
-      ? "Live in Tasks"
+      ? text.live
       : analysis.needsClarification
-        ? "Needs Clarification"
-        : "Ready";
+        ? text.needsClarification
+        : text.ready;
   const badgeTone =
     submission?.status === "created"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -98,10 +149,10 @@ export function CommandPlanSummary({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-stone-500">
-            Plan Summary
+            {text.eyebrow}
           </div>
           <div className="mt-2 text-lg font-semibold tracking-tight text-stone-900">
-            The command is now inside task context
+            {text.heading}
           </div>
         </div>
         <span
@@ -134,46 +185,46 @@ export function CommandPlanSummary({
         <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3 py-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
             <MapPinned className="size-4 text-emerald-600" />
-            Task Landing
+            {text.landing}
           </div>
           <div className="mt-2 text-sm leading-6 text-stone-600">
             {submission?.missionId
-              ? `Created and linked to ${submission.missionId}`
-              : "Waiting for clarification before the mission is created."}
+              ? text.landingCreated(submission.missionId)
+              : text.landingWaiting}
           </div>
         </div>
 
         <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3 py-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
             <ListChecks className="size-4 text-sky-600" />
-            Execution Shape
+            {text.executionShape}
           </div>
           <div className="mt-2 text-sm leading-6 text-stone-600">
-            {`${plan.missions.length} mission / ${plan.tasks.length} execution stages`}
+            {text.executionShapeValue(plan.missions.length, plan.tasks.length)}
           </div>
         </div>
 
         <div className="rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3 py-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-stone-800">
             <CircleAlert className="size-4 text-amber-600" />
-            Risk Level
+            {text.riskLevel}
           </div>
           <div className="mt-2 text-sm leading-6 text-stone-600">
-            {plan.riskAssessment.overallRiskLevel}
+            {riskLabel(plan.riskAssessment.overallRiskLevel)}
           </div>
         </div>
       </div>
 
       <div className="mt-4 space-y-4">
         <SummaryList
-          title="Objectives"
+          title={text.objectives}
           items={analysis.objectives}
-          emptyLabel="No explicit objectives yet."
+          emptyLabel={text.noObjectives}
         />
         <SummaryList
-          title="Constraints"
+          title={text.constraints}
           items={analysis.constraints.map(item => item.description)}
-          emptyLabel="No explicit constraints yet."
+          emptyLabel={text.noConstraints}
         />
       </div>
     </section>

@@ -79,9 +79,13 @@ function statusStyle(status: string | undefined) {
   return STATUS_STYLES[normalized] ?? STATUS_STYLES.queued;
 }
 
-function formatEventTime(ts: number | undefined, fallback: string): string {
+function formatEventTime(
+  locale: string,
+  ts: number | undefined,
+  fallback: string
+): string {
   if (!ts) return fallback;
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "medium",
   }).format(new Date(ts));
@@ -106,7 +110,22 @@ export function ExecutorStatusPanel({
   artifacts,
   missionStatus,
 }: ExecutorStatusPanelProps) {
-  const { copy } = useI18n();
+  const { locale, copy } = useI18n();
+
+  function artifactKindLabel(kind: string) {
+    switch (kind) {
+      case "file":
+        return locale === "zh-CN" ? "文件" : "File";
+      case "report":
+        return locale === "zh-CN" ? "报告" : "Report";
+      case "url":
+        return locale === "zh-CN" ? "链接" : "URL";
+      case "log":
+        return locale === "zh-CN" ? "日志" : "Log";
+      default:
+        return kind;
+    }
+  }
 
   if (!executor) return null;
 
@@ -157,7 +176,11 @@ export function ExecutorStatusPanel({
             {copy.tasks.executor.lastEvent}
           </div>
           <div className="mt-0.5 text-xs font-medium text-stone-800">
-            {formatEventTime(executor.lastEventAt, copy.common.unavailable)}
+            {formatEventTime(
+              locale,
+              executor.lastEventAt,
+              copy.common.unavailable
+            )}
           </div>
         </div>
         <div className="rounded-[16px] border border-stone-200/80 bg-stone-50/70 px-3 py-2">
@@ -221,7 +244,7 @@ export function ExecutorStatusPanel({
                         {artifact.name}
                       </span>
                       <span className="shrink-0 rounded-full border border-stone-200 bg-stone-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-stone-500">
-                        {artifact.kind}
+                        {artifactKindLabel(artifact.kind)}
                       </span>
                     </div>
                     {artifact.description ? (

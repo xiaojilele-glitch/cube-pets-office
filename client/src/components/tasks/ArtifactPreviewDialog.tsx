@@ -34,10 +34,31 @@ export interface ArtifactPreviewDialogProps {
 }
 
 type PreviewState =
-  | { status: "idle"; content: string; contentType: string | null; truncated: false }
-  | { status: "loading"; content: string; contentType: string | null; truncated: false }
-  | { status: "error"; content: string; contentType: string | null; truncated: false; error: string }
-  | { status: "ready"; content: string; contentType: string | null; truncated: boolean };
+  | {
+      status: "idle";
+      content: string;
+      contentType: string | null;
+      truncated: false;
+    }
+  | {
+      status: "loading";
+      content: string;
+      contentType: string | null;
+      truncated: false;
+    }
+  | {
+      status: "error";
+      content: string;
+      contentType: string | null;
+      truncated: false;
+      error: string;
+    }
+  | {
+      status: "ready";
+      content: string;
+      contentType: string | null;
+      truncated: boolean;
+    };
 
 function t(locale: string, zh: string, en: string): string {
   return locale === "zh-CN" ? zh : en;
@@ -113,7 +134,7 @@ export function ArtifactPreviewDialog({
           error:
             error instanceof Error
               ? error.message
-              : t(locale, "Preview failed.", "Preview failed."),
+              : t(locale, "预览失败。", "Preview failed."),
         });
       });
 
@@ -126,7 +147,8 @@ export function ArtifactPreviewDialog({
   );
   const PreviewIcon = getPreviewIcon(previewMode);
   const renderedContent = useMemo(
-    () => formatArtifactPreviewContent(state.content, format, state.contentType),
+    () =>
+      formatArtifactPreviewContent(state.content, format, state.contentType),
     [format, state.content, state.contentType]
   );
 
@@ -141,7 +163,7 @@ export function ArtifactPreviewDialog({
           <DialogDescription className="text-sm leading-6 text-stone-500">
             {t(
               locale,
-              "Previewing mission artifact content.",
+              "正在预览任务产物内容。",
               "Previewing mission artifact content."
             )}
           </DialogDescription>
@@ -151,7 +173,7 @@ export function ArtifactPreviewDialog({
           <div className="border-b border-amber-200 bg-amber-50 px-6 py-3 text-xs text-amber-800">
             {t(
               locale,
-              "Preview truncated to the first 1 MB.",
+              "预览已截断到前 1 MB。",
               "Preview truncated to the first 1 MB."
             )}
           </div>
@@ -160,7 +182,7 @@ export function ArtifactPreviewDialog({
         {state.status === "loading" ? (
           <div className="flex min-h-[320px] items-center justify-center gap-2 px-6 py-10 text-sm text-stone-500">
             <LoaderCircle className="size-4 animate-spin" />
-            {t(locale, "Loading preview...", "Loading preview...")}
+            {t(locale, "正在加载预览...", "Loading preview...")}
           </div>
         ) : null}
 
@@ -169,7 +191,7 @@ export function ArtifactPreviewDialog({
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-700">
               <div className="flex items-center gap-2 font-semibold">
                 <AlertTriangle className="size-4" />
-                {t(locale, "Preview unavailable", "Preview unavailable")}
+                {t(locale, "当前无法预览", "Preview unavailable")}
               </div>
               <p className="mt-2 leading-6">{state.error}</p>
             </div>

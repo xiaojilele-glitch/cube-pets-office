@@ -163,13 +163,14 @@ function DetailTextDialog({
   title,
   description,
   text,
-  buttonLabel = "More",
+  buttonLabel,
 }: {
   title: string;
   description?: string;
   text: string;
   buttonLabel?: string;
 }) {
+  const { locale } = useI18n();
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -179,7 +180,7 @@ function DetailTextDialog({
           size="sm"
           className="workspace-control rounded-full border-[var(--workspace-panel-border)] bg-white/80 text-xs"
         >
-          {buttonLabel}
+          {buttonLabel || t(locale, "查看更多", "More")}
         </Button>
       </DialogTrigger>
       <DialogContent className="workspace-panel workspace-panel-strong max-w-3xl rounded-[24px] border-[var(--workspace-panel-border)] bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
@@ -216,8 +217,11 @@ function ExcerptBlock({
   emptyText?: string;
   className?: string;
 }) {
+  const { locale } = useI18n();
   const normalized = text.trim();
-  const fallback = emptyText || "No detail captured yet.";
+  const fallback =
+    emptyText ||
+    t(locale, "当前还没有记录详细内容。", "No detail captured yet.");
   const resolved = normalized || fallback;
   const preview = compactText(resolved, maxLength);
   const isTruncated = normalized.length > maxLength;
@@ -285,6 +289,69 @@ function DetailTabViewport({
 const TOKEN_AREA_COLORS = { in: "#6366f1", out: "#10b981" } as const;
 const COST_LINE_COLOR = "#d07a4f";
 
+function t(locale: string, zh: string, en: string) {
+  return locale === "zh-CN" ? zh : en;
+}
+
+function localizedTaskStatus(
+  copy: ReturnType<typeof useI18n>["copy"],
+  status: string
+) {
+  return (
+    copy.workflow.statuses.task[
+      status as keyof typeof copy.workflow.statuses.task
+    ] ?? status
+  );
+}
+
+function localizedExecutorStatus(
+  copy: ReturnType<typeof useI18n>["copy"],
+  status: string
+) {
+  switch (status) {
+    case "queued":
+      return copy.tasks.executor.statusQueued;
+    case "running":
+      return copy.tasks.executor.statusRunning;
+    case "completed":
+      return copy.tasks.executor.statusCompleted;
+    case "failed":
+      return copy.tasks.executor.statusFailed;
+    case "warning":
+      return copy.tasks.executor.statusWarning;
+    default:
+      return status;
+  }
+}
+
+function localizedTimelineLevel(locale: string, level: string) {
+  switch (level) {
+    case "info":
+      return t(locale, "信息", "Info");
+    case "warning":
+      return t(locale, "警告", "Warning");
+    case "error":
+      return t(locale, "异常", "Error");
+    case "success":
+      return t(locale, "成功", "Success");
+    default:
+      return level;
+  }
+}
+
+function localizedSecurityLevel(locale: string, level: string) {
+  switch (level) {
+    case "strict":
+      return t(locale, "严格", "Strict");
+    case "balanced":
+      return t(locale, "平衡", "Balanced");
+    case "relaxed":
+      return t(locale, "宽松", "Relaxed");
+    default:
+      return level;
+  }
+}
+
 function formatCostValue(v: number): string {
   return `$${v.toFixed(4)}`;
 }
@@ -295,6 +362,7 @@ function formatTokenCount(v: number): string {
 }
 
 function MissionCostTab() {
+  const { locale } = useI18n();
   const snapshot = useCostStore(s => s.snapshot);
   const history = useCostStore(s => s.history);
 
@@ -323,8 +391,11 @@ function MissionCostTab() {
     return (
       <Card className={DETAIL_CARD_CLASS}>
         <CardContent className="py-10 text-center text-sm text-stone-500">
-          No cost data available. Cost metrics will appear once LLM calls are
-          recorded.
+          {t(
+            locale,
+            "暂无成本数据。记录到模型调用之后，这里会显示成本指标。",
+            "No cost data available. Cost metrics will appear once LLM calls are recorded."
+          )}
         </CardContent>
       </Card>
     );
@@ -338,24 +409,40 @@ function MissionCostTab() {
       {/* Summary cards */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="Total Cost"
+          label={t(locale, "总成本", "Total Cost")}
           value={formatCostValue(snapshot.totalCost)}
-          hint={`Budget ${budgetPct}% used`}
+          hint={t(
+            locale,
+            `预算已使用 ${budgetPct}%`,
+            `Budget ${budgetPct}% used`
+          )}
         />
         <MetricCard
-          label="Tokens In"
+          label={t(locale, "输入 Token", "Tokens In")}
           value={formatTokenCount(snapshot.totalTokensIn)}
-          hint={`Token budget ${tokenPct}% used`}
+          hint={t(
+            locale,
+            `Token 预算已使用 ${tokenPct}%`,
+            `Token budget ${tokenPct}% used`
+          )}
         />
         <MetricCard
-          label="Tokens Out"
+          label={t(locale, "输出 Token", "Tokens Out")}
           value={formatTokenCount(snapshot.totalTokensOut)}
-          hint={`${snapshot.totalCalls} LLM calls`}
+          hint={t(
+            locale,
+            `${snapshot.totalCalls} 次模型调用`,
+            `${snapshot.totalCalls} LLM calls`
+          )}
         />
         <MetricCard
-          label="Budget Remaining"
+          label={t(locale, "剩余预算", "Budget Remaining")}
           value={`${Math.max(100 - budgetPct, 0)}%`}
-          hint={`$${(snapshot.budget.maxCost - snapshot.totalCost).toFixed(4)} left`}
+          hint={t(
+            locale,
+            `剩余 $${(snapshot.budget.maxCost - snapshot.totalCost).toFixed(4)}`,
+            `$${(snapshot.budget.maxCost - snapshot.totalCost).toFixed(4)} left`
+          )}
         />
       </div>
 
@@ -364,20 +451,20 @@ function MissionCostTab() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-stone-900">
             <Coins className="size-4 text-amber-600" />
-            Budget Usage
+            {t(locale, "预算使用情况", "Budget Usage")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
             <div className="flex items-center justify-between text-xs text-stone-500">
-              <span>Cost</span>
+              <span>{t(locale, "成本", "Cost")}</span>
               <span>{budgetPct}%</span>
             </div>
             <Progress className="mt-1 h-2 bg-stone-200" value={budgetPct} />
           </div>
           <div>
             <div className="flex items-center justify-between text-xs text-stone-500">
-              <span>Tokens</span>
+              <span>{t(locale, "Token", "Tokens")}</span>
               <span>{tokenPct}%</span>
             </div>
             <Progress className="mt-1 h-2 bg-stone-200" value={tokenPct} />
@@ -391,10 +478,18 @@ function MissionCostTab() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-stone-900">
               <Coins className="size-4 text-indigo-600" />
-              Token Consumption by Agent
+              {t(
+                locale,
+                "按 Agent 查看 Token 消耗",
+                "Token Consumption by Agent"
+              )}
             </CardTitle>
             <CardDescription>
-              Input and output token breakdown per agent.
+              {t(
+                locale,
+                "按 Agent 展示输入与输出 Token 拆分。",
+                "Input and output token breakdown per agent."
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -417,7 +512,7 @@ function MissionCostTab() {
                 <Area
                   type="monotone"
                   dataKey="tokensIn"
-                  name="Tokens In"
+                  name={t(locale, "输入 Token", "Tokens In")}
                   stackId="1"
                   stroke={TOKEN_AREA_COLORS.in}
                   fill={TOKEN_AREA_COLORS.in}
@@ -426,7 +521,7 @@ function MissionCostTab() {
                 <Area
                   type="monotone"
                   dataKey="tokensOut"
-                  name="Tokens Out"
+                  name={t(locale, "输出 Token", "Tokens Out")}
                   stackId="1"
                   stroke={TOKEN_AREA_COLORS.out}
                   fill={TOKEN_AREA_COLORS.out}
@@ -444,11 +539,14 @@ function MissionCostTab() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-stone-900">
               <Coins className="size-4 text-orange-600" />
-              Cost Accumulation Curve
+              {t(locale, "成本累计曲线", "Cost Accumulation Curve")}
             </CardTitle>
             <CardDescription>
-              Historical mission cost trend (last {historyCurveData.length}{" "}
-              missions).
+              {t(
+                locale,
+                `最近 ${historyCurveData.length} 个任务的历史成本趋势。`,
+                `Historical mission cost trend (last ${historyCurveData.length} missions).`
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -469,13 +567,13 @@ function MissionCostTab() {
                   }}
                   formatter={(value: number) => [
                     formatCostValue(value),
-                    "Cost",
+                    t(locale, "成本", "Cost"),
                   ]}
                 />
                 <Line
                   type="monotone"
                   dataKey="cost"
-                  name="Cost ($)"
+                  name={t(locale, "成本（$）", "Cost ($)")}
                   stroke={COST_LINE_COLOR}
                   strokeWidth={2}
                   dot={{ r: 3, fill: COST_LINE_COLOR }}
@@ -498,9 +596,9 @@ function MissionCostTab() {
           <CardContent className="flex items-center gap-3 py-4">
             <AlertTriangle className="size-5 text-amber-600" />
             <span className="text-sm font-medium text-[var(--workspace-text-strong)]">
-              Degradation active:{" "}
+              {t(locale, "已启用降级策略：", "Degradation active:")}{" "}
               <span className="font-semibold uppercase">
-                {snapshot.downgradeLevel}
+                {localizedSecurityLevel(locale, snapshot.downgradeLevel)}
               </span>
             </span>
           </CardContent>
@@ -671,10 +769,10 @@ export function TaskDetailView({
     ...detail.logSummary.slice(0, 4),
   ];
   const runtimeDetailText = [
-    "Instance Info",
+    t(locale, "实例信息", "Instance Info"),
     ...detail.instanceInfo.map(row => `${row.label}: ${row.value}`),
     "",
-    "Log Summary",
+    t(locale, "日志摘要", "Log Summary"),
     ...detail.logSummary.map(row => `${row.label}: ${row.value}`),
   ].join("\n");
 
@@ -696,6 +794,7 @@ export function TaskDetailView({
             description={copy.tasks.detailView.sourcePreviewDescription}
             text={sourceDirectiveText}
             maxLength={132}
+            emptyText={copy.tasks.detailView.noDetail}
           />
         </div>
       </CardContent>
@@ -720,7 +819,7 @@ export function TaskDetailView({
             const scoreValue =
               task.total_score !== null && task.total_score !== undefined
                 ? String(task.total_score)
-                : "n/a";
+                : copy.common.unavailable;
             const reviewState = task.meta_audit_feedback
               ? copy.tasks.detailView.reviewAudit
               : task.manager_feedback
@@ -756,12 +855,12 @@ export function TaskDetailView({
                           "px-2.5 py-1 text-[11px] font-medium"
                         )}
                       >
-                        {task.status}
+                        {localizedTaskStatus(copy, task.status)}
                       </span>
                     </div>
                     <div className="mt-2 text-sm font-medium leading-6 text-stone-900">
                       {compactText(
-                        task.description || "No work brief captured yet.",
+                        task.description || copy.tasks.detailView.noWorkBrief,
                         118
                       )}
                     </div>
@@ -813,36 +912,56 @@ export function TaskDetailView({
                   <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                     <ExcerptBlock
                       title={copy.tasks.detailView.workBriefTitle}
-                      description={`Full work brief for task #${task.id}.`}
+                      description={t(
+                        locale,
+                        `任务 #${task.id} 的完整工作简报。`,
+                        `Full work brief for task #${task.id}.`
+                      )}
                       text={
                         task.description || copy.tasks.detailView.noWorkBrief
                       }
                       maxLength={104}
+                      emptyText={copy.tasks.detailView.noWorkBrief}
                     />
                   </div>
                   <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                     <ExcerptBlock
                       title={copy.tasks.detailView.deliverablePreviewTitle}
-                      description={`Full deliverable payload for task #${task.id}.`}
+                      description={t(
+                        locale,
+                        `任务 #${task.id} 的完整交付内容。`,
+                        `Full deliverable payload for task #${task.id}.`
+                      )}
                       text={deliverableText}
                       maxLength={150}
+                      emptyText={copy.tasks.detailView.noDeliverable}
                     />
                   </div>
                   <div className="grid gap-2.5">
                     <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                       <ExcerptBlock
                         title={copy.tasks.detailView.managerSignalTitle}
-                        description={`Manager review notes for task #${task.id}.`}
+                        description={t(
+                          locale,
+                          `任务 #${task.id} 的负责人反馈。`,
+                          `Manager review notes for task #${task.id}.`
+                        )}
                         text={managerText}
                         maxLength={86}
+                        emptyText={copy.tasks.detailView.noManagerFeedback}
                       />
                     </div>
                     <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                       <ExcerptBlock
                         title={copy.tasks.detailView.auditSignalTitle}
-                        description={`Audit notes for task #${task.id}.`}
+                        description={t(
+                          locale,
+                          `任务 #${task.id} 的审计反馈。`,
+                          `Audit notes for task #${task.id}.`
+                        )}
                         text={auditText}
                         maxLength={86}
+                        emptyText={copy.tasks.detailView.noAuditSignal}
                       />
                     </div>
                   </div>
@@ -896,7 +1015,7 @@ export function TaskDetailView({
                           timelineTone(event.level)
                         )}
                       >
-                        {event.level}
+                        {localizedTimelineLevel(locale, event.level)}
                       </span>
                     </div>
                     <div className="mt-1.5 text-sm leading-6 text-stone-600">
@@ -1193,7 +1312,7 @@ export function TaskDetailView({
                   <CardHeader className="space-y-1 pb-3">
                     <CardTitle className="flex items-center gap-2 text-stone-900">
                       <Sparkles className="size-4 text-stone-600" />
-                      RAG Context
+                      {t(locale, "RAG 上下文", "RAG Context")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
@@ -1224,10 +1343,14 @@ export function TaskDetailView({
                 <CardHeader className="space-y-1 pb-3">
                   <CardTitle className="flex items-center gap-2 text-stone-900">
                     <Shield className="size-4 text-stone-600" />
-                    Security Policy
+                    {t(locale, "安全策略", "Security Policy")}
                   </CardTitle>
                   <CardDescription className="flex items-center gap-2">
-                    Container sandbox configuration
+                    {t(
+                      locale,
+                      "容器沙箱配置",
+                      "Container sandbox configuration"
+                    )}
                     <span
                       className={cn(
                         "rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
@@ -1238,36 +1361,41 @@ export function TaskDetailView({
                             : workspaceToneClass("success")
                       )}
                     >
-                      {detail.securitySummary.level}
+                      {localizedSecurityLevel(
+                        locale,
+                        detail.securitySummary.level
+                      )}
                     </span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     <SnapshotTile
-                      label="User"
+                      label={t(locale, "用户", "User")}
                       value={detail.securitySummary.user}
                     />
                     <SnapshotTile
-                      label="Network"
+                      label={t(locale, "网络", "Network")}
                       value={detail.securitySummary.networkMode}
                     />
                     <SnapshotTile
-                      label="Readonly FS"
+                      label={t(locale, "只读文件系统", "Readonly FS")}
                       value={
-                        detail.securitySummary.readonlyRootfs ? "Yes" : "No"
+                        detail.securitySummary.readonlyRootfs
+                          ? t(locale, "是", "Yes")
+                          : t(locale, "否", "No")
                       }
                     />
                     <SnapshotTile
-                      label="Memory"
+                      label={t(locale, "内存", "Memory")}
                       value={detail.securitySummary.memoryLimit}
                     />
                     <SnapshotTile
-                      label="CPU"
+                      label={t(locale, "CPU", "CPU")}
                       value={detail.securitySummary.cpuLimit}
                     />
                     <SnapshotTile
-                      label="PIDs Limit"
+                      label={t(locale, "PIDs 限制", "PIDs Limit")}
                       value={String(detail.securitySummary.pidsLimit)}
                     />
                   </div>

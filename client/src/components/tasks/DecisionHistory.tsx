@@ -50,6 +50,29 @@ function decisionTypeTone(type: DecisionType) {
   return "info";
 }
 
+function decisionTypeLabel(locale: string, type: DecisionType) {
+  if (locale !== "zh-CN") {
+    return type;
+  }
+
+  switch (type) {
+    case "approve":
+      return "通过";
+    case "reject":
+      return "拒绝";
+    case "request-info":
+      return "补充信息";
+    case "escalate":
+      return "升级处理";
+    case "multi-choice":
+      return "多选决策";
+    case "custom-action":
+      return "自定义动作";
+    default:
+      return type;
+  }
+}
+
 /* ─── Main Component ─── */
 
 export function DecisionHistory({ history }: DecisionHistoryProps) {
@@ -103,7 +126,7 @@ export function DecisionHistory({ history }: DecisionHistoryProps) {
                       )
                     )}
                   >
-                    {entry.type}
+                    {decisionTypeLabel(locale, entry.type)}
                   </span>
                 </div>
 

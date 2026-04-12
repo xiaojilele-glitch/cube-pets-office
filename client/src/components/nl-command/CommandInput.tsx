@@ -8,6 +8,7 @@ import {
 import { Send } from "lucide-react";
 
 import { GlowButton } from "@/components/ui/GlowButton";
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
 
 /**
@@ -36,13 +37,25 @@ export function CommandInput({
   onSubmit,
   loading,
   commandHistory = [],
-  label = "Enter strategic command",
-  placeholder = 'e.g. "Refactor the payment module with zero downtime"',
-  submitLabel = "Send",
-  sendingLabel = "Sending...",
+  label,
+  placeholder,
+  submitLabel,
+  sendingLabel,
   onTextChange,
   className,
 }: CommandInputProps) {
+  const { locale } = useI18n();
+  const isZh = locale === "zh-CN";
+  const resolvedLabel =
+    label ?? (isZh ? "输入战略指令" : "Enter strategic command");
+  const resolvedPlaceholder =
+    placeholder ??
+    (isZh
+      ? '例如："在不停机的前提下重构支付模块"'
+      : 'e.g. "Refactor the payment module with zero downtime"');
+  const resolvedSubmitLabel = submitLabel ?? (isZh ? "发送" : "Send");
+  const resolvedSendingLabel =
+    sendingLabel ?? (isZh ? "发送中..." : "Sending...");
   const [text, setText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -127,7 +140,7 @@ export function CommandInput({
   return (
     <div className={cn("relative", className)}>
       <label className="mb-1.5 block text-xs font-medium text-stone-500">
-        {label}
+        {resolvedLabel}
       </label>
       <div className="flex items-end gap-2">
         <div className="relative flex-1">
@@ -141,11 +154,11 @@ export function CommandInput({
               // Delay to allow click on suggestion
               setTimeout(() => setShowSuggestions(false), 150);
             }}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             rows={2}
             disabled={loading}
             className="w-full resize-none rounded-xl border border-stone-200 bg-stone-50/60 px-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-50"
-            aria-label="Strategic command input"
+            aria-label={isZh ? "战略指令输入框" : "Strategic command input"}
             aria-autocomplete="list"
             aria-expanded={showSuggestions && suggestions.length > 0}
           />
@@ -186,7 +199,7 @@ export function CommandInput({
           onClick={() => void handleSubmit()}
         >
           <Send className="size-4" />
-          {loading ? sendingLabel : submitLabel}
+          {loading ? resolvedSendingLabel : resolvedSubmitLabel}
         </GlowButton>
       </div>
     </div>

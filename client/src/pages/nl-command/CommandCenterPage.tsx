@@ -8,6 +8,7 @@ import {
   WorkspacePageShell,
   WorkspacePanel,
 } from "@/components/workspace/WorkspacePageShell";
+import { useI18n } from "@/i18n";
 import { useNLCommandStore } from "@/lib/nl-command-store";
 import { cn } from "@/lib/utils";
 
@@ -23,12 +24,76 @@ function riskTone(level: string) {
   }
 }
 
+function localizeRiskLabel(locale: string, level: string) {
+  if (locale !== "zh-CN") return level;
+  switch (level) {
+    case "low":
+      return "低";
+    case "medium":
+      return "中";
+    case "high":
+      return "高";
+    case "critical":
+      return "极高";
+    default:
+      return level;
+  }
+}
+
 export default function CommandCenterPage({
   className,
 }: {
   className?: string;
 }) {
+  const { locale } = useI18n();
   const [fullscreen, setFullscreen] = useState(false);
+  const isZh = locale === "zh-CN";
+  const text = {
+    refresh: isZh ? "刷新" : "Refresh",
+    exitFullscreen: isZh ? "退出全屏" : "Exit Fullscreen",
+    fullscreen: isZh ? "全屏" : "Fullscreen",
+    eyebrow: isZh ? "自然语言指挥中心" : "NL Command Center",
+    title: isZh ? "战略指挥中心" : "Strategic Command Center",
+    description: isZh
+      ? "让兼容路由在视觉上和新的工作台外壳保持一致，同时保留它原有的规划、监控和决策支持布局。"
+      : "Keep the compatibility route visually aligned with the new workspace shell while preserving its planning, monitoring, and decision-support layout.",
+    dismiss: isZh ? "收起" : "Dismiss",
+    executionPlan: isZh ? "执行计划" : "Execution Plan",
+    executionPlanDescription: isZh
+      ? "集中查看当前 mission、时间线、预算和整体风险态势。"
+      : "Current missions, timeline, budget, and overall risk posture.",
+    missions: isZh ? "任务组" : "Missions",
+    tasks: isZh ? "任务" : "Tasks",
+    timeline: isZh ? "时间线" : "Timeline",
+    timelineRange: (start: string, end: string) =>
+      isZh ? `${start} 至 ${end}` : `${start} to ${end}`,
+    budget: isZh ? "预算" : "Budget",
+    risk: isZh ? "风险" : "Risk",
+    identifiedRisks: (count: number) =>
+      isZh ? `已识别 ${count} 条风险` : `${count} identified risk items`,
+    noPlan: isZh
+      ? "还没有执行计划。先提交一条指令来生成计划。"
+      : "No execution plan yet. Submit a command to generate one.",
+    monitoring: isZh ? "实时监控" : "Real-time Monitoring",
+    monitoringDescription: isZh
+      ? "查看活跃指令负载、任务体量和最近的运行告警。"
+      : "Active command load, mission volume, and the latest operational alerts.",
+    activeCommands: isZh ? "活跃指令" : "Active Commands",
+    totalMissions: isZh ? "任务总数" : "Total Missions",
+    recentAlerts: isZh ? "最近告警" : "Recent Alerts",
+    loadingDashboard: isZh ? "正在加载看板..." : "Loading dashboard...",
+    noMonitoring: isZh ? "暂无监控数据。" : "No monitoring data available.",
+    decisionSupport: isZh ? "决策支持" : "Decision Support",
+    decisionSupportDescription: isZh
+      ? "快速查看最可能影响当前执行计划的关键风险。"
+      : "Quick access to the risks most likely to affect the current execution plan.",
+    activeRisks: (count: number) =>
+      isZh ? `${count} 条活跃风险` : `${count} active risks`,
+    mitigation: isZh ? "缓解措施" : "Mitigation",
+    noDecisionSupport: isZh
+      ? "生成执行计划后，这里会出现决策支持数据。"
+      : "Decision support data will appear once an execution plan is generated.",
+  };
 
   const loading = useNLCommandStore(state => state.loading);
   const error = useNLCommandStore(state => state.error);
@@ -93,7 +158,7 @@ export default function CommandCenterPage({
         onClick={handleRefresh}
       >
         <RefreshCw className="size-4" />
-        Refresh
+        {text.refresh}
       </Button>
       <Button
         type="button"
@@ -107,16 +172,16 @@ export default function CommandCenterPage({
         ) : (
           <Maximize2 className="size-4" />
         )}
-        {fullscreen ? "Exit Fullscreen" : "Fullscreen"}
+        {fullscreen ? text.exitFullscreen : text.fullscreen}
       </Button>
     </>
   );
 
   return (
     <WorkspacePageShell
-      eyebrow="NL Command Center"
-      title="Strategic Command Center"
-      description="Keep the compatibility route visually aligned with the new workspace shell while preserving its planning, monitoring, and decision-support layout."
+      eyebrow={text.eyebrow}
+      title={text.title}
+      description={text.description}
       actions={actions}
       className={cn(
         fullscreen && "fixed inset-0 z-50 overflow-y-auto !pb-6 !pt-4 md:!pt-6",
@@ -132,7 +197,7 @@ export default function CommandCenterPage({
               className="font-semibold underline underline-offset-4"
               onClick={clearError}
             >
-              Dismiss
+              {text.dismiss}
             </button>
           </div>
         </WorkspacePanel>
@@ -160,10 +225,10 @@ export default function CommandCenterPage({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-sm font-semibold text-[var(--workspace-text-strong)]">
-                Execution Plan
+                {text.executionPlan}
               </h2>
               <p className="mt-1 text-xs leading-5 text-[var(--workspace-text-muted)]">
-                Current missions, timeline, budget, and overall risk posture.
+                {text.executionPlanDescription}
               </p>
             </div>
             {currentPlan ? (
@@ -171,7 +236,7 @@ export default function CommandCenterPage({
                 className="workspace-badge text-[11px] font-semibold"
                 data-tone={riskTone(currentPlan.status)}
               >
-                {currentPlan.status}
+                {localizeRiskLabel(locale, currentPlan.status)}
               </span>
             ) : null}
           </div>
@@ -181,7 +246,7 @@ export default function CommandCenterPage({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Missions
+                    {text.missions}
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-[var(--workspace-text-strong)]">
                     {currentPlan.missions.length}
@@ -189,7 +254,7 @@ export default function CommandCenterPage({
                 </div>
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Tasks
+                    {text.tasks}
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-[var(--workspace-text-strong)]">
                     {currentPlan.tasks.length}
@@ -200,11 +265,13 @@ export default function CommandCenterPage({
               {currentPlan.timeline ? (
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Timeline
+                    {text.timeline}
                   </div>
                   <div className="mt-2 text-sm font-medium text-[var(--workspace-text)]">
-                    {currentPlan.timeline.startDate} to{" "}
-                    {currentPlan.timeline.endDate}
+                    {text.timelineRange(
+                      currentPlan.timeline.startDate,
+                      currentPlan.timeline.endDate
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -212,7 +279,7 @@ export default function CommandCenterPage({
               {currentPlan.costBudget ? (
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Budget
+                    {text.budget}
                   </div>
                   <div className="mt-2 text-sm font-medium text-[var(--workspace-text)]">
                     {currentPlan.costBudget.totalBudget}{" "}
@@ -225,7 +292,7 @@ export default function CommandCenterPage({
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                      Risk
+                      {text.risk}
                     </div>
                     <span
                       className="workspace-badge text-[11px] font-semibold"
@@ -233,19 +300,23 @@ export default function CommandCenterPage({
                         currentPlan.riskAssessment.overallRiskLevel
                       )}
                     >
-                      {currentPlan.riskAssessment.overallRiskLevel}
+                      {localizeRiskLabel(
+                        locale,
+                        currentPlan.riskAssessment.overallRiskLevel
+                      )}
                     </span>
                   </div>
                   <div className="mt-3 text-sm text-[var(--workspace-text-muted)]">
-                    {currentPlan.riskAssessment.risks.length} identified risk
-                    items
+                    {text.identifiedRisks(
+                      currentPlan.riskAssessment.risks.length
+                    )}
                   </div>
                 </div>
               ) : null}
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-[var(--workspace-text-subtle)]">
-              No execution plan yet. Submit a command to generate one.
+              {text.noPlan}
             </div>
           )}
         </WorkspacePanel>
@@ -253,11 +324,10 @@ export default function CommandCenterPage({
         <WorkspacePanel className="flex min-h-[320px] flex-col p-5">
           <div>
             <h2 className="text-sm font-semibold text-[var(--workspace-text-strong)]">
-              Real-time Monitoring
+              {text.monitoring}
             </h2>
             <p className="mt-1 text-xs leading-5 text-[var(--workspace-text-muted)]">
-              Active command load, mission volume, and the latest operational
-              alerts.
+              {text.monitoringDescription}
             </p>
           </div>
 
@@ -266,7 +336,7 @@ export default function CommandCenterPage({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Active Commands
+                    {text.activeCommands}
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-[var(--workspace-text-strong)]">
                     {dashboard.activeCommands}
@@ -274,7 +344,7 @@ export default function CommandCenterPage({
                 </div>
                 <div className="rounded-[20px] border border-[var(--workspace-panel-border)] bg-white/44 p-4">
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Total Missions
+                    {text.totalMissions}
                   </div>
                   <div className="mt-2 text-2xl font-semibold text-[var(--workspace-text-strong)]">
                     {dashboard.totalMissions}
@@ -285,7 +355,7 @@ export default function CommandCenterPage({
               {alerts.length > 0 ? (
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.18em] text-[var(--workspace-text-subtle)]">
-                    Recent Alerts
+                    {text.recentAlerts}
                   </div>
                   <ul className="mt-3 space-y-2">
                     {alerts.slice(0, 5).map(alert => (
@@ -299,7 +369,7 @@ export default function CommandCenterPage({
                             className="workspace-badge text-[10px] font-semibold"
                             data-tone={riskTone(alert.priority)}
                           >
-                            {alert.priority}
+                            {localizeRiskLabel(locale, alert.priority)}
                           </span>
                         </div>
                         <div className="mt-1 text-[var(--workspace-text-muted)]">
@@ -313,9 +383,7 @@ export default function CommandCenterPage({
             </div>
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-[var(--workspace-text-subtle)]">
-              {loading
-                ? "Loading dashboard..."
-                : "No monitoring data available."}
+              {loading ? text.loadingDashboard : text.noMonitoring}
             </div>
           )}
         </WorkspacePanel>
@@ -324,11 +392,10 @@ export default function CommandCenterPage({
       <WorkspacePanel className="p-5">
         <div>
           <h2 className="text-sm font-semibold text-[var(--workspace-text-strong)]">
-            Decision Support
+            {text.decisionSupport}
           </h2>
           <p className="mt-1 text-xs leading-5 text-[var(--workspace-text-muted)]">
-            Quick access to the risks most likely to affect the current
-            execution plan.
+            {text.decisionSupportDescription}
           </p>
         </div>
 
@@ -338,7 +405,7 @@ export default function CommandCenterPage({
               className="workspace-badge text-[11px] font-semibold"
               data-tone="warning"
             >
-              {currentPlan.riskAssessment.risks.length} active risks
+              {text.activeRisks(currentPlan.riskAssessment.risks.length)}
             </div>
             <ul className="space-y-2">
               {currentPlan.riskAssessment.risks.slice(0, 3).map(risk => (
@@ -354,11 +421,11 @@ export default function CommandCenterPage({
                       className="workspace-badge text-[10px] font-semibold"
                       data-tone={riskTone(risk.level)}
                     >
-                      {risk.level}
+                      {localizeRiskLabel(locale, risk.level)}
                     </span>
                   </div>
                   <div className="mt-2 text-xs leading-6 text-[var(--workspace-text-muted)]">
-                    Mitigation: {risk.mitigation}
+                    {text.mitigation}: {risk.mitigation}
                   </div>
                 </li>
               ))}
@@ -366,8 +433,7 @@ export default function CommandCenterPage({
           </div>
         ) : (
           <div className="mt-4 text-sm text-[var(--workspace-text-subtle)]">
-            Decision support data will appear once an execution plan is
-            generated.
+            {text.noDecisionSupport}
           </div>
         )}
       </WorkspacePanel>
