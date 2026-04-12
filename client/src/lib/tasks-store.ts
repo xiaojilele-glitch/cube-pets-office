@@ -246,6 +246,7 @@ interface TasksStoreState {
     sourceText?: string;
     kind?: string;
     topicId?: string;
+    autoDispatch?: boolean;
   }) => Promise<string | null>;
   cancelMission: (taskId: string, payload: {
     reason?: string;

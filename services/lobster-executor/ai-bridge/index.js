@@ -24,6 +24,48 @@ function getModel() {
   return process.env.AI_MODEL || "gpt-4";
 }
 
+function buildResponsesInput(messages) {
+  const instructions = messages
+    .filter(message => message.role === "system")
+    .map(message => message.content || "")
+    .join("\n\n");
+
+  const input = messages
+    .filter(message => message.role !== "system")
+    .map(message => ({
+      role: message.role,
+      content: [
+        {
+          type: "input_text",
+          text: String(message.content || ""),
+        },
+      ],
+    }));
+
+  return {
+    instructions: instructions || undefined,
+    input,
+  };
+}
+
+function extractResponsesText(data) {
+  if (typeof data?.output_text === "string" && data.output_text.length > 0) {
+    return data.output_text;
+  }
+
+  const texts = [];
+  for (const item of data?.output || []) {
+    if (item?.type !== "message" || !Array.isArray(item.content)) continue;
+    for (const content of item.content) {
+      if (content?.type === "output_text" && typeof content.text === "string") {
+        texts.push(content.text);
+      }
+    }
+  }
+
+  return texts.join("\n").trim();
+}
+
 /**
  * Parse SSE stream and extract text content from Responses API.
  */
@@ -86,12 +128,11 @@ async function generate(messages, options = {}) {
 
   if (wireApi === "responses") {
     url = `${baseUrl}/responses`;
-    const systemMsg = messages.find(m => m.role === "system");
-    const userMsg = messages.find(m => m.role === "user");
+    const { input, instructions } = buildResponsesInput(messages);
     body = {
       model,
-      input: userMsg?.content || "",
-      instructions: systemMsg?.content || "",
+      input,
+      instructions,
       stream: true,
     };
     if (options.temperature !== undefined) body.temperature = options.temperature;
@@ -120,11 +161,19 @@ async function generate(messages, options = {}) {
   let content, usage;
   const contentType = response.headers.get("content-type") || "";
 
-  if (wireApi === "responses" || contentType.includes("text/event-stream")) {
+  if (contentType.includes("text/event-stream")) {
     // SSE streaming response
     const parsed = await parseSSEStream(response);
     content = parsed.content;
     usage = parsed.usage;
+  } else if (wireApi === "responses") {
+    const data = await response.json();
+    content = extractResponsesText(data);
+    usage = {
+      promptTokens: data.usage?.input_tokens || 0,
+      completionTokens: data.usage?.output_tokens || 0,
+      totalTokens: data.usage?.total_tokens || 0,
+    };
   } else {
     // Standard JSON response (Chat Completions)
     const data = await response.json();

@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { randomUUID } from 'node:crypto';
+import { Router, type Request } from 'express';
 import fs from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { readFile } from 'node:fs/promises';
@@ -8,10 +9,13 @@ import type {
   ArtifactListItem,
   ArtifactListResponse,
   MissionEvent,
+  MissionRecord,
 } from '../../shared/mission/contracts.js';
 import { EXECUTOR_API_ROUTES, type CancelExecutorJobRequest } from '../../shared/executor/api.js';
 import type { SubmitMissionOperatorActionRequest } from '../../shared/mission/api.js';
 import { BUILTIN_DECISION_TEMPLATES } from '../../shared/mission/decision-templates.js';
+import { buildExecutionPlan } from '../core/execution-plan-builder.js';
+import { ExecutorClient } from '../core/executor-client.js';
 import { submitMissionDecision } from '../tasks/mission-decision.js';
 import {
   MissionOperatorActionError,
@@ -92,6 +96,267 @@ function toExecutorCancelSource(
 
 function buildExecutorUrl(baseUrl: string, path: string): string {
   return new URL(path, baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`).toString();
+}
+
+interface MissionDispatchResult {
+  task: MissionRecord | undefined;
+  dispatchAccepted: boolean;
+  dispatchError?: string;
+}
+
+function buildServerBaseUrl(request: Request): string {
+  const forwardedProto = request.header('x-forwarded-proto')?.split(',')[0]?.trim();
+  const forwardedHost = request.header('x-forwarded-host')?.split(',')[0]?.trim();
+  const protocol = forwardedProto || request.protocol;
+  const host = forwardedHost || request.get('host') || '127.0.0.1';
+  return `${protocol}://${host}`;
+}
+
+function shouldAutoDispatchMission(
+  task: Pick<MissionRecord, 'kind'>,
+  requested: unknown,
+): boolean {
+  if (requested === true) return true;
+  if (requested === false) return false;
+  return task.kind === 'nl-command';
+}
+
+function applyMissionDispatchPayload(
+  job: { payload?: Record<string, unknown> },
+  missionId: string,
+  sourceText: string,
+  executionMode: 'mock' | 'real',
+): void {
+  const existing = job.payload || {};
+  const existingEnv =
+    typeof existing.env === 'object' &&
+    existing.env !== null &&
+    !Array.isArray(existing.env)
+      ? (existing.env as Record<string, unknown>)
+      : {};
+
+  if (executionMode === 'mock') {
+    const { aiEnabled: _aiEnabled, aiTaskType: _aiTaskType, runner: _runner, ...rest } = existing;
+
+    job.payload = {
+      ...rest,
+      ...(Object.keys(existingEnv).length > 0 ? { env: existingEnv } : {}),
+      runner: {
+        kind: 'mock',
+        outcome: 'success',
+        steps: 3,
+        delayMs: 40,
+        summary: 'Mock mission execution completed.',
+      },
+    };
+    return;
+  }
+
+  const { runner: _runner, ...rest } = existing;
+  job.payload = {
+    ...rest,
+    aiEnabled: true,
+    aiTaskType:
+      typeof existing.aiTaskType === 'string' && existing.aiTaskType.trim()
+        ? existing.aiTaskType.trim()
+        : 'text-generation',
+    command: [],
+    env: {
+      ...existingEnv,
+      MISSION_ID: missionId,
+      TASK_CONTENT: sourceText,
+    },
+  };
+}
+
+async function dispatchMissionToExecutor(
+  runtime: MissionRuntime,
+  missionId: string,
+  options: {
+    fetchImpl: typeof fetch;
+    executorBaseUrl: string;
+    callbackUrl: string;
+    source?: MissionEvent['source'];
+  },
+): Promise<MissionDispatchResult> {
+  const source = options.source ?? 'brain';
+  const mission = runtime.getTask(missionId);
+  if (!mission) {
+    return {
+      task: undefined,
+      dispatchAccepted: false,
+      dispatchError: 'Mission not found',
+    };
+  }
+
+  const sourceText = mission.sourceText?.trim() || mission.title;
+  runtime.markMissionRunning(
+    missionId,
+    'receive',
+    'Mission intake accepted and queued for execution dispatch.',
+    4,
+    source,
+  );
+  runtime.updateMissionStage(
+    missionId,
+    'receive',
+    {
+      status: 'done',
+      detail: 'Mission intake accepted and ready for execution planning.',
+    },
+    8,
+    source,
+  );
+  runtime.markMissionRunning(
+    missionId,
+    'understand',
+    'Reading mission objective and constraints.',
+    12,
+    source,
+  );
+
+  let buildResult: Awaited<ReturnType<typeof buildExecutionPlan>>;
+  try {
+    buildResult = await buildExecutionPlan({
+      missionId,
+      title: mission.title,
+      sourceText,
+      requestedBy: 'brain',
+      topicId: mission.topicId,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const failedTask = runtime.failMission(
+      missionId,
+      `Execution plan build failed: ${detail}`,
+      source,
+    );
+    return {
+      task: failedTask,
+      dispatchAccepted: false,
+      dispatchError: detail,
+    };
+  }
+
+  runtime.updateMissionStage(
+    missionId,
+    'understand',
+    {
+      status: 'done',
+      detail: buildResult.understanding.summary,
+    },
+    20,
+    source,
+  );
+  runtime.markMissionRunning(
+    missionId,
+    'plan',
+    'Structured execution plan created for runtime dispatch.',
+    28,
+    source,
+  );
+  runtime.updateMissionStage(
+    missionId,
+    'plan',
+    {
+      status: 'done',
+      detail: buildResult.plan.summary,
+    },
+    36,
+    source,
+  );
+  runtime.markMissionRunning(
+    missionId,
+    'provision',
+    'Provisioning executor job on lobster.',
+    45,
+    source,
+  );
+
+  const firstJob = buildResult.plan.jobs[0];
+  if (!firstJob) {
+    const failedTask = runtime.failMission(
+      missionId,
+      'Execution plan did not produce any executor jobs.',
+      source,
+    );
+    return {
+      task: failedTask,
+      dispatchAccepted: false,
+      dispatchError: 'Execution plan did not produce any executor jobs.',
+    };
+  }
+
+  const executionMode =
+    process.env.LOBSTER_EXECUTION_MODE === 'mock' ? 'mock' : 'real';
+  applyMissionDispatchPayload(firstJob, missionId, sourceText, executionMode);
+
+  const executorClient = new ExecutorClient({
+    baseUrl: options.executorBaseUrl,
+    callbackUrl: options.callbackUrl,
+    fetchImpl: options.fetchImpl,
+  });
+
+  try {
+    const dispatchResult = await executorClient.dispatchPlan(buildResult.plan, {
+      jobId: firstJob.id,
+      requestId: `mission_${missionId}_attempt_${mission.attempt ?? 1}`,
+      traceId: randomUUID(),
+      idempotencyKey: `mission:${missionId}:attempt:${mission.attempt ?? 1}`,
+    });
+
+    runtime.updateMissionStage(
+      missionId,
+      'provision',
+      {
+        status: 'done',
+        detail: `Executor accepted job ${dispatchResult.response.jobId}.`,
+      },
+      55,
+      source,
+    );
+    runtime.patchMissionExecution(missionId, {
+      executor: {
+        name: dispatchResult.request.executor,
+        requestId: dispatchResult.request.requestId,
+        jobId: dispatchResult.response.jobId,
+        status: 'queued',
+        baseUrl: options.executorBaseUrl,
+        lastEventType: 'job.accepted',
+        lastEventAt: Date.now(),
+      },
+      instance: buildResult.plan.workspaceRoot
+        ? {
+            workspaceRoot: buildResult.plan.workspaceRoot,
+          }
+        : undefined,
+      artifacts: buildResult.plan.artifacts,
+    });
+    const runningTask = runtime.markMissionRunning(
+      missionId,
+      'execute',
+      'Executor accepted the mission. Docker execution is in progress.',
+      60,
+      source,
+    );
+
+    return {
+      task: runningTask,
+      dispatchAccepted: true,
+    };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const failedTask = runtime.failMission(
+      missionId,
+      `Executor dispatch failed: ${detail}`,
+      source,
+    );
+    return {
+      task: failedTask,
+      dispatchAccepted: false,
+      dispatchError: detail,
+    };
+  }
 }
 
 function isExecutorTerminalStatus(value: unknown): boolean {
@@ -179,7 +444,7 @@ export function createTaskRouter(
     }
   }
 
-  router.post('/', (req, res) => {
+  router.post('/', async (req, res) => {
     const body = req.body || {};
     const title = buildTaskTitle(body.title, body.sourceText);
     if (!title) {
@@ -188,7 +453,7 @@ export function createTaskRouter(
       });
     }
 
-    const task = runtime.createTask({
+    let task = runtime.createTask({
       kind: typeof body.kind === 'string' && body.kind.trim() ? body.kind.trim() : 'chat',
       title,
       sourceText:
@@ -202,9 +467,31 @@ export function createTaskRouter(
       stageLabels: [...MISSION_CORE_STAGE_BLUEPRINT],
     });
 
+    let dispatchAccepted: boolean | undefined;
+    let dispatchError: string | undefined;
+    if (shouldAutoDispatchMission(task, body.autoDispatch)) {
+      const dispatched = await dispatchMissionToExecutor(runtime, task.id, {
+        fetchImpl,
+        executorBaseUrl: defaultExecutorBaseUrl,
+        callbackUrl: new URL(
+          EXECUTOR_API_ROUTES.events,
+          buildServerBaseUrl(req)
+        ).toString(),
+      });
+      task = dispatched.task ?? task;
+      dispatchAccepted = dispatched.dispatchAccepted;
+      dispatchError = dispatched.dispatchError;
+    }
+
     return res.status(201).json({
       ok: true,
       task,
+      ...(dispatchAccepted === undefined
+        ? {}
+        : {
+            dispatchAccepted,
+            dispatchError,
+          }),
     });
   });
 
@@ -371,10 +658,34 @@ export function createTaskRouter(
     try {
       const input = (req.body || {}) as SubmitMissionOperatorActionRequest;
       const result = await operatorService.submit(req.params.id, input);
+      let task = result.task;
+      let dispatchAccepted: boolean | undefined;
+      let dispatchError: string | undefined;
+
+      if (input.action === 'retry' && shouldAutoDispatchMission(task, undefined)) {
+        const dispatched = await dispatchMissionToExecutor(runtime, task.id, {
+          fetchImpl,
+          executorBaseUrl: defaultExecutorBaseUrl,
+          callbackUrl: new URL(
+            EXECUTOR_API_ROUTES.events,
+            buildServerBaseUrl(req)
+          ).toString(),
+        });
+        task = dispatched.task ?? task;
+        dispatchAccepted = dispatched.dispatchAccepted;
+        dispatchError = dispatched.dispatchError;
+      }
+
       return res.json({
         ok: true,
         action: result.action,
-        task: result.task,
+        task,
+        ...(dispatchAccepted === undefined
+          ? {}
+          : {
+              dispatchAccepted,
+              dispatchError,
+            }),
       });
     } catch (error) {
       if (error instanceof MissionOperatorActionError) {

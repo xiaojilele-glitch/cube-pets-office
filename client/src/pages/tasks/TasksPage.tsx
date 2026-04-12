@@ -165,6 +165,7 @@ export default function TasksPage({
     sourceText?: string;
     kind?: string;
     topicId?: string;
+    autoDispatch?: boolean;
   }) {
     try {
       const missionId = await createMission(input);

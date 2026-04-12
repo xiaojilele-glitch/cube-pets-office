@@ -57,7 +57,7 @@ describe('MissionStore', () => {
     expect(restoredMission?.events.at(-1)?.type).toBe('done');
   });
 
-  it('fails queued and running missions during recovery while preserving waiting missions', () => {
+  it('fails only running missions during recovery while preserving queued and waiting missions', () => {
     const filePath = path.join(tempDir, 'mission-snapshots.json');
     const store = new MissionStore(new MissionFileSnapshotStore(filePath));
 
@@ -94,10 +94,8 @@ describe('MissionStore', () => {
       message: 'Server restarted during mission execution.',
     });
 
-    expect(recovered.map(task => task.id).sort()).toEqual(
-      [queued.id, running.id].sort()
-    );
-    expect(store.get(queued.id)?.status).toBe('failed');
+    expect(recovered.map(task => task.id)).toEqual([running.id]);
+    expect(store.get(queued.id)?.status).toBe('queued');
     expect(store.get(running.id)?.status).toBe('failed');
     expect(store.get(waiting.id)?.status).toBe('waiting');
     expect(store.get(done.id)?.status).toBe('done');

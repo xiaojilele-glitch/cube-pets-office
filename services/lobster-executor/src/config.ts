@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import Dockerode from "dockerode";
 import type { LobsterExecutorConfig } from "./types.js";
 import { readSecurityConfig } from "./security-policy.js";
 
@@ -12,6 +13,34 @@ function defaultDockerHost(platform: string): string {
   return platform === "win32"
     ? "npipe:////./pipe/docker_engine"
     : "/var/run/docker.sock";
+}
+
+export function parseDockerHost(
+  dockerHost: string | undefined,
+): Dockerode.DockerOptions {
+  if (!dockerHost) return {};
+
+  if (dockerHost.startsWith("npipe:")) {
+    const pipePath = dockerHost
+      .replace(/^npipe:\/\//, "")
+      .replace(/\//g, "\\");
+    return { socketPath: pipePath };
+  }
+
+  if (dockerHost.startsWith("/") || dockerHost.startsWith("\\\\.\\pipe\\")) {
+    return { socketPath: dockerHost };
+  }
+
+  try {
+    const url = new URL(dockerHost.replace(/^tcp:\/\//, "http://"));
+    return {
+      host: url.hostname,
+      port: url.port || "2375",
+      protocol: "http",
+    };
+  } catch {
+    return { host: dockerHost };
+  }
 }
 
 export function readLobsterExecutorConfig(

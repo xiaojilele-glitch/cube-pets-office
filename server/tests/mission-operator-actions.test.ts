@@ -322,6 +322,86 @@ describe('mission operator actions route', () => {
     });
   });
 
+  it('retries an nl-command mission by re-dispatching it to the executor', async () => {
+    const mission = runtime.createTask({
+      kind: 'nl-command',
+      title: 'Retry dispatched mission',
+      sourceText: 'Write a Python script that prints the first 20 Fibonacci numbers.',
+    });
+    runtime.markMissionRunning(mission.id, 'execute', 'Running', 70);
+    runtime.failMission(mission.id, 'Executor dispatch failed earlier');
+
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith('/health')) {
+        return new Response(JSON.stringify({ status: 'ok' }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+
+      expect(url).toContain('/api/executor/jobs');
+      expect(init?.method).toBe('POST');
+
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          accepted: true,
+          missionId: mission.id,
+          jobId: 'job_retry_dispatch',
+          receivedAt: new Date().toISOString(),
+          status: 'queued',
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    });
+
+    const started = await startServer(runtime, fetchImpl as unknown as typeof fetch);
+    server = started.server;
+    baseUrl = started.baseUrl;
+
+    const response = await fetch(`${baseUrl}/api/tasks/${mission.id}/operator-actions`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'retry',
+        requestedBy: 'operator',
+      }),
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(body).toMatchObject({
+      ok: true,
+      dispatchAccepted: true,
+      task: {
+        id: mission.id,
+        status: 'running',
+        operatorState: 'active',
+        attempt: 2,
+        currentStageKey: 'execute',
+        executor: {
+          jobId: 'job_retry_dispatch',
+          status: 'queued',
+        },
+      },
+      action: {
+        action: 'retry',
+      },
+    });
+  });
+
   it('retries a cancelled mission by incrementing attempt and returning it to queued', async () => {
     const mission = runtime.createChatTask('Retry cancelled mission');
     runtime.markMissionRunning(mission.id, 'execute', 'Running', 60);

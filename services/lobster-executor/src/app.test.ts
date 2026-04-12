@@ -245,6 +245,56 @@ describe("lobster executor app", () => {
     expect(job.artifacts.length).toBeGreaterThanOrEqual(2);
   });
 
+  it("delivers mock job callbacks to the configured events URL", async () => {
+    const callbackEvents: Array<{ type?: string; status?: string }> = [];
+    const callbackServer = createServer(async (req, res) => {
+      let body = "";
+      for await (const chunk of req) {
+        body += chunk.toString();
+      }
+      callbackEvents.push(JSON.parse(body).event);
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ ok: true }));
+    });
+    callbackServer.listen(0, "127.0.0.1");
+    await once(callbackServer, "listening");
+    cleanupTasks.push(() => closeServer(callbackServer));
+
+    const callbackAddress = callbackServer.address();
+    if (!callbackAddress || typeof callbackAddress === "string") {
+      throw new Error("Callback server did not expose a TCP address");
+    }
+
+    const harness = await createHarness();
+    const request = createTestRequest("callback-job", "success");
+    request.callback.eventsUrl = `http://127.0.0.1:${callbackAddress.port}/api/executor/events`;
+
+    const response = await fetch(`${harness.baseUrl}/api/executor/jobs`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+
+    expect(response.status).toBe(202);
+
+    await waitForJob(harness.baseUrl, request.jobId);
+
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      if (callbackEvents.some(event => event.type === "job.completed")) {
+        break;
+      }
+      await new Promise(resolve => {
+        setTimeout(resolve, 25);
+      });
+    }
+
+    expect(callbackEvents.some(event => event.type === "job.started")).toBe(true);
+    expect(callbackEvents.some(event => event.type === "job.completed")).toBe(true);
+  });
+
   it("accepts and finishes a mock failed job", async () => {
     const harness = await createHarness();
     const request = createTestRequest("failed-job", "failed");

@@ -63,6 +63,7 @@ export interface TaskHubCreateMissionInput {
   title?: string;
   sourceText?: string;
   topicId?: string;
+  autoDispatch?: boolean;
 }
 
 export type TaskHubCreateMission = (
@@ -402,6 +403,7 @@ function buildTaskHubMissionInput(
     kind: "nl-command",
     title: deriveMissionTitle(command.commandText),
     sourceText: sections.join("\n\n"),
+    autoDispatch: true,
   };
 }
 

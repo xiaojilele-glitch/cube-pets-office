@@ -543,7 +543,7 @@ export class MissionStore {
     const recovered: MissionRecord[] = [];
 
     for (const task of Array.from(this.missions.values())) {
-      if (task.status !== 'queued' && task.status !== 'running') continue;
+      if (task.status !== 'running') continue;
       const updated = this.markFailed(task.id, message, source);
       if (updated) recovered.push(updated);
     }

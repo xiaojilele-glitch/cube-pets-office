@@ -104,14 +104,12 @@ export class LobsterExecutorService {
 
     this.executionMode = config.executionMode;
 
-    // Create CallbackSender for "real" mode
-    let callbackSender: CallbackSender | undefined;
-    if (config.executionMode === "real") {
-      callbackSender = new CallbackSender({
-        secret: config.callbackSecret,
-        executorId: config.serviceName,
-      });
-    }
+    // Create CallbackSender for all modes so mock execution can still replay
+    // lifecycle events back to the server.
+    const callbackSender = new CallbackSender({
+      secret: config.callbackSecret,
+      executorId: config.serviceName,
+    });
     this.callbackSender = callbackSender;
 
     // Select runner based on executionMode
@@ -512,6 +510,9 @@ export class LobsterExecutorService {
       }
       await this.runner.run(record, (event: ExecutorEvent) => {
         this.persistEvent(record, event);
+        if (record.executionMode === "mock") {
+          void this.sendCallback(record, event);
+        }
       });
     } finally {
       this.limiter.release();

@@ -50,6 +50,7 @@ export interface CreateMissionRequest {
   title?: string;
   sourceText?: string;
   topicId?: string;
+  autoDispatch?: boolean;
 }
 
 export interface CreateMissionResponse {
