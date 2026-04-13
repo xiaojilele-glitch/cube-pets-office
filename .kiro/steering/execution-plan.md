@@ -14,7 +14,7 @@
 
 ## 总览
 
-截至 2026-04-13，`.kiro/specs` 共 64 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，当前新增规划重点转向把办公室推进为默认执行壳，平台层能力（L31-L38）仍待环境就绪。
+截至 2026-04-13，`.kiro/specs` 共 65 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，当前新增规划重点转向把办公室推进为默认执行壳，并继续收敛桌面端首屏体验，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -29,7 +29,7 @@
 - [x] P06 `browser-runtime` — 纯前端运行时
 - [x] P07 `frontend-3d` — 3D 场景与前端
 
-## 当前维护快照（2026-04-11）
+## 当前维护快照（2026-04-13）
 
 - 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
 - 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
@@ -38,6 +38,7 @@
 - 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 已完成。
 - 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已完成并合并到 `main`。
 - `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱与右侧上下文 tab 骨架已落地，剩余回归与补测。
+- `office-cockpit-first-screen-refresh` 已进入近端规划，作为 `office-task-cockpit` 的后续桌面首屏体验收口项，聚焦“克制驾驶舱 + 主次分层”。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
@@ -242,6 +243,17 @@ L12 → L29 → L30
 3. 再实现统一发起入口与“普通任务 + 高级发起”双通道。
 4. 最后完成兼容入口、回归验证与桌面手测。
 
+## L30 后新增主线四：办公室首屏风格重构（2026-04-13）
+
+在办公室任务驾驶舱把桌面主壳、三栏结构与统一发起入口收口后，当前核心问题进一步从“能力有没有放进办公室”升级为“首屏是否足够清晰、稳定且适合持续执行”。这条新增主线不是新增业务域，而是对已落地办公室驾驶舱做桌面首屏视觉与信息架构优化：在不削减任务、workflow、Agent、记忆、历史与主操作能力的前提下，把首屏从多块同级卡片并列收敛为单主轴驾驶舱。
+
+### 优先级与依赖
+
+- [ ] P1 `office-cockpit-first-screen-refresh` — 规划中：办公室驾驶舱首屏风格重构，收敛壳层噪音、Scene HUD、统一驾驶台与右侧渐进详情。
+- 依赖已在开发中的 `office-task-cockpit`，以及已完成的 `navigation-convergence`、`task-hub-convergence`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification`、`mission-ui-polish`、`task-detail-operations-first`。
+- 文件 ownership：主 owner 覆盖 `Home.tsx`、`components/office/*`、`components/tasks/*` 与 `index.css`，避免与其他高频 UI 文件并行冲突。
+- 交付顺序：先收敛桌面顶层壳层与 cockpit 头部，再重构中栏 Scene HUD 与统一驾驶台，再重排右栏任务优先详情，最后做栏宽回归与桌面手测。
+
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
 
 <p align="center">
@@ -381,6 +393,21 @@ office-task-cockpit:
   已完成右侧 tab 与统一发起基础装配
   下一步补兼容回归
   最后完成桌面手测与验收
+```
+
+### Day 7+：办公室首屏风格重构（近端规划）
+
+```
+office-cockpit-first-screen-refresh:
+  目标是在不削减功能的前提下，把办公室首屏收敛为“单主轴 + 克制驾驶舱 + 主次分层”
+  保留 Scene3D 主视觉、统一驾驶台、右侧任务优先详情与现有上下文 tab
+  不改后端协议、不改 socket、不改 /tasks 深链、不改移动端主路径
+
+执行顺序:
+  先收敛顶层壳层与 cockpit 头部
+  再重构中栏 HUD 与双通道统一驾驶台
+  再重排右栏渐进详情与左侧队列密度
+  最后补 1280 / 1440 / 1728+ 桌面回归与手测
 ```
 
 ## 关键路径
