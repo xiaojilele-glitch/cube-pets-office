@@ -97,15 +97,15 @@ const WORK_PACKAGE_PROGRESS: Record<string, number> = {
   failed: 36,
 };
 
-const DETAIL_CARD_CLASS = "workspace-panel rounded-[28px]";
+const DETAIL_CARD_CLASS = "workspace-panel rounded-[16px]";
 const DETAIL_CARD_STRONG_CLASS =
-  "workspace-panel workspace-panel-strong rounded-[28px]";
+  "workspace-panel workspace-panel-strong rounded-[16px]";
 const DETAIL_INSET_CLASS =
-  "workspace-panel-inset rounded-[20px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.66)]";
+  "workspace-panel-inset rounded-[12px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.66)]";
 const DETAIL_INSET_SOFT_CLASS =
-  "workspace-panel-inset rounded-[18px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)]";
+  "workspace-panel-inset rounded-[10px] border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.62)]";
 const DETAIL_TEXTAREA_CLASS =
-  "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.68)] text-sm text-stone-700";
+  "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.68)] text-[11px] text-stone-700 min-h-[60px]";
 
 function workPackageProgress(status: string): number {
   return WORK_PACKAGE_PROGRESS[status] || 12;
@@ -146,16 +146,16 @@ function MetricCard({
     <div
       className={cn(
         DETAIL_INSET_CLASS,
-        "px-3.5 py-3.5 shadow-sm backdrop-blur"
+        "px-2.5 py-2 shadow-sm backdrop-blur"
       )}
     >
-      <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+      <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-stone-500">
         {label}
       </div>
-      <div className="mt-1.5 text-xl font-semibold text-stone-900 md:text-2xl">
+      <div className="mt-1 text-lg font-semibold text-stone-900 md:text-xl">
         {value}
       </div>
-      <div className="mt-1 text-xs leading-5 text-stone-500">{hint}</div>
+      <div className="mt-0.5 text-[10px] leading-4 text-stone-500">{hint}</div>
     </div>
   );
 }
@@ -179,22 +179,22 @@ function DetailTextDialog({
           type="button"
           variant="outline"
           size="sm"
-          className="workspace-control rounded-full border-[var(--workspace-panel-border)] bg-white/80 text-xs"
+          className="workspace-control rounded-full border-[var(--workspace-panel-border)] bg-white/80 text-[10px] h-6 px-2"
         >
           {buttonLabel || t(locale, "查看更多", "More")}
         </Button>
       </DialogTrigger>
-      <DialogContent className="workspace-panel workspace-panel-strong max-w-3xl rounded-[24px] border-[var(--workspace-panel-border)] bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
-        <DialogHeader className="border-b border-stone-200/80 px-6 py-5">
-          <DialogTitle className="text-stone-900">{title}</DialogTitle>
+      <DialogContent className="workspace-panel workspace-panel-strong max-w-3xl rounded-[20px] border-[var(--workspace-panel-border)] bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
+        <DialogHeader className="border-b border-stone-200/80 px-4 py-3">
+          <DialogTitle className="text-stone-900 text-sm">{title}</DialogTitle>
           {description ? (
-            <DialogDescription className="text-sm leading-6 text-stone-500">
+            <DialogDescription className="text-xs leading-5 text-stone-500">
               {description}
             </DialogDescription>
           ) : null}
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] w-full">
-          <div className="whitespace-pre-wrap px-6 py-5 text-sm leading-7 text-stone-700">
+          <div className="whitespace-pre-wrap px-4 py-4 text-xs leading-6 text-stone-700">
             {text}
           </div>
         </ScrollArea>
@@ -677,7 +677,7 @@ export function TaskDetailView({
     return (
       <Empty
         className={cn(
-          "workspace-panel flex h-full items-center justify-center rounded-[28px] bg-[rgba(255,255,255,0.62)]",
+          "workspace-panel flex h-full items-center justify-center rounded-[16px] bg-[rgba(255,255,255,0.62)]",
           className
         )}
       >

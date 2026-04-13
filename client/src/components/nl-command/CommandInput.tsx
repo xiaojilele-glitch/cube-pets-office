@@ -157,11 +157,11 @@ export function CommandInput({
   return (
     <div className={cn("relative", className)}>
       {!hideLabel ? (
-        <label className="mb-1.5 block text-xs font-medium text-stone-500">
+        <label className="mb-0.5 block text-[10px] font-medium text-stone-500">
           {resolvedLabel}
         </label>
       ) : null}
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-1.5">
         <div className="relative flex-1">
           <textarea
             ref={inputRef}
@@ -179,7 +179,7 @@ export function CommandInput({
             className={cn(
               "w-full resize-none rounded-xl border border-stone-200 bg-stone-50/60 text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-50",
               dense
-                ? "px-3 py-2 text-[13px] leading-5"
+                ? "rounded-[12px] px-2.5 py-1.5 text-[12px] leading-5"
                 : "px-3 py-2.5 text-sm"
             )}
             aria-label={isZh ? "战略指令输入框" : "Strategic command input"}
@@ -191,7 +191,7 @@ export function CommandInput({
           {showSuggestions && suggestions.length > 0 && (
             <ul
               role="listbox"
-              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-auto rounded-xl border border-stone-200 bg-white shadow-lg"
+              className="absolute left-0 right-0 top-full z-10 mt-1 max-h-36 overflow-auto rounded-[12px] border border-stone-200 bg-white shadow-lg"
             >
               {suggestions.map((suggestion, index) => (
                 <li
@@ -199,7 +199,7 @@ export function CommandInput({
                   role="option"
                   aria-selected={index === selectedIndex}
                   className={cn(
-                    "cursor-pointer px-3 py-2 text-sm text-stone-700 transition-colors",
+                    "cursor-pointer px-2.5 py-1.5 text-[12px] text-stone-700 transition-colors",
                     index === selectedIndex
                       ? "bg-indigo-50 text-indigo-800"
                       : "hover:bg-stone-50"
@@ -219,10 +219,14 @@ export function CommandInput({
         <GlowButton
           type="button"
           disabled={!text.trim() || loading}
-          className={cn("shrink-0 rounded-xl", dense && "h-10 px-3.5 text-sm")}
+          className={cn(
+            "shrink-0 rounded-[12px]",
+            dense &&
+              "h-9 gap-1.5 px-3 text-[10px] font-semibold shadow-[0_8px_20px_rgba(94,139,114,0.18)]"
+          )}
           onClick={() => void handleSubmit()}
         >
-          <Send className="size-4" />
+          <Send className={cn(dense ? "size-3.5" : "size-4")} />
           {loading ? resolvedSendingLabel : resolvedSubmitLabel}
         </GlowButton>
       </div>

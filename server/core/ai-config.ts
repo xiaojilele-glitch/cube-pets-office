@@ -59,7 +59,7 @@ export function getAIConfig(): AIConfig {
     maxContext: normalizeNumber(process.env.LLM_MAX_CONTEXT, 1_000_000),
     providerName: deriveProviderName(baseUrl),
     wireApi: normalizeWireApi(process.env.OPENAI_WIRE_API || process.env.LLM_WIRE_API),
-    timeoutMs: normalizeNumber(process.env.OPENAI_TIMEOUT_MS || process.env.LLM_TIMEOUT_MS, 90000),
+    timeoutMs: normalizeNumber(process.env.OPENAI_TIMEOUT_MS || process.env.LLM_TIMEOUT_MS, 600000),
     stream: normalizeBoolean(process.env.OPENAI_STREAM || process.env.LLM_STREAM, true),
     chatThinkingType:
       process.env.OPENAI_CHAT_THINKING_TYPE ||

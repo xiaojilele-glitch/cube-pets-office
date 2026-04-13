@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from "react";
-import { ArrowRight, LayoutPanelTop, Settings2, Waves } from "lucide-react";
+import { ArrowRight, Settings2, Waves } from "lucide-react";
 import { useLocation } from "wouter";
 
 import { ChatPanel } from "@/components/ChatPanel";
@@ -16,6 +16,7 @@ import { useDemoMode } from "@/hooks/useDemoMode";
 import { useWorkflowRuntimeBootstrap } from "@/hooks/useWorkflowRuntimeBootstrap";
 import { useI18n } from "@/i18n";
 import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from "@/lib/deploy-target";
+import { OFFICE_DESKTOP_OPEN_MORE_EVENT } from "@/lib/navigation-events";
 import { buildOfficeNoticeBoardSnapshot } from "@/lib/scene-agent-detail";
 import { useAppStore } from "@/lib/store";
 import { useTelemetryStore } from "@/lib/telemetry-store";
@@ -28,6 +29,7 @@ export default function Home() {
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
   const locale = useAppStore(state => state.locale);
+  const toggleLocale = useAppStore(state => state.toggleLocale);
   const toggleConfig = useAppStore(state => state.toggleConfig);
   const selectedPet = useAppStore(state => state.selectedPet);
   const setSelectedPet = useAppStore(state => state.setSelectedPet);
@@ -136,6 +138,9 @@ export default function Home() {
     locale === "zh-CN" ? "兼容入口" : "Compatibility panel";
   const demoLabel = locale === "zh-CN" ? "演示模式" : "Live demo";
 
+  const localeLabel =
+    locale === "zh-CN" ? copy.common.englishShort : copy.common.chineseShort;
+
   return (
     <div className="relative h-[100svh] w-screen overflow-hidden bg-[linear-gradient(180deg,#d8e5f0_0%,#e9dfd2_48%,#e3d2c0_100%)]">
       <Scene3D />
@@ -219,87 +224,121 @@ export default function Home() {
       {isSceneReady && !isMobile && (
         <>
           <div
-            className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-between gap-4 px-4 py-3 xl:px-5"
+            className="fixed left-0 right-0 top-0 z-[60] px-3 py-2 xl:px-4"
             style={{ pointerEvents: "auto" }}
           >
-            <div className="flex min-w-0 items-center gap-3 rounded-[26px] border border-white/55 bg-[linear-gradient(180deg,rgba(255,252,248,0.84),rgba(246,238,229,0.74))] px-4 py-2.5 shadow-[0_14px_36px_rgba(88,61,39,0.1)] backdrop-blur">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[18px] bg-[linear-gradient(180deg,#d69871,#c98257)] text-white shadow-[0_10px_24px_rgba(201,130,87,0.22)]">
-                <span className="text-sm font-semibold">CP</span>
-              </div>
-              <div className="min-w-0">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A08972]">
-                  {copy.home.desktopOfficeLabel}
+            <div className="relative flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2 rounded-[16px] border border-white/55 bg-[linear-gradient(180deg,rgba(255,252,248,0.84),rgba(246,238,229,0.74))] px-2.5 py-1.5 shadow-[0_14px_36px_rgba(88,61,39,0.1)] backdrop-blur">
+                <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-[linear-gradient(180deg,#d69871,#c98257)] text-white shadow-[0_10px_24px_rgba(201,130,87,0.22)]">
+                  <span className="text-xs font-semibold">CP</span>
                 </div>
-                <div className="truncate text-sm font-semibold text-[#3A2A1A]">
-                  {copy.home.officeTitle}
+                <div className="min-w-0">
+                  <div className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#A08972]">
+                    {copy.home.desktopOfficeLabel}
+                  </div>
+                  <div className="truncate text-xs font-semibold text-[#3A2A1A]">
+                    {copy.home.officeTitle}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1 rounded-[22px] border border-white/50 bg-[rgba(255,252,248,0.8)] p-1 shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur">
-              <button
-                onClick={() => void setRuntimeMode("frontend")}
-                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                  runtimeMode === "frontend"
-                    ? "bg-[#F8F3ED] text-[#3A2A1A] shadow-sm"
-                    : "text-[#8B7355] hover:text-[#5A4A3A]"
-                }`}
-              >
-                Frontend
-              </button>
-              {CAN_USE_ADVANCED_RUNTIME && (
+              <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center">
+                <div className="pointer-events-auto flex items-center gap-2">
+                  <div className="flex items-center gap-1 rounded-[16px] border border-white/50 bg-[rgba(255,252,248,0.8)] p-0.5 shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur">
+                    <button
+                      onClick={() => void setRuntimeMode("frontend")}
+                      className={`rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
+                        runtimeMode === "frontend"
+                          ? "bg-[#F8F3ED] text-[#3A2A1A] shadow-sm"
+                          : "text-[#8B7355] hover:text-[#5A4A3A]"
+                      }`}
+                    >
+                      Frontend
+                    </button>
+                    {CAN_USE_ADVANCED_RUNTIME && (
+                      <button
+                        onClick={() => void setRuntimeMode("advanced")}
+                        className={`rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
+                          runtimeMode === "advanced"
+                            ? "bg-[#C98257] text-white shadow-sm"
+                            : "text-[#8B7355] hover:text-[#5A4A3A]"
+                        }`}
+                      >
+                        Advanced
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 rounded-[16px] border border-white/50 bg-[rgba(255,252,248,0.8)] p-0.5 shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur">
+                    <button
+                      type="button"
+                      className="rounded-full bg-[#5E8B72] px-3 py-1 text-[11px] font-semibold text-white shadow-sm"
+                    >
+                      {copy.toolbar.primaryNav.office.label}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLocation("/tasks")}
+                      className="rounded-full px-3 py-1 text-[11px] font-semibold text-[#8B7355] transition-all hover:text-[#5A4A3A]"
+                    >
+                      {copy.toolbar.primaryNav.tasks.label}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.dispatchEvent(
+                          new Event(OFFICE_DESKTOP_OPEN_MORE_EVENT)
+                        )
+                      }
+                      className="rounded-full px-3 py-1 text-[11px] font-semibold text-[#8B7355] transition-all hover:text-[#5A4A3A]"
+                    >
+                      {copy.toolbar.primaryNav.more.label}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={toggleLocale}
+                    className="rounded-[16px] border border-white/50 bg-[rgba(255,252,248,0.8)] px-3 py-[7px] text-[11px] font-semibold text-[#8B7355] shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white hover:text-[#5A4A3A]"
+                    title={copy.app.localeSwitch}
+                  >
+                    {localeLabel}
+                  </button>
+                </div>
+              </div>
+
+              <div className="ml-auto flex items-center gap-1.5">
                 <button
-                  onClick={() => void setRuntimeMode("advanced")}
-                  className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all ${
-                    runtimeMode === "advanced"
-                      ? "bg-[#C98257] text-white shadow-sm"
-                      : "text-[#8B7355] hover:text-[#5A4A3A]"
-                  }`}
+                  type="button"
+                  onClick={() => openWorkflowPanel()}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
                 >
-                  Advanced
+                  <Waves className="h-3.5 w-3.5" />
+                  {compatibilityLabel}
                 </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setLocation("/tasks")}
-                className="inline-flex items-center gap-2 rounded-full bg-[#d07a4f] px-4 py-2 text-xs font-semibold text-white shadow-[0_12px_28px_rgba(184,111,69,0.22)] transition-colors hover:bg-[#bf6c43]"
-              >
-                <LayoutPanelTop className="h-4 w-4" />
-                {fullWorkbenchLabel}
-              </button>
-              <button
-                type="button"
-                onClick={() => openWorkflowPanel()}
-                className="inline-flex items-center gap-2 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-4 py-2 text-xs font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
-              >
-                <Waves className="h-4 w-4" />
-                {compatibilityLabel}
-              </button>
-              <button
-                type="button"
-                onClick={handleStartDemo}
-                className="inline-flex items-center gap-2 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-4 py-2 text-xs font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
-              >
-                {demoLabel}
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleConfig()}
-                className="inline-flex items-center gap-2 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-4 py-2 text-xs font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
-              >
-                <Settings2 className="h-4 w-4" />
-                {copy.home.openConfig}
-              </button>
-              {IS_GITHUB_PAGES && <GitHubRepoBadge />}
-              <div className="rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-xs font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur">
-                {copy.home.runtimeChip(
-                  copy.toolbar.runtimeLabels[
-                    runtimeMode === "advanced" ? "advanced" : "frontend"
-                  ]
-                )}
+                <button
+                  type="button"
+                  onClick={handleStartDemo}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
+                >
+                  {demoLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleConfig()}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                  {copy.home.openConfig}
+                </button>
+                {IS_GITHUB_PAGES && <GitHubRepoBadge />}
+                <div className="rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-2.5 py-1 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur">
+                  {copy.home.runtimeChip(
+                    copy.toolbar.runtimeLabels[
+                      runtimeMode === "advanced" ? "advanced" : "frontend"
+                    ]
+                  )}
+                </div>
               </div>
             </div>
           </div>

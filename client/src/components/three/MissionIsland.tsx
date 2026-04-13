@@ -19,7 +19,8 @@ import {
 /* ── Constants ── */
 const ISLAND_POSITION: [number, number, number] = [0, 0, -2.5];
 const MINI_VIEW_OFFSET: [number, number, number] = [0, 2.8, 0];
-const DETAIL_OVERLAY_OFFSET: [number, number, number] = [0, 3.5, 0];
+const WALL_MOUNT_OFFSET: [number, number, number] = [0, 2.04, -2.12];
+const WALL_MOUNT_ROTATION: [number, number, number] = [0, 0, 0];
 
 const GLOW_COLOR_ACTIVE = new THREE.Color("#F59E0B");
 const GLOW_COLOR_IDLE = new THREE.Color("#D6C4A8");
@@ -57,6 +58,7 @@ export function MissionIsland() {
   const glowRef = useRef<THREE.Mesh>(null);
 
   const scale = getIslandScale(tier);
+  const mountOnWall = tier === "desktop";
 
   /* Close overlay when selected mission disappears */
   useEffect(() => {
@@ -148,18 +150,37 @@ export function MissionIsland() {
       </mesh>
 
       {/* Mini View (always visible) */}
-      <Html
-        position={MINI_VIEW_OFFSET}
-        center
-        distanceFactor={7}
-        style={{ pointerEvents: expanded ? "none" : "auto" }}
-      >
-        <MissionMiniView
-          mission={selectedMission}
-          onExpand={handleExpand}
-          onCreateMission={handleCreateMission}
-        />
-      </Html>
+      {mountOnWall ? (
+        <group position={WALL_MOUNT_OFFSET} rotation={WALL_MOUNT_ROTATION}>
+          <Html
+            transform
+            position={[0, 0, 0.08]}
+            center
+            distanceFactor={8.4}
+            style={{ pointerEvents: expanded ? "none" : "auto" }}
+          >
+            <MissionMiniView
+              mission={selectedMission}
+              onExpand={handleExpand}
+              onCreateMission={handleCreateMission}
+              mounted
+            />
+          </Html>
+        </group>
+      ) : (
+        <Html
+          position={MINI_VIEW_OFFSET}
+          center
+          distanceFactor={7}
+          style={{ pointerEvents: expanded ? "none" : "auto" }}
+        >
+          <MissionMiniView
+            mission={selectedMission}
+            onExpand={handleExpand}
+            onCreateMission={handleCreateMission}
+          />
+        </Html>
+      )}
 
       {/* Detail Overlay (visible when expanded) */}
       {expanded && missionDetail && (

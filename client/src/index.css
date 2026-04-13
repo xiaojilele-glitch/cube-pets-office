@@ -120,13 +120,13 @@
   --workspace-shell-border: rgba(156, 123, 94, 0.18);
   --workspace-panel-bg: linear-gradient(
     180deg,
-    rgba(255, 252, 248, 0.9),
-    rgba(246, 238, 229, 0.86)
+    rgba(255, 252, 248, 0.4),
+    rgba(246, 238, 229, 0.3)
   );
   --workspace-panel-strong-bg: linear-gradient(
     180deg,
-    rgba(255, 253, 250, 0.96),
-    rgba(245, 236, 226, 0.92)
+    rgba(255, 253, 250, 0.5),
+    rgba(245, 236, 226, 0.4)
   );
   --workspace-panel-inset-bg: rgba(255, 255, 255, 0.52);
   --workspace-panel-border: rgba(174, 146, 120, 0.22);

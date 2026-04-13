@@ -589,7 +589,7 @@ export function ConfigPanel() {
               type="number"
               value={aiConfig.timeoutMs}
               readOnly={!isBrowserMode}
-              onChange={event => updateField({ timeoutMs: Number(event.target.value) || 45000 })}
+              onChange={event => updateField({ timeoutMs: Number(event.target.value) || 600000 })}
               className={`${inputClass} font-mono`}
             />
           </div>

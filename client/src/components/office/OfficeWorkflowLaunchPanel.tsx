@@ -210,25 +210,25 @@ export function OfficeWorkflowLaunchPanel({
 
   if (isBare && isDense) {
     return (
-      <section className={cn("grid h-full min-h-0 gap-3", className)}>
+      <section className={cn("grid h-full min-h-0 gap-1.5", className)}>
         {pendingLaunch ? (
-          <div className="rounded-[22px] border border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,242,214,0.9))] px-4 py-3 text-sm text-amber-900">
-            <div className="flex items-center gap-2 font-semibold">
-              <Sparkles className="size-4 text-amber-600" />
+          <div className="rounded-[10px] border border-amber-200/80 bg-[linear-gradient(180deg,rgba(255,249,235,0.96),rgba(255,242,214,0.9))] px-2.5 py-1.5 text-[9px] text-amber-900">
+            <div className="flex items-center gap-1.5 font-semibold">
+              <Sparkles className="size-3.5 text-amber-600" />
               {t(
                 locale,
                 "团队已经开始准备，等待 mission 关联完成。",
                 "The team is preparing and waiting for the mission link."
               )}
             </div>
-            <div className="mt-2 text-xs leading-6 text-amber-800/80">
+            <div className="mt-0.5 text-[8px] leading-4 text-amber-800/80">
               {pendingLaunch.directive}
             </div>
           </div>
         ) : null}
 
         {submitError ? (
-          <div className="rounded-[22px] border border-rose-200/80 bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+          <div className="rounded-[10px] border border-rose-200/80 bg-rose-50 px-2.5 py-1.5 text-[9px] leading-4 text-rose-700">
             {submitError.detail || submitError.message}
           </div>
         ) : null}
@@ -243,18 +243,35 @@ export function OfficeWorkflowLaunchPanel({
           }}
         />
 
-        <div className="grid min-h-0 gap-3 xl:grid-cols-[minmax(0,1fr)_252px]">
-          <div className="min-h-0 rounded-[26px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,244,237,0.92))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]">
-            <div className="flex flex-wrap gap-2">
-              <span className="workspace-status workspace-tone-neutral px-2.5 py-1 text-[10px] font-semibold">
+        <div className="grid min-h-0 gap-2">
+          <div className="min-h-0 rounded-[10px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,244,237,0.92))] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]">
+            <div className="flex flex-wrap gap-1">
+              <span className="workspace-status workspace-tone-neutral !gap-0.5 !px-1 !py-0.5 !text-[7px] font-semibold">
                 {runtimeSummary}
               </span>
-              <span className="workspace-status workspace-tone-info px-2.5 py-1 text-[10px] font-semibold">
+              <span className="workspace-status workspace-tone-info !gap-0.5 !px-1 !py-0.5 !text-[7px] font-semibold">
                 {attachments.length} / {MAX_WORKFLOW_ATTACHMENTS}{" "}
                 {t(locale, "附件", "attachments")}
               </span>
+              <Button
+                type="button"
+                variant="outline"
+                className="workspace-control rounded-full h-5 px-1.5 text-[8px]"
+                disabled={
+                  isPreparingFiles ||
+                  attachments.length >= MAX_WORKFLOW_ATTACHMENTS
+                }
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {isPreparingFiles ? (
+                  <Loader2 className="size-2.5 animate-spin" />
+                ) : (
+                  <Paperclip className="size-2.5" />
+                )}
+                {t(locale, "添加", "Add")}
+              </Button>
               {canUpgrade ? (
-                <span className="workspace-status workspace-tone-warning px-2.5 py-1 text-[10px] font-semibold">
+                <span className="workspace-status workspace-tone-warning !gap-0.5 !px-1 !py-0.5 !text-[7px] font-semibold">
                   {t(
                     locale,
                     "切换到高级执行后才会正式发起。",
@@ -264,42 +281,33 @@ export function OfficeWorkflowLaunchPanel({
               ) : null}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-start justify-between gap-3 rounded-[22px] border border-stone-200/80 bg-white/78 px-3.5 py-3">
-              <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                  {t(locale, "上下文附件", "Context attachments")}
-                </div>
-                <div className="mt-1 text-[13px] leading-5 text-stone-600">
-                  {t(
-                    locale,
-                    "支持 txt / md / json / PDF / Word / Excel / 图片，尽量自动提取摘要与 OCR。",
-                    "Supports txt / md / json / PDF / Word / Excel / images with automatic excerpting when possible."
-                  )}
-                </div>
+            {attachments.length > 0 ? (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {attachments.slice(0, 3).map(attachment => (
+                  <div
+                    key={attachment.id}
+                    className="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-200/80 bg-white/78 px-1 py-0.5 text-[7px] text-stone-600"
+                  >
+                    <span className="truncate max-w-[140px]">{attachment.name}</span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setAttachments(current =>
+                          current.filter(item => item.id !== attachment.id)
+                        )
+                      }
+                      className="inline-flex h-3 w-3 items-center justify-center rounded-full text-stone-500 transition-colors hover:text-stone-900"
+                    >
+                      <X className="size-2.5" />
+                    </button>
+                  </div>
+                ))}
               </div>
+            ) : null}
 
-              <Button
-                type="button"
-                variant="outline"
-                className="workspace-control rounded-full"
-                disabled={
-                  isPreparingFiles ||
-                  attachments.length >= MAX_WORKFLOW_ATTACHMENTS
-                }
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {isPreparingFiles ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Paperclip className="size-4" />
-                )}
-                {t(locale, "添加文件", "Add files")}
-              </Button>
-            </div>
-
-            <div className="mt-3 rounded-[24px] border border-stone-200/80 bg-white/84 px-3.5 py-3">
+            <div className="mt-1 rounded-[10px] border border-stone-200/80 bg-white/84 px-2 py-1.5">
               {!hideDirectiveLabel ? (
-                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+                <label className="text-[7px] font-semibold uppercase tracking-[0.12em] text-stone-500">
                   {t(locale, "Directive", "Directive")}
                 </label>
               ) : null}
@@ -317,15 +325,15 @@ export function OfficeWorkflowLaunchPanel({
                   "描述目标、约束、附件上下文，以及希望系统先组织出的团队形态...",
                   "Describe the goal, constraints, attachment context, and the team shape you want the system to organize first..."
                 )}
-                rows={6}
+                rows={2}
                 className={cn(
-                  "w-full resize-none rounded-[20px] border border-stone-200/80 bg-stone-50/80 px-3 py-3 text-[13px] leading-5 text-stone-700 outline-none transition-colors focus:border-stone-300",
-                  hideDirectiveLabel ? "mt-0" : "mt-3"
+                  "w-full resize-none rounded-[10px] border border-stone-200/80 bg-stone-50/80 px-2 py-1 text-[11px] leading-4 text-stone-700 outline-none transition-colors focus:border-stone-300",
+                  hideDirectiveLabel ? "mt-0" : "mt-1"
                 )}
               />
 
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-[11px] leading-5 text-stone-500">
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                <div className="text-[8px] leading-4 text-stone-500">
                   {t(
                     locale,
                     "发起后会先进入“团队准备中”，完成 workflow 关联后自动回落到任务。",
@@ -335,31 +343,31 @@ export function OfficeWorkflowLaunchPanel({
 
                 <Button
                   type="button"
-                  className="rounded-full bg-[#d07a4f] text-white hover:bg-[#bf6c43]"
+                  className="rounded-[9px] h-7 px-2 text-[8px] font-semibold bg-[#d07a4f] text-white shadow-[0_6px_14px_rgba(184,111,69,0.14)] hover:bg-[#bf6c43]"
                   disabled={!directive.trim() || isSubmitting || isPreparingFiles}
                   onClick={() => void handleSubmit()}
                 >
                   {isSubmitting ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 className="size-2.5 animate-spin" />
                   ) : canUpgrade ? (
-                    <Server className="size-4" />
+                    <Server className="size-2.5" />
                   ) : isFrontend ? (
-                    <Monitor className="size-4" />
+                    <Monitor className="size-2.5" />
                   ) : (
-                    <Send className="size-4" />
+                    <Send className="size-2.5" />
                   )}
                   {submitLabel}
                 </Button>
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-1 flex flex-wrap gap-1">
               {quickSuggestions.map(suggestion => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => setDirective(suggestion)}
-                  className="rounded-full border border-stone-200/80 bg-white/78 px-3 py-1.5 text-[11px] font-medium text-stone-600 transition-colors hover:bg-white hover:text-stone-900"
+                  className="rounded-full border border-stone-200/80 bg-white/78 px-1 py-0.5 text-[7px] font-medium text-stone-600 transition-colors hover:bg-white hover:text-stone-900"
                 >
                   {suggestion}
                 </button>
@@ -367,91 +375,11 @@ export function OfficeWorkflowLaunchPanel({
             </div>
 
             {attachmentError ? (
-              <div className="mt-3 rounded-[18px] border border-amber-200/80 bg-amber-50 px-3.5 py-2.5 text-[13px] leading-5 text-amber-700">
+              <div className="mt-1 rounded-[10px] border border-amber-200/80 bg-amber-50 px-2 py-1.5 text-[9px] leading-4 text-amber-700">
                 {attachmentError}
               </div>
             ) : null}
           </div>
-
-          <aside className="grid auto-rows-min gap-2.5">
-            <div className="rounded-[20px] border border-stone-200/80 bg-white/80 px-3 py-3">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                {t(locale, "发起模式", "Launch mode")}
-              </div>
-              <div className="mt-1.5 text-sm font-semibold text-stone-900">
-                {runtimeSummary}
-              </div>
-              <div className="mt-1 text-[11px] leading-5 text-stone-500">
-                {canUpgrade
-                  ? t(
-                      locale,
-                      "当前还是预览模式，切到高级执行后才会真正发起。",
-                      "You are in preview mode until Advanced is enabled."
-                    )
-                  : t(
-                      locale,
-                      "指令和附件会一起打包进 workflow 入口。",
-                      "Directive and attachments stay bundled in the workflow entry."
-                    )}
-              </div>
-            </div>
-
-            <div className="rounded-[20px] border border-stone-200/80 bg-white/80 px-3 py-3">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                {t(locale, "附件上下文", "Attachment context")}
-              </div>
-              <div className="mt-1.5 text-sm font-semibold text-stone-900">
-                {attachments.length > 0
-                  ? t(
-                      locale,
-                      `${attachments.length} 个附件已装载`,
-                      `${attachments.length} attachments loaded`
-                    )
-                  : t(locale, "暂未加入附件", "No attachments yet")}
-              </div>
-              <div className="mt-2 space-y-2">
-                {attachments.length > 0 ? (
-                  attachments.slice(0, 3).map(attachment => (
-                    <div
-                      key={attachment.id}
-                      className="rounded-[16px] border border-stone-200/80 bg-stone-50/70 px-3 py-2"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="truncate text-[12px] font-semibold text-stone-900">
-                            {attachment.name}
-                          </div>
-                          <div className="mt-1 text-[10px] text-stone-500">
-                            {formatAttachmentSize(attachment.size)} ·{" "}
-                            {attachment.excerptStatus}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setAttachments(current =>
-                              current.filter(item => item.id !== attachment.id)
-                            )
-                          }
-                          className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-stone-200/80 bg-white text-stone-500 transition-colors hover:text-stone-900"
-                        >
-                          <X className="size-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="rounded-[16px] border border-dashed border-stone-300/80 bg-stone-50/60 px-3 py-3 text-[11px] leading-5 text-stone-500">
-                    {t(
-                      locale,
-                      "可添加文档、表格、图片或 brief，作为团队发起时的上下文包。",
-                      "Add docs, spreadsheets, images, or briefs as the context bundle for launch."
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
         </div>
       </section>
     );

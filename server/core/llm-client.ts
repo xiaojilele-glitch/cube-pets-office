@@ -95,7 +95,7 @@ function buildProviders(): ProviderConfig[] {
           ? "responses"
           : "chat_completions",
       defaultModel: process.env.FALLBACK_LLM_MODEL || "glm-4.6",
-      timeoutMs: Number(process.env.FALLBACK_LLM_TIMEOUT_MS || 90000),
+      timeoutMs: Number(process.env.FALLBACK_LLM_TIMEOUT_MS || 600000),
       reasoningEffort: process.env.FALLBACK_LLM_REASONING_EFFORT || undefined,
       forceModel:
         (process.env.FALLBACK_LLM_FORCE_MODEL || "true").toLowerCase() !==

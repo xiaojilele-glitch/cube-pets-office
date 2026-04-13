@@ -84,16 +84,18 @@ function CockpitContextShell({
   children: ReactNode;
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[26px] border border-white/65 bg-[rgba(255,255,255,0.42)]">
-      <div className="shrink-0 border-b border-stone-200/70 px-4 py-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[16px] border border-stone-200/75 bg-white/82 shadow-[0_10px_24px_rgba(99,73,45,0.06)]">
+      <div className="shrink-0 border-b border-stone-200/70 px-2.5 py-2">
+        <div className="text-[8px] font-semibold uppercase tracking-[0.1em] text-stone-500">
           {title}
         </div>
-        <div className="mt-1 text-sm leading-6 text-stone-600">
+        <div className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-stone-500">
           {description}
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-hidden px-1 py-1">{children}</div>
+      <div className="min-h-0 flex-1 overflow-hidden px-1.5 pb-1.5 pt-1">
+        {children}
+      </div>
     </div>
   );
 }
@@ -412,11 +414,11 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "pointer-events-none absolute inset-x-4 bottom-[96px] top-[84px] z-[52] flex min-h-0 flex-col gap-3 2xl:bottom-[104px]",
+        "pointer-events-none absolute inset-x-3 bottom-[24px] top-[76px] z-[52] flex min-h-0 flex-col gap-2.5 2xl:bottom-[28px]",
         className
       )}
     >
-      <div className="grid min-h-0 flex-1 grid-cols-[clamp(224px,18vw,260px)_minmax(0,1fr)_clamp(396px,29vw,472px)] gap-3 2xl:grid-cols-[clamp(236px,17vw,276px)_minmax(0,1fr)_clamp(420px,30vw,520px)] 2xl:gap-4">
+      <div className="grid min-h-0 flex-1 grid-cols-[clamp(332px,22.5vw,396px)_minmax(0,1fr)_clamp(332px,22.5vw,396px)] gap-2 2xl:grid-cols-[clamp(348px,24vw,416px)_minmax(0,1fr)_clamp(348px,24vw,416px)] 2xl:gap-2.5">
         <aside className="pointer-events-auto min-h-0">
           <TasksQueueRail
             tasks={filteredTasks}
@@ -439,55 +441,55 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
           />
         </aside>
 
-        <section className="pointer-events-auto min-h-0">
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/65 bg-[linear-gradient(180deg,rgba(255,252,248,0.88),rgba(246,238,229,0.82))] shadow-[0_22px_56px_rgba(98,73,48,0.12)] backdrop-blur">
-            <div className="shrink-0 border-b border-stone-200/70 px-3.5 py-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex rounded-[18px] border border-white/65 bg-white/78 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+        <section className="pointer-events-none min-h-0 flex flex-col justify-end">
+          <div className="pointer-events-auto mx-auto flex w-full max-w-[700px] max-h-[32%] min-h-0 flex-col overflow-hidden rounded-[14px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,252,248,0.36),rgba(246,238,229,0.28))] shadow-[0_14px_34px_rgba(98,73,48,0.1)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.62),rgba(246,238,229,0.52))]">
+            <div className="shrink-0 border-b border-stone-200/50 px-1.5 py-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex rounded-[10px] border border-white/65 bg-white/78 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
                     <button
                       type="button"
                       onClick={() => setLaunchMode("mission")}
                       className={cn(
-                        "inline-flex items-center gap-2 rounded-[14px] px-3 py-2 text-[12px] font-semibold transition-colors",
+                        "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
                         launchMode === "mission"
                           ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.22)]"
                           : "text-stone-600 hover:bg-white"
                       )}
                     >
-                      <Command className="size-4" />
+                      <Command className="size-3.5" />
                       {t(locale, "任务命令", "Mission commands")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setLaunchMode("workflow")}
                       className={cn(
-                        "inline-flex items-center gap-2 rounded-[14px] px-3 py-2 text-[12px] font-semibold transition-colors",
+                        "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
                         launchMode === "workflow"
                           ? "bg-[#5E8B72] text-white shadow-[0_10px_24px_rgba(94,139,114,0.22)]"
                           : "text-stone-600 hover:bg-white"
                       )}
                     >
-                      <Waves className="size-4" />
+                      <Waves className="size-3.5" />
                       {t(locale, "高级发起", "Advanced launch")}
                     </button>
                     <button
                       type="button"
                       onClick={toggleTelemetryDashboard}
                       className={cn(
-                        "inline-flex items-center gap-2 rounded-[14px] px-3 py-2 text-[12px] font-semibold transition-colors",
+                        "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
                         telemetryDashboardOpen
                           ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]"
                           : "text-stone-600 hover:bg-white"
                       )}
                     >
-                      <Activity className="size-4" />
+                      <Activity className="size-3.5" />
                       {t(locale, "统计驾驶台", "Metrics dock")}
                     </button>
                   </div>
 
                   {pendingLaunch ? (
-                    <span className="workspace-status workspace-tone-warning px-2.5 py-1 text-[10px] font-semibold">
+                    <span className="workspace-status workspace-tone-warning px-1 py-0.5 text-[8px] font-semibold">
                       {t(
                         locale,
                         "团队准备中，完成后会自动回到任务视角。",
@@ -497,25 +499,25 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                   ) : null}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Button
                     type="button"
                     variant="outline"
-                    className="workspace-control rounded-full px-3"
+                    className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
                     onClick={() => setCreateDialogOpen(true)}
                   >
-                    <Plus className="size-4" />
+                    <Plus className="size-3.5" />
                     {t(locale, "新建任务", "New task")}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
-                    className="workspace-control rounded-full px-3"
+                    className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
                     onClick={refreshCurrent}
                     disabled={loading && ready}
                   >
                     <RefreshCw
-                      className={cn("size-4", loading && ready && "animate-spin")}
+                      className={cn("size-3.5", loading && ready && "animate-spin")}
                     />
                     {t(locale, "刷新", "Refresh")}
                   </Button>
@@ -525,15 +527,15 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                       <Button
                         type="button"
                         variant="outline"
-                        className="workspace-control rounded-full px-3"
+                        className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
                       >
                         {runtimeMode === "advanced" ? (
-                          <Server className="size-4" />
+                          <Server className="size-3.5" />
                         ) : (
-                          <Monitor className="size-4" />
+                          <Monitor className="size-3.5" />
                         )}
                         {runtimeModeLabel}
-                        <ChevronDown className="size-4 opacity-60" />
+                        <ChevronDown className="size-3.5 opacity-60" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
@@ -564,9 +566,9 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                       <Button
                         type="button"
                         variant="outline"
-                        className="workspace-control rounded-full px-3"
+                        className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
                       >
-                        <Ellipsis className="size-4" />
+                        <Ellipsis className="size-3.5" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
@@ -604,20 +606,23 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                 </div>
               </div>
 
-              <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[1rem] font-semibold tracking-tight text-stone-900">
+              <div className="mt-1 flex min-w-0 flex-col gap-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 rounded-full border border-stone-200/80 bg-white/72 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                    {t(locale, "焦点", "Focus")}
+                  </span>
+                  <div className="min-w-0 flex-1 truncate text-[12px] font-semibold tracking-tight text-stone-900">
                     {focusTitle}
                   </div>
-                  <p className="mt-1 max-w-4xl text-[12px] leading-5 text-stone-600">
-                    {compactText(focusSignal, 148)}
-                  </p>
+                  <div className="hidden max-w-[220px] shrink text-right text-[9px] leading-4 text-stone-600 xl:block">
+                    {compactText(focusSignal, 56)}
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-0.5">
                   <span
                     className={cn(
-                      "workspace-status px-2.5 py-1 text-[10px] font-semibold",
+                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
                       `workspace-tone-${focusTone}`
                     )}
                   >
@@ -625,7 +630,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                   </span>
                   <span
                     className={cn(
-                      "workspace-status px-2.5 py-1 text-[10px] font-semibold",
+                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
                       selectedDetail
                         ? missionOperatorStateTone(selectedDetail.operatorState)
                         : "workspace-tone-neutral"
@@ -633,15 +638,15 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                   >
                     {focusOperatorLabel}
                   </span>
-                  <span className="workspace-status workspace-tone-info px-2.5 py-1 text-[10px] font-semibold">
+                  <span className="workspace-status workspace-tone-info !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
                     {focusStage}
                   </span>
-                  <span className="workspace-status workspace-tone-neutral px-2.5 py-1 text-[10px] font-semibold">
+                  <span className="workspace-status workspace-tone-neutral !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
                     {t(locale, `进度 ${focusProgress}%`, `Progress ${focusProgress}%`)}
                   </span>
                   <span
                     className={cn(
-                      "workspace-status px-2.5 py-1 text-[10px] font-semibold",
+                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
                       runningCount > 0
                         ? "workspace-tone-warning"
                         : "workspace-tone-neutral"
@@ -655,7 +660,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                   </span>
                   <span
                     className={cn(
-                      "workspace-status px-2.5 py-1 text-[10px] font-semibold",
+                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
                       warningCount > 0
                         ? "workspace-tone-warning"
                         : "workspace-tone-info"
@@ -669,7 +674,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                   </span>
                   <span
                     className={cn(
-                      "workspace-status px-2.5 py-1 text-[10px] font-semibold",
+                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
                       agents.length > 0
                         ? "workspace-tone-success"
                         : "workspace-tone-neutral"
@@ -681,7 +686,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-hidden p-3">
+            <div className="min-h-0 flex-1 overflow-hidden p-2">
               {launchMode === "mission" ? (
                 <TasksCommandDock
                   createMission={createMission}
@@ -722,48 +727,47 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
           <Tabs
             value={activeTab}
             onValueChange={value => setActiveTab(value as OfficeCockpitTab)}
-            className="flex h-full min-h-0 flex-col overflow-hidden rounded-[32px] border border-white/65 bg-[linear-gradient(180deg,rgba(255,252,248,0.84),rgba(246,238,229,0.8))] p-3 shadow-[0_22px_60px_rgba(99,73,45,0.12)] backdrop-blur"
+            className="flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] border border-white/35 bg-[linear-gradient(180deg,rgba(255,252,248,0.48),rgba(244,236,227,0.32))] p-2 shadow-[0_22px_48px_rgba(99,73,45,0.12)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.7),rgba(246,238,229,0.5))]"
           >
-            <TabsList className="grid h-auto w-full grid-cols-5 gap-1.5 rounded-[20px] bg-white/72 p-1.5">
+            <TabsList className="grid h-auto w-full grid-cols-5 gap-1 overflow-hidden rounded-[14px] bg-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
               <TabsTrigger
-                className="rounded-[16px] px-1.5 py-2 text-[11px] whitespace-nowrap disabled:opacity-45"
+                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
                 value="task"
               >
                 {t(locale, "任务", "Task")}
               </TabsTrigger>
               <TabsTrigger
-                className="rounded-[16px] px-1.5 py-2 text-[11px] whitespace-nowrap disabled:opacity-45"
+                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
                 value="flow"
                 disabled={!availability.flow}
               >
                 {t(locale, "团队流", "Flow")}
               </TabsTrigger>
               <TabsTrigger
-                className="rounded-[16px] px-1.5 py-2 text-[11px] whitespace-nowrap disabled:opacity-45"
+                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
                 value="agent"
                 disabled={!availability.agent}
               >
                 Agent
               </TabsTrigger>
               <TabsTrigger
-                className="rounded-[16px] px-1.5 py-2 text-[11px] whitespace-nowrap disabled:opacity-45"
+                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
                 value="memory"
                 disabled={!availability.memory}
               >
                 {t(locale, "记忆", "Memory")}
               </TabsTrigger>
               <TabsTrigger
-                className="rounded-[16px] px-1.5 py-2 text-[11px] whitespace-nowrap disabled:opacity-45"
+                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
                 value="history"
                 disabled={!availability.history}
               >
                 {t(locale, "历史", "History")}
               </TabsTrigger>
             </TabsList>
-
             <TabsContent
               value="task"
-              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
             >
               <TasksCockpitDetail
                 detail={selectedDetail}
@@ -787,7 +791,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
 
             <TabsContent
               value="flow"
-              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
             >
               <CockpitContextShell
                 title={t(locale, "团队流", "Flow")}
@@ -812,7 +816,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
 
             <TabsContent
               value="agent"
-              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
             >
               <CockpitContextShell
                 title="Agent"
@@ -825,7 +829,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                 {agents.length > 0 ? (
                   <OfficeAgentInspectorPanel className="h-full" embedded />
                 ) : (
-                  <div className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-stone-300/80 bg-white/62 px-8 py-10 text-center text-sm leading-6 text-stone-500">
+                  <div className="flex h-full items-center justify-center rounded-[14px] border border-dashed border-stone-300/80 bg-white/62 px-3 py-4 text-center text-[11px] leading-5 text-stone-500">
                     {t(
                       locale,
                       "场景 Agent 建立后，这里会显示办公室 Agent 详情视图。",
@@ -838,7 +842,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
 
             <TabsContent
               value="memory"
-              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
             >
               <CockpitContextShell
                 title={t(locale, "记忆与报告", "Memory and reports")}
@@ -854,7 +858,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
 
             <TabsContent
               value="history"
-              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
             >
               <CockpitContextShell
                 title={t(locale, "历史与兼容", "History and compatibility")}

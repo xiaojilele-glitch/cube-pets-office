@@ -43,47 +43,16 @@ function SummaryMetric({
   return (
     <div
       className={cn(
-        "rounded-[20px] border px-3 py-2.5",
+        "rounded-[12px] border px-2 py-1.5",
         tone === "neutral"
           ? "border-stone-200/80 bg-white/78 text-stone-700"
           : workspaceToneClass(tone)
       )}
     >
-      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-75">
+      <div className="text-[9px] font-semibold uppercase tracking-[0.18em] opacity-75">
         {label}
       </div>
-      <div className="mt-1 text-sm font-semibold">{value}</div>
-    </div>
-  );
-}
-
-function SummaryRailCard({
-  label,
-  value,
-  hint,
-  tone = "neutral",
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  tone?: "neutral" | "info" | "warning" | "success";
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-[20px] border px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)]",
-        tone === "neutral"
-          ? "border-stone-200/80 bg-white/80 text-stone-700"
-          : workspaceToneClass(tone)
-      )}
-    >
-      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-75">
-        {label}
-      </div>
-      <div className="mt-1.5 text-sm font-semibold leading-5">{value}</div>
-      {hint ? (
-        <div className="mt-1.5 text-[11px] leading-5 opacity-80">{hint}</div>
-      ) : null}
+      <div className="mt-0.5 text-[11px] font-semibold">{value}</div>
     </div>
   );
 }
@@ -355,12 +324,12 @@ export function TasksCommandDock({
 
   if (isBare && isDense) {
     return (
-      <section className={cn("grid h-full min-h-0 gap-3", className)}>
+      <section className={cn("grid h-full min-h-0 gap-2", className)}>
         {error ? (
           <div
             className={workspaceCalloutClass(
               "danger",
-              "flex items-start justify-between gap-3 px-4 py-3 text-sm leading-6 text-[var(--workspace-danger)]"
+              "flex items-start justify-between gap-2 px-3 py-2 text-[11px] leading-5 text-[var(--workspace-danger)]"
             )}
           >
             <div className="flex items-start gap-2">
@@ -371,7 +340,7 @@ export function TasksCommandDock({
               type="button"
               variant="ghost"
               size="sm"
-              className="workspace-control h-auto rounded-full px-3 py-1 text-[var(--workspace-danger)] hover:bg-white/70"
+              className="workspace-control h-auto rounded-full px-2 py-0.5 text-[10px] text-[var(--workspace-danger)] hover:bg-white/70"
               onClick={clearError}
             >
               {t(locale, "收起", "Dismiss")}
@@ -379,9 +348,9 @@ export function TasksCommandDock({
           </div>
         ) : null}
 
-        <div className="grid min-h-0 gap-3 xl:grid-cols-[minmax(0,1fr)_252px]">
-          <div className="min-h-0 rounded-[26px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,244,237,0.92))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]">
-            <div className="flex flex-wrap gap-2">
+        <div className="grid min-h-0 gap-2">
+          <div className="min-h-0 rounded-[10px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,244,237,0.92))] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]">
+            <div className="flex flex-wrap gap-1">
               <span
                 className={workspaceStatusClass(
                   statusTone === "success"
@@ -389,28 +358,16 @@ export function TasksCommandDock({
                     : statusTone === "warning"
                       ? "warning"
                       : "neutral",
-                  "px-2.5 py-1 text-[10px] font-semibold"
+                  "!gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold"
                 )}
               >
                 {statusLabel}
-              </span>
-              <span
-                className={workspaceStatusClass(
-                  "info",
-                  "px-2.5 py-1 text-[10px] font-semibold"
-                )}
-              >
-                {t(
-                  locale,
-                  "队列视图已联动当前任务",
-                  "Queue view is linked to the current task"
-                )}
               </span>
               {currentDialog?.status === "active" ? (
                 <span
                   className={workspaceStatusClass(
                     "warning",
-                    "px-2.5 py-1 text-[10px] font-semibold"
+                    "!gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold"
                   )}
                 >
                   {t(
@@ -422,7 +379,54 @@ export function TasksCommandDock({
               ) : null}
             </div>
 
-            <div className="mt-3">
+            <div className="mt-0.5 flex flex-wrap gap-1">
+              <span
+                className={workspaceStatusClass(
+                  lastSubmission?.missionId ? "success" : "neutral",
+                  "max-w-full !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold"
+                )}
+              >
+                {t(locale, "落点", "Landing")} / {compactText(landingText, 24)}
+              </span>
+              <span
+                className={workspaceStatusClass(
+                  currentPlan ? "info" : "neutral",
+                  "max-w-full !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold"
+                )}
+              >
+                {t(locale, "编排", "Execution")} / {compactText(executionShape, 24)}
+              </span>
+              {activeTask ? (
+                <span
+                  className={workspaceStatusClass(
+                    activeTask.hasWarnings ? "warning" : "info",
+                    "max-w-full !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold"
+                  )}
+                >
+                  {t(locale, "焦点", "Focus")} / {compactText(activeTask.title, 20)}
+                </span>
+              ) : null}
+              <span
+                className={workspaceStatusClass(
+                  warningsCount > 0
+                    ? "warning"
+                    : runningCount > 0
+                      ? "info"
+                      : completedCount > 0
+                        ? "success"
+                        : "neutral",
+                  "max-w-full !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold"
+                )}
+              >
+                {t(
+                  locale,
+                  `${runningCount} 运行 / ${waitingCount} 等待`,
+                  `${runningCount} running / ${waitingCount} waiting`
+                )}
+              </span>
+            </div>
+
+            <div className="mt-0.5">
               <CommandInput
                 value={draftText}
                 onSubmit={handleSubmit}
@@ -437,27 +441,27 @@ export function TasksCommandDock({
                 )}
                 hideLabel={hideInputLabel}
                 dense
-                rows={5}
-                submitLabel={t(locale, "发送任务", "Send task")}
+                rows={3}
+                submitLabel={t(locale, "发送", "Send")}
                 sendingLabel={t(locale, "发送中...", "Sending...")}
               />
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-1 flex flex-wrap gap-1">
               {quickSuggestions.map(suggestion => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => setDraftText(suggestion)}
-                  className="rounded-full border border-stone-200/80 bg-white/78 px-3 py-1.5 text-[11px] font-medium text-stone-600 transition-colors hover:bg-white hover:text-stone-900"
+                  className="rounded-full border border-stone-200/80 bg-white/78 px-1.5 py-0.5 text-[8px] font-medium text-stone-600 transition-colors hover:bg-white hover:text-stone-900"
                 >
-                  {compactText(suggestion, 28)}
+                  {compactText(suggestion, 18)}
                 </button>
               ))}
             </div>
 
             {currentDialog && currentDialog.status === "active" ? (
-              <div className="mt-3 max-h-[240px] overflow-y-auto pr-1">
+              <div className="mt-2 max-h-[180px] overflow-y-auto pr-1">
                 <ClarificationPanel
                   dialog={currentDialog}
                   onAnswer={handleClarificationAnswer}
@@ -473,38 +477,6 @@ export function TasksCommandDock({
               </div>
             ) : null}
           </div>
-
-          <aside className="grid auto-rows-min gap-2.5">
-            {summaryCards.map(card => (
-              <SummaryRailCard
-                key={card.label}
-                label={card.label}
-                value={card.value}
-                hint={card.hint}
-                tone={card.tone}
-              />
-            ))}
-
-            <div className="rounded-[20px] border border-dashed border-stone-300/80 bg-white/70 px-3 py-3">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
-                {t(locale, "队列脉搏", "Queue pulse")}
-              </div>
-              <div className="mt-1.5 text-sm font-semibold text-stone-900">
-                {t(
-                  locale,
-                  `${runningCount} 运行 / ${waitingCount} 等待`,
-                  `${runningCount} running / ${waitingCount} waiting`
-                )}
-              </div>
-              <div className="mt-1 text-[11px] leading-5 text-stone-500">
-                {t(
-                  locale,
-                  `${completedCount} 完成 / ${warningsCount} 关注`,
-                  `${completedCount} done / ${warningsCount} warnings`
-                )}
-              </div>
-            </div>
-          </aside>
         </div>
       </section>
     );

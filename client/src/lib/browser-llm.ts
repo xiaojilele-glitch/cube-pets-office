@@ -109,7 +109,7 @@ export async function callBrowserLLM(
     headers.Authorization = `Bearer ${config.apiKey}`;
   }
 
-  const timeoutMs = Math.max(1_000, Number(config.timeoutMs) || 45_000);
+  const timeoutMs = Math.max(1_000, Number(config.timeoutMs) || 600_000);
 
   try {
     if (config.wireApi === "responses") {
