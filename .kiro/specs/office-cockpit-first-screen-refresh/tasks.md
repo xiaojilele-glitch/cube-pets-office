@@ -12,34 +12,34 @@
 
 ## Tasks
 
-- [ ] 1. 收敛桌面顶层壳层与 cockpit 头部
-  - [ ] 1.1 精简 `Home` 顶栏，只保留品牌、runtime mode 与全局入口
+- [x] 1. 收敛桌面顶层壳层与 cockpit 头部
+  - [x] 1.1 精简 `Home` 顶栏，只保留品牌、runtime mode 与全局入口
     - _Requirements: 1.1.1, 1.1.2, 1.1.3, 6.1.3_
-  - [ ] 1.2 将 `OfficeTaskCockpit` 顶部摘要重构为低占高 meta strip，移除重型 header card
+  - [x] 1.2 将 `OfficeTaskCockpit` 顶部摘要重构为低占高 meta strip，移除重型 header card
     - _Requirements: 1.1.2, 1.1.3_
 
-- [ ] 2. 重构中栏 Scene HUD 与统一驾驶台
-  - [ ] 2.1 在中栏上沿实现轻量 `scene HUD`，承接当前焦点任务、状态、阶段与联动提示
+- [x] 2. 重构中栏 Scene HUD 与统一驾驶台
+  - [x] 2.1 在中栏上沿实现轻量 `scene HUD`，承接当前焦点任务、状态、阶段与联动提示
     - _Requirements: 2.1.1, 2.1.2, 2.1.3_
-  - [ ] 2.2 用统一驾驶台外壳包裹 `TasksCommandDock` 与 `OfficeWorkflowLaunchPanel`
+  - [x] 2.2 用统一驾驶台外壳包裹 `TasksCommandDock` 与 `OfficeWorkflowLaunchPanel`
     - _Requirements: 3.1.1, 3.1.2, 3.1.3_
 
-- [ ] 3. 重排右栏任务 tab 为操作优先
-  - [ ] 3.1 将 `任务` tab 重构为 `sticky summary + primary action zone + progressive detail sections`
+- [x] 3. 重排右栏任务 tab 为操作优先
+  - [x] 3.1 将 `任务` tab 重构为 `sticky summary + primary action zone + progressive detail sections`
     - _Requirements: 4.1.1, 4.1.2, 4.1.3_
-  - [ ] 3.2 提升失败任务的真实失败信号到右栏首层
+  - [x] 3.2 提升失败任务的真实失败信号到右栏首层
     - _Requirements: 4.1.4_
 
-- [ ] 4. 重组右栏其他 tab 与统一 panel shell
-  - [ ] 4.1 统一 `团队流 / Agent / 记忆 / 历史` 的 panel shell、留白节奏与滚动区域
+- [x] 4. 重组右栏其他 tab 与统一 panel shell
+  - [x] 4.1 统一 `团队流 / Agent / 记忆 / 历史` 的 panel shell、留白节奏与滚动区域
     - _Requirements: 4.1.3, 6.1.1_
-  - [ ] 4.2 保持任务 / Agent / 场景联动与 tab 切换逻辑稳定
+  - [x] 4.2 保持任务 / Agent / 场景联动与 tab 切换逻辑稳定
     - _Requirements: 2.1.2, 3.1.3, 6.1.2_
 
-- [ ] 5. 降噪左侧队列并调整三栏宽度
-  - [ ] 5.1 压缩左侧任务卡密度，保留状态、warning、阶段、进度与更新时间
+- [x] 5. 降噪左侧队列并调整三栏宽度
+  - [x] 5.1 压缩左侧任务卡密度，保留状态、warning、阶段、进度与更新时间
     - _Requirements: 5.1.1, 5.1.2, 5.1.3_
-  - [ ] 5.2 调整左中右三栏宽度策略，优先保证 `Scene3D` 与右栏主操作可读性
+  - [x] 5.2 调整左中右三栏宽度策略，优先保证 `Scene3D` 与右栏主操作可读性
     - _Requirements: 6.1.1_
 
 - [ ] 6. 做兼容回归与桌面手测

@@ -158,10 +158,12 @@ export function TasksQueueRail({
                 className={cn(
                   "w-full border text-left transition-all",
                   isCompact
-                    ? "rounded-[20px] px-3 py-3"
+                    ? "rounded-[18px] px-3 py-2.5"
                     : "rounded-[24px] px-3.5 py-3",
                   active
-                    ? "border-[rgba(201,130,87,0.34)] bg-[linear-gradient(180deg,rgba(255,248,234,0.98),rgba(255,241,220,0.94))] shadow-[0_16px_40px_rgba(164,113,29,0.14)]"
+                    ? isCompact
+                      ? "border-[rgba(201,130,87,0.34)] bg-[rgba(255,247,234,0.95)] shadow-[0_10px_24px_rgba(164,113,29,0.1)]"
+                      : "border-[rgba(201,130,87,0.34)] bg-[linear-gradient(180deg,rgba(255,248,234,0.98),rgba(255,241,220,0.94))] shadow-[0_16px_40px_rgba(164,113,29,0.14)]"
                     : "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.58)] hover:border-[rgba(151,120,90,0.3)] hover:bg-[rgba(255,255,255,0.76)]",
                   task.id === highlightedTaskId &&
                     "ring-2 ring-amber-300 ring-offset-2 ring-offset-[#fff7eb]"
@@ -212,22 +214,29 @@ export function TasksQueueRail({
                       {task.title}
                     </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <div
-                      className={cn(
-                        "font-semibold text-stone-700",
-                        isCompact ? "text-[13px]" : "text-sm"
-                      )}
-                    >
-                      {task.progress}%
+                  {!isCompact ? (
+                    <div className="shrink-0 text-right">
+                      <div
+                        className={cn(
+                          "font-semibold text-stone-700",
+                          isCompact ? "text-[13px]" : "text-sm"
+                        )}
+                      >
+                        {task.progress}%
+                      </div>
+                      <div className="mt-1 text-[11px] text-stone-500">
+                        {formatTaskRelative(task.updatedAt, locale)}
+                      </div>
                     </div>
-                    <div className="mt-1 text-[11px] text-stone-500">
-                      {formatTaskRelative(task.updatedAt, locale)}
-                    </div>
-                  </div>
+                  ) : null}
                 </div>
 
-                <div className="mt-2 text-xs leading-5 text-stone-500">
+                <div
+                  className={cn(
+                    "text-stone-500",
+                    isCompact ? "mt-1.5 text-[11px] leading-5" : "mt-2 text-xs leading-5"
+                  )}
+                >
                   {compactText(
                     task.currentStageLabel || copy.tasks.listPage.noStage,
                     isCompact ? 28 : 34
@@ -237,16 +246,37 @@ export function TasksQueueRail({
                     : ""}
                 </div>
 
+                {isCompact ? (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-200/80">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-[width]",
+                          task.hasWarnings
+                            ? "bg-[linear-gradient(90deg,#d39b50,#c98257)]"
+                            : active
+                              ? "bg-[linear-gradient(90deg,#c98257,#b86f45)]"
+                              : "bg-[linear-gradient(90deg,#7ea38d,#5e8b72)]"
+                        )}
+                        style={{ width: `${Math.max(4, task.progress)}%` }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-semibold text-stone-600">
+                      {task.progress}%
+                    </span>
+                  </div>
+                ) : (
+                  <div className="mt-2 text-[13px] leading-5 text-stone-600">
+                    {summary || copy.tasks.detailView.noDetail}
+                  </div>
+                )}
+
                 <div
                   className={cn(
-                    "mt-2 leading-5 text-stone-600",
-                    isCompact ? "line-clamp-2 text-[12px]" : "text-[13px]"
+                    "mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-stone-500",
+                    isCompact && "items-center"
                   )}
                 >
-                  {summary || copy.tasks.detailView.noDetail}
-                </div>
-
-                <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-stone-500">
                   <span
                     className={workspaceStatusClass(
                       "neutral",
@@ -285,6 +315,11 @@ export function TasksQueueRail({
                       )}
                     >
                       {copy.tasks.listPage.attemptCount(task.attempt)}
+                    </span>
+                  ) : null}
+                  {isCompact ? (
+                    <span className="ml-auto text-[10px] text-stone-400">
+                      {formatTaskRelative(task.updatedAt, locale)}
                     </span>
                   ) : null}
                 </div>

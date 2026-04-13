@@ -38,11 +38,13 @@ export function OfficeWorkflowLaunchPanel({
   pendingLaunch,
   onLaunchSubmitted,
   compact = false,
+  embedded = false,
   className,
 }: {
   pendingLaunch: OfficeLaunchResolution | null;
   onLaunchSubmitted: (resolution: OfficeLaunchResolution) => void;
   compact?: boolean;
+  embedded?: boolean;
   className?: string;
 }) {
   const { locale } = useI18n();
@@ -62,6 +64,7 @@ export function OfficeWorkflowLaunchPanel({
   const isFrontend = runtimeMode === "frontend";
   const canUpgrade = isFrontend && CAN_USE_ADVANCED_RUNTIME;
   const isCompact = compact;
+  const isEmbedded = embedded;
   const submitLabel = useMemo(() => {
     if (isSubmitting) {
       return t(locale, "提交中...", "Submitting...");
@@ -170,30 +173,50 @@ export function OfficeWorkflowLaunchPanel({
   return (
     <section
       className={cn(
-        "workspace-panel workspace-panel-strong rounded-[30px] border border-stone-200/80 px-4 py-4 shadow-[0_24px_70px_rgba(98,73,48,0.14)]",
+        isEmbedded
+          ? "rounded-[24px] border border-white/70 bg-white/78 px-4 py-4 shadow-[0_14px_36px_rgba(99,73,45,0.08)]"
+          : "workspace-panel workspace-panel-strong rounded-[30px] border border-stone-200/80 px-4 py-4 shadow-[0_24px_70px_rgba(98,73,48,0.14)]",
         className
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="workspace-eyebrow">
-            {t(locale, "统一发起 / 高级通道", "Unified launch / workflow lane")}
+            {isEmbedded
+              ? t(locale, "高级发起", "Advanced launch")
+              : t(locale, "统一发起 / 高级通道", "Unified launch / workflow lane")}
           </div>
           <h2
             className={cn(
               "mt-2 font-semibold tracking-tight text-[var(--workspace-text-strong)]",
-              isCompact ? "text-[1.2rem]" : "text-xl"
+              isEmbedded
+                ? "text-[1.1rem]"
+                : isCompact
+                  ? "text-[1.2rem]"
+                  : "text-xl"
             )}
           >
-            {t(locale, "带附件的高级发起", "Advanced launch with attachments")}
+            {isEmbedded
+              ? t(locale, "带上下文的团队发起", "Team launch with context")
+              : t(locale, "带附件的高级发起", "Advanced launch with attachments")}
           </h2>
           <p
             className={cn(
               "mt-2 max-w-3xl text-[var(--workspace-text-muted)]",
-              isCompact ? "text-[13px] leading-5" : "text-sm leading-6"
+              isEmbedded
+                ? "text-[13px] leading-5"
+                : isCompact
+                  ? "text-[13px] leading-5"
+                  : "text-sm leading-6"
             )}
           >
-            {isCompact
+            {isEmbedded
+              ? t(
+                  locale,
+                  "适合带附件、复杂约束或需要先组织团队的任务，完成后会自动回落到 mission。",
+                  "Use this for attachment-heavy or team-shaped launches, then fall back into the mission automatically."
+                )
+              : isCompact
               ? t(
                   locale,
                   "适合带附件或复杂上下文的任务，先走 workflow，再自动回落到 mission。",

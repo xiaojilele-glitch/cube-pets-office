@@ -65,6 +65,7 @@ export function TasksCommandDock({
   onRefresh,
   refreshing = false,
   compact = false,
+  embedded = false,
   className,
 }: {
   createMission: TaskHubCreateMission;
@@ -75,6 +76,7 @@ export function TasksCommandDock({
   onRefresh: () => void;
   refreshing?: boolean;
   compact?: boolean;
+  embedded?: boolean;
   className?: string;
 }) {
   const { locale, copy } = useI18n();
@@ -119,6 +121,7 @@ export function TasksCommandDock({
       ? t(locale, "补全问题后创建", "Created after clarification")
       : t(locale, "尚未创建任务", "No mission created");
   const isCompact = compact;
+  const isEmbedded = embedded;
 
   async function handleSubmit(commandText: string) {
     try {
@@ -202,36 +205,61 @@ export function TasksCommandDock({
   return (
     <section
       className={cn(
-        isCompact
+        isCompact || isEmbedded
           ? "grid gap-3"
           : "grid gap-3 xl:grid-cols-[minmax(0,1.55fr)_360px]",
         className
       )}
     >
-      <div className="workspace-panel workspace-panel-strong overflow-hidden rounded-[30px] px-4 py-4 md:px-5">
+      <div
+        className={cn(
+          "overflow-hidden md:px-5",
+          isEmbedded
+            ? "rounded-[24px] border border-white/70 bg-white/78 px-4 py-4 shadow-[0_14px_36px_rgba(99,73,45,0.08)]"
+            : "workspace-panel workspace-panel-strong rounded-[30px] px-4 py-4"
+        )}
+      >
         <div className="flex h-full min-h-0 flex-col">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 max-w-4xl">
               <div className="workspace-eyebrow">
-                {copy.tasks.listPage.eyebrow}
+                {isEmbedded
+                  ? t(locale, "任务命令", "Mission commands")
+                  : copy.tasks.listPage.eyebrow}
               </div>
               <h1
                 className={cn(
                   "mt-2 font-semibold tracking-tight text-[var(--workspace-text-strong)]",
-                  isCompact ? "text-[1.35rem]" : "text-2xl"
+                  isEmbedded
+                    ? "text-[1.1rem]"
+                    : isCompact
+                      ? "text-[1.35rem]"
+                      : "text-2xl"
                 )}
               >
-                {isCompact
+                {isEmbedded
+                  ? t(locale, "在驾驶台里快速落任务", "Land missions directly in the dock")
+                  : isCompact
                   ? t(locale, "统一任务入口", "Unified task launch")
                   : copy.tasks.listPage.title}
               </h1>
               <p
                 className={cn(
                   "mt-2 max-w-3xl text-[var(--workspace-text-muted)]",
-                  isCompact ? "text-[13px] leading-5" : "text-sm leading-6"
+                  isEmbedded
+                    ? "text-[13px] leading-5"
+                    : isCompact
+                      ? "text-[13px] leading-5"
+                      : "text-sm leading-6"
                 )}
               >
-                {isCompact
+                {isEmbedded
+                  ? t(
+                      locale,
+                      "把自然语言指令、澄清回合和落队结果压缩在一个主操作区里。",
+                      "Keep natural-language commands, clarifications, and task landing inside one operator zone."
+                    )
+                  : isCompact
                   ? t(
                       locale,
                       "在这里快速发起任务、补齐澄清，并把结果稳定落回当前驾驶舱。",
@@ -271,7 +299,7 @@ export function TasksCommandDock({
             </div>
           </div>
 
-          {isCompact ? (
+          {isCompact || isEmbedded ? (
             <div className="mt-3 flex flex-wrap gap-2">
               <span
                 className={cn(
@@ -385,7 +413,7 @@ export function TasksCommandDock({
         </div>
       </div>
 
-      {!isCompact ? (
+      {!isCompact && !isEmbedded ? (
         <div className="workspace-panel overflow-hidden rounded-[30px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,249,240,0.94),rgba(255,255,255,0.88))] px-4 py-4 shadow-[0_20px_60px_rgba(112,84,51,0.08)] backdrop-blur">
           <div className="flex h-full min-h-0 flex-col">
             <div className="flex items-start justify-between gap-3">

@@ -259,12 +259,14 @@ function SnapshotTile({ label, value }: { label: string; value: string }) {
 
 function DetailTabViewport({
   isDesktop,
+  autoHeight = false,
   children,
 }: {
   isDesktop: boolean;
+  autoHeight?: boolean;
   children: ReactNode;
 }) {
-  if (!isDesktop) {
+  if (!isDesktop || autoHeight) {
     return <div className="space-y-4">{children}</div>;
   }
 
@@ -627,6 +629,7 @@ export function TaskDetailView({
   operatorActionLoading,
   onDecisionSubmitted,
   variant = "default",
+  autoHeight = false,
   className,
 }: {
   detail: MissionTaskDetail | null;
@@ -641,6 +644,7 @@ export function TaskDetailView({
   operatorActionLoading?: MissionOperatorActionLoadingMap;
   onDecisionSubmitted?: () => void;
   variant?: TaskDetailViewVariant;
+  autoHeight?: boolean;
   className?: string;
 }) {
   const { locale, copy } = useI18n();
@@ -1405,11 +1409,11 @@ export function TaskDetailView({
       <div
         className={cn(
           "flex min-h-0 flex-col gap-4",
-          isDesktop && "h-full",
+          isDesktop && !autoHeight && "h-full",
           className
         )}
       >
-        <DetailTabViewport isDesktop={isDesktop}>
+        <DetailTabViewport isDesktop={isDesktop} autoHeight={autoHeight}>
           {showCockpitDecisionSection ? decisionsWorkspace : null}
           <TaskPlanetInterior detail={detail} compact />
           {sourceDirectivePanel}
@@ -1442,7 +1446,7 @@ export function TaskDetailView({
     <div
       className={cn(
         "flex min-h-0 flex-col gap-4",
-        isDesktop && "h-full",
+        isDesktop && !autoHeight && "h-full",
         className
       )}
     >
@@ -1498,7 +1502,7 @@ export function TaskDetailView({
           value="overview"
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <DetailTabViewport isDesktop={isDesktop}>
+          <DetailTabViewport isDesktop={isDesktop} autoHeight={autoHeight}>
             <div
               className={cn(
                 "grid gap-4 xl:items-start",
@@ -1541,7 +1545,7 @@ export function TaskDetailView({
           value="execution"
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <DetailTabViewport isDesktop={isDesktop}>
+          <DetailTabViewport isDesktop={isDesktop} autoHeight={autoHeight}>
             {detail.securitySummary && (
               <Card className={cn(DETAIL_CARD_CLASS, "mb-4")}>
                 <CardHeader className="space-y-1 pb-3">
@@ -1647,7 +1651,7 @@ export function TaskDetailView({
           value="decisions"
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <DetailTabViewport isDesktop={isDesktop}>
+          <DetailTabViewport isDesktop={isDesktop} autoHeight={autoHeight}>
             {decisionsWorkspace}
           </DetailTabViewport>
         </TabsContent>
@@ -1656,7 +1660,7 @@ export function TaskDetailView({
           value="artifacts"
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <DetailTabViewport isDesktop={isDesktop}>
+          <DetailTabViewport isDesktop={isDesktop} autoHeight={autoHeight}>
             <div className="space-y-4">
               {artifactsPanel}
               {failurePanel}
@@ -1668,7 +1672,7 @@ export function TaskDetailView({
           value="cost"
           className="min-h-0 flex-1 overflow-hidden data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <DetailTabViewport isDesktop={isDesktop}>
+          <DetailTabViewport isDesktop={isDesktop} autoHeight={autoHeight}>
             <MissionCostTab />
           </DetailTabViewport>
         </TabsContent>

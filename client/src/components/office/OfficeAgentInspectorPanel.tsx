@@ -107,8 +107,10 @@ function toneForState(value: string | null | undefined) {
 }
 
 export function OfficeAgentInspectorPanel({
+  embedded = false,
   className,
 }: {
+  embedded?: boolean;
   className?: string;
 }) {
   const { copy } = useI18n();
@@ -244,7 +246,9 @@ export function OfficeAgentInspectorPanel({
   return (
     <div
       className={cn(
-        "flex min-h-0 flex-col rounded-[28px] border border-stone-200/80 bg-white/88 p-3 text-stone-900 shadow-[0_20px_60px_rgba(112,84,51,0.14)] backdrop-blur",
+        embedded
+          ? "flex min-h-0 flex-col text-stone-900"
+          : "flex min-h-0 flex-col rounded-[28px] border border-stone-200/80 bg-white/88 p-3 text-stone-900 shadow-[0_20px_60px_rgba(112,84,51,0.14)] backdrop-blur",
         className
       )}
     >
