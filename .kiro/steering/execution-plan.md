@@ -1,13 +1,14 @@
 <!--
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
- * @Description: 
+ * @Description:
  * @LastEditTime: 2026-04-11 20:20:00
  * @LastEditors: wangchunji
 -->
+
 ---
-inclusion: auto
----
+
+## inclusion: auto
 
 # Specs 执行顺序与依赖分析
 
@@ -36,7 +37,7 @@ inclusion: auto
 - 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
 - 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 已完成。
 - 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已完成并合并到 `main`。
-- `office-task-cockpit` 已进入近端规划，目标是把办公室从态势页推进为默认执行壳。
+- `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱与右侧上下文 tab 骨架已落地，剩余回归与补测。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
@@ -62,19 +63,23 @@ inclusion: auto
 </p>
 
 ### 并行组 A：Frontend Mode 极致化（核心优先）
+
 - [x] L01 `demo-data-engine` — 预录演示数据引擎 ✅ 已合并 (13 files, +1317)
 - [x] L02 `demo-guided-experience` — 演示回放引擎 + 引导 UI ✅ 已合并 (11 files, +940)
 
 ### 并行组 B：3D 场景增强
+
 - [x] L03 `scene-mission-fusion` — Mission 状态融合进 3D 场景 ✅ 已合并 (7 files, +627)
 - [x] L04 `cross-framework-export` — 导出为 CrewAI/LangGraph/AutoGen 格式 ✅ 已合并 (18 files, +2866)
 
 ### 并行组 C：可观测性（需先完成 C02 事件总线约定）
+
 - [x] L05 `telemetry-dashboard` — 实时遥测仪表盘 ✅ 已合并 (15 files, +1305)
 - [x] L06 `cost-observability` — 成本可观测性，Token 追踪 + 前端看板 ✅ 已合并 (14 files, +3181)
 - [x] L07 `state-persistence-recovery` — 浏览器端长任务恢复 ✅ 已合并 (30 files, +4639)
 
 ### 独立可做
+
 - [x] L08 `collaboration-replay` — Mission 执行过程录制与回放 ✅ 已合并 (52 files, +8291)
 - [x] L09 `multi-modal-vision` — 图片理解能力，前端附件扩展 ✅ 已合并 (19 files, +1478)
 
@@ -85,19 +90,23 @@ inclusion: auto
 </p>
 
 ### 并行组 D：技术债清理（应优先，⚠️ C04 必须先完成）
+
 - [x] L10 `workflow-decoupling` — tasks-store 从双轨收口到 mission-first ✅ 已合并 (17 files, +1027/-2166)
 - [x] L11 `mission-native-projection` — /api/planets 路由实现 + 前端数据源切换 ✅ 已合并 (13 files, +2793)
 
 ### 并行组 E：Agent 能力增强
+
 - [x] L12 `plugin-skill-system` — Skill 热插拔体系 ✅ 已合并 (16 files, +1273)
 - [x] L13 `dynamic-role-system` — Agent 运行时角色切换 ✅ 已合并 (29 files, +4961)
 - [x] L14 `human-in-the-loop` — 通用审批流 + 决策链 ✅ 已合并 (29 files, +2309)
 
 ### 并行组 F：记忆系统升级（⚠️ C03 + C07 必须先完成）
+
 - [x] L15 `knowledge-graph` — 结构化知识图谱层 ✅ 已合并 (43 files, +13786)
 - [x] L16 `vector-db-rag-pipeline` — 向量数据库 + RAG 管道 ✅ 已合并 (60 files, +8916)
 
 ### 独立可做
+
 - [x] L17 `nl-command-center` — 自然语言指挥中心 ✅ 已合并 (65 files, +13234)
 - [x] L18 `agent-autonomy-upgrade` — Agent 自评估 + 竞争执行 ✅ 已合并 (28 files, +4691)
 - [x] L19 `agent-reputation` — Agent 信誉评分系统 ✅ 已合并 (28 files, +4360)
@@ -218,8 +227,9 @@ L12 → L29 → L30
 
 ### 优先级与依赖
 
-- [ ] P0 `office-task-cockpit` — 办公室成为桌面端默认执行壳，内嵌任务驾驶舱、统一发起入口与右侧上下文 tab。
+- [ ] P0 `office-task-cockpit` — 开发中：办公室成为桌面端默认执行壳，内嵌任务驾驶舱、统一发起入口与右侧上下文 tab。
 - 依赖已完成的 `navigation-convergence`、`task-hub-convergence`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification`。
+- 当前进展：桌面端办公室壳层、左侧任务队列、中间 `Scene3D`、右侧任务/上下文 tab 与统一双通道发起入口已接入；剩余兼容回归、补测与桌面手测。
 
 ### 文件 ownership 边界
 
@@ -289,11 +299,13 @@ git worktree add ../cpo-visual-unify feat/workspace-visual-unification
 ## 推荐执行时间线
 
 ### Day 1 上午：阶段 0 契约冻结（已完成 ✅）
+
 ```
 C01-C08 全部完成，shared/ 下 8 个契约模块已冻结
 ```
 
 ### Day 1 下午：第一层 + 第二层前半段并行（15 个 Agent）
+
 ```
 并行组 A: L01 + L02
 并行组 B: L03 + L04
@@ -304,6 +316,7 @@ C01-C08 全部完成，shared/ 下 8 个契约模块已冻结
 ```
 
 ### Day 2：第二层后半段 + 第三层 Docker 链路串行
+
 ```
 并行组 F: L15 + L16
 串行: L22 ✅ → L23 → L24
@@ -311,6 +324,7 @@ C01-C08 全部完成，shared/ 下 8 个契约模块已冻结
 ```
 
 ### Day 3+：按需推进（当前阶段）
+
 ```
 第三层全部完成: L26 ✅ → L27 ✅ → L28 ✅
                 L29 ✅ → L30 ✅
@@ -319,6 +333,7 @@ holographic-ui spec 已完成（tasks 1-8）
 ```
 
 ### Day 4+：补完型 spec 与工程收口（当前实际）
+
 ```
 workflow-artifacts-display 已完成功能开发：
   已完成 Artifact API / tasks-store 扩展 / ArtifactListBlock / ArtifactPreviewDialog
@@ -335,6 +350,7 @@ frontend-demo-mode 待补 tasks.md
 ```
 
 ### Day 5+：信息架构与工作台重构（新增规划）
+
 ```
 Wave 1（可直接并行）:
   navigation-convergence
@@ -351,18 +367,20 @@ Wave 2（已完成并合并）:
   各自由单独 worktree owner 负责，避免跨波次同时改同一批核心文件
 ```
 
-### Day 6+：办公室任务驾驶舱（新增规划）
+### Day 6+：办公室任务驾驶舱（已启动，待回归）
+
 ```
 office-task-cockpit:
-  办公室升级为桌面端默认执行壳
-  左侧任务队列 / 中间办公室场景 / 右侧任务与上下文 tab
-  统一发起入口采用“普通任务 + 高级发起”双通道
+  已完成桌面端办公室主壳与三栏驾驶舱装配
+  已接入右侧任务 / 团队流 / Agent / 记忆报告 / 历史 tab
+  已落地统一发起入口，支持“普通任务 + 高级发起”双通道
+  剩余兼容回归、补测与桌面手测
 
 执行顺序:
-  先桌面壳层
-  再右侧 tab
-  再统一发起
-  最后兼容回归
+  已完成桌面壳层
+  已完成右侧 tab 与统一发起基础装配
+  下一步补兼容回归
+  最后完成桌面手测与验收
 ```
 
 ## 关键路径
@@ -402,4 +420,4 @@ C01-C08 契约冻结 (已完成)
 4. L20 和 L21 虽然在第二层，但分别依赖第一层的 L09 和 L06，不能真正并行
 5. 新一波体验重构如果不按 ownership 拆 worktree，`Home.tsx`、`TasksPage.tsx`、`TaskDetailView.tsx`、`WorkflowPanel.tsx` 会成为高冲突热点
 6. `api-fallback-empty-states` 可以先并行，但不要一开始就同时改任务页高频请求与 `workflow-store`，否则会与任务中台和面板拆解互相阻塞
-5. 当前 TypeScript 基线未清零，新增 spec 若不控制编译回归，容易把补完型工作拖成全局修复
+7. 当前 TypeScript 基线未清零，新增 spec 若不控制编译回归，容易把补完型工作拖成全局修复

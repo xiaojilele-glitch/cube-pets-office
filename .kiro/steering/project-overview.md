@@ -1,13 +1,14 @@
 <!--
  * @Author: wangchunji
  * @Date: 2026-03-31 14:56:15
- * @Description: 
+ * @Description:
  * @LastEditTime: 2026-04-10 01:09:31
  * @LastEditors: wangchunji
 -->
+
 ---
-inclusion: auto
----
+
+## inclusion: auto
 
 # Cube Pets Office 项目总览
 
@@ -81,94 +82,92 @@ inclusion: auto
 
 ### ✅ 已落地主线能力（能力视角）
 
-| 模块 | 说明 |
-|------|------|
-| 十阶段工作流引擎 | 组建→拆解→规划→执行→评审→审计→修订→验证→汇总→进化 |
-| 动态组织生成 | LLM 驱动 CEO/经理/Worker 结构生成 |
-| 三级记忆系统 | 短期(会话) / 中期(向量检索) / 长期(SOUL.md) |
-| 自进化 + 心跳 | 弱维度分析→人设修补→能力注册 |
-| Mission Runtime | 六阶段状态机 + 编排器 |
-| 飞书集成 | ACK/进度/决策回传 |
-| 纯前端运行时 | IndexedDB + Web Worker，同一套引擎 |
-| 3D 场景 | Three.js R3F，Agent 状态实时映射 |
-| 预录演示数据引擎 | 预录数据包 + 序列化/反序列化 |
-| 演示引导体验 | 回放引擎 + 步骤引导 UI |
-| 3D Mission 融合 | Mission 状态映射到 3D 场景动画 |
-| 跨框架导出 | CrewAI / LangGraph / AutoGen 一键导出 |
-| 实时遥测仪表盘 | 事件总线 + Recharts 可视化 |
-| 成本可观测性 | Token 追踪 + 模型定价 + Agent 成本分布 |
-| 长任务恢复 | IndexedDB 持久化，断点续跑 |
-| 执行回放 | Mission 执行过程录制与时间线回放 |
-| 多模态视觉 | 图片理解 + 前端附件扩展 |
-| Workflow 解耦 | tasks-store mission-native 单源架构 |
-| Mission 原生投影 | /api/planets 路由 + 前端数据源切换 |
-| Skill 热插拔 | 运行时注册/卸载技能 |
-| 动态角色切换 | Agent 运行时角色适应 |
-| 人工审批流 | 通用审批 + 决策链 |
-| 知识图谱 | 实体/关系/推理 + 可视化 |
-| 向量 DB + RAG | 7 步 Pipeline |
-| 自然语言指挥中心 | NL→结构化命令，智能路由 |
-| 自评估 + 竞争执行 | Agent 自我评估，竞争择优 |
-| 信誉评分 | 历史表现积累与衰减 |
-| 多模态编排 | 语音 + Vision 统一编排 |
-| 主动成本治理 | 多级预算/四级告警/灰度降级 |
-| Docker 真实容器 | dockerode 生命周期 + HMAC 回调 |
-| AI 容器注入 | API Key 安全注入 + 凭证脱敏 |
-| 安全沙箱 | seccomp/AppArmor + 能力裁剪 |
-| 实时终端 + 截图 | WebSocket 终端流 + 容器截图 |
-| 执行器集成 | WorkflowEngine ↔ Docker 桥接 |
-| Agent 权限矩阵 | RBAC 细粒度权限控制 |
-| 跨 Pod 自主协作 | Swarm 发现/委派/共识 |
-| 不可篡改审计链 | 哈希链式日志 + 异常检测 |
-| 数据血缘追踪 | DAG 采集/查询/导出 + 审计集成 |
-| A2A 互操作协议 | 跨框架 Agent 通信 + 适配器 |
-| Guest Agent 市场 | 外部 Agent 沙箱接入 + TTL |
-| 全息 UI 升级 | 毛玻璃拟态 + HoloDock + GlowButton + 呼吸光晕 |
+| 模块              | 说明                                              |
+| ----------------- | ------------------------------------------------- |
+| 十阶段工作流引擎  | 组建→拆解→规划→执行→评审→审计→修订→验证→汇总→进化 |
+| 动态组织生成      | LLM 驱动 CEO/经理/Worker 结构生成                 |
+| 三级记忆系统      | 短期(会话) / 中期(向量检索) / 长期(SOUL.md)       |
+| 自进化 + 心跳     | 弱维度分析→人设修补→能力注册                      |
+| Mission Runtime   | 六阶段状态机 + 编排器                             |
+| 飞书集成          | ACK/进度/决策回传                                 |
+| 纯前端运行时      | IndexedDB + Web Worker，同一套引擎                |
+| 3D 场景           | Three.js R3F，Agent 状态实时映射                  |
+| 预录演示数据引擎  | 预录数据包 + 序列化/反序列化                      |
+| 演示引导体验      | 回放引擎 + 步骤引导 UI                            |
+| 3D Mission 融合   | Mission 状态映射到 3D 场景动画                    |
+| 跨框架导出        | CrewAI / LangGraph / AutoGen 一键导出             |
+| 实时遥测仪表盘    | 事件总线 + Recharts 可视化                        |
+| 成本可观测性      | Token 追踪 + 模型定价 + Agent 成本分布            |
+| 长任务恢复        | IndexedDB 持久化，断点续跑                        |
+| 执行回放          | Mission 执行过程录制与时间线回放                  |
+| 多模态视觉        | 图片理解 + 前端附件扩展                           |
+| Workflow 解耦     | tasks-store mission-native 单源架构               |
+| Mission 原生投影  | /api/planets 路由 + 前端数据源切换                |
+| Skill 热插拔      | 运行时注册/卸载技能                               |
+| 动态角色切换      | Agent 运行时角色适应                              |
+| 人工审批流        | 通用审批 + 决策链                                 |
+| 知识图谱          | 实体/关系/推理 + 可视化                           |
+| 向量 DB + RAG     | 7 步 Pipeline                                     |
+| 自然语言指挥中心  | NL→结构化命令，智能路由                           |
+| 自评估 + 竞争执行 | Agent 自我评估，竞争择优                          |
+| 信誉评分          | 历史表现积累与衰减                                |
+| 多模态编排        | 语音 + Vision 统一编排                            |
+| 主动成本治理      | 多级预算/四级告警/灰度降级                        |
+| Docker 真实容器   | dockerode 生命周期 + HMAC 回调                    |
+| AI 容器注入       | API Key 安全注入 + 凭证脱敏                       |
+| 安全沙箱          | seccomp/AppArmor + 能力裁剪                       |
+| 实时终端 + 截图   | WebSocket 终端流 + 容器截图                       |
+| 执行器集成        | WorkflowEngine ↔ Docker 桥接                      |
+| Agent 权限矩阵    | RBAC 细粒度权限控制                               |
+| 跨 Pod 自主协作   | Swarm 发现/委派/共识                              |
+| 不可篡改审计链    | 哈希链式日志 + 异常检测                           |
+| 数据血缘追踪      | DAG 采集/查询/导出 + 审计集成                     |
+| A2A 互操作协议    | 跨框架 Agent 通信 + 适配器                        |
+| Guest Agent 市场  | 外部 Agent 沙箱接入 + TTL                         |
+| 全息 UI 升级      | 毛玻璃拟态 + HoloDock + GlowButton + 呼吸光晕     |
 
-### 📍 当前进度快照（Spec 视角，2026-04-10）
+### 📍 当前进度快照（Spec 视角，2026-04-13）
 
-| 状态 | 数量 | 说明 |
-|------|------|------|
-| 已完成 | 37 | 主线 L01-L30 与补充 spec `holographic-ui`、`ai-enabled-sandbox`、`executor-integration` 等已合并 |
-| 部分完成 | 5 | `mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery`、`workflow-artifacts-display`（功能开发完成，待最终检查点） |
-| 未开始 | 14 | 第四层 L31-L38、`i18n-cleanup` 与 5 个任务控制台补完 spec |
-| 待补任务清单 | 1 | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md` |
+| 状态            | 数量 | 说明                                                                                |
+| --------------- | ---- | ----------------------------------------------------------------------------------- |
+| 已完成          | 41   | 已合并或 `tasks.md` 已全勾选的主线/扩展 spec，覆盖 L01-L30 与多项近端工作台收口能力 |
+| 开发中 / 待回归 | 13   | 含 `office-task-cockpit`、`workflow-artifacts-display` 及若干仅剩验证项的 spec      |
+| 未开始          | 9    | 第四层 L31-L38 与 `i18n-cleanup`                                                    |
+| 待补任务清单    | 1    | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md`                              |
 
 - `workflow-artifacts-display` 已完成 Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、页面集成与 Socket 联动；当前仅剩 `tasks.md` 的最终检查点未勾选。
-- `mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 构成当前近端产品收口主线，目标是把任务页补齐为可操作的执行控制台。
-- 下一步主线：`office-task-cockpit` 将把办公室从全局态势页推进为默认执行工作台，桌面端整合任务队列、场景、详情和 workflow 上下文。
+- `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱、右侧上下文 tab 与统一双通道发起基础已落地；剩余回归、补测与桌面手测。
+- `/tasks` 继续保留为全屏工作台与深链页；当前任务真相源仍为 `tasks-store`，不改变 Mission 数据流。
 - `mission-runtime`、`multi-modal-vision`、`nl-command-center` 与 `state-persistence-recovery` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
 - `state-persistence-recovery` 的未完成项主要集中在标记 `*` 的可选属性测试。
 
-### 📋 待启动 / 待环境就绪
+### 📋 待收尾 / 待启动 / 待环境就绪
 
-| 模块 | 依赖 / 备注 |
-|------|------|
-| P0 `mission-cancel-control` | 任务取消端到端闭环，覆盖 Mission、executor、Socket 与详情页反馈 |
-| P0 `mission-operator-actions` | 依赖取消 / 终止语义统一，补齐暂停、恢复、重试、标记阻塞、终止 |
-| P1 `task-detail-operations-first` | 依赖稳定的操作动作模型，将主操作、负责人、blocker、下一步前置 |
-| P1 `execution-language-refresh` | 与任务详情重排并行推进，文案收敛到开发执行 / 协作交付 |
-| P2 `mission-ui-polish` | 待交互语义稳定后收尾，统一反馈、层级、状态、空态与错误态 |
-| i18n-cleanup | 前端文案 / 国际化收口，独立排期 |
-| frontend-demo-mode | 需先补 `tasks.md`，再确认依赖与范围 |
-| L31 Docker Compose 生产部署 | L22 |
-| L32 多人实时协作 | 无 |
-| L33 多租户隔离 | L25 + L31 |
-| L34 Agent 交易市场平台 | L30 + L19 |
-| L35 K8s Agent Operator | L31 |
-| L36 边缘部署 | L31 |
-| L37 多区域灾备 | L31 + L35 |
-| L38 VR 沉浸式扩展 | L03 |
+| 模块                         | 依赖 / 备注                                                       |
+| ---------------------------- | ----------------------------------------------------------------- |
+| P0 `office-task-cockpit`     | 桌面端办公室主壳 + 三栏驾驶舱已落地，待补测试、兼容回归与桌面手测 |
+| `workflow-artifacts-display` | 仅剩 `tasks.md` 最终检查点与验收收尾                              |
+| i18n-cleanup                 | 前端文案 / 国际化收口，独立排期                                   |
+| frontend-demo-mode           | 需先补 `tasks.md`，再确认依赖与范围                               |
+| L31 Docker Compose 生产部署  | L22                                                               |
+| L32 多人实时协作             | 无                                                                |
+| L33 多租户隔离               | L25 + L31                                                         |
+| L34 Agent 交易市场平台       | L30 + L19                                                         |
+| L35 K8s Agent Operator       | L31                                                               |
+| L36 边缘部署                 | L31                                                               |
+| L37 多区域灾备               | L31 + L35                                                         |
+| L38 VR 沉浸式扩展            | L03                                                               |
 
 ## 工程健康快照
 
-- 当前近端增量集中在 5 个任务控制台补完 spec 的排期与落地准备，以及 `workflow-artifacts-display` 的最终检查点验收。
+- 当前近端增量集中在 `office-task-cockpit` 的回归/补测与 `workflow-artifacts-display` 的最终检查点验收。
 - `npm run check` 当前仍有 30 个 TypeScript 错误，主要分布在 lineage 可视化、NL Command、workflow-engine 桥接与 `server/index.ts` 等历史模块。
 - 后续增量工作建议以“不扩大现有 TypeScript 基线错误数”为最低要求，并单独安排一轮编译清债。
 
 ## 核心数据流
 
 ### 预演主线（Frontend Mode）
+
 ```
 用户 → 浏览器运行时 (browser-runtime.ts)
      → BrowserWorkflowRepository (内存)
@@ -178,6 +177,7 @@ inclusion: auto
 ```
 
 ### 执行主线（Advanced Mode）
+
 ```
 用户 → POST /api/workflows → WorkflowEngine.startWorkflow()
      → 动态组织生成 (LLM) → WorkflowOrganizationSnapshot
@@ -187,6 +187,7 @@ inclusion: auto
 ```
 
 ### Mission 执行链路
+
 ```
 用户/飞书 → POST /api/tasks → MissionStore.create()
           → MissionOrchestrator.startMission()
@@ -198,6 +199,7 @@ inclusion: auto
 ```
 
 ### 记忆与进化链路
+
 ```
 工作流执行中：
   Agent.invoke() → SessionStore.appendLLMExchange() (短期记忆)
@@ -213,6 +215,7 @@ inclusion: auto
 ```
 
 ### 审计与血缘链路
+
 ```
 每个工作流动作：
   AuditCollector.capture() → AuditChain.append() (哈希链式日志)
@@ -227,6 +230,7 @@ inclusion: auto
 ```
 
 ### 跨框架互操作链路
+
 ```
 外部 Agent 接入：
   POST /api/agents/guest → GuestInvitationParser.parse() → GuestLifecycle.spawn()
@@ -391,64 +395,70 @@ cube-pets-office/
 ## REST API 总览
 
 ### 工作流
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | /api/workflows | 启动新工作流 |
-| GET | /api/workflows | 工作流列表 |
-| GET | /api/workflows/:id | 工作流详情 |
-| GET | /api/workflows/:id/report | 下载工作流报告 |
+
+| 方法 | 路径                      | 说明           |
+| ---- | ------------------------- | -------------- |
+| POST | /api/workflows            | 启动新工作流   |
+| GET  | /api/workflows            | 工作流列表     |
+| GET  | /api/workflows/:id        | 工作流详情     |
+| GET  | /api/workflows/:id/report | 下载工作流报告 |
 
 ### Mission
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | /api/tasks | 创建 Mission |
-| GET | /api/tasks | Mission 列表 |
-| GET | /api/tasks/:id | Mission 详情 |
-| GET | /api/tasks/:id/events | Mission 事件流 |
-| POST | /api/tasks/:id/decision | 提交决策（幂等） |
-| POST | /api/executor/events | 执行器回调（HMAC 签名） |
-| GET | /api/planets | Planet 列表（Mission 原生投影） |
-| GET | /api/planets/:id | Planet 详情 |
+
+| 方法 | 路径                    | 说明                            |
+| ---- | ----------------------- | ------------------------------- |
+| POST | /api/tasks              | 创建 Mission                    |
+| GET  | /api/tasks              | Mission 列表                    |
+| GET  | /api/tasks/:id          | Mission 详情                    |
+| GET  | /api/tasks/:id/events   | Mission 事件流                  |
+| POST | /api/tasks/:id/decision | 提交决策（幂等）                |
+| POST | /api/executor/events    | 执行器回调（HMAC 签名）         |
+| GET  | /api/planets            | Planet 列表（Mission 原生投影） |
+| GET  | /api/planets/:id        | Planet 详情                     |
 
 ### 审计与血缘
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/audit/entries | 审计日志查询 |
-| GET | /api/audit/verify | 审计链完整性验证 |
-| GET | /api/audit/anomalies | 异常检测结果 |
-| POST | /api/audit/export | 审计日志导出 |
-| GET | /api/lineage/nodes | 血缘节点查询 |
-| GET | /api/lineage/graph | 血缘 DAG 图查询 |
-| GET | /api/lineage/impact/:id | 影响分析 |
-| POST | /api/lineage/export | 血缘导出 (DOT/JSON/CSV) |
+
+| 方法 | 路径                    | 说明                    |
+| ---- | ----------------------- | ----------------------- |
+| GET  | /api/audit/entries      | 审计日志查询            |
+| GET  | /api/audit/verify       | 审计链完整性验证        |
+| GET  | /api/audit/anomalies    | 异常检测结果            |
+| POST | /api/audit/export       | 审计日志导出            |
+| GET  | /api/lineage/nodes      | 血缘节点查询            |
+| GET  | /api/lineage/graph      | 血缘 DAG 图查询         |
+| GET  | /api/lineage/impact/:id | 影响分析                |
+| POST | /api/lineage/export     | 血缘导出 (DOT/JSON/CSV) |
 
 ### 互操作
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | /api/a2a/tasks | A2A 任务接收 |
-| GET | /api/a2a/agents | A2A Agent 发现 |
-| POST | /api/agents/guest | 创建 Guest Agent |
-| GET | /api/agents/guest | Guest Agent 列表 |
+
+| 方法   | 路径                  | 说明             |
+| ------ | --------------------- | ---------------- |
+| POST   | /api/a2a/tasks        | A2A 任务接收     |
+| GET    | /api/a2a/agents       | A2A Agent 发现   |
+| POST   | /api/agents/guest     | 创建 Guest Agent |
+| GET    | /api/agents/guest     | Guest Agent 列表 |
 | DELETE | /api/agents/guest/:id | 移除 Guest Agent |
 
 ### 智能体与知识
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/agents | 智能体列表 |
-| GET | /api/config/ai | AI 配置（只读） |
-| POST | /api/chat | 服务端聊天代理 |
-| GET | /api/reports/* | 报告查询 |
-| GET | /api/rag/* | RAG 管道查询 |
-| GET | /api/knowledge/* | 知识图谱查询 |
-| GET | /api/telemetry/* | 遥测数据查询 |
-| GET | /api/cost/* | 成本数据查询 |
-| GET | /api/reputation/* | 信誉评分查询 |
+
+| 方法 | 路径               | 说明            |
+| ---- | ------------------ | --------------- |
+| GET  | /api/agents        | 智能体列表      |
+| GET  | /api/config/ai     | AI 配置（只读） |
+| POST | /api/chat          | 服务端聊天代理  |
+| GET  | /api/reports/\*    | 报告查询        |
+| GET  | /api/rag/\*        | RAG 管道查询    |
+| GET  | /api/knowledge/\*  | 知识图谱查询    |
+| GET  | /api/telemetry/\*  | 遥测数据查询    |
+| GET  | /api/cost/\*       | 成本数据查询    |
+| GET  | /api/reputation/\* | 信誉评分查询    |
 
 ### 飞书
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | /api/feishu/relay | OpenClaw Relay 入口 |
-| POST | /api/feishu/webhook | 飞书 Webhook 回调 |
+
+| 方法 | 路径                | 说明                |
+| ---- | ------------------- | ------------------- |
+| POST | /api/feishu/relay   | OpenClaw Relay 入口 |
+| POST | /api/feishu/webhook | 飞书 Webhook 回调   |
 
 ## 开发规范
 
@@ -467,15 +477,15 @@ cube-pets-office/
 
 ## 环境变量分组
 
-| 配置组 | 关键变量 | 说明 |
-|--------|---------|------|
-| 基础运行 | `PORT`、`NODE_ENV` | 默认 3001、development |
-| 主 LLM | `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL` | 任意 OpenAI 兼容提供商 |
-| Fallback LLM | `FALLBACK_LLM_*` | 主模型不可用时的兜底 |
-| Vision LLM | `VISION_LLM_*` | 视觉分析专用模型 |
-| Voice | `TTS_*`、`STT_*` | 语音服务，未配置回退 Web Speech API |
-| Executor | `LOBSTER_EXECUTOR_BASE_URL`、`EXECUTOR_CALLBACK_SECRET` | Docker 执行器 |
-| 飞书 | `FEISHU_ENABLED`、`FEISHU_MODE`、`FEISHU_RELAY_SECRET` | 默认 mock |
+| 配置组       | 关键变量                                                | 说明                                |
+| ------------ | ------------------------------------------------------- | ----------------------------------- |
+| 基础运行     | `PORT`、`NODE_ENV`                                      | 默认 3001、development              |
+| 主 LLM       | `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL`              | 任意 OpenAI 兼容提供商              |
+| Fallback LLM | `FALLBACK_LLM_*`                                        | 主模型不可用时的兜底                |
+| Vision LLM   | `VISION_LLM_*`                                          | 视觉分析专用模型                    |
+| Voice        | `TTS_*`、`STT_*`                                        | 语音服务，未配置回退 Web Speech API |
+| Executor     | `LOBSTER_EXECUTOR_BASE_URL`、`EXECUTOR_CALLBACK_SECRET` | Docker 执行器                       |
+| 飞书         | `FEISHU_ENABLED`、`FEISHU_MODE`、`FEISHU_RELAY_SECRET`  | 默认 mock                           |
 
 ## 常用命令
 

@@ -31,11 +31,11 @@ export const messages = {
     },
     home: {
       mobileHint:
-        "这里是办公室首页，你可以从这里进入任务、打开工作流或调整运行时配置。",
+        "这里是办公室首页。移动端继续保留当前结构，你可以从这里进入任务、打开工作流或调整运行时配置。",
       officeEyebrow: "办公室",
-      officeTitle: "先看全局，再进入任务主线。",
+      officeTitle: "办公室已成为桌面端默认执行壳。",
       officeDescription:
-        "办公室负责总览团队状态、运行模式和演示环境；真正推进执行时，再进入任务主路径。",
+        "桌面端会在办公室里内嵌任务队列、Scene3D、详情与统一发起；移动端暂时继续通过任务页和抽屉协同。",
       enterTasks: "进入任务",
       openWorkflow: "打开工作流",
       openConfig: "运行时配置",
@@ -82,12 +82,12 @@ export const messages = {
         office: {
           label: "办公室",
           sublabel: "OFFICE",
-          description: "查看运行模式、团队状态和办公室总览。",
+          description: "桌面端默认执行壳，内嵌任务队列、场景和详情上下文。",
         },
         tasks: {
           label: "任务",
           sublabel: "TASKS",
-          description: "进入任务台，创建任务并推进执行主线。",
+          description: "进入全屏任务工作台与深链页，继续推进执行主线。",
         },
         more: {
           label: "更多",
@@ -783,11 +783,11 @@ export const messages = {
     },
     home: {
       mobileHint:
-        "This is the Office home. Start from here to enter Tasks, open the workflow, or adjust runtime settings.",
+        "This is the Office home. Mobile keeps the current structure, so you can still enter Tasks, open the workflow, or adjust runtime settings from here.",
       officeEyebrow: "Office",
-      officeTitle: "Start from the office, then move into task execution.",
+      officeTitle: "Office is now the default desktop execution shell.",
       officeDescription:
-        "The Office is for orientation, team status, and runtime context. When you are ready to execute, continue into the Tasks path.",
+        "On desktop, the Office now embeds the task queue, Scene3D, detail tabs, and unified launch. Mobile stays conservative for now.",
       enterTasks: "Open Tasks",
       openWorkflow: "Open Workflow",
       openConfig: "Runtime Config",
@@ -836,12 +836,13 @@ export const messages = {
           label: "Office",
           sublabel: "OFFICE",
           description:
-            "Review runtime context, team status, and the office overview.",
+            "The default desktop execution shell with the task queue, scene, and detail context embedded.",
         },
         tasks: {
           label: "Tasks",
           sublabel: "TASKS",
-          description: "Create missions and continue the main execution flow.",
+          description:
+            "Open the full-screen task workbench and deep-link pages for focused execution.",
         },
         more: {
           label: "More",

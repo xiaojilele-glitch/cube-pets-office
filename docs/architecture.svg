@@ -28,40 +28,40 @@
 
 <!-- Frontend -->
 <rect x="198" y="16" width="900" height="96" rx="12" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="648" y="34" text-anchor="middle" fill="#0C447C">Frontend — Holographic Command Deck UI + Task Console (control actions + artifacts)</text>
+<text class="ts" x="648" y="34" text-anchor="middle" fill="#0C447C">Frontend — Office shell + embedded task cockpit + overlays</text>
 
 <!-- Frontend boxes -->
 <rect x="210" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="252" y="58" text-anchor="middle" fill="#0C447C">3D office</text>
-<text class="sm" x="252" y="72" text-anchor="middle" fill="#185FA5">Three.js R3F</text>
+<text class="ts" x="252" y="58" text-anchor="middle" fill="#0C447C">Office shell</text>
+<text class="sm" x="252" y="72" text-anchor="middle" fill="#185FA5">desktop shell</text>
 
 <rect x="302" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="344" y="58" text-anchor="middle" fill="#0C447C">Task console</text>
-<text class="sm" x="344" y="72" text-anchor="middle" fill="#185FA5">ops + owner + next</text>
+<text class="ts" x="344" y="58" text-anchor="middle" fill="#0C447C">Task queue</text>
+<text class="sm" x="344" y="72" text-anchor="middle" fill="#185FA5">search + live</text>
 
 <rect x="394" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="436" y="58" text-anchor="middle" fill="#0C447C">NL command</text>
-<text class="sm" x="436" y="72" text-anchor="middle" fill="#185FA5">center</text>
+<text class="ts" x="436" y="58" text-anchor="middle" fill="#0C447C">Launch dock</text>
+<text class="sm" x="436" y="72" text-anchor="middle" fill="#185FA5">dual launch</text>
 
 <rect x="486" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="528" y="58" text-anchor="middle" fill="#0C447C">Cost govern</text>
-<text class="sm" x="528" y="72" text-anchor="middle" fill="#185FA5">dashboard</text>
+<text class="ts" x="528" y="58" text-anchor="middle" fill="#0C447C">Detail tabs</text>
+<text class="sm" x="528" y="72" text-anchor="middle" fill="#185FA5">task + ctx</text>
 
 <rect x="578" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="620" y="58" text-anchor="middle" fill="#0C447C">Artifacts</text>
-<text class="sm" x="620" y="72" text-anchor="middle" fill="#185FA5">preview + download</text>
+<text class="ts" x="620" y="58" text-anchor="middle" fill="#0C447C">Scene3D</text>
+<text class="sm" x="620" y="72" text-anchor="middle" fill="#185FA5">main scene</text>
 
 <rect x="670" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="712" y="58" text-anchor="middle" fill="#0C447C">Lineage DAG</text>
-<text class="sm" x="712" y="72" text-anchor="middle" fill="#185FA5">heatmap</text>
+<text class="ts" x="712" y="58" text-anchor="middle" fill="#0C447C">History</text>
+<text class="sm" x="712" y="72" text-anchor="middle" fill="#185FA5">sessions / DAG</text>
 
 <rect x="762" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="804" y="58" text-anchor="middle" fill="#0C447C">Audit panel</text>
-<text class="sm" x="804" y="72" text-anchor="middle" fill="#185FA5">verifier</text>
+<text class="ts" x="804" y="58" text-anchor="middle" fill="#0C447C">Reports</text>
+<text class="sm" x="804" y="72" text-anchor="middle" fill="#185FA5">mem + audit</text>
 
 <rect x="854" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
-<text class="ts" x="896" y="58" text-anchor="middle" fill="#0C447C">Telemetry</text>
-<text class="sm" x="896" y="72" text-anchor="middle" fill="#185FA5">Recharts</text>
+<text class="ts" x="896" y="58" text-anchor="middle" fill="#0C447C">Overlays</text>
+<text class="sm" x="896" y="72" text-anchor="middle" fill="#185FA5">chat + telem</text>
 
 <rect x="946" y="44" width="84" height="36" rx="6" fill="#fff" stroke="#85B7EB" stroke-width="0.5"/>
 <text class="ts" x="988" y="58" text-anchor="middle" fill="#0C447C">Browser RT</text>
@@ -69,20 +69,20 @@
 
 <!-- ==================== FLOW: Frontend ↔ Brain ==================== -->
 
-<!-- ① User NL command → Brain API via Socket.IO -->
+<!-- ① Unified launch / NL command → Brain API via Socket.IO -->
 <path d="M436 80 L436 128 L350 128 L350 156" fill="none" stroke="#185FA5" stroke-width="1" marker-end="url(#a)"/>
 <rect x="360" y="120" width="90" height="14" rx="3" fill="#E6F1FB" stroke="none"/>
-<text class="fl" x="405" y="130" text-anchor="middle" fill="#185FA5">① Socket.IO cmd</text>
+<text class="fl" x="405" y="130" text-anchor="middle" fill="#185FA5">① launch cmd</text>
 
-<!-- ② Brain pushes workflow state back to 3D + panels -->
+<!-- ② Brain pushes mission/workflow state back to the office cockpit -->
 <path d="M252 112 L252 128 L280 128 L280 156" fill="none" stroke="#3B6D11" stroke-width="1" marker-end="url(#a)"/>
 <rect x="200" y="120" width="80" height="14" rx="3" fill="#EAF3DE" stroke="none"/>
-<text class="fl" x="240" y="130" text-anchor="middle" fill="#3B6D11">② WS task state</text>
+<text class="fl" x="240" y="130" text-anchor="middle" fill="#3B6D11">② cockpit sync</text>
 
-<!-- ③ Cost governance state → Cost panel -->
+<!-- ③ Mission/operator state → detail tabs -->
 <path d="M528 80 L528 128 L490 128 L490 156" fill="none" stroke="#185FA5" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
 <rect x="492" y="120" width="86" height="14" rx="3" fill="#E6F1FB" stroke="none"/>
-<text class="fl" x="535" y="130" text-anchor="middle" fill="#185FA5">③ governance state</text>
+<text class="fl" x="535" y="130" text-anchor="middle" fill="#185FA5">③ detail sync</text>
 
 <!-- ==================== ROW 1: CUBE BRAIN + INTELLIGENCE ==================== -->
 
@@ -223,12 +223,12 @@
 <rect x="560" y="370" width="70" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
 <text class="fl" x="595" y="380" text-anchor="middle" fill="#6B46C1">⑦ data mutations</text>
 
-<!-- ⑧ Trust → Frontend: audit stream to Audit panel -->
+<!-- ⑧ Trust → Frontend: audit stream to reports / audit tab -->
 <path d="M646 406 L646 148 L804 148 L804 112" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
 <rect x="660" y="140" width="70" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
 <text class="fl" x="695" y="150" text-anchor="middle" fill="#6B46C1">⑧ audit stream</text>
 
-<!-- ⑨ Trust → Frontend: lineage DAG to Lineage panel -->
+<!-- ⑨ Trust → Frontend: lineage DAG to history tab -->
 <path d="M782 406 L782 148 L712 148 L712 112" fill="none" stroke="#6B46C1" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a)"/>
 <rect x="740" y="140" width="70" height="14" rx="3" fill="#F0E6FF" stroke="none"/>
 <text class="fl" x="775" y="150" text-anchor="middle" fill="#6B46C1">⑨ lineage DAG</text>
@@ -453,6 +453,6 @@
 <text class="sm" x="500" y="968" fill="#666">Numbered flows: ①–⑮ show the complete data path from user query to execution result</text>
 
 <!-- Version -->
-<text class="sm" x="550" y="984" text-anchor="middle" fill="#999">2026-04-11 snapshot — 56 tracked specs · 39 done / 8 partial · 180K+ lines TypeScript</text>
+<text class="sm" x="550" y="984" text-anchor="middle" fill="#999">2026-04-13 snapshot — 64 tracked specs · 41 done / 13 active · 180K+ lines TypeScript</text>
 
 </svg>

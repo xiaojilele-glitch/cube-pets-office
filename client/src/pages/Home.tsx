@@ -5,17 +5,16 @@ import { useLocation } from "wouter";
 import { ChatPanel } from "@/components/ChatPanel";
 import { GitHubRepoBadge } from "@/components/GitHubRepoBadge";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { OfficeTaskCockpit } from "@/components/office/OfficeTaskCockpit";
 import { AgentDetailDrawer } from "@/components/scene/AgentDetailDrawer";
 import { OfficeNoticeBoard } from "@/components/scene/OfficeNoticeBoard";
 import { Scene3D } from "@/components/Scene3D";
 import { TelemetryDashboard } from "@/components/TelemetryDashboard";
 import { WorkflowPanel } from "@/components/WorkflowPanel";
-import { OfficeAgentInspectorPanel } from "@/components/office/OfficeAgentInspectorPanel";
 import { useViewportTier } from "@/hooks/useViewportTier";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useWorkflowRuntimeBootstrap } from "@/hooks/useWorkflowRuntimeBootstrap";
 import { useI18n } from "@/i18n";
-import { getAgentToolbarLabel } from "@/lib/agent-config";
 import { CAN_USE_ADVANCED_RUNTIME, IS_GITHUB_PAGES } from "@/lib/deploy-target";
 import { buildOfficeNoticeBoardSnapshot } from "@/lib/scene-agent-detail";
 import { useAppStore } from "@/lib/store";
@@ -62,7 +61,7 @@ export default function Home() {
     } catch (err) {
       console.warn("[Home] Demo bundle not available yet:", err);
     }
-  }, [startDemo, setLocation]);
+  }, [setLocation, startDemo]);
 
   useEffect(() => {
     hydrateAIConfig().catch(error => {
@@ -71,12 +70,16 @@ export default function Home() {
   }, [hydrateAIConfig]);
 
   useEffect(() => {
-    if (runtimeMode === "frontend") disconnectSocket();
+    if (runtimeMode === "frontend") {
+      disconnectSocket();
+    }
   }, [disconnectSocket, runtimeMode]);
 
   useEffect(() => {
-    if (isSceneReady && runtimeMode === "advanced") fetchTelemetry();
-  }, [isSceneReady, runtimeMode, fetchTelemetry]);
+    if (isSceneReady && runtimeMode === "advanced") {
+      fetchTelemetry();
+    }
+  }, [fetchTelemetry, isSceneReady, runtimeMode]);
 
   useEffect(() => {
     if (runtimeMode !== "advanced") return;
@@ -95,22 +98,6 @@ export default function Home() {
           workflow =>
             workflow.status === "running" || workflow.status === "pending"
         ).length;
-  const focusLabel = selectedPet
-    ? getAgentToolbarLabel(selectedPet, locale)
-    : locale === "zh-CN"
-      ? "点击 Agent 查看"
-      : "Click agent to inspect";
-
-  const managerNames = useMemo(() => {
-    const liveManagers = agents
-      .filter(agent => agent.role === "ceo" || agent.role === "manager")
-      .slice(0, 5)
-      .map(agent => agent.name.split("路")[0].trim());
-
-    return liveManagers.length > 0
-      ? liveManagers
-      : ["CEO", "Pixel", "Nexus", "Echo", "Warden"];
-  }, [agents]);
 
   const noticeBoardSnapshot = useMemo(
     () =>
@@ -127,13 +114,13 @@ export default function Home() {
         totalCost: telemetrySnapshot?.totalCost ?? 0,
       }),
     [
-      locale,
-      runtimeMode,
-      missionTasks,
-      missionDetailsById,
-      workflows,
       heartbeatStatuses,
+      locale,
+      missionDetailsById,
+      missionTasks,
+      runtimeMode,
       telemetrySnapshot,
+      workflows,
     ]
   );
 
@@ -148,7 +135,6 @@ export default function Home() {
     <div className="relative h-[100svh] w-screen overflow-hidden bg-[linear-gradient(180deg,#d8e5f0_0%,#e9dfd2_48%,#e3d2c0_100%)]">
       <Scene3D />
 
-      {/* Gradient overlays */}
       <div className="pointer-events-none absolute inset-0 z-[5]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(228,241,252,0.72),rgba(228,241,252,0)_38%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,251,247,0.42),rgba(255,251,247,0)_30%)]" />
@@ -159,44 +145,26 @@ export default function Home() {
         <div className="absolute inset-0 shadow-[inset_0_0_160px_rgba(79,58,38,0.12)]" />
       </div>
 
-      {isSceneReady && (
-        <div
-          className={`pointer-events-none absolute inset-x-0 z-[18] flex justify-center px-3 ${
-            isMobile
-              ? "top-[calc(env(safe-area-inset-top)+108px)]"
-              : "top-20 px-4"
-          }`}
-        >
-          <div
-            className={`pointer-events-auto w-full studio-shell shadow-[0_18px_45px_rgba(78,58,38,0.12)] ${
-              isMobile
-                ? "max-w-none rounded-[28px] px-4 py-4"
-                : "max-w-[min(760px,calc(100vw-25rem))] rounded-[34px] px-6 py-5"
-            }`}
-          >
+      {isSceneReady && isMobile ? (
+        <div className="pointer-events-none absolute inset-x-0 z-[18] flex justify-center px-3 top-[calc(env(safe-area-inset-top)+108px)]">
+          <div className="pointer-events-auto w-full max-w-none rounded-[28px] studio-shell px-4 py-4 shadow-[0_18px_45px_rgba(78,58,38,0.12)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#A08972]">
               {copy.home.officeEyebrow}
             </p>
-            <div
-              className={`mt-3 ${isMobile ? "space-y-3" : "flex items-end justify-between gap-6"}`}
-            >
+            <div className="mt-3 space-y-3">
               <div className="min-w-0">
                 <h1
-                  className={`${isMobile ? "text-xl" : "text-[2rem]"} font-semibold tracking-tight text-[#3A2A1A]`}
+                  className="text-xl font-semibold tracking-tight text-[#3A2A1A]"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
                   {copy.home.officeTitle}
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#5C4A39]">
-                  {isMobile
-                    ? copy.home.mobileHint
-                    : copy.home.officeDescription}
+                  {copy.home.mobileHint}
                 </p>
               </div>
 
-              <div
-                className={`flex ${isMobile ? "flex-col" : "flex-wrap justify-end"} gap-2`}
-              >
+              <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={() => setLocation("/tasks")}
@@ -239,13 +207,12 @@ export default function Home() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {!isSceneReady && <LoadingScreen />}
 
       {isSceneReady && !isMobile && (
         <>
-          {/* Top bar: office identity | mode switch | github */}
           <div
             className="fixed left-0 right-0 top-0 z-[60] flex items-center justify-between px-5 py-3"
             style={{ pointerEvents: "auto" }}
@@ -294,132 +261,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Left sidebar: task hub + system status */}
-          <div
-            className="fixed left-4 top-16 z-[60] flex w-[160px] flex-col gap-3"
-            style={{ pointerEvents: "auto" }}
-          >
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#C98257]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
-                  {copy.home.taskHubTitle}
-                </span>
-              </div>
-              <button
-                onClick={() => setLocation("/tasks")}
-                className="mt-2 w-full rounded-xl bg-[#C98257] px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm transition-colors hover:bg-[#B86F45]"
-              >
-                {copy.home.enterTasks}
-              </button>
-              <button
-                onClick={() => setLocation("/tasks?new=1")}
-                className="mt-1.5 w-full rounded-xl studio-surface px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] transition-colors hover:bg-white/70"
-              >
-                {copy.home.newMission}
-              </button>
-              <button
-                onClick={handleStartDemo}
-                className="mt-1.5 w-full text-center text-[11px] font-medium text-[#5E8B72] transition-colors hover:text-[#456B58]"
-              >
-                {copy.home.liveDemo}
-              </button>
-            </div>
-
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
-                  {locale === "zh-CN" ? "系统状态" : "System status"}
-                </span>
-              </div>
-              <div className="mt-2 space-y-1 text-[10px] text-[#5A4A3A]">
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#5E8B72]" />
-                    {locale === "zh-CN" ? "Agent 在线" : "Agents online"}
-                  </span>
-                  <span className="font-semibold">{agentCount} / 18</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
-                    {locale === "zh-CN" ? "活跃工作流" : "Active workflows"}
-                  </span>
-                  <span className="font-semibold">{activeWorkflows}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#87AFC7]" />
-                    {locale === "zh-CN" ? "运行模式" : "Runtime mode"}
-                  </span>
-                  <span className="font-semibold">
-                    {runtimeMode === "advanced" ? "Advanced" : "Frontend"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right sidebar: active agents + token usage */}
-          <div
-            className={`fixed right-4 top-16 z-[60] flex flex-col gap-3 ${
-              selectedPet ? "w-[min(340px,calc(100vw-2rem))]" : "w-[240px]"
-            }`}
-            style={{ pointerEvents: "auto" }}
-          >
-            <OfficeNoticeBoard
-              locale={locale}
-              snapshot={noticeBoardSnapshot}
-              onOpenTasks={() => setLocation("/tasks")}
-              onOpenWorkflow={() => openWorkflowPanel()}
-              onOpenCurrentTask={handleOpenCurrentMission}
-            />
-
-            {selectedPet ? (
-              <OfficeAgentInspectorPanel />
-            ) : (
-              <div className="rounded-2xl studio-shell p-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-[#C98257]" />
-                  <span className="text-[11px] font-bold text-[#3A2A1A]">
-                    {locale === "zh-CN" ? "活跃 Agent" : "Active agents"}
-                  </span>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {managerNames.map(name => (
-                    <span
-                      key={name}
-                      className="flex items-center gap-1 rounded-full studio-surface px-2 py-0.5 text-[9px] font-medium text-[#5A4A3A]"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#C98257]" />
-                      {name}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-2 text-[9px] text-[#8B7355]">{focusLabel}</p>
-              </div>
-            )}
-
-            {/* Token usage */}
-            <div className="rounded-2xl studio-shell p-3">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-[#5E8B72]" />
-                <span className="text-[11px] font-bold text-[#3A2A1A]">
-                  {locale === "zh-CN" ? "Token 用量" : "Token usage"}
-                </span>
-              </div>
-              <div className="mt-2 flex items-baseline justify-between">
-                <span className="text-[10px] text-[#5E8B72]">
-                  {(telemetrySnapshot?.totalTokensIn ?? 0).toLocaleString()}{" "}
-                  tokens
-                </span>
-                <span className="text-[10px] font-semibold text-[#3A2A1A]">
-                  ${(telemetrySnapshot?.totalCost ?? 0).toFixed(4)}
-                </span>
-              </div>
-            </div>
-          </div>
+          <OfficeTaskCockpit
+            onOpenWorkflowPanel={() => openWorkflowPanel()}
+            onOpenConfig={() => toggleConfig()}
+            onStartDemo={handleStartDemo}
+          />
 
           <ChatPanel />
           <WorkflowPanel />
