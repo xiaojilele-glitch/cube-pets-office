@@ -28,7 +28,7 @@ inclusion: auto
 ## 项目规模
 
 - 850+ 文件 / ~180,000 行 TypeScript
-- `.kiro/specs` 当前共 57 个 spec 目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`（`frontend-demo-mode`）；其中 `workflow-artifacts-display` 已完成功能开发、待最终检查点
+- `.kiro/specs` 当前共 64 个 spec 目录；详细完成态与近端规划以下方“当前进度快照（Spec 视角）”为准，其中 `workflow-artifacts-display` 已完成功能开发、待最终检查点
 - 当前活跃增量：任务控制台补完主线（取消 / 操作动作 / 详情首屏 / 文案 / UI 打磨）；`workflow-artifacts-display` 进入最终验收收口
 - 14 个 shared/ 契约模块，主线能力已覆盖前端、服务端、执行器、审计与互操作层
 - 大量单元测试与属性测试已覆盖 Mission、执行器、RAG、审计、NL Command 等核心域
@@ -74,6 +74,8 @@ inclusion: auto
 │  IndexedDB (浏览器端) · 审计日志 · 血缘图存储                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+> 当前任务真相源仍为 `tasks-store`；后续桌面端主路径将改为“办公室壳 + 内嵌驾驶舱”，但不改变 `/tasks` 深链和 Mission 数据流。
 
 ## 模块完成状态
 
@@ -134,6 +136,7 @@ inclusion: auto
 
 - `workflow-artifacts-display` 已完成 Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、页面集成与 Socket 联动；当前仅剩 `tasks.md` 的最终检查点未勾选。
 - `mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 构成当前近端产品收口主线，目标是把任务页补齐为可操作的执行控制台。
+- 下一步主线：`office-task-cockpit` 将把办公室从全局态势页推进为默认执行工作台，桌面端整合任务队列、场景、详情和 workflow 上下文。
 - `mission-runtime`、`multi-modal-vision`、`nl-command-center` 与 `state-persistence-recovery` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
 - `state-persistence-recovery` 的未完成项主要集中在标记 `*` 的可选属性测试。
 

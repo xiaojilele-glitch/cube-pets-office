@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-本文件创建于 46 个 Spec 阶段；截至 2026-04-10，`.kiro/specs` 已扩展为 57 个目录：37 个已完成、5 个部分完成、14 个未开始、1 个待补 `tasks.md`。其中 `workflow-artifacts-display` 已完成功能开发，当前仅剩最终检查点待验收。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
+本文件创建于 46 个 Spec 阶段；截至 2026-04-13，`.kiro/specs` 已扩展为 64 个目录。下文保留路线图创建时的阶段划分与历史统计口径，用于追溯依赖关系；其中 `workflow-artifacts-display` 已完成功能开发，当前仅剩最终检查点待验收。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
 
 ### 已完成基座（8 个）
 
@@ -21,7 +21,7 @@ inclusion: manual
 | browser-runtime | 纯前端运行时（IndexedDB + Web Worker） |
 | frontend-3d | 3D 场景 + 工作流面板 + 任务驾驶舱 |
 
-### 后续新增 / 补充 Spec（11 个）
+### 后续新增 / 补充 Spec（12 个）
 
 | Spec | 状态 | 简述 |
 |------|------|------|
@@ -34,6 +34,7 @@ inclusion: manual
 | task-detail-operations-first | 已完成 | 任务详情页首屏重排 |
 | execution-language-refresh | 未开始 | 文案从方案叙事收敛到执行协作 |
 | mission-ui-polish | 未开始 | 任务控制台 UI 收尾打磨 |
+| office-task-cockpit | 规划中 | 办公室成为默认执行壳，桌面端内嵌任务驾驶舱 |
 | i18n-cleanup | 未开始 | 前端国际化与文案清理 |
 | frontend-demo-mode | 待补任务 | spec 目录已存在，但尚未形成 `tasks.md` |
 
@@ -52,6 +53,12 @@ inclusion: manual
 | P1 | task-detail-operations-first | mission-operator-actions | 首屏前置主操作、负责人、blocker、下一步 |
 | P1 | execution-language-refresh | 无硬依赖，可与上项并行 | 文案从“动态组队/方案感”收口到“执行/交付/协作” |
 | P2 | mission-ui-polish | 前 4 项基本稳定后 | 统一反馈时机、按钮层级、状态可见性、空态与错误态 |
+
+### 当前近端工作台主线延伸（2026-04-13）
+
+- `office-task-cockpit` 不是新增业务域，而是把既有任务、workflow、scene 三条体验主线收口到办公室。
+- `/tasks` 保留为全屏工作台，不与办公室争夺一级主心智。
+- V1 采用“统一入口、双通道发起、桌面优先”的策略推进。
 
 ### 历史待开发清单（路线图创建时，38 个）
 
@@ -331,7 +338,7 @@ flowchart TB
   subgraph Client["前端"]
     Scene3D["3D 办公场景"]
     WFPanel["工作流面板"]
-    Tasks["/tasks 驾驶舱<br/>（独立页面）"]
+    Tasks["/tasks 驾驶舱<br/>（独立页面保留，办公室内嵌规划中）"]
   end
 
   subgraph Brain["Cube Brain"]

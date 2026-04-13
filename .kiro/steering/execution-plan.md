@@ -13,7 +13,7 @@ inclusion: auto
 
 ## 总览
 
-截至 2026-04-11，`.kiro/specs` 共 62 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线已完成，当前新增规划重点转向信息架构收口、任务中台化、场景交互增强与体验统一，平台层能力（L31-L38）仍待环境就绪。
+截至 2026-04-13，`.kiro/specs` 共 64 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，当前新增规划重点转向把办公室推进为默认执行壳，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -36,6 +36,7 @@ inclusion: auto
 - 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
 - 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 已完成。
 - 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已完成并合并到 `main`。
+- `office-task-cockpit` 已进入近端规划，目标是把办公室从态势页推进为默认执行壳。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
@@ -211,6 +212,26 @@ L12 → L29 → L30
 
 > 目标：把系统从“多个工具入口并列”收口为“办公室看态势、任务做推进、更多收低频”的单主线工作台。
 
+## L30 后新增主线三：办公室任务驾驶舱（2026-04-13）
+
+在信息架构与工作台重构主线完成后，当前核心问题进一步从“入口有没有收口”升级为“办公室与任务是否仍然分屏分心智”。这条新增主线聚焦把办公室从态势页推进为默认运行时工作台：桌面端在同一屏中收口任务队列、办公室场景、任务详情与 workflow 上下文，同时保留 `/tasks` 作为全屏工作台与深链页。
+
+### 优先级与依赖
+
+- [ ] P0 `office-task-cockpit` — 办公室成为桌面端默认执行壳，内嵌任务驾驶舱、统一发起入口与右侧上下文 tab。
+- 依赖已完成的 `navigation-convergence`、`task-hub-convergence`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification`。
+
+### 文件 ownership 边界
+
+- 主 owner 覆盖 `client/src/pages/Home.tsx`、`client/src/components/tasks/*`、`client/src/components/office/*`，避免与其他高频界面文件并行冲突。
+
+### 交付顺序建议
+
+1. 先搭桌面端办公室壳层与三栏驾驶舱布局。
+2. 再把右侧默认 `任务` tab 与 `团队流 / Agent / 记忆报告 / 历史` 上下文 tab 收口。
+3. 再实现统一发起入口与“普通任务 + 高级发起”双通道。
+4. 最后完成兼容入口、回归验证与桌面手测。
+
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
 
 <p align="center">
@@ -328,6 +349,20 @@ Wave 2（已完成并合并）:
 并行原则:
   Home/App/Toolbar、TasksPage/TaskDetailView、WorkflowPanel/workflow-store、Scene3D/three/*
   各自由单独 worktree owner 负责，避免跨波次同时改同一批核心文件
+```
+
+### Day 6+：办公室任务驾驶舱（新增规划）
+```
+office-task-cockpit:
+  办公室升级为桌面端默认执行壳
+  左侧任务队列 / 中间办公室场景 / 右侧任务与上下文 tab
+  统一发起入口采用“普通任务 + 高级发起”双通道
+
+执行顺序:
+  先桌面壳层
+  再右侧 tab
+  再统一发起
+  最后兼容回归
 ```
 
 ## 关键路径
