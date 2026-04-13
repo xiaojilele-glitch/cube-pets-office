@@ -37,10 +37,12 @@ function formatAttachmentSize(size: number) {
 export function OfficeWorkflowLaunchPanel({
   pendingLaunch,
   onLaunchSubmitted,
+  compact = false,
   className,
 }: {
   pendingLaunch: OfficeLaunchResolution | null;
   onLaunchSubmitted: (resolution: OfficeLaunchResolution) => void;
+  compact?: boolean;
   className?: string;
 }) {
   const { locale } = useI18n();
@@ -59,6 +61,7 @@ export function OfficeWorkflowLaunchPanel({
 
   const isFrontend = runtimeMode === "frontend";
   const canUpgrade = isFrontend && CAN_USE_ADVANCED_RUNTIME;
+  const isCompact = compact;
   const submitLabel = useMemo(() => {
     if (isSubmitting) {
       return t(locale, "提交中...", "Submitting...");
@@ -176,15 +179,31 @@ export function OfficeWorkflowLaunchPanel({
           <div className="workspace-eyebrow">
             {t(locale, "统一发起 / 高级通道", "Unified launch / workflow lane")}
           </div>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--workspace-text-strong)]">
+          <h2
+            className={cn(
+              "mt-2 font-semibold tracking-tight text-[var(--workspace-text-strong)]",
+              isCompact ? "text-[1.2rem]" : "text-xl"
+            )}
+          >
             {t(locale, "带附件的高级发起", "Advanced launch with attachments")}
           </h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--workspace-text-muted)]">
-            {t(
-              locale,
-              "这里继续走现有 workflow directive 链路，适合带附件、带上下文、需要先组织团队再落到 mission 的任务。",
-              "This keeps the existing workflow directive path for launches that need attachments, extra context, or a team setup before the mission lands."
+          <p
+            className={cn(
+              "mt-2 max-w-3xl text-[var(--workspace-text-muted)]",
+              isCompact ? "text-[13px] leading-5" : "text-sm leading-6"
             )}
+          >
+            {isCompact
+              ? t(
+                  locale,
+                  "适合带附件或复杂上下文的任务，先走 workflow，再自动回落到 mission。",
+                  "Use this for attachment-heavy or context-rich work. It launches through workflow first, then falls back into the mission."
+                )
+              : t(
+                  locale,
+                  "这里继续走现有 workflow directive 链路，适合带附件、带上下文、需要先组织团队再落到 mission 的任务。",
+                  "This keeps the existing workflow directive path for launches that need attachments, extra context, or a team setup before the mission lands."
+                )}
           </p>
         </div>
 
@@ -233,7 +252,12 @@ export function OfficeWorkflowLaunchPanel({
         }}
       />
 
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-stone-200/80 bg-white/78 px-4 py-3">
+      <div
+        className={cn(
+          "flex flex-wrap items-start justify-between gap-3 rounded-[24px] border border-stone-200/80 bg-white/78 px-4 py-3",
+          isCompact ? "mt-3" : "mt-4"
+        )}
+      >
         <div className="min-w-0">
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
             {t(locale, "上下文附件", "Context attachments")}
@@ -331,17 +355,23 @@ export function OfficeWorkflowLaunchPanel({
             "描述目标、约束、交付物和关键附件上下文...",
             "Describe the goal, constraints, deliverable, and key attachment context..."
           )}
-          rows={4}
+          rows={isCompact ? 3 : 4}
           className="mt-3 w-full resize-none rounded-[22px] border border-stone-200/80 bg-stone-50/80 px-4 py-3 text-sm leading-6 text-stone-700 outline-none transition-colors focus:border-stone-300"
         />
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs leading-6 text-stone-500">
-            {t(
-              locale,
-              "高级发起成功后会先显示“团队准备中”，待 workflow 关联到 mission 后自动聚焦回任务队列。",
-              "After a successful advanced launch, the dock shows a team-preparing state and automatically focuses the task once the workflow links to a mission."
-            )}
+            {isCompact
+              ? t(
+                  locale,
+                  "成功后会先进入“团队准备中”，完成关联后自动聚焦到任务。",
+                  "After launch the team enters a preparing state, then automatically focuses the mission once linked."
+                )
+              : t(
+                  locale,
+                  "高级发起成功后会先显示“团队准备中”，待 workflow 关联到 mission 后自动聚焦回任务队列。",
+                  "After a successful advanced launch, the dock shows a team-preparing state and automatically focuses the task once the workflow links to a mission."
+                )}
           </div>
 
           <Button

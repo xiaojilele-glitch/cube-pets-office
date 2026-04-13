@@ -85,6 +85,9 @@ type TaskHelperCopy = {
     decisionRequired: string;
     paused: string;
     pausedFallback: string;
+    failureDetected: string;
+    failureFallback: string;
+    failureMeta: (attempt: number) => string;
     requestedBy: (name: string) => string;
     noActiveBlocker: string;
     clearToContinue: string;
@@ -228,6 +231,9 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       decisionRequired: "需要决策后继续",
       paused: "已暂停",
       pausedFallback: "任务已暂停，可以随时恢复。",
+      failureDetected: "执行失败",
+      failureFallback: "任务执行异常结束，需要先审阅失败原因。",
+      failureMeta: attempt => `第 ${attempt} 次尝试失败`,
       requestedBy: name => `发起者：${name}`,
       noActiveBlocker: "当前无阻塞",
       clearToContinue: "可继续推进",
@@ -379,6 +385,10 @@ const TASK_HELPER_COPY: Record<AppLocale, TaskHelperCopy> = {
       decisionRequired: "Decision required to continue",
       paused: "Paused",
       pausedFallback: "Mission is paused and can be resumed at any time.",
+      failureDetected: "Execution failed",
+      failureFallback:
+        "The mission exited unexpectedly and should be reviewed before retrying.",
+      failureMeta: attempt => `Attempt ${attempt} failed`,
       requestedBy: name => `Requested by ${name}`,
       noActiveBlocker: "No active blocker",
       clearToContinue: "Clear to continue",
@@ -906,6 +916,22 @@ export function deriveTaskBlocker(
         ? copy.blocker.requestedBy(detail.latestOperatorAction.requestedBy)
         : undefined,
       tone: "info",
+    };
+  }
+
+  if (detail.status === "failed") {
+    return {
+      label: copy.summaryLabels.blockerWaiting,
+      title: copy.blocker.failureDetected,
+      detail:
+        compactText(
+          detail.failureReasons[0] ||
+            detail.lastSignal ||
+            copy.blocker.failureFallback,
+          160
+        ) || copy.blocker.failureFallback,
+      meta: copy.blocker.failureMeta(detail.attempt),
+      tone: "danger",
     };
   }
 

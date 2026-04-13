@@ -70,16 +70,14 @@ export function TaskPlanetInterior({
     <section
       className={cn(
         "workspace-panel workspace-panel-strong overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_left,rgba(252,211,77,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(45,212,191,0.18),transparent_34%),linear-gradient(180deg,#fffdf7,#f6efe3)] shadow-[0_24px_70px_rgba(120,91,54,0.12)]",
-        compact ? "p-3 xl:max-h-[360px]" : "p-4",
+        compact ? "p-3" : "p-4",
         className
       )}
     >
       <div
         className={cn(
           "grid xl:items-start",
-          compact
-            ? "gap-3 xl:grid-cols-[minmax(0,1fr)_260px]"
-            : "gap-4 xl:grid-cols-[minmax(0,1.12fr)_320px]"
+          compact ? "gap-3" : "gap-4 xl:grid-cols-[minmax(0,1.12fr)_320px]"
         )}
       >
         <div className={cn(PLANET_PANEL_CLASS, compact ? "p-3" : "p-4")}>
@@ -99,10 +97,18 @@ export function TaskPlanetInterior({
             </div>
             <div className="flex flex-wrap gap-2 text-[11px] text-stone-600">
               <span className={PLANET_PILL_CLASS}>
-                {t(locale, `${detail.stages.length} 个阶段`, `${detail.stages.length} stages`)}
+                {t(
+                  locale,
+                  `${detail.stages.length} 个阶段`,
+                  `${detail.stages.length} stages`
+                )}
               </span>
               <span className={PLANET_PILL_CLASS}>
-                {t(locale, `${detail.agents.length} 名成员`, `${detail.agents.length} crew`)}
+                {t(
+                  locale,
+                  `${detail.agents.length} 名成员`,
+                  `${detail.agents.length} crew`
+                )}
               </span>
             </div>
           </div>
@@ -132,7 +138,9 @@ export function TaskPlanetInterior({
                 <div
                   className={cn(
                     "workspace-panel-inset border border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.82)] text-center shadow-[0_14px_36px_rgba(107,77,44,0.12)] backdrop-blur",
-                    compact ? "rounded-[20px] px-3.5 py-3" : "rounded-[24px] px-5 py-4"
+                    compact
+                      ? "rounded-[20px] px-3.5 py-3"
+                      : "rounded-[24px] px-5 py-4"
                   )}
                 >
                   <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
@@ -152,7 +160,8 @@ export function TaskPlanetInterior({
                       compact ? "text-xs" : "text-sm"
                     )}
                   >
-                    {detail.currentStageLabel || t(locale, "准备中", "Preparing")}
+                    {detail.currentStageLabel ||
+                      t(locale, "准备中", "Preparing")}
                   </div>
                   <div className="mt-2 text-[11px] leading-5 text-stone-500">
                     {t(
@@ -173,7 +182,9 @@ export function TaskPlanetInterior({
                   <div
                     className={cn(
                       "workspace-status text-center text-[10px] font-medium shadow-sm backdrop-blur",
-                      compact ? "min-w-[62px] px-2 py-1" : "min-w-[82px] px-2.5 py-1.5",
+                      compact
+                        ? "min-w-[62px] px-2 py-1"
+                        : "min-w-[82px] px-2.5 py-1.5",
                       stageTone(stage.status)
                     )}
                   >
@@ -208,8 +219,8 @@ export function TaskPlanetInterior({
 
           <div
             className={cn(
-              "grid gap-2 sm:grid-cols-3",
-              compact ? "mt-3" : "mt-4"
+              "grid gap-2",
+              compact ? "mt-3 sm:grid-cols-2" : "mt-4 sm:grid-cols-3"
             )}
           >
             <div className={PLANET_TILE_CLASS}>
@@ -217,7 +228,8 @@ export function TaskPlanetInterior({
                 {t(locale, "当前焦点", "Focus")}
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
-                {detail.currentStageLabel || t(locale, "当前无活跃阶段", "No active stage")}
+                {detail.currentStageLabel ||
+                  t(locale, "当前无活跃阶段", "No active stage")}
               </div>
             </div>
             <div className={PLANET_TILE_CLASS}>
@@ -226,7 +238,8 @@ export function TaskPlanetInterior({
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
                 {compactText(
-                  detail.waitingFor || t(locale, "当前无阻塞信号", "No blocking signal"),
+                  detail.waitingFor ||
+                    t(locale, "当前无阻塞信号", "No blocking signal"),
                   42
                 )}
               </div>
@@ -237,7 +250,8 @@ export function TaskPlanetInterior({
               </div>
               <div className="mt-1 text-sm font-medium text-stone-800">
                 {compactText(
-                  detail.lastSignal || t(locale, "当前没有新的执行信号", "No recent signal"),
+                  detail.lastSignal ||
+                    t(locale, "当前没有新的执行信号", "No recent signal"),
                   42
                 )}
               </div>
@@ -252,13 +266,19 @@ export function TaskPlanetInterior({
                 {t(locale, "执行阶段", "Orbit Stages")}
               </div>
               <span className={PLANET_PILL_CLASS}>
-                {t(locale, `${detail.stages.length} 个节点`, `${detail.stages.length} nodes`)}
+                {t(
+                  locale,
+                  `${detail.stages.length} 个节点`,
+                  `${detail.stages.length} nodes`
+                )}
               </span>
             </div>
             <div
               className={cn(
-                "mt-3 grid gap-2 sm:grid-cols-2",
-                compact && "max-h-[116px] overflow-y-auto pr-1"
+                "mt-3 grid gap-2",
+                compact
+                  ? "max-h-[116px] overflow-y-auto pr-1"
+                  : "sm:grid-cols-2"
               )}
             >
               {detail.stages.map(stage => (
@@ -269,7 +289,12 @@ export function TaskPlanetInterior({
                         {stage.label}
                       </div>
                       <div className="mt-1 line-clamp-1 text-[11px] leading-5 text-stone-500">
-                        {stage.detail || t(locale, "当前还没有记录详细内容。", "No detail captured yet.")}
+                        {stage.detail ||
+                          t(
+                            locale,
+                            "当前还没有记录详细内容。",
+                            "No detail captured yet."
+                          )}
                       </div>
                     </div>
                     <span
@@ -292,13 +317,19 @@ export function TaskPlanetInterior({
                 {t(locale, "执行成员", "Agent Crew")}
               </div>
               <span className={PLANET_PILL_CLASS}>
-                {t(locale, `${detail.agents.length} 名成员`, `${detail.agents.length} members`)}
+                {t(
+                  locale,
+                  `${detail.agents.length} 名成员`,
+                  `${detail.agents.length} members`
+                )}
               </span>
             </div>
             <div
               className={cn(
-                "mt-3 grid gap-2 sm:grid-cols-2",
-                compact && "max-h-[132px] overflow-y-auto pr-1"
+                "mt-3 grid gap-2",
+                compact
+                  ? "max-h-[132px] overflow-y-auto pr-1"
+                  : "sm:grid-cols-2"
               )}
             >
               {detail.agents.map(agent => (

@@ -930,7 +930,13 @@ export function TaskDetailView({
                   </div>
                 </div>
 
-                <div className="mt-3 grid gap-2.5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.05fr)_minmax(0,0.95fr)]">
+                <div
+                  className={cn(
+                    "mt-3 grid gap-2.5",
+                    !isCockpit &&
+                      "xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.05fr)_minmax(0,0.95fr)]"
+                  )}
+                >
                   <div className={cn(DETAIL_INSET_SOFT_CLASS, "p-3")}>
                     <ExcerptBlock
                       title={copy.tasks.detailView.workBriefTitle}
@@ -1259,18 +1265,110 @@ export function TaskDetailView({
       </Card>
     ) : null;
 
-  const decisionFocusSection = !isCockpit && showDecisionFocusSection ? (
-    <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      {showStructuredDecisionPanel && detail.decision ? (
-        <DecisionPanel
-          missionId={detail.id}
-          decision={detail.decision}
-          onDecisionSubmitted={onDecisionSubmitted}
-        />
-      ) : null}
-      {detail.decisionPresets.length > 0 ? decisionPanel : null}
-    </section>
+  const securitySummaryPanel = detail.securitySummary ? (
+    <Card className={DETAIL_CARD_CLASS}>
+      <CardHeader className="space-y-1 pb-3">
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <Shield className="size-4 text-stone-600" />
+          {t(locale, "瀹夊叏绛栫暐", "Security Policy")}
+        </CardTitle>
+        <CardDescription className="flex items-center gap-2">
+          {t(locale, "瀹瑰櫒娌欑閰嶇疆", "Container sandbox configuration")}
+          <span
+            className={cn(
+              "rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+              detail.securitySummary.level === "strict"
+                ? workspaceToneClass("danger")
+                : detail.securitySummary.level === "balanced"
+                  ? workspaceToneClass("warning")
+                  : workspaceToneClass("success")
+            )}
+          >
+            {localizedSecurityLevel(locale, detail.securitySummary.level)}
+          </span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div
+          className={cn(
+            "grid gap-2 sm:grid-cols-2",
+            !isCockpit && "lg:grid-cols-3"
+          )}
+        >
+          <SnapshotTile
+            label={t(locale, "鐢ㄦ埛", "User")}
+            value={detail.securitySummary.user}
+          />
+          <SnapshotTile
+            label={t(locale, "缃戠粶", "Network")}
+            value={detail.securitySummary.networkMode}
+          />
+          <SnapshotTile
+            label={t(locale, "鍙鏂囦欢绯荤粺", "Readonly FS")}
+            value={
+              detail.securitySummary.readonlyRootfs
+                ? t(locale, "鏄?", "Yes")
+                : t(locale, "鍚?", "No")
+            }
+          />
+          <SnapshotTile
+            label={t(locale, "鍐呭瓨", "Memory")}
+            value={detail.securitySummary.memoryLimit}
+          />
+          <SnapshotTile
+            label={t(locale, "CPU", "CPU")}
+            value={detail.securitySummary.cpuLimit}
+          />
+          <SnapshotTile
+            label={t(locale, "PIDs 闄愬埗", "PIDs Limit")}
+            value={String(detail.securitySummary.pidsLimit)}
+          />
+        </div>
+      </CardContent>
+    </Card>
   ) : null;
+
+  const executorStatusPanel = detail.executor ? (
+    <Card className={DETAIL_CARD_CLASS}>
+      <CardHeader className="space-y-1 pb-3">
+        <CardTitle className="flex items-center gap-2 text-stone-900">
+          <Bot className="size-4 text-sky-600" />
+          {copy.tasks.executor.title}
+        </CardTitle>
+        <CardDescription>{copy.tasks.executor.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <ExecutorStatusPanel
+          executor={detail.executor}
+          instance={detail.instance}
+          artifacts={detail.missionArtifacts}
+          missionStatus={detail.status}
+        />
+      </CardContent>
+    </Card>
+  ) : null;
+
+  const executorTerminalPanel = detail.executor ? (
+    <ExecutorTerminalPanel
+      missionId={detail.id}
+      missionStatus={detail.status}
+      executorStatus={detail.executor.status}
+    />
+  ) : null;
+
+  const decisionFocusSection =
+    !isCockpit && showDecisionFocusSection ? (
+      <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        {showStructuredDecisionPanel && detail.decision ? (
+          <DecisionPanel
+            missionId={detail.id}
+            decision={detail.decision}
+            onDecisionSubmitted={onDecisionSubmitted}
+          />
+        ) : null}
+        {detail.decisionPresets.length > 0 ? decisionPanel : null}
+      </section>
+    ) : null;
 
   const decisionsWorkspace = (
     <div className="space-y-4">
@@ -1298,6 +1396,47 @@ export function TaskDetailView({
       </Card>
     </div>
   );
+
+  const showCockpitDecisionSection =
+    showDecisionFocusSection || decisionHistoryEntries.length > 0;
+
+  if (isCockpit) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-0 flex-col gap-4",
+          isDesktop && "h-full",
+          className
+        )}
+      >
+        <DetailTabViewport isDesktop={isDesktop}>
+          {showCockpitDecisionSection ? decisionsWorkspace : null}
+          <TaskPlanetInterior detail={detail} compact />
+          {sourceDirectivePanel}
+          {runtimePreviewRows.length > 0 ? runtimeSnapshotPanel : null}
+          {securitySummaryPanel}
+          {executorStatusPanel}
+          {detail.status === "failed" ? executorTerminalPanel : null}
+          {detail.tasks.length > 0 ? workPackagesPanel : null}
+          {detail.timeline.length > 0 ? timelinePanel : null}
+          {detail.artifacts.length > 0 || artifactError ? artifactsPanel : null}
+          {failurePanel}
+        </DetailTabViewport>
+        <ArtifactPreviewDialog
+          missionId={detail.id}
+          artifactIndex={previewArtifactIndex}
+          artifactName={previewArtifactName}
+          format={previewArtifactFormat}
+          open={previewArtifactIndex !== null}
+          onOpenChange={open => {
+            if (!open) {
+              setPreviewArtifactIndex(null);
+            }
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div

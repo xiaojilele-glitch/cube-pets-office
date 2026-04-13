@@ -240,10 +240,13 @@ describe("task operation helper derivations", () => {
 
     const primary = derivePrimaryActions(detail);
     const owner = deriveCurrentOwner(detail);
+    const blocker = deriveTaskBlocker(detail);
     const nextStep = deriveNextStep(detail);
 
     expect(primary.normalActions).toEqual(["retry"]);
     expect(owner.title).toBe("Human follow-up");
+    expect(blocker.title).toBe("Execution failed");
+    expect(blocker.detail).toContain("Artifact packaging step failed");
     expect(nextStep.title).toBe(
       "Review failure details and retry if appropriate"
     );

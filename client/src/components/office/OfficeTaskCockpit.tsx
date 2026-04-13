@@ -380,36 +380,34 @@ export function OfficeTaskCockpit({
   return (
     <div
       className={cn(
-        "pointer-events-none absolute inset-x-4 bottom-4 top-20 z-[52] flex min-h-0 flex-col gap-4",
+        "pointer-events-none absolute inset-x-4 bottom-[96px] top-[76px] z-[52] flex min-h-0 flex-col gap-3 2xl:bottom-[104px]",
         className
       )}
     >
-      <section className="pointer-events-auto rounded-[30px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,249,240,0.94),rgba(255,255,255,0.84))] px-5 py-4 shadow-[0_22px_70px_rgba(92,66,40,0.14)] backdrop-blur">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <section className="pointer-events-auto rounded-[28px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,249,240,0.92),rgba(255,255,255,0.84))] px-4 py-3 shadow-[0_18px_46px_rgba(92,66,40,0.12)] backdrop-blur">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="workspace-eyebrow">
               {t(locale, "办公室任务驾驶舱", "Office task cockpit")}
             </div>
-            <h1 className="mt-2 text-[1.65rem] font-semibold tracking-tight text-stone-900">
-              {t(
-                locale,
-                "办公室成为默认执行主壳",
-                "The office is now the default execution shell"
-              )}
-            </h1>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-stone-600">
-              {t(
-                locale,
-                "左侧盯任务队列，中间保留办公室场景，右侧把任务、团队流、Agent、记忆报告和历史收进一个驾驶舱里。",
-                "Keep the task queue on the left, the office scene in the middle, and the task, workflow, agent, memory, and history context in one cockpit on the right."
-              )}
-            </p>
+            <div className="mt-1 flex flex-wrap items-end gap-x-3 gap-y-1">
+              <h1 className="text-[1.2rem] font-semibold tracking-tight text-stone-900">
+                {t(locale, "办公室执行舱", "Office execution cockpit")}
+              </h1>
+              <p className="text-sm text-stone-500">
+                {t(
+                  locale,
+                  "桌面端把队列、场景、详情收进同一屏。",
+                  "Queue, scene, and detail now live on one desktop screen."
+                )}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button
               type="button"
-              className="rounded-full bg-[#d07a4f] text-white hover:bg-[#bf6c43]"
+              className="h-10 rounded-full bg-[#d07a4f] px-4 text-white hover:bg-[#bf6c43]"
               onClick={() => setLocation("/tasks")}
             >
               <LayoutPanelTop className="size-4" />
@@ -418,7 +416,7 @@ export function OfficeTaskCockpit({
             <Button
               type="button"
               variant="outline"
-              className="workspace-control rounded-full"
+              className="workspace-control h-10 rounded-full px-4"
               onClick={onOpenWorkflowPanel}
             >
               <Waves className="size-4" />
@@ -428,7 +426,7 @@ export function OfficeTaskCockpit({
               <Button
                 type="button"
                 variant="outline"
-                className="workspace-control rounded-full"
+                className="workspace-control h-10 rounded-full px-4"
                 onClick={onStartDemo}
               >
                 {t(locale, "演示模式", "Live demo")}
@@ -437,7 +435,7 @@ export function OfficeTaskCockpit({
             <Button
               type="button"
               variant="outline"
-              className="workspace-control rounded-full"
+              className="workspace-control h-10 rounded-full px-4"
               onClick={onOpenConfig}
             >
               <Settings2 className="size-4" />
@@ -465,7 +463,7 @@ export function OfficeTaskCockpit({
         </div>
       </section>
 
-      <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)_420px] gap-4">
+      <div className="grid min-h-0 flex-1 grid-cols-[264px_minmax(0,1fr)_minmax(408px,464px)] gap-3 2xl:grid-cols-[276px_minmax(0,1fr)_minmax(428px,500px)]">
         <aside className="pointer-events-auto min-h-0">
           <TasksQueueRail
             tasks={filteredTasks}
@@ -483,19 +481,20 @@ export function OfficeTaskCockpit({
               });
             }}
             onRefresh={refreshCurrent}
+            density="compact"
             className="h-full"
           />
         </aside>
 
-        <section className="relative min-h-0">
-          <div className="pointer-events-auto absolute left-0 right-0 top-0">
-            <div className="mx-auto max-w-[820px] rounded-[28px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,252,248,0.94),rgba(252,245,235,0.84))] px-4 py-4 shadow-[0_18px_40px_rgba(92,66,40,0.12)] backdrop-blur">
-              <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="relative flex min-h-0 flex-col justify-between gap-3">
+          <div className="pointer-events-auto mx-auto w-full max-w-[820px]">
+            <div className="rounded-[24px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,252,248,0.92),rgba(252,245,235,0.82))] px-4 py-3 shadow-[0_14px_32px_rgba(92,66,40,0.1)] backdrop-blur">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
                     {t(locale, "场景当前焦点", "Current scene focus")}
                   </div>
-                  <div className="mt-2 text-lg font-semibold text-stone-900">
+                  <div className="mt-1.5 truncate text-base font-semibold text-stone-900">
                     {selectedDetail?.title ||
                       pendingLaunch?.directive ||
                       t(
@@ -504,31 +503,33 @@ export function OfficeTaskCockpit({
                         "Pick a task or scene agent to focus"
                       )}
                   </div>
-                  <div className="mt-1 text-sm leading-6 text-stone-600">
-                    {selectedDetail?.currentStageLabel ||
-                      (selectedPet
-                        ? t(
-                            locale,
-                            "场景 Agent 已联动到右侧详情",
-                            "Scene agent is linked to the right-side detail"
-                          )
-                        : t(
-                            locale,
-                            "保持 Scene3D 可见，任务与 Agent 通过状态源联动。",
-                            "Keep Scene3D visible while task and agent state stay linked."
-                          ))}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="workspace-status px-2.5 py-1 text-[10px] font-semibold">
+                      {selectedDetail?.currentStageLabel ||
+                        t(locale, "等待焦点", "Awaiting focus")}
+                    </span>
+                    {selectedPet ? (
+                      <span className="workspace-status workspace-tone-info px-2.5 py-1 text-[10px] font-semibold">
+                        {t(locale, "场景 Agent 已联动", "Scene agent linked")}
+                      </span>
+                    ) : null}
+                    {pendingLaunch ? (
+                      <span className="workspace-status workspace-tone-warning px-2.5 py-1 text-[10px] font-semibold">
+                        {t(locale, "团队准备中", "Team preparing")}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex rounded-full bg-stone-100/90 p-1 shadow-inner">
                   <button
                     type="button"
                     onClick={() => setLaunchMode("mission")}
                     className={cn(
-                      "rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors",
+                      "rounded-full px-3 py-2 text-sm font-semibold transition-colors",
                       launchMode === "mission"
-                        ? "border-[#d07a4f] bg-[#d07a4f] text-white"
-                        : "border-stone-200 bg-white/90 text-stone-600 hover:bg-white"
+                        ? "bg-[#d07a4f] text-white shadow-sm"
+                        : "text-stone-600 hover:bg-white/90"
                     )}
                   >
                     <Command className="mr-2 inline size-4" />
@@ -538,10 +539,10 @@ export function OfficeTaskCockpit({
                     type="button"
                     onClick={() => setLaunchMode("workflow")}
                     className={cn(
-                      "rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors",
+                      "rounded-full px-3 py-2 text-sm font-semibold transition-colors",
                       launchMode === "workflow"
-                        ? "border-[#5E8B72] bg-[#5E8B72] text-white"
-                        : "border-stone-200 bg-white/90 text-stone-600 hover:bg-white"
+                        ? "bg-[#5E8B72] text-white shadow-sm"
+                        : "text-stone-600 hover:bg-white/90"
                     )}
                   >
                     <Waves className="mr-2 inline size-4" />
@@ -552,8 +553,8 @@ export function OfficeTaskCockpit({
             </div>
           </div>
 
-          <div className="pointer-events-auto absolute inset-x-0 bottom-0">
-            <div className="mx-auto max-w-[1080px]">
+          <div className="pointer-events-auto mx-auto mt-auto w-full max-w-[940px]">
+            <div className="w-full">
               {launchMode === "mission" ? (
                 <TasksCommandDock
                   createMission={createMission}
@@ -563,10 +564,12 @@ export function OfficeTaskCockpit({
                   onOpenCreateDialog={() => setCreateDialogOpen(true)}
                   onRefresh={refreshCurrent}
                   refreshing={loading && ready}
+                  compact
                 />
               ) : (
                 <OfficeWorkflowLaunchPanel
                   pendingLaunch={pendingLaunch}
+                  compact
                   onLaunchSubmitted={resolution => {
                     setPendingLaunch(resolution);
                     setActiveTab("flow");
@@ -581,27 +584,45 @@ export function OfficeTaskCockpit({
           <Tabs
             value={activeTab}
             onValueChange={value => setActiveTab(value as OfficeCockpitTab)}
-            className="workspace-panel workspace-panel-strong h-full rounded-[30px] border border-stone-200/80 px-3 py-3 shadow-[0_20px_60px_rgba(99,73,45,0.12)]"
+            className="workspace-panel workspace-panel-strong flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-stone-200/80 px-3 py-3 shadow-[0_20px_60px_rgba(99,73,45,0.12)]"
           >
-            <TabsList className="grid h-auto w-full grid-cols-5 rounded-[20px] bg-stone-100/90 p-1">
-              <TabsTrigger className="rounded-[16px] text-xs" value="task">
+            <TabsList className="grid h-auto w-full grid-cols-5 gap-1 rounded-[18px] bg-stone-100/80 p-1">
+              <TabsTrigger
+                className="rounded-[14px] px-1.5 py-2 text-[11px] whitespace-nowrap"
+                value="task"
+              >
                 {t(locale, "任务", "Task")}
               </TabsTrigger>
-              <TabsTrigger className="rounded-[16px] text-xs" value="flow">
-                {t(locale, "团队流", "Flow")}
+              <TabsTrigger
+                className="rounded-[14px] px-1.5 py-2 text-[11px] whitespace-nowrap"
+                value="flow"
+              >
+                {t(locale, "团队", "Flow")}
               </TabsTrigger>
-              <TabsTrigger className="rounded-[16px] text-xs" value="agent">
+              <TabsTrigger
+                className="rounded-[14px] px-1.5 py-2 text-[11px] whitespace-nowrap"
+                value="agent"
+              >
                 Agent
               </TabsTrigger>
-              <TabsTrigger className="rounded-[16px] text-xs" value="memory">
-                {t(locale, "记忆报告", "Memory")}
+              <TabsTrigger
+                className="rounded-[14px] px-1.5 py-2 text-[11px] whitespace-nowrap"
+                value="memory"
+              >
+                {t(locale, "记忆", "Memory")}
               </TabsTrigger>
-              <TabsTrigger className="rounded-[16px] text-xs" value="history">
+              <TabsTrigger
+                className="rounded-[14px] px-1.5 py-2 text-[11px] whitespace-nowrap"
+                value="history"
+              >
                 {t(locale, "历史", "History")}
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="task" className="min-h-0 flex-1 pt-3">
+            <TabsContent
+              value="task"
+              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+            >
               <TasksCockpitDetail
                 detail={selectedDetail}
                 decisionNote={decisionNote}
@@ -622,7 +643,10 @@ export function OfficeTaskCockpit({
               />
             </TabsContent>
 
-            <TabsContent value="flow" className="min-h-0 flex-1 pt-3">
+            <TabsContent
+              value="flow"
+              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+            >
               <OfficeWorkflowFlowPanel
                 workflow={activeWorkflow}
                 missionDetail={selectedDetail}
@@ -635,7 +659,10 @@ export function OfficeTaskCockpit({
               />
             </TabsContent>
 
-            <TabsContent value="agent" className="min-h-0 flex-1 pt-3">
+            <TabsContent
+              value="agent"
+              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+            >
               {agents.length > 0 ? (
                 <OfficeAgentInspectorPanel className="h-full" />
               ) : (
@@ -649,11 +676,17 @@ export function OfficeTaskCockpit({
               )}
             </TabsContent>
 
-            <TabsContent value="memory" className="min-h-0 flex-1 pt-3">
+            <TabsContent
+              value="memory"
+              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+            >
               <OfficeMemoryReportsPanel workflow={activeWorkflow} />
             </TabsContent>
 
-            <TabsContent value="history" className="min-h-0 flex-1 pt-3">
+            <TabsContent
+              value="history"
+              className="mt-0 min-h-0 flex-1 overflow-hidden pt-3"
+            >
               <OfficeWorkflowHistoryPanel
                 activeWorkflowId={activeWorkflow?.id || null}
                 onSelectWorkflow={workflowId => {

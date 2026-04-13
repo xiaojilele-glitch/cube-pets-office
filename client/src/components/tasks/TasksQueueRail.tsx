@@ -32,6 +32,7 @@ export function TasksQueueRail({
   onSearchChange,
   onSelectTask,
   onRefresh,
+  density = "regular",
   className,
 }: {
   tasks: MissionTaskSummary[];
@@ -45,10 +46,12 @@ export function TasksQueueRail({
   onSearchChange: (value: string) => void;
   onSelectTask: (taskId: string) => void;
   onRefresh: () => void;
+  density?: "regular" | "compact";
   className?: string;
 }) {
   const { locale, copy } = useI18n();
   const taskButtonRefs = useRef(new Map<string, HTMLButtonElement>());
+  const isCompact = density === "compact";
 
   useEffect(() => {
     if (!highlightedTaskId) {
@@ -68,13 +71,23 @@ export function TasksQueueRail({
         className
       )}
     >
-      <div className="shrink-0 border-b border-stone-200/80 px-4 py-4">
+      <div
+        className={cn(
+          "shrink-0 border-b border-stone-200/80",
+          isCompact ? "px-3.5 py-3.5" : "px-4 py-4"
+        )}
+      >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500">
               {copy.tasks.listPage.queueTitle}
             </div>
-            <div className="mt-1 text-sm font-semibold text-[var(--workspace-text-strong)]">
+            <div
+              className={cn(
+                "mt-1 font-semibold text-[var(--workspace-text-strong)]",
+                isCompact ? "text-[13px]" : "text-sm"
+              )}
+            >
               {copy.tasks.listPage.visibleCount(tasks.length, totalCount)}
             </div>
           </div>
@@ -89,13 +102,21 @@ export function TasksQueueRail({
             value={search}
             onChange={event => onSearchChange(event.target.value)}
             placeholder={copy.tasks.listPage.searchPlaceholder}
-            className="workspace-control h-11 rounded-full border-none pl-10"
+            className={cn(
+              "workspace-control rounded-full border-none pl-10",
+              isCompact ? "h-10 text-sm" : "h-11"
+            )}
           />
         </div>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-2.5 px-3 py-3">
+        <div
+          className={cn(
+            "px-3",
+            isCompact ? "space-y-2 py-2.5" : "space-y-2.5 py-3"
+          )}
+        >
           {error ? (
             <RetryInlineNotice
               title={copy.chat.errorTitle}
@@ -119,7 +140,7 @@ export function TasksQueueRail({
             const active = task.id === activeTaskId;
             const summary = compactText(
               localizeTaskHubBriefText(task.summary || task.sourceText, locale),
-              108
+              isCompact ? 74 : 108
             );
 
             return (
@@ -135,7 +156,10 @@ export function TasksQueueRail({
                   taskButtonRefs.current.delete(task.id);
                 }}
                 className={cn(
-                  "w-full rounded-[24px] border px-3.5 py-3 text-left transition-all",
+                  "w-full border text-left transition-all",
+                  isCompact
+                    ? "rounded-[20px] px-3 py-3"
+                    : "rounded-[24px] px-3.5 py-3",
                   active
                     ? "border-[rgba(201,130,87,0.34)] bg-[linear-gradient(180deg,rgba(255,248,234,0.98),rgba(255,241,220,0.94))] shadow-[0_16px_40px_rgba(164,113,29,0.14)]"
                     : "border-[var(--workspace-panel-border)] bg-[rgba(255,255,255,0.58)] hover:border-[rgba(151,120,90,0.3)] hover:bg-[rgba(255,255,255,0.76)]",
@@ -162,7 +186,10 @@ export function TasksQueueRail({
                             missionOperatorStateTone(task.operatorState)
                           )}
                         >
-                          {missionOperatorStateLabel(task.operatorState, locale)}
+                          {missionOperatorStateLabel(
+                            task.operatorState,
+                            locale
+                          )}
                         </span>
                       ) : null}
                       {task.hasWarnings ? (
@@ -176,12 +203,22 @@ export function TasksQueueRail({
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-stone-900">
+                    <div
+                      className={cn(
+                        "mt-2 line-clamp-2 font-semibold leading-5 text-stone-900",
+                        isCompact ? "text-[13px]" : "text-sm"
+                      )}
+                    >
                       {task.title}
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="text-sm font-semibold text-stone-700">
+                    <div
+                      className={cn(
+                        "font-semibold text-stone-700",
+                        isCompact ? "text-[13px]" : "text-sm"
+                      )}
+                    >
                       {task.progress}%
                     </div>
                     <div className="mt-1 text-[11px] text-stone-500">
@@ -193,12 +230,19 @@ export function TasksQueueRail({
                 <div className="mt-2 text-xs leading-5 text-stone-500">
                   {compactText(
                     task.currentStageLabel || copy.tasks.listPage.noStage,
-                    34
+                    isCompact ? 28 : 34
                   )}
-                  {task.waitingFor ? ` / ${compactText(task.waitingFor, 28)}` : ""}
+                  {task.waitingFor
+                    ? ` / ${compactText(task.waitingFor, isCompact ? 18 : 28)}`
+                    : ""}
                 </div>
 
-                <div className="mt-2 text-[13px] leading-5 text-stone-600">
+                <div
+                  className={cn(
+                    "mt-2 leading-5 text-stone-600",
+                    isCompact ? "line-clamp-2 text-[12px]" : "text-[13px]"
+                  )}
+                >
                   {summary || copy.tasks.detailView.noDetail}
                 </div>
 
@@ -211,22 +255,28 @@ export function TasksQueueRail({
                   >
                     {copy.tasks.listPage.tasksCount(task.taskCount)}
                   </span>
-                  <span
-                    className={workspaceStatusClass(
-                      "neutral",
-                      "px-2 py-1 text-[10px] font-medium"
-                    )}
-                  >
-                    {copy.tasks.listPage.messagesCount(task.messageCount)}
-                  </span>
-                  <span
-                    className={workspaceStatusClass(
-                      "neutral",
-                      "px-2 py-1 text-[10px] font-medium"
-                    )}
-                  >
-                    {copy.tasks.listPage.attachmentsCount(task.attachmentCount)}
-                  </span>
+                  {!isCompact ? (
+                    <>
+                      <span
+                        className={workspaceStatusClass(
+                          "neutral",
+                          "px-2 py-1 text-[10px] font-medium"
+                        )}
+                      >
+                        {copy.tasks.listPage.messagesCount(task.messageCount)}
+                      </span>
+                      <span
+                        className={workspaceStatusClass(
+                          "neutral",
+                          "px-2 py-1 text-[10px] font-medium"
+                        )}
+                      >
+                        {copy.tasks.listPage.attachmentsCount(
+                          task.attachmentCount
+                        )}
+                      </span>
+                    </>
+                  ) : null}
                   {task.attempt > 1 ? (
                     <span
                       className={workspaceStatusClass(
