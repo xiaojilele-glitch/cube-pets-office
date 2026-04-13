@@ -119,7 +119,9 @@ export default function TasksPage({
     (selectedTaskId && detailsById[selectedTaskId] ? selectedTaskId : null) ||
     filteredTasks[0]?.id ||
     null;
-  const selectedDetail = activeTaskId ? detailsById[activeTaskId] || null : null;
+  const selectedDetail = activeTaskId
+    ? detailsById[activeTaskId] || null
+    : null;
   const selectedTaskSummary =
     tasks.find(task => task.id === activeTaskId) || null;
   const decisionNote = activeTaskId ? decisionNotes[activeTaskId] || "" : "";
@@ -251,7 +253,9 @@ export default function TasksPage({
                 });
               }}
               onRefresh={refreshCurrent}
-              className={cn(isLockedCockpit ? "h-full min-h-0" : "min-h-[640px]")}
+              className={cn(
+                isLockedCockpit ? "h-full min-h-0" : "min-h-[640px]"
+              )}
             />
 
             <div className="min-w-0 flex min-h-0 flex-col gap-3">
@@ -263,7 +267,7 @@ export default function TasksPage({
                 onOpenCreateDialog={() => setCreateDialogOpen(true)}
                 onRefresh={refreshCurrent}
                 refreshing={loading && ready}
-                className={cn(isLockedCockpit && "shrink-0 xl:h-[220px]")}
+                className={cn(isLockedCockpit && "shrink-0 xl:min-h-[304px]")}
               />
 
               <TasksCockpitDetail
