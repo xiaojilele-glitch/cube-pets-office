@@ -25,11 +25,15 @@ export interface CommandInputProps {
   loading?: boolean;
   /** Previous command texts for auto-complete suggestions */
   commandHistory?: string[];
+  value?: string;
   label?: string;
+  hideLabel?: boolean;
+  dense?: boolean;
   placeholder?: string;
   submitLabel?: string;
   sendingLabel?: string;
   onTextChange?: (value: string) => void;
+  rows?: number;
   className?: string;
 }
 
@@ -37,11 +41,15 @@ export function CommandInput({
   onSubmit,
   loading,
   commandHistory = [],
+  value,
   label,
+  hideLabel = false,
+  dense = false,
   placeholder,
   submitLabel,
   sendingLabel,
   onTextChange,
+  rows,
   className,
 }: CommandInputProps) {
   const { locale } = useI18n();
@@ -56,10 +64,21 @@ export function CommandInput({
   const resolvedSubmitLabel = submitLabel ?? (isZh ? "发送" : "Send");
   const resolvedSendingLabel =
     sendingLabel ?? (isZh ? "发送中..." : "Sending...");
-  const [text, setText] = useState("");
+  const [internalText, setInternalText] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const text = value ?? internalText;
+
+  const setText = useCallback(
+    (nextValue: string) => {
+      if (value === undefined) {
+        setInternalText(nextValue);
+      }
+      onTextChange?.(nextValue);
+    },
+    [onTextChange, value]
+  );
 
   const suggestions = useMemo(() => {
     const trimmed = text.trim().toLowerCase();
@@ -75,10 +94,9 @@ export function CommandInput({
     if (!trimmed || loading) return;
     await onSubmit(trimmed);
     setText("");
-    onTextChange?.("");
     setShowSuggestions(false);
     setSelectedIndex(-1);
-  }, [text, loading, onSubmit, onTextChange]);
+  }, [text, loading, onSubmit, setText]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -123,11 +141,10 @@ export function CommandInput({
   const handleChange = useCallback(
     (value: string) => {
       setText(value);
-      onTextChange?.(value);
       setShowSuggestions(value.trim().length >= 2);
       setSelectedIndex(-1);
     },
-    [onTextChange]
+    [setText]
   );
 
   const selectSuggestion = useCallback((suggestion: string) => {
@@ -135,13 +152,15 @@ export function CommandInput({
     setShowSuggestions(false);
     setSelectedIndex(-1);
     inputRef.current?.focus();
-  }, []);
+  }, [setText]);
 
   return (
     <div className={cn("relative", className)}>
-      <label className="mb-1.5 block text-xs font-medium text-stone-500">
-        {resolvedLabel}
-      </label>
+      {!hideLabel ? (
+        <label className="mb-1.5 block text-xs font-medium text-stone-500">
+          {resolvedLabel}
+        </label>
+      ) : null}
       <div className="flex items-end gap-2">
         <div className="relative flex-1">
           <textarea
@@ -155,9 +174,14 @@ export function CommandInput({
               setTimeout(() => setShowSuggestions(false), 150);
             }}
             placeholder={resolvedPlaceholder}
-            rows={2}
+            rows={rows ?? 2}
             disabled={loading}
-            className="w-full resize-none rounded-xl border border-stone-200 bg-stone-50/60 px-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-50"
+            className={cn(
+              "w-full resize-none rounded-xl border border-stone-200 bg-stone-50/60 text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100 disabled:opacity-50",
+              dense
+                ? "px-3 py-2 text-[13px] leading-5"
+                : "px-3 py-2.5 text-sm"
+            )}
             aria-label={isZh ? "战略指令输入框" : "Strategic command input"}
             aria-autocomplete="list"
             aria-expanded={showSuggestions && suggestions.length > 0}
@@ -195,7 +219,7 @@ export function CommandInput({
         <GlowButton
           type="button"
           disabled={!text.trim() || loading}
-          className="shrink-0 rounded-xl"
+          className={cn("shrink-0 rounded-xl", dense && "h-10 px-3.5 text-sm")}
           onClick={() => void handleSubmit()}
         >
           <Send className="size-4" />

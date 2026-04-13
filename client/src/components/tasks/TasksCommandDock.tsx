@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -56,6 +57,37 @@ function SummaryMetric({
   );
 }
 
+function SummaryRailCard({
+  label,
+  value,
+  hint,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "neutral" | "info" | "warning" | "success";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-[20px] border px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.58)]",
+        tone === "neutral"
+          ? "border-stone-200/80 bg-white/80 text-stone-700"
+          : workspaceToneClass(tone)
+      )}
+    >
+      <div className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-75">
+        {label}
+      </div>
+      <div className="mt-1.5 text-sm font-semibold leading-5">{value}</div>
+      {hint ? (
+        <div className="mt-1.5 text-[11px] leading-5 opacity-80">{hint}</div>
+      ) : null}
+    </div>
+  );
+}
+
 export function TasksCommandDock({
   createMission,
   tasks,
@@ -66,6 +98,11 @@ export function TasksCommandDock({
   refreshing = false,
   compact = false,
   embedded = false,
+  bare = false,
+  dense = false,
+  hideHeader = false,
+  hideActions = false,
+  hideInputLabel = false,
   className,
 }: {
   createMission: TaskHubCreateMission;
@@ -77,6 +114,11 @@ export function TasksCommandDock({
   refreshing?: boolean;
   compact?: boolean;
   embedded?: boolean;
+  bare?: boolean;
+  dense?: boolean;
+  hideHeader?: boolean;
+  hideActions?: boolean;
+  hideInputLabel?: boolean;
   className?: string;
 }) {
   const { locale, copy } = useI18n();
@@ -87,6 +129,7 @@ export function TasksCommandDock({
   const currentDialog = useNLCommandStore(state => state.currentDialog);
   const currentPlan = useNLCommandStore(state => state.currentPlan);
   const commands = useNLCommandStore(state => state.commands);
+  const draftText = useNLCommandStore(state => state.draftText);
   const lastSubmission = useNLCommandStore(state => state.lastSubmission);
   const setDraftText = useNLCommandStore(state => state.setDraftText);
   const submitTaskHubCommand = useNLCommandStore(
@@ -114,21 +157,122 @@ export function TasksCommandDock({
       : currentDialog?.status === "active"
         ? t(locale, "等待补充澄清", "Clarification needed")
         : t(locale, "等待新指令", "Ready for next command");
-  const commandSummary = currentCommand?.commandText || activeTask?.title || "";
   const landingText = lastSubmission?.missionId
     ? lastSubmission.missionId
     : currentDialog?.status === "active"
-      ? t(locale, "补全问题后创建", "Created after clarification")
+      ? t(locale, "补完问题后创建", "Created after clarification")
       : t(locale, "尚未创建任务", "No mission created");
   const executionShape = currentPlan
     ? t(
         locale,
-        `${currentPlan.missions.length} 条主线 / ${currentPlan.tasks.length} 个执行阶段`,
+        `${currentPlan.missions.length} 条主线 / ${currentPlan.tasks.length} 个阶段`,
         `${currentPlan.missions.length} mission / ${currentPlan.tasks.length} stages`
       )
     : t(locale, "等待规划生成", "Waiting for plan");
   const isCompact = compact;
   const isEmbedded = embedded;
+  const isBare = bare;
+  const isDense = dense;
+  const showHeaderCopy = !hideHeader;
+  const showHeaderActions = !hideActions;
+  const hasTopHeader = showHeaderCopy || showHeaderActions;
+  const hasStatusBar = isCompact || isEmbedded;
+  const stageText =
+    activeTask?.currentStageLabel ||
+    t(locale, "尚未进入执行阶段", "No active stage yet");
+  const quickSuggestions = useMemo(
+    () =>
+      [
+        activeTask
+          ? t(
+              locale,
+              `继续推进「${activeTask.title}」，先处理当前阻塞并给出下一步。`,
+              `Continue "${activeTask.title}" by resolving the current blocker and proposing the next step.`
+            )
+          : null,
+        t(
+          locale,
+          "新建一个任务：先整理目标、约束、交付物，再自动落入队列。",
+          "Create a task by organizing goal, constraints, and deliverable before landing it in the queue."
+        ),
+        t(
+          locale,
+          "检查当前任务队列中的高风险项，并给出优先级建议。",
+          "Review high-risk items in the current queue and suggest priorities."
+        ),
+        t(
+          locale,
+          "针对当前任务生成一版执行拆解、验收标准和回滚预案。",
+          "Generate an execution breakdown, acceptance criteria, and rollback plan for the current task."
+        ),
+      ].filter((item): item is string => Boolean(item)),
+    [activeTask, locale]
+  );
+  const summaryCards = useMemo(
+    () => [
+      {
+        label: t(locale, "落点", "Landing"),
+        value: compactText(landingText, 40),
+        hint: lastSubmission?.createdAt
+          ? formatTaskRelative(lastSubmission.createdAt, locale)
+          : t(
+              locale,
+              "命令提交后会在这里显示任务落点。",
+              "The landing result appears here after submission."
+            ),
+        tone: (lastSubmission?.missionId ? "success" : "neutral") as
+          | "neutral"
+          | "info"
+          | "warning"
+          | "success",
+      },
+      {
+        label: t(locale, "执行编排", "Execution shape"),
+        value: compactText(executionShape, 40),
+        hint: currentAnalysis?.intent
+          ? compactText(currentAnalysis.intent, 44)
+          : t(
+              locale,
+              "分析和拆解会同步压到这里。",
+              "Analysis and breakdown stay condensed here."
+            ),
+        tone: (currentPlan ? "info" : "neutral") as
+          | "neutral"
+          | "info"
+          | "warning"
+          | "success",
+      },
+      {
+        label: t(locale, "当前焦点", "Current focus"),
+        value: activeTask
+          ? compactText(activeTask.title, 34)
+          : t(locale, "等待选择任务", "Waiting for task selection"),
+        hint: activeTask
+          ? compactText(stageText, 34)
+          : t(
+              locale,
+              "左侧队列选择后，这里会绑定当前任务。",
+              "Selecting a task from the rail binds it here."
+            ),
+        tone: (activeTask?.hasWarnings ? "warning" : activeTask ? "info" : "neutral") as
+          | "neutral"
+          | "info"
+          | "warning"
+          | "success",
+      },
+    ],
+    [
+      activeTask,
+      currentAnalysis?.intent,
+      currentPlan,
+      executionShape,
+      landingText,
+      lastSubmission?.createdAt,
+      lastSubmission?.missionId,
+      locale,
+      stageText,
+    ]
+  );
 
   async function handleSubmit(commandText: string) {
     try {
@@ -143,7 +287,7 @@ export function TasksCommandDock({
         toast.success(
           t(
             locale,
-            "这条指令已转成任务，并自动聚焦到任务驾驶舱。",
+            "这条指令已经转成任务，并自动聚焦到驾驶台。",
             "The command was turned into a mission and focused in the cockpit."
           )
         );
@@ -154,7 +298,7 @@ export function TasksCommandDock({
       toast(
         t(
           locale,
-          "先补完下方缺失上下文，任务才会创建。",
+          "先补完下方缺失的上下文，任务才会创建。",
           "Add the missing context below before the mission is created."
         )
       );
@@ -209,105 +353,280 @@ export function TasksCommandDock({
     }
   }
 
+  if (isBare && isDense) {
+    return (
+      <section className={cn("grid h-full min-h-0 gap-3", className)}>
+        {error ? (
+          <div
+            className={workspaceCalloutClass(
+              "danger",
+              "flex items-start justify-between gap-3 px-4 py-3 text-sm leading-6 text-[var(--workspace-danger)]"
+            )}
+          >
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="workspace-control h-auto rounded-full px-3 py-1 text-[var(--workspace-danger)] hover:bg-white/70"
+              onClick={clearError}
+            >
+              {t(locale, "收起", "Dismiss")}
+            </Button>
+          </div>
+        ) : null}
+
+        <div className="grid min-h-0 gap-3 xl:grid-cols-[minmax(0,1fr)_252px]">
+          <div className="min-h-0 rounded-[26px] border border-stone-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,244,237,0.92))] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]">
+            <div className="flex flex-wrap gap-2">
+              <span
+                className={workspaceStatusClass(
+                  statusTone === "success"
+                    ? "success"
+                    : statusTone === "warning"
+                      ? "warning"
+                      : "neutral",
+                  "px-2.5 py-1 text-[10px] font-semibold"
+                )}
+              >
+                {statusLabel}
+              </span>
+              <span
+                className={workspaceStatusClass(
+                  "info",
+                  "px-2.5 py-1 text-[10px] font-semibold"
+                )}
+              >
+                {t(
+                  locale,
+                  "队列视图已联动当前任务",
+                  "Queue view is linked to the current task"
+                )}
+              </span>
+              {currentDialog?.status === "active" ? (
+                <span
+                  className={workspaceStatusClass(
+                    "warning",
+                    "px-2.5 py-1 text-[10px] font-semibold"
+                  )}
+                >
+                  {t(
+                    locale,
+                    `待补充 ${currentDialog.questions.length} 项`,
+                    `${currentDialog.questions.length} clarifications pending`
+                  )}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-3">
+              <CommandInput
+                value={draftText}
+                onSubmit={handleSubmit}
+                onTextChange={setDraftText}
+                loading={loading}
+                commandHistory={commands.map(command => command.commandText)}
+                label={t(locale, "输入任务指令", "Enter task command")}
+                placeholder={t(
+                  locale,
+                  "直接描述目标、约束、交付物和时限，系统会先帮你压成任务结构。",
+                  "Describe the goal, constraints, deliverable, and deadline. The dock will shape it into a task first."
+                )}
+                hideLabel={hideInputLabel}
+                dense
+                rows={5}
+                submitLabel={t(locale, "发送任务", "Send task")}
+                sendingLabel={t(locale, "发送中...", "Sending...")}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              {quickSuggestions.map(suggestion => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setDraftText(suggestion)}
+                  className="rounded-full border border-stone-200/80 bg-white/78 px-3 py-1.5 text-[11px] font-medium text-stone-600 transition-colors hover:bg-white hover:text-stone-900"
+                >
+                  {compactText(suggestion, 28)}
+                </button>
+              ))}
+            </div>
+
+            {currentDialog && currentDialog.status === "active" ? (
+              <div className="mt-3 max-h-[240px] overflow-y-auto pr-1">
+                <ClarificationPanel
+                  dialog={currentDialog}
+                  onAnswer={handleClarificationAnswer}
+                  title={t(locale, "补齐缺失上下文", "Add the missing context")}
+                  answerPlaceholder={t(
+                    locale,
+                    "补充这条指令还缺的关键信息...",
+                    "Add the detail this command still needs..."
+                  )}
+                  answerLabel={t(locale, "提交补充", "Submit detail")}
+                  answeringLabel={t(locale, "提交中...", "Submitting...")}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          <aside className="grid auto-rows-min gap-2.5">
+            {summaryCards.map(card => (
+              <SummaryRailCard
+                key={card.label}
+                label={card.label}
+                value={card.value}
+                hint={card.hint}
+                tone={card.tone}
+              />
+            ))}
+
+            <div className="rounded-[20px] border border-dashed border-stone-300/80 bg-white/70 px-3 py-3">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-stone-500">
+                {t(locale, "队列脉搏", "Queue pulse")}
+              </div>
+              <div className="mt-1.5 text-sm font-semibold text-stone-900">
+                {t(
+                  locale,
+                  `${runningCount} 运行 / ${waitingCount} 等待`,
+                  `${runningCount} running / ${waitingCount} waiting`
+                )}
+              </div>
+              <div className="mt-1 text-[11px] leading-5 text-stone-500">
+                {t(
+                  locale,
+                  `${completedCount} 完成 / ${warningsCount} 关注`,
+                  `${completedCount} done / ${warningsCount} warnings`
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={cn("grid gap-3", className)}>
+    <section className={cn("grid", isDense ? "gap-2" : "gap-3", className)}>
       <div
         className={cn(
-          "overflow-hidden md:px-5",
-          isEmbedded
-            ? "rounded-[24px] border border-white/70 bg-white/78 px-4 py-4 shadow-[0_14px_36px_rgba(99,73,45,0.08)]"
-            : "workspace-panel workspace-panel-strong rounded-[30px] px-4 py-4"
+          !isBare && "overflow-hidden md:px-5",
+          !isBare &&
+            (isEmbedded
+              ? "rounded-[24px] border border-white/70 bg-white/78 px-4 py-4 shadow-[0_14px_36px_rgba(99,73,45,0.08)]"
+              : "workspace-panel workspace-panel-strong rounded-[30px] px-4 py-4")
         )}
       >
         <div className="flex h-full min-h-0 flex-col">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0 max-w-4xl">
-              <div className="workspace-eyebrow">
-                {isEmbedded
-                  ? t(locale, "任务命令", "Mission commands")
-                  : copy.tasks.listPage.eyebrow}
-              </div>
-              <h1
-                className={cn(
-                  "mt-2 font-semibold tracking-tight text-[var(--workspace-text-strong)]",
-                  isEmbedded
-                    ? "text-[1.1rem]"
-                    : isCompact
-                      ? "text-[1.35rem]"
-                      : "text-2xl"
-                )}
-              >
-                {isEmbedded
-                  ? t(
-                      locale,
-                      "在驾驶台里快速落任务",
-                      "Land missions directly in the dock"
-                    )
-                  : isCompact
-                    ? t(locale, "统一任务入口", "Unified task launch")
-                    : copy.tasks.listPage.title}
-              </h1>
-              <p
-                className={cn(
-                  "mt-2 max-w-3xl text-[var(--workspace-text-muted)]",
-                  isEmbedded
-                    ? "text-[13px] leading-5"
-                    : isCompact
-                      ? "text-[13px] leading-5"
-                      : "text-sm leading-6"
-                )}
-              >
-                {isEmbedded
-                  ? t(
-                      locale,
-                      "把自然语言指令、澄清回合和落队结果压缩在一个主操作区里。",
-                      "Keep natural-language commands, clarifications, and task landing inside one operator zone."
-                    )
-                  : isCompact
-                    ? t(
-                        locale,
-                        "在这里快速发起任务、补齐澄清，并把结果稳定落回当前驾驶舱。",
-                        "Launch missions, resolve clarifications, and land the result back into the cockpit."
-                      )
-                    : t(
-                        locale,
-                        "首屏优先处理任务指令、补充澄清和当前任务落点，队列与详情在同一页闭环推进。",
-                        "Prioritize commands, clarifications, and task landing on the first screen while the queue and detail stay in the same loop."
-                      )}
-              </p>
-            </div>
+          {hasTopHeader ? (
+            <div
+              className={cn(
+                "flex flex-wrap items-start justify-between",
+                isDense ? "gap-3" : "gap-4"
+              )}
+            >
+              {showHeaderCopy ? (
+                <div className="min-w-0 max-w-4xl">
+                  <div className="workspace-eyebrow">
+                    {isEmbedded
+                      ? t(locale, "任务命令", "Mission commands")
+                      : copy.tasks.listPage.eyebrow}
+                  </div>
+                  <h1
+                    className={cn(
+                      "mt-2 font-semibold tracking-tight text-[var(--workspace-text-strong)]",
+                      isEmbedded
+                        ? "text-[1.1rem]"
+                        : isCompact
+                          ? "text-[1.35rem]"
+                          : "text-2xl"
+                    )}
+                  >
+                    {isEmbedded
+                      ? t(
+                          locale,
+                          "在驾驶台里快速落任务",
+                          "Land missions directly in the dock"
+                        )
+                      : isCompact
+                        ? t(locale, "统一任务入口", "Unified task launch")
+                        : copy.tasks.listPage.title}
+                  </h1>
+                  <p
+                    className={cn(
+                      "mt-2 max-w-3xl text-[var(--workspace-text-muted)]",
+                      isEmbedded
+                        ? "text-[13px] leading-5"
+                        : isCompact
+                          ? "text-[13px] leading-5"
+                          : "text-sm leading-6"
+                    )}
+                  >
+                    {isEmbedded
+                      ? t(
+                          locale,
+                          "把自然语言指令、澄清问答和落队结果压进一个主操作区里。",
+                          "Keep natural-language commands, clarifications, and task landing inside one operator zone."
+                        )
+                      : isCompact
+                        ? t(
+                            locale,
+                            "在这里快速发起任务、补齐澄清，并把结果稳定落回当前驾驶台。",
+                            "Launch missions, resolve clarifications, and land the result back into the cockpit."
+                          )
+                        : t(
+                            locale,
+                            "首屏优先处理任务指令、补充澄清和当前任务落点，队列与详情在同一页闭环推进。",
+                            "Prioritize commands, clarifications, and task landing on the first screen while the queue and detail stay in the same loop."
+                          )}
+                  </p>
+                </div>
+              ) : null}
 
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                className="rounded-full bg-[linear-gradient(180deg,#c98257,#b86f45)] text-white shadow-[0_14px_28px_rgba(184,111,69,0.22)] hover:brightness-105"
-                onClick={onOpenCreateDialog}
-              >
-                <Plus className="size-4" />
-                {copy.tasks.listPage.create}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="workspace-control rounded-full"
-                onClick={onRefresh}
-                disabled={refreshing}
-              >
-                {refreshing ? (
-                  <LoaderCircle className="size-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="size-4" />
-                )}
-                {copy.tasks.listPage.refresh}
-              </Button>
+              {showHeaderActions ? (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    className="rounded-full bg-[linear-gradient(180deg,#c98257,#b86f45)] text-white shadow-[0_14px_28px_rgba(184,111,69,0.22)] hover:brightness-105"
+                    onClick={onOpenCreateDialog}
+                  >
+                    <Plus className="size-4" />
+                    {copy.tasks.listPage.create}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="workspace-control rounded-full"
+                    onClick={onRefresh}
+                    disabled={refreshing}
+                  >
+                    {refreshing ? (
+                      <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="size-4" />
+                    )}
+                    {copy.tasks.listPage.refresh}
+                  </Button>
+                </div>
+              ) : null}
             </div>
-          </div>
+          ) : null}
 
-          {isCompact || isEmbedded ? (
-            <div className="mt-3 flex flex-wrap gap-2">
+          {hasStatusBar ? (
+            <div
+              className={cn(
+                hasTopHeader && (isDense ? "mt-2.5" : "mt-3"),
+                "flex flex-wrap gap-2"
+              )}
+            >
               <span
                 className={cn(
-                  "workspace-status px-2.5 py-1 text-[10px] font-semibold",
+                  "workspace-status font-semibold",
+                  isDense ? "px-2 py-0.5 text-[10px]" : "px-2.5 py-1 text-[10px]",
                   statusTone === "success"
                     ? workspaceStatusClass("success", "")
                     : statusTone === "warning"
@@ -320,7 +639,9 @@ export function TasksCommandDock({
               <span
                 className={workspaceStatusClass(
                   "neutral",
-                  "px-2.5 py-1 text-[10px] font-semibold"
+                  isDense
+                    ? "px-2 py-0.5 text-[10px] font-semibold"
+                    : "px-2.5 py-1 text-[10px] font-semibold"
                 )}
               >
                 {t(
@@ -336,7 +657,9 @@ export function TasksCommandDock({
                     : completedCount > 0
                       ? "success"
                       : "neutral",
-                  "px-2.5 py-1 text-[10px] font-semibold"
+                  isDense
+                    ? "px-2 py-0.5 text-[10px] font-semibold"
+                    : "px-2.5 py-1 text-[10px] font-semibold"
                 )}
               >
                 {t(
@@ -349,7 +672,9 @@ export function TasksCommandDock({
                 <span
                   className={workspaceStatusClass(
                     activeTask.hasWarnings ? "warning" : "info",
-                    "max-w-full px-2.5 py-1 text-[10px] font-semibold"
+                    isDense
+                      ? "max-w-full px-2 py-0.5 text-[10px] font-semibold"
+                      : "max-w-full px-2.5 py-1 text-[10px] font-semibold"
                   )}
                 >
                   {compactText(activeTask.title, 42)}
@@ -358,7 +683,20 @@ export function TasksCommandDock({
             </div>
           ) : null}
 
-          <div className="mt-4 min-h-0 flex-1 overflow-y-auto pr-1">
+          <div
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto pr-1",
+              hasStatusBar
+                ? isDense
+                  ? "mt-2"
+                  : "mt-3"
+                : hasTopHeader
+                  ? isDense
+                    ? "mt-3"
+                    : "mt-4"
+                  : ""
+            )}
+          >
             {error ? (
               <div
                 className={workspaceCalloutClass(
@@ -383,6 +721,7 @@ export function TasksCommandDock({
             ) : null}
 
             <CommandInput
+              value={draftText}
               onSubmit={handleSubmit}
               onTextChange={setDraftText}
               loading={loading}
@@ -393,12 +732,15 @@ export function TasksCommandDock({
                 "例如：本周内重构支付模块，要求不停机并准备可回滚方案",
                 'Example: "Refactor the payment module this week with zero downtime and a rollback plan"'
               )}
+              hideLabel={hideInputLabel}
+              dense={isDense}
+              rows={isDense ? 3 : 2}
               submitLabel={t(locale, "运行指令", "Run command")}
               sendingLabel={t(locale, "运行中...", "Running...")}
             />
 
             {currentDialog && currentDialog.status === "active" ? (
-              <div className="mt-4">
+              <div className={isDense ? "mt-3" : "mt-4"}>
                 <ClarificationPanel
                   dialog={currentDialog}
                   onAnswer={handleClarificationAnswer}
@@ -446,8 +788,7 @@ export function TasksCommandDock({
                       "max-w-full px-2.5 py-1 text-[10px] font-semibold"
                     )}
                   >
-                    {t(locale, "落点", "Landing")} ·{" "}
-                    {compactText(landingText, 32)}
+                    {t(locale, "落点", "Landing")} 路 {compactText(landingText, 32)}
                   </span>
                   <span
                     className={workspaceStatusClass(
@@ -455,7 +796,7 @@ export function TasksCommandDock({
                       "max-w-full px-2.5 py-1 text-[10px] font-semibold"
                     )}
                   >
-                    {t(locale, "执行形态", "Execution shape")} ·{" "}
+                    {t(locale, "执行形态", "Execution shape")} 路{" "}
                     {compactText(executionShape, 36)}
                   </span>
                   {activeTask ? (
@@ -465,8 +806,7 @@ export function TasksCommandDock({
                         "max-w-full px-2.5 py-1 text-[10px] font-semibold"
                       )}
                     >
-                      {t(locale, "焦点", "Focus")} ·{" "}
-                      {compactText(activeTask.title, 28)}
+                      {t(locale, "焦点", "Focus")} 路 {compactText(activeTask.title, 28)}
                     </span>
                   ) : null}
                 </div>
@@ -500,20 +840,8 @@ export function TasksCommandDock({
                     label={t(locale, "当前节奏", "Current cadence")}
                     value={
                       activeTask
-                        ? compactText(
-                            activeTask.currentStageLabel ||
-                              t(
-                                locale,
-                                "尚未进入执行阶段",
-                                "No active stage yet"
-                              ),
-                            40
-                          )
-                        : t(
-                            locale,
-                            "等待选择任务",
-                            "Waiting for task selection"
-                          )
+                        ? compactText(stageText, 40)
+                        : t(locale, "等待选择任务", "Waiting for task selection")
                     }
                     tone={activeTask?.hasWarnings ? "warning" : "info"}
                   />
@@ -536,8 +864,8 @@ export function TasksCommandDock({
                       )}
                     >
                       {activeTask.hasWarnings
-                        ? t(locale, "有风险信号", "Warnings present")
-                        : t(locale, "持续推进中", "Healthy progression")}
+                        ? t(locale, "存在风险信号", "Warnings present")
+                        : t(locale, "任务推进健康", "Healthy progression")}
                     </span>
                     {currentAnalysis?.intent ? (
                       <span
