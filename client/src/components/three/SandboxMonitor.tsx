@@ -52,7 +52,7 @@ const SLOT_LAYOUT = {
 } as const;
 
 const HTML_HEIGHT = 150;
-const HTML_DISTANCE_FACTOR = 10.2;
+const HTML_DISTANCE_FACTOR = 6.4;
 
 function t(locale: string, zh: string, en: string) {
   return locale === "zh-CN" ? zh : en;
