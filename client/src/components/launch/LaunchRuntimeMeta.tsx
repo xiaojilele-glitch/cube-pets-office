@@ -55,9 +55,9 @@ export function LaunchRuntimeMeta({
   return (
     <div
       className={cn(
-        "mt-2 flex items-center gap-2 text-xs text-stone-500",
+        "mt-2 flex gap-2 text-xs text-stone-500",
         hasSharedActionRail
-          ? "flex-wrap"
+          ? "flex-wrap items-end"
           : "overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       )}
     >
@@ -106,13 +106,15 @@ export function LaunchRuntimeMeta({
 
       <div
         className={cn(
-          "flex min-w-0 items-center gap-2",
-          hasSharedActionRail ? "ml-auto flex-1 flex-wrap justify-end" : "ml-auto"
+          "flex min-w-0 gap-2",
+          hasSharedActionRail
+            ? "ml-auto flex-1 flex-wrap items-end justify-end"
+            : "ml-auto items-center"
         )}
       >
         {operatorActionRail}
 
-        {onSubmit && submitLabel ? (
+        {!hasSharedActionRail && onSubmit && submitLabel ? (
           <GlowButton
             type="button"
             disabled={submitDisabled}

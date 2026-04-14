@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -71,6 +71,7 @@ export function LaunchOperatorActionRail({
   detail,
   loadingByAction,
   onSubmitAction,
+  trailingAction,
   className,
 }: {
   detail: MissionTaskDetail;
@@ -79,6 +80,7 @@ export function LaunchOperatorActionRail({
     action: ActionKind;
     reason?: string;
   }) => void | Promise<void>;
+  trailingAction?: ReactNode;
   className?: string;
 }) {
   const { locale, copy } = useI18n();
@@ -357,78 +359,72 @@ export function LaunchOperatorActionRail({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2",
+        "flex min-w-0 flex-1 flex-col items-end gap-1.5",
         className
       )}
     >
-      <span
-        className={cn(
-          "workspace-status !gap-1 !px-2 !py-1 !text-xs font-semibold whitespace-nowrap",
-          missionOperatorStateTone(detail.operatorState)
-        )}
-        title={missionOperatorStateLabel(detail.operatorState, locale)}
-      >
-        {missionOperatorStateLabel(detail.operatorState, locale)}
-      </span>
-
-      {latestAction ? (
+      <div className="flex w-full flex-wrap items-center justify-end gap-2">
         <span
-          className={workspaceStatusClass(
-            "neutral",
-            "max-w-[220px] !gap-1 !px-2 !py-1 !text-xs font-medium"
+          className={cn(
+            "workspace-status !gap-1 !px-2 !py-1 !text-xs font-semibold whitespace-nowrap",
+            missionOperatorStateTone(detail.operatorState)
           )}
-          title={[
-            missionOperatorActionLabel(latestAction.action as ActionKind, locale),
-            latestSummary,
-            formatTaskRelative(latestAction.createdAt, locale),
-          ]
-            .filter(Boolean)
-            .join(" / ")}
+          title={missionOperatorStateLabel(detail.operatorState, locale)}
         >
-          <Clock3 className="size-3.5" />
-          <span className="truncate">
-            {missionOperatorActionLabel(latestAction.action as ActionKind, locale)}
-            {latestSummary ? ` / ${latestSummary}` : ""}
+          {missionOperatorStateLabel(detail.operatorState, locale)}
+        </span>
+
+        {latestAction ? (
+          <span
+            className={workspaceStatusClass(
+              "neutral",
+              "max-w-[220px] !gap-1 !px-2 !py-1 !text-xs font-medium"
+            )}
+            title={[
+              missionOperatorActionLabel(latestAction.action as ActionKind, locale),
+              latestSummary,
+              formatTaskRelative(latestAction.createdAt, locale),
+            ]
+              .filter(Boolean)
+              .join(" / ")}
+          >
+            <Clock3 className="size-3.5" />
+            <span className="truncate">
+              {missionOperatorActionLabel(latestAction.action as ActionKind, locale)}
+              {latestSummary ? ` / ${latestSummary}` : ""}
+            </span>
           </span>
-        </span>
-      ) : null}
+        ) : null}
 
-      {primaryActions.passiveMessage ? (
-        <span
-          className={workspaceStatusClass(
-            "neutral",
-            "max-w-[240px] !gap-1 !px-2 !py-1 !text-xs font-medium"
-          )}
-          title={primaryActions.passiveMessage}
-        >
-          <AlertTriangle className="size-3.5" />
-          <span className="truncate">{compactText(primaryActions.passiveMessage, 44)}</span>
-        </span>
-      ) : null}
+        {primaryActions.passiveMessage ? (
+          <span
+            className={workspaceStatusClass(
+              "neutral",
+              "max-w-[240px] !gap-1 !px-2 !py-1 !text-xs font-medium"
+            )}
+            title={primaryActions.passiveMessage}
+          >
+            <AlertTriangle className="size-3.5" />
+            <span className="truncate">
+              {compactText(primaryActions.passiveMessage, 44)}
+            </span>
+          </span>
+        ) : null}
 
-      {primaryAction ? renderActionButton(primaryAction, "primary") : null}
-      {secondaryActions.map(action =>
-        renderActionButton(action, "secondary")
-      )}
-      {dangerousActions.includes("terminate")
-        ? renderActionButton("terminate", "danger")
-        : null}
+        {inlineError ? (
+          <span
+            className={workspaceStatusClass(
+              "danger",
+              "max-w-[220px] !gap-1 !px-2 !py-1 !text-xs font-medium"
+            )}
+            title={inlineError}
+          >
+            <AlertTriangle className="size-3.5" />
+            <span className="truncate">{compactText(inlineError, 40)}</span>
+          </span>
+        ) : null}
 
-      {inlineError ? (
-        <span
-          className={workspaceStatusClass(
-            "danger",
-            "max-w-[220px] !gap-1 !px-2 !py-1 !text-xs font-medium"
-          )}
-          title={inlineError}
-        >
-          <AlertTriangle className="size-3.5" />
-          <span className="truncate">{compactText(inlineError, 40)}</span>
-        </span>
-      ) : null}
-
-      {feedback ? (
-        <>
+        {feedback ? (
           <span
             className={workspaceStatusClass(
               feedback.tone === "success" ? "success" : "danger",
@@ -443,23 +439,34 @@ export function LaunchOperatorActionRail({
             )}
             <span className="truncate">{compactText(feedback.title, 36)}</span>
           </span>
-          {feedback.retryPayload ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-8 rounded-full px-2.5 text-xs"
-              onClick={() => {
-                const retryPayload = feedback.retryPayload;
-                if (!retryPayload) return;
-                void submitAction(retryPayload.action, retryPayload.reason);
-              }}
-            >
-              <RotateCcw className="size-3.5" />
-              {copy.tasks.operatorBar.retryLast}
-            </Button>
-          ) : null}
-        </>
-      ) : null}
+        ) : null}
+      </div>
+
+      <div className="flex w-full flex-wrap items-center justify-end gap-2">
+        {primaryAction ? renderActionButton(primaryAction, "primary") : null}
+        {secondaryActions.map(action =>
+          renderActionButton(action, "secondary")
+        )}
+        {dangerousActions.includes("terminate")
+          ? renderActionButton("terminate", "danger")
+          : null}
+        {feedback?.retryPayload ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 rounded-full px-2.5 text-xs"
+            onClick={() => {
+              const retryPayload = feedback.retryPayload;
+              if (!retryPayload) return;
+              void submitAction(retryPayload.action, retryPayload.reason);
+            }}
+          >
+            <RotateCcw className="size-3.5" />
+            {copy.tasks.operatorBar.retryLast}
+          </Button>
+        ) : null}
+        {trailingAction}
+      </div>
     </div>
   );
 }

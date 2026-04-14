@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   RefreshCw,
+  Send,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ import { LaunchOperatorActionRail } from "@/components/launch/LaunchOperatorActi
 import { LaunchRuntimeMeta } from "@/components/launch/LaunchRuntimeMeta";
 import { ClarificationPanel } from "@/components/nl-command/ClarificationPanel";
 import { CommandInput } from "@/components/nl-command/CommandInput";
+import { GlowButton } from "@/components/ui/GlowButton";
 import { Button } from "@/components/ui/button";
 import { useI18n } from "@/i18n";
 import { CAN_USE_ADVANCED_RUNTIME } from "@/lib/deploy-target";
@@ -494,6 +496,17 @@ export function UnifiedLaunchComposer({
                   detail={activeTaskDetail}
                   loadingByAction={operatorActionLoading}
                   onSubmitAction={onSubmitOperatorAction}
+                  trailingAction={
+                    <GlowButton
+                      type="button"
+                      disabled={!draftText.trim() || submitting}
+                      className="h-8 shrink-0 rounded-full px-3 text-xs font-semibold shadow-[0_10px_24px_rgba(94,139,114,0.18)]"
+                      onClick={() => void handleSubmit(draftText)}
+                    >
+                      <Send className="size-3.5" />
+                      {submitLabel}
+                    </GlowButton>
+                  }
                 />
               ) : undefined
             }

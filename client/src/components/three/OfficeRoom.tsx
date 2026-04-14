@@ -423,90 +423,8 @@ function ZoneBase({
   );
 }
 
-function ZoneBanner({
-  position,
-  rotation = [0, 0, 0],
-  color,
-  title,
-  subtitle,
-  wallMounted = false,
-}: {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  color: string;
-  title: string;
-  subtitle: string;
-  wallMounted?: boolean;
-}) {
-  const panelDepth = wallMounted ? 0.04 : 0.08;
-  const accentDepth = wallMounted ? 0.014 : 0.02;
-  const badgeDepth = wallMounted ? 0.028 : 0.04;
-  const htmlZ = wallMounted ? 0.045 : 0.07;
-
-  return (
-    <group position={position} rotation={rotation}>
-      {wallMounted && (
-        <>
-          <mesh position={[0, 0, -0.016]}>
-            <boxGeometry args={[1.68, 1.02, 0.015]} />
-            <meshStandardMaterial color="#8E765E" roughness={0.94} />
-          </mesh>
-          <mesh position={[0, 0.56, -0.012]}>
-            <boxGeometry args={[0.76, 0.06, 0.01]} />
-            <meshStandardMaterial color="#A98C71" roughness={0.88} />
-          </mesh>
-          {[-0.3, 0.3].map(x => (
-            <mesh key={x} position={[x, 0.56, -0.002]}>
-              <cylinderGeometry args={[0.02, 0.02, 0.018, 16]} />
-              <meshStandardMaterial
-                color="#D9C4A4"
-                metalness={0.12}
-                roughness={0.42}
-              />
-            </mesh>
-          ))}
-        </>
-      )}
-
-      <mesh>
-        <boxGeometry args={[1.74, 0.84, panelDepth]} />
-        <meshStandardMaterial color="#F4E9DB" roughness={0.92} />
-      </mesh>
-      <mesh position={[0, 0.28, panelDepth / 2 + accentDepth / 2]}>
-        <boxGeometry args={[1.74, 0.14, accentDepth]} />
-        <meshStandardMaterial color={color} roughness={0.65} />
-      </mesh>
-      <mesh position={[-0.64, 0.28, panelDepth / 2 + badgeDepth / 2 + 0.002]}>
-        <cylinderGeometry args={[0.045, 0.045, badgeDepth, 20]} />
-        <meshStandardMaterial
-          color="#FFF7EA"
-          emissive={color}
-          emissiveIntensity={0.26}
-        />
-      </mesh>
-      <Html
-        center
-        position={[0, -0.02, htmlZ + 0.01]}
-        distanceFactor={13}
-        style={{ pointerEvents: "none" }}
-      >
-        <div className="w-[152px] rounded-2xl border border-white/70 bg-white/92 px-3 py-2 text-center shadow-[0_10px_24px_rgba(74,54,34,0.16)] backdrop-blur-md">
-          <div className="whitespace-nowrap text-[12px] font-bold tracking-[0.08em] text-[#3F3124]">
-            {title}
-          </div>
-          <div className="mt-1 truncate text-[9px] font-medium tracking-[0.04em] text-[#8F7A66]">
-            {subtitle}
-          </div>
-        </div>
-      </Html>
-    </group>
-  );
-}
-
 const POD_SLOTS = [
   {
-    bannerPosition: [-6.92, 1.76, -1.75] as [number, number, number],
-    bannerRotation: [0, Math.PI / 2, 0] as [number, number, number],
     floorPosition: [-3.45, 0.03, -1.78] as [number, number, number],
     decorPosition: [-5.15, 0, -1.95] as [number, number, number],
     glassPosition: [-4.52, 1.02, -1.02] as [number, number, number],
@@ -514,8 +432,6 @@ const POD_SLOTS = [
     storageRotation: [0, 0, 0] as [number, number, number],
   },
   {
-    bannerPosition: [6.92, 1.76, -1.7] as [number, number, number],
-    bannerRotation: [0, -Math.PI / 2, 0] as [number, number, number],
     floorPosition: [3.35, 0.03, -1.72] as [number, number, number],
     decorPosition: [5.3, 0, -1.8] as [number, number, number],
     glassPosition: [4.9, 1.06, -0.98] as [number, number, number],
@@ -523,8 +439,6 @@ const POD_SLOTS = [
     storageRotation: [0, 0, 0] as [number, number, number],
   },
   {
-    bannerPosition: [-6.92, 1.76, 2.65] as [number, number, number],
-    bannerRotation: [0, Math.PI / 2, 0] as [number, number, number],
     floorPosition: [-3.08, 0.03, 2.45] as [number, number, number],
     decorPosition: [-5.08, 0, 2.68] as [number, number, number],
     glassPosition: [-4.48, 1.02, 2.96] as [number, number, number],
@@ -532,8 +446,6 @@ const POD_SLOTS = [
     storageRotation: [0, 0, 0] as [number, number, number],
   },
   {
-    bannerPosition: [6.92, 1.76, 2.55] as [number, number, number],
-    bannerRotation: [0, -Math.PI / 2, 0] as [number, number, number],
     floorPosition: [3.25, 0.03, 2.45] as [number, number, number],
     decorPosition: [5.25, 0, 2.58] as [number, number, number],
     glassPosition: [4.86, 1.04, 2.04] as [number, number, number],
@@ -556,15 +468,6 @@ function PodDecor({
 
   return (
     <group>
-      <ZoneBanner
-        position={slot.bannerPosition}
-        rotation={slot.bannerRotation}
-        color={color}
-        title={title}
-        subtitle={subtitle}
-        wallMounted
-      />
-
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={slot.floorPosition}>
         <torusGeometry args={[ringRadius, 0.055, 16, 64]} />
         <meshStandardMaterial
@@ -843,11 +746,17 @@ function MobileBoard({
   position,
   rotation = [0, 0, 0],
   color,
+  title,
+  subtitle,
 }: {
   position: [number, number, number];
   rotation?: [number, number, number];
   color: string;
+  title: string;
+  subtitle: string;
 }) {
+  const glowTextShadow = `0 0 8px ${color}, 0 0 16px ${color}, 0 0 28px rgba(255,255,255,0.7)`;
+
   return (
     <group position={position} rotation={rotation}>
       <mesh position={[0, 1.02, 0]}>
@@ -870,6 +779,74 @@ function MobileBoard({
         <boxGeometry args={[0.94, 0.05, 0.34]} />
         <meshStandardMaterial color="#90755B" roughness={0.86} />
       </mesh>
+      <mesh position={[0, 1.18, 0.027]}>
+        <planeGeometry args={[0.84, 0.28]} />
+        <meshStandardMaterial
+          color="#FFFDF8"
+          emissive={color}
+          emissiveIntensity={0.18}
+          transparent
+          opacity={0.2}
+        />
+      </mesh>
+      <mesh position={[0, 0.96, 0.027]}>
+        <planeGeometry args={[0.76, 0.16]} />
+        <meshStandardMaterial
+          color="#FFFCF6"
+          emissive={color}
+          emissiveIntensity={0.22}
+          transparent
+          opacity={0.14}
+        />
+      </mesh>
+      <mesh position={[0, 1.31, 0.028]}>
+        <planeGeometry args={[0.7, 0.016]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.86}
+          transparent
+          opacity={0.78}
+        />
+      </mesh>
+      <mesh position={[0, 0.84, 0.028]}>
+        <planeGeometry args={[0.62, 0.012]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.7}
+          transparent
+          opacity={0.6}
+        />
+      </mesh>
+      <Html
+        center
+        transform
+        position={[0, 1.09, 0.032]}
+        distanceFactor={8.8}
+        style={{ pointerEvents: "none" }}
+      >
+        <div className="w-[158px] text-center">
+          <div
+            className="text-[9px] font-semibold uppercase tracking-[0.32em] text-white/90"
+            style={{
+              fontFamily: "'Space Grotesk', 'Noto Sans SC', sans-serif",
+              textShadow: glowTextShadow,
+            }}
+          >
+            {title}
+          </div>
+          <div
+            className="mt-2 text-[16px] font-black leading-[1.08] tracking-[0.08em] text-white"
+            style={{
+              fontFamily: "'Space Grotesk', 'Noto Sans SC', sans-serif",
+              textShadow: `${glowTextShadow}, 0 2px 10px rgba(15,23,42,0.35)`,
+            }}
+          >
+            {subtitle}
+          </div>
+        </div>
+      </Html>
       {[-0.36, 0.36]
         .flatMap(x => [-0.12, 0.12].map(z => ({ x, z })))
         .map(({ x, z }) => (
@@ -884,17 +861,17 @@ function MobileBoard({
         ))}
       {[
         {
-          position: [-0.22, 1.08, 0.03] as [number, number, number],
+          position: [-0.24, 0.76, 0.03] as [number, number, number],
           noteColor: "#FDE68A",
           rotationZ: -0.08,
         },
         {
-          position: [0.08, 0.98, 0.03] as [number, number, number],
+          position: [0.12, 0.66, 0.03] as [number, number, number],
           noteColor: "#BFDBFE",
           rotationZ: 0.05,
         },
         {
-          position: [0.24, 1.18, 0.03] as [number, number, number],
+          position: [0.24, 0.9, 0.03] as [number, number, number],
           noteColor: "#FBCFE8",
           rotationZ: -0.04,
         },
@@ -1155,6 +1132,10 @@ export function OfficeRoom() {
         position={[-5.92, 0, -1.15]}
         rotation={[0, Math.PI / 2, 0]}
         color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]}
+        title={sceneDepartments[0]?.title || getScenePodTitle(0, locale)}
+        subtitle={
+          sceneDepartments[0]?.subtitle || getFallbackPodSubtitle(0, locale)
+        }
       />
       <TaskCart
         position={[-5.25, 0, -2.72]}
@@ -1188,6 +1169,10 @@ export function OfficeRoom() {
         position={[5.95, 0, -2.45]}
         rotation={[0, -Math.PI / 2.3, 0]}
         color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]}
+        title={sceneDepartments[1]?.title || getScenePodTitle(1, locale)}
+        subtitle={
+          sceneDepartments[1]?.subtitle || getFallbackPodSubtitle(1, locale)
+        }
       />
       <TaskCart
         position={[2.05, 0, -2.52]}
@@ -1217,6 +1202,10 @@ export function OfficeRoom() {
         position={[-5.98, 0, 1.48]}
         rotation={[0, Math.PI / 2, 0]}
         color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]}
+        title={sceneDepartments[2]?.title || getScenePodTitle(2, locale)}
+        subtitle={
+          sceneDepartments[2]?.subtitle || getFallbackPodSubtitle(2, locale)
+        }
       />
       <TaskCart
         position={[-1.98, 0, 2.62]}
@@ -1257,6 +1246,10 @@ export function OfficeRoom() {
         position={[5.95, 0, 1.58]}
         rotation={[0, -Math.PI / 2, 0]}
         color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]}
+        title={sceneDepartments[3]?.title || getScenePodTitle(3, locale)}
+        subtitle={
+          sceneDepartments[3]?.subtitle || getFallbackPodSubtitle(3, locale)
+        }
       />
       <TaskCart
         position={[1.96, 0, 2.88]}
