@@ -29,6 +29,8 @@ export interface ScreenshotFrame {
   timestamp: string;
 }
 
+export type SandboxFocusedPane = "terminal" | "task" | "browser";
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -74,13 +76,18 @@ interface SandboxStoreState {
   previousScreenshot: ScreenshotFrame | null;
   isStreaming: boolean;
   fullscreen: boolean;
+  focusedPane: SandboxFocusedPane | null;
 
   appendLog: (line: LogLine) => void;
   setLogHistory: (lines: LogLine[]) => void;
   updateScreenshot: (frame: ScreenshotFrame) => void;
   setActiveMission: (missionId: string | null) => void;
   requestLogHistory: (missionId?: string | null) => void;
-  setFullscreen: (value: boolean) => void;
+  setFullscreen: (
+    value: boolean,
+    pane?: SandboxFocusedPane
+  ) => void;
+  setFocusedPane: (pane: SandboxFocusedPane | null) => void;
   reset: () => void;
   initSocket: (socket: Socket) => void;
 }
@@ -96,6 +103,7 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
   previousScreenshot: null,
   isStreaming: false,
   fullscreen: false,
+  focusedPane: null,
 
   appendLog: (line: LogLine) => {
     set(s => {
@@ -146,8 +154,18 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
     });
   },
 
-  setFullscreen: (value: boolean) => {
-    set({ fullscreen: value });
+  setFullscreen: (value, pane = "terminal") => {
+    set({
+      fullscreen: value,
+      focusedPane: value ? pane : null,
+    });
+  },
+
+  setFocusedPane: pane => {
+    set({
+      focusedPane: pane,
+      fullscreen: pane !== null,
+    });
   },
 
   reset: () => {
@@ -158,6 +176,7 @@ export const useSandboxStore = create<SandboxStoreState>((set, get) => ({
       previousScreenshot: null,
       isStreaming: false,
       fullscreen: false,
+      focusedPane: null,
     });
   },
 

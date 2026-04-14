@@ -6,7 +6,7 @@ inclusion: manual
 
 ## 当前状态总览
 
-本文件创建于 46 个 Spec 阶段；截至 2026-04-13，`.kiro/specs` 已扩展为 65 个目录。下文保留路线图创建时的阶段划分与历史统计口径，用于追溯依赖关系；其中 `workflow-artifacts-display` 已完成功能开发，当前仅剩最终检查点待验收。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
+本文件创建于 46 个 Spec 阶段；截至 2026-04-14，`.kiro/specs` 已扩展为 66 个目录。下文保留路线图创建时的阶段划分与历史统计口径，用于追溯依赖关系；其中 `workflow-artifacts-display` 已完成功能开发，当前仅剩最终检查点待验收。按领域分为 8 个大类的主路线仍然成立，但当前实现范围已经超过本路线图创建时的口径。
 
 ### 已完成基座（8 个）
 
@@ -21,7 +21,7 @@ inclusion: manual
 | browser-runtime      | 纯前端运行时（IndexedDB + Web Worker）      |
 | frontend-3d          | 3D 场景 + 工作流面板 + 任务驾驶舱           |
 
-### 后续新增 / 补充 Spec（13 个）
+### 后续新增 / 补充 Spec（14 个）
 
 | Spec                         | 状态         | 简述                                       |
 | ---------------------------- | ------------ | ------------------------------------------ |
@@ -36,6 +36,7 @@ inclusion: manual
 | mission-ui-polish            | 未开始       | 任务控制台 UI 收尾打磨                     |
 | office-task-cockpit          | 开发中       | 办公室成为默认执行壳，桌面端内嵌任务驾驶舱 |
 | office-cockpit-first-screen-refresh | 规划中 | 办公室驾驶舱首屏风格重构，收敛主次关系与信息密度 |
+| office-wall-display-redesign | 规划中 | 后墙三分区监控屏改造，统一终端 / 任务 / 浏览器墙面显示 |
 | i18n-cleanup                 | 未开始       | 前端国际化与文案清理                       |
 | frontend-demo-mode           | 待补任务     | spec 目录已存在，但尚未形成 `tasks.md`     |
 
@@ -66,6 +67,12 @@ inclusion: manual
 - `office-cockpit-first-screen-refresh` 不是新增业务域，而是 `office-task-cockpit` 的后续桌面首屏体验收口项。
 - 目标是在不削减任务、workflow、Agent、记忆、历史与主操作能力的前提下，把办公室首屏从多块同级卡片并列收敛为单主轴驾驶舱。
 - V1 继续采用“Scene3D 主视觉、统一驾驶台、右侧任务优先详情、移动端保守兼容”的策略推进。
+
+### 当前近端场景化显示收口（2026-04-14）
+
+- `office-wall-display-redesign` 是 `office-cockpit-first-screen-refresh` 之后的进一步场景化收口项，不是新增业务域。
+- 目标是在不改变 mission / sandbox 数据主线的前提下，把后墙从嵌入式预览板升级为统一的“终端 / 任务 / 浏览器”三分区监控屏。
+- V1 继续采用“Scene3D 持有后墙装配、任务区居中主控、侧区承接执行证据、pane 级聚焦交互”的策略推进。
 
 ### 历史待开发清单（路线图创建时，38 个）
 

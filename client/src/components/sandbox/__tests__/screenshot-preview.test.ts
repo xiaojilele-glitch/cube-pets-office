@@ -66,6 +66,7 @@ describe("ScreenshotPreview 逻辑测试", () => {
     });
 
     it("reset 清除所有截图", () => {
+      useSandboxStore.getState().setFocusedPane("browser");
       useSandboxStore.getState().updateScreenshot({
         stepIndex: 0,
         imageData: "test",
@@ -76,6 +77,7 @@ describe("ScreenshotPreview 逻辑测试", () => {
       useSandboxStore.getState().reset();
       expect(useSandboxStore.getState().latestScreenshot).toBeNull();
       expect(useSandboxStore.getState().previousScreenshot).toBeNull();
+      expect(useSandboxStore.getState().focusedPane).toBeNull();
     });
   });
 

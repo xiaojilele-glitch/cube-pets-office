@@ -14,7 +14,7 @@
 
 ## 总览
 
-截至 2026-04-13，`.kiro/specs` 共 65 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，当前新增规划重点转向把办公室推进为默认执行壳，并继续收敛桌面端首屏体验，平台层能力（L31-L38）仍待环境就绪。
+截至 2026-04-14，`.kiro/specs` 共 66 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，当前新增规划重点转向把办公室推进为默认执行壳，并继续收敛桌面端首屏体验，同时将后墙显示区域推进为场景化监控设备，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -29,7 +29,7 @@
 - [x] P06 `browser-runtime` — 纯前端运行时
 - [x] P07 `frontend-3d` — 3D 场景与前端
 
-## 当前维护快照（2026-04-13）
+## 当前维护快照（2026-04-14）
 
 - 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
 - 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
@@ -39,6 +39,7 @@
 - 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已完成并合并到 `main`。
 - `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱与右侧上下文 tab 骨架已落地，剩余回归与补测。
 - `office-cockpit-first-screen-refresh` 已进入近端规划，作为 `office-task-cockpit` 的后续桌面首屏体验收口项，聚焦“克制驾驶舱 + 主次分层”。
+- `office-wall-display-redesign` 已进入近端规划，作为 `scene-mission-fusion`、`sandbox-live-preview` 与 `office-task-cockpit` 的后续墙面监控屏改造项，聚焦把后墙升级为“终端 / 任务 / 浏览器”三分区显示器。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
 - 工程健康：`npm run check` 当前存在 30 个 TypeScript 错误，属于需要单独收敛的基线欠账。
 
@@ -254,6 +255,17 @@ L12 → L29 → L30
 - 文件 ownership：主 owner 覆盖 `Home.tsx`、`components/office/*`、`components/tasks/*` 与 `index.css`，避免与其他高频 UI 文件并行冲突。
 - 交付顺序：先收敛桌面顶层壳层与 cockpit 头部，再重构中栏 Scene HUD 与统一驾驶台，再重排右栏任务优先详情，最后做栏宽回归与桌面手测。
 
+## L30 后新增主线五：办公室墙面显示器重构（2026-04-14）
+
+在办公室首屏风格重构把桌面端壳层噪音、主次关系和右侧渐进详情收口后，当前核心问题进一步从“首屏清不清晰”升级为“后墙中央的信息展示是否真正成为场景的一部分”。这条新增主线聚焦把后墙从嵌入式预览板升级为统一的场景化监控屏：左侧终端执行流、中间任务主控、右侧浏览器实时画面，形成与办公室空间一致的三分区显示器。
+
+### 优先级与依赖
+
+- [ ] P1 `office-wall-display-redesign` — 规划中：重构后墙显示器，统一终端 / 任务 / 浏览器三分区，并将任务 HUD 场景化为真实设备。
+- 依赖已完成的 `scene-mission-fusion`、`sandbox-live-preview`，以及已在推进中的 `office-task-cockpit`、`office-cockpit-first-screen-refresh`。
+- 文件 ownership：主 owner 优先覆盖 `Scene3D.tsx`、`components/three/SandboxMonitor.tsx`、`components/sandbox/*`、墙面任务摘要组件与 `sandbox-store.ts`，避免场景层与 pane 级聚焦逻辑并行冲突。
+- 交付顺序：先重做后墙外壳与三区布局，再实现中间任务主控区，再收终端和浏览器两侧 pane，最后补 pane 级聚焦交互、线缆/光影与桌面回归。
+
 ## 第四层：平台级能力（环境就绪后再做，不设时间承诺）
 
 <p align="center">
@@ -408,6 +420,20 @@ office-cockpit-first-screen-refresh:
   再重构中栏 HUD 与双通道统一驾驶台
   再重排右栏渐进详情与左侧队列密度
   最后补 1280 / 1440 / 1728+ 桌面回归与手测
+```
+
+### Day 8+：办公室墙面显示器重构（近端规划）
+
+```
+office-wall-display-redesign:
+  目标是在不改变 mission / sandbox 数据主线的前提下，把后墙升级为统一的三分区监控屏
+  左侧承接终端执行流，中间承接 Mission Control，右侧承接 Browser Live
+  继续由 Scene3D 持有后墙位置与装配权，不引入新的后端契约或第二套任务状态源
+执行顺序:
+  先重做后墙显示器壳体与三区框架
+  再实现中间任务主控区与默认镜头可读性
+  再收终端 / 浏览器两侧 pane 的 wall 变体
+  最后补 pane 级焦点交互、环境装饰和桌面回归
 ```
 
 ## 关键路径

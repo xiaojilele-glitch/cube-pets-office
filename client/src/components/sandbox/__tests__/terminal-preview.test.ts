@@ -48,24 +48,43 @@ describe("TerminalPreview 逻辑测试", () => {
     it("初始状态 fullscreen 为 false", () => {
       useSandboxStore.getState().reset();
       expect(useSandboxStore.getState().fullscreen).toBe(false);
+      expect(useSandboxStore.getState().focusedPane).toBeNull();
     });
 
     it("setFullscreen(true) 切换到全屏", () => {
       useSandboxStore.getState().reset();
       useSandboxStore.getState().setFullscreen(true);
       expect(useSandboxStore.getState().fullscreen).toBe(true);
+      expect(useSandboxStore.getState().focusedPane).toBe("terminal");
     });
 
     it("setFullscreen(false) 退出全屏", () => {
       useSandboxStore.getState().setFullscreen(true);
       useSandboxStore.getState().setFullscreen(false);
       expect(useSandboxStore.getState().fullscreen).toBe(false);
+      expect(useSandboxStore.getState().focusedPane).toBeNull();
     });
 
     it("reset 后 fullscreen 回到 false", () => {
       useSandboxStore.getState().setFullscreen(true);
       useSandboxStore.getState().reset();
       expect(useSandboxStore.getState().fullscreen).toBe(false);
+      expect(useSandboxStore.getState().focusedPane).toBeNull();
+    });
+
+    it("setFocusedPane('browser') 会同步打开 pane 聚焦", () => {
+      useSandboxStore.getState().reset();
+      useSandboxStore.getState().setFocusedPane("browser");
+      expect(useSandboxStore.getState().fullscreen).toBe(true);
+      expect(useSandboxStore.getState().focusedPane).toBe("browser");
+    });
+
+    it("setFocusedPane(null) 会清空 pane 聚焦", () => {
+      useSandboxStore.getState().reset();
+      useSandboxStore.getState().setFocusedPane("task");
+      useSandboxStore.getState().setFocusedPane(null);
+      expect(useSandboxStore.getState().fullscreen).toBe(false);
+      expect(useSandboxStore.getState().focusedPane).toBeNull();
     });
   });
 

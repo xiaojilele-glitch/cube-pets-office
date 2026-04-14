@@ -15,6 +15,13 @@ export interface ScreenshotPreviewProps {
   previous: ScreenshotFrame | null;
   onClickZoom: () => void;
   embedded?: boolean;
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
+  showFullscreenButton?: boolean;
+  title?: string;
+  statusLabel?: string | null;
+  contextLabel?: string | null;
+  variant?: "default" | "wall";
 }
 
 function ScreenshotPreviewInner({
@@ -22,11 +29,27 @@ function ScreenshotPreviewInner({
   previous,
   onClickZoom,
   embedded = false,
+  fullscreen = false,
+  onToggleFullscreen,
+  showFullscreenButton = true,
+  title,
+  statusLabel = null,
+  contextLabel = null,
+  variant = "default",
 }: ScreenshotPreviewProps) {
   const { locale } = useI18n();
-  const compactFrame = embedded;
-  const headerHeight = compactFrame ? 24 : 28;
-  const previewTitle = locale === "zh-CN" ? "浏览器画面" : "Browser view";
+  const wallVariant = variant === "wall";
+  const compactFrame = embedded && !fullscreen;
+  const headerHeight = compactFrame ? 24 : wallVariant ? 30 : 28;
+  const previewTitle =
+    title ||
+    (locale === "zh-CN"
+      ? wallVariant
+        ? "浏览器实时画面"
+        : "浏览器画面"
+      : wallVariant
+        ? "Browser Live"
+        : "Browser view");
   const zoomLabel = locale === "zh-CN" ? "放大" : "Zoom";
   const emptyTitle = locale === "zh-CN" ? "等待浏览器画面" : "Waiting for browser view";
   const emptyDescription =
@@ -36,27 +59,108 @@ function ScreenshotPreviewInner({
   const ariaLabel =
     locale === "zh-CN" ? "点击放大浏览器截图" : "Open browser screenshot";
 
-  const shellStyle: React.CSSProperties = {
-    width: "100%",
-    height: "100%",
-    position: "relative",
-    background: compactFrame
-      ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
-      : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-    borderRadius: compactFrame ? 10 : 12,
-    overflow: "hidden",
-    cursor: "pointer",
-    border: compactFrame
-      ? "1px solid rgba(148, 163, 184, 0.12)"
-      : "1px solid rgba(148, 163, 184, 0.18)",
-    boxShadow: compactFrame
-      ? "inset 0 1px 0 rgba(255,255,255,0.04)"
-      : "0 12px 30px rgba(15, 23, 42, 0.24)",
-  };
+  const shellStyle: React.CSSProperties = fullscreen
+    ? {
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background:
+          "linear-gradient(180deg, rgba(5,10,18,0.96), rgba(10,18,30,0.98))",
+        padding: 16,
+      }
+    : {
+        width: "100%",
+        height: "100%",
+        position: "relative",
+        background: wallVariant
+          ? "linear-gradient(180deg, rgba(11,17,27,0.98), rgba(18,27,41,0.99))"
+          : compactFrame
+            ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
+            : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
+        borderRadius: compactFrame ? 10 : wallVariant ? 14 : 12,
+        overflow: "hidden",
+        cursor: "pointer",
+        border: wallVariant
+          ? "1px solid rgba(86, 104, 128, 0.18)"
+          : compactFrame
+            ? "1px solid rgba(148, 163, 184, 0.12)"
+            : "1px solid rgba(148, 163, 184, 0.18)",
+        boxShadow: wallVariant
+          ? "inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(4, 10, 18, 0.24)"
+          : compactFrame
+            ? "inset 0 1px 0 rgba(255,255,255,0.04)"
+            : "0 12px 30px rgba(15, 23, 42, 0.24)",
+      };
+
+  const showControl = fullscreen || showFullscreenButton;
+
+  const headerRight = (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {statusLabel ? (
+        <span
+          style={{
+            fontSize: compactFrame ? 8 : 9,
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: locale === "zh-CN" ? "none" : "uppercase",
+            color: "#93c5fd",
+          }}
+        >
+          {statusLabel}
+        </span>
+      ) : (
+        <span style={{ fontSize: compactFrame ? 9 : 10, color: "#e2e8f0" }}>
+          {zoomLabel}
+        </span>
+      )}
+      {showControl ? (
+        <button
+          type="button"
+          onClick={event => {
+            event.stopPropagation();
+            if (fullscreen) {
+              onToggleFullscreen?.();
+            } else {
+              onClickZoom();
+            }
+          }}
+          style={{
+            background: compactFrame
+              ? "rgba(30,41,59,0.56)"
+              : "rgba(51,65,85,0.55)",
+            border: compactFrame
+              ? "1px solid rgba(148, 163, 184, 0.14)"
+              : "none",
+            color: "#e2e8f0",
+            cursor: "pointer",
+            padding: compactFrame ? "1px 6px" : "2px 6px",
+            borderRadius: 6,
+            fontSize: compactFrame ? 10 : 12,
+            lineHeight: 1.2,
+          }}
+          aria-label={fullscreen ? (locale === "zh-CN" ? "退出全屏" : "Exit fullscreen") : ariaLabel}
+        >
+          {fullscreen ? "x" : "[ ]"}
+        </button>
+      ) : null}
+    </div>
+  );
 
   if (!current) {
     return (
-      <div data-testid="screenshot-placeholder" style={shellStyle}>
+      <div
+        data-testid="screenshot-placeholder"
+        style={shellStyle}
+        onClick={onClickZoom}
+        role="button"
+        tabIndex={0}
+        aria-label={ariaLabel}
+        onKeyDown={event => {
+          if (event.key === "Enter" || event.key === " ") {
+            onClickZoom();
+          }
+        }}
+      >
         <div
           style={{
             position: "absolute",
@@ -65,6 +169,18 @@ function ScreenshotPreviewInner({
               "radial-gradient(circle at top, rgba(96,165,250,0.12), transparent 36%), radial-gradient(circle at bottom, rgba(244,114,182,0.08), transparent 32%)",
           }}
         />
+        {wallVariant && !fullscreen ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px)",
+              opacity: 0.16,
+              pointerEvents: "none",
+            }}
+          />
+        ) : null}
         <div
           style={{
             position: "absolute",
@@ -81,9 +197,11 @@ function ScreenshotPreviewInner({
               ? "1px solid rgba(148, 163, 184, 0.1)"
               : "1px solid rgba(148, 163, 184, 0.14)",
             color: "#cbd5e1",
-            background: compactFrame
-              ? "rgba(6,10,18,0.84)"
-              : "rgba(15,23,42,0.78)",
+            background: wallVariant
+              ? "rgba(6,12,20,0.84)"
+              : compactFrame
+                ? "rgba(6,10,18,0.84)"
+                : "rgba(15,23,42,0.78)",
           }}
         >
           <span
@@ -97,9 +215,7 @@ function ScreenshotPreviewInner({
           >
             {previewTitle}
           </span>
-          <span style={{ fontSize: compactFrame ? 9 : 10, color: "#e2e8f0" }}>
-            {zoomLabel}
-          </span>
+          {headerRight}
         </div>
 
         <div
@@ -154,9 +270,11 @@ function ScreenshotPreviewInner({
             ? "1px solid rgba(148, 163, 184, 0.1)"
             : "1px solid rgba(148, 163, 184, 0.14)",
           color: "#cbd5e1",
-          background: compactFrame
-            ? "rgba(6,10,18,0.84)"
-            : "rgba(15,23,42,0.78)",
+          background: wallVariant
+            ? "rgba(6,12,20,0.84)"
+            : compactFrame
+              ? "rgba(6,10,18,0.84)"
+              : "rgba(15,23,42,0.78)",
         }}
       >
         <span
@@ -170,9 +288,7 @@ function ScreenshotPreviewInner({
         >
           {previewTitle}
         </span>
-        <span style={{ fontSize: compactFrame ? 9 : 10, color: "#e2e8f0" }}>
-          {zoomLabel}
-        </span>
+        {headerRight}
       </div>
 
       {previous ? (
@@ -222,6 +338,27 @@ function ScreenshotPreviewInner({
       >
         {formatTimestamp(current.timestamp)}
       </div>
+      {contextLabel ? (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 4,
+            left: 4,
+            maxWidth: "60%",
+            background: "rgba(15,23,42,0.72)",
+            color: "#cbd5e1",
+            fontSize: compactFrame ? 9 : 10,
+            padding: "1px 6px",
+            borderRadius: 6,
+            zIndex: 2,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {contextLabel}
+        </div>
+      ) : null}
     </div>
   );
 }

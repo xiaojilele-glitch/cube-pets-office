@@ -18,6 +18,11 @@ export interface TerminalPreviewProps {
   fullscreen: boolean;
   onToggleFullscreen: () => void;
   embedded?: boolean;
+  onActivate?: () => void;
+  showFullscreenButton?: boolean;
+  title?: string;
+  statusLabel?: string | null;
+  variant?: "default" | "wall";
 }
 
 const SCROLLBACK = 500;
@@ -28,15 +33,29 @@ function TerminalPreviewInner({
   fullscreen,
   onToggleFullscreen,
   embedded = false,
+  onActivate,
+  showFullscreenButton = true,
+  title,
+  statusLabel = null,
+  variant = "default",
 }: TerminalPreviewProps) {
   const { locale } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const writtenCountRef = useRef(0);
+  const wallVariant = variant === "wall";
   const compactFrame = embedded && !fullscreen;
-  const headerHeight = compactFrame ? 24 : 28;
+  const headerHeight = compactFrame ? 24 : wallVariant ? 30 : 28;
 
-  const previewTitle = locale === "zh-CN" ? "执行终端" : "Execution terminal";
+  const previewTitle =
+    title ||
+    (locale === "zh-CN"
+      ? wallVariant
+        ? "执行流"
+        : "执行终端"
+      : wallVariant
+        ? "Execution Feed"
+        : "Execution terminal");
   const idleTitle = locale === "zh-CN" ? "等待执行" : "Waiting for run";
   const idleDescription =
     locale === "zh-CN"
@@ -101,28 +120,65 @@ function TerminalPreviewInner({
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: "linear-gradient(180deg, #111827, #0f172a)",
+        background:
+          "linear-gradient(180deg, rgba(5,10,18,0.96), rgba(10,18,30,0.98))",
         padding: 16,
       }
     : {
         width: "100%",
         height: "100%",
         position: "relative",
-        background: compactFrame
-          ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
-          : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-        borderRadius: compactFrame ? 10 : 12,
+        background: wallVariant
+          ? "linear-gradient(180deg, rgba(11,17,27,0.98), rgba(18,27,41,0.99))"
+          : compactFrame
+            ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
+            : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
+        borderRadius: compactFrame ? 10 : wallVariant ? 14 : 12,
         overflow: "hidden",
-        border: compactFrame
-          ? "1px solid rgba(148, 163, 184, 0.12)"
-          : "1px solid rgba(148, 163, 184, 0.18)",
-        boxShadow: compactFrame
-          ? "inset 0 1px 0 rgba(255,255,255,0.04)"
-          : "0 12px 30px rgba(15, 23, 42, 0.24)",
+        border: wallVariant
+          ? "1px solid rgba(86, 104, 128, 0.18)"
+          : compactFrame
+            ? "1px solid rgba(148, 163, 184, 0.12)"
+            : "1px solid rgba(148, 163, 184, 0.18)",
+        boxShadow: wallVariant
+          ? "inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(4, 10, 18, 0.24)"
+          : compactFrame
+            ? "inset 0 1px 0 rgba(255,255,255,0.04)"
+            : "0 12px 30px rgba(15, 23, 42, 0.24)",
+        cursor: onActivate && !fullscreen ? "pointer" : "default",
       };
 
+  const showControl = fullscreen || showFullscreenButton;
+
   return (
-    <div style={containerStyle} data-testid="terminal-preview">
+    <div
+      style={containerStyle}
+      data-testid="terminal-preview"
+      onClick={!fullscreen ? onActivate : undefined}
+      role={!fullscreen && onActivate ? "button" : undefined}
+      tabIndex={!fullscreen && onActivate ? 0 : undefined}
+      onKeyDown={
+        !fullscreen && onActivate
+          ? event => {
+              if (event.key === "Enter" || event.key === " ") {
+                onActivate();
+              }
+            }
+          : undefined
+      }
+    >
+      {wallVariant && !fullscreen ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px)",
+            opacity: 0.16,
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
       <div
         style={{
           display: "flex",
@@ -135,9 +191,11 @@ function TerminalPreviewInner({
             ? "1px solid rgba(148, 163, 184, 0.1)"
             : "1px solid rgba(148, 163, 184, 0.14)",
           color: "#cbd5e1",
-          background: compactFrame
-            ? "rgba(6,10,18,0.84)"
-            : "rgba(15,23,42,0.78)",
+          background: wallVariant
+            ? "rgba(6,12,20,0.84)"
+            : compactFrame
+              ? "rgba(6,10,18,0.84)"
+              : "rgba(15,23,42,0.78)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -162,6 +220,47 @@ function TerminalPreviewInner({
         >
           {previewTitle}
         </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {statusLabel ? (
+            <span
+              style={{
+                fontSize: compactFrame ? 8 : 9,
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                textTransform: locale === "zh-CN" ? "none" : "uppercase",
+                color: isStreaming ? "#86efac" : "#fbbf24",
+              }}
+            >
+              {statusLabel}
+            </span>
+          ) : null}
+          {showControl ? (
+            <button
+              data-testid="terminal-fullscreen-btn"
+              onClick={event => {
+                event.stopPropagation();
+                onToggleFullscreen();
+              }}
+              style={{
+                background: compactFrame
+                  ? "rgba(30,41,59,0.56)"
+                  : "rgba(51,65,85,0.55)",
+                border: compactFrame
+                  ? "1px solid rgba(148, 163, 184, 0.14)"
+                  : "none",
+                color: "#e2e8f0",
+                cursor: "pointer",
+                padding: compactFrame ? "1px 6px" : "2px 6px",
+                borderRadius: 6,
+                fontSize: compactFrame ? 10 : 12,
+                lineHeight: 1.2,
+              }}
+              aria-label={fullscreenLabel}
+            >
+              {fullscreen ? "x" : "[ ]"}
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {!isStreaming && (
@@ -194,32 +293,6 @@ function TerminalPreviewInner({
         ref={containerRef}
         style={{ width: "100%", height: `calc(100% - ${headerHeight}px)` }}
       />
-
-      <button
-        data-testid="terminal-fullscreen-btn"
-        onClick={onToggleFullscreen}
-        style={{
-          position: "absolute",
-          top: 4,
-          right: 4,
-          background: compactFrame
-            ? "rgba(30,41,59,0.56)"
-            : "rgba(51,65,85,0.55)",
-          border: compactFrame
-            ? "1px solid rgba(148, 163, 184, 0.14)"
-            : "none",
-          color: "#e2e8f0",
-          cursor: "pointer",
-          padding: compactFrame ? "1px 6px" : "2px 6px",
-          borderRadius: 6,
-          fontSize: compactFrame ? 10 : 12,
-          lineHeight: 1.2,
-          zIndex: 2,
-        }}
-        aria-label={fullscreenLabel}
-      >
-        {fullscreen ? "x" : "[ ]"}
-      </button>
     </div>
   );
 }

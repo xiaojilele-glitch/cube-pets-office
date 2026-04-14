@@ -29,8 +29,8 @@
 ## 项目规模
 
 - 850+ 文件 / ~180,000 行 TypeScript
-- `.kiro/specs` 当前共 64 个 spec 目录；详细完成态与近端规划以下方“当前进度快照（Spec 视角）”为准，其中 `workflow-artifacts-display` 已完成功能开发、待最终检查点
-- 当前活跃增量：任务控制台补完主线（取消 / 操作动作 / 详情首屏 / 文案 / UI 打磨）；`workflow-artifacts-display` 进入最终验收收口
+- `.kiro/specs` 当前共 66 个 spec 目录；详细完成态与近端规划以下方“当前进度快照（Spec 视角）”为准，其中 `workflow-artifacts-display` 已完成功能开发、待最终检查点
+- 当前活跃增量：任务控制台补完主线（取消 / 操作动作 / 详情首屏 / 文案 / UI 打磨）；`workflow-artifacts-display` 进入最终验收收口；办公室桌面体验收口继续沿 `office-cockpit-first-screen-refresh` → `office-wall-display-redesign` 演进
 - 14 个 shared/ 契约模块，主线能力已覆盖前端、服务端、执行器、审计与互操作层
 - 大量单元测试与属性测试已覆盖 Mission、执行器、RAG、审计、NL Command 等核心域
 
@@ -126,17 +126,19 @@
 | Guest Agent 市场  | 外部 Agent 沙箱接入 + TTL                         |
 | 全息 UI 升级      | 毛玻璃拟态 + HoloDock + GlowButton + 呼吸光晕     |
 
-### 📍 当前进度快照（Spec 视角，2026-04-13）
+### 📍 当前进度快照（Spec 视角，2026-04-14）
 
 | 状态            | 数量 | 说明                                                                                |
 | --------------- | ---- | ----------------------------------------------------------------------------------- |
 | 已完成          | 41   | 已合并或 `tasks.md` 已全勾选的主线/扩展 spec，覆盖 L01-L30 与多项近端工作台收口能力 |
-| 开发中 / 待回归 | 13   | 含 `office-task-cockpit`、`workflow-artifacts-display` 及若干仅剩验证项的 spec      |
+| 开发中 / 待回归 / 规划中 | 15   | 含 `office-task-cockpit`、`workflow-artifacts-display`、`office-cockpit-first-screen-refresh`、`office-wall-display-redesign` 及若干仅剩验证项的 spec |
 | 未开始          | 9    | 第四层 L31-L38 与 `i18n-cleanup`                                                    |
 | 待补任务清单    | 1    | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md`                              |
 
 - `workflow-artifacts-display` 已完成 Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、页面集成与 Socket 联动；当前仅剩 `tasks.md` 的最终检查点未勾选。
 - `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱、右侧上下文 tab 与统一双通道发起基础已落地；剩余回归、补测与桌面手测。
+- `office-cockpit-first-screen-refresh` 已进入近端规划，作为 `office-task-cockpit` 的桌面首屏体验收口项，聚焦“克制驾驶舱 + 主次分层 + 右侧渐进详情”。
+- `office-wall-display-redesign` 已完成 spec 建档，作为 `scene-mission-fusion`、`sandbox-live-preview` 与 `office-task-cockpit` 的后续场景化改造项，聚焦把后墙升级为“终端 / 任务 / 浏览器”三分区监控屏。
 - `/tasks` 继续保留为全屏工作台与深链页；当前任务真相源仍为 `tasks-store`，不改变 Mission 数据流。
 - `mission-runtime`、`multi-modal-vision`、`nl-command-center` 与 `state-persistence-recovery` 的剩余勾选项主要是历史尾项或补测任务，不代表主线能力缺失。
 - `state-persistence-recovery` 的未完成项主要集中在标记 `*` 的可选属性测试。
@@ -146,6 +148,8 @@
 | 模块                         | 依赖 / 备注                                                       |
 | ---------------------------- | ----------------------------------------------------------------- |
 | P0 `office-task-cockpit`     | 桌面端办公室主壳 + 三栏驾驶舱已落地，待补测试、兼容回归与桌面手测 |
+| P1 `office-cockpit-first-screen-refresh` | `office-task-cockpit` 的后续桌面首屏收口，聚焦主次关系、Scene HUD 与统一驾驶台 |
+| P1 `office-wall-display-redesign` | `scene-mission-fusion` + `sandbox-live-preview` + `office-task-cockpit` 的后续场景化显示改造 |
 | `workflow-artifacts-display` | 仅剩 `tasks.md` 最终检查点与验收收尾                              |
 | i18n-cleanup                 | 前端文案 / 国际化收口，独立排期                                   |
 | frontend-demo-mode           | 需先补 `tasks.md`，再确认依赖与范围                               |
