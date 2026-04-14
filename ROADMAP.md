@@ -1,5 +1,13 @@
 # 实现路径规划：从展示页面到多智能体编排系统
 
+## 2026-04-15 增补
+
+- [x] `launch-operator-surface-convergence` 第一阶段已完成：`UnifiedLaunchComposer` 已接入底部任务操作 rail，统一发起区与任务操作区开始收敛为同一块首屏控制面。
+- [x] `OfficeTaskCockpit.tsx` 与 `TasksPage.tsx` 已完成共享操作区接线，活动任务详情、任务操作 loading map 和提交回调都已并入统一发起组件。
+- [x] `TasksCockpitDetail` 首屏独立任务操作卡已降级为“建议与依据”区，右侧栏继续保留任务摘要、信号、产物和深层详情，不再承担首屏主操作入口。
+- [x] 已补齐自动化验证：底部任务操作 rail 组件测试、统一发起区 helper 测试、任务操作栏测试和 `unified-launch-coordinator` 发起回归测试均已通过。
+- [ ] 当前剩余收尾项主要是桌面端与窄宽度场景手测，以及 `office-task-cockpit` 的最终兼容回归。
+
 ## 2026-03-27 增补
 
 - [x] 工作流附件输入已从“仅文本”升级为“文本 + 附件”联合提交。

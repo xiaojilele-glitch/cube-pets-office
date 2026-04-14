@@ -219,6 +219,7 @@ class LocalRuntimeClient {
   submitDirective(directive: string, attachments: WorkflowInputAttachment[] = []) {
     return this.request<{
       workflowId: string;
+      missionId?: string | null;
       status: WorkflowInfo["status"];
       deduped: boolean;
     }>("submit_directive", { directive, attachments });

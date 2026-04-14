@@ -883,6 +883,7 @@ scope.onmessage = async event => {
         if (existing) {
           respond(message.requestId, {
             workflowId: existing.id,
+            missionId: existing.missionId ?? null,
             status: existing.status,
             deduped: true,
           });
@@ -891,6 +892,7 @@ scope.onmessage = async event => {
 
         const workflow: WorkflowInfo = {
           id: uuid(),
+          missionId: null,
           directive,
           status: "pending",
           current_stage: null,
@@ -910,6 +912,7 @@ scope.onmessage = async event => {
         persist();
         respond(message.requestId, {
           workflowId: workflow.id,
+          missionId: null,
           status: "running",
           deduped: false,
         });

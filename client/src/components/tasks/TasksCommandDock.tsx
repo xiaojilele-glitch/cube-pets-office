@@ -7,6 +7,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useShallow } from "zustand/react/shallow";
 
 import { ClarificationPanel } from "@/components/nl-command/ClarificationPanel";
 import { CommandInput } from "@/components/nl-command/CommandInput";
@@ -18,6 +19,7 @@ import {
 } from "@/components/workspace/workspace-tone";
 import { useI18n } from "@/i18n";
 import {
+  selectTaskHubLaunchSession,
   useNLCommandStore,
   type TaskHubCommandSubmissionResult,
   type TaskHubCreateMission,
@@ -91,15 +93,20 @@ export function TasksCommandDock({
   className?: string;
 }) {
   const { locale, copy } = useI18n();
-  const loading = useNLCommandStore(state => state.loading);
-  const error = useNLCommandStore(state => state.error);
-  const currentCommand = useNLCommandStore(state => state.currentCommand);
-  const currentAnalysis = useNLCommandStore(state => state.currentAnalysis);
-  const currentDialog = useNLCommandStore(state => state.currentDialog);
-  const currentPlan = useNLCommandStore(state => state.currentPlan);
-  const commands = useNLCommandStore(state => state.commands);
-  const draftText = useNLCommandStore(state => state.draftText);
-  const lastSubmission = useNLCommandStore(state => state.lastSubmission);
+  const taskHubSession = useNLCommandStore(
+    useShallow(selectTaskHubLaunchSession)
+  );
+  const {
+    loading,
+    error,
+    currentCommand,
+    currentAnalysis,
+    currentDialog,
+    currentPlan,
+    draftText,
+    lastSubmission,
+    commands,
+  } = taskHubSession;
   const setDraftText = useNLCommandStore(state => state.setDraftText);
   const submitTaskHubCommand = useNLCommandStore(
     state => state.submitTaskHubCommand
@@ -108,6 +115,10 @@ export function TasksCommandDock({
     state => state.submitTaskHubClarification
   );
   const clearError = useNLCommandStore(state => state.clearError);
+  const commandHistory = useMemo(
+    () => commands.map(command => command.commandText),
+    [commands]
+  );
 
   const runningCount = tasks.filter(task => task.status === "running").length;
   const waitingCount = tasks.filter(task => task.status === "waiting").length;
@@ -432,7 +443,7 @@ export function TasksCommandDock({
                 onSubmit={handleSubmit}
                 onTextChange={setDraftText}
                 loading={loading}
-                commandHistory={commands.map(command => command.commandText)}
+                commandHistory={commandHistory}
                 label={t(locale, "输入任务指令", "Enter task command")}
                 placeholder={t(
                   locale,
@@ -505,7 +516,7 @@ export function TasksCommandDock({
                 <div className="min-w-0 max-w-4xl">
                   <div className="workspace-eyebrow">
                     {isEmbedded
-                      ? t(locale, "任务命令", "Mission commands")
+                      ? t(locale, "快速任务入口", "Direct mission launch")
                       : copy.tasks.listPage.eyebrow}
                   </div>
                   <h1
@@ -697,7 +708,7 @@ export function TasksCommandDock({
               onSubmit={handleSubmit}
               onTextChange={setDraftText}
               loading={loading}
-              commandHistory={commands.map(command => command.commandText)}
+              commandHistory={commandHistory}
               label={t(locale, "输入任务指令", "Enter task command")}
               placeholder={t(
                 locale,

@@ -247,8 +247,8 @@ export function OfficeWorkflowFlowPanel({
         title={t(locale, "还没有团队流上下文", "No workflow context yet")}
         description={t(
           locale,
-          "快速任务会直接进入 mission，高级发起成功后这里会显示 stage、组织摘要、附件和产物。",
-          "Mission launches land directly in the task flow. After an advanced launch succeeds, this tab shows stages, organization context, attachments, and artifacts."
+          "快速任务会直接进入 mission，团队流发起成功后这里会显示 stage、组织摘要、附件和产物。",
+          "Mission launches land directly in the task flow. After a workflow launch succeeds, this tab shows stages, organization context, attachments, and artifacts."
         )}
       />
     );

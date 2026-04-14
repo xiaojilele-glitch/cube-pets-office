@@ -86,6 +86,18 @@ export interface TaskHubCommandSubmissionResult {
   createdAt: number;
 }
 
+export interface TaskHubLaunchSession {
+  draftText: string;
+  commands: StrategicCommand[];
+  currentCommand: StrategicCommand | null;
+  currentAnalysis: CommandAnalysis | null;
+  currentDialog: ClarificationDialog | null;
+  currentPlan: NLExecutionPlan | null;
+  lastSubmission: TaskHubCommandSubmissionResult | null;
+  loading: boolean;
+  error: string | null;
+}
+
 export interface SubmitTaskHubCommandRequest extends SubmitCommandRequest {
   createMission: TaskHubCreateMission;
 }
@@ -631,6 +643,33 @@ interface NLCommandState {
 
   // Utility
   clearError: () => void;
+}
+
+export function selectTaskHubLaunchSession(
+  state: Pick<
+    NLCommandState,
+    | "commands"
+    | "draftText"
+    | "currentCommand"
+    | "currentAnalysis"
+    | "currentDialog"
+    | "currentPlan"
+    | "lastSubmission"
+    | "loading"
+    | "error"
+  >
+): TaskHubLaunchSession {
+  return {
+    draftText: state.draftText,
+    commands: state.commands,
+    currentCommand: state.currentCommand,
+    currentAnalysis: state.currentAnalysis,
+    currentDialog: state.currentDialog,
+    currentPlan: state.currentPlan,
+    lastSubmission: state.lastSubmission,
+    loading: state.loading,
+    error: state.error,
+  };
 }
 
 // ---------------------------------------------------------------------------

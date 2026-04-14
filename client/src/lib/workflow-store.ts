@@ -106,7 +106,16 @@ interface WorkflowHeartbeatRunResponse {
 
 interface WorkflowCreateResponse {
   workflowId?: string;
+  missionId?: string | null;
+  status?: WorkflowInfo["status"];
+  deduped?: boolean;
   error?: string;
+}
+
+export interface WorkflowLaunchResult {
+  workflowId: string;
+  missionId: string | null;
+  deduped: boolean;
 }
 
 export type PanelView =
@@ -286,7 +295,9 @@ interface WorkflowState {
     limit?: number
   ) => Promise<void>;
   runHeartbeat: (agentId: string) => Promise<boolean>;
-  submitDirective: (input: DirectiveSubmissionInput) => Promise<string | null>;
+  submitDirective: (
+    input: DirectiveSubmissionInput
+  ) => Promise<WorkflowLaunchResult | null>;
   downloadWorkflowReport: (
     workflowId: string,
     format: "json" | "md"
@@ -987,7 +998,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         activeView: "workflow",
       });
       await get().fetchWorkflowDetail(existingRunningWorkflow.id);
-      return existingRunningWorkflow.id;
+      return {
+        workflowId: existingRunningWorkflow.id,
+        missionId: existingRunningWorkflow.missionId ?? null,
+        deduped: true,
+      };
     }
 
     if (
@@ -995,7 +1010,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       state.lastSubmittedAt !== null &&
       now - state.lastSubmittedAt < 5000
     ) {
-      return state.currentWorkflowId;
+      return state.currentWorkflowId
+        ? {
+            workflowId: state.currentWorkflowId,
+            missionId:
+              state.currentWorkflow?.id === state.currentWorkflowId
+                ? state.currentWorkflow.missionId ?? null
+                : null,
+            deduped: true,
+          }
+        : null;
     }
 
     set({
@@ -1033,7 +1057,11 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         });
         await get().fetchWorkflowDetail(data.workflowId);
         await get().fetchWorkflows();
-        return data.workflowId;
+        return {
+          workflowId: data.workflowId,
+          missionId: data.missionId ?? null,
+          deduped: Boolean(data.deduped),
+        };
       }
 
       set({ isSubmitting: false, submitError: null });

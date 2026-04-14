@@ -104,6 +104,7 @@ router.post("/", async (req, res) => {
     if (activeWorkflow) {
       return res.json({
         workflowId: activeWorkflow.id,
+        missionId: resolveWorkflowMission(activeWorkflow.id) ?? null,
         status: activeWorkflow.status,
         deduped: true,
       });
@@ -120,6 +121,7 @@ router.post("/", async (req, res) => {
     if (recentWorkflow) {
       return res.json({
         workflowId: recentWorkflow.id,
+        missionId: resolveWorkflowMission(recentWorkflow.id) ?? null,
         status: recentWorkflow.status,
         deduped: true,
       });

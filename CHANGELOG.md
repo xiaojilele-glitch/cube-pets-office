@@ -4,6 +4,14 @@
 
 更细的任务拆分、阶段规划和未完成项请看 [ROADMAP.md](./ROADMAP.md)。
 
+## 2026-04-15
+
+- 更新 `README.md`，同步当前产品口径：办公室主壳、统一智能发起入口、底部共享操作区与最近完成的发起/任务操作收敛进展。
+- 完成 `launch-operator-surface-convergence` 第一阶段：`UnifiedLaunchComposer` 接入底部任务操作 rail，`OfficeTaskCockpit.tsx` / `TasksPage.tsx` 完成接线。
+- 将 `TasksCockpitDetail` 的首屏独立任务操作卡降级为建议与依据区，首屏主操作入口收口到底部共享操作区。
+- 为共享操作区补充测试与回归：新增 `LaunchOperatorActionRail` 组件测试，补齐 `unified-launch-coordinator` 的升级前短路与澄清提交流程回归。
+- 更新 `.kiro/specs/launch-operator-surface-convergence/tasks.md` 与 `.kiro/steering/execution-plan.md`，同步本轮实现进度与当前剩余手测项。
+
 ## 2026-03-30
 
 - 重构 `README.md`，把内容改成更适合首次阅读的结构：30 秒了解、核心链路、快速开始、配置总览、文档入口。

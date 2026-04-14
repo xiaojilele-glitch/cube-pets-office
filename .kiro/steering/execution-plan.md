@@ -2,7 +2,7 @@
  * @Author: wangchunji
  * @Date: 2026-04-01 09:20:21
  * @Description:
- * @LastEditTime: 2026-04-11 20:20:00
+ * @LastEditTime: 2026-04-15 02:20:00
  * @LastEditors: wangchunji
 -->
 
@@ -14,7 +14,7 @@
 
 ## 总览
 
-截至 2026-04-14，`.kiro/specs` 共 66 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，当前新增规划重点转向把办公室推进为默认执行壳，并继续收敛桌面端首屏体验，同时将后墙显示区域推进为场景化监控设备，平台层能力（L31-L38）仍待环境就绪。
+截至 2026-04-15，`.kiro/specs` 共 66 个目录。前三层主线与补充 spec `holographic-ui` 已基本落地，`workflow-artifacts-display` 已完成功能开发、待最终检查点；任务控制台补完主线与信息架构收口主线已完成，办公室主壳与统一智能发起入口已进入收口阶段，`launch-operator-surface-convergence` 已完成开发与自动化验证、仅剩桌面手测，当前新增规划重点继续转向桌面端首屏体验收束与后墙场景化监控设备推进，平台层能力（L31-L38）仍待环境就绪。
 
 > **维护说明**：本文件保留原始执行顺序与依赖分析，供追溯和继续排期使用；若与旧段落的历史口径冲突，以本节快照为准。
 
@@ -29,7 +29,7 @@
 - [x] P06 `browser-runtime` — 纯前端运行时
 - [x] P07 `frontend-3d` — 3D 场景与前端
 
-## 当前维护快照（2026-04-14）
+## 当前维护快照（2026-04-15）
 
 - 已合并主线：阶段 0、第一层、第二层和第三层链路均已实现并合并。
 - 已完成补充 spec：`ai-enabled-sandbox`、`executor-integration`、`holographic-ui`。
@@ -37,7 +37,8 @@
 - 历史尾项：`mission-runtime`、`multi-modal-vision`、`nl-command-center`、`state-persistence-recovery` 仍有少量未勾选任务，属于补测或收尾项。
 - 新增近端主线：`mission-cancel-control`、`mission-operator-actions`、`task-detail-operations-first`、`execution-language-refresh`、`mission-ui-polish` 已完成。
 - 新增下一波规划：`navigation-convergence`、`task-hub-convergence`、`api-fallback-empty-states`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification` 已完成并合并到 `main`。
-- `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱与右侧上下文 tab 骨架已落地，剩余回归与补测。
+- `office-task-cockpit` 已进入收口阶段，桌面端办公室主壳、三栏驾驶舱、右侧上下文 tab 与统一智能发起入口已落地，剩余桌面兼容回归与手测。
+- `launch-operator-surface-convergence` 已完成第一阶段实现：`UnifiedLaunchComposer` 接入底部任务操作 rail，`OfficeTaskCockpit.tsx` / `TasksPage.tsx` 已完成接线，`TasksCockpitDetail` 首屏独立任务操作卡已降级为建议与依据区；`tasks.md` 当前仅剩 `7.4` 桌面端与窄宽度手动验证未勾选。
 - `office-cockpit-first-screen-refresh` 已进入近端规划，作为 `office-task-cockpit` 的后续桌面首屏体验收口项，聚焦“克制驾驶舱 + 主次分层”。
 - `office-wall-display-redesign` 已进入近端规划，作为 `scene-mission-fusion`、`sandbox-live-preview` 与 `office-task-cockpit` 的后续墙面监控屏改造项，聚焦把后墙升级为“终端 / 任务 / 浏览器”三分区显示器。
 - 待启动：`i18n-cleanup`、第四层 L31-L38，以及尚未补 `tasks.md` 的 `frontend-demo-mode`。
@@ -231,7 +232,7 @@ L12 → L29 → L30
 
 - [ ] P0 `office-task-cockpit` — 开发中：办公室成为桌面端默认执行壳，内嵌任务驾驶舱、统一发起入口与右侧上下文 tab。
 - 依赖已完成的 `navigation-convergence`、`task-hub-convergence`、`workflow-panel-decomposition`、`scene-agent-interaction`、`workspace-visual-unification`。
-- 当前进展：桌面端办公室壳层、左侧任务队列、中间 `Scene3D`、右侧任务/上下文 tab 与统一双通道发起入口已接入；剩余兼容回归、补测与桌面手测。
+- 当前进展：桌面端办公室壳层、左侧任务队列、中间 `Scene3D`、右侧任务/上下文 tab 与统一智能发起入口已接入；`launch-operator-surface-convergence` 第一阶段已完成，底部共享操作区已支持任务操作并入；剩余兼容回归、桌面 / 窄宽手测与最终验收。
 
 ### 文件 ownership 边界
 
@@ -397,14 +398,19 @@ Wave 2（已完成并合并）:
 office-task-cockpit:
   已完成桌面端办公室主壳与三栏驾驶舱装配
   已接入右侧任务 / 团队流 / Agent / 记忆报告 / 历史 tab
-  已落地统一发起入口，支持“普通任务 + 高级发起”双通道
-  剩余兼容回归、补测与桌面手测
+  已落地统一智能发起入口
+  已完成 launch-operator-surface-convergence 第一阶段：
+    UnifiedLaunchComposer 已接入底部任务操作 rail
+    OfficeTaskCockpit / TasksPage 已接线
+    TasksCockpitDetail 首屏任务操作卡已降级为建议区
+    自动化测试已完成，当前仅剩桌面 / 窄宽手测
+  剩余兼容回归与桌面手测
 
 执行顺序:
   已完成桌面壳层
-  已完成右侧 tab 与统一发起基础装配
-  下一步补兼容回归
-  最后完成桌面手测与验收
+  已完成右侧 tab、统一发起基础装配与任务操作底部收敛
+  下一步补桌面兼容回归
+  最后完成桌面 / 窄宽手测与验收
 ```
 
 ### Day 7+：办公室首屏风格重构（近端规划）

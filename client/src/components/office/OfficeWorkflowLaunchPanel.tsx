@@ -84,7 +84,7 @@ export function OfficeWorkflowLaunchPanel({
       return t(locale, "切换到高级执行", "Switch to Advanced");
     }
     if (isFrontend) {
-      return t(locale, "预览高级发起", "Preview advanced launch");
+      return t(locale, "预览团队流发起", "Preview workflow launch");
     }
     return t(locale, "发起团队流", "Launch workflow");
   }, [canUpgrade, isFrontend, isSubmitting, locale]);
@@ -126,20 +126,21 @@ export function OfficeWorkflowLaunchPanel({
       return;
     }
 
-    const workflowId = await submitDirective({
+    const launchResult = await submitDirective({
       directive: directive.trim(),
       attachments,
     });
 
-    if (!workflowId) {
+    if (!launchResult) {
       return;
     }
 
     onLaunchSubmitted({
-      workflowId,
+      workflowId: launchResult.workflowId,
       directive: directive.trim(),
       attachmentCount: attachments.length,
       requestedAt: Date.now(),
+      missionId: launchResult.missionId,
     });
     setDirective("");
     setAttachments([]);
@@ -400,7 +401,7 @@ export function OfficeWorkflowLaunchPanel({
           <div className="min-w-0">
             <div className="workspace-eyebrow">
               {isEmbedded
-                ? t(locale, "高级发起", "Advanced launch")
+                ? t(locale, "团队流发起", "Workflow launch")
                 : t(locale, "统一发起 / 高级通道", "Unified launch / workflow lane")}
             </div>
             <h2
@@ -415,7 +416,7 @@ export function OfficeWorkflowLaunchPanel({
             >
               {isEmbedded
                 ? t(locale, "带上下文的团队发起", "Team launch with context")
-                : t(locale, "带附件的高级发起", "Advanced launch with attachments")}
+                : t(locale, "带附件的团队流发起", "Workflow launch with attachments")}
             </h2>
             <p
               className={cn(
@@ -639,8 +640,8 @@ export function OfficeWorkflowLaunchPanel({
                 )
               : t(
                   locale,
-                  "高级发起成功后会先显示“团队准备中”，等 workflow 关联到 mission 后自动聚焦回任务队列。",
-                  "After a successful advanced launch, the dock shows a team-preparing state and automatically focuses the task once the workflow links to a mission."
+                  "团队流发起成功后会先显示“团队准备中”，等 workflow 关联到 mission 后自动聚焦回任务队列。",
+                  "After a successful workflow launch, the dock shows a team-preparing state and automatically focuses the task once the workflow links to a mission."
                 )}
           </div>
 

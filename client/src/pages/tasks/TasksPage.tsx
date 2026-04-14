@@ -7,9 +7,9 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { UnifiedLaunchComposer } from "@/components/launch/UnifiedLaunchComposer";
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
 import { TasksCockpitDetail } from "@/components/tasks/TasksCockpitDetail";
-import { TasksCommandDock } from "@/components/tasks/TasksCommandDock";
 import { TasksQueueRail } from "@/components/tasks/TasksQueueRail";
 import { useViewportTier } from "@/hooks/useViewportTier";
 import { useI18n } from "@/i18n";
@@ -259,14 +259,34 @@ export default function TasksPage({
             />
 
             <div className="min-w-0 flex min-h-0 flex-col gap-3">
-              <TasksCommandDock
+              <UnifiedLaunchComposer
                 createMission={createMission}
-                tasks={tasks}
-                activeTask={selectedTaskSummary}
+                activeTaskTitle={selectedTaskSummary?.title}
+                activeTaskDetail={selectedDetail}
+                operatorActionLoading={
+                  activeTaskId
+                    ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
+                    : {}
+                }
+                onSubmitOperatorAction={handleSubmitOperatorAction}
                 onTaskResolved={handleTaskHubResolved}
                 onOpenCreateDialog={() => setCreateDialogOpen(true)}
                 onRefresh={refreshCurrent}
                 refreshing={loading && ready}
+                onWorkflowResolved={resolution => {
+                  if (!resolution.missionId) {
+                    return;
+                  }
+                  handleTaskHubResolved({
+                    commandId: resolution.workflowId,
+                    commandText: resolution.directive,
+                    missionId: resolution.missionId,
+                    relatedMissionIds: [resolution.missionId],
+                    autoSelectedMissionId: resolution.missionId,
+                    status: "created",
+                    createdAt: resolution.requestedAt,
+                  });
+                }}
                 className={cn(isLockedCockpit && "shrink-0 xl:min-h-[304px]")}
               />
 
@@ -292,14 +312,34 @@ export default function TasksPage({
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            <TasksCommandDock
+            <UnifiedLaunchComposer
               createMission={createMission}
-              tasks={tasks}
-              activeTask={selectedTaskSummary}
+              activeTaskTitle={selectedTaskSummary?.title}
+              activeTaskDetail={selectedDetail}
+              operatorActionLoading={
+                activeTaskId
+                  ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
+                  : {}
+              }
+              onSubmitOperatorAction={handleSubmitOperatorAction}
               onTaskResolved={handleTaskHubResolved}
               onOpenCreateDialog={() => setCreateDialogOpen(true)}
               onRefresh={refreshCurrent}
               refreshing={loading && ready}
+              onWorkflowResolved={resolution => {
+                if (!resolution.missionId) {
+                  return;
+                }
+                handleTaskHubResolved({
+                  commandId: resolution.workflowId,
+                  commandText: resolution.directive,
+                  missionId: resolution.missionId,
+                  relatedMissionIds: [resolution.missionId],
+                  autoSelectedMissionId: resolution.missionId,
+                  status: "created",
+                  createdAt: resolution.requestedAt,
+                });
+              }}
             />
 
             <TasksQueueRail

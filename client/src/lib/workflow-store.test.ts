@@ -78,6 +78,7 @@ describe("workflow-store advanced fallback handling", () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => {});
+    mockGetWorkflowsSnapshot.mockResolvedValue([]);
 
     const { useAppStore } = await import("./store");
     useAppStore.setState({ runtimeMode: "advanced" });
@@ -166,5 +167,71 @@ describe("workflow-store advanced fallback handling", () => {
     const state = useWorkflowStore.getState();
     expect(state.submitError?.source).toBe("html-fallback");
     expect(state.submitError?.message).not.toContain("Unexpected token");
+  });
+
+  it("returns workflowId and missionId from the advanced workflow launch response", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            workflowId: "wf-advanced",
+            missionId: "mission-123",
+            status: "running",
+            deduped: false,
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            workflow: {
+              id: "wf-advanced",
+              missionId: "mission-123",
+              directive: "Launch the workflow with mission link",
+              status: "running",
+              current_stage: "direction",
+              departments_involved: [],
+              started_at: null,
+              completed_at: null,
+              results: {},
+              created_at: "2026-04-15T00:00:00.000Z",
+            },
+            tasks: [],
+            messages: [],
+            report: null,
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+            },
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ workflows: [] }), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        })
+      );
+
+    const { useWorkflowStore } = await import("./workflow-store");
+    const result = await useWorkflowStore.getState().submitDirective({
+      directive: "Launch the workflow with mission link",
+    });
+
+    expect(result).toEqual({
+      workflowId: "wf-advanced",
+      missionId: "mission-123",
+      deduped: false,
+    });
   });
 });

@@ -10,7 +10,6 @@ import {
 import {
   Activity,
   ChevronDown,
-  Command,
   Copy,
   Ellipsis,
   Monitor,
@@ -18,14 +17,13 @@ import {
   RefreshCw,
   Server,
   Settings2,
-  Waves,
 } from "lucide-react";
 import { Splitter } from "antd";
 import { toast } from "sonner";
 
+import { UnifiedLaunchComposer } from "@/components/launch/UnifiedLaunchComposer";
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
 import { TasksCockpitDetail } from "@/components/tasks/TasksCockpitDetail";
-import { TasksCommandDock } from "@/components/tasks/TasksCommandDock";
 import { TasksQueueRail } from "@/components/tasks/TasksQueueRail";
 import {
   compactText,
@@ -54,7 +52,6 @@ import { useWorkflowStore } from "@/lib/workflow-store";
 import { resolveTaskHubLocationUpdate } from "@/pages/tasks/task-hub-location";
 
 import { OfficeAgentInspectorPanel } from "./OfficeAgentInspectorPanel";
-import { OfficeWorkflowLaunchPanel } from "./OfficeWorkflowLaunchPanel";
 import {
   OfficeMemoryReportsPanel,
   OfficeWorkflowFlowPanel,
@@ -62,7 +59,6 @@ import {
 } from "./OfficeWorkflowContextPanels";
 import type {
   OfficeCockpitTab,
-  OfficeLaunchMode,
   OfficeLaunchResolution,
 } from "./office-task-cockpit-types";
 import {
@@ -146,7 +142,6 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
 
   const [search, setSearch] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [launchMode, setLaunchMode] = useState<OfficeLaunchMode>("mission");
   const [activeTab, setActiveTab] = useState<OfficeCockpitTab>("task");
   const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
     null
@@ -268,7 +263,6 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
       null;
     if (linkedMissionId) {
       setPendingLaunch(null);
-      setLaunchMode("mission");
       setActiveTab("task");
       startTransition(() => {
         selectTask(linkedMissionId);
@@ -551,32 +545,9 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <div className="flex rounded-[10px] border border-white/65 bg-white/78 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
-                      <button
-                        type="button"
-                        onClick={() => setLaunchMode("mission")}
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
-                          launchMode === "mission"
-                            ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.22)]"
-                            : "text-stone-600 hover:bg-white"
-                        )}
-                      >
-                        <Command className="size-3.5" />
-                        {t(locale, "任务命令", "Mission commands")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setLaunchMode("workflow")}
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
-                          launchMode === "workflow"
-                            ? "bg-[#5E8B72] text-white shadow-[0_10px_24px_rgba(94,139,114,0.22)]"
-                            : "text-stone-600 hover:bg-white"
-                        )}
-                      >
-                        <Waves className="size-3.5" />
-                        {t(locale, "高级发起", "Advanced launch")}
-                      </button>
+                      <span className="inline-flex items-center gap-1 rounded-[8px] bg-[#d07a4f] px-1.5 py-0.5 text-[8px] font-semibold text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]">
+                        {t(locale, "统一智能发起", "Unified smart launch")}
+                      </span>
                       <button
                         type="button"
                         onClick={toggleTelemetryDashboard}
@@ -806,38 +777,34 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
               </div>
 
               <div className="min-h-0 flex-1 overflow-hidden p-2">
-                {launchMode === "mission" ? (
-                  <TasksCommandDock
-                    createMission={createMission}
-                    tasks={tasks}
-                    activeTask={selectedTaskSummary}
-                    onTaskResolved={handleTaskHubResolved}
-                    onOpenCreateDialog={() => setCreateDialogOpen(true)}
-                    onRefresh={refreshCurrent}
-                    refreshing={loading && ready}
-                    compact
-                    bare
-                    dense
-                    hideHeader
-                    hideActions
-                    hideInputLabel
-                    className="h-full"
-                  />
-                ) : (
-                  <OfficeWorkflowLaunchPanel
-                    pendingLaunch={pendingLaunch}
-                    compact
-                    bare
-                    dense
-                    hideHeader
-                    hideDirectiveLabel
-                    className="h-full"
-                    onLaunchSubmitted={resolution => {
-                      setPendingLaunch(resolution);
-                      setActiveTab("flow");
-                    }}
-                  />
-                )}
+                <UnifiedLaunchComposer
+                  createMission={createMission}
+                  activeTaskTitle={selectedTaskSummary?.title}
+                  activeTaskDetail={selectedDetail}
+                  operatorActionLoading={
+                    activeTaskId
+                      ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
+                      : {}
+                  }
+                  onSubmitOperatorAction={handleSubmitOperatorAction}
+                  onTaskResolved={handleTaskHubResolved}
+                  compact
+                  bare
+                  dense
+                  hideHeader
+                  hideInputLabel
+                  className="h-full"
+                  onWorkflowResolved={resolution => {
+                    setPendingLaunch({
+                      workflowId: resolution.workflowId,
+                      directive: resolution.directive,
+                      attachmentCount: resolution.attachmentCount,
+                      requestedAt: resolution.requestedAt,
+                      missionId: resolution.missionId,
+                    });
+                    setActiveTab("flow");
+                  }}
+                />
               </div>
             </div>
           </section>

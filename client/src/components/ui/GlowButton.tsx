@@ -108,7 +108,9 @@ const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
           />
         ))}
         {/* Content */}
-        <span className="relative z-10">{children}</span>
+        <span className="relative z-10 inline-flex items-center gap-1.5">
+          {children}
+        </span>
       </button>
     );
   },

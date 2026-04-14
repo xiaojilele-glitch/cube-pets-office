@@ -35,6 +35,7 @@ export interface CommandInputProps {
   onTextChange?: (value: string) => void;
   rows?: number;
   className?: string;
+  hideSubmitButton?: boolean;
 }
 
 export function CommandInput({
@@ -51,6 +52,7 @@ export function CommandInput({
   onTextChange,
   rows,
   className,
+  hideSubmitButton = false,
 }: CommandInputProps) {
   const { locale } = useI18n();
   const isZh = locale === "zh-CN";
@@ -161,8 +163,8 @@ export function CommandInput({
           {resolvedLabel}
         </label>
       ) : null}
-      <div className="flex items-end gap-1.5">
-        <div className="relative flex-1">
+      <div className="space-y-1.5">
+        <div className="relative">
           <textarea
             ref={inputRef}
             value={text}
@@ -216,19 +218,23 @@ export function CommandInput({
           )}
         </div>
 
-        <GlowButton
-          type="button"
-          disabled={!text.trim() || loading}
-          className={cn(
-            "shrink-0 rounded-[12px]",
-            dense &&
-              "h-9 gap-1.5 px-3 text-[10px] font-semibold shadow-[0_8px_20px_rgba(94,139,114,0.18)]"
-          )}
-          onClick={() => void handleSubmit()}
-        >
-          <Send className={cn(dense ? "size-3.5" : "size-4")} />
-          {loading ? resolvedSendingLabel : resolvedSubmitLabel}
-        </GlowButton>
+        {!hideSubmitButton ? (
+          <div className="flex justify-end">
+            <GlowButton
+              type="button"
+              disabled={!text.trim() || loading}
+              className={cn(
+                "shrink-0 rounded-[12px]",
+                dense &&
+                  "h-9 gap-1.5 px-3 text-[10px] font-semibold shadow-[0_8px_20px_rgba(94,139,114,0.18)]"
+              )}
+              onClick={() => void handleSubmit()}
+            >
+              <Send className={cn(dense ? "size-3.5" : "size-4")} />
+              {loading ? resolvedSendingLabel : resolvedSubmitLabel}
+            </GlowButton>
+          </div>
+        ) : null}
       </div>
     </div>
   );

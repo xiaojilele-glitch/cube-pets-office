@@ -689,11 +689,11 @@ function DirectiveView() {
       await setRuntimeMode("advanced");
       return;
     }
-    const workflowId = await submitDirective({
+    const launchResult = await submitDirective({
       directive: directive.trim(),
       attachments,
     });
-    if (workflowId) {
+    if (launchResult?.workflowId) {
       setDirective("");
       setAttachments([]);
       setAttachmentError(null);

@@ -27,7 +27,6 @@ import type {
 } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
 
-import { OperatorActionBar } from "./OperatorActionBar";
 import { StatusPillStack } from "./StatusPillStack";
 import { TaskDetailView } from "./TaskDetailView";
 import {
@@ -484,8 +483,8 @@ export function TasksCockpitDetail({
                 <div className="mt-0.5 line-clamp-2 text-[10px] leading-4 text-stone-600">
                   {t(
                     locale,
-                    "把建议动作、人工干预和执行控制压进同一个工作面，避免右栏继续下坠。",
-                    "Keep recommendations, manual intervention, and execution controls in one compact surface."
+                    "首屏任务控制已经收敛到底部 dock，这里保留推荐原因和判断依据。",
+                    "First-screen task controls now live in the bottom dock. This card keeps the rationale and guidance."
                   )}
                 </div>
               </div>
@@ -558,16 +557,6 @@ export function TasksCockpitDetail({
                   {primaryActions.passiveMessage}
                 </div>
               ) : null}
-
-              <div className="rounded-[12px] border border-stone-200/80 bg-white/72 px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)]">
-                <OperatorActionBar
-                  detail={detail}
-                  loadingByAction={operatorActionLoading}
-                  onSubmitAction={onSubmitOperatorAction}
-                  showContextSummary={false}
-                  variant="compact"
-                />
-              </div>
             </div>
           </section>
 
