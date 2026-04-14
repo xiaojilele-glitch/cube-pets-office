@@ -19,7 +19,7 @@ import {
 /* ── Constants ── */
 const ISLAND_POSITION: [number, number, number] = [0, 0, -2.5];
 const MINI_VIEW_OFFSET: [number, number, number] = [0, 2.8, 0];
-const WALL_MOUNT_OFFSET: [number, number, number] = [0, 2.04, -2.12];
+const WALL_MOUNT_OFFSET: [number, number, number] = [0, 1.42, -2.29];
 const WALL_MOUNT_ROTATION: [number, number, number] = [0, 0, 0];
 
 const GLOW_COLOR_ACTIVE = new THREE.Color("#F59E0B");
@@ -150,7 +150,25 @@ export function MissionIsland() {
       </mesh>
 
       {/* Mini View (always visible) */}
-      {!mountOnWall && (
+      {mountOnWall ? (
+        <group position={WALL_MOUNT_OFFSET} rotation={WALL_MOUNT_ROTATION}>
+          <Html
+            transform
+            position={[0, 0, 0.002]}
+            center
+            distanceFactor={5.3}
+            style={{ pointerEvents: expanded ? "none" : "auto" }}
+          >
+            <MissionMiniView
+              mission={selectedMission}
+              onExpand={handleExpand}
+              onCreateMission={handleCreateMission}
+              mounted
+              compactMounted
+            />
+          </Html>
+        </group>
+      ) : (
         <Html
           position={MINI_VIEW_OFFSET}
           center
