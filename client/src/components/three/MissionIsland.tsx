@@ -150,24 +150,7 @@ export function MissionIsland() {
       </mesh>
 
       {/* Mini View (always visible) */}
-      {mountOnWall ? (
-        <group position={WALL_MOUNT_OFFSET} rotation={WALL_MOUNT_ROTATION}>
-          <Html
-            transform
-            position={[0, 0, 0.08]}
-            center
-            distanceFactor={8.4}
-            style={{ pointerEvents: expanded ? "none" : "auto" }}
-          >
-            <MissionMiniView
-              mission={selectedMission}
-              onExpand={handleExpand}
-              onCreateMission={handleCreateMission}
-              mounted
-            />
-          </Html>
-        </group>
-      ) : (
+      {!mountOnWall && (
         <Html
           position={MINI_VIEW_OFFSET}
           center
