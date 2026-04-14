@@ -706,6 +706,76 @@
   color: #4a3727;
 }
 
+.office-cockpit-splitter {
+  overflow: visible;
+}
+
+.office-cockpit-splitter.ant-splitter > .ant-splitter-panel {
+  padding: 0;
+  background: transparent;
+}
+
+.office-cockpit-splitter.ant-splitter > .ant-splitter-bar {
+  z-index: 4;
+  background: transparent;
+  overflow: visible;
+  cursor: default;
+}
+
+.office-cockpit-splitter.ant-splitter-horizontal > .ant-splitter-bar {
+  width: 0;
+}
+
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-dragger {
+  display: none;
+}
+
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar {
+  opacity: 1;
+  width: 18px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #9c6b47;
+  box-shadow:
+    0 0 0 1px rgba(201, 130, 87, 0.18),
+    0 10px 24px rgba(88, 61, 39, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar:hover,
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar:active {
+  background: rgba(255, 248, 241, 0.96);
+  color: #5e8b72;
+}
+
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-icon {
+  font-size: 12px;
+}
+
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar-start {
+  right: 3px;
+}
+
+.office-cockpit-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar-end {
+  left: 3px;
+}
+
 /* Smooth transitions for all panels */
 [class*="animate-in"] {
   will-change: transform, opacity;

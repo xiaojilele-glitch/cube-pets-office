@@ -20,6 +20,7 @@ import {
   Settings2,
   Waves,
 } from "lucide-react";
+import { Splitter } from "antd";
 import { toast } from "sonner";
 
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
@@ -106,13 +107,19 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
   const toggleConfig = useAppStore(state => state.toggleConfig);
   const selectedPet = useAppStore(state => state.selectedPet);
-  const telemetryDashboardOpen = useTelemetryStore(state => state.dashboardOpen);
-  const toggleTelemetryDashboard = useTelemetryStore(state => state.toggleDashboard);
+  const telemetryDashboardOpen = useTelemetryStore(
+    state => state.dashboardOpen
+  );
+  const toggleTelemetryDashboard = useTelemetryStore(
+    state => state.toggleDashboard
+  );
   const ensureReady = useTasksStore(state => state.ensureReady);
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
   const createMission = useTasksStore(state => state.createMission);
-  const submitOperatorAction = useTasksStore(state => state.submitOperatorAction);
+  const submitOperatorAction = useTasksStore(
+    state => state.submitOperatorAction
+  );
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
   const tasks = useTasksStore(state => state.tasks);
@@ -129,17 +136,26 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
   const agents = useWorkflowStore(state => state.agents);
   const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
   const currentWorkflowId = useWorkflowStore(state => state.currentWorkflowId);
-  const fetchWorkflowDetail = useWorkflowStore(state => state.fetchWorkflowDetail);
+  const fetchWorkflowDetail = useWorkflowStore(
+    state => state.fetchWorkflowDetail
+  );
   const fetchWorkflows = useWorkflowStore(state => state.fetchWorkflows);
-  const setCurrentWorkflow = useWorkflowStore(state => state.setCurrentWorkflow);
+  const setCurrentWorkflow = useWorkflowStore(
+    state => state.setCurrentWorkflow
+  );
 
   const [search, setSearch] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [launchMode, setLaunchMode] = useState<OfficeLaunchMode>("mission");
   const [activeTab, setActiveTab] = useState<OfficeCockpitTab>("task");
-  const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(null);
-  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(null);
-  const [pendingLaunch, setPendingLaunch] = useState<OfficeLaunchResolution | null>(null);
+  const [launchingPresetId, setLaunchingPresetId] = useState<string | null>(
+    null
+  );
+  const [highlightedTaskId, setHighlightedTaskId] = useState<string | null>(
+    null
+  );
+  const [pendingLaunch, setPendingLaunch] =
+    useState<OfficeLaunchResolution | null>(null);
   const previousSelectedPetRef = useRef<string | null>(selectedPet);
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
 
@@ -150,7 +166,9 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
   useEffect(() => {
     if (!highlightedTaskId || typeof window === "undefined") return;
     const timer = window.setTimeout(() => {
-      setHighlightedTaskId(current => (current === highlightedTaskId ? null : current));
+      setHighlightedTaskId(current =>
+        current === highlightedTaskId ? null : current
+      );
     }, 2400);
     return () => window.clearTimeout(timer);
   }, [highlightedTaskId]);
@@ -177,13 +195,17 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     (selectedTaskId && detailsById[selectedTaskId] ? selectedTaskId : null) ||
     filteredTasks[0]?.id ||
     null;
-  const selectedDetail = activeTaskId ? detailsById[activeTaskId] || null : null;
-  const selectedTaskSummary = tasks.find(task => task.id === activeTaskId) || null;
+  const selectedDetail = activeTaskId
+    ? detailsById[activeTaskId] || null
+    : null;
+  const selectedTaskSummary =
+    tasks.find(task => task.id === activeTaskId) || null;
   const decisionNote = activeTaskId ? decisionNotes[activeTaskId] || "" : "";
 
   const pendingWorkflow =
     (pendingLaunch
-      ? workflows.find(workflow => workflow.id === pendingLaunch.workflowId) || null
+      ? workflows.find(workflow => workflow.id === pendingLaunch.workflowId) ||
+        null
       : null) ||
     (currentWorkflow &&
     pendingLaunch &&
@@ -197,7 +219,11 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
       workflows,
       currentWorkflow,
     });
-    return pendingWorkflow || selectedWorkflow || (activeTaskId ? null : currentWorkflow);
+    return (
+      pendingWorkflow ||
+      selectedWorkflow ||
+      (activeTaskId ? null : currentWorkflow)
+    );
   }, [activeTaskId, currentWorkflow, pendingWorkflow, workflows]);
 
   useEffect(() => {
@@ -210,10 +236,22 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
       setCurrentWorkflow(workflowForTask.id);
       return;
     }
-    if (!workflowForTask && !pendingLaunch && activeTaskId && currentWorkflowId) {
+    if (
+      !workflowForTask &&
+      !pendingLaunch &&
+      activeTaskId &&
+      currentWorkflowId
+    ) {
       setCurrentWorkflow(null);
     }
-  }, [activeTaskId, currentWorkflow, currentWorkflowId, pendingLaunch, setCurrentWorkflow, workflows]);
+  }, [
+    activeTaskId,
+    currentWorkflow,
+    currentWorkflowId,
+    pendingLaunch,
+    setCurrentWorkflow,
+    workflows,
+  ]);
 
   useEffect(() => {
     if (pendingLaunch && pendingLaunch.workflowId !== currentWorkflowId) {
@@ -225,7 +263,8 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     if (!pendingLaunch) return;
     const linkedMissionId =
       pendingWorkflow?.missionId ||
-      workflows.find(workflow => workflow.id === pendingLaunch.workflowId)?.missionId ||
+      workflows.find(workflow => workflow.id === pendingLaunch.workflowId)
+        ?.missionId ||
       null;
     if (linkedMissionId) {
       setPendingLaunch(null);
@@ -234,7 +273,13 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
       startTransition(() => {
         selectTask(linkedMissionId);
       });
-      toast.success(t(locale, "团队准备完成，已自动把焦点切回新任务。", "Team setup is complete and the new task is now focused."));
+      toast.success(
+        t(
+          locale,
+          "团队准备完成，已自动把焦点切回新任务。",
+          "Team setup is complete and the new task is now focused."
+        )
+      );
       return;
     }
     if (typeof window === "undefined") return;
@@ -243,7 +288,15 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
       void fetchWorkflowDetail(pendingLaunch.workflowId);
     }, 2000);
     return () => window.clearInterval(timer);
-  }, [fetchWorkflowDetail, fetchWorkflows, locale, pendingLaunch, pendingWorkflow, selectTask, workflows]);
+  }, [
+    fetchWorkflowDetail,
+    fetchWorkflows,
+    locale,
+    pendingLaunch,
+    pendingWorkflow,
+    selectTask,
+    workflows,
+  ]);
 
   useEffect(() => {
     if (selectedPet && selectedPet !== previousSelectedPetRef.current) {
@@ -287,7 +340,13 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     try {
       const missionId = await createMission(input);
       if (missionId) {
-        toast.success(t(locale, "任务已创建并落入队列。", "Mission created and added to the queue."));
+        toast.success(
+          t(
+            locale,
+            "任务已创建并落入队列。",
+            "Mission created and added to the queue."
+          )
+        );
       }
       return missionId;
     } catch (createError) {
@@ -310,12 +369,18 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
         action: payload.action,
         reason: payload.reason,
       });
-      toast.success(t(locale, "任务操作已提交。", "Mission operator action submitted."));
+      toast.success(
+        t(locale, "任务操作已提交。", "Mission operator action submitted.")
+      );
     } catch (submitError) {
       const message =
         submitError instanceof Error
           ? submitError.message
-          : t(locale, "任务操作提交失败。", "Failed to submit operator action.");
+          : t(
+              locale,
+              "任务操作提交失败。",
+              "Failed to submit operator action."
+            );
       toast.error(message);
       throw submitError;
     }
@@ -342,7 +407,8 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     }
   }
 
-  const refreshCurrent = () => void refresh({ preferredTaskId: activeTaskId || null });
+  const refreshCurrent = () =>
+    void refresh({ preferredTaskId: activeTaskId || null });
   const queuedCount = tasks.filter(task => task.status === "queued").length;
   const runningCount = tasks.filter(task => task.status === "running").length;
   const waitingCount = tasks.filter(task => task.status === "waiting").length;
@@ -352,21 +418,24 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     selectedDetail?.waitingFor ||
     selectedDetail?.summary ||
     pendingLaunch?.directive ||
-    t(locale, "点击左侧任务或场景 Agent，把当前执行焦点钉在办公室里。", "Pick a task or scene agent to focus the current scene.");
+    t(
+      locale,
+      "点击左侧任务或场景 Agent，把当前执行焦点钉在办公室里。",
+      "Pick a task or scene agent to focus the current scene."
+    );
   const focusStage =
     selectedDetail?.currentStageLabel ||
     pendingWorkflow?.current_stage ||
     t(locale, "等待焦点", "Awaiting focus");
-  const focusTone =
-    pendingLaunch
-      ? "warning"
-      : selectedDetail?.status === "failed"
-        ? "danger"
-        : selectedDetail?.status === "done"
-          ? "success"
-          : selectedDetail
-            ? "info"
-            : "neutral";
+  const focusTone = pendingLaunch
+    ? "warning"
+    : selectedDetail?.status === "failed"
+      ? "danger"
+      : selectedDetail?.status === "done"
+        ? "success"
+        : selectedDetail
+          ? "info"
+          : "neutral";
   const focusStatusLabel = selectedDetail
     ? missionStatusLabel(selectedDetail.status, locale)
     : pendingLaunch
@@ -377,31 +446,52 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     : selectedPet
       ? t(locale, "Agent 已联动", "Agent linked")
       : t(locale, "等待联动", "Waiting for link");
-  const focusProgress = selectedDetail?.progress ?? selectedTaskSummary?.progress ?? 0;
+  const focusProgress =
+    selectedDetail?.progress ?? selectedTaskSummary?.progress ?? 0;
   const focusTitle =
     selectedDetail?.title ||
     pendingLaunch?.directive ||
-    t(locale, "等待把执行焦点钉在场景里", "Waiting to pin an execution focus into the scene");
+    t(
+      locale,
+      "等待把执行焦点钉在场景里",
+      "Waiting to pin an execution focus into the scene"
+    );
   const runtimeModeLabel =
     runtimeMode === "advanced"
       ? t(locale, "高级执行", "Advanced runtime")
       : t(locale, "前端预览", "Frontend preview");
   const runtimeModeHint =
     runtimeMode === "advanced"
-      ? t(locale, "服务端与容器链路已经可用", "Server and container lanes are available")
-      : t(locale, "适合快速预览和前台验证", "Best for fast previews and front-end validation");
+      ? t(
+          locale,
+          "服务端与容器链路已经可用",
+          "Server and container lanes are available"
+        )
+      : t(
+          locale,
+          "适合快速预览和前台验证",
+          "Best for fast previews and front-end validation"
+        );
 
   async function handleCopyFocusSummary() {
-    const summary = [focusTitle, focusSignal, `${focusStage} / ${focusProgress}%`]
+    const summary = [
+      focusTitle,
+      focusSignal,
+      `${focusStage} / ${focusProgress}%`,
+    ]
       .filter(Boolean)
       .join("\n");
     if (typeof navigator === "undefined" || !navigator.clipboard) {
-      toast.error(t(locale, "当前环境无法复制。", "Clipboard is not available here."));
+      toast.error(
+        t(locale, "当前环境无法复制。", "Clipboard is not available here.")
+      );
       return;
     }
     try {
       await navigator.clipboard.writeText(summary);
-      toast.success(t(locale, "已复制当前焦点摘要。", "Copied the current focus summary."));
+      toast.success(
+        t(locale, "已复制当前焦点摘要。", "Copied the current focus summary.")
+      );
     } catch (copyError) {
       toast.error(
         copyError instanceof Error
@@ -418,476 +508,515 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
         className
       )}
     >
-      <div className="grid min-h-0 flex-1 grid-cols-[clamp(332px,22.5vw,396px)_minmax(0,1fr)_clamp(332px,22.5vw,396px)] gap-2 2xl:grid-cols-[clamp(348px,24vw,416px)_minmax(0,1fr)_clamp(348px,24vw,416px)] 2xl:gap-2.5">
-        <aside className="pointer-events-auto min-h-0">
-          <TasksQueueRail
-            tasks={filteredTasks}
-            totalCount={tasks.length}
-            activeTaskId={activeTaskId}
-            highlightedTaskId={highlightedTaskId}
-            loading={loading}
-            ready={ready}
-            error={error}
-            search={search}
-            onSearchChange={setSearch}
-            onSelectTask={taskId => {
-              startTransition(() => {
-                selectTask(taskId);
-              });
-            }}
-            onRefresh={refreshCurrent}
-            density="compact"
-            className="h-full"
-          />
-        </aside>
+      <Splitter className="office-cockpit-splitter pointer-events-auto min-h-0 flex-1">
+        <Splitter.Panel
+          defaultSize="22%"
+          min={320}
+          max={460}
+          resizable={false}
+          collapsible={{ end: true, showCollapsibleIcon: true }}
+          style={{ overflow: "hidden" }}
+        >
+          <aside className="min-h-0 h-full pr-2">
+            <TasksQueueRail
+              tasks={filteredTasks}
+              totalCount={tasks.length}
+              activeTaskId={activeTaskId}
+              highlightedTaskId={highlightedTaskId}
+              loading={loading}
+              ready={ready}
+              error={error}
+              search={search}
+              onSearchChange={setSearch}
+              onSelectTask={taskId => {
+                startTransition(() => {
+                  selectTask(taskId);
+                });
+              }}
+              onRefresh={refreshCurrent}
+              density="compact"
+              className="h-full"
+            />
+          </aside>
+        </Splitter.Panel>
 
-        <section className="pointer-events-none min-h-0 flex flex-col justify-end">
-          <div className="pointer-events-auto mx-auto flex w-full max-w-[700px] max-h-[32%] min-h-0 flex-col overflow-hidden rounded-[14px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,252,248,0.36),rgba(246,238,229,0.28))] shadow-[0_14px_34px_rgba(98,73,48,0.1)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.62),rgba(246,238,229,0.52))]">
-            <div className="shrink-0 border-b border-stone-200/50 px-1.5 py-1">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <div className="flex rounded-[10px] border border-white/65 bg-white/78 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
-                    <button
-                      type="button"
-                      onClick={() => setLaunchMode("mission")}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
-                        launchMode === "mission"
-                          ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.22)]"
-                          : "text-stone-600 hover:bg-white"
-                      )}
-                    >
-                      <Command className="size-3.5" />
-                      {t(locale, "任务命令", "Mission commands")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLaunchMode("workflow")}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
-                        launchMode === "workflow"
-                          ? "bg-[#5E8B72] text-white shadow-[0_10px_24px_rgba(94,139,114,0.22)]"
-                          : "text-stone-600 hover:bg-white"
-                      )}
-                    >
-                      <Waves className="size-3.5" />
-                      {t(locale, "高级发起", "Advanced launch")}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={toggleTelemetryDashboard}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
-                        telemetryDashboardOpen
-                          ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]"
-                          : "text-stone-600 hover:bg-white"
-                      )}
-                    >
-                      <Activity className="size-3.5" />
-                      {t(locale, "统计驾驶台", "Metrics dock")}
-                    </button>
+        <Splitter.Panel
+          defaultSize="56%"
+          min="28%"
+          style={{ overflow: "visible" }}
+        >
+          <section className="pointer-events-none flex h-full min-h-0 flex-col justify-end px-2">
+            <div className="pointer-events-auto mx-auto flex w-full max-w-[700px] max-h-[32%] min-h-0 flex-col overflow-hidden rounded-[14px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,252,248,0.36),rgba(246,238,229,0.28))] shadow-[0_14px_34px_rgba(98,73,48,0.1)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.62),rgba(246,238,229,0.52))]">
+              <div className="shrink-0 border-b border-stone-200/50 px-1.5 py-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex rounded-[10px] border border-white/65 bg-white/78 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+                      <button
+                        type="button"
+                        onClick={() => setLaunchMode("mission")}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
+                          launchMode === "mission"
+                            ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.22)]"
+                            : "text-stone-600 hover:bg-white"
+                        )}
+                      >
+                        <Command className="size-3.5" />
+                        {t(locale, "任务命令", "Mission commands")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLaunchMode("workflow")}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
+                          launchMode === "workflow"
+                            ? "bg-[#5E8B72] text-white shadow-[0_10px_24px_rgba(94,139,114,0.22)]"
+                            : "text-stone-600 hover:bg-white"
+                        )}
+                      >
+                        <Waves className="size-3.5" />
+                        {t(locale, "高级发起", "Advanced launch")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleTelemetryDashboard}
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
+                          telemetryDashboardOpen
+                            ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]"
+                            : "text-stone-600 hover:bg-white"
+                        )}
+                      >
+                        <Activity className="size-3.5" />
+                        {t(locale, "统计驾驶台", "Metrics dock")}
+                      </button>
+                    </div>
+
+                    {pendingLaunch ? (
+                      <span className="workspace-status workspace-tone-warning px-1 py-0.5 text-[8px] font-semibold">
+                        {t(
+                          locale,
+                          "团队准备中，完成后会自动回到任务视角。",
+                          "Team preparing, then auto-return to the task view."
+                        )}
+                      </span>
+                    ) : null}
                   </div>
 
-                  {pendingLaunch ? (
-                    <span className="workspace-status workspace-tone-warning px-1 py-0.5 text-[8px] font-semibold">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
+                      onClick={() => setCreateDialogOpen(true)}
+                    >
+                      <Plus className="size-3.5" />
+                      {t(locale, "新建任务", "New task")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
+                      onClick={refreshCurrent}
+                      disabled={loading && ready}
+                    >
+                      <RefreshCw
+                        className={cn(
+                          "size-3.5",
+                          loading && ready && "animate-spin"
+                        )}
+                      />
+                      {t(locale, "刷新", "Refresh")}
+                    </Button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
+                        >
+                          {runtimeMode === "advanced" ? (
+                            <Server className="size-3.5" />
+                          ) : (
+                            <Monitor className="size-3.5" />
+                          )}
+                          {runtimeModeLabel}
+                          <ChevronDown className="size-3.5 opacity-60" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <div className="px-2 py-1.5 text-[11px] leading-5 text-stone-500">
+                          {runtimeModeHint}
+                        </div>
+                        <DropdownMenuRadioGroup
+                          value={runtimeMode}
+                          onValueChange={value =>
+                            void setRuntimeMode(
+                              value as "frontend" | "advanced"
+                            )
+                          }
+                        >
+                          <DropdownMenuRadioItem value="frontend">
+                            {t(locale, "前端预览", "Frontend preview")}
+                          </DropdownMenuRadioItem>
+                          <DropdownMenuRadioItem
+                            value="advanced"
+                            disabled={!CAN_USE_ADVANCED_RUNTIME}
+                          >
+                            {t(locale, "高级执行", "Advanced runtime")}
+                          </DropdownMenuRadioItem>
+                        </DropdownMenuRadioGroup>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
+                        >
+                          <Ellipsis className="size-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onSelect={event => {
+                            event.preventDefault();
+                            void handleCopyFocusSummary();
+                          }}
+                        >
+                          <Copy className="size-4" />
+                          {t(locale, "复制当前焦点", "Copy focus")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={event => {
+                            event.preventDefault();
+                            toggleConfig();
+                          }}
+                        >
+                          <Settings2 className="size-4" />
+                          {t(locale, "运行时配置", "Runtime config")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={event => {
+                            event.preventDefault();
+                            toggleTelemetryDashboard();
+                          }}
+                        >
+                          <Activity className="size-4" />
+                          {telemetryDashboardOpen
+                            ? t(locale, "收起统计驾驶台", "Hide metrics dock")
+                            : t(locale, "打开统计驾驶台", "Open metrics dock")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                <div className="mt-1 flex min-w-0 flex-col gap-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="shrink-0 rounded-full border border-stone-200/80 bg-white/72 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+                      {t(locale, "焦点", "Focus")}
+                    </span>
+                    <div className="min-w-0 flex-1 truncate text-[12px] font-semibold tracking-tight text-stone-900">
+                      {focusTitle}
+                    </div>
+                    <div className="hidden max-w-[220px] shrink text-right text-[9px] leading-4 text-stone-600 xl:block">
+                      {compactText(focusSignal, 56)}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-0.5">
+                    <span
+                      className={cn(
+                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                        `workspace-tone-${focusTone}`
+                      )}
+                    >
+                      {focusStatusLabel}
+                    </span>
+                    <span
+                      className={cn(
+                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                        selectedDetail
+                          ? missionOperatorStateTone(
+                              selectedDetail.operatorState
+                            )
+                          : "workspace-tone-neutral"
+                      )}
+                    >
+                      {focusOperatorLabel}
+                    </span>
+                    <span className="workspace-status workspace-tone-info !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
+                      {focusStage}
+                    </span>
+                    <span className="workspace-status workspace-tone-neutral !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
                       {t(
                         locale,
-                        "团队准备中，完成后会自动回到任务视角。",
-                        "Team preparing, then auto-return to the task view."
+                        `进度 ${focusProgress}%`,
+                        `Progress ${focusProgress}%`
                       )}
                     </span>
-                  ) : null}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                    onClick={() => setCreateDialogOpen(true)}
-                  >
-                    <Plus className="size-3.5" />
-                    {t(locale, "新建任务", "New task")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                    onClick={refreshCurrent}
-                    disabled={loading && ready}
-                  >
-                    <RefreshCw
-                      className={cn("size-3.5", loading && ready && "animate-spin")}
-                    />
-                    {t(locale, "刷新", "Refresh")}
-                  </Button>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                      >
-                        {runtimeMode === "advanced" ? (
-                          <Server className="size-3.5" />
-                        ) : (
-                          <Monitor className="size-3.5" />
-                        )}
-                        {runtimeModeLabel}
-                        <ChevronDown className="size-3.5 opacity-60" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <div className="px-2 py-1.5 text-[11px] leading-5 text-stone-500">
-                        {runtimeModeHint}
-                      </div>
-                      <DropdownMenuRadioGroup
-                        value={runtimeMode}
-                        onValueChange={value =>
-                          void setRuntimeMode(value as "frontend" | "advanced")
-                        }
-                      >
-                        <DropdownMenuRadioItem value="frontend">
-                          {t(locale, "前端预览", "Frontend preview")}
-                        </DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem
-                          value="advanced"
-                          disabled={!CAN_USE_ADVANCED_RUNTIME}
-                        >
-                          {t(locale, "高级执行", "Advanced runtime")}
-                        </DropdownMenuRadioItem>
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                      >
-                        <Ellipsis className="size-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        onSelect={event => {
-                          event.preventDefault();
-                          void handleCopyFocusSummary();
-                        }}
-                      >
-                        <Copy className="size-4" />
-                        {t(locale, "复制当前焦点", "Copy focus")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={event => {
-                          event.preventDefault();
-                          toggleConfig();
-                        }}
-                      >
-                        <Settings2 className="size-4" />
-                        {t(locale, "运行时配置", "Runtime config")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={event => {
-                          event.preventDefault();
-                          toggleTelemetryDashboard();
-                        }}
-                      >
-                        <Activity className="size-4" />
-                        {telemetryDashboardOpen
-                          ? t(locale, "收起统计驾驶台", "Hide metrics dock")
-                          : t(locale, "打开统计驾驶台", "Open metrics dock")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    <span
+                      className={cn(
+                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                        runningCount > 0
+                          ? "workspace-tone-warning"
+                          : "workspace-tone-neutral"
+                      )}
+                    >
+                      {t(
+                        locale,
+                        `队列 ${queuedCount} / 运行 ${runningCount}`,
+                        `Queue ${queuedCount} / running ${runningCount}`
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                        warningCount > 0
+                          ? "workspace-tone-warning"
+                          : "workspace-tone-info"
+                      )}
+                    >
+                      {t(
+                        locale,
+                        `等待 ${waitingCount} / 关注 ${warningCount}`,
+                        `Waiting ${waitingCount} / warnings ${warningCount}`
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                        agents.length > 0
+                          ? "workspace-tone-success"
+                          : "workspace-tone-neutral"
+                      )}
+                    >
+                      {t(
+                        locale,
+                        `Agent ${agents.length}`,
+                        `Agents ${agents.length}`
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-1 flex min-w-0 flex-col gap-1">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span className="shrink-0 rounded-full border border-stone-200/80 bg-white/72 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-stone-500">
-                    {t(locale, "焦点", "Focus")}
-                  </span>
-                  <div className="min-w-0 flex-1 truncate text-[12px] font-semibold tracking-tight text-stone-900">
-                    {focusTitle}
-                  </div>
-                  <div className="hidden max-w-[220px] shrink text-right text-[9px] leading-4 text-stone-600 xl:block">
-                    {compactText(focusSignal, 56)}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-0.5">
-                  <span
-                    className={cn(
-                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                      `workspace-tone-${focusTone}`
-                    )}
-                  >
-                    {focusStatusLabel}
-                  </span>
-                  <span
-                    className={cn(
-                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                      selectedDetail
-                        ? missionOperatorStateTone(selectedDetail.operatorState)
-                        : "workspace-tone-neutral"
-                    )}
-                  >
-                    {focusOperatorLabel}
-                  </span>
-                  <span className="workspace-status workspace-tone-info !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
-                    {focusStage}
-                  </span>
-                  <span className="workspace-status workspace-tone-neutral !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
-                    {t(locale, `进度 ${focusProgress}%`, `Progress ${focusProgress}%`)}
-                  </span>
-                  <span
-                    className={cn(
-                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                      runningCount > 0
-                        ? "workspace-tone-warning"
-                        : "workspace-tone-neutral"
-                    )}
-                  >
-                    {t(
-                      locale,
-                      `队列 ${queuedCount} / 运行 ${runningCount}`,
-                      `Queue ${queuedCount} / running ${runningCount}`
-                    )}
-                  </span>
-                  <span
-                    className={cn(
-                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                      warningCount > 0
-                        ? "workspace-tone-warning"
-                        : "workspace-tone-info"
-                    )}
-                  >
-                    {t(
-                      locale,
-                      `等待 ${waitingCount} / 关注 ${warningCount}`,
-                      `Waiting ${waitingCount} / warnings ${warningCount}`
-                    )}
-                  </span>
-                  <span
-                    className={cn(
-                      "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                      agents.length > 0
-                        ? "workspace-tone-success"
-                        : "workspace-tone-neutral"
-                    )}
-                  >
-                    {t(locale, `Agent ${agents.length}`, `Agents ${agents.length}`)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-hidden p-2">
-              {launchMode === "mission" ? (
-                <TasksCommandDock
-                  createMission={createMission}
-                  tasks={tasks}
-                  activeTask={selectedTaskSummary}
-                  onTaskResolved={handleTaskHubResolved}
-                  onOpenCreateDialog={() => setCreateDialogOpen(true)}
-                  onRefresh={refreshCurrent}
-                  refreshing={loading && ready}
-                  compact
-                  bare
-                  dense
-                  hideHeader
-                  hideActions
-                  hideInputLabel
-                  className="h-full"
-                />
-              ) : (
-                <OfficeWorkflowLaunchPanel
-                  pendingLaunch={pendingLaunch}
-                  compact
-                  bare
-                  dense
-                  hideHeader
-                  hideDirectiveLabel
-                  className="h-full"
-                  onLaunchSubmitted={resolution => {
-                    setPendingLaunch(resolution);
-                    setActiveTab("flow");
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        </section>
-
-        <aside className="pointer-events-auto min-h-0">
-          <Tabs
-            value={activeTab}
-            onValueChange={value => setActiveTab(value as OfficeCockpitTab)}
-            className="flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] border border-white/35 bg-[linear-gradient(180deg,rgba(255,252,248,0.48),rgba(244,236,227,0.32))] p-2 shadow-[0_22px_48px_rgba(99,73,45,0.12)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.7),rgba(246,238,229,0.5))]"
-          >
-            <TabsList className="grid h-auto w-full grid-cols-5 gap-1 overflow-hidden rounded-[14px] bg-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
-              <TabsTrigger
-                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
-                value="task"
-              >
-                {t(locale, "任务", "Task")}
-              </TabsTrigger>
-              <TabsTrigger
-                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
-                value="flow"
-                disabled={!availability.flow}
-              >
-                {t(locale, "团队流", "Flow")}
-              </TabsTrigger>
-              <TabsTrigger
-                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
-                value="agent"
-                disabled={!availability.agent}
-              >
-                Agent
-              </TabsTrigger>
-              <TabsTrigger
-                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
-                value="memory"
-                disabled={!availability.memory}
-              >
-                {t(locale, "记忆", "Memory")}
-              </TabsTrigger>
-              <TabsTrigger
-                className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
-                value="history"
-                disabled={!availability.history}
-              >
-                {t(locale, "历史", "History")}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent
-              value="task"
-              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
-            >
-              <TasksCockpitDetail
-                detail={selectedDetail}
-                decisionNote={decisionNote}
-                onDecisionNoteChange={value => {
-                  if (!activeTaskId) return;
-                  setDecisionNote(activeTaskId, value);
-                }}
-                onLaunchDecision={handleLaunchDecision}
-                launchingPresetId={launchingPresetId}
-                onSubmitOperatorAction={handleSubmitOperatorAction}
-                operatorActionLoading={
-                  activeTaskId
-                    ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
-                    : {}
-                }
-                onDecisionSubmitted={refreshCurrent}
-                className="h-full"
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="flow"
-              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
-            >
-              <CockpitContextShell
-                title={t(locale, "团队流", "Flow")}
-                description={t(
-                  locale,
-                  "把 workflow 阶段、组织结构和附件上下文压进统一的右栏节奏里。",
-                  "Keep workflow stages, org context, and attachments inside one shared right-panel shell."
-                )}
-              >
-                <OfficeWorkflowFlowPanel
-                  workflow={activeWorkflow}
-                  missionDetail={selectedDetail}
-                  onOpenTask={taskId => {
-                    setActiveTab("task");
-                    startTransition(() => {
-                      selectTask(taskId);
-                    });
-                  }}
-                />
-              </CockpitContextShell>
-            </TabsContent>
-
-            <TabsContent
-              value="agent"
-              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
-            >
-              <CockpitContextShell
-                title="Agent"
-                description={t(
-                  locale,
-                  "场景 Agent、团队站位和 heartbeat 报告都在同一个检视视图里联动。",
-                  "Scene agents, org placement, and heartbeat reports stay linked in one inspector view."
-                )}
-              >
-                {agents.length > 0 ? (
-                  <OfficeAgentInspectorPanel className="h-full" embedded />
+              <div className="min-h-0 flex-1 overflow-hidden p-2">
+                {launchMode === "mission" ? (
+                  <TasksCommandDock
+                    createMission={createMission}
+                    tasks={tasks}
+                    activeTask={selectedTaskSummary}
+                    onTaskResolved={handleTaskHubResolved}
+                    onOpenCreateDialog={() => setCreateDialogOpen(true)}
+                    onRefresh={refreshCurrent}
+                    refreshing={loading && ready}
+                    compact
+                    bare
+                    dense
+                    hideHeader
+                    hideActions
+                    hideInputLabel
+                    className="h-full"
+                  />
                 ) : (
-                  <div className="flex h-full items-center justify-center rounded-[14px] border border-dashed border-stone-300/80 bg-white/62 px-3 py-4 text-center text-[11px] leading-5 text-stone-500">
-                    {t(
-                      locale,
-                      "场景 Agent 建立后，这里会显示办公室 Agent 详情视图。",
-                      "Once scene agents are available, this tab shows the office agent detail view."
-                    )}
-                  </div>
+                  <OfficeWorkflowLaunchPanel
+                    pendingLaunch={pendingLaunch}
+                    compact
+                    bare
+                    dense
+                    hideHeader
+                    hideDirectiveLabel
+                    className="h-full"
+                    onLaunchSubmitted={resolution => {
+                      setPendingLaunch(resolution);
+                      setActiveTab("flow");
+                    }}
+                  />
                 )}
-              </CockpitContextShell>
-            </TabsContent>
+              </div>
+            </div>
+          </section>
+        </Splitter.Panel>
 
-            <TabsContent
-              value="memory"
-              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
+        <Splitter.Panel
+          defaultSize="22%"
+          min={320}
+          max={460}
+          resizable={false}
+          collapsible={{ start: true, showCollapsibleIcon: true }}
+          style={{ overflow: "hidden" }}
+        >
+          <aside className="min-h-0 h-full pl-2">
+            <Tabs
+              value={activeTab}
+              onValueChange={value => setActiveTab(value as OfficeCockpitTab)}
+              className="flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] border border-white/35 bg-[linear-gradient(180deg,rgba(255,252,248,0.48),rgba(244,236,227,0.32))] p-2 shadow-[0_22px_48px_rgba(99,73,45,0.12)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.7),rgba(246,238,229,0.5))]"
             >
-              <CockpitContextShell
-                title={t(locale, "记忆与报告", "Memory and reports")}
-                description={t(
-                  locale,
-                  "最近记忆、搜索结果和 heartbeat 报告，共享同一个上下文壳层。",
-                  "Recent memory, search results, and heartbeat reports share the same context shell."
-                )}
+              <TabsList className="grid h-auto w-full grid-cols-5 gap-1 overflow-hidden rounded-[14px] bg-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
+                <TabsTrigger
+                  className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
+                  value="task"
+                >
+                  {t(locale, "任务", "Task")}
+                </TabsTrigger>
+                <TabsTrigger
+                  className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
+                  value="flow"
+                  disabled={!availability.flow}
+                >
+                  {t(locale, "团队流", "Flow")}
+                </TabsTrigger>
+                <TabsTrigger
+                  className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
+                  value="agent"
+                  disabled={!availability.agent}
+                >
+                  Agent
+                </TabsTrigger>
+                <TabsTrigger
+                  className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
+                  value="memory"
+                  disabled={!availability.memory}
+                >
+                  {t(locale, "记忆", "Memory")}
+                </TabsTrigger>
+                <TabsTrigger
+                  className="min-h-[30px] rounded-[10px] border border-transparent px-1 py-0.5 text-[10px] font-semibold whitespace-nowrap text-stone-600 transition disabled:opacity-45 data-[state=active]:border-white/80 data-[state=active]:bg-[#fff8ef] data-[state=active]:text-stone-900 data-[state=active]:shadow-[0_10px_22px_rgba(184,111,69,0.14)]"
+                  value="history"
+                  disabled={!availability.history}
+                >
+                  {t(locale, "历史", "History")}
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent
+                value="task"
+                className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
               >
-                <OfficeMemoryReportsPanel workflow={activeWorkflow} />
-              </CockpitContextShell>
-            </TabsContent>
-
-            <TabsContent
-              value="history"
-              className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
-            >
-              <CockpitContextShell
-                title={t(locale, "历史与兼容", "History and compatibility")}
-                description={t(
-                  locale,
-                  "保留 workflow 连续性和兼容入口，但不再抢首屏主轴。",
-                  "Preserve workflow continuity and compatibility access without stealing the first-screen axis."
-                )}
-              >
-                <OfficeWorkflowHistoryPanel
-                  activeWorkflowId={activeWorkflow?.id || null}
-                  onSelectWorkflow={workflowId => {
-                    setCurrentWorkflow(workflowId);
-                    const matched = workflows.find(
-                      workflow => workflow.id === workflowId
-                    );
-                    if (matched?.missionId) {
-                      startTransition(() => {
-                        selectTask(matched.missionId!);
-                      });
-                    }
-                    setActiveTab("flow");
+                <TasksCockpitDetail
+                  detail={selectedDetail}
+                  decisionNote={decisionNote}
+                  onDecisionNoteChange={value => {
+                    if (!activeTaskId) return;
+                    setDecisionNote(activeTaskId, value);
                   }}
+                  onLaunchDecision={handleLaunchDecision}
+                  launchingPresetId={launchingPresetId}
+                  onSubmitOperatorAction={handleSubmitOperatorAction}
+                  operatorActionLoading={
+                    activeTaskId
+                      ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
+                      : {}
+                  }
+                  onDecisionSubmitted={refreshCurrent}
+                  className="h-full"
                 />
-              </CockpitContextShell>
-            </TabsContent>
-          </Tabs>
-        </aside>
-      </div>
+              </TabsContent>
+
+              <TabsContent
+                value="flow"
+                className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
+              >
+                <CockpitContextShell
+                  title={t(locale, "团队流", "Flow")}
+                  description={t(
+                    locale,
+                    "把 workflow 阶段、组织结构和附件上下文压进统一的右栏节奏里。",
+                    "Keep workflow stages, org context, and attachments inside one shared right-panel shell."
+                  )}
+                >
+                  <OfficeWorkflowFlowPanel
+                    workflow={activeWorkflow}
+                    missionDetail={selectedDetail}
+                    onOpenTask={taskId => {
+                      setActiveTab("task");
+                      startTransition(() => {
+                        selectTask(taskId);
+                      });
+                    }}
+                  />
+                </CockpitContextShell>
+              </TabsContent>
+
+              <TabsContent
+                value="agent"
+                className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
+              >
+                <CockpitContextShell
+                  title="Agent"
+                  description={t(
+                    locale,
+                    "场景 Agent、团队站位和 heartbeat 报告都在同一个检视视图里联动。",
+                    "Scene agents, org placement, and heartbeat reports stay linked in one inspector view."
+                  )}
+                >
+                  {agents.length > 0 ? (
+                    <OfficeAgentInspectorPanel className="h-full" embedded />
+                  ) : (
+                    <div className="flex h-full items-center justify-center rounded-[14px] border border-dashed border-stone-300/80 bg-white/62 px-3 py-4 text-center text-[11px] leading-5 text-stone-500">
+                      {t(
+                        locale,
+                        "场景 Agent 建立后，这里会显示办公室 Agent 详情视图。",
+                        "Once scene agents are available, this tab shows the office agent detail view."
+                      )}
+                    </div>
+                  )}
+                </CockpitContextShell>
+              </TabsContent>
+
+              <TabsContent
+                value="memory"
+                className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
+              >
+                <CockpitContextShell
+                  title={t(locale, "记忆与报告", "Memory and reports")}
+                  description={t(
+                    locale,
+                    "最近记忆、搜索结果和 heartbeat 报告，共享同一个上下文壳层。",
+                    "Recent memory, search results, and heartbeat reports share the same context shell."
+                  )}
+                >
+                  <OfficeMemoryReportsPanel workflow={activeWorkflow} />
+                </CockpitContextShell>
+              </TabsContent>
+
+              <TabsContent
+                value="history"
+                className="mt-2 h-full min-h-0 flex-1 overflow-hidden"
+              >
+                <CockpitContextShell
+                  title={t(locale, "历史与兼容", "History and compatibility")}
+                  description={t(
+                    locale,
+                    "保留 workflow 连续性和兼容入口，但不再抢首屏主轴。",
+                    "Preserve workflow continuity and compatibility access without stealing the first-screen axis."
+                  )}
+                >
+                  <OfficeWorkflowHistoryPanel
+                    activeWorkflowId={activeWorkflow?.id || null}
+                    onSelectWorkflow={workflowId => {
+                      setCurrentWorkflow(workflowId);
+                      const matched = workflows.find(
+                        workflow => workflow.id === workflowId
+                      );
+                      if (matched?.missionId) {
+                        startTransition(() => {
+                          selectTask(matched.missionId!);
+                        });
+                      }
+                      setActiveTab("flow");
+                    }}
+                  />
+                </CockpitContextShell>
+              </TabsContent>
+            </Tabs>
+          </aside>
+        </Splitter.Panel>
+      </Splitter>
 
       <CreateMissionDialog
         open={createDialogOpen}

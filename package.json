@@ -51,6 +51,7 @@
     "@types/dockerode": "^4.0.1",
     "@types/three": "^0.183.1",
     "@xterm/addon-fit": "^0.11.0",
+    "antd": "^5.29.3",
     "axios": "^1.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
