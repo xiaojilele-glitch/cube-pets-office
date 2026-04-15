@@ -244,22 +244,22 @@ export class PlanAdjustmentManager {
     if (entityType === 'mission') {
       const mission = plan.missions.find((m) => m.missionId === entityId);
       if (mission && field in mission) {
-        (mission as Record<string, unknown>)[field] = newValue;
+        (mission as unknown as Record<string, unknown>)[field] = newValue;
       }
     } else if (entityType === 'task') {
       const task = plan.tasks.find((t) => t.taskId === entityId);
       if (task && field in task) {
-        (task as Record<string, unknown>)[field] = newValue;
+        (task as unknown as Record<string, unknown>)[field] = newValue;
       }
     } else if (entityType === 'timeline') {
       const entry = plan.timeline.entries.find((e) => e.entityId === entityId);
       if (entry && field in entry) {
-        (entry as Record<string, unknown>)[field] = newValue;
+        (entry as unknown as Record<string, unknown>)[field] = newValue;
       }
     } else if (entityType === 'resource') {
       const resource = plan.resourceAllocation.entries.find((e) => e.taskId === entityId);
       if (resource && field in resource) {
-        (resource as Record<string, unknown>)[field] = newValue;
+        (resource as unknown as Record<string, unknown>)[field] = newValue;
       }
     }
   }

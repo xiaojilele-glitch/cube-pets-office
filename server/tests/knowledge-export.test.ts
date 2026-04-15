@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
+import { randomUUID } from "node:crypto";
 import fc from "fast-check";
 import { GraphStore } from "../knowledge/graph-store.js";
 import type { Entity, Relation, EntitySource } from "../../shared/knowledge/types.js";
@@ -65,19 +66,22 @@ describe("Property 22: 图谱导出往返一致性", () => {
   it(
     "exported entities and relations match the originally created data",
     () => {
-      const PROJECT_ID = "export-roundtrip-test";
-
       fc.assert(
         fc.property(
-          entityListArb(PROJECT_ID),
+          entityListArb("export-roundtrip-template"),
           fc.constantFrom(...RELATION_TYPES),
           (entityInputs, relType) => {
+            const projectId = `export-roundtrip-${randomUUID()}`;
             // Fresh store per iteration
             const s = new GraphStore();
+            const inputsForProject = entityInputs.map((input) => ({
+              ...input,
+              projectId,
+            }));
 
             // 1. Create entities
             const created: Entity[] = [];
-            for (const input of entityInputs) {
+            for (const input of inputsForProject) {
               created.push(s.createEntity(input));
             }
 
@@ -98,9 +102,9 @@ describe("Property 22: 图谱导出往返一致性", () => {
             }
 
             // 3. Export — same code path as the admin export endpoint
-            s.load(PROJECT_ID);
-            const exportedEntities = s.getAllEntities(PROJECT_ID);
-            const exportedRelations = s.getAllRelations(PROJECT_ID);
+            s.load(projectId);
+            const exportedEntities = s.getAllEntities(projectId);
+            const exportedRelations = s.getAllRelations(projectId);
 
             // 4. Verify entity count
             expect(exportedEntities).toHaveLength(created.length);

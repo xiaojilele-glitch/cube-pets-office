@@ -383,7 +383,7 @@ describe("OntologyRegistry", () => {
   // Property-Based Tests
   // -------------------------------------------------------------------------
 
-  describe("Feature: knowledge-graph, Property 3: 鑷畾涔夌被鍨嬫敞鍐屽線杩斾竴鑷存€?, () => {
+  describe("Feature: knowledge-graph, Property 3: custom type registration round-trip", () => {
     /**
      * Validates: Requirements 1.5, 1.6
      *

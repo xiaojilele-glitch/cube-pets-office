@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from "socket.io";
 import type { AgentEvent } from "../../shared/workflow-runtime.js";
 import type { TelemetrySnapshot } from "../../shared/telemetry.js";
 import type { CostSnapshot, CostAlert } from "../../shared/cost.js";
+import type { DimensionDeltas } from "../../shared/reputation.js";
 import { telemetryStore } from "./telemetry-store.js";
 import { NLCommandSocketEmitter } from "./nl-command/socket-emitter.js";
 import type { EmitFn } from "./nl-command/socket-emitter.js";
@@ -146,7 +147,7 @@ export function emitReputationChanged(payload: {
   oldScore: number;
   newScore: number;
   grade: string;
-  dimensionDeltas: Record<string, number>;
+  dimensionDeltas: DimensionDeltas;
 }): void {
   if (!io) return;
   io.emit('reputation.changed', payload);

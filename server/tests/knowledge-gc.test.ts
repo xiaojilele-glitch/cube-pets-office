@@ -13,6 +13,11 @@ import type { Entity, EntitySource } from "../../shared/knowledge/types.js";
 // ---------------------------------------------------------------------------
 
 const PROJECT = "test-project";
+let currentProject = PROJECT;
+
+function uniqueProjectId(prefix: string): string {
+  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 function makeEntity(
   store: GraphStore,
@@ -24,7 +29,7 @@ function makeEntity(
     description: overrides?.description ?? "test entity",
     source: overrides?.source ?? ("code_analysis" as EntitySource),
     confidence: overrides?.confidence ?? 0.8,
-    projectId: overrides?.projectId ?? PROJECT,
+    projectId: overrides?.projectId ?? currentProject,
     needsReview: overrides?.needsReview ?? false,
     linkedMemoryIds: overrides?.linkedMemoryIds ?? [],
     extendedAttributes: overrides?.extendedAttributes ?? {},
@@ -38,7 +43,7 @@ function backdateEntity(
   daysAgo: number,
 ): void {
   const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
-  const data = store.getGraphData(PROJECT);
+  const data = store.getGraphData(currentProject);
   const entity = data.entities.find((e) => e.entityId === entityId);
   if (entity) {
     entity.createdAt = date;
@@ -56,6 +61,7 @@ let lifecycleLog: LifecycleLog;
 
 beforeEach(() => {
   tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "gc-test-"));
+  currentProject = uniqueProjectId("gc-project");
   store = new GraphStore();
   lifecycleLog = new LifecycleLog(path.join(tmpDir, "lifecycle.jsonl"));
   store.lifecycleLog = lifecycleLog;
@@ -234,7 +240,7 @@ describe("mergeDuplicateEntities", () => {
     expect(count).toBe(1);
 
     // Only one entity should remain
-    const remaining = store.findEntities({ projectId: PROJECT, entityType: "CodeModule", name: "UserService" });
+    const remaining = store.findEntities({ projectId: currentProject, entityType: "CodeModule", name: "UserService" });
     expect(remaining).toHaveLength(1);
     expect(remaining[0].confidence).toBe(0.9);
   });
@@ -250,7 +256,7 @@ describe("mergeDuplicateEntities", () => {
     const count = gc.mergeDuplicateEntities();
     expect(count).toBe(1);
 
-    const remaining = store.findEntities({ projectId: PROJECT, entityType: "CodeModule" });
+    const remaining = store.findEntities({ projectId: currentProject, entityType: "CodeModule" });
     const userServices = remaining.filter((e) => e.name.toLowerCase().includes("userservice"));
     expect(userServices).toHaveLength(1);
     expect(userServices[0].confidence).toBe(0.7);
@@ -269,8 +275,18 @@ describe("mergeDuplicateEntities", () => {
   it("does not merge entities with different projects", () => {
     const gc = new KnowledgeGarbageCollector(store, lifecycleLog);
 
-    makeEntity(store, { name: "UserService", entityType: "CodeModule", projectId: "proj-a", confidence: 0.6 });
-    makeEntity(store, { name: "UserService", entityType: "CodeModule", projectId: "proj-b", confidence: 0.9 });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "CodeModule",
+      projectId: uniqueProjectId("proj-a"),
+      confidence: 0.6,
+    });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "CodeModule",
+      projectId: uniqueProjectId("proj-b"),
+      confidence: 0.9,
+    });
 
     const count = gc.mergeDuplicateEntities();
     expect(count).toBe(0);
@@ -294,7 +310,7 @@ describe("mergeDuplicateEntities", () => {
 
     gc.mergeDuplicateEntities();
 
-    const remaining = store.findEntities({ projectId: PROJECT, entityType: "CodeModule", name: "AuthModule" });
+    const remaining = store.findEntities({ projectId: currentProject, entityType: "CodeModule", name: "AuthModule" });
     expect(remaining).toHaveLength(1);
     // Winner's attrs take precedence, loser's fill gaps
     expect(remaining[0].extendedAttributes).toMatchObject({
@@ -379,7 +395,7 @@ function backdateEntityForProject(
   }
 }
 
-describe("Property 18: 鍨冨溇鍥炴敹姝ｇ‘鎬?, () => {
+describe("Property 18: garbage collection correctness", () => {
   /**
    * **Validates: Requirements 6.3**
    *

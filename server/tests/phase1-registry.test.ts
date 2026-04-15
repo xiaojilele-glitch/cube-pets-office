@@ -2,11 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getAgents = vi.fn();
 const getAgent = vi.fn();
+const updateAgentSoul = vi.fn();
+const getReputationProfile = vi.fn();
+const upsertReputationProfile = vi.fn();
+
+const reputationProfiles = new Map<string, any>();
 
 vi.mock('../db/index.js', () => ({
   default: {
     getAgents,
     getAgent,
+    updateAgentSoul,
+    getReputationProfile,
+    upsertReputationProfile,
   },
 }));
 
@@ -14,6 +22,13 @@ describe('phase1 registry validation', () => {
   beforeEach(() => {
     getAgents.mockReset();
     getAgent.mockReset();
+    updateAgentSoul.mockReset();
+    reputationProfiles.clear();
+    getReputationProfile.mockImplementation((agentId: string) => reputationProfiles.get(agentId));
+    upsertReputationProfile.mockImplementation((profile: any) => {
+      reputationProfiles.set(profile.agentId, profile);
+      return profile;
+    });
     vi.resetModules();
   });
 

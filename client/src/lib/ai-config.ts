@@ -24,6 +24,16 @@ interface PersistedAISettings {
 
 const STORAGE_KEY = "cube-pets-office.ai-settings.v1";
 
+function getSafeLocalStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.localStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function deriveProviderName(baseUrl: string): string {
   try {
     return new URL(baseUrl).host || baseUrl;
@@ -110,10 +120,11 @@ export function createBrowserAIConfig(
 }
 
 function readPersistedAISettings(): PersistedAISettings | null {
-  if (typeof window === "undefined") return null;
+  const storage = getSafeLocalStorage();
+  if (!storage) return null;
 
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? parsed : null;
@@ -137,7 +148,8 @@ export function savePersistedAISettings(
   mode: AIConfigMode,
   browserConfig: AIConfig
 ): void {
-  if (typeof window === "undefined") return;
+  const storage = getSafeLocalStorage();
+  if (!storage) return;
 
   const payload: PersistedAISettings = {
     mode,
@@ -156,5 +168,5 @@ export function savePersistedAISettings(
     },
   };
 
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  storage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }

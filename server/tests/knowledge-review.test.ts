@@ -9,6 +9,11 @@ import type { Entity, EntitySource, ReviewAction } from "../../shared/knowledge/
 // ---------------------------------------------------------------------------
 
 const PROJECT = "test-project";
+let defaultProjectId = PROJECT;
+
+function uniqueProjectId(prefix: string): string {
+  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 function makeEntity(
   store: GraphStore,
@@ -20,7 +25,7 @@ function makeEntity(
     description: overrides?.description ?? "test entity",
     source: overrides?.source ?? ("code_analysis" as EntitySource),
     confidence: overrides?.confidence ?? 0.8,
-    projectId: overrides?.projectId ?? PROJECT,
+    projectId: overrides?.projectId ?? defaultProjectId,
     needsReview: overrides?.needsReview ?? false,
     linkedMemoryIds: overrides?.linkedMemoryIds ?? [],
     extendedAttributes: overrides?.extendedAttributes ?? {},
@@ -35,6 +40,7 @@ let store: GraphStore;
 let queue: KnowledgeReviewQueue;
 
 beforeEach(() => {
+  defaultProjectId = uniqueProjectId("review-project");
   store = new GraphStore();
   queue = new KnowledgeReviewQueue(store);
 });
@@ -61,12 +67,14 @@ describe("getQueue", () => {
   });
 
   it("filters by projectId", () => {
-    makeEntity(store, { confidence: 0.2, projectId: "proj-a" });
-    makeEntity(store, { confidence: 0.2, projectId: "proj-b" });
+    const projectA = uniqueProjectId("proj-a");
+    const projectB = uniqueProjectId("proj-b");
+    makeEntity(store, { confidence: 0.2, projectId: projectA });
+    makeEntity(store, { confidence: 0.2, projectId: projectB });
 
-    const result = queue.getQueue({ projectId: "proj-a" });
+    const result = queue.getQueue({ projectId: projectA });
     expect(result).toHaveLength(1);
-    expect(result[0].projectId).toBe("proj-a");
+    expect(result[0].projectId).toBe(projectA);
   });
 
   it("filters by entityType", () => {

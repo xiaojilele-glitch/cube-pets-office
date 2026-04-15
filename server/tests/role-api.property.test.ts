@@ -129,8 +129,11 @@ const arbRoleId = fc
 const arbRoleName = fc.string({ minLength: 1, maxLength: 30 });
 
 const arbTimestamp = fc
-  .date({ min: new Date('2024-01-01'), max: new Date('2026-01-01') })
-  .map((d) => d.toISOString());
+  .integer({
+    min: Date.UTC(2024, 0, 1),
+    max: Date.UTC(2025, 11, 31, 23, 59, 59, 999),
+  })
+  .map((timestamp) => new Date(timestamp).toISOString());
 
 const arbTriggerSource = fc.string({ minLength: 1, maxLength: 30 });
 

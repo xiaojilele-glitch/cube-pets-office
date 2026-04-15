@@ -11,7 +11,6 @@ import { useTasksStore } from "@/lib/tasks-store";
 import { MissionDetailOverlay } from "../tasks/MissionDetailOverlay";
 import { MissionMiniView } from "../tasks/MissionMiniView";
 import {
-  extractActiveAgents,
   getIslandScale,
   selectDisplayMission,
 } from "../tasks/mission-island-helpers";
@@ -19,8 +18,6 @@ import {
 /* ── Constants ── */
 const ISLAND_POSITION: [number, number, number] = [0, 0, -2.5];
 const MINI_VIEW_OFFSET: [number, number, number] = [0, 2.8, 0];
-const WALL_MOUNT_OFFSET: [number, number, number] = [0, 1.42, -2.29];
-const WALL_MOUNT_ROTATION: [number, number, number] = [0, 0, 0];
 
 const GLOW_COLOR_ACTIVE = new THREE.Color("#F59E0B");
 const GLOW_COLOR_IDLE = new THREE.Color("#D6C4A8");
@@ -38,18 +35,12 @@ function useMissionIslandData() {
 
   const isRunning = selectedMission?.status === "running";
 
-  const activeAgents = useMemo(
-    () => (missionDetail ? extractActiveAgents(missionDetail) : []),
-    [missionDetail],
-  );
-
-  return { selectedMission, missionDetail, isRunning, activeAgents };
+  return { selectedMission, missionDetail, isRunning };
 }
 
 /* ── Main Component ── */
 export function MissionIsland() {
-  const { selectedMission, missionDetail, isRunning } =
-    useMissionIslandData();
+  const { selectedMission, missionDetail, isRunning } = useMissionIslandData();
   const [expanded, setExpanded] = useState(false);
   const [, setLocation] = useLocation();
   const { tier } = useViewportTier();
@@ -57,7 +48,7 @@ export function MissionIsland() {
   const glowRef = useRef<THREE.Mesh>(null);
 
   const scale = getIslandScale(tier);
-  const mountOnWall = tier === "desktop";
+  const interactive = tier !== "desktop";
 
   /* Close overlay when selected mission disappears */
   useEffect(() => {
@@ -117,13 +108,21 @@ export function MissionIsland() {
     <group
       position={ISLAND_POSITION}
       scale={scale}
-      onClick={handleIslandClick}
-      onPointerOver={() => {
-        document.body.style.cursor = "pointer";
-      }}
-      onPointerOut={() => {
-        document.body.style.cursor = "auto";
-      }}
+      onClick={interactive ? handleIslandClick : undefined}
+      onPointerOver={
+        interactive
+          ? () => {
+              document.body.style.cursor = "pointer";
+            }
+          : undefined
+      }
+      onPointerOut={
+        interactive
+          ? () => {
+              document.body.style.cursor = "auto";
+            }
+          : undefined
+      }
     >
       {/* Floor ring */}
       <mesh
@@ -144,25 +143,7 @@ export function MissionIsland() {
       </mesh>
 
       {/* Mini View (always visible) */}
-      {mountOnWall ? (
-        <group position={WALL_MOUNT_OFFSET} rotation={WALL_MOUNT_ROTATION}>
-          <Html
-            transform
-            position={[0, 0, 0.002]}
-            center
-            distanceFactor={5.3}
-            style={{ pointerEvents: expanded ? "none" : "auto" }}
-          >
-            <MissionMiniView
-              mission={selectedMission}
-              onExpand={handleExpand}
-              onCreateMission={handleCreateMission}
-              mounted
-              compactMounted
-            />
-          </Html>
-        </group>
-      ) : (
+      {interactive ? (
         <Html
           position={MINI_VIEW_OFFSET}
           center
@@ -175,7 +156,7 @@ export function MissionIsland() {
             onCreateMission={handleCreateMission}
           />
         </Html>
-      )}
+      ) : null}
 
       {/* Detail Overlay (visible when expanded) */}
       {expanded && missionDetail && (

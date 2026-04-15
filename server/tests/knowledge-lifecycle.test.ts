@@ -267,7 +267,7 @@ function createEntityWithStatus(
   return store.getEntity(entity.entityId)!;
 }
 
-describe("Property 16: 瀹炰綋鐘舵€佹満杞崲鍚堟硶鎬?, () => {
+describe("Property 16: entity state transition legality", () => {
   let store: GraphStore;
   let lifecycleLog: LifecycleLog;
   let logTmpDir: string;
@@ -379,7 +379,7 @@ describe("Property 16: 瀹炰綋鐘舵€佹満杞崲鍚堟硶鎬?, () => {
 // Validates: Requirements 6.5
 // ---------------------------------------------------------------------------
 
-describe("Property 20: 鐢熷懡鍛ㄦ湡鏃ュ織瀹屾暣鎬?, () => {
+describe("Property 20: lifecycle log completeness", () => {
   let store: GraphStore;
   let lifecycleLog: LifecycleLog;
   let logTmpDir: string;

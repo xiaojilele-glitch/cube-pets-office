@@ -80,10 +80,10 @@ describe("Property 6: 回调投递覆盖所有事件", () => {
           const [url, init] = call;
           expect(url).toBe(eventsUrl);
 
-          const body = JSON.parse(init!.body as string) as ExecutorEvent;
-          expect(body.type).toBe(events[i].type);
-          expect(body.eventId).toBe(events[i].eventId);
-          expect(body.message).toBe(events[i].message);
+          const body = JSON.parse(init!.body as string) as { event: ExecutorEvent };
+          expect(body.event.type).toBe(events[i].type);
+          expect(body.event.eventId).toBe(events[i].eventId);
+          expect(body.event.message).toBe(events[i].message);
         }
       }),
       { numRuns: 100 },
