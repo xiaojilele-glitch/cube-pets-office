@@ -58,9 +58,10 @@ export function createLobsterExecutorApp(
 
   app.get("/health", async (_req, res: Response<LobsterExecutorHealthResponse>) => {
     const config = readLobsterExecutorConfig();
+    const effectiveMode = service.getExecutionMode();
 
     let dockerStatus: "connected" | "disconnected" = "disconnected";
-    if (config.executionMode === "real") {
+    if (effectiveMode === "real") {
       try {
         const docker = new Dockerode(parseDockerHost(config.dockerHost));
         await docker.ping();
@@ -87,7 +88,7 @@ export function createLobsterExecutorApp(
           createJob: true,
           jobQuery: true,
           cancelJob: true,
-          dockerLifecycle: config.executionMode === "real",
+          dockerLifecycle: effectiveMode === "real",
           callbackSigning: config.callbackSecret !== "",
         },
       aiCapability: {

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <defs>
+    <style>
+      .box{fill:#0b1220;stroke:#3b82f6;stroke-width:2;rx:14;ry:14}
+      .box2{fill:#0b1220;stroke:#22c55e;stroke-width:2;rx:14;ry:14}
+      .box3{fill:#0b1220;stroke:#f59e0b;stroke-width:2;rx:14;ry:14}
+      .t1{fill:#e5e7eb;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;font-size:18px;font-weight:700}
+      .t2{fill:#cbd5e1;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;font-size:14px}
+      .t3{fill:#94a3b8;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;font-size:12px}
+      .line{stroke:#94a3b8;stroke-width:2;fill:none}
+      .line2{stroke:#22c55e;stroke-width:2;fill:none}
+      .line3{stroke:#f59e0b;stroke-width:2;fill:none}
+      .cap{stroke-linecap:round;stroke-linejoin:round}
+      .badge{fill:#111827;stroke:#334155;stroke-width:1;rx:10;ry:10}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="720" fill="#060b16"/>
+
+  <text x="40" y="52" class="t1">Cube Pets Office 执行链路（Trae 沙盒：real → native 自动降级）</text>
+  <text x="40" y="78" class="t3">端口：Client 3000 | Server 3001 | Executor 3031</text>
+
+  <rect x="60" y="120" width="320" height="120" class="box"/>
+  <text x="92" y="158" class="t1">Client (Vite)</text>
+  <text x="92" y="186" class="t2">UI 发起任务 / 展示日志与产物</text>
+  <text x="92" y="210" class="t3">http://localhost:3000</text>
+
+  <rect x="440" y="120" width="320" height="120" class="box"/>
+  <text x="472" y="158" class="t1">Server (Express)</text>
+  <text x="472" y="186" class="t2">生成 execution plan，派发到 executor</text>
+  <text x="472" y="210" class="t3">http://localhost:3001</text>
+
+  <rect x="820" y="120" width="320" height="120" class="box"/>
+  <text x="852" y="158" class="t1">Executor (lobster)</text>
+  <text x="852" y="186" class="t2">执行 job，回调事件到 server</text>
+  <text x="852" y="210" class="t3">http://localhost:3031</text>
+
+  <path d="M 380 180 L 440 180" class="line cap" marker-end="url(#arrow)"/>
+  <text x="392" y="168" class="t3">POST /api/tasks</text>
+
+  <path d="M 760 180 L 820 180" class="line cap" marker-end="url(#arrow)"/>
+  <text x="772" y="168" class="t3">dispatch plan</text>
+
+  <path d="M 820 250 C 740 320, 620 320, 540 250" class="line cap" marker-end="url(#arrow)"/>
+  <text x="560" y="308" class="t3">POST /api/executor/events</text>
+
+  <rect x="90" y="286" width="1020" height="20" class="badge"/>
+  <text x="110" y="301" class="t3">Executor 启动阶段：如果 Docker 可用 → DockerRunner（容器执行）；Docker 不可用（沙盒）→ NativeRunner（本机进程执行）</text>
+
+  <rect x="220" y="350" width="360" height="150" class="box2"/>
+  <text x="252" y="388" class="t1">路径 A：DockerRunner</text>
+  <text x="252" y="416" class="t2">容器内执行 payload.command</text>
+  <text x="252" y="442" class="t3">需要 docker.sock / Docker daemon</text>
+  <text x="252" y="468" class="t3">隔离强，资源策略更完整</text>
+
+  <rect x="620" y="350" width="360" height="150" class="box3"/>
+  <text x="652" y="388" class="t1">路径 B：NativeRunner（沙盒）</text>
+  <text x="652" y="416" class="t2">直接在沙盒主机 spawn 子进程执行</text>
+  <text x="652" y="442" class="t3">stdout/stderr → executor.log → 回调事件</text>
+  <text x="652" y="468" class="t3">隔离弱，但能真跑命令/产物</text>
+
+  <path d="M 980 420 L 1110 420" class="line3 cap" marker-end="url(#arrowAmber)"/>
+  <text x="988" y="408" class="t3">写 result.json / artifacts</text>
+
+  <rect x="720" y="520" width="420" height="150" class="box3"/>
+  <text x="752" y="558" class="t1">NativeRunner 特殊兜底：AI-only job</text>
+  <text x="752" y="586" class="t2">当 aiEnabled=true 且 command 为空</text>
+  <text x="752" y="612" class="t3">调用 Server /api/chat 生成 ai-result.json</text>
+  <text x="752" y="638" class="t3">然后 job.completed 回调到 server</text>
+
+  <path d="M 800 520 C 760 500, 700 470, 650 430" class="line3 cap" marker-end="url(#arrowAmber)"/>
+  <path d="M 720 600 C 640 560, 600 520, 560 480" class="line3 cap" marker-end="url(#arrowAmber)"/>
+  <text x="560" y="540" class="t3">POST /api/chat</text>
+</svg>
+

@@ -253,7 +253,7 @@ async function main() {
       new Promise((_, reject) =>
         setTimeout(
           () => reject(new Error("Timed out waiting for dev server readiness log.")),
-          30000
+          180000
         )
       ),
     ]);
