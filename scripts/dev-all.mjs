@@ -54,7 +54,11 @@ function parseDockerOptions(dockerHost) {
 }
 
 function resolveRequestedExecutionMode() {
-  return process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real";
+  const requestedMode = process.env.LOBSTER_EXECUTION_MODE;
+  if (requestedMode === "mock" || requestedMode === "native") {
+    return requestedMode;
+  }
+  return "real";
 }
 
 async function isDockerReachable(dockerHost) {
@@ -69,9 +73,9 @@ async function isDockerReachable(dockerHost) {
 
 async function resolveDevEnvironment() {
   const requestedExecutionMode = resolveRequestedExecutionMode();
-  if (requestedExecutionMode === "mock") {
+  if (requestedExecutionMode !== "real") {
     return {
-      LOBSTER_EXECUTION_MODE: "mock",
+      LOBSTER_EXECUTION_MODE: requestedExecutionMode,
     };
   }
 
@@ -86,11 +90,11 @@ async function resolveDevEnvironment() {
 
   console.warn(
     `[dev:all] Docker is unavailable at "${dockerHost}". Falling back to ` +
-      `LOBSTER_EXECUTION_MODE=mock so the dev stack can keep running.`
+      `LOBSTER_EXECUTION_MODE=native so the dev stack can keep running.`
   );
 
   return {
-    LOBSTER_EXECUTION_MODE: "mock",
+    LOBSTER_EXECUTION_MODE: "native",
   };
 }
 

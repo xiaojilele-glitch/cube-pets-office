@@ -112,7 +112,7 @@ LLM_MODEL=gpt-5.4
 LLM_WIRE_API=responses
 ```
 
-`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。若 Docker 不可用，脚本现在会自动回退到 `LOBSTER_EXECUTION_MODE=mock`，这样整套开发环境仍然能启动；如果你想验证真实容器执行，再启动 Docker 并重新运行即可。
+`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。若 Docker 不可用，脚本现在会自动回退到 `LOBSTER_EXECUTION_MODE=native`，这样整套开发环境仍然能保持真实执行链路；如果你只想做纯模拟调试，仍然可以手动把 `.env` 里的模式设成 `mock`。
 
 ### 方式三：单独控制执行器（调试 / 真实 Docker）
 
@@ -126,13 +126,16 @@ npm run dev:frontend
 # 终端 3：单独启动执行器（mock 模式，无需 Docker）
 LOBSTER_EXECUTION_MODE=mock npx tsx services/lobster-executor/src/index.ts
 
+# 或 native 模式（本机进程执行，无需 Docker）
+LOBSTER_EXECUTION_MODE=native npx tsx services/lobster-executor/src/index.ts
+
 # 或真实 Docker 模式（需要 Docker 运行中）
 LOBSTER_EXECUTION_MODE=real npx tsx services/lobster-executor/src/index.ts
 ```
 
-PowerShell 下可先执行 `$env:LOBSTER_EXECUTION_MODE='mock'` 或 `$env:LOBSTER_EXECUTION_MODE='real'` 再启动命令。
+PowerShell 下可先执行 `$env:LOBSTER_EXECUTION_MODE='mock'`、`$env:LOBSTER_EXECUTION_MODE='native'` 或 `$env:LOBSTER_EXECUTION_MODE='real'` 再启动命令。
 
-系统会把 AI 生成的执行计划下发到 Lobster 执行器，页面上实时展示容器状态、日志和产物。支持 mock 模式（开发调试）和 real 模式（真实 Docker 容器执行）。
+系统会把 AI 生成的执行计划下发到 Lobster 执行器，页面上实时展示执行状态、日志和产物。支持 mock 模式（开发调试）、native 模式（本机进程执行）和 real 模式（真实 Docker 容器执行）。
 
 ---
 
