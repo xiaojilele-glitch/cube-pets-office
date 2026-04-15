@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-// We need to control process.env before importing the module under test.
-// vi.hoisted + dynamic import keeps things deterministic.
+import { getVisionConfig } from "../core/vision-provider.js";
 
 /** Snapshot current env so we can restore after each test */
 function snapshotEnv() {
@@ -61,14 +60,7 @@ describe("getVisionConfig", () => {
     Object.assign(process.env, savedEnv);
   });
 
-  async function loadGetVisionConfig() {
-    // Dynamic import to pick up fresh env each time
-    const mod = await import("../core/vision-provider.js");
-    return mod.getVisionConfig;
-  }
-
-  it("falls back to main LLM config when no VISION or FALLBACK vars are set", async () => {
-    const getVisionConfig = await loadGetVisionConfig();
+  it("falls back to main LLM config when no VISION or FALLBACK vars are set", () => {
     const cfg = getVisionConfig();
 
     expect(cfg.apiKey).toBe("main-key");
@@ -81,13 +73,12 @@ describe("getVisionConfig", () => {
     expect(cfg.timeoutMs).toBe(30000);
   });
 
-  it("uses FALLBACK_LLM_* when VISION_LLM_* is not set", async () => {
+  it("uses FALLBACK_LLM_* when VISION_LLM_* is not set", () => {
     process.env.FALLBACK_LLM_API_KEY = "fallback-key";
     process.env.FALLBACK_LLM_BASE_URL = "https://fallback.example.com/v1";
     process.env.FALLBACK_LLM_MODEL = "fallback-model";
     process.env.FALLBACK_LLM_WIRE_API = "responses";
 
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.apiKey).toBe("fallback-key");
@@ -96,7 +87,7 @@ describe("getVisionConfig", () => {
     expect(cfg.wireApi).toBe("responses");
   });
 
-  it("uses VISION_LLM_* when all three tiers are set", async () => {
+  it("uses VISION_LLM_* when all three tiers are set", () => {
     process.env.FALLBACK_LLM_API_KEY = "fallback-key";
     process.env.FALLBACK_LLM_BASE_URL = "https://fallback.example.com/v1";
     process.env.FALLBACK_LLM_MODEL = "fallback-model";
@@ -106,7 +97,6 @@ describe("getVisionConfig", () => {
     process.env.VISION_LLM_MODEL = "vision-model";
     process.env.VISION_LLM_WIRE_API = "responses";
 
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.apiKey).toBe("vision-key");
@@ -115,27 +105,22 @@ describe("getVisionConfig", () => {
     expect(cfg.wireApi).toBe("responses");
   });
 
-  it("respects VISION_LLM_MAX_TOKENS", async () => {
+  it("respects VISION_LLM_MAX_TOKENS", () => {
     process.env.VISION_LLM_MAX_TOKENS = "2048";
-
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.maxTokens).toBe(2048);
   });
 
-  it("defaults maxTokens to 1000 for invalid values", async () => {
+  it("defaults maxTokens to 1000 for invalid values", () => {
     process.env.VISION_LLM_MAX_TOKENS = "not-a-number";
-
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.maxTokens).toBe(1000);
   });
 
-  it("respects VISION_LLM_DETAIL", async () => {
+  it("respects VISION_LLM_DETAIL", () => {
     process.env.VISION_LLM_DETAIL = "high";
-    const getVisionConfig = await loadGetVisionConfig();
     expect(getVisionConfig().detail).toBe("high");
 
     process.env.VISION_LLM_DETAIL = "auto";
@@ -145,39 +130,31 @@ describe("getVisionConfig", () => {
     expect(getVisionConfig().detail).toBe("low");
   });
 
-  it("defaults detail to 'low' for unrecognized values", async () => {
+  it("defaults detail to 'low' for unrecognized values", () => {
     process.env.VISION_LLM_DETAIL = "ultra";
-
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.detail).toBe("low");
   });
 
-  it("respects VISION_LLM_TIMEOUT_MS", async () => {
+  it("respects VISION_LLM_TIMEOUT_MS", () => {
     process.env.VISION_LLM_TIMEOUT_MS = "60000";
-
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.timeoutMs).toBe(60000);
   });
 
-  it("defaults timeoutMs to 30000 for invalid values", async () => {
+  it("defaults timeoutMs to 30000 for invalid values", () => {
     process.env.VISION_LLM_TIMEOUT_MS = "-5";
-
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.timeoutMs).toBe(30000);
   });
 
-  it("mixes tiers: VISION apiKey + FALLBACK baseUrl + main model", async () => {
+  it("mixes tiers: VISION apiKey + FALLBACK baseUrl + main model", () => {
     process.env.VISION_LLM_API_KEY = "vision-key";
     process.env.FALLBACK_LLM_BASE_URL = "https://fallback.example.com/v1";
     // model falls through to main
-
-    const getVisionConfig = await loadGetVisionConfig();
     const cfg = getVisionConfig();
 
     expect(cfg.apiKey).toBe("vision-key");

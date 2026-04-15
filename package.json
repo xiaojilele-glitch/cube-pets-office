@@ -12,9 +12,14 @@
     "dev:stop": "node scripts/dev-stop.mjs",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:pages": "node scripts/build-pages.mjs",
-    "start": "NODE_ENV=production node dist/index.js",
+    "start": "node scripts/start-prod.mjs",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
+    "test:client": "vitest run client/src",
+    "test:server": "node --max-old-space-size=6144 ./node_modules/vitest/vitest.mjs run --config vitest.config.server.ts server shared --pool=forks --poolOptions.forks.singleFork --no-file-parallelism --silent",
+    "test:executor": "vitest run --config services/lobster-executor/vitest.config.ts",
+    "smoke:prod": "node scripts/prod-smoke.mjs",
+    "test:release": "npm run check && npm run build && npm run test:client && npm run test:server && npm run test:executor && npm run smoke:prod",
     "format": "prettier --write ."
   },
   "dependencies": {

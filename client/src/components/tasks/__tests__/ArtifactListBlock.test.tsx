@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { useAppStore } from "@/lib/store";
@@ -43,13 +43,13 @@ function renderBlock(
 
 describe("ArtifactListBlock", () => {
   beforeEach(() => {
-    useAppStore.setState({ locale: "en-US" });
+    useAppStore.setState({ locale: "zh-CN" });
   });
 
   it("renders an explanatory empty state for the full variant", () => {
     const markup = renderBlock([]);
 
-    expect(markup).toContain("尚未产生产物");
+    expect(markup).toContain("尚未产生");
     expect(markup).toContain("任务仍在运行中");
   });
 
@@ -72,15 +72,15 @@ describe("ArtifactListBlock", () => {
     ]);
 
     expect(markup).toContain("Dashboard");
-    expect(markup).toContain("Open Link");
+    expect(markup).toContain("打开链接");
     expect(markup).toContain("https://example.com/dashboard");
   });
 
   it("shows preview and download controls for a completed report", () => {
     const markup = renderBlock([makeArtifact()], "completed");
 
-    expect(markup).toContain("Preview");
-    expect(markup).toContain("Download");
+    expect(markup).toContain("预览");
+    expect(markup).toContain("下载");
     expect(markup).toContain("bg-amber-500/10");
   });
 
@@ -88,7 +88,7 @@ describe("ArtifactListBlock", () => {
     const markup = renderBlock([makeArtifact()], "running", "compact");
 
     expect(markup).toContain("animate-ping");
-    expect(markup).toContain("Artifacts");
+    expect(markup).toContain("产物");
   });
 
   it("exports helper logic for completed highlighting", () => {

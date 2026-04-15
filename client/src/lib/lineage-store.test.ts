@@ -8,6 +8,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { DataLineageNode, LineageGraph } from "@shared/lineage/contracts";
 import { LINEAGE_SOCKET_EVENTS } from "@shared/lineage/socket";
+import { useLineageStore } from "./lineage-store";
 
 // ---------------------------------------------------------------------------
 // Mock fetch globally
@@ -57,13 +58,19 @@ function makeSocket() {
 // ---------------------------------------------------------------------------
 
 describe("useLineageStore", () => {
-  let useLineageStore: typeof import("./lineage-store").useLineageStore;
-
-  beforeEach(async () => {
-    vi.resetModules();
+  beforeEach(() => {
     fetchMock.mockReset();
-    const mod = await import("./lineage-store");
-    useLineageStore = mod.useLineageStore;
+    useLineageStore.setState({
+      graph: null,
+      selectedNodeId: null,
+      filters: {},
+      loading: false,
+      hasLoaded: false,
+      error: null,
+      impactResult: null,
+      alerts: [],
+      lastRequest: null,
+    });
   });
 
   afterEach(() => {

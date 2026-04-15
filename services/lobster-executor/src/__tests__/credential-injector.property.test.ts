@@ -111,11 +111,12 @@ describe("Property 2: 凭证解析与覆盖优先级", () => {
           const creds = resolveAICredentials(payload, hostEnv);
           const envVars = buildAIEnvVars(creds);
 
-          // Must contain exactly 3 entries with AI_ prefix
-          expect(envVars).toHaveLength(3);
+          // Must contain exactly 4 entries with AI_ prefix
+          expect(envVars).toHaveLength(4);
           expect(envVars[0]).toBe(`AI_API_KEY=${creds.apiKey}`);
           expect(envVars[1]).toBe(`AI_BASE_URL=${creds.baseUrl}`);
           expect(envVars[2]).toBe(`AI_MODEL=${creds.model}`);
+          expect(envVars[3]).toMatch(/^AI_WIRE_API=/);
         },
       ),
       { numRuns: 100 },

@@ -112,7 +112,7 @@ LLM_MODEL=gpt-5.4
 LLM_WIRE_API=responses
 ```
 
-`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。若机器上没有 Docker，把 `LOBSTER_EXECUTION_MODE=mock` 写入 `.env` 即可继续体验完整链路。
+`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。若 Docker 不可用，脚本现在会自动回退到 `LOBSTER_EXECUTION_MODE=mock`，这样整套开发环境仍然能启动；如果你想验证真实容器执行，再启动 Docker 并重新运行即可。
 
 ### 方式三：单独控制执行器（调试 / 真实 Docker）
 

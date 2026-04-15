@@ -32,6 +32,10 @@ function createTestDeps() {
   return { graphStore, reviewQueue, knowledgeService };
 }
 
+function uniqueProjectId(prefix: string): string {
+  return `${prefix}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 async function withServer(
   handler: (baseUrl: string, deps: ReturnType<typeof createTestDeps>) => Promise<void>,
 ): Promise<void> {
@@ -69,7 +73,7 @@ function seedEntity(graphStore: GraphStore, overrides: Partial<Entity> & { name:
     description: "A test module",
     source: "code_analysis",
     confidence: 0.9,
-    projectId: "proj-1",
+    projectId: overrides.projectId ?? uniqueProjectId("proj"),
     needsReview: false,
     linkedMemoryIds: [],
     extendedAttributes: { filePath: `src/${overrides.name ?? "test"}.ts` },
@@ -93,8 +97,9 @@ describe("GET /api/knowledge/graph", () => {
 
   it("returns nodes and edges for a project", async () => {
     await withServer(async (baseUrl, deps) => {
-      const e1 = seedEntity(deps.graphStore, { name: "mod-a", projectId: "proj-1" });
-      const e2 = seedEntity(deps.graphStore, { name: "mod-b", projectId: "proj-1" });
+      const projectId = uniqueProjectId("proj");
+      const e1 = seedEntity(deps.graphStore, { name: "mod-a", projectId });
+      const e2 = seedEntity(deps.graphStore, { name: "mod-b", projectId });
       deps.graphStore.createRelation({
         relationType: "DEPENDS_ON",
         sourceEntityId: e1.entityId,
@@ -106,7 +111,7 @@ describe("GET /api/knowledge/graph", () => {
         needsReview: false,
       });
 
-      const res = await fetch(`${baseUrl}/api/knowledge/graph?projectId=proj-1`);
+      const res = await fetch(`${baseUrl}/api/knowledge/graph?projectId=${projectId}`);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -117,10 +122,11 @@ describe("GET /api/knowledge/graph", () => {
 
   it("filters nodes by entityTypes", async () => {
     await withServer(async (baseUrl, deps) => {
-      seedEntity(deps.graphStore, { name: "mod-a", entityType: "CodeModule", projectId: "proj-1" });
-      seedEntity(deps.graphStore, { name: "api-a", entityType: "API", projectId: "proj-1" });
+      const projectId = uniqueProjectId("proj");
+      seedEntity(deps.graphStore, { name: "mod-a", entityType: "CodeModule", projectId });
+      seedEntity(deps.graphStore, { name: "api-a", entityType: "API", projectId });
 
-      const res = await fetch(`${baseUrl}/api/knowledge/graph?projectId=proj-1&entityTypes=API`);
+      const res = await fetch(`${baseUrl}/api/knowledge/graph?projectId=${projectId}&entityTypes=API`);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.nodes).toHaveLength(1);
@@ -130,7 +136,7 @@ describe("GET /api/knowledge/graph", () => {
 
   it("returns empty for a project with no data", async () => {
     await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/knowledge/graph?projectId=empty-proj`);
+      const res = await fetch(`${baseUrl}/api/knowledge/graph?projectId=${uniqueProjectId("empty-proj")}`);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.nodes).toHaveLength(0);
@@ -158,10 +164,11 @@ describe("GET /api/knowledge/review-queue", () => {
 
   it("returns entities needing review", async () => {
     await withServer(async (baseUrl, deps) => {
-      seedEntity(deps.graphStore, { name: "low-conf", confidence: 0.3, needsReview: true, projectId: "proj-1" });
-      seedEntity(deps.graphStore, { name: "high-conf", confidence: 0.9, needsReview: false, projectId: "proj-1" });
+      const projectId = uniqueProjectId("proj");
+      seedEntity(deps.graphStore, { name: "low-conf", confidence: 0.3, needsReview: true, projectId });
+      seedEntity(deps.graphStore, { name: "high-conf", confidence: 0.9, needsReview: false, projectId });
 
-      const res = await fetch(`${baseUrl}/api/knowledge/review-queue?projectId=proj-1`);
+      const res = await fetch(`${baseUrl}/api/knowledge/review-queue?projectId=${projectId}`);
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.items).toHaveLength(1);
@@ -284,12 +291,13 @@ describe("POST /api/knowledge/query", () => {
 
   it("returns unified query results", async () => {
     await withServer(async (baseUrl, deps) => {
-      seedEntity(deps.graphStore, { name: "auth-module", projectId: "proj-1" });
+      const projectId = uniqueProjectId("proj");
+      seedEntity(deps.graphStore, { name: "auth-module", projectId });
 
       const res = await fetch(`${baseUrl}/api/knowledge/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: "What modules exist?", projectId: "proj-1" }),
+        body: JSON.stringify({ question: "What modules exist?", projectId }),
       });
 
       expect(res.status).toBe(200);
@@ -303,14 +311,15 @@ describe("POST /api/knowledge/query", () => {
 
   it("accepts optional mode in options", async () => {
     await withServer(async (baseUrl, deps) => {
-      seedEntity(deps.graphStore, { name: "auth-module", projectId: "proj-1" });
+      const projectId = uniqueProjectId("proj");
+      seedEntity(deps.graphStore, { name: "auth-module", projectId });
 
       const res = await fetch(`${baseUrl}/api/knowledge/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: "What modules exist?",
-          projectId: "proj-1",
+          projectId,
           options: { mode: "preferStructured" },
         }),
       });

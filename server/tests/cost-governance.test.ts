@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import { convertCurrency, type Currency } from '../../shared/cost-governance';
@@ -533,16 +535,13 @@ describe('Property 8: 灰度降级比例', () => {
             return;
           }
 
-          // Hash-based bucketing maps each agent to bucket 0-99.
-          // Agent is downgraded if bucket < grayPercent.
-          // Allow +-1 tolerance for small N where hash distribution may deviate.
-          const expectedLow = Math.floor(N * grayPercent / 100);
-          const expectedHigh = Math.ceil(N * grayPercent / 100);
-          const toleranceLow = Math.max(0, expectedLow - 1);
-          const toleranceHigh = Math.min(N, expectedHigh + 1);
+          const expectedDowngradedCount = agentIds.filter((agentId) => {
+            const hash = createHash('sha256').update(agentId).digest();
+            const bucket = hash.readUInt32BE(0) % 100;
+            return bucket < grayPercent;
+          }).length;
 
-          expect(downgradedCount).toBeGreaterThanOrEqual(toleranceLow);
-          expect(downgradedCount).toBeLessThanOrEqual(toleranceHigh);
+          expect(downgradedCount).toBe(expectedDowngradedCount);
         },
       ),
       { numRuns: 100 },

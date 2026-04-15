@@ -1032,7 +1032,7 @@ describe("GraphStore", () => {
   // Property 1: 瀹炰綋鍒涘缓灞炴€у畬鏁存€?
   // -------------------------------------------------------------------------
 
-  describe("Feature: knowledge-graph, Property 1: 瀹炰綋鍒涘缓灞炴€у畬鏁存€?, () => {
+  describe("Feature: knowledge-graph, Property 1: entity creation integrity", () => {
     /**
      * Validates: Requirements 1.3
      *
@@ -1141,7 +1141,7 @@ describe("GraphStore", () => {
   // Property 2: 鍏崇郴鍒涘缓灞炴€у畬鏁存€?
   // -------------------------------------------------------------------------
 
-  describe("Feature: knowledge-graph, Property 2: 鍏崇郴鍒涘缓灞炴€у畬鏁存€?, () => {
+  describe("Feature: knowledge-graph, Property 2: relation creation integrity", () => {
     /**
      * Validates: Requirements 1.4
      *
@@ -1451,7 +1451,7 @@ describe("GraphStore", () => {
   // Property 12: 椤圭洰闅旂涓嶅彉閲?
   // -------------------------------------------------------------------------
 
-  describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?, () => {
+  describe("Feature: knowledge-graph, Property 12: project isolation invariant", () => {
     /**
      * Validates: Requirements 4.5
      *
@@ -1571,19 +1571,21 @@ describe("GraphStore", () => {
           projectIdArb,
           relationTypeArb,
           relationTypeArb,
-          (projectA, projectB, relTypeA, relTypeB) => {
-            fc.pre(projectA !== projectB);
+        (projectA, projectB, relTypeA, relTypeB) => {
+          fc.pre(projectA !== projectB);
 
-            const localStore = new GraphStore();
+          const localStore = new GraphStore();
+          const projectAId = `${projectA}-${Math.random().toString(36).slice(2, 10)}`;
+          const projectBId = `${projectB}-${Math.random().toString(36).slice(2, 10)}`;
 
-            // Create entities and relations in project A
-            const a1 = localStore.createEntity({
+          // Create entities and relations in project A
+          const a1 = localStore.createEntity({
               entityType: "CodeModule",
               name: "ModA1",
               description: "",
               source: "code_analysis",
               confidence: 0.8,
-              projectId: projectA,
+              projectId: projectAId,
               needsReview: false,
               linkedMemoryIds: [],
               extendedAttributes: {},
@@ -1594,7 +1596,7 @@ describe("GraphStore", () => {
               description: "",
               source: "code_analysis",
               confidence: 0.8,
-              projectId: projectA,
+              projectId: projectAId,
               needsReview: false,
               linkedMemoryIds: [],
               extendedAttributes: {},
@@ -1617,7 +1619,7 @@ describe("GraphStore", () => {
               description: "",
               source: "code_analysis",
               confidence: 0.7,
-              projectId: projectB,
+              projectId: projectBId,
               needsReview: false,
               linkedMemoryIds: [],
               extendedAttributes: {},
@@ -1628,7 +1630,7 @@ describe("GraphStore", () => {
               description: "",
               source: "code_analysis",
               confidence: 0.7,
-              projectId: projectB,
+              projectId: projectBId,
               needsReview: false,
               linkedMemoryIds: [],
               extendedAttributes: {},
@@ -1645,10 +1647,10 @@ describe("GraphStore", () => {
             });
 
             // Query relations for project A 鈥?all must reference project A entities
-            const relationsA = localStore.findRelations({ projectId: projectA });
+            const relationsA = localStore.findRelations({ projectId: projectAId });
             expect(relationsA.length).toBeGreaterThanOrEqual(1);
             const entityIdsA = new Set(
-              localStore.findEntities({ projectId: projectA }).map((e) => e.entityId),
+              localStore.findEntities({ projectId: projectAId }).map((e) => e.entityId),
             );
             for (const rel of relationsA) {
               expect(
@@ -1657,10 +1659,10 @@ describe("GraphStore", () => {
             }
 
             // Query relations for project B 鈥?all must reference project B entities
-            const relationsB = localStore.findRelations({ projectId: projectB });
+            const relationsB = localStore.findRelations({ projectId: projectBId });
             expect(relationsB.length).toBeGreaterThanOrEqual(1);
             const entityIdsB = new Set(
-              localStore.findEntities({ projectId: projectB }).map((e) => e.entityId),
+              localStore.findEntities({ projectId: projectBId }).map((e) => e.entityId),
             );
             for (const rel of relationsB) {
               expect(
@@ -1752,7 +1754,7 @@ describe("GraphStore", () => {
 // Property 12: 椤圭洰闅旂涓嶅彉閲?
 // -------------------------------------------------------------------------
 
-describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?, () => {
+describe("Feature: knowledge-graph, Property 12: project isolation invariant", () => {
   /**
    * Validates: Requirements 4.5
    *
@@ -1877,6 +1879,8 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
           fc.pre(projectA !== projectB);
 
           const localStore = new GraphStore();
+          const projectAId = `${projectA}-${Math.random().toString(36).slice(2, 10)}`;
+          const projectBId = `${projectB}-${Math.random().toString(36).slice(2, 10)}`;
 
           // Create entities and relations in project A
           const a1 = localStore.createEntity({
@@ -1885,7 +1889,7 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
             description: "",
             source: "code_analysis",
             confidence: 0.8,
-            projectId: projectA,
+            projectId: projectAId,
             needsReview: false,
             linkedMemoryIds: [],
             extendedAttributes: {},
@@ -1896,7 +1900,7 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
             description: "",
             source: "code_analysis",
             confidence: 0.8,
-            projectId: projectA,
+            projectId: projectAId,
             needsReview: false,
             linkedMemoryIds: [],
             extendedAttributes: {},
@@ -1919,7 +1923,7 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
             description: "",
             source: "code_analysis",
             confidence: 0.7,
-            projectId: projectB,
+            projectId: projectBId,
             needsReview: false,
             linkedMemoryIds: [],
             extendedAttributes: {},
@@ -1930,7 +1934,7 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
             description: "",
             source: "code_analysis",
             confidence: 0.7,
-            projectId: projectB,
+            projectId: projectBId,
             needsReview: false,
             linkedMemoryIds: [],
             extendedAttributes: {},
@@ -1947,11 +1951,11 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
           });
 
           // Query relations for project A
-          const relationsA = localStore.findRelations({ projectId: projectA });
+          const relationsA = localStore.findRelations({ projectId: projectAId });
           expect(relationsA.length).toBe(1);
           // All returned relations must reference entities in project A
           const entityIdsA = new Set(
-            localStore.findEntities({ projectId: projectA }).map((e) => e.entityId),
+            localStore.findEntities({ projectId: projectAId }).map((e) => e.entityId),
           );
           for (const rel of relationsA) {
             expect(
@@ -1960,10 +1964,10 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
           }
 
           // Query relations for project B
-          const relationsB = localStore.findRelations({ projectId: projectB });
+          const relationsB = localStore.findRelations({ projectId: projectBId });
           expect(relationsB.length).toBe(1);
           const entityIdsB = new Set(
-            localStore.findEntities({ projectId: projectB }).map((e) => e.entityId),
+            localStore.findEntities({ projectId: projectBId }).map((e) => e.entityId),
           );
           for (const rel of relationsB) {
             expect(
@@ -2049,7 +2053,7 @@ describe("Feature: knowledge-graph, Property 12: 椤圭洰闅旂涓嶅彉閲?
 // Property 13: 鍥鹃亶鍘嗘繁搴︾害鏉?
 // -------------------------------------------------------------------------
 
-describe("Feature: knowledge-graph, Property 13: 鍥鹃亶鍘嗘繁搴︾害鏉?, () => {
+describe("Feature: knowledge-graph, Property 13: graph traversal depth constraint", () => {
   /**
    * Validates: Requirements 4.1
    *

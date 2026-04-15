@@ -90,6 +90,14 @@ function get<T>(url: string): Promise<T> {
   return fetch(url).then((r) => parseJson<T>(r));
 }
 
+function toQueryRecord<T extends object>(
+  value?: T,
+): Record<string, string | number | boolean | null | undefined> | undefined {
+  return value as unknown as
+    | Record<string, string | number | boolean | null | undefined>
+    | undefined;
+}
+
 // ---------------------------------------------------------------------------
 // 指令管理
 // ---------------------------------------------------------------------------
@@ -103,7 +111,7 @@ export function submitCommand(
 export function listCommands(
   params?: ListCommandsRequest,
 ): Promise<ListCommandsResponse> {
-  return get(withQuery(NL_COMMAND_API_ROUTES.commands, params as Record<string, string | number | undefined>));
+  return get(withQuery(NL_COMMAND_API_ROUTES.commands, toQueryRecord(params)));
 }
 
 export function getCommand(id: string): Promise<GetCommandResponse> {
@@ -158,7 +166,7 @@ export function getDashboard(): Promise<DashboardResponse> {
 export function listAlerts(
   params?: ListAlertsRequest,
 ): Promise<ListAlertsResponse> {
-  return get(withQuery(NL_COMMAND_API_ROUTES.alerts, params as Record<string, string | number | boolean | undefined>));
+  return get(withQuery(NL_COMMAND_API_ROUTES.alerts, toQueryRecord(params)));
 }
 
 export function createAlertRule(
@@ -201,7 +209,7 @@ export function addComment(
 export function listComments(
   params: ListCommentsRequest,
 ): Promise<ListCommentsResponse> {
-  return get(withQuery(NL_COMMAND_API_ROUTES.comments, params as Record<string, string | number | undefined>));
+  return get(withQuery(NL_COMMAND_API_ROUTES.comments, toQueryRecord(params)));
 }
 
 // ---------------------------------------------------------------------------
@@ -225,13 +233,13 @@ export function generateReport(
 export function listHistory(
   params?: ListHistoryRequest,
 ): Promise<ListHistoryResponse> {
-  return get(withQuery(NL_COMMAND_API_ROUTES.history, params as Record<string, string | number | undefined>));
+  return get(withQuery(NL_COMMAND_API_ROUTES.history, toQueryRecord(params)));
 }
 
 export function listTemplates(
   params?: ListTemplatesRequest,
 ): Promise<ListTemplatesResponse> {
-  return get(withQuery(NL_COMMAND_API_ROUTES.templates, params as Record<string, string | number | undefined>));
+  return get(withQuery(NL_COMMAND_API_ROUTES.templates, toQueryRecord(params)));
 }
 
 export function saveTemplate(
@@ -247,7 +255,7 @@ export function saveTemplate(
 export function listAudit(
   params?: ListAuditRequest,
 ): Promise<ListAuditResponse> {
-  return get(withQuery(NL_COMMAND_API_ROUTES.audit, params as Record<string, string | number | undefined>));
+  return get(withQuery(NL_COMMAND_API_ROUTES.audit, toQueryRecord(params)));
 }
 
 export function exportAudit(

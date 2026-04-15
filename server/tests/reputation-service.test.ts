@@ -434,7 +434,7 @@ describe('ReputationService', () => {
       service.initializeProfile(ids[2], false); // 500, then boost
       service.adjustReputation(ids[2], 'qualityScore', 200, 'boost');
 
-      const board = service.getLeaderboard();
+      const board = service.getLeaderboard({ limit: 10_000 });
 
       // Find our test agents in the board
       const ourEntries = board.filter(e => ids.includes(e.agentId));
@@ -453,7 +453,7 @@ describe('ReputationService', () => {
       service.initializeProfile(internalId, false); // standard
       service.initializeProfile(externalId, true);  // probation
 
-      const probationBoard = service.getLeaderboard({ trustTier: 'probation' });
+      const probationBoard = service.getLeaderboard({ trustTier: 'probation', limit: 10_000 });
       const probationIds = probationBoard.map(e => e.agentId);
       expect(probationIds).toContain(externalId);
       // Internal agent should not be in probation board

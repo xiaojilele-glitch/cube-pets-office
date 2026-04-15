@@ -20,7 +20,12 @@ import { signPayload, createCallbackHeaders } from "./hmac-signer.js";
 const arbSecret = fc.string({ minLength: 1, maxLength: 128 });
 
 /** ISO-like timestamp string */
-const arbTimestamp = fc.date().map((d) => d.toISOString());
+const arbTimestamp = fc
+  .date({
+    min: new Date("2000-01-01T00:00:00.000Z"),
+    max: new Date("2100-01-01T00:00:00.000Z"),
+  })
+  .map((d) => d.toISOString());
 
 /** Arbitrary raw body (JSON-like content) */
 const arbRawBody = fc.string({ minLength: 0, maxLength: 2048 });

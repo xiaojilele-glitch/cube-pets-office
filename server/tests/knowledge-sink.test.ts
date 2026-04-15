@@ -1,3 +1,7 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
 import { beforeEach, describe, expect, it } from "vitest";
 import * as fc from "fast-check";
 
@@ -16,6 +20,11 @@ import type {
 } from "../../shared/knowledge/types.js";
 
 const TEST_PROJECT = "test-project-sink";
+const TEST_GRAPH_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../data/knowledge",
+  `graph-${TEST_PROJECT}.json`,
+);
 
 function makeDecisionPayload(
   overrides: Partial<DecisionPayload> = {},
@@ -58,6 +67,7 @@ describe("AgentKnowledgeSink", () => {
   let sink: AgentKnowledgeSink;
 
   beforeEach(() => {
+    fs.rmSync(TEST_GRAPH_PATH, { force: true });
     graphStore = new GraphStore();
     ontologyRegistry = new OntologyRegistry();
     sink = new AgentKnowledgeSink(graphStore, ontologyRegistry);

@@ -81,6 +81,12 @@ function createSeededService(status: StoredJobRecord["status"] = "queued") {
   cleanupPaths.push(dataRoot);
 
   const service = createLobsterExecutorService({ dataRoot });
+  const callbackSend = vi.fn().mockResolvedValue(undefined);
+  (
+    service as unknown as {
+      callbackSender?: { send: typeof callbackSend };
+    }
+  ).callbackSender = { send: callbackSend };
   const request = createTestRequest(`job-${randomUUID()}`);
   const receivedAt = new Date().toISOString();
   const dataDirectory = join(dataRoot, "jobs", request.missionId, request.jobId);

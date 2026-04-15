@@ -1,29 +1,15 @@
-/**
- * Property 10: IndexedDB 往返一致性
- *
- * Feature: telemetry-dashboard, Property 10: IndexedDB 往返一致性
- *
- * 生成随机 TelemetrySnapshot，验证 IndexedDB 写入后读取等价。
- *
- * **Validates: Requirements 9.2, 9.3**
- */
 import "fake-indexeddb/auto";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import fc from "fast-check";
 import type {
-  TelemetrySnapshot,
-  TelemetryAlert,
   AgentTimingSummary,
   MissionStageTiming,
+  TelemetryAlert,
+  TelemetrySnapshot,
 } from "@shared/telemetry";
 
-// Dynamic imports — reset per test for IndexedDB isolation
 let saveTelemetrySnapshot: typeof import("./browser-telemetry-store").saveTelemetrySnapshot;
 let loadTelemetrySnapshot: typeof import("./browser-telemetry-store").loadTelemetrySnapshot;
-
-// ---------------------------------------------------------------------------
-// Arbitraries
-// ---------------------------------------------------------------------------
 
 const arbAlert: fc.Arbitrary<TelemetryAlert> = fc.record({
   id: fc.uuid(),
@@ -59,14 +45,49 @@ const arbTelemetrySnapshot: fc.Arbitrary<TelemetrySnapshot> = fc.record({
   updatedAt: fc.nat({ max: 2_000_000_000_000 }),
 });
 
-// ---------------------------------------------------------------------------
-// Setup: fresh IndexedDB + module per test
-// ---------------------------------------------------------------------------
+function createLocalStorageMock(): Storage {
+  const store = new Map<string, string>();
+
+  return {
+    get length() {
+      return store.size;
+    },
+    clear() {
+      store.clear();
+    },
+    getItem(key: string) {
+      return store.has(key) ? store.get(key)! : null;
+    },
+    key(index: number) {
+      return Array.from(store.keys())[index] ?? null;
+    },
+    removeItem(key: string) {
+      store.delete(key);
+    },
+    setItem(key: string, value: string) {
+      store.set(key, value);
+    },
+  };
+}
 
 beforeEach(async () => {
   const FDBFactory = (await import("fake-indexeddb/lib/FDBFactory")).default;
+  const localStorage = createLocalStorageMock();
+
   globalThis.indexedDB = new FDBFactory();
-  (globalThis as any).window = globalThis;
+  Object.defineProperty(globalThis, "localStorage", {
+    value: localStorage,
+    configurable: true,
+    writable: true,
+  });
+  Object.defineProperty(globalThis, "window", {
+    value: {
+      indexedDB: globalThis.indexedDB,
+      localStorage,
+    },
+    configurable: true,
+    writable: true,
+  });
 
   vi.resetModules();
 
@@ -75,12 +96,7 @@ beforeEach(async () => {
   loadTelemetrySnapshot = mod.loadTelemetrySnapshot;
 });
 
-// ---------------------------------------------------------------------------
-// Property test
-// ---------------------------------------------------------------------------
-
-describe("Property 10: IndexedDB 往返一致性", () => {
-  // Feature: telemetry-dashboard, Property 10: IndexedDB 往返一致性
+describe("browser-telemetry-store", () => {
   it("save then load should return a deeply equal snapshot", async () => {
     await fc.assert(
       fc.asyncProperty(arbTelemetrySnapshot, async (snapshot) => {
@@ -88,7 +104,7 @@ describe("Property 10: IndexedDB 往返一致性", () => {
         const loaded = await loadTelemetrySnapshot();
         expect(loaded).toEqual(snapshot);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -107,9 +123,9 @@ describe("Property 10: IndexedDB 往返一致性", () => {
           await saveTelemetrySnapshot(second);
           const loaded = await loadTelemetrySnapshot();
           expect(loaded).toEqual(second);
-        },
+        }
       ),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 });

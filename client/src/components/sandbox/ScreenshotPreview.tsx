@@ -1,7 +1,5 @@
 /**
  * ScreenshotPreview - displays the latest browser screenshot with crossfade.
- *
- * @see Requirements 5.1, 5.2, 5.3, 5.5, 5.6
  */
 
 import { memo } from "react";
@@ -22,6 +20,7 @@ export interface ScreenshotPreviewProps {
   statusLabel?: string | null;
   contextLabel?: string | null;
   variant?: "default" | "wall";
+  headerMode?: "default" | "hidden";
 }
 
 function ScreenshotPreviewInner({
@@ -36,28 +35,34 @@ function ScreenshotPreviewInner({
   statusLabel = null,
   contextLabel = null,
   variant = "default",
+  headerMode = "default",
 }: ScreenshotPreviewProps) {
   const { locale } = useI18n();
   const wallVariant = variant === "wall";
   const compactFrame = embedded && !fullscreen;
-  const headerHeight = compactFrame ? 24 : wallVariant ? 30 : 28;
+  const headerHidden = headerMode === "hidden" && !fullscreen;
+  const headerHeight = headerHidden ? 0 : compactFrame ? 28 : wallVariant ? 28 : 28;
+  const showCenteredPlaceholder = !current && wallVariant && headerHidden && !fullscreen;
+  const framelessWallPane = wallVariant && headerHidden && !fullscreen;
   const previewTitle =
     title ||
     (locale === "zh-CN"
       ? wallVariant
-        ? "浏览器实时画面"
+        ? "浏览器回传"
         : "浏览器画面"
       : wallVariant
         ? "Browser Live"
         : "Browser view");
   const zoomLabel = locale === "zh-CN" ? "放大" : "Zoom";
-  const emptyTitle = locale === "zh-CN" ? "等待浏览器画面" : "Waiting for browser view";
+  const emptyTitle =
+    locale === "zh-CN" ? "等待浏览器画面" : "Waiting for browser view";
   const emptyDescription =
     locale === "zh-CN"
-      ? "执行含页面步骤后，这里会回传最新截图"
+      ? "浏览器步骤开始后，这里会回传最新截图。"
       : "A fresh screenshot will appear here after browser steps run.";
   const ariaLabel =
-    locale === "zh-CN" ? "点击放大浏览器截图" : "Open browser screenshot";
+    locale === "zh-CN" ? "打开浏览器画面" : "Open browser screenshot";
+  const wallStatusColor = current ? "#60a5fa" : "#94a3b8";
 
   const shellStyle: React.CSSProperties = fullscreen
     ? {
@@ -65,54 +70,60 @@ function ScreenshotPreviewInner({
         inset: 0,
         zIndex: 9999,
         background:
-          "linear-gradient(180deg, rgba(5,10,18,0.96), rgba(10,18,30,0.98))",
+          "linear-gradient(180deg, rgba(4,8,14,0.98), rgba(9,14,21,0.99))",
         padding: 16,
       }
     : {
         width: "100%",
         height: "100%",
         position: "relative",
-        background: wallVariant
-          ? "linear-gradient(180deg, rgba(11,17,27,0.98), rgba(18,27,41,0.99))"
-          : compactFrame
-            ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
-            : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-        borderRadius: compactFrame ? 10 : wallVariant ? 14 : 12,
+        background: framelessWallPane
+          ? "transparent"
+          : wallVariant
+            ? "linear-gradient(180deg, rgba(7,12,18,0.98), rgba(11,18,28,0.99))"
+            : compactFrame
+              ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
+              : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
+        borderRadius: framelessWallPane ? 12 : compactFrame ? 12 : wallVariant ? 14 : 12,
         overflow: "hidden",
         cursor: "pointer",
-        border: wallVariant
-          ? "1px solid rgba(86, 104, 128, 0.18)"
-          : compactFrame
-            ? "1px solid rgba(148, 163, 184, 0.12)"
-            : "1px solid rgba(148, 163, 184, 0.18)",
-        boxShadow: wallVariant
-          ? "inset 0 1px 0 rgba(255,255,255,0.03), 0 8px 24px rgba(4, 10, 18, 0.24)"
-          : compactFrame
-            ? "inset 0 1px 0 rgba(255,255,255,0.04)"
-            : "0 12px 30px rgba(15, 23, 42, 0.24)",
+        border: framelessWallPane
+          ? "none"
+          : wallVariant
+            ? "1px solid rgba(71,85,105,0.28)"
+            : compactFrame
+              ? "1px solid rgba(148, 163, 184, 0.12)"
+              : "1px solid rgba(148, 163, 184, 0.18)",
+        boxShadow: framelessWallPane
+          ? "none"
+          : wallVariant
+            ? "inset 0 1px 0 rgba(255,255,255,0.02)"
+            : compactFrame
+              ? "inset 0 1px 0 rgba(255,255,255,0.04)"
+              : "0 12px 30px rgba(15, 23, 42, 0.24)",
       };
 
   const showControl = fullscreen || showFullscreenButton;
 
   const headerRight = (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
       {statusLabel ? (
         <span
           style={{
-            fontSize: compactFrame ? 8 : 9,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
+            fontSize: compactFrame ? 8 : wallVariant ? 8 : 9,
+            fontWeight: 700,
+            letterSpacing: wallVariant ? "0.06em" : "0.08em",
             textTransform: locale === "zh-CN" ? "none" : "uppercase",
-            color: "#93c5fd",
+            color: wallVariant ? wallStatusColor : "#93c5fd",
           }}
         >
           {statusLabel}
         </span>
-      ) : (
+      ) : !wallVariant ? (
         <span style={{ fontSize: compactFrame ? 9 : 10, color: "#e2e8f0" }}>
           {zoomLabel}
         </span>
-      )}
+      ) : null}
       {showControl ? (
         <button
           type="button"
@@ -125,20 +136,26 @@ function ScreenshotPreviewInner({
             }
           }}
           style={{
-            background: compactFrame
-              ? "rgba(30,41,59,0.56)"
-              : "rgba(51,65,85,0.55)",
-            border: compactFrame
-              ? "1px solid rgba(148, 163, 184, 0.14)"
-              : "none",
+            background: wallVariant
+              ? "rgba(30,41,59,0.64)"
+              : compactFrame
+                ? "rgba(30,41,59,0.56)"
+                : "rgba(51,65,85,0.55)",
+            border: "1px solid rgba(148, 163, 184, 0.16)",
             color: "#e2e8f0",
             cursor: "pointer",
-            padding: compactFrame ? "1px 6px" : "2px 6px",
-            borderRadius: 6,
-            fontSize: compactFrame ? 10 : 12,
+            padding: compactFrame ? "2px 8px" : wallVariant ? "2px 7px" : "3px 9px",
+            borderRadius: 999,
+            fontSize: compactFrame ? 10 : wallVariant ? 10 : 12,
             lineHeight: 1.2,
           }}
-          aria-label={fullscreen ? (locale === "zh-CN" ? "退出全屏" : "Exit fullscreen") : ariaLabel}
+          aria-label={
+            fullscreen
+              ? locale === "zh-CN"
+                ? "退出聚焦"
+                : "Close focus"
+              : ariaLabel
+          }
         >
           {fullscreen ? "x" : "[ ]"}
         </button>
@@ -166,7 +183,7 @@ function ScreenshotPreviewInner({
             position: "absolute",
             inset: 0,
             background:
-              "radial-gradient(circle at top, rgba(96,165,250,0.12), transparent 36%), radial-gradient(circle at bottom, rgba(244,114,182,0.08), transparent 32%)",
+              "radial-gradient(circle at top, rgba(96,165,250,0.12), transparent 34%), radial-gradient(circle at bottom, rgba(14,165,233,0.08), transparent 28%)",
           }}
         />
         {wallVariant && !fullscreen ? (
@@ -175,66 +192,113 @@ function ScreenshotPreviewInner({
               position: "absolute",
               inset: 0,
               background:
-                "repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 4px)",
+                "repeating-linear-gradient(180deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 4px)",
               opacity: 0.16,
               pointerEvents: "none",
             }}
           />
         ) : null}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 2,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            height: headerHeight,
-            padding: compactFrame ? "0 8px" : "0 10px",
-            borderBottom: compactFrame
-              ? "1px solid rgba(148, 163, 184, 0.1)"
-              : "1px solid rgba(148, 163, 184, 0.14)",
-            color: "#cbd5e1",
-            background: wallVariant
-              ? "rgba(6,12,20,0.84)"
-              : compactFrame
-                ? "rgba(6,10,18,0.84)"
-                : "rgba(15,23,42,0.78)",
-          }}
-        >
-          <span
+        {headerHidden ? null : (
+          <div
             style={{
-              fontSize: compactFrame ? 9 : 10,
-              fontWeight: 600,
-              letterSpacing: compactFrame ? "0.08em" : "0.12em",
-              textTransform: locale === "zh-CN" ? "none" : "uppercase",
-              color: "#94a3b8",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 2,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              height: headerHeight,
+              padding: compactFrame ? "0 10px" : wallVariant ? "0 10px" : "0 12px",
+              borderBottom: wallVariant
+                ? "1px solid rgba(71,85,105,0.2)"
+                : compactFrame
+                  ? "1px solid rgba(148, 163, 184, 0.1)"
+                  : "1px solid rgba(148, 163, 184, 0.14)",
+              color: "#cbd5e1",
+              background: wallVariant
+                ? "linear-gradient(180deg, rgba(6,10,16,0.94), rgba(8,13,20,0.92))"
+                : compactFrame
+                  ? "rgba(6,10,18,0.84)"
+                  : "rgba(15,23,42,0.78)",
             }}
           >
-            {previewTitle}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            {wallVariant ? (
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 999,
+                  background: wallStatusColor,
+                  boxShadow: `0 0 12px ${wallStatusColor}`,
+                  flexShrink: 0,
+                }}
+              />
+            ) : null}
+            <span
+              style={{
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
+                fontWeight: 700,
+                letterSpacing: wallVariant
+                  ? "0.1em"
+                  : compactFrame
+                    ? "0.08em"
+                    : "0.12em",
+                textTransform: locale === "zh-CN" ? "none" : "uppercase",
+                color: wallVariant ? "#dbe6f3" : "#94a3b8",
+              }}
+            >
+              {previewTitle}
+            </span>
+          </div>
           {headerRight}
-        </div>
+          </div>
+        )}
 
         <div
           style={{
             position: "absolute",
-            inset: headerHeight,
+            inset: showCenteredPlaceholder ? 0 : headerHeight,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: compactFrame ? 4 : 6,
+            gap: showCenteredPlaceholder ? 6 : compactFrame ? 4 : 6,
             color: "#94a3b8",
-            fontSize: compactFrame ? 12 : 13,
+            fontSize: showCenteredPlaceholder ? 13 : compactFrame ? 12 : 13,
             textAlign: "center",
-            padding: "0 10px",
+            padding: showCenteredPlaceholder ? "0 18px" : "0 14px",
+            zIndex: showCenteredPlaceholder ? 3 : undefined,
           }}
-        >
-          <span style={{ fontWeight: 600, color: "#e2e8f0" }}>{emptyTitle}</span>
-          <span style={{ fontSize: compactFrame ? 10 : 11 }}>{emptyDescription}</span>
+          >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: showCenteredPlaceholder ? 6 : compactFrame ? 4 : 6,
+              width: "100%",
+              transform: showCenteredPlaceholder ? "translateY(-10px)" : undefined,
+            }}
+          >
+            <span style={{ fontWeight: 700, color: "#e2e8f0" }}>{emptyTitle}</span>
+            <span
+              style={{
+                maxWidth: showCenteredPlaceholder ? "82%" : undefined,
+                fontSize: showCenteredPlaceholder ? 11 : compactFrame ? 10 : 11,
+                lineHeight: showCenteredPlaceholder ? 1.5 : undefined,
+              }}
+            >
+              {emptyDescription}
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -254,42 +318,68 @@ function ScreenshotPreviewInner({
         }
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 2,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: headerHeight,
-          padding: compactFrame ? "0 8px" : "0 10px",
-          borderBottom: compactFrame
-            ? "1px solid rgba(148, 163, 184, 0.1)"
-            : "1px solid rgba(148, 163, 184, 0.14)",
-          color: "#cbd5e1",
-          background: wallVariant
-            ? "rgba(6,12,20,0.84)"
-            : compactFrame
-              ? "rgba(6,10,18,0.84)"
-              : "rgba(15,23,42,0.78)",
-        }}
-      >
-        <span
+      {headerHidden ? null : (
+        <div
           style={{
-            fontSize: compactFrame ? 9 : 10,
-            fontWeight: 600,
-            letterSpacing: compactFrame ? "0.08em" : "0.12em",
-            textTransform: locale === "zh-CN" ? "none" : "uppercase",
-            color: "#94a3b8",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: headerHeight,
+            padding: compactFrame ? "0 10px" : wallVariant ? "0 10px" : "0 12px",
+            borderBottom: wallVariant
+              ? "1px solid rgba(71,85,105,0.2)"
+              : compactFrame
+                ? "1px solid rgba(148, 163, 184, 0.1)"
+                : "1px solid rgba(148, 163, 184, 0.14)",
+            color: "#cbd5e1",
+            background: wallVariant
+              ? "linear-gradient(180deg, rgba(6,10,16,0.94), rgba(8,13,20,0.92))"
+              : compactFrame
+                ? "rgba(6,10,18,0.84)"
+                : "rgba(15,23,42,0.78)",
           }}
         >
-          {previewTitle}
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+          {wallVariant ? (
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: 999,
+                background: wallStatusColor,
+                boxShadow: `0 0 12px ${wallStatusColor}`,
+                flexShrink: 0,
+              }}
+            />
+          ) : null}
+          <span
+            style={{
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
+              fontWeight: 700,
+              letterSpacing: wallVariant
+                ? "0.1em"
+                : compactFrame
+                  ? "0.08em"
+                  : "0.12em",
+              textTransform: locale === "zh-CN" ? "none" : "uppercase",
+              color: wallVariant ? "#dbe6f3" : "#94a3b8",
+            }}
+          >
+            {previewTitle}
+          </span>
+        </div>
         {headerRight}
-      </div>
+        </div>
+      )}
 
       {previous ? (
         <img
@@ -325,15 +415,16 @@ function ScreenshotPreviewInner({
         data-testid="screenshot-timestamp"
         style={{
           position: "absolute",
-          bottom: 4,
-          right: 4,
-          background: "rgba(15,23,42,0.72)",
+          bottom: 8,
+          right: 8,
+          background: "rgba(7,12,18,0.74)",
           color: "#e2e8f0",
           fontSize: compactFrame ? 10 : 11,
-          padding: "1px 6px",
-          borderRadius: 6,
+          padding: "2px 8px",
+          borderRadius: 999,
           fontFamily: "monospace",
           zIndex: 2,
+          border: "1px solid rgba(148,163,184,0.14)",
         }}
       >
         {formatTimestamp(current.timestamp)}
@@ -342,18 +433,19 @@ function ScreenshotPreviewInner({
         <div
           style={{
             position: "absolute",
-            bottom: 4,
-            left: 4,
-            maxWidth: "60%",
-            background: "rgba(15,23,42,0.72)",
+            bottom: 8,
+            left: 8,
+            maxWidth: "58%",
+            background: "rgba(7,12,18,0.74)",
             color: "#cbd5e1",
             fontSize: compactFrame ? 9 : 10,
-            padding: "1px 6px",
-            borderRadius: 6,
+            padding: "2px 8px",
+            borderRadius: 999,
             zIndex: 2,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            border: "1px solid rgba(148,163,184,0.14)",
           }}
         >
           {contextLabel}

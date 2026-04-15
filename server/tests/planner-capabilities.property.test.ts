@@ -184,11 +184,8 @@ describe("Feature: multi-modal-agent, Property 9: Planner Prompt 包含能力标
         );
 
         for (const t of nonCeoWithCaps) {
-          const expectedTag = `[${t.capabilities!.join(", ")}]`;
-          // Find the line for this template by its id
-          const line = lines.find((l) => l.startsWith(`- ${t.id} (`));
-          expect(line).toBeDefined();
-          expect(line).toContain(expectedTag);
+          const expectedLine = `- ${t.id} (${t.role}): ${t.title}. ${t.responsibility} [${t.capabilities!.join(", ")}]`;
+          expect(lines).toContain(expectedLine);
         }
       }),
       { numRuns: 100 },

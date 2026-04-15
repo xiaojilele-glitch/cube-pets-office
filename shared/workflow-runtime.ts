@@ -1,3 +1,5 @@
+import type { A2AFrameworkType } from "./a2a-protocol.js";
+
 export const WORKFLOW_STAGES = [
   "direction",
   "planning",
@@ -312,6 +314,17 @@ export interface RuntimeMessageBus {
     workflowId: string,
     stage: string,
     metadata?: any
+  ): Promise<MessageRecord>;
+  sendA2A(
+    fromId: string,
+    toExternalId: string,
+    content: string,
+    workflowId: string,
+    metadata?: {
+      frameworkType?: A2AFrameworkType;
+      sessionId?: string;
+      [key: string]: unknown;
+    }
   ): Promise<MessageRecord>;
   getInbox(agentId: string, workflowId?: string): Promise<MessageRecord[]>;
   getWorkflowMessages?(workflowId: string): Promise<MessageRecord[]>;

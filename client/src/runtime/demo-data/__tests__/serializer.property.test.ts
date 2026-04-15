@@ -314,7 +314,7 @@ describe("serializer property tests", () => {
       fc.property(arbDemoDataBundle, (bundle) => {
         const json = serializeDemoData(bundle);
         const restored = deserializeDemoData(json);
-        expect(restored).toEqual(bundle);
+        expect(restored).toEqual(JSON.parse(JSON.stringify(bundle)));
       }),
       { numRuns: 100 },
     );

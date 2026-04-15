@@ -87,16 +87,47 @@ interface AppState {
 const DEFAULT_AI_CONFIG = createDefaultAIConfig();
 const RUNTIME_MODE_STORAGE_KEY = 'cube-pets-office-runtime-mode';
 
+function getSafeLocalStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return window.localStorage ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function readStorageValue(key: string): string | null {
+  const storage = getSafeLocalStorage();
+  if (!storage) return null;
+
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorageValue(key: string, value: string): void {
+  const storage = getSafeLocalStorage();
+  if (!storage) return;
+
+  try {
+    storage.setItem(key, value);
+  } catch {
+    // Ignore storage failures in SSR, fake window, and isolated test environments.
+  }
+}
+
 function getInitialLocale(): AppLocale {
   if (typeof window === 'undefined') return DEFAULT_LOCALE;
 
-  const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+  const stored = readStorageValue(LOCALE_STORAGE_KEY);
   return isLocale(stored) ? stored : DEFAULT_LOCALE;
 }
 
 function persistLocale(locale: AppLocale) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  writeStorageValue(LOCALE_STORAGE_KEY, locale);
 }
 
 function createPreviewAIConfig(): AIConfig {
@@ -119,13 +150,12 @@ function getInitialRuntimeMode(): RuntimeMode {
   if (!CAN_USE_ADVANCED_RUNTIME) return 'frontend';
   if (typeof window === 'undefined') return 'frontend';
 
-  const stored = window.localStorage.getItem(RUNTIME_MODE_STORAGE_KEY);
+  const stored = readStorageValue(RUNTIME_MODE_STORAGE_KEY);
   return stored === 'advanced' ? 'advanced' : 'frontend';
 }
 
 function persistRuntimeMode(mode: RuntimeMode) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(RUNTIME_MODE_STORAGE_KEY, mode);
+  writeStorageValue(RUNTIME_MODE_STORAGE_KEY, mode);
 }
 
 function getFrontendAIConfig(serverConfig: AIConfig): AIConfig {

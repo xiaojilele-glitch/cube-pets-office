@@ -485,14 +485,18 @@ describe("KnowledgeGraphQuery", () => {
             for (const entity of result.entities) {
               if (entity.confidence < 0.5) {
                 // Low-confidence entity must have [low confidence] annotation on its line
+                const escapedName = entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
                 const linePattern = new RegExp(
-                  `${entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.*\\[low confidence\\]`,
+                  `^- ${escapedName}\\s*\\([^\\n]*\\[low confidence\\]$`,
+                  "m",
                 );
                 expect(summary).toMatch(linePattern);
               } else {
                 // High-confidence entity must NOT have [low confidence] on its line
+                const escapedName = entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
                 const linePattern = new RegExp(
-                  `${entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}.*\\[low confidence\\]`,
+                  `^- ${escapedName}\\s*\\([^\\n]*\\[low confidence\\]$`,
+                  "m",
                 );
                 expect(summary).not.toMatch(linePattern);
               }

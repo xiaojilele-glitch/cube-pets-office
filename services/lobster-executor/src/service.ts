@@ -226,7 +226,7 @@ export class LobsterExecutorService {
         },
       });
       this.persistEvent(record, event);
-      await this.sendCallback(record, event);
+      void this.sendCallback(record, event);
 
       return {
         ok: true,

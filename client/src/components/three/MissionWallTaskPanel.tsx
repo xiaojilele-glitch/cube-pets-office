@@ -144,6 +144,11 @@ export interface MissionWallTaskPanelProps {
   fullscreen?: boolean;
   onActivate?: () => void;
   onClose?: () => void;
+  auxiliaryPanes?: Array<{
+    label: string;
+    value: string;
+    tone?: "default" | "active" | "info";
+  }>;
 }
 
 function MissionWallTaskPanelInner({
@@ -152,6 +157,7 @@ function MissionWallTaskPanelInner({
   fullscreen = false,
   onActivate,
   onClose,
+  auxiliaryPanes = [],
 }: MissionWallTaskPanelProps) {
   const { locale } = useI18n();
   const tone = missionTone(mission?.status ?? null);
@@ -180,6 +186,10 @@ function MissionWallTaskPanelInner({
     mission?.status === "failed" ||
     mission?.status === "waiting" ||
     (detail?.failureReasons.length ?? 0) > 0;
+  const compactWallView = !fullscreen;
+  const summaryLabels = fullscreen
+    ? [statusLabel, operatorLabel, stageLabel]
+    : [statusLabel, stageLabel];
 
   const rootStyle: React.CSSProperties = fullscreen
     ? {
@@ -197,11 +207,9 @@ function MissionWallTaskPanelInner({
         overflow: "hidden",
         borderRadius: 16,
         cursor: onActivate ? "pointer" : "default",
-        background:
-          "linear-gradient(180deg, rgba(13,19,31,0.98), rgba(24,33,46,0.99))",
-        border: "1px solid rgba(86, 104, 128, 0.18)",
-        boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,0.03), 0 10px 30px rgba(5,10,18,0.24)",
+        background: "transparent",
+        border: "none",
+        boxShadow: "none",
       };
 
   const mainShellStyle: React.CSSProperties = {
@@ -209,7 +217,7 @@ function MissionWallTaskPanelInner({
     width: "100%",
     height: "100%",
     minHeight: fullscreen ? 0 : "100%",
-    borderRadius: fullscreen ? 24 : 16,
+    borderRadius: fullscreen ? 24 : 14,
     overflow: "hidden",
     background:
       "radial-gradient(circle at top right, rgba(96,165,250,0.08), transparent 24%), linear-gradient(180deg, rgba(20,28,42,0.98), rgba(14,21,33,0.98))",
@@ -219,7 +227,7 @@ function MissionWallTaskPanelInner({
       : "inset 0 1px 0 rgba(255,255,255,0.03)",
   };
 
-  const shellPadding = fullscreen ? 28 : 18;
+  const shellPadding = fullscreen ? 28 : 10;
 
   return (
     <div
@@ -293,34 +301,35 @@ function MissionWallTaskPanelInner({
           <div
             style={{
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "space-between",
-              gap: 12,
+              gap: 10,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: fullscreen ? 54 : 42,
-                  height: fullscreen ? 54 : 42,
-                  borderRadius: 12,
+                  width: fullscreen ? 50 : 30,
+                  height: fullscreen ? 50 : 30,
+                  borderRadius: fullscreen ? 12 : 9,
                   background: "rgba(251,146,60,0.9)",
                   color: "#1f2937",
-                  fontSize: fullscreen ? 18 : 16,
+                  fontSize: fullscreen ? 17 : 13,
                   fontWeight: 700,
+                  flexShrink: 0,
                 }}
               >
                 MC
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: fullscreen ? 18 : 12,
-                    lineHeight: 1.2,
-                    letterSpacing: "0.18em",
+                    fontSize: fullscreen ? 18 : 10,
+                    lineHeight: 1.1,
+                    letterSpacing: fullscreen ? "0.18em" : "0.14em",
                     textTransform: "uppercase",
                     color: "rgba(148,163,184,0.88)",
                   }}
@@ -329,55 +338,97 @@ function MissionWallTaskPanelInner({
                 </div>
                 <div
                   style={{
-                    marginTop: 6,
+                    marginTop: fullscreen ? 6 : 3,
                     display: "flex",
                     alignItems: "center",
-                    gap: 8,
+                    gap: 5,
                     flexWrap: "wrap",
                   }}
                 >
-                  {[statusLabel, operatorLabel, stageLabel].map(
-                    (label, index) => (
-                      <span
-                        key={`${label}-${index}`}
-                        style={{
-                          borderRadius: 999,
-                          padding: "4px 10px",
-                          fontSize: fullscreen ? 13 : 10,
-                          lineHeight: 1.1,
-                          color: index === 0 ? tone.accent : "#93c5fd",
-                          background:
-                            index === 0
-                              ? tone.accentSoft
-                              : "rgba(96,165,250,0.12)",
-                          border:
-                            index === 0
-                              ? `1px solid ${tone.accentSoft}`
-                              : "1px solid rgba(96,165,250,0.16)",
-                        }}
-                      >
-                        {label}
-                      </span>
-                    )
-                  )}
+                  {summaryLabels.map((label, index) => (
+                    <span
+                      key={`${label}-${index}`}
+                      style={{
+                        borderRadius: 999,
+                        padding: fullscreen ? "4px 10px" : "2px 7px",
+                        fontSize: fullscreen ? 13 : 8,
+                        lineHeight: 1.1,
+                        color: index === 0 ? tone.accent : "#93c5fd",
+                        background:
+                          index === 0
+                            ? tone.accentSoft
+                            : "rgba(96,165,250,0.12)",
+                        border:
+                          index === 0
+                            ? `1px solid ${tone.accentSoft}`
+                            : "1px solid rgba(96,165,250,0.16)",
+                      }}
+                    >
+                      {label}
+                    </span>
+                  ))}
                 </div>
+                {!fullscreen && auxiliaryPanes.length > 0 ? (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    {auxiliaryPanes.map(item => {
+                      const accentColor =
+                        item.tone === "active"
+                          ? "#34d399"
+                          : item.tone === "info"
+                            ? "#60a5fa"
+                            : "rgba(148,163,184,0.88)";
+
+                      return (
+                        <span
+                          key={`${item.label}-${item.value}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 4,
+                            borderRadius: 999,
+                            padding: "2px 7px",
+                            fontSize: 8,
+                            lineHeight: 1.1,
+                            color: "rgba(226,232,240,0.9)",
+                            background: "rgba(15,23,42,0.42)",
+                            border: "1px solid rgba(71,85,105,0.18)",
+                          }}
+                        >
+                          <span style={{ color: "rgba(148,163,184,0.72)" }}>
+                            {item.label}
+                          </span>
+                          <span style={{ color: accentColor }}>{item.value}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null}
               </div>
             </div>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: 7,
                 color: "rgba(148,163,184,0.88)",
-                fontSize: fullscreen ? 16 : 12,
-                letterSpacing: "0.16em",
+                fontSize: fullscreen ? 16 : 10,
+                letterSpacing: "0.1em",
+                flexShrink: 0,
               }}
             >
               <span>{formatClock(locale, mission?.updatedAt ?? null)}</span>
               <span
                 style={{
                   display: "inline-flex",
-                  gap: 6,
+                  gap: fullscreen ? 6 : 4,
                   alignItems: "center",
                 }}
               >
@@ -385,8 +436,8 @@ function MissionWallTaskPanelInner({
                   <span
                     key={color}
                     style={{
-                      width: fullscreen ? 10 : 8,
-                      height: fullscreen ? 10 : 8,
+                      width: fullscreen ? 10 : 6,
+                      height: fullscreen ? 10 : 6,
                       borderRadius: 999,
                       background: color,
                       boxShadow: `0 0 12px ${color}`,
@@ -399,18 +450,18 @@ function MissionWallTaskPanelInner({
 
           <div
             style={{
-              marginTop: fullscreen ? 30 : 20,
-              fontSize: fullscreen ? 42 : 18,
-              lineHeight: fullscreen ? 1.2 : 1.35,
+              marginTop: fullscreen ? 28 : 8,
+              fontSize: fullscreen ? 42 : 13,
+              lineHeight: fullscreen ? 1.2 : 1.22,
               fontWeight: 700,
               color: "#f8fafc",
               textWrap: "balance",
             }}
           >
-            {compactText(title, fullscreen ? 96 : 40)}
+            {compactText(title, fullscreen ? 96 : 36)}
           </div>
 
-          <div style={{ marginTop: fullscreen ? 26 : 18 }}>
+          <div style={{ marginTop: fullscreen ? 24 : 8 }}>
             <div
               style={{
                 display: "flex",
@@ -418,13 +469,13 @@ function MissionWallTaskPanelInner({
                 justifyContent: "space-between",
                 gap: 10,
                 color: "rgba(226,232,240,0.92)",
-                fontSize: fullscreen ? 18 : 12,
+                fontSize: fullscreen ? 18 : 10,
               }}
             >
               <span>{t(locale, "总体进度", "Overall progress")}</span>
               <span
                 style={{
-                  fontSize: fullscreen ? 26 : 14,
+                  fontSize: fullscreen ? 26 : 12,
                   fontWeight: 700,
                   color: tone.accent,
                 }}
@@ -434,8 +485,8 @@ function MissionWallTaskPanelInner({
             </div>
             <div
               style={{
-                marginTop: 10,
-                height: fullscreen ? 16 : 10,
+                marginTop: 6,
+                height: fullscreen ? 16 : 7,
                 borderRadius: 999,
                 background: "rgba(51,65,85,0.72)",
                 overflow: "hidden",
@@ -455,11 +506,11 @@ function MissionWallTaskPanelInner({
 
           <div
             style={{
-              marginTop: fullscreen ? 28 : 20,
-              borderRadius: 14,
+              marginTop: fullscreen ? 24 : 8,
+              borderRadius: 12,
               border: `1px solid ${tone.accentSoft}`,
               background: "rgba(22,30,44,0.72)",
-              padding: fullscreen ? "18px 20px" : "12px 14px",
+              padding: fullscreen ? "18px 20px" : "7px 10px",
               color: "rgba(203,213,225,0.92)",
             }}
           >
@@ -467,22 +518,23 @@ function MissionWallTaskPanelInner({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 10,
+                gap: 8,
               }}
             >
               <span
                 style={{
-                  width: fullscreen ? 12 : 10,
-                  height: fullscreen ? 12 : 10,
+                  width: fullscreen ? 12 : 7,
+                  height: fullscreen ? 12 : 7,
                   borderRadius: 999,
                   background: needsAttention ? tone.accent : "#60a5fa",
                   boxShadow: `0 0 14px ${needsAttention ? tone.accent : "#60a5fa"}`,
+                  flexShrink: 0,
                 }}
               />
               <span
                 style={{
-                  fontSize: fullscreen ? 20 : 12,
-                  lineHeight: 1.5,
+                  fontSize: fullscreen ? 20 : 10,
+                  lineHeight: compactWallView ? 1.35 : 1.45,
                 }}
               >
                 {signalLine}
@@ -490,54 +542,87 @@ function MissionWallTaskPanelInner({
             </div>
           </div>
 
-          <div
-            style={{
-              marginTop: "auto",
-              paddingTop: fullscreen ? 30 : 18,
-              borderTop: "1px solid rgba(71,85,105,0.34)",
-              display: "flex",
-              alignItems: "stretch",
-            }}
-          >
-            <MetricTile
-              label={t(locale, "完成", "Done")}
-              value={String(completedCount)}
-              color="#4ade80"
-            />
+          {fullscreen ? (
             <div
               style={{
-                width: 1,
-                background: "rgba(71,85,105,0.36)",
+                marginTop: "auto",
+                paddingTop: 30,
+                borderTop: "1px solid rgba(71,85,105,0.34)",
+                display: "flex",
+                alignItems: "stretch",
               }}
-            />
-            <MetricTile
-              label={t(locale, "关注", "Alerts")}
-              value={String(warningCount)}
-              color="#f87171"
-            />
+            >
+              <MetricTile
+                label={t(locale, "完成", "Done")}
+                value={String(completedCount)}
+                color="#4ade80"
+              />
+              <div
+                style={{
+                  width: 1,
+                  background: "rgba(71,85,105,0.36)",
+                }}
+              />
+              <MetricTile
+                label={t(locale, "关注", "Alerts")}
+                value={String(warningCount)}
+                color="#f87171"
+              />
+              <div
+                style={{
+                  width: 1,
+                  background: "rgba(71,85,105,0.36)",
+                }}
+              />
+              <MetricTile
+                label={t(locale, "运行", "Active")}
+                value={String(runningAgents)}
+                color="#60a5fa"
+              />
+              <div
+                style={{
+                  width: 1,
+                  background: "rgba(71,85,105,0.36)",
+                }}
+              />
+              <MetricTile
+                label={t(locale, "Agent", "Agent")}
+                value={String(totalAgents || packageCount)}
+                color="#fbbf24"
+              />
+            </div>
+          ) : (
             <div
               style={{
-                width: 1,
-                background: "rgba(71,85,105,0.36)",
+                marginTop: 8,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                flexWrap: "wrap",
+                color: "rgba(191,219,254,0.88)",
+                fontSize: 8,
               }}
-            />
-            <MetricTile
-              label={t(locale, "运行", "Active")}
-              value={String(runningAgents)}
-              color="#60a5fa"
-            />
-            <div
-              style={{
-                width: 1,
-                background: "rgba(71,85,105,0.36)",
-              }}
-            />
-            <MetricTile
-              label={t(locale, "Agent", "Agent")}
-              value={String(totalAgents || packageCount)}
-              color="#fbbf24"
-            />
-          </div>
+            >
+              {[
+                `${t(locale, "运行", "Active")} ${runningAgents}`,
+                `${t(locale, "关注", "Alerts")} ${warningCount}`,
+                `${t(locale, "Agent", "Agent")} ${totalAgents || packageCount}`,
+              ].map(item => (
+                <span
+                  key={item}
+                  style={{
+                    borderRadius: 999,
+                    padding: "2px 7px",
+                    background: "rgba(15,23,42,0.38)",
+                    border: "1px solid rgba(71,85,105,0.16)",
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          )}
+
           {fullscreen ? (
             <div
               style={{

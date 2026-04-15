@@ -364,6 +364,68 @@ class BrowserMessageBus implements RuntimeMessageBus {
   async getInbox(agentId: string, workflowId?: string): Promise<MessageRecord[]> {
     return this.repo.getInbox(agentId, workflowId);
   }
+
+  async sendA2A(
+    fromId: string,
+    toExternalId: string,
+    content: string,
+    workflowId: string,
+    metadata?: {
+      frameworkType?: string;
+      sessionId?: string;
+      [key: string]: unknown;
+    }
+  ): Promise<MessageRecord> {
+    const fromAgent = this.repo.getAgent(fromId);
+    const workflow = this.repo.getWorkflow(workflowId);
+
+    if (!fromId.trim() || !toExternalId.trim()) {
+      throw new Error("Sender and external receiver IDs are required");
+    }
+    if (!content.trim()) {
+      throw new Error("Message content must not be empty");
+    }
+    if (!workflowId.trim() || !workflow) {
+      throw new Error("Workflow not found");
+    }
+    if (!fromAgent) {
+      throw new Error("Agent not found");
+    }
+
+    const message = this.repo.createMessage({
+      workflow_id: workflowId,
+      from_agent: fromId,
+      to_agent: toExternalId,
+      stage: "execution",
+      content,
+      metadata: {
+        ...metadata,
+        a2a: true,
+        direction: "outbound",
+      },
+    });
+
+    this.memoryRepo.appendMessageLog(fromId, {
+      workflowId,
+      stage: "execution",
+      direction: "outbound",
+      otherAgentId: toExternalId,
+      content,
+      metadata,
+    });
+
+    this.eventEmitter.emit({
+      type: "message_sent",
+      workflowId,
+      from: fromId,
+      to: toExternalId,
+      stage: "execution",
+      preview: content.substring(0, 100),
+      timestamp: message.created_at,
+    });
+
+    return message;
+  }
 }
 
 class BrowserAgentDirectory implements AgentDirectory {

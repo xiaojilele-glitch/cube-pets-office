@@ -120,7 +120,7 @@ describe("CallbackSender", () => {
 
     const body = mockFetch.mock.calls[0][1]!.body as string;
     const parsed = JSON.parse(body);
-    expect(parsed.type).toBe("job.completed");
-    expect(parsed.status).toBe("completed");
+    expect(parsed.event.type).toBe("job.completed");
+    expect(parsed.event.status).toBe("completed");
   });
 });
