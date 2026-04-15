@@ -97,7 +97,13 @@ function CockpitContextShell({
   );
 }
 
-export function OfficeTaskCockpit({ className }: { className?: string }) {
+export function OfficeTaskCockpit({
+  className,
+  resizeActive = false,
+}: {
+  className?: string;
+  resizeActive?: boolean;
+}) {
   const { locale } = useI18n();
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const setRuntimeMode = useAppStore(state => state.setRuntimeMode);
@@ -109,7 +115,6 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
   const toggleTelemetryDashboard = useTelemetryStore(
     state => state.toggleDashboard
   );
-  const ensureReady = useTasksStore(state => state.ensureReady);
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);
   const createMission = useTasksStore(state => state.createMission);
@@ -153,10 +158,6 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     useState<OfficeLaunchResolution | null>(null);
   const previousSelectedPetRef = useRef<string | null>(selectedPet);
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
-
-  useEffect(() => {
-    void ensureReady();
-  }, [ensureReady]);
 
   useEffect(() => {
     if (!highlightedTaskId || typeof window === "undefined") return;
@@ -465,7 +466,13 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
           locale,
           "适合快速预览和前台验证",
           "Best for fast previews and front-end validation"
-        );
+      );
+  const floatingGlassClass = resizeActive
+    ? "border-stone-200/85 bg-[#fff9f2]/96 shadow-[0_10px_24px_rgba(98,73,48,0.06)]"
+    : "border-white/30 bg-[linear-gradient(180deg,rgba(255,252,248,0.36),rgba(246,238,229,0.28))] shadow-[0_14px_34px_rgba(98,73,48,0.1)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.62),rgba(246,238,229,0.52))]";
+  const sideShellClass = resizeActive
+    ? "border-stone-200/85 bg-[#fff9f2]/96 shadow-[0_14px_30px_rgba(99,73,45,0.08)]"
+    : "border-white/35 bg-[linear-gradient(180deg,rgba(255,252,248,0.48),rgba(244,236,227,0.32))] shadow-[0_22px_48px_rgba(99,73,45,0.12)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.7),rgba(246,238,229,0.5))]";
 
   async function handleCopyFocusSummary() {
     const summary = [
@@ -504,7 +511,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
     >
       <Splitter className="office-cockpit-splitter pointer-events-auto min-h-0 flex-1">
         <Splitter.Panel
-          defaultSize="22%"
+          defaultSize={0}
           min={320}
           max={460}
           resizable={false}
@@ -540,7 +547,12 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
           style={{ overflow: "visible" }}
         >
           <section className="pointer-events-none flex h-full min-h-0 flex-col justify-end px-2">
-            <div className="pointer-events-auto mx-auto flex w-full max-w-[700px] max-h-[32%] min-h-0 flex-col overflow-hidden rounded-[14px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,252,248,0.36),rgba(246,238,229,0.28))] shadow-[0_14px_34px_rgba(98,73,48,0.1)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.62),rgba(246,238,229,0.52))]">
+            <div
+              className={cn(
+                "pointer-events-auto mx-auto flex w-full max-w-[700px] max-h-[32%] min-h-0 flex-col overflow-hidden rounded-[14px] border",
+                floatingGlassClass
+              )}
+            >
               <div className="shrink-0 border-b border-stone-200/50 px-1.5 py-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -811,7 +823,7 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
         </Splitter.Panel>
 
         <Splitter.Panel
-          defaultSize="22%"
+          defaultSize={0}
           min={320}
           max={460}
           resizable={false}
@@ -822,7 +834,10 @@ export function OfficeTaskCockpit({ className }: { className?: string }) {
             <Tabs
               value={activeTab}
               onValueChange={value => setActiveTab(value as OfficeCockpitTab)}
-              className="flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] border border-white/35 bg-[linear-gradient(180deg,rgba(255,252,248,0.48),rgba(244,236,227,0.32))] p-2 shadow-[0_22px_48px_rgba(99,73,45,0.12)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.7),rgba(246,238,229,0.5))]"
+              className={cn(
+                "flex h-full min-h-0 flex-col overflow-hidden rounded-[18px] border p-2",
+                sideShellClass
+              )}
             >
               <TabsList className="grid h-auto w-full grid-cols-5 gap-1 overflow-hidden rounded-[14px] bg-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
                 <TabsTrigger

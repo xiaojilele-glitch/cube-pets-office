@@ -162,8 +162,10 @@ function SessionParticleStream({
 
 /* ── Main component ── */
 
-export function CrossPodParticles() {
+export function CrossPodParticles({ active = true }: { active?: boolean }) {
   const activeSessions = useSwarmStore((s) => s.activeSessions);
+
+  if (!active) return null;
 
   // Track fade-out state for ended sessions
   const fadeMapRef = useRef<Map<string, { startTime: number }>>(new Map());

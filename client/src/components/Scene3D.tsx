@@ -1,9 +1,11 @@
-import { ContactShadows } from '@react-three/drei';
+import { ContactShadows, useGLTF } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { Suspense, useEffect, useState } from 'react';
 import { ACESFilmicToneMapping } from 'three';
 
+import { useIdleActivation } from '@/hooks/useIdleActivation';
 import { useViewportTier } from '@/hooks/useViewportTier';
+import { FURNITURE_MODELS, PET_MODELS } from '@/lib/assets';
 import { useTasksStore } from '@/lib/tasks-store';
 
 import { CrossFrameworkParticles } from './three/CrossFrameworkParticles';
@@ -15,8 +17,43 @@ import { SandboxMonitor } from './three/SandboxMonitor';
 import { SceneStageFlow } from './three/SceneStageFlow';
 import { WaitingDecisionBubble } from './three/WaitingDecisionBubble';
 
-export function Scene3D() {
+const CRITICAL_FURNITURE_MODELS = [
+  FURNITURE_MODELS.floorFull,
+  FURNITURE_MODELS.floorHalf,
+  FURNITURE_MODELS.floorCornerRound,
+  FURNITURE_MODELS.wallCorner,
+  FURNITURE_MODELS.wallCornerRond,
+  FURNITURE_MODELS.desk,
+  FURNITURE_MODELS.chairDesk,
+  FURNITURE_MODELS.computerScreen,
+  FURNITURE_MODELS.computerKeyboard,
+  FURNITURE_MODELS.computerMouse,
+  FURNITURE_MODELS.rugRounded,
+  FURNITURE_MODELS.rugRectangle,
+  FURNITURE_MODELS.laptop,
+  FURNITURE_MODELS.tableRound,
+];
+
+const SECONDARY_SCENE_MODELS = [
+  ...Object.values(FURNITURE_MODELS).filter(
+    url => !CRITICAL_FURNITURE_MODELS.includes(url)
+  ),
+  ...Object.values(PET_MODELS),
+];
+
+export type ScenePerformanceProfile = 'balanced' | 'resizing';
+
+export function Scene3D({
+  performanceProfile = 'balanced',
+}: {
+  performanceProfile?: ScenePerformanceProfile;
+}) {
   const { isMobile, isTablet } = useViewportTier();
+  const deferredDetailsReady = useIdleActivation(
+    performanceProfile === 'balanced',
+    600
+  );
+  const reducedSceneEffects = performanceProfile === 'resizing';
 
   // Sandbox shield: show when the selected mission runs at strict security level.
   const isStrictSandbox = useTasksStore(state => {
@@ -38,19 +75,61 @@ export function Scene3D() {
     };
   }, []);
 
+  useEffect(() => {
+    CRITICAL_FURNITURE_MODELS.forEach(url => {
+      useGLTF.preload(url);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!deferredDetailsReady || typeof window === 'undefined') return;
+
+    let timeoutId: number | null = null;
+    let idleId: number | null = null;
+
+    const preloadSecondary = () => {
+      SECONDARY_SCENE_MODELS.forEach(url => {
+        useGLTF.preload(url);
+      });
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      idleId = window.requestIdleCallback(() => {
+        preloadSecondary();
+      }, { timeout: 1200 });
+    } else {
+      timeoutId = window.setTimeout(preloadSecondary, 900);
+    }
+
+    return () => {
+      if (idleId !== null && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [deferredDetailsReady]);
+
   const camera = isMobile
     ? { position: [0, 8.4, 16.2] as [number, number, number], fov: 46, near: 0.1, far: 100 }
     : isTablet
       ? { position: [0, 7.8, 14.6] as [number, number, number], fov: 43, near: 0.1, far: 100 }
       : { position: [0, 7.3, 13.8] as [number, number, number], fov: 40, near: 0.1, far: 100 };
+  const dpr: [number, number] = reducedSceneEffects
+    ? [1, 1]
+    : isMobile
+      ? [1, 1.35]
+      : [1, 1.5];
+  const primaryShadowSize = reducedSceneEffects ? 768 : 1024;
 
   return (
     <div className="absolute inset-0 z-0 h-full w-full touch-pan-y">
       <Canvas
         shadows
         camera={camera}
-        dpr={isMobile ? [1, 1.5] : [1, 2]}
-        gl={{ antialias: true, alpha: false }}
+        dpr={dpr}
+        gl={{ antialias: !reducedSceneEffects, alpha: false }}
         onCreated={({ gl, camera: sceneCamera }) => {
           gl.setClearColor('#BFDFFF');
           gl.toneMapping = ACESFilmicToneMapping;
@@ -67,8 +146,8 @@ export function Scene3D() {
             intensity={0.98}
             color="#FBE2BC"
             castShadow
-            shadow-mapSize-height={2048}
-            shadow-mapSize-width={2048}
+            shadow-mapSize-height={primaryShadowSize}
+            shadow-mapSize-width={primaryShadowSize}
             shadow-camera-bottom={-11}
             shadow-camera-far={22}
             shadow-camera-left={-11}
@@ -97,23 +176,32 @@ export function Scene3D() {
             decay={2}
           />
 
-          <OfficeRoom />
+          <OfficeRoom
+            showSecondaryDecor={deferredDetailsReady && !reducedSceneEffects}
+            reducedEffects={reducedSceneEffects}
+          />
           <SceneStageFlow />
-          <PetWorkers />
+          <PetWorkers reducedOverlays={!deferredDetailsReady || reducedSceneEffects} />
           <MissionIsland />
           <SandboxMonitor />
           <WaitingDecisionBubble />
-          <CrossPodParticles />
-          <CrossFrameworkParticles />
+          {!reducedSceneEffects && deferredDetailsReady ? (
+            <>
+              <CrossPodParticles active />
+              <CrossFrameworkParticles active showLabels={false} />
+            </>
+          ) : null}
 
-          <ContactShadows
-            position={[0, 0.01, 0]}
-            opacity={0.34}
-            scale={15}
-            blur={2.2}
-            far={5.5}
-            color="#665140"
-          />
+          {!reducedSceneEffects ? (
+            <ContactShadows
+              position={[0, 0.01, 0]}
+              opacity={0.34}
+              scale={15}
+              blur={2.2}
+              far={5.5}
+              color="#665140"
+            />
+          ) : null}
         </Suspense>
       </Canvas>
 

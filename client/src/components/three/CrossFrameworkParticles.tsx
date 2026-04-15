@@ -28,9 +28,17 @@ const PULSE_RED = new THREE.Color("#EF4444");
 
 const BASE_POSITION: [number, number, number] = [-4, 2, 0];
 
-export function CrossFrameworkParticles() {
+export function CrossFrameworkParticles({
+  active = true,
+  showLabels = true,
+}: {
+  active?: boolean;
+  showLabels?: boolean;
+}) {
   const activeSessions = useA2AStore((s) => s.activeSessions);
   const groupRef = useRef<THREE.Group>(null);
+
+  if (!active) return null;
 
   // Diamond geometry (rotated octahedron)
   const diamondGeo = useMemo(() => new THREE.OctahedronGeometry(0.08, 0), []);
@@ -91,8 +99,8 @@ export function CrossFrameworkParticles() {
             </mesh>
 
             {/* Framework type label for active sessions */}
-            {(session.status === "running" ||
-              session.status === "pending") && (
+            {showLabels &&
+            (session.status === "running" || session.status === "pending") ? (
               <Html
                 position={[0, 0.2, 0]}
                 center
@@ -113,7 +121,7 @@ export function CrossFrameworkParticles() {
                   {session.frameworkType.toUpperCase()}
                 </div>
               </Html>
-            )}
+            ) : null}
           </group>
         );
       })}

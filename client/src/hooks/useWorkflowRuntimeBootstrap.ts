@@ -5,8 +5,10 @@ import { useWorkflowStore } from "@/lib/workflow-store";
 
 export function useWorkflowRuntimeBootstrap({
   heartbeatReportLimit = 12,
+  deferSecondary = false,
 }: {
   heartbeatReportLimit?: number;
+  deferSecondary?: boolean;
 } = {}) {
   const runtimeMode = useAppStore(state => state.runtimeMode);
   const initSocket = useWorkflowStore(state => state.initSocket);
@@ -22,6 +24,8 @@ export function useWorkflowRuntimeBootstrap({
   );
 
   useEffect(() => {
+    let timeoutId: number | null = null;
+
     if (runtimeMode === "advanced") {
       void initSocket();
     } else {
@@ -32,8 +36,24 @@ export function useWorkflowRuntimeBootstrap({
     void fetchStages();
     void fetchWorkflows();
     void fetchHeartbeatStatuses();
-    void fetchHeartbeatReports(undefined, heartbeatReportLimit);
+
+    const loadSecondary = () => {
+      void fetchHeartbeatReports(undefined, heartbeatReportLimit);
+    };
+
+    if (deferSecondary && typeof window !== "undefined") {
+      timeoutId = window.setTimeout(loadSecondary, 700);
+    } else {
+      loadSecondary();
+    }
+
+    return () => {
+      if (timeoutId !== null && typeof window !== "undefined") {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [
+    deferSecondary,
     disconnectSocket,
     fetchAgents,
     fetchHeartbeatReports,

@@ -983,7 +983,13 @@ function DecorativePlants() {
   );
 }
 
-export function OfficeRoom() {
+export function OfficeRoom({
+  showSecondaryDecor = true,
+  reducedEffects = false,
+}: {
+  showSecondaryDecor?: boolean;
+  reducedEffects?: boolean;
+}) {
   const setSceneReady = useAppStore(state => state.setSceneReady);
   const setLoadingProgress = useAppStore(state => state.setLoadingProgress);
   const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
@@ -1066,10 +1072,12 @@ export function OfficeRoom() {
     <group>
       <Floor />
       <Walls />
-      <ArchitecturalAccents />
-      <WallBrandPlaque />
+      {showSecondaryDecor ? <ArchitecturalAccents /> : null}
+      {showSecondaryDecor && !reducedEffects ? <WallBrandPlaque /> : null}
       <CorkBoard />
-      <DepartmentDecor departments={sceneDepartments} />
+      {showSecondaryDecor ? (
+        <DepartmentDecor departments={sceneDepartments} />
+      ) : null}
 
       {sceneDepartments[0] ? (
         <ZoneBase
@@ -1123,25 +1131,29 @@ export function OfficeRoom() {
         position={[-3.1, 0, -2.22]}
         rotation={[0, Math.PI / 2.8, 0]}
       />
-      <StorageColumn
-        position={[-2.1, 0, -2.92]}
-        rotation={[0, -Math.PI / 5, 0]}
-        low
-      />
-      <MobileBoard
-        position={[-5.92, 0, -1.15]}
-        rotation={[0, Math.PI / 2, 0]}
-        color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]}
-        title={sceneDepartments[0]?.title || getScenePodTitle(0, locale)}
-        subtitle={
-          sceneDepartments[0]?.subtitle || getFallbackPodSubtitle(0, locale)
-        }
-      />
-      <TaskCart
-        position={[-5.25, 0, -2.72]}
-        rotation={[0, Math.PI / 8, 0]}
-        color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]}
-      />
+      {showSecondaryDecor ? (
+        <>
+          <StorageColumn
+            position={[-2.1, 0, -2.92]}
+            rotation={[0, -Math.PI / 5, 0]}
+            low
+          />
+          <MobileBoard
+            position={[-5.92, 0, -1.15]}
+            rotation={[0, Math.PI / 2, 0]}
+            color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]}
+            title={sceneDepartments[0]?.title || getScenePodTitle(0, locale)}
+            subtitle={
+              sceneDepartments[0]?.subtitle || getFallbackPodSubtitle(0, locale)
+            }
+          />
+          <TaskCart
+            position={[-5.25, 0, -2.72]}
+            rotation={[0, Math.PI / 8, 0]}
+            color={sceneDepartments[0]?.color || SCENE_DEPARTMENT_COLORS[0]}
+          />
+        </>
+      ) : null}
 
       <FurnitureModel
         url={FURNITURE_MODELS.rugRectangle}
@@ -1151,34 +1163,38 @@ export function OfficeRoom() {
       />
       <LaptopDesk position={[2.35, 0, -1.08]} rotation={[0, Math.PI / 6, 0]} />
       <MeetingSet position={[4.85, 0, -1.42]} rotation={[0, -Math.PI / 8, 0]} />
-      <FurnitureModel
-        url={FURNITURE_MODELS.sideTable}
-        position={[3.55, 0, -2.88]}
-        rotation={[0, -Math.PI / 6, 0]}
-        scale={0.92}
-        centerXZ
-      />
-      <FurnitureModel
-        url={FURNITURE_MODELS.laptop}
-        position={[3.55, 0.39, -2.88]}
-        rotation={[0, -Math.PI / 6, 0]}
-        scale={0.92}
-        centerXZ
-      />
-      <MobileBoard
-        position={[5.95, 0, -2.45]}
-        rotation={[0, -Math.PI / 2.3, 0]}
-        color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]}
-        title={sceneDepartments[1]?.title || getScenePodTitle(1, locale)}
-        subtitle={
-          sceneDepartments[1]?.subtitle || getFallbackPodSubtitle(1, locale)
-        }
-      />
-      <TaskCart
-        position={[2.05, 0, -2.52]}
-        rotation={[0, -Math.PI / 10, 0]}
-        color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]}
-      />
+      {showSecondaryDecor ? (
+        <>
+          <FurnitureModel
+            url={FURNITURE_MODELS.sideTable}
+            position={[3.55, 0, -2.88]}
+            rotation={[0, -Math.PI / 6, 0]}
+            scale={0.92}
+            centerXZ
+          />
+          <FurnitureModel
+            url={FURNITURE_MODELS.laptop}
+            position={[3.55, 0.39, -2.88]}
+            rotation={[0, -Math.PI / 6, 0]}
+            scale={0.92}
+            centerXZ
+          />
+          <MobileBoard
+            position={[5.95, 0, -2.45]}
+            rotation={[0, -Math.PI / 2.3, 0]}
+            color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]}
+            title={sceneDepartments[1]?.title || getScenePodTitle(1, locale)}
+            subtitle={
+              sceneDepartments[1]?.subtitle || getFallbackPodSubtitle(1, locale)
+            }
+          />
+          <TaskCart
+            position={[2.05, 0, -2.52]}
+            rotation={[0, -Math.PI / 10, 0]}
+            color={sceneDepartments[1]?.color || SCENE_DEPARTMENT_COLORS[1]}
+          />
+        </>
+      ) : null}
 
       <FurnitureModel
         url={FURNITURE_MODELS.rugRectangle}
@@ -1188,30 +1204,34 @@ export function OfficeRoom() {
       />
       <MeetingSet position={[-3.55, 0, 2.28]} rotation={[0, Math.PI / 10, 0]} />
       <LaptopDesk position={[-5.3, 0, 2.9]} rotation={[0, Math.PI / 2.4, 0]} />
-      <FurnitureModel
-        url={FURNITURE_MODELS.chairRounded}
-        position={[-2.1, 0, 2.98]}
-        rotation={[0, -Math.PI / 2.6, 0]}
-      />
-      <StorageColumn
-        position={[-5.95, 0, 3.5]}
-        rotation={[0, Math.PI / 2, 0]}
-        low
-      />
-      <MobileBoard
-        position={[-5.98, 0, 1.48]}
-        rotation={[0, Math.PI / 2, 0]}
-        color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]}
-        title={sceneDepartments[2]?.title || getScenePodTitle(2, locale)}
-        subtitle={
-          sceneDepartments[2]?.subtitle || getFallbackPodSubtitle(2, locale)
-        }
-      />
-      <TaskCart
-        position={[-1.98, 0, 2.62]}
-        rotation={[0, Math.PI / 7, 0]}
-        color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]}
-      />
+      {showSecondaryDecor ? (
+        <>
+          <FurnitureModel
+            url={FURNITURE_MODELS.chairRounded}
+            position={[-2.1, 0, 2.98]}
+            rotation={[0, -Math.PI / 2.6, 0]}
+          />
+          <StorageColumn
+            position={[-5.95, 0, 3.5]}
+            rotation={[0, Math.PI / 2, 0]}
+            low
+          />
+          <MobileBoard
+            position={[-5.98, 0, 1.48]}
+            rotation={[0, Math.PI / 2, 0]}
+            color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]}
+            title={sceneDepartments[2]?.title || getScenePodTitle(2, locale)}
+            subtitle={
+              sceneDepartments[2]?.subtitle || getFallbackPodSubtitle(2, locale)
+            }
+          />
+          <TaskCart
+            position={[-1.98, 0, 2.62]}
+            rotation={[0, Math.PI / 7, 0]}
+            color={sceneDepartments[2]?.color || SCENE_DEPARTMENT_COLORS[2]}
+          />
+        </>
+      ) : null}
 
       <FurnitureModel
         url={FURNITURE_MODELS.rugRounded}
@@ -1233,51 +1253,51 @@ export function OfficeRoom() {
         position={[4.18, 0, 2.12]}
         rotation={[0, -Math.PI / 2.8, 0]}
       />
-      <LaptopDesk
-        position={[5.25, 0, 2.26]}
-        rotation={[0, -Math.PI / 2.2, 0]}
-      />
-      <StorageColumn
-        position={[5.92, 0, 3.42]}
-        rotation={[0, -Math.PI / 2.2, 0]}
-        low
-      />
-      <MobileBoard
-        position={[5.95, 0, 1.58]}
-        rotation={[0, -Math.PI / 2, 0]}
-        color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]}
-        title={sceneDepartments[3]?.title || getScenePodTitle(3, locale)}
-        subtitle={
-          sceneDepartments[3]?.subtitle || getFallbackPodSubtitle(3, locale)
-        }
-      />
-      <TaskCart
-        position={[1.96, 0, 2.88]}
-        rotation={[0, -Math.PI / 8, 0]}
-        color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]}
-      />
+      {showSecondaryDecor ? (
+        <>
+          <LaptopDesk
+            position={[5.25, 0, 2.26]}
+            rotation={[0, -Math.PI / 2.2, 0]}
+          />
+          <StorageColumn
+            position={[5.92, 0, 3.42]}
+            rotation={[0, -Math.PI / 2.2, 0]}
+            low
+          />
+          <MobileBoard
+            position={[5.95, 0, 1.58]}
+            rotation={[0, -Math.PI / 2, 0]}
+            color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]}
+            title={sceneDepartments[3]?.title || getScenePodTitle(3, locale)}
+            subtitle={
+              sceneDepartments[3]?.subtitle || getFallbackPodSubtitle(3, locale)
+            }
+          />
+          <TaskCart
+            position={[1.96, 0, 2.88]}
+            rotation={[0, -Math.PI / 8, 0]}
+            color={sceneDepartments[3]?.color || SCENE_DEPARTMENT_COLORS[3]}
+          />
 
-      <LoungeArea position={[0.2, 0, 4.1]} />
-      <FurnitureModel
-        url={FURNITURE_MODELS.tableCoffee}
-        position={[-0.3, 0, 1.15]}
-      />
-      <FurnitureModel
-        url={FURNITURE_MODELS.loungeChair}
-        position={[-1.95, 0, 1.4]}
-        rotation={[0, Math.PI / 3, 0]}
-      />
-      <FurnitureModel
-        url={FURNITURE_MODELS.loungeChair}
-        position={[1.6, 0, 1.35]}
-        rotation={[0, -Math.PI / 3, 0]}
-      />
+          <LoungeArea position={[0.2, 0, 4.1]} />
+          <FurnitureModel
+            url={FURNITURE_MODELS.tableCoffee}
+            position={[-0.3, 0, 1.15]}
+          />
+          <FurnitureModel
+            url={FURNITURE_MODELS.loungeChair}
+            position={[-1.95, 0, 1.4]}
+            rotation={[0, Math.PI / 3, 0]}
+          />
+          <FurnitureModel
+            url={FURNITURE_MODELS.loungeChair}
+            position={[1.6, 0, 1.35]}
+            rotation={[0, -Math.PI / 3, 0]}
+          />
 
-      <DecorativePlants />
+          <DecorativePlants />
+        </>
+      ) : null}
     </group>
   );
 }
-
-Object.values(FURNITURE_MODELS).forEach(url => {
-  useGLTF.preload(url);
-});

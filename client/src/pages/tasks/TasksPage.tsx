@@ -11,7 +11,7 @@ import { UnifiedLaunchComposer } from "@/components/launch/UnifiedLaunchComposer
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
 import { TasksCockpitDetail } from "@/components/tasks/TasksCockpitDetail";
 import { TasksQueueRail } from "@/components/tasks/TasksQueueRail";
-import { useViewportTier } from "@/hooks/useViewportTier";
+import { useViewportTier, useViewportWidth } from "@/hooks/useViewportTier";
 import { useI18n } from "@/i18n";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
 import { useTasksStore } from "@/lib/tasks-store";
@@ -27,7 +27,8 @@ export default function TasksPage({
   className?: string;
 }) {
   const { copy } = useI18n();
-  const { width, isMobile } = useViewportTier();
+  const { isMobile } = useViewportTier();
+  const width = useViewportWidth();
   const ensureReady = useTasksStore(state => state.ensureReady);
   const refresh = useTasksStore(state => state.refresh);
   const selectTask = useTasksStore(state => state.selectTask);

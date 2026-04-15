@@ -597,9 +597,11 @@ function MessageFlowPath({
 function AgentWorker({
   config,
   leaving,
+  reducedOverlays = false,
 }: {
   config: SceneAgentConfig;
   leaving?: boolean;
+  reducedOverlays?: boolean;
 }) {
   const { scene } = useGLTF(PET_MODELS[config.animal]);
   const cloned = useMemo(() => {
@@ -665,6 +667,15 @@ function AgentWorker({
   const agentStatus = agentStatuses[config.id] || "idle";
   const accent = roleColor || config.color;
   const isActive = hovered || selectedPet === config.id;
+  const showPrimaryLabel =
+    !reducedOverlays ||
+    isActive ||
+    agentStatus !== "idle" ||
+    config.role !== "worker";
+  const showSpeechBubble =
+    showBubble ||
+    selectedPet === config.id ||
+    (!reducedOverlays && agentStatus !== "idle");
 
   const handleClick = useCallback(() => {
     setSelectedPet(config.id);
@@ -758,39 +769,41 @@ function AgentWorker({
     >
       <primitive object={cloned} />
 
-      <Html
-        position={[0, 1.8, 0]}
-        center
-        distanceFactor={7}
-        style={{ pointerEvents: "none" }}
-      >
-        <div
-          className={`glass-3d flex whitespace-nowrap items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
-            isActive ? "scale-110" : ""
-          }`}
-          style={{
-            ...(isActive ? { background: accent } : {}),
-            ...getStatusBorderStyle(agentStatus),
-          }}
+      {showPrimaryLabel ? (
+        <Html
+          position={[0, 1.8, 0]}
+          center
+          distanceFactor={7}
+          style={{ pointerEvents: "none" }}
         >
-          <span className="text-white">
-            {config.emoji} {config.shortLabel}
-          </span>
-          {config.isGuest && (
-            <span className="rounded-full bg-orange-500/80 px-1.5 py-0.5 text-[8px] font-bold text-white tracking-wider">
-              Guest
-            </span>
-          )}
-          <span
-            className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold tracking-[0.08em]"
-            style={{ color: getStatusTextColor(agentStatus) }}
+          <div
+            className={`glass-3d flex whitespace-nowrap items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
+              isActive ? "scale-110" : ""
+            }`}
+            style={{
+              ...(isActive ? { background: accent } : {}),
+              ...getStatusBorderStyle(agentStatus),
+            }}
           >
-            {config.titleLabel}
-          </span>
-        </div>
-      </Html>
+            <span className="text-white">
+              {config.emoji} {config.shortLabel}
+            </span>
+            {config.isGuest && !reducedOverlays ? (
+              <span className="rounded-full bg-orange-500/80 px-1.5 py-0.5 text-[8px] font-bold text-white tracking-wider">
+                Guest
+              </span>
+            ) : null}
+            <span
+              className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold tracking-[0.08em]"
+              style={{ color: getStatusTextColor(agentStatus) }}
+            >
+              {config.titleLabel}
+            </span>
+          </div>
+        </Html>
+      ) : null}
 
-      {currentRoleName && (
+      {currentRoleName && !reducedOverlays && (
         <Html
           position={[0, 2.2, 0]}
           center
@@ -806,7 +819,7 @@ function AgentWorker({
         </Html>
       )}
 
-      {hasSlowAlert && (
+      {hasSlowAlert && !reducedOverlays && (
         <Html
           position={[0, currentRoleName ? 2.6 : 2.4, 0]}
           center
@@ -825,9 +838,7 @@ function AgentWorker({
           useAppStore.getState().locale,
           config.idleText
         )}
-        visible={
-          showBubble || selectedPet === config.id || agentStatus !== "idle"
-        }
+        visible={showSpeechBubble}
         accent={accent}
       />
 
@@ -851,7 +862,7 @@ function AgentWorker({
         />
       )}
       {/* Reputation warning: red pulse for D grade */}
-      {reputationProfile?.grade === "D" && (
+      {reputationProfile?.grade === "D" && !reducedOverlays && (
         <Html
           position={[0, currentRoleName ? 3.0 : 2.8, 0]}
           center
@@ -926,7 +937,11 @@ function DepartmentMarker({
   );
 }
 
-export function PetWorkers() {
+export function PetWorkers({
+  reducedOverlays = false,
+}: {
+  reducedOverlays?: boolean;
+}) {
   const locale = useAppStore(state => state.locale);
   const agents = useWorkflowStore(state => state.agents);
   const currentWorkflow = useWorkflowStore(state => state.currentWorkflow);
@@ -1114,6 +1129,17 @@ export function PetWorkers() {
 
   return (
     <group>
+      {!reducedOverlays
+        ? departmentMarkers.map(marker => (
+            <DepartmentMarker
+              key={marker.id}
+              label={marker.label}
+              position={marker.position}
+              color={marker.color}
+            />
+          ))
+        : null}
+
       {flowRoutes.map(route => (
         <MessageFlowPath
           key={route.key}
@@ -1130,12 +1156,9 @@ export function PetWorkers() {
           key={config.id}
           config={config}
           leaving={guestLeavingIds.has(config.id)}
+          reducedOverlays={reducedOverlays}
         />
       ))}
     </group>
   );
 }
-
-Object.values(PET_MODELS).forEach(url => {
-  useGLTF.preload(url);
-});

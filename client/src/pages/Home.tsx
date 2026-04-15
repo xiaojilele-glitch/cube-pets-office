@@ -11,7 +11,10 @@ import { OfficeNoticeBoard } from "@/components/scene/OfficeNoticeBoard";
 import { Scene3D } from "@/components/Scene3D";
 import { TelemetryDashboard } from "@/components/TelemetryDashboard";
 import { WorkflowPanel } from "@/components/WorkflowPanel";
-import { useViewportTier } from "@/hooks/useViewportTier";
+import {
+  useViewportResizeState,
+  useViewportTier,
+} from "@/hooks/useViewportTier";
 import { useDemoMode } from "@/hooks/useDemoMode";
 import { useWorkflowRuntimeBootstrap } from "@/hooks/useWorkflowRuntimeBootstrap";
 import { useI18n } from "@/i18n";
@@ -21,6 +24,7 @@ import { buildOfficeNoticeBoardSnapshot } from "@/lib/scene-agent-detail";
 import { useAppStore } from "@/lib/store";
 import { useTelemetryStore } from "@/lib/telemetry-store";
 import { useTasksStore } from "@/lib/tasks-store";
+import { cn } from "@/lib/utils";
 import { useWorkflowStore } from "@/lib/workflow-store";
 
 export default function Home() {
@@ -49,11 +53,15 @@ export default function Home() {
   );
   const openWorkflowPanel = useWorkflowStore(state => state.openWorkflowPanel);
   const { isMobile } = useViewportTier();
+  const resizeActive = useViewportResizeState();
   const { copy } = useI18n();
   const [, setLocation] = useLocation();
   const { startDemo } = useDemoMode();
 
-  useWorkflowRuntimeBootstrap({ heartbeatReportLimit: 18 });
+  useWorkflowRuntimeBootstrap({
+    heartbeatReportLimit: 18,
+    deferSecondary: true,
+  });
 
   const handleStartDemo = useCallback(async () => {
     try {
@@ -84,11 +92,10 @@ export default function Home() {
   }, [fetchTelemetry, isSceneReady, runtimeMode]);
 
   useEffect(() => {
-    if (runtimeMode !== "advanced") return;
     ensureTasksReady().catch(error => {
       console.warn("[Home] Failed to hydrate mission summaries:", error);
     });
-  }, [ensureTasksReady, runtimeMode]);
+  }, [ensureTasksReady]);
 
   const agentCount = agents.length || 18;
   const activeWorkflows =
@@ -101,30 +108,31 @@ export default function Home() {
             workflow.status === "running" || workflow.status === "pending"
         ).length;
 
-  const noticeBoardSnapshot = useMemo(
-    () =>
-      buildOfficeNoticeBoardSnapshot({
-        locale,
-        runtimeMode,
-        missionTasks,
-        missionDetailsById,
-        workflows,
-        heartbeatStatuses,
-        totalTokens:
-          (telemetrySnapshot?.totalTokensIn ?? 0) +
-          (telemetrySnapshot?.totalTokensOut ?? 0),
-        totalCost: telemetrySnapshot?.totalCost ?? 0,
-      }),
-    [
-      heartbeatStatuses,
+  const noticeBoardSnapshot = useMemo(() => {
+    if (!isMobile) return null;
+
+    return buildOfficeNoticeBoardSnapshot({
       locale,
-      missionDetailsById,
-      missionTasks,
       runtimeMode,
-      telemetrySnapshot,
+      missionTasks,
+      missionDetailsById,
       workflows,
-    ]
-  );
+      heartbeatStatuses,
+      totalTokens:
+        (telemetrySnapshot?.totalTokensIn ?? 0) +
+        (telemetrySnapshot?.totalTokensOut ?? 0),
+      totalCost: telemetrySnapshot?.totalCost ?? 0,
+    });
+  }, [
+    heartbeatStatuses,
+    isMobile,
+    locale,
+    missionDetailsById,
+    missionTasks,
+    runtimeMode,
+    telemetrySnapshot,
+    workflows,
+  ]);
 
   const handleOpenCurrentMission = selectedTaskId
     ? () => {
@@ -140,10 +148,18 @@ export default function Home() {
 
   const localeLabel =
     locale === "zh-CN" ? copy.common.englishShort : copy.common.chineseShort;
+  const scenePerformanceProfile =
+    resizeActive && !isMobile ? "resizing" : "balanced";
+  const desktopGlassClass = resizeActive
+    ? "border-stone-200/90 bg-[#fff8f0]/96 shadow-[0_8px_20px_rgba(88,61,39,0.06)]"
+    : "border-white/50 bg-[rgba(255,252,248,0.8)] shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur";
+  const utilityChipClass = resizeActive
+    ? "border-stone-200/90 bg-[#fff8f0]/96 shadow-[0_8px_20px_rgba(88,61,39,0.06)]"
+    : "border-white/55 bg-[rgba(255,252,248,0.82)] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur";
 
   return (
     <div className="relative h-[100svh] w-screen overflow-hidden bg-[linear-gradient(180deg,#d8e5f0_0%,#e9dfd2_48%,#e3d2c0_100%)]">
-      <Scene3D />
+      <Scene3D performanceProfile={scenePerformanceProfile} />
 
       <div className="pointer-events-none absolute inset-0 z-[5]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(228,241,252,0.72),rgba(228,241,252,0)_38%)]" />
@@ -228,7 +244,14 @@ export default function Home() {
             style={{ pointerEvents: "auto" }}
           >
             <div className="relative flex items-center justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2 rounded-[16px] border border-white/55 bg-[linear-gradient(180deg,rgba(255,252,248,0.84),rgba(246,238,229,0.74))] px-2.5 py-1.5 shadow-[0_14px_36px_rgba(88,61,39,0.1)] backdrop-blur">
+              <div
+                className={cn(
+                  "flex min-w-0 items-center gap-2 rounded-[16px] px-2.5 py-1.5",
+                  resizeActive
+                    ? "border border-stone-200/90 bg-[#fff8f0]/96 shadow-[0_8px_20px_rgba(88,61,39,0.06)]"
+                    : "border border-white/55 bg-[linear-gradient(180deg,rgba(255,252,248,0.84),rgba(246,238,229,0.74))] shadow-[0_14px_36px_rgba(88,61,39,0.1)] backdrop-blur"
+                )}
+              >
                 <div className="flex h-7 w-7 items-center justify-center rounded-[10px] bg-[linear-gradient(180deg,#d69871,#c98257)] text-white shadow-[0_10px_24px_rgba(201,130,87,0.22)]">
                   <span className="text-xs font-semibold">CP</span>
                 </div>
@@ -244,7 +267,12 @@ export default function Home() {
 
               <div className="pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 justify-center">
                 <div className="pointer-events-auto flex items-center gap-2">
-                  <div className="flex items-center gap-1 rounded-[16px] border border-white/50 bg-[rgba(255,252,248,0.8)] p-0.5 shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur">
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 rounded-[16px] border p-0.5",
+                      desktopGlassClass
+                    )}
+                  >
                     <button
                       onClick={() => void setRuntimeMode("frontend")}
                       className={`rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
@@ -269,7 +297,12 @@ export default function Home() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1 rounded-[16px] border border-white/50 bg-[rgba(255,252,248,0.8)] p-0.5 shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur">
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 rounded-[16px] border p-0.5",
+                      desktopGlassClass
+                    )}
+                  >
                     <button
                       type="button"
                       className="rounded-full bg-[#5E8B72] px-3 py-1 text-[11px] font-semibold text-white shadow-sm"
@@ -299,7 +332,10 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={toggleLocale}
-                    className="rounded-[16px] border border-white/50 bg-[rgba(255,252,248,0.8)] px-3 py-[7px] text-[11px] font-semibold text-[#8B7355] shadow-[0_10px_28px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white hover:text-[#5A4A3A]"
+                    className={cn(
+                      "rounded-[16px] border px-3 py-[7px] text-[11px] font-semibold text-[#8B7355] transition-colors hover:bg-white hover:text-[#5A4A3A]",
+                      desktopGlassClass
+                    )}
                     title={copy.app.localeSwitch}
                   >
                     {localeLabel}
@@ -311,7 +347,10 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => openWorkflowPanel()}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] transition-colors hover:bg-white",
+                    utilityChipClass
+                  )}
                 >
                   <Waves className="h-3.5 w-3.5" />
                   {compatibilityLabel}
@@ -319,20 +358,31 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={handleStartDemo}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] transition-colors hover:bg-white",
+                    utilityChipClass
+                  )}
                 >
                   {demoLabel}
                 </button>
                 <button
                   type="button"
                   onClick={() => toggleConfig()}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur transition-colors hover:bg-white"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold text-[#5A4A3A] transition-colors hover:bg-white",
+                    utilityChipClass
+                  )}
                 >
                   <Settings2 className="h-3.5 w-3.5" />
                   {copy.home.openConfig}
                 </button>
                 {IS_GITHUB_PAGES && <GitHubRepoBadge />}
-                <div className="rounded-full border border-white/55 bg-[rgba(255,252,248,0.82)] px-2.5 py-1 text-[11px] font-semibold text-[#5A4A3A] shadow-[0_10px_24px_rgba(88,61,39,0.08)] backdrop-blur">
+                <div
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px] font-semibold text-[#5A4A3A]",
+                    utilityChipClass
+                  )}
+                >
                   {copy.home.runtimeChip(
                     copy.toolbar.runtimeLabels[
                       runtimeMode === "advanced" ? "advanced" : "frontend"
@@ -343,7 +393,7 @@ export default function Home() {
             </div>
           </div>
 
-          <OfficeTaskCockpit />
+          <OfficeTaskCockpit resizeActive={resizeActive} />
 
           <ChatPanel />
           <WorkflowPanel />
@@ -355,13 +405,15 @@ export default function Home() {
         <>
           <div className="pointer-events-none absolute inset-x-0 top-[calc(env(safe-area-inset-top)+270px)] z-[18] px-3">
             <div className="pointer-events-auto">
-              <OfficeNoticeBoard
-                locale={locale}
-                snapshot={noticeBoardSnapshot}
-                onOpenTasks={() => setLocation("/tasks")}
-                onOpenWorkflow={() => openWorkflowPanel()}
-                onOpenCurrentTask={handleOpenCurrentMission}
-              />
+              {noticeBoardSnapshot ? (
+                <OfficeNoticeBoard
+                  locale={locale}
+                  snapshot={noticeBoardSnapshot}
+                  onOpenTasks={() => setLocation("/tasks")}
+                  onOpenWorkflow={() => openWorkflowPanel()}
+                  onOpenCurrentTask={handleOpenCurrentMission}
+                />
+              ) : null}
             </div>
           </div>
           <ChatPanel />
