@@ -1,9 +1,6 @@
 import { useMemo, useRef, useState, type ChangeEvent } from "react";
-import {
-  RefreshCw,
-  Send,
-  Sparkles,
-} from "lucide-react";
+import { Splitter } from "antd";
+import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 
@@ -47,11 +44,7 @@ function t(locale: string, zh: string, en: string) {
 
 export function getUnifiedLaunchRouteHint(
   locale: string,
-  kind:
-    | "clarify"
-    | "mission"
-    | "workflow"
-    | "upgrade-required"
+  kind: "clarify" | "mission" | "workflow" | "upgrade-required"
 ) {
   switch (kind) {
     case "workflow":
@@ -192,6 +185,7 @@ export function UnifiedLaunchComposer({
       submitting,
     });
   }, [decision.kind, locale, submitting]);
+  const hasActiveClarification = currentDialog?.status === "active";
 
   async function handleSubmit(commandText: string) {
     clearError();
@@ -257,7 +251,11 @@ export function UnifiedLaunchComposer({
         return;
       }
 
-      if (result.route === "mission" && result.status === "created" && result.missionId) {
+      if (
+        result.route === "mission" &&
+        result.status === "created" &&
+        result.missionId
+      ) {
         onTaskResolved?.({
           commandId: result.commandId,
           commandText,
@@ -315,7 +313,11 @@ export function UnifiedLaunchComposer({
         },
       });
 
-      if (result?.route === "mission" && result.status === "created" && result.missionId) {
+      if (
+        result?.route === "mission" &&
+        result.status === "created" &&
+        result.missionId
+      ) {
         onTaskResolved?.({
           commandId: result.commandId,
           commandText: currentCommand.commandText,
@@ -393,6 +395,61 @@ export function UnifiedLaunchComposer({
     }
   }
 
+  const composerInputShell = (
+    <div className="rounded-[18px] border border-stone-200/80 bg-white/82 p-3">
+      <CommandInput
+        onSubmit={handleSubmit}
+        loading={submitting}
+        commandHistory={commandHistory}
+        value={draftText}
+        onTextChange={setDraftText}
+        hideLabel={hideInputLabel}
+        dense={isDense}
+        rows={isCompact ? 2 : 3}
+        placeholder={t(
+          locale,
+          "鐩存帴鎻忚堪鐩爣銆佺害鏉熴€佷氦浠樼墿锛屽繀瑕佹椂闄勪笂鏂囦欢锛涚郴缁熶細鑷姩鍒ゆ柇璧板揩閫熶换鍔°€佹緞娓呰繕鏄珮绾х紪鎺?..",
+          "Describe the goal, constraints, deliverable, and attach files if needed. The system decides between mission, clarification, and workflow..."
+        )}
+        submitLabel={submitLabel}
+        sendingLabel={submitLabel}
+        hideSubmitButton
+      />
+
+      <LaunchRuntimeMeta
+        locale={locale}
+        runtimeMode={runtimeMode}
+        attachmentCount={attachments.length}
+        isPreparingFiles={isPreparingFiles}
+        maxAttachments={MAX_WORKFLOW_ATTACHMENTS}
+        onPickFiles={() => fileInputRef.current?.click()}
+        operatorActionRail={
+          activeTaskDetail ? (
+            <LaunchOperatorActionRail
+              detail={activeTaskDetail}
+              loadingByAction={operatorActionLoading}
+              onSubmitAction={onSubmitOperatorAction}
+              trailingAction={
+                <GlowButton
+                  type="button"
+                  disabled={!draftText.trim() || submitting}
+                  className="h-8 shrink-0 rounded-full px-3 text-xs font-semibold shadow-[0_10px_24px_rgba(94,139,114,0.18)]"
+                  onClick={() => void handleSubmit(draftText)}
+                >
+                  <Send className="size-3.5" />
+                  {submitLabel}
+                </GlowButton>
+              }
+            />
+          ) : undefined
+        }
+        onSubmit={() => void handleSubmit(draftText)}
+        submitLabel={submitLabel}
+        submitDisabled={!draftText.trim() || submitting}
+      />
+    </div>
+  );
+
   return (
     <section
       className={cn(
@@ -426,7 +483,11 @@ export function UnifiedLaunchComposer({
 
           <div className="flex flex-wrap items-center gap-2">
             {onOpenCreateDialog ? (
-              <Button type="button" variant="outline" onClick={onOpenCreateDialog}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onOpenCreateDialog}
+              >
                 {t(locale, "新建任务", "New task")}
               </Button>
             ) : null}
@@ -437,7 +498,9 @@ export function UnifiedLaunchComposer({
                 disabled={refreshing}
                 onClick={onRefresh}
               >
-                <RefreshCw className={cn("size-4", refreshing && "animate-spin")} />
+                <RefreshCw
+                  className={cn("size-4", refreshing && "animate-spin")}
+                />
                 {t(locale, "刷新", "Refresh")}
               </Button>
             ) : null}
@@ -445,7 +508,9 @@ export function UnifiedLaunchComposer({
         </div>
       ) : null}
 
-      <div className={cn(hideHeader ? "" : isDense ? "mt-3" : "mt-4", "space-y-3")}>
+      <div
+        className={cn(hideHeader ? "" : isDense ? "mt-3" : "mt-4", "space-y-3")}
+      >
         <LaunchAttachmentSection
           attachments={attachments}
           attachmentError={attachmentError}
@@ -463,66 +528,33 @@ export function UnifiedLaunchComposer({
           onChange={event => void handleFilesSelected(event)}
         />
 
-        <div className="rounded-[18px] border border-stone-200/80 bg-white/82 p-3">
-          <CommandInput
-            onSubmit={handleSubmit}
-            loading={submitting}
-            commandHistory={commandHistory}
-            value={draftText}
-            onTextChange={setDraftText}
-            hideLabel={hideInputLabel}
-            dense={isDense}
-            rows={isCompact ? 2 : 3}
-            placeholder={t(
-              locale,
-              "直接描述目标、约束、交付物，必要时附上文件；系统会自动判断走快速任务、澄清还是高级编排...",
-              "Describe the goal, constraints, deliverable, and attach files if needed. The system decides between mission, clarification, and workflow..."
+        {hasActiveClarification && currentDialog ? (
+          <Splitter
+            layout="vertical"
+            lazy
+            className={cn(
+              "launch-clarification-splitter min-h-0 rounded-[20px] border border-stone-200/75 bg-[linear-gradient(180deg,rgba(255,252,248,0.74),rgba(247,240,233,0.64))] p-2 shadow-[0_14px_34px_rgba(98,73,48,0.08)]",
+              isDense ? "gap-2" : "gap-3"
             )}
-            submitLabel={submitLabel}
-            sendingLabel={submitLabel}
-            hideSubmitButton
-          />
-
-          <LaunchRuntimeMeta
-            locale={locale}
-            runtimeMode={runtimeMode}
-            attachmentCount={attachments.length}
-            isPreparingFiles={isPreparingFiles}
-            maxAttachments={MAX_WORKFLOW_ATTACHMENTS}
-            onPickFiles={() => fileInputRef.current?.click()}
-            operatorActionRail={
-              activeTaskDetail ? (
-                <LaunchOperatorActionRail
-                  detail={activeTaskDetail}
-                  loadingByAction={operatorActionLoading}
-                  onSubmitAction={onSubmitOperatorAction}
-                  trailingAction={
-                    <GlowButton
-                      type="button"
-                      disabled={!draftText.trim() || submitting}
-                      className="h-8 shrink-0 rounded-full px-3 text-xs font-semibold shadow-[0_10px_24px_rgba(94,139,114,0.18)]"
-                      onClick={() => void handleSubmit(draftText)}
-                    >
-                      <Send className="size-3.5" />
-                      {submitLabel}
-                    </GlowButton>
-                  }
+          >
+            <Splitter.Panel
+              min={84}
+              defaultSize="42%"
+              collapsible={{ end: true, showCollapsibleIcon: true }}
+            >
+              <div className="min-h-0 overflow-y-auto pr-1">
+                <ClarificationPanel
+                  dialog={currentDialog}
+                  onAnswer={handleClarificationAnswer}
+                  className="border-amber-200/80 bg-amber-50/70"
                 />
-              ) : undefined
-            }
-            onSubmit={() => void handleSubmit(draftText)}
-            submitLabel={submitLabel}
-            submitDisabled={!draftText.trim() || submitting}
-          />
-        </div>
-
-        {currentDialog?.status === "active" ? (
-          <ClarificationPanel
-            dialog={currentDialog}
-            onAnswer={handleClarificationAnswer}
-            className="border-amber-200/80 bg-amber-50/70"
-          />
-        ) : null}
+              </div>
+            </Splitter.Panel>
+            <Splitter.Panel min={168}>{composerInputShell}</Splitter.Panel>
+          </Splitter>
+        ) : (
+          composerInputShell
+        )}
       </div>
     </section>
   );

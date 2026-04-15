@@ -776,6 +776,73 @@
   left: 3px;
 }
 
+.launch-clarification-splitter {
+  overflow: visible;
+}
+
+.launch-clarification-splitter.ant-splitter > .ant-splitter-panel {
+  padding: 0;
+  background: transparent;
+}
+
+.launch-clarification-splitter.ant-splitter > .ant-splitter-bar {
+  z-index: 4;
+  height: 0;
+  background: transparent;
+  overflow: visible;
+  cursor: default;
+}
+
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-dragger {
+  display: none;
+}
+
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar {
+  opacity: 1;
+  width: 34px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #9c6b47;
+  box-shadow:
+    0 0 0 1px rgba(201, 130, 87, 0.18),
+    0 10px 24px rgba(88, 61, 39, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar:hover,
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar:active {
+  background: rgba(255, 248, 241, 0.98);
+  color: #5e8b72;
+}
+
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-icon {
+  font-size: 12px;
+}
+
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar-start {
+  bottom: 4px;
+}
+
+.launch-clarification-splitter.ant-splitter
+  > .ant-splitter-bar
+  .ant-splitter-bar-collapse-bar-end {
+  top: 4px;
+}
+
 /* Smooth transitions for all panels */
 [class*="animate-in"] {
   will-change: transform, opacity;
