@@ -2,6 +2,19 @@
 inclusion: auto
 ---
 
+# 2026-04-15 Runtime Addendum
+
+保留以下旧指南不变，新增当前实现约束：
+
+1. 不得再默认假设 Docker 必然存在。
+2. 涉及执行链路的功能要同时考虑 `real`、`native`、`mock`。
+3. 涉及 GitHub Pages 的功能不得写成 executor-backed 模式。
+4. 如果改动了运行时边界，必须同步检查 README、ROADMAP 和 steering 补充文档。
+
+补充文档：
+
+- `.kiro/steering/2026-04-15-runtime-current-state.md`
+
 # 模块实现指南
 
 从 rbac-system-pc 的 90 个 AIGC 模块批量实现经验中提炼的方法论，适配 cube-pets-office 当前“主线已落地、以增量补完 spec 为主”的实现阶段。

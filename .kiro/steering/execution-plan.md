@@ -480,3 +480,9 @@ C01-C08 契约冻结 (已完成)
 5. 新一波体验重构如果不按 ownership 拆 worktree，`Home.tsx`、`TasksPage.tsx`、`TaskDetailView.tsx`、`WorkflowPanel.tsx` 会成为高冲突热点
 6. `api-fallback-empty-states` 可以先并行，但不要一开始就同时改任务页高频请求与 `workflow-store`，否则会与任务中台和面板拆解互相阻塞
 7. 当前 TypeScript 基线未清零，新增 spec 若不控制编译回归，容易把补完型工作拖成全局修复
+## 2026-04-15 增补：当前运行时兼容层
+
+- `dev:all` 默认优先 `real`，Docker 不可用时回退到 `native`
+- executor 现已支持 `mock | native | real`
+- GitHub Pages 只走前端浏览器运行时
+- 详细补充说明见 `.kiro/steering/2026-04-15-runtime-current-state.md`

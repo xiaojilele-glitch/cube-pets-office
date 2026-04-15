@@ -1,0 +1,113 @@
+<svg width="1200" height="920" viewBox="0 0 1200 920" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .title { font: 700 24px Arial, sans-serif; fill: #1f2937; }
+    .section { font: 700 16px Arial, sans-serif; fill: #111827; }
+    .label { font: 600 13px Arial, sans-serif; fill: #111827; }
+    .text { font: 12px Arial, sans-serif; fill: #374151; }
+    .small { font: 11px Arial, sans-serif; fill: #4b5563; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="context-stroke"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="920" fill="#f8fafc"/>
+  <text x="600" y="42" text-anchor="middle" class="title">Cube Pets Office Runtime Architecture</text>
+  <text x="600" y="66" text-anchor="middle" class="small">Addendum: 2026-04-15</text>
+
+  <rect x="40" y="96" width="1120" height="110" rx="18" fill="#eef2ff" stroke="#a5b4fc"/>
+  <text x="90" y="125" class="section">Entry Surfaces</text>
+
+  <rect x="70" y="140" width="200" height="42" rx="10" fill="#ffffff" stroke="#c7d2fe"/>
+  <text x="170" y="166" text-anchor="middle" class="label">Office shell / Home</text>
+  <rect x="290" y="140" width="200" height="42" rx="10" fill="#ffffff" stroke="#c7d2fe"/>
+  <text x="390" y="166" text-anchor="middle" class="label">/tasks cockpit</text>
+  <rect x="510" y="140" width="220" height="42" rx="10" fill="#ffffff" stroke="#c7d2fe"/>
+  <text x="620" y="166" text-anchor="middle" class="label">UnifiedLaunchComposer</text>
+  <rect x="750" y="140" width="180" height="42" rx="10" fill="#ffffff" stroke="#c7d2fe"/>
+  <text x="840" y="166" text-anchor="middle" class="label">Scene3D</text>
+  <rect x="950" y="140" width="170" height="42" rx="10" fill="#ffffff" stroke="#c7d2fe"/>
+  <text x="1035" y="166" text-anchor="middle" class="label">Feishu relay</text>
+
+  <rect x="40" y="236" width="700" height="520" rx="18" fill="#ecfeff" stroke="#67e8f9"/>
+  <text x="80" y="265" class="section">Advanced Runtime (local)</text>
+  <rect x="70" y="286" width="300" height="88" rx="14" fill="#ffffff" stroke="#a5f3fc"/>
+  <text x="220" y="312" text-anchor="middle" class="label">Frontend workbench</text>
+  <text x="220" y="334" text-anchor="middle" class="text">OfficeTaskCockpit, task queue,</text>
+  <text x="220" y="352" text-anchor="middle" class="text">detail tabs, shared actions, overlays</text>
+  <rect x="410" y="286" width="290" height="88" rx="14" fill="#ffffff" stroke="#a5f3fc"/>
+  <text x="555" y="312" text-anchor="middle" class="label">Express + Socket.IO</text>
+  <text x="555" y="334" text-anchor="middle" class="text">REST API, websocket sync,</text>
+  <text x="555" y="352" text-anchor="middle" class="text">config, tasks, reports, lineage, audit</text>
+  <line x1="370" y1="330" x2="410" y2="330" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="70" y="406" width="300" height="148" rx="14" fill="#ffffff" stroke="#a5f3fc"/>
+  <text x="220" y="432" text-anchor="middle" class="label">Cube brain</text>
+  <text x="220" y="454" text-anchor="middle" class="text">Workflow engine</text>
+  <text x="220" y="474" text-anchor="middle" class="text">Mission runtime / Mission store</text>
+  <text x="220" y="494" text-anchor="middle" class="text">Dynamic organization</text>
+  <text x="220" y="514" text-anchor="middle" class="text">ExecutionPlanBuilder / ExecutorClient</text>
+  <text x="220" y="534" text-anchor="middle" class="text">Socket event fanout</text>
+
+  <rect x="410" y="406" width="290" height="148" rx="14" fill="#ffffff" stroke="#a5f3fc"/>
+  <text x="555" y="432" text-anchor="middle" class="label">Intelligence + governance</text>
+  <text x="555" y="454" text-anchor="middle" class="text">3-tier memory, RAG, knowledge graph</text>
+  <text x="555" y="474" text-anchor="middle" class="text">cost governance, review, permissions</text>
+  <text x="555" y="494" text-anchor="middle" class="text">A2A, guest agents, reputation</text>
+  <text x="555" y="514" text-anchor="middle" class="text">audit chain, lineage, artifacts</text>
+  <line x1="220" y1="374" x2="220" y2="406" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="555" y1="374" x2="555" y2="406" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="370" y1="480" x2="410" y2="480" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="70" y="590" width="630" height="136" rx="14" fill="#ffffff" stroke="#a5f3fc"/>
+  <text x="385" y="618" text-anchor="middle" class="label">Lobster Executor</text>
+  <rect x="95" y="638" width="170" height="58" rx="12" fill="#ecfccb" stroke="#84cc16"/>
+  <text x="180" y="662" text-anchor="middle" class="label">DockerRunner</text>
+  <text x="180" y="682" text-anchor="middle" class="text">mode = real</text>
+  <rect x="305" y="638" width="170" height="58" rx="12" fill="#dbeafe" stroke="#60a5fa"/>
+  <text x="390" y="662" text-anchor="middle" class="label">NativeRunner</text>
+  <text x="390" y="682" text-anchor="middle" class="text">mode = native</text>
+  <rect x="515" y="638" width="160" height="58" rx="12" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="595" y="662" text-anchor="middle" class="label">MockRunner</text>
+  <text x="595" y="682" text-anchor="middle" class="text">mode = mock</text>
+  <line x1="220" y1="554" x2="220" y2="590" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="555" y1="554" x2="555" y2="590" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="95" y="714" class="small">real: Docker available, full container lifecycle</text>
+  <text x="335" y="714" class="small">native: local fallback when Docker is unavailable</text>
+  <text x="530" y="714" class="small">mock: explicit simulation path</text>
+
+  <rect x="780" y="236" width="380" height="520" rx="18" fill="#f5f3ff" stroke="#c4b5fd"/>
+  <text x="820" y="265" class="section">Frontend Runtime (GitHub Pages / preview)</text>
+  <rect x="810" y="296" width="320" height="90" rx="14" fill="#ffffff" stroke="#d8b4fe"/>
+  <text x="970" y="322" text-anchor="middle" class="label">Browser runtime</text>
+  <text x="970" y="344" text-anchor="middle" class="text">BrowserWorkflowRepository</text>
+  <text x="970" y="362" text-anchor="middle" class="text">browser-runtime.ts</text>
+  <rect x="810" y="426" width="320" height="90" rx="14" fill="#ffffff" stroke="#d8b4fe"/>
+  <text x="970" y="452" text-anchor="middle" class="label">Local persistence</text>
+  <text x="970" y="474" text-anchor="middle" class="text">IndexedDB, local settings, browser stores</text>
+  <text x="970" y="492" text-anchor="middle" class="text">runtime mode forced to frontend</text>
+  <rect x="810" y="556" width="320" height="120" rx="14" fill="#ffffff" stroke="#d8b4fe"/>
+  <text x="970" y="582" text-anchor="middle" class="label">Preview / demo fallback</text>
+  <text x="970" y="604" text-anchor="middle" class="text">If API is unavailable, UI stays usable</text>
+  <text x="970" y="622" text-anchor="middle" class="text">with browser preview or local demo data</text>
+  <text x="970" y="640" text-anchor="middle" class="text">No executor process exists here</text>
+  <line x1="970" y1="386" x2="970" y2="426" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="970" y1="516" x2="970" y2="556" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="280" y="792" width="640" height="88" rx="18" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="600" y="820" text-anchor="middle" class="section">Runtime selection rules</text>
+  <text x="600" y="844" text-anchor="middle" class="text">dev:all => prefer real; if Docker is unavailable => native; explicit mock/native stays unchanged</text>
+  <text x="600" y="864" text-anchor="middle" class="text">GitHub Pages => frontend-only browser runtime, never executor-backed</text>
+  <line x1="370" y1="182" x2="370" y2="236" stroke="#0891b2" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="970" y1="182" x2="970" y2="236" stroke="#7c3aed" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="40" y="792" width="200" height="88" rx="18" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="140" y="820" text-anchor="middle" class="section">Legend</text>
+  <text x="62" y="844" class="text">Cyan: local advanced runtime</text>
+  <text x="62" y="862" class="text">Purple: frontend-only runtime</text>
+  <rect x="960" y="792" width="200" height="88" rx="18" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="1060" y="820" text-anchor="middle" class="section">Key boundary</text>
+  <text x="983" y="844" class="text">Pages != native executor</text>
+  <text x="983" y="862" class="text">No Docker is not the same as Pages</text>
+</svg>

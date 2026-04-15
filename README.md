@@ -25,6 +25,25 @@
 
 ---
 
+## 2026-04-15 Current Runtime Addendum
+
+This addendum keeps the old README body intact and only supplements the latest runtime behavior.
+
+- Local + Docker reachable => `real`
+- Local without Docker => `native`
+- GitHub Pages => browser-only frontend runtime, not `native`
+
+Current addendum docs:
+
+- [Runtime current state](./.kiro/steering/2026-04-15-runtime-current-state.md)
+- [Updated runtime architecture diagram](./docs/architecture-runtime-2026-04-15.svg)
+
+<p align="center">
+  <img src="./docs/architecture-runtime-2026-04-15.svg" alt="Cube Pets Office runtime architecture addendum" width="100%" />
+</p>
+
+---
+
 ## ⚡ 项目概述
 
 Cube Pets Office 是一个**从 0 实现的开源多智能体可视化平台**。输入一条自然语言指令，系统自动组建 AI 团队——CEO 拆解方向、经理分配任务、Worker 并行执行、互相评审打分、审计修订、最终汇总进化。整个过程在 3D 办公场景中实时呈现。

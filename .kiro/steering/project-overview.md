@@ -10,6 +10,19 @@
 
 ## inclusion: auto
 
+## 2026-04-15 增补：当前运行时快照
+
+本页以下旧内容保持不动。本次仅新增一条当前口径补充：
+
+- 本地 Docker 可用时，完整链路走 `real`
+- 本地 Docker 不可用时，完整链路回退到 `native`
+- GitHub Pages 只走 Browser Runtime，不属于 executor 模式
+
+详见：
+
+- `.kiro/steering/2026-04-15-runtime-current-state.md`
+- `docs/architecture-runtime-2026-04-15.svg`
+
 # Cube Pets Office 项目总览
 
 ## 项目定位

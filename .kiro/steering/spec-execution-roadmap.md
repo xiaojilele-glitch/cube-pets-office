@@ -2,6 +2,14 @@
 inclusion: manual
 ---
 
+# 2026-04-15 Runtime Addendum
+
+不改动下方旧路线图，仅补充当前运行时归档入口：
+
+- 新归档：`sandbox-native-executor-compat`
+- 新图示：`docs/architecture-runtime-2026-04-15.svg`
+- 当前统一口径：`.kiro/steering/2026-04-15-runtime-current-state.md`
+
 # Spec 执行路线图与架构演化
 
 ## 当前状态总览
