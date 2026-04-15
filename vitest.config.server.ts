@@ -16,6 +16,7 @@ export default defineConfig({
       "client/src/lib/replay/__tests__/**/*.test.ts",
       "client/src/runtime/demo-data/__tests__/**/*.test.ts",
       "client/src/components/__tests__/**/*.test.ts",
+      "services/lobster-executor/src/__tests__/**/*.test.ts",
     ],
   },
 });

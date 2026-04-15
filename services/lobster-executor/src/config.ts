@@ -48,14 +48,16 @@ export function readLobsterExecutorConfig(
   platform: string = process.platform
 ): LobsterExecutorConfig {
   const securityConfig = readSecurityConfig(env);
+  const rawMode = env.LOBSTER_EXECUTION_MODE;
+  const executionMode =
+    rawMode === "mock" ? "mock" : rawMode === "native" ? "native" : "real";
 
   return {
     host: env.LOBSTER_EXECUTOR_HOST || "0.0.0.0",
     port: parsePort(env.LOBSTER_EXECUTOR_PORT, 3031),
     dataRoot: resolve(env.LOBSTER_EXECUTOR_DATA_ROOT || "tmp/lobster-executor"),
     serviceName: env.LOBSTER_EXECUTOR_NAME || "lobster-executor",
-    executionMode:
-      env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real",
+    executionMode,
     defaultImage: env.LOBSTER_DEFAULT_IMAGE || "node:20-slim",
     maxConcurrentJobs: Math.max(
       1,

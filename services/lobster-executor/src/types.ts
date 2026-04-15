@@ -12,7 +12,7 @@ export interface LobsterExecutorConfig {
   port: number;
   dataRoot: string;
   serviceName: string;
-  executionMode: "real" | "mock";
+  executionMode: "real" | "mock" | "native";
   defaultImage: string;
   maxConcurrentJobs: number;
   dockerHost?: string;

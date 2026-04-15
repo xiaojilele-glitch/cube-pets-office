@@ -74,7 +74,7 @@ export class LobsterExecutorService {
 
   private readonly runner: JobRunner;
   private readonly limiter: ConcurrencyLimiter;
-  private readonly executionMode: "real" | "mock";
+  private readonly executionMode: "real" | "mock" | "native";
   private readonly callbackSender?: CallbackSender;
 
   constructor(private readonly options: LobsterExecutorServiceOptions) {
@@ -120,6 +120,10 @@ export class LobsterExecutorService {
 
     // Create concurrency limiter
     this.limiter = new ConcurrencyLimiter(config.maxConcurrentJobs);
+  }
+
+  getExecutionMode(): "real" | "mock" | "native" {
+    return this.executionMode;
   }
 
   getDataRoot(): string {
