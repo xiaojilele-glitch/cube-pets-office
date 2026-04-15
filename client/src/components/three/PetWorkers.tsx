@@ -20,11 +20,7 @@ import {
   useWorkflowStore,
   type WorkflowOrganizationSnapshot,
 } from "@/lib/workflow-store";
-import { useReputationStore } from "@/lib/reputation-store";
-import { useRoleStore } from "@/lib/role-store";
-import { useTelemetryStore } from "@/lib/telemetry-store";
 import { selectWorkflowOrganization } from "@/lib/workflow-selectors";
-import { getRoleColor } from "@/components/AgentRolePanel";
 
 type SceneAgentConfig = {
   id: string;
@@ -301,35 +297,12 @@ function createDynamicSceneData(
   return { sceneAgents, markers };
 }
 
-function SpeechBubble({
-  text,
-  visible,
-  accent,
-}: {
+function SpeechBubble(_: {
   text: string;
   visible: boolean;
   accent: string;
 }) {
-  if (!visible) return null;
-
-  return (
-    <Html
-      position={[0, 3.3, 0]}
-      center
-      distanceFactor={7.6}
-      style={{ pointerEvents: "none" }}
-    >
-      <div
-        className="min-w-[136px] max-w-[176px] rounded-2xl border bg-white/95 px-2 py-1.5 text-center shadow-lg backdrop-blur-sm animate-in fade-in duration-300"
-        style={{ borderColor: `${accent}55` }}
-      >
-        <p className="whitespace-pre-line break-words text-[11px] leading-5 text-[#3A3A3A]">
-          {text}
-        </p>
-        <div className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-white/95" />
-      </div>
-    </Html>
-  );
+  return null;
 }
 
 function animateWorker(
@@ -391,6 +364,7 @@ function animateWorker(
   }
 }
 
+/* Removed verbose speech-bubble copy to keep the 3D scene visually cleaner.
 const STATUS_BUBBLES: Record<AppLocale, Record<string, string>> = {
   "zh-CN": {
     listening: "正在听...\n请说出你的指令。",
@@ -429,6 +403,15 @@ const STATUS_BUBBLES: Record<AppLocale, Record<string, string>> = {
 function getStatusBubble(status: string, locale: AppLocale, fallback: string) {
   return STATUS_BUBBLES[locale][status] || fallback;
 }
+*/
+
+function getStatusBubble(
+  _status: string,
+  _locale: AppLocale,
+  fallback: string
+) {
+  return fallback;
+}
 
 /* ── Agent status → visual category mapping ── */
 type StatusCategory =
@@ -466,6 +449,7 @@ function getStatusCategory(status: string): StatusCategory {
   }
 }
 
+/* Removed secondary title-pill coloring to reduce label clutter.
 const STATUS_TEXT_COLORS: Record<StatusCategory, string> = {
   working: "#06b6d4",
   thinking: "#f59e0b",
@@ -478,6 +462,7 @@ const STATUS_TEXT_COLORS: Record<StatusCategory, string> = {
 function getStatusTextColor(status: string): string {
   return STATUS_TEXT_COLORS[getStatusCategory(status)];
 }
+*/
 
 function getStatusBorderStyle(status: string): CSSProperties {
   const category = getStatusCategory(status);
@@ -631,7 +616,6 @@ function AgentWorker({
 
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
-  const [showBubble, setShowBubble] = useState(false);
 
   // Guest agent entry/exit animation state
   const guestAnimRef = useRef({
@@ -650,37 +634,22 @@ function AgentWorker({
   const setSelectedPet = useAppStore(state => state.setSelectedPet);
   const agentStatuses = useWorkflowStore(state => state.agentStatuses);
 
-  const telemetrySnapshot = useTelemetryStore(state => state.snapshot);
-  const hasSlowAlert =
-    telemetrySnapshot?.alerts?.some(
-      a => a.type === "agent_slow" && a.agentId === config.id && !a.resolved
-    ) ?? false;
-
-  const agentRoleInfo = useRoleStore(state => state.agentRoles.get(config.id));
-  const currentRoleName = agentRoleInfo?.currentRole?.roleName || null;
-  const roleColor = currentRoleName ? getRoleColor(currentRoleName) : null;
-
-  const reputationProfile = useReputationStore(
-    state => state.profiles[config.id]
-  );
-
   const agentStatus = agentStatuses[config.id] || "idle";
-  const accent = roleColor || config.color;
+  const accent = config.color;
+  const currentRoleName = null;
+  const roleColor = null;
+  const hasSlowAlert = false;
+  const reputationProfile = {} as { grade?: "S" | "A" | "D" } | undefined;
   const isActive = hovered || selectedPet === config.id;
   const showPrimaryLabel =
     !reducedOverlays ||
     isActive ||
     agentStatus !== "idle" ||
     config.role !== "worker";
-  const showSpeechBubble =
-    showBubble ||
-    selectedPet === config.id ||
-    (!reducedOverlays && agentStatus !== "idle");
+  const showSpeechBubble = false;
 
   const handleClick = useCallback(() => {
     setSelectedPet(config.id);
-    setShowBubble(true);
-    window.setTimeout(() => setShowBubble(false), 3500);
   }, [config.id, setSelectedPet]);
 
   useFrame(({ clock }) => {
@@ -777,11 +746,11 @@ function AgentWorker({
           style={{ pointerEvents: "none" }}
         >
           <div
-            className={`glass-3d flex whitespace-nowrap items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
+            className={`glass-3d flex whitespace-nowrap items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold shadow-sm transition-all duration-200 ${
               isActive ? "scale-110" : ""
             }`}
             style={{
-              ...(isActive ? { background: accent } : {}),
+              background: isActive ? accent : "rgba(31, 41, 55, 0.84)",
               ...getStatusBorderStyle(agentStatus),
             }}
           >
@@ -793,12 +762,6 @@ function AgentWorker({
                 Guest
               </span>
             ) : null}
-            <span
-              className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold tracking-[0.08em]"
-              style={{ color: getStatusTextColor(agentStatus) }}
-            >
-              {config.titleLabel}
-            </span>
           </div>
         </Html>
       ) : null}
@@ -1129,7 +1092,7 @@ export function PetWorkers({
 
   return (
     <group>
-      {!reducedOverlays
+      {false
         ? departmentMarkers.map(marker => (
             <DepartmentMarker
               key={marker.id}

@@ -24,7 +24,6 @@ const WALL_MOUNT_ROTATION: [number, number, number] = [0, 0, 0];
 
 const GLOW_COLOR_ACTIVE = new THREE.Color("#F59E0B");
 const GLOW_COLOR_IDLE = new THREE.Color("#D6C4A8");
-const PLATFORM_COLOR = "#8B7355";
 
 /* ── Data Hook ── */
 function useMissionIslandData() {
@@ -80,14 +79,14 @@ export function MissionIsland() {
     if (!glowRef.current) return;
     const mat = glowRef.current.material as THREE.MeshStandardMaterial;
     if (isRunning) {
-      const pulse = 0.4 + Math.sin(clock.elapsedTime * 2.5) * 0.3;
+      const pulse = 0.22 + Math.sin(clock.elapsedTime * 2.5) * 0.14;
       mat.emissive.copy(GLOW_COLOR_ACTIVE);
       mat.emissiveIntensity = pulse;
-      mat.opacity = 0.5 + pulse * 0.4;
+      mat.opacity = 0.18 + pulse * 0.2;
     } else {
       mat.emissive.copy(GLOW_COLOR_IDLE);
-      mat.emissiveIntensity = 0.15;
-      mat.opacity = 0.25;
+      mat.emissiveIntensity = 0.08;
+      mat.opacity = 0.1;
     }
   });
 
@@ -126,24 +125,19 @@ export function MissionIsland() {
         document.body.style.cursor = "auto";
       }}
     >
-      {/* Platform base */}
-      <mesh position={[0, 0.15, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[1.2, 1.4, 0.3, 32]} />
-        <meshStandardMaterial color={PLATFORM_COLOR} roughness={0.7} />
-      </mesh>
-
-      {/* Glow ring */}
+      {/* Floor ring */}
       <mesh
         ref={glowRef}
-        position={[0, 0.32, 0]}
+        position={[0, 0.035, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
       >
-        <ringGeometry args={[1.0, 1.35, 48]} />
+        <ringGeometry args={[0.82, 1.04, 48]} />
         <meshStandardMaterial
           transparent
-          opacity={0.3}
+          opacity={0.1}
           emissive={GLOW_COLOR_IDLE}
-          emissiveIntensity={0.15}
+          emissiveIntensity={0.08}
+          roughness={0.9}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
