@@ -29,6 +29,7 @@ import {
 } from "./credential-injector.js";
 import { CredentialScrubber } from "./credential-scrubber.js";
 import {
+  type SecurityConfig,
   readSecurityConfig,
   resolveSecurityPolicy,
   toDockerCreateOptions,
@@ -67,6 +68,7 @@ export class DockerRunner implements JobRunner {
   private readonly docker: Dockerode;
   private readonly callbackSender: CallbackSender;
   private readonly config: DockerRunnerConfig;
+  private readonly securityConfig: SecurityConfig;
   private readonly securityPolicy: SecurityPolicy;
   private readonly auditLogger: SecurityAuditLogger;
 
@@ -84,8 +86,7 @@ export class DockerRunner implements JobRunner {
       dockerCertPath: executorConfig.dockerCertPath,
     };
 
-    // Resolve security policy once at construction time
-    this.securityPolicy = resolveSecurityPolicy({
+    this.securityConfig = {
       securityLevel: executorConfig.securityLevel as "strict" | "balanced" | "permissive",
       containerUser: executorConfig.containerUser ?? "65534",
       maxMemory: executorConfig.maxMemory ?? "512m",
@@ -94,7 +95,10 @@ export class DockerRunner implements JobRunner {
       tmpfsSize: executorConfig.tmpfsSize ?? "64m",
       networkWhitelist: executorConfig.networkWhitelist ?? [],
       seccompProfilePath: executorConfig.seccompProfilePath,
-    });
+    };
+
+    // Resolve the default security policy once and derive per-job overrides from it.
+    this.securityPolicy = resolveSecurityPolicy(this.securityConfig);
 
     // Security audit logger
     this.auditLogger = new SecurityAuditLogger(executorConfig.dataRoot);
@@ -155,6 +159,7 @@ export class DockerRunner implements JobRunner {
   ): Promise<void> {
     const startTime = Date.now();
     let container: Dockerode.Container | undefined;
+    const securityPolicy = this.resolveSecurityPolicyForRecord(record);
 
     try {
       // 0. Extract payload flags
@@ -176,17 +181,17 @@ export class DockerRunner implements JobRunner {
         jobId: record.request.jobId,
         missionId: record.request.missionId,
         eventType: "container.created",
-        securityLevel: this.securityPolicy.level,
+        securityLevel: securityPolicy.level,
         detail: {
           containerId,
           image: (record.planJob.payload as Record<string, unknown>)?.image ?? this.config.defaultImage,
-          user: this.securityPolicy.user,
-          readonlyRootfs: this.securityPolicy.readonlyRootfs,
-          capDrop: this.securityPolicy.capDrop,
-          capAdd: this.securityPolicy.capAdd,
-          networkMode: this.securityPolicy.network.mode,
-          memoryBytes: this.securityPolicy.resources.memoryBytes,
-          pidsLimit: this.securityPolicy.resources.pidsLimit,
+          user: securityPolicy.user,
+          readonlyRootfs: securityPolicy.readonlyRootfs,
+          capDrop: securityPolicy.capDrop,
+          capAdd: securityPolicy.capAdd,
+          networkMode: securityPolicy.network.mode,
+          memoryBytes: securityPolicy.resources.memoryBytes,
+          pidsLimit: securityPolicy.resources.pidsLimit,
         },
       });
 
@@ -198,7 +203,7 @@ export class DockerRunner implements JobRunner {
         jobId: record.request.jobId,
         missionId: record.request.missionId,
         eventType: "container.started",
-        securityLevel: this.securityPolicy.level,
+        securityLevel: securityPolicy.level,
         detail: { containerId },
       });
 
@@ -217,26 +222,26 @@ export class DockerRunner implements JobRunner {
       });
       // Task 3.2: Attach network policy info to job.started payload
       // Task 5.1: Attach securitySummary to job.started payload
-      const memBytes = this.securityPolicy.resources.memoryBytes;
+      const memBytes = securityPolicy.resources.memoryBytes;
       const memoryLimit = memBytes >= 1_073_741_824
         ? `${Math.round(memBytes / 1_073_741_824)}GB`
         : `${Math.round(memBytes / 1_048_576)}MB`;
-      const cpuLimit = (this.securityPolicy.resources.nanoCpus / 1_000_000_000).toFixed(1);
+      const cpuLimit = (securityPolicy.resources.nanoCpus / 1_000_000_000).toFixed(1);
 
       startedEvent.payload = {
         ...startedEvent.payload,
         networkPolicy: {
-          mode: this.securityPolicy.network.mode,
-          whitelist: this.securityPolicy.network.whitelist ?? [],
+          mode: securityPolicy.network.mode,
+          whitelist: securityPolicy.network.whitelist ?? [],
         },
         securitySummary: {
-          level: this.securityPolicy.level,
-          user: this.securityPolicy.user,
-          networkMode: this.securityPolicy.network.mode,
-          readonlyRootfs: this.securityPolicy.readonlyRootfs,
+          level: securityPolicy.level,
+          user: securityPolicy.user,
+          networkMode: securityPolicy.network.mode,
+          readonlyRootfs: securityPolicy.readonlyRootfs,
           memoryLimit,
           cpuLimit,
-          pidsLimit: this.securityPolicy.resources.pidsLimit,
+          pidsLimit: securityPolicy.resources.pidsLimit,
         },
       };
       emitEvent(startedEvent);
@@ -307,8 +312,8 @@ export class DockerRunner implements JobRunner {
           jobId: record.request.jobId,
           missionId: record.request.missionId,
           eventType: "container.oom",
-          securityLevel: this.securityPolicy.level,
-          detail: { exitCode, memoryLimit: this.securityPolicy.resources.memoryBytes },
+          securityLevel: securityPolicy.level,
+          detail: { exitCode, memoryLimit: securityPolicy.resources.memoryBytes },
         });
         await this.emitFailed(
           record, emitEvent, "OOM_KILLED",
@@ -322,7 +327,7 @@ export class DockerRunner implements JobRunner {
           jobId: record.request.jobId,
           missionId: record.request.missionId,
           eventType: "container.seccomp_violation",
-          securityLevel: this.securityPolicy.level,
+          securityLevel: securityPolicy.level,
           detail: { exitCode, signal: "SIGSYS" },
         });
         await this.emitFailed(
@@ -350,7 +355,7 @@ export class DockerRunner implements JobRunner {
         jobId: record.request.jobId,
         missionId: record.request.missionId,
         eventType: "container.security_failure",
-        securityLevel: this.securityPolicy.level,
+        securityLevel: securityPolicy.level,
         detail: { errorCode, errorMessage },
       });
 
@@ -367,7 +372,7 @@ export class DockerRunner implements JobRunner {
           jobId: record.request.jobId,
           missionId: record.request.missionId,
           eventType: "container.destroyed",
-          securityLevel: this.securityPolicy.level,
+          securityLevel: securityPolicy.level,
           detail: { containerId: container.id },
         });
         await this.cleanupContainer(container);
@@ -427,6 +432,7 @@ export class DockerRunner implements JobRunner {
   ): Dockerode.ContainerCreateOptions {
     const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
     const aiEnabled = payload.aiEnabled === true;
+    const securityPolicy = this.resolveSecurityPolicyForRecord(record);
 
     // Image selection: payload.image > (aiEnabled ? aiImage : defaultImage)
     const image = aiEnabled
@@ -456,8 +462,8 @@ export class DockerRunner implements JobRunner {
     const isRemoteDocker = this.config.dockerHost?.startsWith("tcp:") || this.config.dockerHost?.startsWith("http:");
 
     // Security policy → Docker options
-    const securityCreateOpts = toDockerCreateOptions(this.securityPolicy);
-    const securityHostConfig = toDockerHostConfig(this.securityPolicy);
+    const securityCreateOpts = toDockerCreateOptions(securityPolicy);
+    const securityHostConfig = toDockerHostConfig(securityPolicy);
 
     return {
       Image: image,
@@ -946,16 +952,17 @@ export class DockerRunner implements JobRunner {
     // Task 4.4: Attach securityContext for security-related failures
     const SECURITY_ERROR_CODES = ["OOM_KILLED", "SECCOMP_VIOLATION", "SECURITY_CONFIG_INVALID"];
     if (SECURITY_ERROR_CODES.includes(errorCode)) {
+      const securityPolicy = this.resolveSecurityPolicyForRecord(record);
       event.payload = {
         ...event.payload,
         securityContext: {
-          level: this.securityPolicy.level,
-          user: this.securityPolicy.user,
-          networkMode: this.securityPolicy.network.mode,
-          readonlyRootfs: this.securityPolicy.readonlyRootfs,
-          capDrop: this.securityPolicy.capDrop,
-          capAdd: this.securityPolicy.capAdd,
-          resources: this.securityPolicy.resources,
+          level: securityPolicy.level,
+          user: securityPolicy.user,
+          networkMode: securityPolicy.network.mode,
+          readonlyRootfs: securityPolicy.readonlyRootfs,
+          capDrop: securityPolicy.capDrop,
+          capAdd: securityPolicy.capAdd,
+          resources: securityPolicy.resources,
         },
       };
     }
@@ -970,6 +977,22 @@ export class DockerRunner implements JobRunner {
    */
   static mapExitCodeToStatus(exitCode: number): "completed" | "failed" {
     return exitCode === 0 ? "completed" : "failed";
+  }
+
+  private resolveSecurityPolicyForRecord(record: StoredJobRecord): SecurityPolicy {
+    const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const aiEnabled = payload.aiEnabled === true;
+
+    if (!aiEnabled || this.securityConfig.securityLevel !== "strict") {
+      return this.securityPolicy;
+    }
+
+    // AI planning requires outbound network access; keep the sandbox hardened
+    // while lifting only the network preset from strict to balanced.
+    return resolveSecurityPolicy({
+      ...this.securityConfig,
+      securityLevel: "balanced",
+    });
   }
 
   private createEvent(

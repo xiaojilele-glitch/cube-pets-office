@@ -1300,23 +1300,23 @@ export function TaskDetailView({
           )}
         >
           <SnapshotTile
-            label={t(locale, "鐢ㄦ埛", "User")}
+            label={t(locale, "用户", "User")}
             value={detail.securitySummary.user}
           />
           <SnapshotTile
-            label={t(locale, "缃戠粶", "Network")}
+            label={t(locale, "网络", "Network")}
             value={detail.securitySummary.networkMode}
           />
           <SnapshotTile
-            label={t(locale, "鍙鏂囦欢绯荤粺", "Readonly FS")}
+            label={t(locale, "只读文件系统", "Readonly FS")}
             value={
               detail.securitySummary.readonlyRootfs
-                ? t(locale, "鏄?", "Yes")
-                : t(locale, "鍚?", "No")
+                ? t(locale, "是", "Yes")
+                : t(locale, "否", "No")
             }
           />
           <SnapshotTile
-            label={t(locale, "鍐呭瓨", "Memory")}
+            label={t(locale, "内存", "Memory")}
             value={detail.securitySummary.memoryLimit}
           />
           <SnapshotTile
@@ -1324,7 +1324,7 @@ export function TaskDetailView({
             value={detail.securitySummary.cpuLimit}
           />
           <SnapshotTile
-            label={t(locale, "PIDs 闄愬埗", "PIDs Limit")}
+            label={t(locale, "PIDs 限制", "PIDs Limit")}
             value={String(detail.securitySummary.pidsLimit)}
           />
         </div>

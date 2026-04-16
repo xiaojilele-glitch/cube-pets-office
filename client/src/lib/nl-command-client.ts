@@ -1,10 +1,3 @@
-/**
- * NL Command Center REST API client.
- *
- * Typed functions wrapping fetch() for every NL Command endpoint.
- * Uses route constants and request/response types from shared/nl-command/api.ts.
- */
-
 import {
   NL_COMMAND_API_ROUTES,
   type SubmitCommandRequest,
@@ -12,6 +5,8 @@ import {
   type ListCommandsRequest,
   type ListCommandsResponse,
   type GetCommandResponse,
+  type ClarificationPreviewRequest,
+  type ClarificationPreviewResponse,
   type SubmitClarificationRequest,
   type SubmitClarificationResponse,
   type GetDialogResponse,
@@ -48,10 +43,6 @@ import {
   type ExportAuditResponse,
 } from "@shared/nl-command/api";
 
-// ---------------------------------------------------------------------------
-// Helpers (same pattern as mission-client.ts)
-// ---------------------------------------------------------------------------
-
 function withQuery(
   path: string,
   query?: Record<string, string | number | boolean | null | undefined>,
@@ -83,24 +74,20 @@ function post<T>(url: string, body: unknown): Promise<T> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  }).then((r) => parseJson<T>(r));
+  }).then(response => parseJson<T>(response));
 }
 
 function get<T>(url: string): Promise<T> {
-  return fetch(url).then((r) => parseJson<T>(r));
+  return fetch(url).then(response => parseJson<T>(response));
 }
 
 function toQueryRecord<T extends object>(
   value?: T,
 ): Record<string, string | number | boolean | null | undefined> | undefined {
-  return value as unknown as
+  return value as
     | Record<string, string | number | boolean | null | undefined>
     | undefined;
 }
-
-// ---------------------------------------------------------------------------
-// 指令管理
-// ---------------------------------------------------------------------------
 
 export function submitCommand(
   req: SubmitCommandRequest,
@@ -118,9 +105,11 @@ export function getCommand(id: string): Promise<GetCommandResponse> {
   return get(NL_COMMAND_API_ROUTES.commandById(id));
 }
 
-// ---------------------------------------------------------------------------
-// 澄清对话
-// ---------------------------------------------------------------------------
+export function previewClarificationQuestions(
+  req: ClarificationPreviewRequest,
+): Promise<ClarificationPreviewResponse> {
+  return post(NL_COMMAND_API_ROUTES.clarificationPreview, req);
+}
 
 export function submitClarification(
   commandId: string,
@@ -132,10 +121,6 @@ export function submitClarification(
 export function getDialog(commandId: string): Promise<GetDialogResponse> {
   return get(NL_COMMAND_API_ROUTES.commandDialog(commandId));
 }
-
-// ---------------------------------------------------------------------------
-// 执行计划
-// ---------------------------------------------------------------------------
 
 export function getPlan(planId: string): Promise<GetPlanResponse> {
   return get(NL_COMMAND_API_ROUTES.planById(planId));
@@ -155,10 +140,6 @@ export function adjustPlan(
   return post(NL_COMMAND_API_ROUTES.planAdjust(planId), req);
 }
 
-// ---------------------------------------------------------------------------
-// 监控与告警
-// ---------------------------------------------------------------------------
-
 export function getDashboard(): Promise<DashboardResponse> {
   return get(NL_COMMAND_API_ROUTES.dashboard);
 }
@@ -174,10 +155,6 @@ export function createAlertRule(
 ): Promise<CreateAlertRuleResponse> {
   return post(NL_COMMAND_API_ROUTES.alertRules, req);
 }
-
-// ---------------------------------------------------------------------------
-// 决策支持
-// ---------------------------------------------------------------------------
 
 export function getRisks(planId: string): Promise<GetRisksResponse> {
   return get(NL_COMMAND_API_ROUTES.planRisks(planId));
@@ -196,10 +173,6 @@ export function applySuggestion(
   return post(NL_COMMAND_API_ROUTES.planApplySuggestion(planId), req);
 }
 
-// ---------------------------------------------------------------------------
-// 协作
-// ---------------------------------------------------------------------------
-
 export function addComment(
   req: AddCommentRequest,
 ): Promise<AddCommentResponse> {
@@ -212,10 +185,6 @@ export function listComments(
   return get(withQuery(NL_COMMAND_API_ROUTES.comments, toQueryRecord(params)));
 }
 
-// ---------------------------------------------------------------------------
-// 报告
-// ---------------------------------------------------------------------------
-
 export function getReport(reportId: string): Promise<GetReportResponse> {
   return get(NL_COMMAND_API_ROUTES.reportById(reportId));
 }
@@ -225,10 +194,6 @@ export function generateReport(
 ): Promise<GenerateReportResponse> {
   return post(NL_COMMAND_API_ROUTES.reportsGenerate, req);
 }
-
-// ---------------------------------------------------------------------------
-// 历史与模板
-// ---------------------------------------------------------------------------
 
 export function listHistory(
   params?: ListHistoryRequest,
@@ -247,10 +212,6 @@ export function saveTemplate(
 ): Promise<SaveTemplateResponse> {
   return post(NL_COMMAND_API_ROUTES.templates, req);
 }
-
-// ---------------------------------------------------------------------------
-// 审计
-// ---------------------------------------------------------------------------
 
 export function listAudit(
   params?: ListAuditRequest,

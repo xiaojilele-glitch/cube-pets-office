@@ -54,7 +54,29 @@ function request(method: string, path: string, body?: unknown): Promise<{ status
 beforeAll(async () => {
   const app = express();
   app.use(express.json());
-  app.use('/api/nl-command', createNLCommandRouter());
+  app.use('/api/nl-command', createNLCommandRouter({
+    previewClarificationQuestions: async (payload) => ({
+      needsClarification: true,
+      questions: [
+        {
+          questionId: 'preview-1',
+          text:
+            payload.locale === 'en-US'
+              ? 'Which delivery window should we target?'
+              : '这次希望按哪个交付窗口推进？',
+          type: 'single_choice',
+          options:
+            payload.locale === 'en-US'
+              ? ['today', 'this week', 'flexible']
+              : ['今天内', '本周内', '可弹性安排'],
+          context:
+            payload.locale === 'en-US'
+              ? 'Used to avoid guessing the deadline.'
+              : '用于避免系统自行猜测截止时间。',
+        },
+      ],
+    }),
+  }));
   await new Promise<void>((resolve) => {
     server = app.listen(0, () => {
       const addr = server.address();
@@ -74,6 +96,27 @@ afterAll(async () => {
 // ─── Tests ───
 
 describe('NL Command Center REST API routes', () => {
+  describe('POST /api/nl-command/clarification-preview', () => {
+    it('should return 400 when commandText is missing', async () => {
+      const res = await request('POST', '/api/nl-command/clarification-preview', {
+        userId: 'u1',
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('should return generated clarification questions for valid requests', async () => {
+      const res = await request('POST', '/api/nl-command/clarification-preview', {
+        commandText: '整理支付模块发布方案',
+        userId: 'u1',
+        locale: 'zh-CN',
+      });
+
+      expect(res.status).toBe(200);
+      expect((res.body as Record<string, unknown>).needsClarification).toBe(true);
+      expect(((res.body as { questions?: unknown[] }).questions ?? []).length).toBe(1);
+    });
+  });
+
   // ─── POST /api/nl-command/commands ───
 
   describe('POST /api/nl-command/commands', () => {

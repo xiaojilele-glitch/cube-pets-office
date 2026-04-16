@@ -239,14 +239,19 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
     !hasOutcomeSignal(commandText) ? "outcome" : null,
     !hasTimelineSignal(commandText) ? "timeline" : null,
     !hasConstraintSignal(commandText) ? "constraints" : null,
-  ].filter((topic): topic is string => Boolean(topic));
+  ].filter((topic): topic is TaskHubClarificationTopic => Boolean(topic));
 
   const needsClarification =
     commandText.length < 36 || missingTopics.length >= 2;
+  const questionTopics = needsClarification
+    ? missingTopics.length > 0
+      ? missingTopics.slice(0, 2)
+      : (["outcome"] as TaskHubClarificationTopic[])
+    : [];
   const questions = needsClarification
-    ? missingTopics.slice(0, 2).map(topic => ({
+    ? questionTopics.map(topic => ({
         ...buildPreviewClarificationQuestion(
-          topic as TaskHubClarificationTopic,
+          topic,
           locale
         ),
         questionId: `${topic}:${nanoid(8)}`,
@@ -298,6 +303,95 @@ function buildTaskHubAnalysis(req: SubmitCommandRequest): {
     },
     questions,
   };
+}
+
+function normalizeClarificationQuestion(
+  question: ClarificationQuestion,
+  index: number
+): ClarificationQuestion | null {
+  const text = normalizeCommandText(question.text);
+  if (!text) return null;
+
+  const options = question.options
+    ?.map(option => normalizeCommandText(option))
+    .filter(Boolean);
+  const hasOptions = Boolean(options && options.length > 0);
+
+  return {
+    questionId:
+      normalizeCommandText(question.questionId) || `generated:${index + 1}`,
+    text,
+    type:
+      (question.type === "single_choice" || question.type === "multi_choice") &&
+      hasOptions
+        ? question.type
+        : "free_text",
+    options: hasOptions ? uniqueStrings(options!) : undefined,
+    context: question.context
+      ? normalizeCommandText(question.context)
+      : undefined,
+  };
+}
+
+async function resolveTaskHubAnalysis(req: SubmitCommandRequest): Promise<{
+  analysis: CommandAnalysis;
+  questions: ClarificationQuestion[];
+}> {
+  const fallback = buildTaskHubAnalysis(req);
+
+  try {
+    const preview = await api.previewClarificationQuestions({
+      commandText: normalizeCommandText(req.commandText),
+      userId: req.userId,
+      priority: req.priority,
+      timeframe: req.timeframe,
+      locale: getCurrentTaskHubLocale(),
+    });
+
+    const generatedQuestions = Array.isArray(preview.questions)
+      ? preview.questions
+          .map((question, index) =>
+            normalizeClarificationQuestion(question, index)
+          )
+          .filter(
+            (question): question is ClarificationQuestion => Boolean(question)
+          )
+      : [];
+
+    const previewNeedsClarification =
+      typeof preview.needsClarification === "boolean"
+        ? preview.needsClarification
+        : fallback.analysis.needsClarification;
+
+    if (previewNeedsClarification && generatedQuestions.length === 0) {
+      return fallback;
+    }
+
+    const needsClarification =
+      generatedQuestions.length > 0 ||
+      previewNeedsClarification;
+    const questions = needsClarification
+      ? generatedQuestions.length > 0
+        ? generatedQuestions
+        : fallback.questions
+      : [];
+
+    return {
+      analysis: {
+        ...fallback.analysis,
+        needsClarification,
+        clarificationTopics: needsClarification
+          ? fallback.analysis.clarificationTopics
+          : undefined,
+        confidence: needsClarification
+          ? Math.min(fallback.analysis.confidence, 0.76)
+          : Math.max(fallback.analysis.confidence, 0.86),
+      },
+      questions,
+    };
+  } catch {
+    return fallback;
+  }
 }
 
 function buildRefinedCommandText(
@@ -700,10 +794,12 @@ export const useNLCommandStore = create<NLCommandState>((set, get) => ({
   },
 
   submitTaskHubCommand: async req => {
+    set({ loading: true, error: null, lastSubmission: null });
+
     const { createMission, ...commandRequest } = req;
     const normalizedText = normalizeCommandText(commandRequest.commandText);
     const commandId = `task-hub-${nanoid(10)}`;
-    const { analysis, questions } = buildTaskHubAnalysis(commandRequest);
+    const { analysis, questions } = await resolveTaskHubAnalysis(commandRequest);
     const command: StrategicCommand = {
       commandId,
       commandText: normalizedText,

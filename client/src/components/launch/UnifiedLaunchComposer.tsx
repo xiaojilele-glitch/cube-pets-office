@@ -410,7 +410,7 @@ export function UnifiedLaunchComposer({
         rows={isCompact ? 2 : 3}
         placeholder={t(
           locale,
-          "鐩存帴鎻忚堪鐩爣銆佺害鏉熴€佷氦浠樼墿锛屽繀瑕佹椂闄勪笂鏂囦欢锛涚郴缁熶細鑷姩鍒ゆ柇璧板揩閫熶换鍔°€佹緞娓呰繕鏄珮绾х紪鎺?..",
+          "直接描述目标、约束、交付物，必要时附上文件；系统会自动判断走快速任务、澄清还是高级编排...",
           "Describe the goal, constraints, deliverable, and attach files if needed. The system decides between mission, clarification, and workflow..."
         )}
         submitLabel={submitLabel}

@@ -11,6 +11,7 @@ import type {
   CommandConstraint,
   CommandTimeframe,
   CommandAnalysis,
+  ClarificationQuestion,
   ClarificationDialog,
   ClarificationAnswer,
   FinalizedCommand,
@@ -45,6 +46,7 @@ export const NL_COMMAND_API_ROUTES = {
   commandById: (id: string) => `${NL_COMMAND_API_BASE}/commands/${id}`,
 
   // 澄清对话
+  clarificationPreview: `${NL_COMMAND_API_BASE}/clarification-preview`,
   commandClarify: (id: string) => `${NL_COMMAND_API_BASE}/commands/${id}/clarify`,
   commandDialog: (id: string) => `${NL_COMMAND_API_BASE}/commands/${id}/dialog`,
 
@@ -126,6 +128,19 @@ export interface GetCommandResponse {
   finalized?: FinalizedCommand;
   decomposition?: MissionDecomposition;
   plan?: NLExecutionPlan;
+}
+
+export interface ClarificationPreviewRequest {
+  commandText: string;
+  userId: string;
+  priority?: CommandPriority;
+  timeframe?: CommandTimeframe;
+  locale?: "zh-CN" | "en-US";
+}
+
+export interface ClarificationPreviewResponse {
+  needsClarification: boolean;
+  questions: ClarificationQuestion[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

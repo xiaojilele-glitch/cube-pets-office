@@ -10,21 +10,12 @@ import type {
   ClarificationQuestion,
 } from "@shared/nl-command/contracts";
 
-/**
- * Clarification dialog panel.
- *
- * Displays unanswered clarification questions and supports:
- * - Free-text answers
- * - Selection-based answers (single_choice / multi_choice)
- *
- * @see Requirements 2.3
- */
 export interface ClarificationPanelProps {
   dialog: ClarificationDialog;
   onAnswer: (
     questionId: string,
     text: string,
-    selectedOptions?: string[]
+    selectedOptions?: string[],
   ) => void | Promise<void>;
   title?: string;
   answerPlaceholder?: string;
@@ -44,14 +35,13 @@ export function ClarificationPanel({
 }: ClarificationPanelProps) {
   const { locale } = useI18n();
   const isZh = locale === "zh-CN";
-  const answeredIds = new Set(dialog.answers.map(a => a.questionId));
+  const answeredIds = new Set(dialog.answers.map(answer => answer.questionId));
   const unanswered = dialog.questions.filter(
-    q => !answeredIds.has(q.questionId)
+    question => !answeredIds.has(question.questionId),
   );
-  const resolvedTitle =
-    title ?? (isZh ? "需要补充信息" : "Clarification Needed");
+  const resolvedTitle = title ?? (isZh ? "需要补充信息" : "Clarification Needed");
   const resolvedAnswerPlaceholder =
-    answerPlaceholder ?? (isZh ? "请填写你的回答..." : "Type your answer...");
+    answerPlaceholder ?? (isZh ? "请输入你的回答..." : "Type your answer...");
   const resolvedAnswerLabel = answerLabel ?? (isZh ? "提交回答" : "Answer");
   const resolvedAnsweringLabel =
     answeringLabel ?? (isZh ? "提交中..." : "Submitting...");
@@ -61,36 +51,35 @@ export function ClarificationPanel({
   return (
     <div
       className={cn(
-        "rounded-xl border border-amber-200 bg-amber-50/60 p-3",
-        className
+        "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-amber-200 bg-amber-50/60 p-3",
+        className,
       )}
     >
-      <div className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-800">
+      <div className="mb-3 flex shrink-0 items-center gap-2 text-sm font-medium text-amber-800">
         <MessageCircleQuestion className="size-4" />
         {isZh
           ? `${resolvedTitle}（${unanswered.length} 个问题）`
           : `${resolvedTitle} (${unanswered.length} question${unanswered.length > 1 ? "s" : ""})`}
       </div>
-      <div className="space-y-3">
-        {unanswered.map(question => (
-          <QuestionCard
-            key={question.questionId}
-            question={question}
-            onAnswer={onAnswer}
-            answerPlaceholder={resolvedAnswerPlaceholder}
-            answerLabel={resolvedAnswerLabel}
-            answeringLabel={resolvedAnsweringLabel}
-            locale={locale}
-          />
-        ))}
+
+      <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+        <div className="space-y-3">
+          {unanswered.map(question => (
+            <QuestionCard
+              key={question.questionId}
+              question={question}
+              onAnswer={onAnswer}
+              answerPlaceholder={resolvedAnswerPlaceholder}
+              answerLabel={resolvedAnswerLabel}
+              answeringLabel={resolvedAnsweringLabel}
+              locale={locale}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Internal: single question card
-// ---------------------------------------------------------------------------
 
 function QuestionCard({
   question,
@@ -104,7 +93,7 @@ function QuestionCard({
   onAnswer: (
     questionId: string,
     text: string,
-    selectedOptions?: string[]
+    selectedOptions?: string[],
   ) => void | Promise<void>;
   answerPlaceholder: string;
   answerLabel: string;
@@ -116,62 +105,65 @@ function QuestionCard({
   const [submitting, setSubmitting] = useState(false);
   const resolvedQuestion = localizeTaskHubQuestion(
     question,
-    locale === "zh-CN" ? "zh-CN" : "en-US"
+    locale === "zh-CN" ? "zh-CN" : "en-US",
   );
 
-  const isFreeText = resolvedQuestion.type === "free_text";
   const isSingleChoice = resolvedQuestion.type === "single_choice";
   const isMultiChoice = resolvedQuestion.type === "multi_choice";
   const hasOptions =
     (isSingleChoice || isMultiChoice) &&
-    resolvedQuestion.options &&
+    Array.isArray(resolvedQuestion.options) &&
     resolvedQuestion.options.length > 0;
 
   const toggleOption = useCallback(
     (option: string) => {
-      setSelected(prev => {
-        const next = new Set(prev);
+      setSelected(previous => {
         if (isSingleChoice) {
-          // Single choice: replace selection
           return new Set([option]);
         }
-        // Multi choice: toggle
-        if (next.has(option)) next.delete(option);
-        else next.add(option);
+
+        const next = new Set(previous);
+        if (next.has(option)) {
+          next.delete(option);
+        } else {
+          next.add(option);
+        }
         return next;
       });
     },
-    [isSingleChoice]
+    [isSingleChoice],
   );
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true);
     try {
       if (hasOptions) {
-        const opts = Array.from(selected);
-        await onAnswer(question.questionId, opts.join(", "), opts);
-      } else {
-        await onAnswer(question.questionId, freeText.trim());
+        const options = Array.from(selected);
+        await onAnswer(question.questionId, options.join(", "), options);
+        return;
       }
+
+      await onAnswer(question.questionId, freeText.trim());
     } finally {
       setSubmitting(false);
     }
-  }, [hasOptions, selected, freeText, onAnswer, question.questionId]);
+  }, [freeText, hasOptions, onAnswer, question.questionId, selected]);
 
   const canSubmit = hasOptions ? selected.size > 0 : freeText.trim().length > 0;
 
   return (
-    <div className="rounded-lg border border-amber-100 bg-white/80 p-3">
+    <div className="overflow-hidden rounded-lg border border-amber-100 bg-white/80 p-3">
       <p className="text-sm font-medium text-stone-800">
         {resolvedQuestion.text}
       </p>
-      {resolvedQuestion.context && (
-        <p className="mt-1 text-xs text-stone-500">
+
+      {resolvedQuestion.context ? (
+        <p className="mt-1 text-xs leading-5 text-stone-500">
           {resolvedQuestion.context}
         </p>
-      )}
+      ) : null}
 
-      <div className="mt-2">
+      <div className="mt-3">
         {hasOptions ? (
           <div className="flex flex-wrap gap-2">
             {resolvedQuestion.options!.map(option => (
@@ -182,7 +174,7 @@ function QuestionCard({
                   "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
                   selected.has(option)
                     ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-                    : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300"
+                    : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300",
                 )}
                 onClick={() => toggleOption(option)}
               >
@@ -193,18 +185,18 @@ function QuestionCard({
         ) : (
           <textarea
             value={freeText}
-            onChange={e => setFreeText(e.target.value)}
+            onChange={event => setFreeText(event.target.value)}
             placeholder={answerPlaceholder}
-            rows={2}
-            className="w-full resize-none rounded-lg border border-stone-200 bg-stone-50/60 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            rows={3}
+            className="min-h-[92px] w-full resize-y rounded-lg border border-stone-200 bg-stone-50/60 px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             aria-label={
               locale === "zh-CN"
                 ? `回答：${resolvedQuestion.text}`
                 : `Answer for: ${resolvedQuestion.text}`
             }
-            onKeyDown={e => {
-              if (e.key === "Enter" && !e.shiftKey && canSubmit) {
-                e.preventDefault();
+            onKeyDown={event => {
+              if (event.key === "Enter" && !event.shiftKey && canSubmit) {
+                event.preventDefault();
                 void handleSubmit();
               }
             }}
@@ -212,7 +204,7 @@ function QuestionCard({
         )}
       </div>
 
-      <div className="mt-2 flex justify-end">
+      <div className="mt-3 flex justify-end">
         <GlowButton
           type="button"
           disabled={!canSubmit || submitting}

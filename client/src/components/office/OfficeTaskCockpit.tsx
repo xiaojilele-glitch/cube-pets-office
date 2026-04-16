@@ -833,55 +833,62 @@ export function OfficeTaskCockpit({
   const launchStage =
     hasActiveClarification && currentDialog ? (
       <div className="pointer-events-none flex w-full items-end justify-center">
-        <div className="pointer-events-none flex h-[clamp(360px,58vh,760px)] w-full max-w-[860px] min-h-0 flex-col items-center justify-end">
-          {clarificationExpanded ? (
-            <div className="pointer-events-auto mb-2 w-full min-h-0 max-h-[calc(100%-172px)] overflow-hidden rounded-[24px] border border-white/36 bg-[linear-gradient(180deg,rgba(255,252,248,0.72),rgba(246,238,229,0.62))] shadow-[0_18px_40px_rgba(98,73,48,0.14)] backdrop-blur-md">
-              <div className="shrink-0 border-b border-stone-200/55 px-3 py-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="workspace-status workspace-tone-warning !px-2 !py-1 !text-[10px] font-semibold">
-                    {t(locale, "需要补充信息", "Clarification needed")}
-                  </span>
-                  <span className="text-[11px] text-stone-600">
-                    {t(
-                      locale,
-                      "先补齐上下文，系统再继续创建任务。",
-                      "Fill in the missing context and the system will continue creating the task."
-                    )}
-                  </span>
+        <div className="pointer-events-none flex h-[clamp(380px,60vh,780px)] w-full max-w-[860px] min-h-0 flex-col items-center justify-end">
+          <div
+            className={cn(
+              "pointer-events-none relative w-full min-h-0",
+              clarificationExpanded ? "flex-1 pb-10" : "h-10 shrink-0",
+            )}
+          >
+            {clarificationExpanded ? (
+              <div className="pointer-events-auto flex h-full min-h-0 flex-col overflow-hidden rounded-[24px] border border-white/36 bg-[linear-gradient(180deg,rgba(255,252,248,0.72),rgba(246,238,229,0.62))] shadow-[0_18px_40px_rgba(98,73,48,0.14)] backdrop-blur-md">
+                <div className="shrink-0 border-b border-stone-200/55 px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="workspace-status workspace-tone-warning !px-2 !py-1 !text-[10px] font-semibold">
+                      {t(locale, "需要补充信息", "Clarification needed")}
+                    </span>
+                    <span className="text-[11px] text-stone-600">
+                      {t(
+                        locale,
+                        "先补齐上下文，系统再继续创建任务。",
+                        "Fill in the missing context and the system will continue creating the task.",
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 pt-3">
+                  <ClarificationPanel
+                    dialog={currentDialog}
+                    onAnswer={handleClarificationAnswer}
+                    className="h-full border-amber-200/80 bg-amber-50/70 shadow-none"
+                  />
                 </div>
               </div>
+            ) : null}
 
-              <div className="min-h-0 overflow-y-auto p-3">
-                <ClarificationPanel
-                  dialog={currentDialog}
-                  onAnswer={handleClarificationAnswer}
-                  className="border-amber-200/80 bg-amber-50/70 shadow-none"
+            <div className="pointer-events-auto absolute bottom-0 left-1/2 z-10 -translate-x-1/2">
+              <button
+                type="button"
+                className="inline-flex h-7 w-12 items-center justify-center rounded-full border border-stone-200/80 bg-white/94 text-[#9c6b47] shadow-[0_10px_24px_rgba(88,61,39,0.14)] backdrop-blur-md transition hover:bg-[#fff8f1] hover:text-[#5e8b72]"
+                aria-label={
+                  clarificationExpanded
+                    ? t(locale, "收起补充信息", "Collapse clarification")
+                    : t(locale, "展开补充信息", "Expand clarification")
+                }
+                onClick={() => setClarificationExpanded(current => !current)}
+              >
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform",
+                    clarificationExpanded && "rotate-180"
+                  )}
                 />
-              </div>
+              </button>
             </div>
-          ) : null}
-
-          <div className="pointer-events-auto z-10 mb-2 flex w-full justify-center">
-            <button
-              type="button"
-              className="inline-flex h-7 w-12 items-center justify-center rounded-full border border-stone-200/80 bg-white/94 text-[#9c6b47] shadow-[0_10px_24px_rgba(88,61,39,0.14)] backdrop-blur-md transition hover:bg-[#fff8f1] hover:text-[#5e8b72]"
-              aria-label={
-                clarificationExpanded
-                  ? t(locale, "收起补充信息", "Collapse clarification")
-                  : t(locale, "展开补充信息", "Expand clarification")
-              }
-              onClick={() => setClarificationExpanded(current => !current)}
-            >
-              <ChevronDown
-                className={cn(
-                  "size-4 transition-transform",
-                  clarificationExpanded && "rotate-180"
-                )}
-              />
-            </button>
           </div>
 
-          <div className="pointer-events-none flex w-full shrink-0 justify-center">
+          <div className="pointer-events-none flex w-full shrink-0 justify-center pt-2">
             {launcherDock}
           </div>
         </div>
