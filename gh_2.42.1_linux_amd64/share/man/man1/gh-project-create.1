@@ -1,0 +1,47 @@
+.nh
+.TH "GH-PROJECT-CREATE" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-project-create - Create a project
+
+
+.SH SYNOPSIS
+.PP
+\fBgh project create [flags]\fR
+
+
+.SH OPTIONS
+.TP
+\fB--format\fR \fB<string>\fR
+Output format: {json}
+
+.TP
+\fB-q\fR, \fB--jq\fR \fB<expression>\fR
+Filter JSON output using a jq expression
+
+.TP
+\fB--owner\fR \fB<string>\fR
+Login of the owner. Use "@me" for the current user.
+
+.TP
+\fB-t\fR, \fB--template\fR \fB<string>\fR
+Format JSON output using a Go template; see "gh help formatting"
+
+.TP
+\fB--title\fR \fB<string>\fR
+Title for the project
+
+
+.SH EXAMPLE
+.EX
+# create a new project owned by login monalisa
+gh project create --owner monalisa --title "a new project"
+
+
+.EE
+
+
+.SH SEE ALSO
+.PP
+\fBgh-project(1)\fR

@@ -99,7 +99,9 @@ describe("TerminalPreview 逻辑测试", () => {
           timestamp: new Date().toISOString(),
         });
       }
-      expect(useSandboxStore.getState().logLines.length).toBeLessThanOrEqual(500);
+      expect(useSandboxStore.getState().logLines.length).toBeLessThanOrEqual(
+        500
+      );
     });
   });
 });

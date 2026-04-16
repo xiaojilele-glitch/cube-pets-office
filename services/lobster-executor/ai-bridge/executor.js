@@ -25,7 +25,9 @@ const LOG_FILE = path.join(ARTIFACTS_DIR, "execution.log");
 function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}`;
   console.log(line);
-  try { fs.appendFileSync(LOG_FILE, line + "\n"); } catch {}
+  try {
+    fs.appendFileSync(LOG_FILE, line + "\n");
+  } catch {}
 }
 
 function run(cmd, opts = {}) {
@@ -71,10 +73,11 @@ async function main() {
 
   let plan;
   try {
-    const planResponse = await generate([
-      {
-        role: "system",
-        content: `You are an autonomous code executor running inside a Docker container (Debian-based, with Node.js 20, Python 3, pip, git, curl, wget, jq, build-essential).
+    const planResponse = await generate(
+      [
+        {
+          role: "system",
+          content: `You are an autonomous code executor running inside a Docker container (Debian-based, with Node.js 20, Python 3, pip, git, curl, wget, jq, build-essential).
 
 Your job: analyze the user's task, figure out what needs to be done, install any missing dependencies, write the code to a file, and execute it.
 
@@ -95,22 +98,29 @@ Rules:
 - language: python, javascript, bash, etc.
 - If the task already contains complete code, extract it directly.
 - If the task is vague, write the simplest working solution.
-- Always produce runnable code. Never output placeholder or pseudo-code.`
-      },
-      {
-        role: "user",
-        content: taskContent
-      }
-    ], { temperature: 0.1, maxTokens: 4096 });
+- Always produce runnable code. Never output placeholder or pseudo-code.`,
+        },
+        {
+          role: "user",
+          content: taskContent,
+        },
+      ],
+      { temperature: 0.1, maxTokens: 4096 }
+    );
 
     plan = JSON.parse(planResponse.content);
-    log(`AI plan: language=${plan.language}, file=${plan.code_filename}, setup=${plan.setup_commands?.length || 0} commands`);
+    log(
+      `AI plan: language=${plan.language}, file=${plan.code_filename}, setup=${plan.setup_commands?.length || 0} commands`
+    );
   } catch (err) {
     log(`ERROR: AI planning failed: ${err.message}`);
     // Fallback: try to extract code directly from task
     plan = fallbackPlan(taskContent);
     if (!plan) {
-      writeResult({ success: false, error: "AI planning failed and no code could be extracted" });
+      writeResult({
+        success: false,
+        error: "AI planning failed and no code could be extracted",
+      });
       process.exit(1);
     }
     log(`Using fallback plan: ${plan.language} ${plan.code_filename}`);
@@ -161,10 +171,40 @@ function fallbackPlan(content) {
   if (pyMatch) {
     // Auto-detect imports and generate pip install commands
     const code = pyMatch[1].trim();
-    const imports = [...code.matchAll(/^(?:import|from)\s+(\w+)/gm)].map(m => m[1]);
-    const stdlibs = new Set(["os", "sys", "json", "re", "math", "datetime", "collections", "itertools", "functools", "pathlib", "typing", "io", "csv", "time", "random", "hashlib", "base64", "urllib", "http", "subprocess", "shutil", "glob", "string", "textwrap", "copy", "pprint"]);
+    const imports = [...code.matchAll(/^(?:import|from)\s+(\w+)/gm)].map(
+      m => m[1]
+    );
+    const stdlibs = new Set([
+      "os",
+      "sys",
+      "json",
+      "re",
+      "math",
+      "datetime",
+      "collections",
+      "itertools",
+      "functools",
+      "pathlib",
+      "typing",
+      "io",
+      "csv",
+      "time",
+      "random",
+      "hashlib",
+      "base64",
+      "urllib",
+      "http",
+      "subprocess",
+      "shutil",
+      "glob",
+      "string",
+      "textwrap",
+      "copy",
+      "pprint",
+    ]);
     const thirdParty = imports.filter(m => !stdlibs.has(m));
-    const setup = thirdParty.length > 0 ? [`pip install ${thirdParty.join(" ")}`] : [];
+    const setup =
+      thirdParty.length > 0 ? [`pip install ${thirdParty.join(" ")}`] : [];
     return {
       setup_commands: setup,
       code_filename: "solution.py",
@@ -203,14 +243,19 @@ function fallbackPlan(content) {
 
 function writeResult(result) {
   try {
-    if (!fs.existsSync(ARTIFACTS_DIR)) fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
-    fs.writeFileSync(RESULT_FILE, JSON.stringify(result, null, 2) + "\n", "utf-8");
+    if (!fs.existsSync(ARTIFACTS_DIR))
+      fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
+    fs.writeFileSync(
+      RESULT_FILE,
+      JSON.stringify(result, null, 2) + "\n",
+      "utf-8"
+    );
   } catch (err) {
     log(`WARNING: Failed to write result: ${err.message}`);
   }
 }
 
-main().catch((err) => {
+main().catch(err => {
   log(`FATAL: ${err.message}`);
   writeResult({ success: false, error: err.message });
   process.exit(1);

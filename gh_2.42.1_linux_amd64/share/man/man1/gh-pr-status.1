@@ -1,0 +1,40 @@
+.nh
+.TH "GH-PR-STATUS" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-pr-status - Show status of relevant pull requests
+
+
+.SH SYNOPSIS
+.PP
+\fBgh pr status [flags]\fR
+
+
+.SH OPTIONS
+.TP
+\fB-c\fR, \fB--conflict-status\fR
+Display the merge conflict status of each pull request
+
+.TP
+\fB-q\fR, \fB--jq\fR \fB<expression>\fR
+Filter JSON output using a jq expression
+
+.TP
+\fB--json\fR \fB<fields>\fR
+Output JSON with the specified fields
+
+.TP
+\fB-t\fR, \fB--template\fR \fB<string>\fR
+Format JSON output using a Go template; see "gh help formatting"
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH SEE ALSO
+.PP
+\fBgh-pr(1)\fR

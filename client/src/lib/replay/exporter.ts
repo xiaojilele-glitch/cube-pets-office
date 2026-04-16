@@ -3,16 +3,16 @@ import type {
   ExecutionTimeline,
   PerformanceMetrics,
   CostSummary,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
 /* ─── Report Types ─── */
 
 export type ReportSection =
-  | 'summary'
-  | 'events'
-  | 'performance'
-  | 'cost'
-  | 'anomalies';
+  | "summary"
+  | "events"
+  | "performance"
+  | "cost"
+  | "anomalies";
 
 export interface ReportOptions {
   title?: string;
@@ -32,15 +32,15 @@ export interface ReportData {
 /* ─── CSV Helpers ─── */
 
 const CSV_HEADERS = [
-  'eventId',
-  'timestamp',
-  'eventType',
-  'sourceAgent',
-  'targetAgent',
+  "eventId",
+  "timestamp",
+  "eventType",
+  "sourceAgent",
+  "targetAgent",
 ] as const;
 
 function escapeCsvField(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
@@ -52,10 +52,10 @@ function eventToCsvRow(event: ExecutionEvent): string {
     String(event.timestamp),
     event.eventType,
     event.sourceAgent,
-    event.targetAgent ?? '',
+    event.targetAgent ?? "",
   ]
     .map(escapeCsvField)
-    .join(',');
+    .join(",");
 }
 
 /* ─── Report Content Builders ─── */
@@ -73,23 +73,23 @@ function buildSummarySection(timeline: ExecutionTimeline): string {
     `Duration: ${timeline.totalDuration}ms`,
     `Events: ${timeline.eventCount}`,
     `Agents: ${agents.size}`,
-    `Event Types: ${Array.from(types).join(', ')}`,
+    `Event Types: ${Array.from(types).join(", ")}`,
     `Time Range: ${new Date(timeline.startTime).toISOString()} — ${new Date(timeline.endTime).toISOString()}`,
-  ].join('\n');
+  ].join("\n");
 }
 
 function buildEventsSection(events: ExecutionEvent[]): string {
   return events
     .slice(0, 50) // cap for readability
     .map(
-      (e) =>
-        `[${new Date(e.timestamp).toISOString()}] ${e.eventType} | ${e.sourceAgent}${e.targetAgent ? ` → ${e.targetAgent}` : ''}`,
+      e =>
+        `[${new Date(e.timestamp).toISOString()}] ${e.eventType} | ${e.sourceAgent}${e.targetAgent ? ` → ${e.targetAgent}` : ""}`
     )
-    .join('\n');
+    .join("\n");
 }
 
 function buildPerformanceSection(metrics?: PerformanceMetrics): string {
-  if (!metrics) return 'No performance data available.';
+  if (!metrics) return "No performance data available.";
   const lines = [
     `Total Duration: ${metrics.totalDuration}ms`,
     `LLM Calls: ${metrics.llmMetrics.callCount}`,
@@ -98,42 +98,45 @@ function buildPerformanceSection(metrics?: PerformanceMetrics): string {
     `Max Concurrent Agents: ${metrics.concurrency.maxConcurrentAgents}`,
   ];
   if (metrics.stageMetrics.length > 0) {
-    lines.push('Stages:');
+    lines.push("Stages:");
     for (const s of metrics.stageMetrics) {
       lines.push(
-        `  ${s.stageKey}: ${s.duration}ms${s.isBottleneck ? ' [BOTTLENECK]' : ''}`,
+        `  ${s.stageKey}: ${s.duration}ms${s.isBottleneck ? " [BOTTLENECK]" : ""}`
       );
     }
   }
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function buildCostSection(cost?: CostSummary): string {
-  if (!cost) return 'No cost data available.';
+  if (!cost) return "No cost data available.";
   const lines = [`Total Cost: $${cost.totalCost.toFixed(4)}`];
   const agentEntries = Object.entries(cost.byAgent);
   if (agentEntries.length > 0) {
-    lines.push('By Agent:');
+    lines.push("By Agent:");
     for (const [agent, c] of agentEntries) {
       lines.push(`  ${agent}: $${c.toFixed(4)}`);
     }
   }
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 function buildAnomaliesSection(cost?: CostSummary): string {
-  if (!cost || cost.anomalies.length === 0) return 'No anomalies detected.';
+  if (!cost || cost.anomalies.length === 0) return "No anomalies detected.";
   return cost.anomalies
-    .map((a) => `Event ${a.eventId}: $${a.cost.toFixed(4)} (threshold: $${a.threshold.toFixed(4)}) — ${a.reason}`)
-    .join('\n');
+    .map(
+      a =>
+        `Event ${a.eventId}: $${a.cost.toFixed(4)} (threshold: $${a.threshold.toFixed(4)}) — ${a.reason}`
+    )
+    .join("\n");
 }
 
 const SECTION_BUILDERS: Record<
   ReportSection,
   (timeline: ExecutionTimeline, opts: ReportOptions) => string
 > = {
-  summary: (tl) => buildSummarySection(tl),
-  events: (tl) => buildEventsSection(tl.events),
+  summary: tl => buildSummarySection(tl),
+  events: tl => buildEventsSection(tl.events),
   performance: (_, opts) => buildPerformanceSection(opts.performanceMetrics),
   cost: (_, opts) => buildCostSection(opts.costSummary),
   anomalies: (_, opts) => buildAnomaliesSection(opts.costSummary),
@@ -170,9 +173,9 @@ export class ReplayExporter {
    * Requirement 6.6
    */
   exportCSV(timeline: ExecutionTimeline): string {
-    const header = CSV_HEADERS.join(',');
+    const header = CSV_HEADERS.join(",");
     const rows = timeline.events.map(eventToCsvRow);
-    return [header, ...rows].join('\n');
+    return [header, ...rows].join("\n");
   }
 
   /**
@@ -232,7 +235,7 @@ if(DATA.length>0)render();
    */
   generateReport(
     timeline: ExecutionTimeline,
-    options: ReportOptions,
+    options: ReportOptions
   ): ReportData {
     const title = options.title ?? `Replay Report: ${timeline.missionId}`;
     const content: Partial<Record<ReportSection, string>> = {};
@@ -259,11 +262,11 @@ if(DATA.length>0)render();
    */
   exportReportHTML(report: ReportData): string {
     const sectionHTML = report.sections
-      .map((s) => {
-        const body = report.content[s] ?? '';
+      .map(s => {
+        const body = report.content[s] ?? "";
         return `<section><h2>${s.charAt(0).toUpperCase() + s.slice(1)}</h2><pre>${body}</pre></section>`;
       })
-      .join('\n');
+      .join("\n");
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -294,18 +297,23 @@ ${sectionHTML}
   exportReportMarkdown(report: ReportData): string {
     const lines: string[] = [
       `# ${report.title}`,
-      '',
+      "",
       `**Mission:** ${report.missionId}  `,
       `**Generated:** ${new Date(report.generatedAt).toISOString()}`,
-      '',
+      "",
     ];
 
     for (const section of report.sections) {
-      const body = report.content[section] ?? '';
-      lines.push(`## ${section.charAt(0).toUpperCase() + section.slice(1)}`, '', body, '');
+      const body = report.content[section] ?? "";
+      lines.push(
+        `## ${section.charAt(0).toUpperCase() + section.slice(1)}`,
+        "",
+        body,
+        ""
+      );
     }
 
-    lines.push('---', '*Generated by Collaboration Replay System*');
-    return lines.join('\n');
+    lines.push("---", "*Generated by Collaboration Replay System*");
+    return lines.join("\n");
   }
 }

@@ -12,9 +12,13 @@
  *   architecture_decision  → PassthroughChunker（不分块）
  */
 
-import type { SourceType, ChunkRecord, ChunkMetadata } from '../../../shared/rag/contracts.js';
-import { SOURCE_TYPES } from '../../../shared/rag/contracts.js';
-import { getRAGConfig, type ChunkingConfig } from '../config.js';
+import type {
+  SourceType,
+  ChunkRecord,
+  ChunkMetadata,
+} from "../../../shared/rag/contracts.js";
+import { SOURCE_TYPES } from "../../../shared/rag/contracts.js";
+import { getRAGConfig, type ChunkingConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // Chunker 接口
@@ -34,13 +38,13 @@ export interface Chunker {
  * 与设计文档 §2 "Chunker 接口族" 一致。
  */
 const DEFAULT_STRATEGY_MAP: Record<SourceType, string> = {
-  code_snippet: 'syntax_aware',
-  conversation: 'conversation_turn',
-  document: 'semantic_paragraph',
-  task_result: 'sliding_window',
-  mission_log: 'sliding_window',
-  architecture_decision: 'passthrough',
-  bug_report: 'sliding_window',
+  code_snippet: "syntax_aware",
+  conversation: "conversation_turn",
+  document: "semantic_paragraph",
+  task_result: "sliding_window",
+  mission_log: "sliding_window",
+  architecture_decision: "passthrough",
+  bug_report: "sliding_window",
 };
 
 export class ChunkRouter {
@@ -136,12 +140,12 @@ export class ChunkRouter {
     if (!entry) {
       throw new Error(
         `No Chunker registered for strategy "${strategy}". ` +
-        `Registered: [${this.registeredStrategies().join(', ')}]`,
+          `Registered: [${this.registeredStrategies().join(", ")}]`
       );
     }
 
     // 如果是工厂函数，调用并缓存
-    const chunker = typeof entry === 'function' ? entry() : entry;
+    const chunker = typeof entry === "function" ? entry() : entry;
     this.resolved.set(strategy, chunker);
     return chunker;
   }

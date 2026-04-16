@@ -7,7 +7,7 @@ import { createHmac } from "node:crypto";
 export function signPayload(
   secret: string,
   timestamp: string,
-  rawBody: string,
+  rawBody: string
 ): string {
   return createHmac("sha256", secret)
     .update(`${timestamp}.${rawBody}`)
@@ -24,7 +24,7 @@ export function createCallbackHeaders(
   executorId: string,
   secret: string,
   rawBody: string,
-  now?: () => Date,
+  now?: () => Date
 ): Record<string, string> {
   const timestamp = (now?.() ?? new Date()).toISOString();
   const signature = signPayload(secret, timestamp, rawBody);

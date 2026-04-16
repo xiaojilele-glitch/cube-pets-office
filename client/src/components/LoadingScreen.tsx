@@ -1,64 +1,64 @@
-import { useI18n } from '@/i18n';
-import { useAppStore } from '@/lib/store';
+import { useI18n } from "@/i18n";
+import { useAppStore } from "@/lib/store";
 
 const PIXEL_SIZE = 8;
 const PIXEL_PET_CELLS = [
-  { x: 3, y: 0, color: '#D6A16F' },
-  { x: 6, y: 0, color: '#D6A16F' },
-  { x: 2, y: 1, color: '#D6A16F' },
-  { x: 3, y: 1, color: '#D6A16F' },
-  { x: 4, y: 1, color: '#D6A16F' },
-  { x: 5, y: 1, color: '#D6A16F' },
-  { x: 6, y: 1, color: '#D6A16F' },
-  { x: 7, y: 1, color: '#D6A16F' },
-  { x: 2, y: 2, color: '#D6A16F' },
-  { x: 3, y: 2, color: '#E4B788' },
-  { x: 4, y: 2, color: '#E4B788' },
-  { x: 5, y: 2, color: '#E4B788' },
-  { x: 6, y: 2, color: '#E4B788' },
-  { x: 7, y: 2, color: '#D6A16F' },
-  { x: 1, y: 3, color: '#D6A16F' },
-  { x: 2, y: 3, color: '#E4B788' },
-  { x: 3, y: 3, color: '#EBC49B' },
-  { x: 4, y: 3, color: '#EBC49B' },
-  { x: 5, y: 3, color: '#EBC49B' },
-  { x: 6, y: 3, color: '#EBC49B' },
-  { x: 7, y: 3, color: '#E4B788' },
-  { x: 8, y: 3, color: '#D6A16F' },
-  { x: 1, y: 4, color: '#D6A16F' },
-  { x: 2, y: 4, color: '#E4B788' },
-  { x: 3, y: 4, color: '#EBC49B' },
-  { x: 4, y: 4, color: '#FFFFFF' },
-  { x: 5, y: 4, color: '#EBC49B' },
-  { x: 6, y: 4, color: '#FFFFFF' },
-  { x: 7, y: 4, color: '#EBC49B' },
-  { x: 8, y: 4, color: '#D6A16F' },
-  { x: 1, y: 5, color: '#D6A16F' },
-  { x: 2, y: 5, color: '#E4B788' },
-  { x: 3, y: 5, color: '#EBC49B' },
-  { x: 4, y: 5, color: '#3E2B1D' },
-  { x: 5, y: 5, color: '#EBC49B' },
-  { x: 6, y: 5, color: '#3E2B1D' },
-  { x: 7, y: 5, color: '#EBC49B' },
-  { x: 8, y: 5, color: '#D6A16F' },
-  { x: 1, y: 6, color: '#D6A16F' },
-  { x: 2, y: 6, color: '#E4B788' },
-  { x: 3, y: 6, color: '#EBC49B' },
-  { x: 4, y: 6, color: '#EBC49B' },
-  { x: 5, y: 6, color: '#EBC49B' },
-  { x: 6, y: 6, color: '#EBC49B' },
-  { x: 7, y: 6, color: '#EBC49B' },
-  { x: 8, y: 6, color: '#D6A16F' },
-  { x: 2, y: 7, color: '#D6A16F' },
-  { x: 3, y: 7, color: '#E4B788' },
-  { x: 4, y: 7, color: '#EBC49B' },
-  { x: 5, y: 7, color: '#EBC49B' },
-  { x: 6, y: 7, color: '#E4B788' },
-  { x: 7, y: 7, color: '#D6A16F' },
-  { x: 3, y: 8, color: '#D6A16F' },
-  { x: 4, y: 8, color: '#6D4B32' },
-  { x: 5, y: 8, color: '#6D4B32' },
-  { x: 6, y: 8, color: '#D6A16F' },
+  { x: 3, y: 0, color: "#D6A16F" },
+  { x: 6, y: 0, color: "#D6A16F" },
+  { x: 2, y: 1, color: "#D6A16F" },
+  { x: 3, y: 1, color: "#D6A16F" },
+  { x: 4, y: 1, color: "#D6A16F" },
+  { x: 5, y: 1, color: "#D6A16F" },
+  { x: 6, y: 1, color: "#D6A16F" },
+  { x: 7, y: 1, color: "#D6A16F" },
+  { x: 2, y: 2, color: "#D6A16F" },
+  { x: 3, y: 2, color: "#E4B788" },
+  { x: 4, y: 2, color: "#E4B788" },
+  { x: 5, y: 2, color: "#E4B788" },
+  { x: 6, y: 2, color: "#E4B788" },
+  { x: 7, y: 2, color: "#D6A16F" },
+  { x: 1, y: 3, color: "#D6A16F" },
+  { x: 2, y: 3, color: "#E4B788" },
+  { x: 3, y: 3, color: "#EBC49B" },
+  { x: 4, y: 3, color: "#EBC49B" },
+  { x: 5, y: 3, color: "#EBC49B" },
+  { x: 6, y: 3, color: "#EBC49B" },
+  { x: 7, y: 3, color: "#E4B788" },
+  { x: 8, y: 3, color: "#D6A16F" },
+  { x: 1, y: 4, color: "#D6A16F" },
+  { x: 2, y: 4, color: "#E4B788" },
+  { x: 3, y: 4, color: "#EBC49B" },
+  { x: 4, y: 4, color: "#FFFFFF" },
+  { x: 5, y: 4, color: "#EBC49B" },
+  { x: 6, y: 4, color: "#FFFFFF" },
+  { x: 7, y: 4, color: "#EBC49B" },
+  { x: 8, y: 4, color: "#D6A16F" },
+  { x: 1, y: 5, color: "#D6A16F" },
+  { x: 2, y: 5, color: "#E4B788" },
+  { x: 3, y: 5, color: "#EBC49B" },
+  { x: 4, y: 5, color: "#3E2B1D" },
+  { x: 5, y: 5, color: "#EBC49B" },
+  { x: 6, y: 5, color: "#3E2B1D" },
+  { x: 7, y: 5, color: "#EBC49B" },
+  { x: 8, y: 5, color: "#D6A16F" },
+  { x: 1, y: 6, color: "#D6A16F" },
+  { x: 2, y: 6, color: "#E4B788" },
+  { x: 3, y: 6, color: "#EBC49B" },
+  { x: 4, y: 6, color: "#EBC49B" },
+  { x: 5, y: 6, color: "#EBC49B" },
+  { x: 6, y: 6, color: "#EBC49B" },
+  { x: 7, y: 6, color: "#EBC49B" },
+  { x: 8, y: 6, color: "#D6A16F" },
+  { x: 2, y: 7, color: "#D6A16F" },
+  { x: 3, y: 7, color: "#E4B788" },
+  { x: 4, y: 7, color: "#EBC49B" },
+  { x: 5, y: 7, color: "#EBC49B" },
+  { x: 6, y: 7, color: "#E4B788" },
+  { x: 7, y: 7, color: "#D6A16F" },
+  { x: 3, y: 8, color: "#D6A16F" },
+  { x: 4, y: 8, color: "#6D4B32" },
+  { x: 5, y: 8, color: "#6D4B32" },
+  { x: 6, y: 8, color: "#D6A16F" },
 ];
 
 export function LoadingScreen() {
@@ -82,11 +82,11 @@ export function LoadingScreen() {
           <div className="absolute inset-4 rounded-[28px] bg-cyan-500/10 blur-2xl" />
           <div
             className="glass-panel relative h-[92px] w-[92px] rounded-[24px]"
-            style={{ animation: 'petFloat 1.8s ease-in-out infinite' }}
+            style={{ animation: "petFloat 1.8s ease-in-out infinite" }}
           >
             <div
               className="absolute left-1/2 top-1/2 h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2"
-              style={{ imageRendering: 'pixelated' }}
+              style={{ imageRendering: "pixelated" }}
             >
               {PIXEL_PET_CELLS.map((cell, index) => (
                 <span
@@ -98,7 +98,7 @@ export function LoadingScreen() {
                     width: `${PIXEL_SIZE}px`,
                     height: `${PIXEL_SIZE}px`,
                     backgroundColor: cell.color,
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.18)",
                   }}
                 />
               ))}
@@ -107,7 +107,7 @@ export function LoadingScreen() {
 
           <div
             className="absolute bottom-1 left-1/2 h-4 w-20 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-md"
-            style={{ animation: 'shadowPulse 1.8s ease-in-out infinite' }}
+            style={{ animation: "shadowPulse 1.8s ease-in-out infinite" }}
           />
         </div>
 
@@ -118,7 +118,7 @@ export function LoadingScreen() {
 
         <h2
           className="mb-2 text-[28px] font-bold text-white/90"
-          style={{ fontFamily: 'var(--font-display)' }}
+          style={{ fontFamily: "var(--font-display)" }}
         >
           {copy.loading.title}
         </h2>

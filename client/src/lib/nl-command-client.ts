@@ -45,7 +45,7 @@ import {
 
 function withQuery(
   path: string,
-  query?: Record<string, string | number | boolean | null | undefined>,
+  query?: Record<string, string | number | boolean | null | undefined>
 ): string {
   if (!query) return path;
   const params = new URLSearchParams();
@@ -82,7 +82,7 @@ function get<T>(url: string): Promise<T> {
 }
 
 function toQueryRecord<T extends object>(
-  value?: T,
+  value?: T
 ): Record<string, string | number | boolean | null | undefined> | undefined {
   return value as
     | Record<string, string | number | boolean | null | undefined>
@@ -90,13 +90,13 @@ function toQueryRecord<T extends object>(
 }
 
 export function submitCommand(
-  req: SubmitCommandRequest,
+  req: SubmitCommandRequest
 ): Promise<SubmitCommandResponse> {
   return post(NL_COMMAND_API_ROUTES.commands, req);
 }
 
 export function listCommands(
-  params?: ListCommandsRequest,
+  params?: ListCommandsRequest
 ): Promise<ListCommandsResponse> {
   return get(withQuery(NL_COMMAND_API_ROUTES.commands, toQueryRecord(params)));
 }
@@ -106,14 +106,14 @@ export function getCommand(id: string): Promise<GetCommandResponse> {
 }
 
 export function previewClarificationQuestions(
-  req: ClarificationPreviewRequest,
+  req: ClarificationPreviewRequest
 ): Promise<ClarificationPreviewResponse> {
   return post(NL_COMMAND_API_ROUTES.clarificationPreview, req);
 }
 
 export function submitClarification(
   commandId: string,
-  req: SubmitClarificationRequest,
+  req: SubmitClarificationRequest
 ): Promise<SubmitClarificationResponse> {
   return post(NL_COMMAND_API_ROUTES.commandClarify(commandId), req);
 }
@@ -128,14 +128,14 @@ export function getPlan(planId: string): Promise<GetPlanResponse> {
 
 export function approvePlan(
   planId: string,
-  req: ApprovePlanRequest,
+  req: ApprovePlanRequest
 ): Promise<ApprovePlanResponse> {
   return post(NL_COMMAND_API_ROUTES.planApprove(planId), req);
 }
 
 export function adjustPlan(
   planId: string,
-  req: AdjustPlanRequest,
+  req: AdjustPlanRequest
 ): Promise<AdjustPlanResponse> {
   return post(NL_COMMAND_API_ROUTES.planAdjust(planId), req);
 }
@@ -145,13 +145,13 @@ export function getDashboard(): Promise<DashboardResponse> {
 }
 
 export function listAlerts(
-  params?: ListAlertsRequest,
+  params?: ListAlertsRequest
 ): Promise<ListAlertsResponse> {
   return get(withQuery(NL_COMMAND_API_ROUTES.alerts, toQueryRecord(params)));
 }
 
 export function createAlertRule(
-  req: CreateAlertRuleRequest,
+  req: CreateAlertRuleRequest
 ): Promise<CreateAlertRuleResponse> {
   return post(NL_COMMAND_API_ROUTES.alertRules, req);
 }
@@ -161,26 +161,26 @@ export function getRisks(planId: string): Promise<GetRisksResponse> {
 }
 
 export function getSuggestions(
-  planId: string,
+  planId: string
 ): Promise<GetSuggestionsResponse> {
   return get(NL_COMMAND_API_ROUTES.planSuggestions(planId));
 }
 
 export function applySuggestion(
   planId: string,
-  req: ApplySuggestionRequest,
+  req: ApplySuggestionRequest
 ): Promise<ApplySuggestionResponse> {
   return post(NL_COMMAND_API_ROUTES.planApplySuggestion(planId), req);
 }
 
 export function addComment(
-  req: AddCommentRequest,
+  req: AddCommentRequest
 ): Promise<AddCommentResponse> {
   return post(NL_COMMAND_API_ROUTES.comments, req);
 }
 
 export function listComments(
-  params: ListCommentsRequest,
+  params: ListCommentsRequest
 ): Promise<ListCommentsResponse> {
   return get(withQuery(NL_COMMAND_API_ROUTES.comments, toQueryRecord(params)));
 }
@@ -190,37 +190,37 @@ export function getReport(reportId: string): Promise<GetReportResponse> {
 }
 
 export function generateReport(
-  req: GenerateReportRequest,
+  req: GenerateReportRequest
 ): Promise<GenerateReportResponse> {
   return post(NL_COMMAND_API_ROUTES.reportsGenerate, req);
 }
 
 export function listHistory(
-  params?: ListHistoryRequest,
+  params?: ListHistoryRequest
 ): Promise<ListHistoryResponse> {
   return get(withQuery(NL_COMMAND_API_ROUTES.history, toQueryRecord(params)));
 }
 
 export function listTemplates(
-  params?: ListTemplatesRequest,
+  params?: ListTemplatesRequest
 ): Promise<ListTemplatesResponse> {
   return get(withQuery(NL_COMMAND_API_ROUTES.templates, toQueryRecord(params)));
 }
 
 export function saveTemplate(
-  req: SaveTemplateRequest,
+  req: SaveTemplateRequest
 ): Promise<SaveTemplateResponse> {
   return post(NL_COMMAND_API_ROUTES.templates, req);
 }
 
 export function listAudit(
-  params?: ListAuditRequest,
+  params?: ListAuditRequest
 ): Promise<ListAuditResponse> {
   return get(withQuery(NL_COMMAND_API_ROUTES.audit, toQueryRecord(params)));
 }
 
 export function exportAudit(
-  req: ExportAuditRequest,
+  req: ExportAuditRequest
 ): Promise<ExportAuditResponse> {
   return post(NL_COMMAND_API_ROUTES.auditExport, req);
 }

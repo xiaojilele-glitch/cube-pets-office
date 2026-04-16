@@ -9,7 +9,7 @@ export class RingBuffer<T> {
 
   constructor(private readonly capacity: number) {
     if (capacity < 1 || !Number.isInteger(capacity)) {
-      throw new RangeError('RingBuffer capacity must be a positive integer');
+      throw new RangeError("RingBuffer capacity must be a positive integer");
     }
     this.buffer = new Array(capacity);
   }

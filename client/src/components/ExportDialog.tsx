@@ -58,15 +58,14 @@ export function ExportDialog({
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(
-          body?.error ?? `Export failed (${res.status})`
-        );
+        throw new Error(body?.error ?? `Export failed (${res.status})`);
       }
 
       const blob = await res.blob();
       const filename =
-        res.headers.get("Content-Disposition")?.match(/filename="?(.+?)"?$/)?.[1] ??
-        `cube-export-${framework}.zip`;
+        res.headers
+          .get("Content-Disposition")
+          ?.match(/filename="?(.+?)"?$/)?.[1] ?? `cube-export-${framework}.zip`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -102,7 +101,7 @@ export function ExportDialog({
         <div className="grid gap-3 px-6 py-5">
           <p className="text-sm font-medium text-stone-700">Target Framework</p>
           <div className="grid grid-cols-2 gap-2">
-            {FRAMEWORK_OPTIONS.map((opt) => (
+            {FRAMEWORK_OPTIONS.map(opt => (
               <button
                 key={opt.value}
                 type="button"

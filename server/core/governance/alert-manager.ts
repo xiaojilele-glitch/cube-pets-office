@@ -15,7 +15,7 @@
  * @see Requirements 3.1, 3.2, 3.3, 3.4, 3.6
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 import type {
   AlertThresholdConfig,
@@ -23,18 +23,18 @@ import type {
   AlertResponseStrategy,
   BudgetAlert,
   MissionBudget,
-} from '../../../shared/cost-governance.js';
-import { auditTrail } from './audit-trail.js';
+} from "../../../shared/cost-governance.js";
+import { auditTrail } from "./audit-trail.js";
 
 // ---------------------------------------------------------------------------
 // Default thresholds (used when MissionBudget.alertThresholds is empty)
 // ---------------------------------------------------------------------------
 
 export const DEFAULT_ALERT_THRESHOLDS: AlertThresholdConfig[] = [
-  { percent: 50, responseStrategy: 'LOG' },
-  { percent: 75, responseStrategy: 'REDUCE_CONCURRENCY' },
-  { percent: 90, responseStrategy: 'DOWNGRADE_MODEL' },
-  { percent: 100, responseStrategy: 'PAUSE_TASK' },
+  { percent: 50, responseStrategy: "LOG" },
+  { percent: 75, responseStrategy: "REDUCE_CONCURRENCY" },
+  { percent: 90, responseStrategy: "DOWNGRADE_MODEL" },
+  { percent: 100, responseStrategy: "PAUSE_TASK" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -42,12 +42,11 @@ export const DEFAULT_ALERT_THRESHOLDS: AlertThresholdConfig[] = [
 // ---------------------------------------------------------------------------
 
 const PERCENT_TO_ALERT_TYPE: { percent: number; type: AlertType }[] = [
-  { percent: 50, type: 'WARNING' },
-  { percent: 75, type: 'CAUTION' },
-  { percent: 90, type: 'CRITICAL' },
-  { percent: 100, type: 'EXCEEDED' },
+  { percent: 50, type: "WARNING" },
+  { percent: 75, type: "CAUTION" },
+  { percent: 90, type: "CRITICAL" },
+  { percent: 100, type: "EXCEEDED" },
 ];
-
 
 /**
  * Map a threshold percent to the closest AlertType.
@@ -61,7 +60,7 @@ function percentToAlertType(percent: number): AlertType {
       return PERCENT_TO_ALERT_TYPE[i].type;
     }
   }
-  return 'WARNING';
+  return "WARNING";
 }
 
 // ---------------------------------------------------------------------------
@@ -88,7 +87,7 @@ export class AlertManager {
   evaluate(
     missionId: string,
     currentCost: number,
-    budget: MissionBudget,
+    budget: MissionBudget
   ): BudgetAlert[] {
     const thresholds: AlertThresholdConfig[] =
       budget.alertThresholds.length > 0
@@ -133,7 +132,7 @@ export class AlertManager {
 
         // Record to audit trail
         auditTrail.record({
-          action: 'ALERT_TRIGGERED',
+          action: "ALERT_TRIGGERED",
           missionId,
           details: {
             alertId: alert.alertId,
@@ -164,29 +163,29 @@ export class AlertManager {
    */
   executeResponse(alert: BudgetAlert): void {
     switch (alert.action) {
-      case 'LOG':
+      case "LOG":
         console.warn(
-          `[AlertManager] WARNING — Mission ${alert.missionId}: cost ${alert.currentCost} reached ${alert.threshold}% of budget`,
+          `[AlertManager] WARNING — Mission ${alert.missionId}: cost ${alert.currentCost} reached ${alert.threshold}% of budget`
         );
         break;
-      case 'REDUCE_CONCURRENCY':
+      case "REDUCE_CONCURRENCY":
         console.warn(
-          `[AlertManager] CAUTION — Mission ${alert.missionId}: reducing concurrency (${alert.threshold}%)`,
+          `[AlertManager] CAUTION — Mission ${alert.missionId}: reducing concurrency (${alert.threshold}%)`
         );
         break;
-      case 'DOWNGRADE_MODEL':
+      case "DOWNGRADE_MODEL":
         console.warn(
-          `[AlertManager] CRITICAL — Mission ${alert.missionId}: triggering model downgrade (${alert.threshold}%)`,
+          `[AlertManager] CRITICAL — Mission ${alert.missionId}: triggering model downgrade (${alert.threshold}%)`
         );
         break;
-      case 'PAUSE_TASK':
+      case "PAUSE_TASK":
         console.warn(
-          `[AlertManager] EXCEEDED — Mission ${alert.missionId}: pausing task (${alert.threshold}%)`,
+          `[AlertManager] EXCEEDED — Mission ${alert.missionId}: pausing task (${alert.threshold}%)`
         );
         break;
       default:
         console.warn(
-          `[AlertManager] Unknown strategy "${alert.action}" for alert ${alert.alertId}`,
+          `[AlertManager] Unknown strategy "${alert.action}" for alert ${alert.alertId}`
         );
     }
   }
@@ -201,11 +200,11 @@ export class AlertManager {
    */
   notify(alert: BudgetAlert): void {
     // Dynamic import to avoid circular dependency and allow silent skip
-    import('../socket.js')
+    import("../socket.js")
       .then(({ getSocketIO }) => {
         const io = getSocketIO();
         if (io) {
-          io.emit('cost_governance.alert', alert);
+          io.emit("cost_governance.alert", alert);
         }
       })
       .catch(() => {
@@ -222,7 +221,7 @@ export class AlertManager {
    */
   getActiveAlerts(missionId: string): BudgetAlert[] {
     const result: BudgetAlert[] = [];
-    this.activeAlerts.forEach((alert) => {
+    this.activeAlerts.forEach(alert => {
       if (alert.missionId === missionId && !alert.resolved) {
         result.push(alert);
       }

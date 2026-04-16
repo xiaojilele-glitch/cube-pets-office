@@ -116,17 +116,17 @@ client/src/components/knowledge/
 interface EntityTypeDefinition {
   name: string;
   description: string;
-  source: 'core' | 'custom';
-  extendedAttributes: string[];  // 该类型特有的扩展属性名
+  source: "core" | "custom";
+  extendedAttributes: string[]; // 该类型特有的扩展属性名
   registeredAt: string;
 }
 
 interface RelationTypeDefinition {
   name: string;
   description: string;
-  source: 'core' | 'custom';
-  sourceEntityTypes: string[];   // 允许的源实体类型（空数组表示不限）
-  targetEntityTypes: string[];   // 允许的目标实体类型
+  source: "core" | "custom";
+  sourceEntityTypes: string[]; // 允许的源实体类型（空数组表示不限）
+  targetEntityTypes: string[]; // 允许的目标实体类型
   registeredAt: string;
 }
 
@@ -144,8 +144,12 @@ class OntologyRegistry {
   getRelationType(name: string): RelationTypeDefinition | undefined;
 
   // 扩展
-  registerEntityType(definition: Omit<EntityTypeDefinition, 'source' | 'registeredAt'>): void;
-  registerRelationType(definition: Omit<RelationTypeDefinition, 'source' | 'registeredAt'>): void;
+  registerEntityType(
+    definition: Omit<EntityTypeDefinition, "source" | "registeredAt">
+  ): void;
+  registerRelationType(
+    definition: Omit<RelationTypeDefinition, "source" | "registeredAt">
+  ): void;
 
   // 事件
   onChange(listener: () => void): () => void;
@@ -170,14 +174,14 @@ interface Entity {
   description: string;
   createdAt: string;
   updatedAt: string;
-  source: 'agent_extracted' | 'user_defined' | 'code_analysis' | 'llm_inferred';
-  confidence: number;          // 0.0 - 1.0
+  source: "agent_extracted" | "user_defined" | "code_analysis" | "llm_inferred";
+  confidence: number; // 0.0 - 1.0
   projectId: string;
-  status: 'active' | 'deprecated' | 'archived';
+  status: "active" | "deprecated" | "archived";
   needsReview: boolean;
   linkedMemoryIds: string[];
   deprecationReason?: string;
-  extendedAttributes: Record<string, unknown>;  // 类型特有属性
+  extendedAttributes: Record<string, unknown>; // 类型特有属性
 }
 
 interface Relation {
@@ -185,10 +189,10 @@ interface Relation {
   relationType: string;
   sourceEntityId: string;
   targetEntityId: string;
-  weight: number;              // 0.0 - 1.0
+  weight: number; // 0.0 - 1.0
   evidence: string;
   createdAt: string;
-  source: 'agent_extracted' | 'user_defined' | 'code_analysis' | 'llm_inferred';
+  source: "agent_extracted" | "user_defined" | "code_analysis" | "llm_inferred";
   confidence: number;
   needsReview: boolean;
 }
@@ -207,22 +211,45 @@ class GraphStore {
   constructor();
 
   // 实体 CRUD
-  createEntity(entity: Omit<Entity, 'entityId' | 'createdAt' | 'updatedAt' | 'status'>): Entity;
+  createEntity(
+    entity: Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
+  ): Entity;
   getEntity(entityId: string): Entity | undefined;
   findEntities(filters: EntityFilters): Entity[];
   updateEntity(entityId: string, updates: Partial<Entity>): Entity | undefined;
-  mergeEntity(entity: Partial<Entity> & { entityType: string; projectId: string; name: string }): Entity;
+  mergeEntity(
+    entity: Partial<Entity> & {
+      entityType: string;
+      projectId: string;
+      name: string;
+    }
+  ): Entity;
 
   // 关系 CRUD
-  createRelation(relation: Omit<Relation, 'relationId' | 'createdAt'>): Relation;
+  createRelation(
+    relation: Omit<Relation, "relationId" | "createdAt">
+  ): Relation;
   getRelation(relationId: string): Relation | undefined;
   findRelations(filters: RelationFilters): Relation[];
-  updateRelation(relationId: string, updates: Partial<Relation>): Relation | undefined;
+  updateRelation(
+    relationId: string,
+    updates: Partial<Relation>
+  ): Relation | undefined;
 
   // 图遍历
-  getNeighbors(entityId: string, relationTypes?: string[], depth?: number): { entities: Entity[]; relations: Relation[] };
-  findPath(sourceId: string, targetId: string): { entities: Entity[]; relations: Relation[] } | null;
-  getSubgraph(entityIds: string[]): { entities: Entity[]; relations: Relation[] };
+  getNeighbors(
+    entityId: string,
+    relationTypes?: string[],
+    depth?: number
+  ): { entities: Entity[]; relations: Relation[] };
+  findPath(
+    sourceId: string,
+    targetId: string
+  ): { entities: Entity[]; relations: Relation[] } | null;
+  getSubgraph(entityIds: string[]): {
+    entities: Entity[];
+    relations: Relation[];
+  };
 
   // 去重
   deduplicateEntity(entity: Partial<Entity>): Entity;
@@ -233,7 +260,12 @@ class GraphStore {
   forceSave(): void;
 
   // 事件
-  onEntityChanged(listener: (entity: Entity, action: 'created' | 'updated' | 'deleted') => void): () => void;
+  onEntityChanged(
+    listener: (
+      entity: Entity,
+      action: "created" | "updated" | "deleted"
+    ) => void
+  ): () => void;
 }
 ```
 
@@ -246,14 +278,16 @@ class GraphStore {
 
 interface ExtractionOptions {
   repoPath: string;
-  language: 'typescript' | 'javascript' | 'python' | string;
+  language: "typescript" | "javascript" | "python" | string;
   projectId: string;
-  sinceCommit?: string;  // 增量提取
+  sinceCommit?: string; // 增量提取
 }
 
 interface ExtractionResult {
-  entities: Array<Omit<Entity, 'entityId' | 'createdAt' | 'updatedAt' | 'status'>>;
-  relations: Array<Omit<Relation, 'relationId' | 'createdAt'>>;
+  entities: Array<
+    Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
+  >;
+  relations: Array<Omit<Relation, "relationId" | "createdAt">>;
   stats: ExtractionStats;
 }
 
@@ -271,11 +305,22 @@ class CodeKnowledgeExtractor {
   extract(options: ExtractionOptions): Promise<ExtractionResult>;
 
   // 内部方法
-  private extractTypeScript(files: string[], projectId: string): ExtractionResult;
+  private extractTypeScript(
+    files: string[],
+    projectId: string
+  ): ExtractionResult;
   private extractPython(files: string[], projectId: string): ExtractionResult;
-  private extractWithLLM(files: string[], language: string, projectId: string): Promise<ExtractionResult>;
+  private extractWithLLM(
+    files: string[],
+    language: string,
+    projectId: string
+  ): Promise<ExtractionResult>;
   private getChangedFiles(repoPath: string, sinceCommit: string): string[];
-  private markDeletedAsDeprecated(repoPath: string, sinceCommit: string, projectId: string): void;
+  private markDeletedAsDeprecated(
+    repoPath: string,
+    sinceCommit: string,
+    projectId: string
+  ): void;
 }
 ```
 
@@ -333,10 +378,16 @@ class AgentKnowledgeSink {
   recordBugfix(payload: BugfixPayload): Entity;
 
   // 被动提取（监听 task.completed 事件）
-  extractFromTaskCompletion(taskOutput: TaskCompletionOutput): Promise<SinkSummary>;
+  extractFromTaskCompletion(
+    taskOutput: TaskCompletionOutput
+  ): Promise<SinkSummary>;
 
   // 自动建立关系
-  private autoLinkRelations(entity: Entity, missionId?: string, agentId?: string): void;
+  private autoLinkRelations(
+    entity: Entity,
+    missionId?: string,
+    agentId?: string
+  ): void;
 
   // 验证必填字段
   private validateDecisionPayload(payload: DecisionPayload): string[];
@@ -353,7 +404,7 @@ class AgentKnowledgeSink {
 interface EntityFilters {
   entityType?: string;
   projectId: string;
-  name?: string;           // 模糊匹配
+  name?: string; // 模糊匹配
   confidenceMin?: number;
   status?: string;
 }
@@ -370,14 +421,27 @@ class KnowledgeGraphQuery {
 
   getEntity(entityId: string): Entity | undefined;
   findEntities(filters: EntityFilters): Entity[];
-  getNeighbors(entityId: string, relationTypes: string[], depth: number): QueryResult;
+  getNeighbors(
+    entityId: string,
+    relationTypes: string[],
+    depth: number
+  ): QueryResult;
   findPath(sourceEntityId: string, targetEntityId: string): QueryResult;
   subgraph(entityIds: string[]): QueryResult;
-  naturalLanguageQuery(question: string, projectId: string): Promise<QueryResult>;
+  naturalLanguageQuery(
+    question: string,
+    projectId: string
+  ): Promise<QueryResult>;
 
   // 内部
-  private buildContextSummary(entities: Entity[], relations: Relation[]): Promise<string>;
-  private translateToStructuredQuery(question: string, ontology: EntityTypeDefinition[]): Promise<EntityFilters>;
+  private buildContextSummary(
+    entities: Entity[],
+    relations: Relation[]
+  ): Promise<string>;
+  private translateToStructuredQuery(
+    question: string,
+    ontology: EntityTypeDefinition[]
+  ): Promise<EntityFilters>;
 }
 ```
 
@@ -389,7 +453,7 @@ class KnowledgeGraphQuery {
 // server/knowledge/knowledge-service.ts
 
 interface UnifiedQueryOptions {
-  mode: 'preferStructured' | 'preferSemantic' | 'balanced';
+  mode: "preferStructured" | "preferSemantic" | "balanced";
 }
 
 interface UnifiedKnowledgeResult {
@@ -405,7 +469,11 @@ class KnowledgeService {
     graphStore: GraphStore
   );
 
-  query(question: string, projectId: string, options?: UnifiedQueryOptions): Promise<UnifiedKnowledgeResult>;
+  query(
+    question: string,
+    projectId: string,
+    options?: UnifiedQueryOptions
+  ): Promise<UnifiedKnowledgeResult>;
 
   // 图谱 → 记忆同步
   syncEntityToVectorStore(entity: Entity): Promise<void>;
@@ -423,9 +491,9 @@ class KnowledgeService {
 // server/knowledge/review-queue.ts
 
 interface ReviewAction {
-  action: 'approve' | 'reject' | 'edit';
-  reviewedBy: string;        // agentId 或 userId
-  reviewerType: 'agent' | 'human';
+  action: "approve" | "reject" | "edit";
+  reviewedBy: string; // agentId 或 userId
+  reviewerType: "agent" | "human";
   rejectionReason?: string;
   editedAttributes?: Record<string, unknown>;
 }
@@ -433,7 +501,11 @@ interface ReviewAction {
 class KnowledgeReviewQueue {
   constructor(graphStore: GraphStore);
 
-  getQueue(filters?: { projectId?: string; entityType?: string; sortBy?: string }): Entity[];
+  getQueue(filters?: {
+    projectId?: string;
+    entityType?: string;
+    sortBy?: string;
+  }): Entity[];
   review(entityId: string, action: ReviewAction): Entity;
   getQueueSize(): number;
   checkBacklogAlert(threshold?: number): boolean;
@@ -448,7 +520,7 @@ class KnowledgeReviewQueue {
 // server/knowledge/garbage-collector.ts
 
 interface GCConfig {
-  archiveAfterDays: number;      // 默认 90
+  archiveAfterDays: number; // 默认 90
   lowConfidenceThreshold: number; // 默认 0.3
   lowConfidenceMaxAgeDays: number; // 默认 30
   duplicateSimilarityThreshold: number; // 默认 0.9
@@ -462,7 +534,11 @@ interface GCResult {
 }
 
 class KnowledgeGarbageCollector {
-  constructor(graphStore: GraphStore, lifecycleLog: LifecycleLog, config?: Partial<GCConfig>);
+  constructor(
+    graphStore: GraphStore,
+    lifecycleLog: LifecycleLog,
+    config?: Partial<GCConfig>
+  );
 
   run(): GCResult;
   archiveExpiredDeprecated(): number;
@@ -488,18 +564,18 @@ data/knowledge/
 
 ```typescript
 interface Entity {
-  entityId: string;                    // UUID v4
-  entityType: string;                  // 来自 OntologyRegistry
+  entityId: string; // UUID v4
+  entityType: string; // 来自 OntologyRegistry
   name: string;
   description: string;
-  createdAt: string;                   // ISO 8601
-  updatedAt: string;                   // ISO 8601
-  source: 'agent_extracted' | 'user_defined' | 'code_analysis' | 'llm_inferred';
-  confidence: number;                  // 0.0 - 1.0
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+  source: "agent_extracted" | "user_defined" | "code_analysis" | "llm_inferred";
+  confidence: number; // 0.0 - 1.0
   projectId: string;
-  status: 'active' | 'deprecated' | 'archived';
+  status: "active" | "deprecated" | "archived";
   needsReview: boolean;
-  linkedMemoryIds: string[];           // 关联的向量记忆条目 ID
+  linkedMemoryIds: string[]; // 关联的向量记忆条目 ID
   deprecationReason?: string;
   extendedAttributes: Record<string, unknown>;
 }
@@ -512,8 +588,8 @@ interface CodeModuleExtended {
   filePath: string;
   language: string;
   linesOfCode: number;
-  complexity: number;          // 圈复杂度
-  exports: string[];           // 导出的公共接口列表
+  complexity: number; // 圈复杂度
+  exports: string[]; // 导出的公共接口列表
 }
 ```
 
@@ -537,7 +613,7 @@ interface ArchitectureDecisionExtended {
   decision: string;
   alternatives: string[];
   consequences: string;
-  supersededBy?: string;       // 被替代时指向新决策的 entityId
+  supersededBy?: string; // 被替代时指向新决策的 entityId
 }
 ```
 
@@ -545,14 +621,14 @@ interface ArchitectureDecisionExtended {
 
 ```typescript
 interface Relation {
-  relationId: string;                  // UUID v4
-  relationType: string;                // 来自 OntologyRegistry
+  relationId: string; // UUID v4
+  relationType: string; // 来自 OntologyRegistry
   sourceEntityId: string;
   targetEntityId: string;
-  weight: number;                      // 0.0 - 1.0
-  evidence: string;                    // 支撑证据
+  weight: number; // 0.0 - 1.0
+  evidence: string; // 支撑证据
   createdAt: string;
-  source: 'agent_extracted' | 'user_defined' | 'code_analysis' | 'llm_inferred';
+  source: "agent_extracted" | "user_defined" | "code_analysis" | "llm_inferred";
   confidence: number;
   needsReview: boolean;
 }
@@ -579,12 +655,12 @@ interface GraphData {
 ```typescript
 interface LifecycleLogEntry {
   entityId: string;
-  action: 'status_change' | 'garbage_collect' | 'merge' | 'review';
+  action: "status_change" | "garbage_collect" | "merge" | "review";
   reason: string;
   previousStatus?: string;
   newStatus?: string;
   timestamp: string;
-  triggeredBy: 'auto_cleanup' | 'manual' | 'code_change' | 'review';
+  triggeredBy: "auto_cleanup" | "manual" | "code_change" | "review";
 }
 ```
 
@@ -594,135 +670,161 @@ interface LifecycleLogEntry {
 // shared/knowledge/api.ts
 export const KNOWLEDGE_API = {
   // 公开 API
-  graph: '/api/knowledge/graph',
-  reviewQueue: '/api/knowledge/review-queue',
-  review: '/api/knowledge/review/:entityId',
-  query: '/api/knowledge/query',
+  graph: "/api/knowledge/graph",
+  reviewQueue: "/api/knowledge/review-queue",
+  review: "/api/knowledge/review/:entityId",
+  query: "/api/knowledge/query",
 
   // 管理 API
-  stats: '/api/admin/knowledge/stats',
-  reindex: '/api/admin/knowledge/reindex',
-  reindexStatus: '/api/admin/knowledge/reindex/:taskId',
-  export: '/api/admin/knowledge/export',
+  stats: "/api/admin/knowledge/stats",
+  reindex: "/api/admin/knowledge/reindex",
+  reindexStatus: "/api/admin/knowledge/reindex/:taskId",
+  export: "/api/admin/knowledge/export",
 } as const;
 ```
 
-
 ## 正确性属性
 
-*正确性属性是一种在系统所有有效执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性作为人类可读规范与机器可验证正确性保证之间的桥梁。*
+_正确性属性是一种在系统所有有效执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性作为人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 实体创建属性完整性
-*For any* entity creation input with valid entityType, name, and projectId, the created Entity SHALL contain all common attributes (entityId, entityType, name, description, createdAt, updatedAt, source, confidence, projectId) with non-null values, and entityId SHALL be globally unique.
+
+_For any_ entity creation input with valid entityType, name, and projectId, the created Entity SHALL contain all common attributes (entityId, entityType, name, description, createdAt, updatedAt, source, confidence, projectId) with non-null values, and entityId SHALL be globally unique.
 **Validates: Requirements 1.3**
 
 ### Property 2: 关系创建属性完整性
-*For any* relation creation input with valid relationType, sourceEntityId, and targetEntityId, the created Relation SHALL contain all common attributes (relationId, relationType, sourceEntityId, targetEntityId, weight, evidence, createdAt, source) with non-null values.
+
+_For any_ relation creation input with valid relationType, sourceEntityId, and targetEntityId, the created Relation SHALL contain all common attributes (relationId, relationType, sourceEntityId, targetEntityId, weight, evidence, createdAt, source) with non-null values.
 **Validates: Requirements 1.4**
 
 ### Property 3: 自定义类型注册往返一致性
-*For any* custom entity type name registered via OntologyRegistry.registerEntityType(), the type SHALL appear in OntologyRegistry.getEntityTypes() with source marked as "custom", and the total count of returned types SHALL equal the core types count plus the number of registered custom types.
+
+_For any_ custom entity type name registered via OntologyRegistry.registerEntityType(), the type SHALL appear in OntologyRegistry.getEntityTypes() with source marked as "custom", and the total count of returned types SHALL equal the core types count plus the number of registered custom types.
 **Validates: Requirements 1.5, 1.6**
 
 ### Property 4: 本体变更事件触发
-*For any* call to registerEntityType() or registerRelationType(), the OntologyRegistry SHALL emit exactly one "ontology.changed" event.
+
+_For any_ call to registerEntityType() or registerRelationType(), the OntologyRegistry SHALL emit exactly one "ontology.changed" event.
 **Validates: Requirements 1.7**
 
 ### Property 5: 提取实体扩展属性完整性
-*For any* extracted entity of type CodeModule, the extendedAttributes SHALL contain filePath, language, linesOfCode, complexity, and exports; *for any* extracted entity of type API, the extendedAttributes SHALL contain endpoint, httpMethod, requestSchema, responseSchema, and authRequired.
+
+_For any_ extracted entity of type CodeModule, the extendedAttributes SHALL contain filePath, language, linesOfCode, complexity, and exports; _for any_ extracted entity of type API, the extendedAttributes SHALL contain endpoint, httpMethod, requestSchema, responseSchema, and authRequired.
 **Validates: Requirements 2.3, 2.4**
 
 ### Property 6: LLM 提取默认置信度
-*For any* entity extracted via LLM-assisted extraction (non-AST languages), the confidence SHALL default to 0.7.
+
+_For any_ entity extracted via LLM-assisted extraction (non-AST languages), the confidence SHALL default to 0.7.
 **Validates: Requirements 2.2**
 
 ### Property 7: 实体去重唯一键不变量
-*For any* two entities with identical (entityType, projectId, filePath, name) written to the graph, the graph SHALL contain exactly one entity for that unique key, and the retained entity SHALL have the higher confidence value for conflicting attributes.
+
+_For any_ two entities with identical (entityType, projectId, filePath, name) written to the graph, the graph SHALL contain exactly one entity for that unique key, and the retained entity SHALL have the higher confidence value for conflicting attributes.
 **Validates: Requirements 2.6**
 
 ### Property 8: ArchitectureDecision 必填字段验证
-*For any* DecisionPayload missing at least one of the required fields (context, decision, alternatives, consequences), AgentKnowledgeSink.recordDecision() SHALL reject the write and return an error.
+
+_For any_ DecisionPayload missing at least one of the required fields (context, decision, alternatives, consequences), AgentKnowledgeSink.recordDecision() SHALL reject the write and return an error.
 **Validates: Requirements 3.4**
 
 ### Property 9: 低置信度实体进入审核队列
-*For any* entity with confidence < 0.5 or needsReview: true, the entity SHALL appear in the KnowledgeReviewQueue, and SHALL NOT be included in default graph query results (unless explicitly querying the review queue).
+
+_For any_ entity with confidence < 0.5 or needsReview: true, the entity SHALL appear in the KnowledgeReviewQueue, and SHALL NOT be included in default graph query results (unless explicitly querying the review queue).
 **Validates: Requirements 3.3, 7.1**
 
 ### Property 10: 知识写入自动关系建立
-*For any* entity written to the graph with a missionId and agentId, the GraphStore SHALL contain EXECUTED_BY relation linking the entity to the Mission, and KNOWS_ABOUT relation linking the Agent to the entity, without explicit specification by the caller.
+
+_For any_ entity written to the graph with a missionId and agentId, the GraphStore SHALL contain EXECUTED_BY relation linking the entity to the Mission, and KNOWS_ABOUT relation linking the Agent to the entity, without explicit specification by the caller.
 **Validates: Requirements 3.5**
 
 ### Property 11: 查询结果置信度排序
-*For any* query result containing multiple entities, the entities SHALL be sorted by confidence in descending order, and any entity with confidence < 0.5 SHALL be annotated with a low-confidence warning in contextSummary.
+
+_For any_ query result containing multiple entities, the entities SHALL be sorted by confidence in descending order, and any entity with confidence < 0.5 SHALL be annotated with a low-confidence warning in contextSummary.
 **Validates: Requirements 4.4**
 
 ### Property 12: 项目隔离不变量
-*For any* graph query with projectId A, the returned entities and relations SHALL exclusively belong to projectId A; no entity or relation with a different projectId SHALL appear in the results.
+
+_For any_ graph query with projectId A, the returned entities and relations SHALL exclusively belong to projectId A; no entity or relation with a different projectId SHALL appear in the results.
 **Validates: Requirements 4.5**
 
 ### Property 13: 图遍历深度约束
-*For any* getNeighbors(entityId, relationTypes, depth=N) query, all returned entities SHALL be reachable from the source entity within N hops through the specified relation types.
+
+_For any_ getNeighbors(entityId, relationTypes, depth=N) query, all returned entities SHALL be reachable from the source entity within N hops through the specified relation types.
 **Validates: Requirements 4.1**
 
 ### Property 14: 统一检索模式行为
-*For any* KnowledgeService.query() call with mode "preferStructured", the structuredResults SHALL be ranked higher than semanticResults in the merged output; with mode "preferSemantic", the reverse SHALL hold; with mode "balanced", results SHALL be mixed by relevance score.
+
+_For any_ KnowledgeService.query() call with mode "preferStructured", the structuredResults SHALL be ranked higher than semanticResults in the merged output; with mode "preferSemantic", the reverse SHALL hold; with mode "balanced", results SHALL be mixed by relevance score.
 **Validates: Requirements 5.1**
 
 ### Property 15: 图谱到向量同步双向链接
-*For any* entity synced to the vector store, the entity's linkedMemoryIds SHALL contain the vector memory entry ID, and the vector memory entry SHALL carry a linkedEntityId referencing the entity's entityId.
+
+_For any_ entity synced to the vector store, the entity's linkedMemoryIds SHALL contain the vector memory entry ID, and the vector memory entry SHALL carry a linkedEntityId referencing the entity's entityId.
 **Validates: Requirements 5.4**
 
 ### Property 16: 实体状态机转换合法性
-*For any* entity status transition, only the following transitions SHALL be allowed: active → deprecated, deprecated → archived, archived → active. Any other transition SHALL be rejected.
+
+_For any_ entity status transition, only the following transitions SHALL be allowed: active → deprecated, deprecated → archived, archived → active. Any other transition SHALL be rejected.
 **Validates: Requirements 6.1**
 
 ### Property 17: 删除文件触发废弃标记
-*For any* file detected as deleted during incremental extraction, the corresponding CodeModule entity and target entities of its DEPENDS_ON and CALLS relations SHALL have status "deprecated" and deprecationReason containing the commit hash.
+
+_For any_ file detected as deleted during incremental extraction, the corresponding CodeModule entity and target entities of its DEPENDS_ON and CALLS relations SHALL have status "deprecated" and deprecationReason containing the commit hash.
 **Validates: Requirements 6.2**
 
 ### Property 18: 垃圾回收正确性
-*For any* entity with status "deprecated" older than archiveAfterDays, KnowledgeGarbageCollector SHALL transition it to "archived"; *for any* entity with confidence < 0.3, age > 30 days, and zero query references, KnowledgeGarbageCollector SHALL delete it.
+
+_For any_ entity with status "deprecated" older than archiveAfterDays, KnowledgeGarbageCollector SHALL transition it to "archived"; _for any_ entity with confidence < 0.3, age > 30 days, and zero query references, KnowledgeGarbageCollector SHALL delete it.
 **Validates: Requirements 6.3**
 
 ### Property 19: 架构决策版本链
-*For any* chain of ArchitectureDecision entities connected by SUPERSEDES relations, a default query SHALL return only the latest (non-deprecated) decision; a query with includeHistory: true SHALL return all decisions in the chain ordered by creation time.
+
+_For any_ chain of ArchitectureDecision entities connected by SUPERSEDES relations, a default query SHALL return only the latest (non-deprecated) decision; a query with includeHistory: true SHALL return all decisions in the chain ordered by creation time.
 **Validates: Requirements 6.4**
 
 ### Property 20: 生命周期日志完整性
-*For any* lifecycle management operation (status transition, garbage collection, entity merge), a corresponding entry SHALL exist in knowledge_lifecycle_log containing entityId, action, reason, timestamp, and triggeredBy.
+
+_For any_ lifecycle management operation (status transition, garbage collection, entity merge), a corresponding entry SHALL exist in knowledge_lifecycle_log containing entityId, action, reason, timestamp, and triggeredBy.
 **Validates: Requirements 6.5**
 
 ### Property 21: 审核操作置信度调整
-*For any* review action "approve" by a human reviewer, the entity confidence SHALL become max(currentConfidence, 0.8); *for any* review action "approve" by a trusted Agent, the confidence SHALL become max(currentConfidence, 0.7); *for any* review action "reject", the entity status SHALL become "archived".
+
+_For any_ review action "approve" by a human reviewer, the entity confidence SHALL become max(currentConfidence, 0.8); _for any_ review action "approve" by a trusted Agent, the confidence SHALL become max(currentConfidence, 0.7); _for any_ review action "reject", the entity status SHALL become "archived".
 **Validates: Requirements 7.2, 7.3**
 
 ### Property 22: 图谱导出往返一致性
-*For any* project graph data, exporting via GET /api/admin/knowledge/export and then importing the resulting JSON SHALL produce an equivalent set of entities and relations (same entityIds, same attributes, same relations).
+
+_For any_ project graph data, exporting via GET /api/admin/knowledge/export and then importing the resulting JSON SHALL produce an equivalent set of entities and relations (same entityIds, same attributes, same relations).
 **Validates: Requirements 8.5**
 
 ## 错误处理
 
 ### 存储层错误
+
 - JSON 文件读取失败：返回空图谱数据，记录错误日志，不中断服务
 - JSON 文件写入失败：使用 debounced save 重试机制（与现有 `database.json` 模式一致），写入失败时保留内存数据
 - 文件损坏：保留备份文件 `graph-{projectId}.json.bak`，损坏时从备份恢复
 
 ### LLM 调用错误
+
 - LLM 提取失败：记录错误，跳过该文件，在 ExtractionStats.errors 中记录失败原因
 - 自然语言查询 LLM 转译失败：降级为向量检索（回退到三级记忆系统），在 QueryResult 中标注降级信息
 - LLM 返回格式异常：使用 JSON.parse 容错处理，解析失败时丢弃该结果并记录 warning
 
 ### 图查询错误
+
 - 查询超时：返回已获取的部分结果，标注 `isPartial: true`
 - 实体不存在：返回 undefined/null，不抛异常
 - 循环引用（图遍历）：使用 visited set 防止无限循环，限制最大遍历深度
 
 ### 审核队列错误
+
 - 审核不存在的实体：返回 404 错误
 - 重复审核：幂等处理，返回当前状态
 - 队列积压：超过阈值时触发告警，不阻塞写入
 
 ### 数据一致性错误
+
 - 去重冲突：取 confidence 更高者的属性，记录合并日志
 - 双向同步冲突：以 entityId 为唯一键，图谱为权威数据源
 - 关系引用的实体不存在：创建关系时校验源和目标实体存在性，不存在时拒绝创建
@@ -734,11 +836,13 @@ export const KNOWLEDGE_API = {
 使用 `fast-check` 库（Vitest 生态兼容）进行属性测试，每个属性测试运行至少 100 次迭代。
 
 每个正确性属性对应一个独立的属性测试，测试标注格式：
+
 ```
 Feature: knowledge-graph, Property N: {property_text}
 ```
 
 属性测试重点覆盖：
+
 - 实体/关系创建的属性完整性（Property 1, 2）
 - 本体注册的往返一致性（Property 3）
 - 去重逻辑的唯一键不变量（Property 7）
@@ -751,6 +855,7 @@ Feature: knowledge-graph, Property N: {property_text}
 ### 单元测试
 
 使用 Vitest 进行单元测试，重点覆盖：
+
 - OntologyRegistry 核心类型初始化（验证 10 个实体类型和 11 个关系类型）
 - CodeKnowledgeExtractor 的 TypeScript AST 解析（使用项目自身代码作为测试输入）
 - AgentKnowledgeSink 的必填字段验证（ArchitectureDecision 缺少字段时拒绝）

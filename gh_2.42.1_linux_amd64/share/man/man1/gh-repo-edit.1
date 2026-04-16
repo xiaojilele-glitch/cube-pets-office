@@ -1,0 +1,113 @@
+.nh
+.TH "GH-REPO-EDIT" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-repo-edit - Edit repository settings
+
+
+.SH SYNOPSIS
+.PP
+\fBgh repo edit [<repository>] [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Edit repository settings.
+
+.PP
+To toggle a setting off, use the \fB--<flag>=false\fR syntax.
+
+.PP
+Note that changing repository visibility to private will cause loss of stars and watchers.
+
+
+.SH OPTIONS
+.TP
+\fB--add-topic\fR \fB<strings>\fR
+Add repository topic
+
+.TP
+\fB--allow-forking\fR
+Allow forking of an organization repository
+
+.TP
+\fB--allow-update-branch\fR
+Allow a pull request head branch that is behind its base branch to be updated
+
+.TP
+\fB--default-branch\fR \fB<name>\fR
+Set the default branch name for the repository
+
+.TP
+\fB--delete-branch-on-merge\fR
+Delete head branch when pull requests are merged
+
+.TP
+\fB-d\fR, \fB--description\fR \fB<string>\fR
+Description of the repository
+
+.TP
+\fB--enable-auto-merge\fR
+Enable auto-merge functionality
+
+.TP
+\fB--enable-discussions\fR
+Enable discussions in the repository
+
+.TP
+\fB--enable-issues\fR
+Enable issues in the repository
+
+.TP
+\fB--enable-merge-commit\fR
+Enable merging pull requests via merge commit
+
+.TP
+\fB--enable-projects\fR
+Enable projects in the repository
+
+.TP
+\fB--enable-rebase-merge\fR
+Enable merging pull requests via rebase
+
+.TP
+\fB--enable-squash-merge\fR
+Enable merging pull requests via squashed commit
+
+.TP
+\fB--enable-wiki\fR
+Enable wiki in the repository
+
+.TP
+\fB-h\fR, \fB--homepage\fR \fB<URL>\fR
+Repository home page URL
+
+.TP
+\fB--remove-topic\fR \fB<strings>\fR
+Remove repository topic
+
+.TP
+\fB--template\fR
+Make the repository available as a template repository
+
+.TP
+\fB--visibility\fR \fB<string>\fR
+Change the visibility of the repository to {public,private,internal}
+
+
+.SH EXAMPLE
+.EX
+# enable issues and wiki
+gh repo edit --enable-issues --enable-wiki
+
+# disable projects
+gh repo edit --enable-projects=false
+
+
+.EE
+
+
+.SH SEE ALSO
+.PP
+\fBgh-repo(1)\fR

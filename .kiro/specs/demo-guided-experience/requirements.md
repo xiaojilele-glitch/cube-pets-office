@@ -5,6 +5,7 @@
 为 Cube Pets Office 多智能体可视化教学平台构建演示回放引擎与引导体验层。该模块负责将预录演示数据（来自 demo-data-engine 的 DemoDataBundle）通过现有 UI 组件（WorkflowPanel、Scene3D、ChatPanel）进行回放，提供零配置的"Live Demo"入口，并通过 Mission Store（tasks-store）原生接口驱动 3D 场景动画、对话气泡、消息流转、阶段指示器以及记忆系统和进化引擎的可视化展示。
 
 本文档覆盖五大需求模块：
+
 - **演示回放引擎** — 按时间线调度预录事件，驱动前端状态更新
 - **Mission Store 集成** — 通过原生数据路径写入演示数据
 - **无 API Key 依赖** — 首次访问即可体验完整演示
@@ -47,7 +48,6 @@
 3.6. WHEN 回放完成, THE Demo_Playback_Engine SHALL 将工作流状态设置为 completed，并保持最终状态可查看
 
 3.7. IF 回放过程中发生异常, THEN THE Demo_Playback_Engine SHALL 记录错误日志并将工作流状态设置为 failed，同时在 UI 上显示错误提示
-
 
 ### 需求 4：Mission Store 集成
 

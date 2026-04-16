@@ -9,19 +9,24 @@
  * 纯函数，无副作用。
  */
 
-import type { ExportIR, ExportFile, AgentDefinition } from "../../../shared/export-schema.js";
+import type {
+  ExportIR,
+  ExportFile,
+  AgentDefinition,
+} from "../../../shared/export-schema.js";
 
 // ---------------------------------------------------------------------------
 // 辅助：将字符串转为 snake_case 标识符
 // ---------------------------------------------------------------------------
 
 function toSnakeCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9\s_-]/g, "")
-    .replace(/[\s-]+/g, "_")
-    .toLowerCase()
-    .replace(/^_+|_+$/g, "")
-    || "unnamed";
+  return (
+    str
+      .replace(/[^a-zA-Z0-9\s_-]/g, "")
+      .replace(/[\s-]+/g, "_")
+      .toLowerCase()
+      .replace(/^_+|_+$/g, "") || "unnamed"
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -44,7 +49,7 @@ interface GraphJson {
 }
 
 function generateGraphJson(ir: ExportIR): string {
-  const nodes: GraphNode[] = ir.pipeline.stages.map((stage) => ({
+  const nodes: GraphNode[] = ir.pipeline.stages.map(stage => ({
     name: toSnakeCase(stage.name),
     label: stage.label,
   }));
@@ -67,7 +72,7 @@ function pickAgentForStage(
   participantRoles: readonly ("ceo" | "manager" | "worker")[]
 ): AgentDefinition | undefined {
   for (const role of participantRoles) {
-    const agent = ir.agents.find((a) => a.role === role);
+    const agent = ir.agents.find(a => a.role === role);
     if (agent) return agent;
   }
   return undefined;
@@ -98,9 +103,13 @@ function generateMainPy(ir: ExportIR): string {
   lines.push(`from langchain_core.messages import SystemMessage, HumanMessage`);
   lines.push(``);
   lines.push(``);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(`# State definition`);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(``);
   lines.push(`class GraphState(TypedDict):`);
   lines.push(`    messages: list[Any]`);
@@ -108,9 +117,13 @@ function generateMainPy(ir: ExportIR): string {
   lines.push(`    results: dict[str, Any]`);
   lines.push(``);
   lines.push(``);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(`# Node handler functions (one per agent)`);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
 
   // Generate a handler function for each agent
   for (const agent of ir.agents) {
@@ -121,11 +134,15 @@ function generateMainPy(ir: ExportIR): string {
     lines.push(``);
     lines.push(`def ${fnName}(state: GraphState) -> GraphState:`);
     lines.push(`    """Handler for agent: ${agent.name}"""`);
-    lines.push(`    llm = ChatOpenAI(model="${agent.model.name}", temperature=${agent.model.temperature})`);
+    lines.push(
+      `    llm = ChatOpenAI(model="${agent.model.name}", temperature=${agent.model.temperature})`
+    );
     lines.push(`    system_prompt = "${systemPrompt}"`);
     lines.push(`    messages = [`);
     lines.push(`        SystemMessage(content=system_prompt),`);
-    lines.push(`        HumanMessage(content=f"Execute stage: {state['current_stage']}"),`);
+    lines.push(
+      `        HumanMessage(content=f"Execute stage: {state['current_stage']}"),`
+    );
     lines.push(`    ]`);
     lines.push(`    response = llm.invoke(messages)`);
     lines.push(`    results = dict(state["results"])`);
@@ -139,9 +156,13 @@ function generateMainPy(ir: ExportIR): string {
 
   lines.push(``);
   lines.push(``);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(`# Stage node functions (dispatch to agent handler)`);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
 
   // Generate a stage node function for each pipeline stage
   for (const stage of ir.pipeline.stages) {
@@ -162,9 +183,13 @@ function generateMainPy(ir: ExportIR): string {
 
   lines.push(``);
   lines.push(``);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(`# Graph construction`);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(``);
   lines.push(`def build_graph() -> StateGraph:`);
   lines.push(`    with open("graph.json", "r", encoding="utf-8") as f:`);
@@ -196,7 +221,9 @@ function generateMainPy(ir: ExportIR): string {
   // Set entry point and finish point
   if (ir.pipeline.stages.length > 0) {
     const firstStage = toSnakeCase(ir.pipeline.stages[0].name);
-    const lastStage = toSnakeCase(ir.pipeline.stages[ir.pipeline.stages.length - 1].name);
+    const lastStage = toSnakeCase(
+      ir.pipeline.stages[ir.pipeline.stages.length - 1].name
+    );
     lines.push(`    # Set entry and finish`);
     lines.push(`    workflow.set_entry_point("${firstStage}")`);
     lines.push(`    workflow.add_edge("${lastStage}", END)`);

@@ -11,9 +11,15 @@ import { Router, type Request, type Response } from "express";
 import { registry, MAX_GUESTS } from "../core/registry.js";
 import { GuestAgent } from "../core/guest-agent.js";
 import { guestLifecycleManager } from "../core/guest-lifecycle.js";
-import { generateGuestId, sanitizeGuestConfig } from "../../shared/guest-agent-utils.js";
+import {
+  generateGuestId,
+  sanitizeGuestConfig,
+} from "../../shared/guest-agent-utils.js";
 import { ensureAgentWorkspace } from "../memory/workspace.js";
-import type { GuestAgentConfig, GuestAgentNode } from "../../shared/organization-schema.js";
+import type {
+  GuestAgentConfig,
+  GuestAgentNode,
+} from "../../shared/organization-schema.js";
 
 const router = Router();
 
@@ -33,10 +39,14 @@ router.post("/", (req: Request, res: Response) => {
   }
   const cfg = config as Partial<GuestAgentConfig>;
   if (!cfg.model || typeof cfg.model !== "string") {
-    return res.status(400).json({ error: "Missing required field: config.model" });
+    return res
+      .status(400)
+      .json({ error: "Missing required field: config.model" });
   }
   if (!cfg.baseUrl || typeof cfg.baseUrl !== "string") {
-    return res.status(400).json({ error: "Missing required field: config.baseUrl" });
+    return res
+      .status(400)
+      .json({ error: "Missing required field: config.baseUrl" });
   }
 
   // Build a complete GuestAgentConfig with defaults
@@ -50,8 +60,14 @@ router.post("/", (req: Request, res: Response) => {
   };
 
   const id = generateGuestId();
-  const dept = typeof departmentId === "string" && departmentId.trim() ? departmentId.trim() : "engineering";
-  const mgr = typeof managerId === "string" && managerId.trim() ? managerId.trim() : "mgr-eng";
+  const dept =
+    typeof departmentId === "string" && departmentId.trim()
+      ? departmentId.trim()
+      : "engineering";
+  const mgr =
+    typeof managerId === "string" && managerId.trim()
+      ? managerId.trim()
+      : "mgr-eng";
 
   const orgNode: GuestAgentNode = {
     id,
@@ -103,7 +119,7 @@ router.post("/", (req: Request, res: Response) => {
  * @see Requirements 2.2
  */
 router.get("/", (_req: Request, res: Response) => {
-  const guests = registry.getGuestAgents().map((agent) => ({
+  const guests = registry.getGuestAgents().map(agent => ({
     id: agent.config.id,
     name: agent.config.name,
     department: agent.config.department,

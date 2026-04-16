@@ -26,7 +26,7 @@ graph TD
     WS --> API_W[/api/workflows]
     API_T --> MS[MissionStore]
     API_W --> DB[(Workflow DB)]
-    
+
     subgraph "寄生依赖（待移除）"
         WS
         SOCK_W
@@ -46,10 +46,10 @@ graph TD
     MC --> API_P[/api/planets]
     API_T --> MS[MissionStore]
     API_P --> MS
-    
+
     WS[workflow-store.ts] --> WP[WorkflowPanel.tsx]
     WS -->|workflow_* events| SOCK_W[Workflow Socket]
-    
+
     note1[tasks-store 与 workflow-store 零交叉]
 ```
 
@@ -79,16 +79,17 @@ sequenceDiagram
 盘点以手动审查 + grep 辅助方式进行，输出结构化 markdown 表格：
 
 ```markdown
-| 文件 | 行号 | 依赖类型 | 访问的数据字段 | UI 用途 | Mission 原生替代 |
-|------|------|----------|---------------|---------|-----------------|
-| tasks-store.ts | 42 | import | useWorkflowStore | 获取 workflow detail | MissionRecord enriched fields |
-| ... | ... | ... | ... | ... | ... |
+| 文件           | 行号 | 依赖类型 | 访问的数据字段   | UI 用途              | Mission 原生替代              |
+| -------------- | ---- | -------- | ---------------- | -------------------- | ----------------------------- |
+| tasks-store.ts | 42   | import   | useWorkflowStore | 获取 workflow detail | MissionRecord enriched fields |
+| ...            | ...  | ...      | ...              | ...                  | ...                           |
 ```
 
 分类维度：
+
 - **import 依赖** — tasks-store.ts 对 workflow-store 的 import 语句
 - **组件引用** — TaskDetailView/TaskPlanetInterior/task-helpers 中的 workflow 数据读取
-- **Socket 监听** — tasks 相关代码中的 workflow_* 事件监听
+- **Socket 监听** — tasks 相关代码中的 workflow\_\* 事件监听
 - **类型交叉** — shared/mission/ 对 shared/workflow-runtime.ts 的类型依赖
 
 ### 2. MissionRecord 扩展字段（shared/mission/contracts.ts）
@@ -111,7 +112,7 @@ interface MissionWorkPackage {
   workerId: string;
   description: string;
   deliverable?: string;
-  status: 'pending' | 'running' | 'passed' | 'failed' | 'verified';
+  status: "pending" | "running" | "passed" | "failed" | "verified";
   score?: number;
   feedback?: string;
   stageKey?: string;
@@ -127,9 +128,9 @@ interface MissionMessageLogEntry {
 interface MissionAgentCrewMember {
   id: string;
   name: string;
-  role: 'ceo' | 'manager' | 'worker';
+  role: "ceo" | "manager" | "worker";
   department?: string;
-  status: 'idle' | 'working' | 'thinking' | 'done' | 'error';
+  status: "idle" | "working" | "thinking" | "done" | "error";
 }
 
 // 扩展 MissionRecord
@@ -143,6 +144,7 @@ interface MissionRecord {
 ```
 
 设计决策：
+
 - 所有新字段均为 `optional`，确保向后兼容
 - `MissionOrganizationSnapshot` 是 `WorkflowOrganizationSnapshot` 的精简版，只保留 UI 所需的部门列表和 agent 计数，避免引入 workflow 类型依赖
 - `MissionWorkPackage` 对应 workflow 的 `TaskRecord`，但使用 mission 域的命名和精简字段
@@ -166,13 +168,15 @@ class MissionOrchestrator {
     const updates: Partial<MissionRecord> = {};
 
     // planning 阶段完成后：填充 organization 和 agentCrew
-    if (completedStage === 'planning' || completedStage === 'direction') {
+    if (completedStage === "planning" || completedStage === "direction") {
       updates.organization = this.extractOrganization(workflowId);
       updates.agentCrew = this.extractAgentCrew(workflowId);
     }
 
     // execution/review 阶段完成后：填充 workPackages
-    if (['execution', 'review', 'revision', 'verify'].includes(completedStage)) {
+    if (
+      ["execution", "review", "revision", "verify"].includes(completedStage)
+    ) {
       updates.workPackages = this.extractWorkPackages(workflowId);
     }
 
@@ -198,7 +202,10 @@ class MissionOrchestrator {
     // ...
   }
 
-  private extractMessageLog(workflowId: string, limit: number): MissionMessageLogEntry[] {
+  private extractMessageLog(
+    workflowId: string,
+    limit: number
+  ): MissionMessageLogEntry[] {
     // 从 workflow messages 提取最近 N 条摘要
     // ...
   }
@@ -220,16 +227,20 @@ function buildNativeSummaryRecord(mission: MissionRecord): MissionTaskSummary {
     progress: mission.progress,
     kind: mission.kind,
     currentStageKey: mission.currentStageKey ?? null,
-    currentStageLabel: mission.stages.find(s => s.key === mission.currentStageKey)?.label ?? null,
+    currentStageLabel:
+      mission.stages.find(s => s.key === mission.currentStageKey)?.label ??
+      null,
     departmentLabels: mission.organization?.departments.map(d => d.label) ?? [],
     taskCount: mission.workPackages?.length ?? 0,
-    completedTaskCount: mission.workPackages?.filter(
-      wp => wp.status === 'passed' || wp.status === 'verified'
-    ).length ?? 0,
+    completedTaskCount:
+      mission.workPackages?.filter(
+        wp => wp.status === "passed" || wp.status === "verified"
+      ).length ?? 0,
     messageCount: mission.messageLog?.length ?? 0,
-    activeAgentCount: mission.agentCrew?.filter(
-      a => a.status === 'working' || a.status === 'thinking'
-    ).length ?? 0,
+    activeAgentCount:
+      mission.agentCrew?.filter(
+        a => a.status === "working" || a.status === "thinking"
+      ).length ?? 0,
     summary: mission.summary ?? null,
     waitingFor: mission.waitingFor ?? null,
     createdAt: mission.createdAt,
@@ -255,19 +266,23 @@ function buildNativeDetailRecord(mission: MissionRecord): MissionTaskDetail {
 }
 
 // 原生 agent 构建（从 agentCrew 而非 workflow agents）
-function buildNativeInteriorAgents(mission: MissionRecord): TaskInteriorAgent[] {
+function buildNativeInteriorAgents(
+  mission: MissionRecord
+): TaskInteriorAgent[] {
   const agents: TaskInteriorAgent[] = [];
-  
+
   if (mission.agentCrew) {
     for (const member of mission.agentCrew) {
       agents.push({
         id: member.id,
         name: member.name,
         role: member.role,
-        department: member.department ?? '',
+        department: member.department ?? "",
         status: member.status,
-        stageKey: mission.currentStageKey ?? 'receive',
-        stageLabel: mission.stages.find(s => s.key === mission.currentStageKey)?.label ?? '',
+        stageKey: mission.currentStageKey ?? "receive",
+        stageLabel:
+          mission.stages.find(s => s.key === mission.currentStageKey)?.label ??
+          "",
         progress: undefined,
         currentAction: undefined,
         angle: 0,
@@ -277,12 +292,14 @@ function buildNativeInteriorAgents(mission: MissionRecord): TaskInteriorAgent[] 
 
   // 始终包含 mission-core agent
   agents.push({
-    id: 'mission-core',
-    name: 'Mission Core',
-    role: 'orchestrator',
+    id: "mission-core",
+    name: "Mission Core",
+    role: "orchestrator",
     status: inferMissionCoreAgentStatus(mission.status),
-    stageKey: mission.currentStageKey ?? 'receive',
-    stageLabel: mission.stages.find(s => s.key === mission.currentStageKey)?.label ?? 'Receive',
+    stageKey: mission.currentStageKey ?? "receive",
+    stageLabel:
+      mission.stages.find(s => s.key === mission.currentStageKey)?.label ??
+      "Receive",
     angle: 0,
   });
 
@@ -292,9 +309,9 @@ function buildNativeInteriorAgents(mission: MissionRecord): TaskInteriorAgent[] 
 // 原生 log summary 构建（从 messageLog 而非 workflow messages）
 function buildNativeLogSummary(mission: MissionRecord): string[] {
   if (!mission.messageLog?.length) return [];
-  return mission.messageLog.slice(-10).map(
-    entry => `[${entry.sender}] ${entry.content}`
-  );
+  return mission.messageLog
+    .slice(-10)
+    .map(entry => `[${entry.sender}] ${entry.content}`);
 }
 ```
 
@@ -309,7 +326,9 @@ async function hydrateTaskData(options?: { preferredTaskId?: string | null }) {
   }
 }
 
-async function hydrateNativeTaskData(options?: { preferredTaskId?: string | null }) {
+async function hydrateNativeTaskData(options?: {
+  preferredTaskId?: string | null;
+}) {
   // 1. 调用 listMissions() 获取 MissionRecord[]
   // 2. 对每个 mission 调用 buildNativeSummaryRecord()
   // 3. 如果有 selectedTaskId，调用 getMission(id) 获取完整 record
@@ -336,64 +355,64 @@ async function hydrateNativeTaskData(options?: { preferredTaskId?: string | null
 
 ### MissionRecord 扩展字段
 
-| 字段 | 类型 | 来源 | 填充时机 |
-|------|------|------|----------|
-| organization | MissionOrganizationSnapshot? | WorkflowOrganizationSnapshot 精简 | planning 阶段完成后 |
-| workPackages | MissionWorkPackage[]? | TaskRecord[] 转换 | execution/review/revision/verify 阶段完成后 |
-| messageLog | MissionMessageLogEntry[]? | MessageRecord[] 摘要 | 每个阶段完成后（最近 50 条） |
-| agentCrew | MissionAgentCrewMember[]? | AgentDirectory 快照 | planning 阶段完成后 |
+| 字段         | 类型                         | 来源                              | 填充时机                                    |
+| ------------ | ---------------------------- | --------------------------------- | ------------------------------------------- |
+| organization | MissionOrganizationSnapshot? | WorkflowOrganizationSnapshot 精简 | planning 阶段完成后                         |
+| workPackages | MissionWorkPackage[]?        | TaskRecord[] 转换                 | execution/review/revision/verify 阶段完成后 |
+| messageLog   | MissionMessageLogEntry[]?    | MessageRecord[] 摘要              | 每个阶段完成后（最近 50 条）                |
+| agentCrew    | MissionAgentCrewMember[]?    | AgentDirectory 快照               | planning 阶段完成后                         |
 
 ### MissionTaskSummary 字段来源对比
 
-| 字段 | Workflow 补充层来源 | Mission 原生来源 |
-|------|-------------------|-----------------|
-| departmentLabels | workflow organization snapshot | mission.organization.departments |
-| taskCount | workflow tasks.length | mission.workPackages.length |
-| completedTaskCount | workflow tasks.filter(passed) | mission.workPackages.filter(passed/verified) |
-| messageCount | workflow messages.length | mission.messageLog.length |
-| activeAgentCount | workflow agent directory | mission.agentCrew.filter(working/thinking) |
+| 字段               | Workflow 补充层来源            | Mission 原生来源                             |
+| ------------------ | ------------------------------ | -------------------------------------------- |
+| departmentLabels   | workflow organization snapshot | mission.organization.departments             |
+| taskCount          | workflow tasks.length          | mission.workPackages.length                  |
+| completedTaskCount | workflow tasks.filter(passed)  | mission.workPackages.filter(passed/verified) |
+| messageCount       | workflow messages.length       | mission.messageLog.length                    |
+| activeAgentCount   | workflow agent directory       | mission.agentCrew.filter(working/thinking)   |
 
 ### MissionTaskDetail 字段来源对比
 
-| 字段 | Workflow 补充层来源 | Mission 原生来源 |
-|------|-------------------|-----------------|
-| agents | workflow agentDirectory + tasks | mission.agentCrew + workPackages |
-| logSummary | workflow messages | mission.messageLog |
-| artifacts (reports) | workflow report paths | mission.artifacts |
-| stages | mission.stages (已原生) | mission.stages (不变) |
-| timeline | mission.events (已原生) | mission.events (不变) |
+| 字段                | Workflow 补充层来源             | Mission 原生来源                 |
+| ------------------- | ------------------------------- | -------------------------------- |
+| agents              | workflow agentDirectory + tasks | mission.agentCrew + workPackages |
+| logSummary          | workflow messages               | mission.messageLog               |
+| artifacts (reports) | workflow report paths           | mission.artifacts                |
+| stages              | mission.stages (已原生)         | mission.stages (不变)            |
+| timeline            | mission.events (已原生)         | mission.events (不变)            |
 
 ## 正确性属性
 
-*正确性属性是在系统所有有效执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_正确性属性是在系统所有有效执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: MissionRecord 丰富化字段向后兼容
 
-*For any* MissionRecord, the record SHALL be valid regardless of which combination of enrichment fields (organization, workPackages, messageLog, agentCrew) are present or absent. A MissionRecord with none of the new fields SHALL be indistinguishable in behavior from the pre-migration format.
+_For any_ MissionRecord, the record SHALL be valid regardless of which combination of enrichment fields (organization, workPackages, messageLog, agentCrew) are present or absent. A MissionRecord with none of the new fields SHALL be indistinguishable in behavior from the pre-migration format.
 
 **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.7**
 
 ### Property 2: 阶段完成丰富化完整性
 
-*For any* workflow stage completion event with associated organization, tasks, and messages data, when the MissionOrchestrator processes the stage completion, the resulting MissionRecord SHALL contain: (a) organization field populated if the completed stage is 'planning' or 'direction', (b) workPackages field populated if the completed stage is 'execution', 'review', 'revision', or 'verify', (c) messageLog field always populated with the most recent messages (up to 50).
+_For any_ workflow stage completion event with associated organization, tasks, and messages data, when the MissionOrchestrator processes the stage completion, the resulting MissionRecord SHALL contain: (a) organization field populated if the completed stage is 'planning' or 'direction', (b) workPackages field populated if the completed stage is 'execution', 'review', 'revision', or 'verify', (c) messageLog field always populated with the most recent messages (up to 50).
 
 **Validates: Requirements 2.5, 2.6**
 
 ### Property 3: 原生 Summary 构建完整性
 
-*For any* MissionRecord with populated enrichment fields (organization, workPackages, messageLog, agentCrew), the native summary builder SHALL produce a valid MissionTaskSummary where: (a) departmentLabels derives from organization.departments, (b) taskCount equals workPackages.length, (c) completedTaskCount equals workPackages filtered by 'passed' or 'verified' status, (d) messageCount equals messageLog.length, (e) activeAgentCount equals agentCrew filtered by 'working' or 'thinking' status.
+_For any_ MissionRecord with populated enrichment fields (organization, workPackages, messageLog, agentCrew), the native summary builder SHALL produce a valid MissionTaskSummary where: (a) departmentLabels derives from organization.departments, (b) taskCount equals workPackages.length, (c) completedTaskCount equals workPackages filtered by 'passed' or 'verified' status, (d) messageCount equals messageLog.length, (e) activeAgentCount equals agentCrew filtered by 'working' or 'thinking' status.
 
 **Validates: Requirements 3.2**
 
 ### Property 4: 原生 Detail 构建完整性
 
-*For any* MissionRecord with populated enrichment fields, the native detail builder SHALL produce a valid MissionTaskDetail where: (a) stages array length equals mission.stages.length, (b) agents array contains at least one agent with id 'mission-core', (c) timeline derives from mission.events, (d) logSummary derives from mission.messageLog.
+_For any_ MissionRecord with populated enrichment fields, the native detail builder SHALL produce a valid MissionTaskDetail where: (a) stages array length equals mission.stages.length, (b) agents array contains at least one agent with id 'mission-core', (c) timeline derives from mission.events, (d) logSummary derives from mission.messageLog.
 
 **Validates: Requirements 3.3**
 
 ### Property 5: 数据源等价性（变形属性）
 
-*For any* MissionRecord that has a corresponding WorkflowRecord with equivalent data, the MissionTaskSummary produced by the native builder (buildNativeSummaryRecord) SHALL have equivalent field values to the MissionTaskSummary produced by the legacy workflow builder (buildSummaryRecord) for the following fields: status, progress, departmentLabels, taskCount, completedTaskCount, messageCount, activeAgentCount.
+_For any_ MissionRecord that has a corresponding WorkflowRecord with equivalent data, the MissionTaskSummary produced by the native builder (buildNativeSummaryRecord) SHALL have equivalent field values to the MissionTaskSummary produced by the legacy workflow builder (buildSummaryRecord) for the following fields: status, progress, departmentLabels, taskCount, completedTaskCount, messageCount, activeAgentCount.
 
 **Validates: Requirements 3.7**
 
@@ -401,28 +420,28 @@ async function hydrateNativeTaskData(options?: { preferredTaskId?: string | null
 
 ### MissionOrchestrator 丰富化
 
-| 场景 | 处理方式 |
-|------|----------|
-| workflowId 对应的 workflow 不存在 | 跳过丰富化，MissionRecord 保持现有字段，不报错 |
-| extractOrganization 返回空数据 | organization 字段设为 undefined，不影响其他字段 |
-| extractWorkPackages 抛出异常 | catch 并 log warn，workPackages 保持上一次值 |
-| extractMessageLog 返回空数组 | messageLog 设为空数组 [] |
+| 场景                              | 处理方式                                        |
+| --------------------------------- | ----------------------------------------------- |
+| workflowId 对应的 workflow 不存在 | 跳过丰富化，MissionRecord 保持现有字段，不报错  |
+| extractOrganization 返回空数据    | organization 字段设为 undefined，不影响其他字段 |
+| extractWorkPackages 抛出异常      | catch 并 log warn，workPackages 保持上一次值    |
+| extractMessageLog 返回空数组      | messageLog 设为空数组 []                        |
 
 ### tasks-store 原生构建
 
-| 场景 | 处理方式 |
-|------|----------|
-| mission.organization 为 undefined | departmentLabels 返回空数组 [] |
-| mission.workPackages 为 undefined | taskCount/completedTaskCount 返回 0 |
-| mission.messageLog 为 undefined | messageCount 返回 0，logSummary 返回空数组 |
-| mission.agentCrew 为 undefined | activeAgentCount 返回 0，agents 只包含 mission-core |
+| 场景                              | 处理方式                                            |
+| --------------------------------- | --------------------------------------------------- |
+| mission.organization 为 undefined | departmentLabels 返回空数组 []                      |
+| mission.workPackages 为 undefined | taskCount/completedTaskCount 返回 0                 |
+| mission.messageLog 为 undefined   | messageCount 返回 0，logSummary 返回空数组          |
+| mission.agentCrew 为 undefined    | activeAgentCount 返回 0，agents 只包含 mission-core |
 
 ### 特性开关回退
 
-| 场景 | 处理方式 |
-|------|----------|
-| useMissionNativeData = true 但原生数据不完整 | 使用默认值（0、空数组），不回退到 workflow 路径 |
-| useMissionNativeData = false | 完全使用现有 workflow 补充层逻辑，不调用原生构建函数 |
+| 场景                                         | 处理方式                                             |
+| -------------------------------------------- | ---------------------------------------------------- |
+| useMissionNativeData = true 但原生数据不完整 | 使用默认值（0、空数组），不回退到 workflow 路径      |
+| useMissionNativeData = false                 | 完全使用现有 workflow 补充层逻辑，不调用原生构建函数 |
 
 ## 测试策略
 

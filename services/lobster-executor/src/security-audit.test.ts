@@ -71,7 +71,7 @@ describe("SecurityAuditLogger", () => {
 
     const job1Entries = logger.getByJobId("job-1");
     expect(job1Entries).toHaveLength(2);
-    expect(job1Entries.every((e) => e.jobId === "job-1")).toBe(true);
+    expect(job1Entries.every(e => e.jobId === "job-1")).toBe(true);
 
     const job2Entries = logger.getByJobId("job-2");
     expect(job2Entries).toHaveLength(1);

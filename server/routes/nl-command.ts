@@ -25,7 +25,7 @@ type PreviewGenerationMode = "judge" | "questions" | "repair";
 export interface NLCommandRouterDeps {
   orchestrator?: unknown;
   previewClarificationQuestions?: (
-    request: ClarificationPreviewRequest,
+    request: ClarificationPreviewRequest
   ) => Promise<ClarificationPreviewResponse>;
 }
 
@@ -66,7 +66,7 @@ function normalizePreviewOption(value: unknown): string {
 
 function normalizePreviewQuestion(
   value: unknown,
-  index: number,
+  index: number
 ): ClarificationQuestion | null {
   if (!value || typeof value !== "object") return null;
 
@@ -79,8 +79,10 @@ function normalizePreviewQuestion(
   const options = Array.isArray(question.options)
     ? Array.from(
         new Set(
-          question.options.map(option => normalizePreviewOption(option)).filter(Boolean),
-        ),
+          question.options
+            .map(option => normalizePreviewOption(option))
+            .filter(Boolean)
+        )
       ).slice(0, 4)
     : undefined;
   const hasChoiceOptions = Boolean(options && options.length >= 2);
@@ -95,7 +97,7 @@ function normalizePreviewQuestion(
         ? question.questionId.trim()
         : typeof question.id === "string" && question.id.trim()
           ? question.id.trim()
-        : `generated:${index + 1}`,
+          : `generated:${index + 1}`,
     text,
     type: hasChoiceOptions
       ? rawType === "free_text"
@@ -110,7 +112,9 @@ function normalizePreviewQuestion(
   };
 }
 
-function normalizePreviewResponse(value: unknown): ClarificationPreviewResponse {
+function normalizePreviewResponse(
+  value: unknown
+): ClarificationPreviewResponse {
   const payload =
     value && typeof value === "object"
       ? (value as Partial<ClarificationPreviewResponse>)
@@ -118,8 +122,8 @@ function normalizePreviewResponse(value: unknown): ClarificationPreviewResponse 
   const questions = Array.isArray(payload.questions)
     ? payload.questions
         .map((question, index) => normalizePreviewQuestion(question, index))
-        .filter(
-          (question): question is ClarificationQuestion => Boolean(question),
+        .filter((question): question is ClarificationQuestion =>
+          Boolean(question)
         )
         .slice(0, 3)
     : [];
@@ -154,7 +158,7 @@ function needsChoiceRepair(response: ClarificationPreviewResponse): boolean {
 function buildPreviewPrompts(
   request: ClarificationPreviewRequest,
   mode: PreviewGenerationMode,
-  questionsToRepair: ClarificationQuestion[] = [],
+  questionsToRepair: ClarificationQuestion[] = []
 ): { systemPrompt: string; userPrompt: string } {
   const locale = request.locale === "en-US" ? "en-US" : "zh-CN";
   const localeInstruction =
@@ -219,7 +223,7 @@ function buildPreviewPrompts(
           : undefined,
     },
     null,
-    2,
+    2
   );
 
   return { systemPrompt, userPrompt };
@@ -228,12 +232,12 @@ function buildPreviewPrompts(
 async function generatePreviewResponse(
   request: ClarificationPreviewRequest,
   mode: PreviewGenerationMode,
-  questionsToRepair: ClarificationQuestion[] = [],
+  questionsToRepair: ClarificationQuestion[] = []
 ): Promise<ClarificationPreviewResponse> {
   const { systemPrompt, userPrompt } = buildPreviewPrompts(
     request,
     mode,
-    questionsToRepair,
+    questionsToRepair
   );
   const response = await callLLMJson<ClarificationPreviewResponse>(
     [
@@ -247,24 +251,24 @@ async function generatePreviewResponse(
       model: process.env.LLM_MODEL,
       temperature: mode === "judge" ? 0.2 : 0.1,
       maxTokens: mode === "judge" ? 800 : 1200,
-    },
+    }
   );
 
   return normalizePreviewResponse(response);
 }
 
 function buildFallbackClarificationQuestions(
-  request: ClarificationPreviewRequest,
+  request: ClarificationPreviewRequest
 ): ClarificationQuestion[] {
   const locale = request.locale === "en-US" ? "en-US" : "zh-CN";
   const text = request.commandText.trim();
   const hasTimeline =
     /今天|明天|本周|下周|月底|本月|截止|deadline|launch|release|ship|before|by\s+\w+/i.test(
-      text,
+      text
     );
   const hasConstraint =
     /零停机|zero downtime|回滚|rollback|预算|budget|风险|constraint|兼容|compliance|sla|测试|test/i.test(
-      text,
+      text
     );
 
   const questions: ClarificationQuestion[] = [
@@ -336,7 +340,7 @@ function buildFallbackClarificationQuestions(
 }
 
 async function defaultPreviewClarificationQuestions(
-  request: ClarificationPreviewRequest,
+  request: ClarificationPreviewRequest
 ): Promise<ClarificationPreviewResponse> {
   const firstPass = await generatePreviewResponse(request, "judge");
   if (!firstPass.needsClarification) {
@@ -355,12 +359,14 @@ async function defaultPreviewClarificationQuestions(
   }
 
   const repairSource =
-    secondPass.questions.length > 0 ? secondPass.questions : firstPass.questions;
+    secondPass.questions.length > 0
+      ? secondPass.questions
+      : firstPass.questions;
   if (repairSource.length > 0) {
     const thirdPass = await generatePreviewResponse(
       request,
       "repair",
-      repairSource,
+      repairSource
     );
     if (!needsChoiceRepair(thirdPass)) {
       return thirdPass;
@@ -373,9 +379,7 @@ async function defaultPreviewClarificationQuestions(
   };
 }
 
-export function createNLCommandRouter(
-  deps: NLCommandRouterDeps = {},
-): Router {
+export function createNLCommandRouter(deps: NLCommandRouterDeps = {}): Router {
   const router = Router();
 
   router.post("/clarification-preview", async (req, res) => {

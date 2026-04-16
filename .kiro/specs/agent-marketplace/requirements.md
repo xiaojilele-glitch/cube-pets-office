@@ -27,7 +27,7 @@ Guest Agent（访客代理）机制允许用户在任务执行期间邀请外部
 1. THE shared/organization-schema.ts SHALL 定义 GuestAgentNode 接口，继承 WorkflowOrganizationNode，新增字段：invitedBy（string，邀请者）、source（string，来源如 "manual"、"feishu"、"natural_language"）、expiresAt（number，过期时间戳）、guestConfig（GuestAgentConfig）
 2. THE GuestAgentConfig SHALL 包含以下字段：model（string）、baseUrl（string）、apiKey（string，可选）、skills（技能描述数组）、mcp（MCP 绑定数组）、avatarHint（string，建议的动物/表情用于 3D 渲染）
 3. THE shared/runtime-agent.ts SHALL 扩展 RuntimeAgentConfig，新增 isGuest 布尔字段以区分访客代理和常驻代理
-4. THE System SHALL 对所有访客代理 ID 使用 "guest_" 前缀，防止与现有代理命名冲突
+4. THE System SHALL 对所有访客代理 ID 使用 "guest\_" 前缀，防止与现有代理命名冲突
 5. THE GuestAgentNode SHALL 与现有 WorkflowOrganizationSnapshot 结构兼容，使 PetWorkers.tsx 无需特殊处理即可渲染访客代理
 
 ### 需求 2：访客代理注册 API
@@ -99,4 +99,4 @@ Guest Agent（访客代理）机制允许用户在任务执行期间邀请外部
 
 1. THE System SHALL 将 GuestAgentConfig 序列化为 JSON 格式存入组织快照
 2. FOR ALL 合法的 GuestAgentConfig 对象，序列化后再反序列化 SHALL 产生等价的对象（往返一致性）
-3. THE API 响应 SHALL 在返回访客代理信息时隐藏 apiKey 字段（替换为 "***"）
+3. THE API 响应 SHALL 在返回访客代理信息时隐藏 apiKey 字段（替换为 "\*\*\*"）

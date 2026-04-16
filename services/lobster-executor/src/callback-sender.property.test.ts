@@ -64,7 +64,7 @@ const arbEventType = fc.constantFrom(
   "job.progress" as const,
   "job.completed" as const,
   "job.failed" as const,
-  "job.log" as const,
+  "job.log" as const
 );
 
 /* ─── Tests ─── */
@@ -77,11 +77,11 @@ describe("Property 7: 回调重试与容错", () => {
   it("partial failures: fetch is called exactly failCount + 1 times (failures + 1 success)", async () => {
     await fc.assert(
       fc.asyncProperty(
-        arbMaxRetries.chain((maxRetries) =>
-          fc.integer({ min: 0, max: maxRetries }).map((failCount) => ({
+        arbMaxRetries.chain(maxRetries =>
+          fc.integer({ min: 0, max: maxRetries }).map(failCount => ({
             maxRetries,
             failCount,
-          })),
+          }))
         ),
         arbEventType,
         async ({ maxRetries, failCount }, eventType) => {
@@ -89,49 +89,57 @@ describe("Property 7: 回调重试与容错", () => {
 
           const sender = new CallbackSender(
             { secret: "s", executorId: "e", maxRetries, baseDelayMs: 1 },
-            mockFetch,
+            mockFetch
           );
 
-          await sender.send("https://test.local/events", makeEvent({ type: eventType }));
+          await sender.send(
+            "https://test.local/events",
+            makeEvent({ type: eventType })
+          );
 
           // failCount failures + 1 successful call
           expect(mockFetch).toHaveBeenCalledTimes(failCount + 1);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("all retries exhausted: send() resolves (never throws) and fetch called maxRetries + 1 times", async () => {
     await fc.assert(
-      fc.asyncProperty(arbMaxRetries, arbEventType, async (maxRetries, eventType) => {
-        // failCount > maxRetries → every attempt fails
-        const totalAttempts = maxRetries + 1;
-        const { fn: mockFetch } = createCountingFetch(totalAttempts);
+      fc.asyncProperty(
+        arbMaxRetries,
+        arbEventType,
+        async (maxRetries, eventType) => {
+          // failCount > maxRetries → every attempt fails
+          const totalAttempts = maxRetries + 1;
+          const { fn: mockFetch } = createCountingFetch(totalAttempts);
 
-        const sender = new CallbackSender(
-          { secret: "s", executorId: "e", maxRetries, baseDelayMs: 1 },
-          mockFetch,
-        );
+          const sender = new CallbackSender(
+            { secret: "s", executorId: "e", maxRetries, baseDelayMs: 1 },
+            mockFetch
+          );
 
-        // Must resolve, not reject — callback failure never blocks Job
-        await expect(
-          sender.send("https://test.local/events", makeEvent({ type: eventType })),
-        ).resolves.toBeUndefined();
+          // Must resolve, not reject — callback failure never blocks Job
+          await expect(
+            sender.send(
+              "https://test.local/events",
+              makeEvent({ type: eventType })
+            )
+          ).resolves.toBeUndefined();
 
-        // 1 initial attempt + maxRetries retries
-        expect(mockFetch).toHaveBeenCalledTimes(totalAttempts);
-      }),
-      { numRuns: 100 },
+          // 1 initial attempt + maxRetries retries
+          expect(mockFetch).toHaveBeenCalledTimes(totalAttempts);
+        }
+      ),
+      { numRuns: 100 }
     );
   });
 
   it("send() never throws regardless of fetch behavior (network errors, HTTP errors, or success)", async () => {
-    const arbFetchBehavior = fc.constantFrom<"network-error" | "http-error" | "success">(
-      "network-error",
-      "http-error",
-      "success",
-    );
+    const arbFetchBehavior = fc.constantFrom<
+      "network-error" | "http-error" | "success"
+    >("network-error", "http-error", "success");
 
     await fc.assert(
       fc.asyncProperty(
@@ -144,7 +152,10 @@ describe("Property 7: 回调重试与容错", () => {
               case "network-error":
                 throw new Error("ECONNREFUSED");
               case "http-error":
-                return new Response(null, { status: 503, statusText: "Service Unavailable" });
+                return new Response(null, {
+                  status: 503,
+                  statusText: "Service Unavailable",
+                });
               case "success":
                 return new Response(null, { status: 200 });
             }
@@ -152,16 +163,19 @@ describe("Property 7: 回调重试与容错", () => {
 
           const sender = new CallbackSender(
             { secret: "s", executorId: "e", maxRetries, baseDelayMs: 1 },
-            mockFetch,
+            mockFetch
           );
 
           // Must always resolve — this is the core fault-tolerance guarantee
           await expect(
-            sender.send("https://test.local/events", makeEvent({ type: eventType })),
+            sender.send(
+              "https://test.local/events",
+              makeEvent({ type: eventType })
+            )
           ).resolves.toBeUndefined();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

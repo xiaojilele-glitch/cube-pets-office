@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback, type ReactNode } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { X } from 'lucide-react';
+import { useEffect, useRef, useCallback, type ReactNode } from "react";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { X } from "lucide-react";
 
 /** Height reserved for the bottom HoloDock (icon + padding + glow dot). */
 const DOCK_BOTTOM_RESERVE = 80;
@@ -19,18 +19,18 @@ export interface HoloDrawerProps {
 /* ── Animation variants ── */
 
 const drawerVariants: Variants = {
-  hidden: { x: '100%', opacity: 1 },
+  hidden: { x: "100%", opacity: 1 },
   visible: {
     x: 0,
     opacity: 1,
     transition: {
-      type: 'spring',
+      type: "spring",
       stiffness: 300,
       damping: 25,
     },
   },
   exit: {
-    x: '100%',
+    x: "100%",
     opacity: 0,
     transition: {
       duration: 0.2,
@@ -50,22 +50,28 @@ const drawerVariants: Variants = {
  *
  * @see AC-3.1 through AC-3.5
  */
-export function HoloDrawer({ open, onClose, title, width = 400, children }: HoloDrawerProps) {
+export function HoloDrawer({
+  open,
+  onClose,
+  title,
+  width = 400,
+  children,
+}: HoloDrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const clampedWidth = Math.min(width, 420);
 
   // ── ESC key close (AC-3.5) ──
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     },
-    [onClose],
+    [onClose]
   );
 
   useEffect(() => {
     if (!open) return;
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, handleKeyDown]);
 
   // ── Click-outside close (AC-3.5) ──
@@ -80,12 +86,12 @@ export function HoloDrawer({ open, onClose, title, width = 400, children }: Holo
 
     // Delay one frame so the opening click doesn't immediately close.
     const raf = requestAnimationFrame(() => {
-      document.addEventListener('pointerdown', handlePointerDown);
+      document.addEventListener("pointerdown", handlePointerDown);
     });
 
     return () => {
       cancelAnimationFrame(raf);
-      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [open, onClose]);
 
@@ -109,7 +115,7 @@ export function HoloDrawer({ open, onClose, title, width = 400, children }: Holo
           <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-3">
             <h2
               className="truncate text-sm font-semibold text-white"
-              style={{ fontFamily: 'var(--font-display)' }}
+              style={{ fontFamily: "var(--font-display)" }}
             >
               {title}
             </h2>

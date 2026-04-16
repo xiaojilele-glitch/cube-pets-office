@@ -2,17 +2,17 @@ import type {
   AutonomyConfig,
   CompetitionSession,
   ContestantEntry,
-} from '../../shared/autonomy-types.js';
-import type { CapabilityProfileManager } from './capability-profile-manager.js';
-import type { TaskRequest } from './self-assessment.js';
+} from "../../shared/autonomy-types.js";
+import type { CapabilityProfileManager } from "./capability-profile-manager.js";
+import type { TaskRequest } from "./self-assessment.js";
 
 // ─── Local Types ─────────────────────────────────────────────
 
 /** Extended task request with competition-specific fields. */
 export interface CompetitionTaskRequest extends TaskRequest {
-  priority: 'critical' | 'high' | 'normal' | 'low';
-  qualityRequirement: 'high' | 'normal' | 'low';
-  dataSecurityLevel: 'sensitive' | 'normal';
+  priority: "critical" | "high" | "normal" | "low";
+  qualityRequirement: "high" | "normal" | "low";
+  dataSecurityLevel: "sensitive" | "normal";
   estimatedDurationMs: number;
   manualCompetition: boolean;
   historicalFailRate: number;
@@ -23,7 +23,7 @@ export interface CompetitionTaskRequest extends TaskRequest {
 export interface CostMonitor {
   checkCompetitionBudget(
     estimatedTokens: number,
-    missionRemainingBudget: number,
+    missionRemainingBudget: number
   ): { approved: boolean; reason?: string };
 }
 
@@ -37,7 +37,7 @@ export class CompetitionEngine {
   constructor(
     private readonly profileManager: CapabilityProfileManager,
     private readonly costMonitor: CostMonitor,
-    private readonly config: AutonomyConfig,
+    private readonly config: AutonomyConfig
   ) {}
 
   /**
@@ -50,8 +50,8 @@ export class CompetitionEngine {
    * - task.manualCompetition === true
    */
   shouldTrigger(task: CompetitionTaskRequest, bestFitness: number): boolean {
-    if (task.priority === 'critical') return true;
-    if (task.qualityRequirement === 'high') return true;
+    if (task.priority === "critical") return true;
+    if (task.qualityRequirement === "high") return true;
     if (this.computeUncertainty(task, bestFitness) > 0.7) return true;
     if (task.manualCompetition === true) return true;
     return false;
@@ -66,7 +66,10 @@ export class CompetitionEngine {
    *
    * Result clamped to [0, 1].
    */
-  computeUncertainty(task: CompetitionTaskRequest, bestFitness: number): number {
+  computeUncertainty(
+    task: CompetitionTaskRequest,
+    bestFitness: number
+  ): number {
     const raw =
       0.4 * task.historicalFailRate +
       0.35 * (1 - bestFitness) +
@@ -87,13 +90,14 @@ export class CompetitionEngine {
 
     // Build fitness + skillVector lookup
     const candidateData = candidates
-      .map((id) => {
+      .map(id => {
         const profile = this.profileManager.getProfile(id);
         if (!profile) return null;
         // Compute a simple fitnessScore proxy: average of skill values
         const skills = profile.skillVector;
         const vals = Array.from(skills.values());
-        const avgSkill = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+        const avgSkill =
+          vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
         // Use confidenceScore as a rough fitness proxy
         const fitness = avgSkill * 0.5 + profile.confidenceScore * 0.5;
         return { id, fitness, skills };
@@ -114,7 +118,7 @@ export class CompetitionEngine {
 
     // Step 2: subsequent picks — max cosine distance, fitness >= 0.5
     while (selected.length < count) {
-      let bestCandidate: typeof candidateData[0] | null = null;
+      let bestCandidate: (typeof candidateData)[0] | null = null;
       let bestDistance = -1;
 
       for (const candidate of candidateData) {
@@ -123,7 +127,7 @@ export class CompetitionEngine {
 
         // Compute minimum cosine distance to any already-selected agent
         const minDist = Math.min(
-          ...selected.map((s) => cosineDistance(candidate.skills, s.skills)),
+          ...selected.map(s => cosineDistance(candidate.skills, s.skills))
         );
 
         if (minDist > bestDistance) {
@@ -137,7 +141,7 @@ export class CompetitionEngine {
       selectedIds.add(bestCandidate.id);
     }
 
-    return selected.map((s) => s.id);
+    return selected.map(s => s.id);
   }
 
   /**
@@ -147,12 +151,12 @@ export class CompetitionEngine {
   async runCompetition(
     task: CompetitionTaskRequest,
     contestants: string[],
-    deadline: number,
+    deadline: number
   ): Promise<CompetitionSession> {
-    const entries: ContestantEntry[] = contestants.map((agentId) => {
+    const entries: ContestantEntry[] = contestants.map(agentId => {
       const profile = this.profileManager.getProfile(agentId);
       const isExternal = profile
-        ? profile.specializationTags.includes('external')
+        ? profile.specializationTags.includes("external")
         : false;
       return {
         agentId,
@@ -166,7 +170,7 @@ export class CompetitionEngine {
       id: `comp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       taskId: task.taskId,
       contestants: entries,
-      status: 'running',
+      status: "running",
       deadline,
       budgetApproved: true,
       startedAt: Date.now(),
@@ -183,12 +187,12 @@ export class CompetitionEngine {
    * Returns false for external agents on sensitive tasks, true otherwise.
    */
   checkDataSecurity(agentId: string, task: CompetitionTaskRequest): boolean {
-    if (task.dataSecurityLevel !== 'sensitive') return true;
+    if (task.dataSecurityLevel !== "sensitive") return true;
 
     const profile = this.profileManager.getProfile(agentId);
     if (!profile) return false; // unknown agent on sensitive task → block
 
-    const isExternal = profile.specializationTags.includes('external');
+    const isExternal = profile.specializationTags.includes("external");
     return !isExternal;
   }
 
@@ -199,7 +203,7 @@ export class CompetitionEngine {
   computeDeadline(estimatedDurationMs: number): number {
     return Math.min(
       estimatedDurationMs * 1.5,
-      this.config.competition.maxDeadlineMs,
+      this.config.competition.maxDeadlineMs
     );
   }
 }
@@ -215,7 +219,10 @@ function clamp(value: number, min: number, max: number): number {
  * distance = 1 - cosineSimilarity.
  * Returns 1.0 if either vector is zero-magnitude (maximally distant).
  */
-function cosineDistance(a: Map<string, number>, b: Map<string, number>): number {
+function cosineDistance(
+  a: Map<string, number>,
+  b: Map<string, number>
+): number {
   const allKeys = new Set([...a.keys(), ...b.keys()]);
 
   let dot = 0;

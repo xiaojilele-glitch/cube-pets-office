@@ -8,7 +8,7 @@
  * @see Requirements 7.1, 7.2, 7.4, 7.5, 7.6
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 import type {
   ApprovalDecision,
@@ -16,8 +16,8 @@ import type {
   AuditEntry,
   NLExecutionPlan,
   PlanApprovalRequest,
-} from '../../../shared/nl-command/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
+} from "../../../shared/nl-command/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
 
 export interface PlanApprovalOptions {
   auditTrail: AuditTrail;
@@ -32,7 +32,7 @@ export class PlanApproval {
 
   constructor(options: PlanApprovalOptions) {
     this.auditTrail = options.auditTrail;
-    this.defaultApprovers = options.defaultApprovers ?? ['admin'];
+    this.defaultApprovers = options.defaultApprovers ?? ["admin"];
   }
 
   /**
@@ -41,7 +41,7 @@ export class PlanApproval {
    */
   async createApprovalRequest(
     plan: NLExecutionPlan,
-    requiredApprovers?: string[],
+    requiredApprovers?: string[]
   ): Promise<PlanApprovalRequest> {
     const now = Date.now();
     const request: PlanApprovalRequest = {
@@ -49,19 +49,26 @@ export class PlanApproval {
       planId: plan.planId,
       requiredApprovers: requiredApprovers ?? [...this.defaultApprovers],
       approvals: [],
-      status: 'pending',
+      status: "pending",
       createdAt: now,
       updatedAt: now,
     };
 
     this.requests.set(request.requestId, request);
 
-    await this.recordAudit('approval_submitted', request.requiredApprovers[0] ?? 'system', {
-      content: `Approval request created for plan ${plan.planId}`,
-      entityId: plan.planId,
-      entityType: 'plan',
-      metadata: { requestId: request.requestId, requiredApprovers: request.requiredApprovers },
-    });
+    await this.recordAudit(
+      "approval_submitted",
+      request.requiredApprovers[0] ?? "system",
+      {
+        content: `Approval request created for plan ${plan.planId}`,
+        entityId: plan.planId,
+        entityType: "plan",
+        metadata: {
+          requestId: request.requestId,
+          requiredApprovers: request.requiredApprovers,
+        },
+      }
+    );
 
     return { ...request };
   }
@@ -73,8 +80,8 @@ export class PlanApproval {
   async submitApproval(
     requestId: string,
     approverId: string,
-    decision: 'approved' | 'rejected' | 'revision_requested',
-    comments?: string,
+    decision: "approved" | "rejected" | "revision_requested",
+    comments?: string
   ): Promise<PlanApprovalRequest> {
     const request = this.requests.get(requestId);
     if (!request) {
@@ -82,12 +89,16 @@ export class PlanApproval {
     }
 
     if (!request.requiredApprovers.includes(approverId)) {
-      throw new Error(`Approver ${approverId} is not a required approver for request ${requestId}`);
+      throw new Error(
+        `Approver ${approverId} is not a required approver for request ${requestId}`
+      );
     }
 
     // Check for duplicate submission
-    if (request.approvals.some((a) => a.approverId === approverId)) {
-      throw new Error(`Approver ${approverId} has already submitted a decision for request ${requestId}`);
+    if (request.approvals.some(a => a.approverId === approverId)) {
+      throw new Error(
+        `Approver ${approverId} has already submitted a decision for request ${requestId}`
+      );
     }
 
     const approvalDecision: ApprovalDecision = {
@@ -102,14 +113,16 @@ export class PlanApproval {
     request.updatedAt = Date.now();
 
     await this.recordAudit(
-      request.status === 'pending' ? 'approval_submitted' : 'approval_completed',
+      request.status === "pending"
+        ? "approval_submitted"
+        : "approval_completed",
       approverId,
       {
         content: `Approver ${approverId} submitted '${decision}' for plan ${request.planId}`,
         entityId: request.planId,
-        entityType: 'plan',
+        entityType: "plan",
         metadata: { requestId, decision, comments },
-      },
+      }
     );
 
     return { ...request, approvals: [...request.approvals] };
@@ -120,7 +133,7 @@ export class PlanApproval {
    * @see Requirement 7.5
    */
   isApprovalComplete(request: PlanApprovalRequest): boolean {
-    return request.status !== 'pending';
+    return request.status !== "pending";
   }
 
   /**
@@ -147,27 +160,34 @@ export class PlanApproval {
   private computeStatus(request: PlanApprovalRequest): ApprovalStatus {
     const decisions = request.approvals;
 
-    if (decisions.some((d) => d.decision === 'rejected')) {
-      return 'rejected';
+    if (decisions.some(d => d.decision === "rejected")) {
+      return "rejected";
     }
 
-    if (decisions.some((d) => d.decision === 'revision_requested')) {
-      return 'revision_requested';
+    if (decisions.some(d => d.decision === "revision_requested")) {
+      return "revision_requested";
     }
 
     const allApproved =
       request.requiredApprovers.length > 0 &&
-      request.requiredApprovers.every((approver) =>
-        decisions.some((d) => d.approverId === approver && d.decision === 'approved'),
+      request.requiredApprovers.every(approver =>
+        decisions.some(
+          d => d.approverId === approver && d.decision === "approved"
+        )
       );
 
-    return allApproved ? 'approved' : 'pending';
+    return allApproved ? "approved" : "pending";
   }
 
   private async recordAudit(
-    operationType: AuditEntry['operationType'],
+    operationType: AuditEntry["operationType"],
     operator: string,
-    details: { content: string; entityId?: string; entityType?: string; metadata?: Record<string, unknown> },
+    details: {
+      content: string;
+      entityId?: string;
+      entityType?: string;
+      metadata?: Record<string, unknown>;
+    }
   ): Promise<void> {
     await this.auditTrail.record({
       entryId: randomUUID(),
@@ -175,7 +195,7 @@ export class PlanApproval {
       operator,
       content: details.content,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: details.entityId,
       entityType: details.entityType,
       metadata: details.metadata,

@@ -59,14 +59,13 @@ export class AuditExport {
    */
   exportLog(
     filters: AuditQueryFilters,
-    format: "json" | "csv",
+    format: "json" | "csv"
   ): { data: string; hash: string; signature: string } {
     const entries = this.getFilteredEntries(filters);
 
     // 10.1 / 10.2 格式化导出数据
-    const data = format === "json"
-      ? this.formatJson(entries)
-      : this.formatCsv(entries);
+    const data =
+      format === "json" ? this.formatJson(entries) : this.formatCsv(entries);
 
     // 10.3 完整性验证信息
     const hash = crypto.createHash("sha256").update(data).digest("hex");
@@ -118,22 +117,41 @@ export class AuditExport {
     const count = this.chain.getEntryCount();
     if (count === 0) return [];
     const all = this.chain.getEntries(0, count - 1);
-    return all.filter((entry) => this.matchFilters(entry, filters));
+    return all.filter(entry => this.matchFilters(entry, filters));
   }
 
   /** 应用过滤条件（与 AuditQuery 逻辑一致） */
-  private matchFilters(entry: AuditLogEntry, filters: AuditQueryFilters): boolean {
+  private matchFilters(
+    entry: AuditLogEntry,
+    filters: AuditQueryFilters
+  ): boolean {
     const event = entry.event;
 
     if (filters.eventType !== undefined) {
-      const types = Array.isArray(filters.eventType) ? filters.eventType : [filters.eventType];
+      const types = Array.isArray(filters.eventType)
+        ? filters.eventType
+        : [filters.eventType];
       if (!types.includes(event.eventType)) return false;
     }
-    if (filters.actorId !== undefined && event.actor.id !== filters.actorId) return false;
-    if (filters.actorType !== undefined && event.actor.type !== filters.actorType) return false;
-    if (filters.resourceType !== undefined && event.resource.type !== filters.resourceType) return false;
-    if (filters.resourceId !== undefined && event.resource.id !== filters.resourceId) return false;
-    if (filters.result !== undefined && event.result !== filters.result) return false;
+    if (filters.actorId !== undefined && event.actor.id !== filters.actorId)
+      return false;
+    if (
+      filters.actorType !== undefined &&
+      event.actor.type !== filters.actorType
+    )
+      return false;
+    if (
+      filters.resourceType !== undefined &&
+      event.resource.type !== filters.resourceType
+    )
+      return false;
+    if (
+      filters.resourceId !== undefined &&
+      event.resource.id !== filters.resourceId
+    )
+      return false;
+    if (filters.result !== undefined && event.result !== filters.result)
+      return false;
 
     if (filters.severity !== undefined) {
       const def = DEFAULT_EVENT_TYPE_REGISTRY[event.eventType];
@@ -145,7 +163,8 @@ export class AuditExport {
     }
     if (filters.timeRange) {
       const ts = event.timestamp;
-      if (ts < filters.timeRange.start || ts > filters.timeRange.end) return false;
+      if (ts < filters.timeRange.start || ts > filters.timeRange.end)
+        return false;
     }
     if (filters.keyword !== undefined) {
       const lk = filters.keyword.toLowerCase();
@@ -156,7 +175,7 @@ export class AuditExport {
         event.resource.name ?? "",
         event.metadata ? JSON.stringify(event.metadata) : "",
       ];
-      if (!fields.some((f) => f.toLowerCase().includes(lk))) return false;
+      if (!fields.some(f => f.toLowerCase().includes(lk))) return false;
     }
 
     return true;
@@ -176,7 +195,7 @@ export class AuditExport {
     filters: AuditQueryFilters,
     format: string,
     entryCount: number,
-    hash: string,
+    hash: string
   ): void {
     this.collector.record({
       eventType: AuditEventType.AUDIT_EXPORT,

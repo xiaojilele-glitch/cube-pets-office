@@ -27,14 +27,18 @@ async function waitForMissionFailure(baseUrl, missionId) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
-    const { response, body } = await fetchJson(`${baseUrl}/api/tasks/${missionId}`);
+    const { response, body } = await fetchJson(
+      `${baseUrl}/api/tasks/${missionId}`
+    );
     if (response.ok && body?.task?.status === "failed") {
       return body.task;
     }
     await sleep(200);
   }
 
-  throw new Error(`Timed out waiting for recovered mission ${missionId} to fail`);
+  throw new Error(
+    `Timed out waiting for recovered mission ${missionId} to fail`
+  );
 }
 
 async function main() {
@@ -61,17 +65,20 @@ async function main() {
       intervalMs: 250,
     });
 
-    const { response, body } = await fetchJson(`${baseUrl}/api/tasks/smoke/seed-running`, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        title: "Mission restart smoke",
-        detail: "Mission seeded before restart recovery check",
-        progress: 58,
-      }),
-    });
+    const { response, body } = await fetchJson(
+      `${baseUrl}/api/tasks/smoke/seed-running`,
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          title: "Mission restart smoke",
+          detail: "Mission seeded before restart recovery check",
+          progress: 58,
+        }),
+      }
+    );
 
     assert(
       response.ok && body?.missionId,
@@ -94,7 +101,11 @@ async function main() {
 
     const recovered = await waitForMissionFailure(baseUrl, missionId);
     assert(
-      String(recovered.summary || recovered.events?.[recovered.events.length - 1]?.message || "")
+      String(
+        recovered.summary ||
+          recovered.events?.[recovered.events.length - 1]?.message ||
+          ""
+      )
         .toLowerCase()
         .includes("restarted"),
       `Recovered mission did not explain restart failure: ${JSON.stringify(recovered)}`

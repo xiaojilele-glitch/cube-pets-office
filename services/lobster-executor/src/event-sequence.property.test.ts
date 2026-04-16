@@ -52,7 +52,7 @@ function makeRecord(
   dataDir: string,
   steps: number,
   delayMs: number,
-  logs?: string[],
+  logs?: string[]
 ): StoredJobRecord {
   const logFile = join(dataDir, "executor.log");
   const planJob: ExecutionPlanJob = {
@@ -132,7 +132,7 @@ const arbLogs = fc.option(
     minLength: 1,
     maxLength: 10,
   }),
-  { nil: undefined },
+  { nil: undefined }
 );
 
 /* ─── Tests ─── */
@@ -142,11 +142,14 @@ describe("Property 9: 事件序列顺序", () => {
     await fc.assert(
       fc.asyncProperty(arbSteps, arbLogs, async (steps, logs) => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeRecord(dataDir, steps, 0, logs ?? undefined);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         // Must have at least 2 events: started + completed
         expect(events.length).toBeGreaterThanOrEqual(2);
@@ -168,21 +171,21 @@ describe("Property 9: 事件序列顺序", () => {
         }
 
         // Status transitions: running → running → ... → completed
-        const statuses = events.map((e) => e.status);
-        const runningCount = statuses.filter((s) => s === "running").length;
-        const completedCount = statuses.filter((s) => s === "completed").length;
+        const statuses = events.map(e => e.status);
+        const runningCount = statuses.filter(s => s === "running").length;
+        const completedCount = statuses.filter(s => s === "completed").length;
         expect(completedCount).toBe(1);
         expect(runningCount).toBe(events.length - 1);
 
         // Event types sequence: started, progress*, completed
-        const types = events.map((e) => e.type);
+        const types = events.map(e => e.type);
         expect(types[0]).toBe("job.started");
         expect(types[types.length - 1]).toBe("job.completed");
         for (let i = 1; i < types.length - 1; i++) {
           expect(types[i]).toBe("job.progress");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -190,11 +193,14 @@ describe("Property 9: 事件序列顺序", () => {
     await fc.assert(
       fc.asyncProperty(arbSteps, arbLogs, async (steps, logs) => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeRecord(dataDir, steps, 0, logs ?? undefined);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         for (let i = 1; i < events.length; i++) {
           const prev = events[i - 1].progress ?? 0;
@@ -205,7 +211,7 @@ describe("Property 9: 事件序列顺序", () => {
         // Final event should have progress 100
         expect(events[events.length - 1].progress).toBe(100);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -213,13 +219,16 @@ describe("Property 9: 事件序列顺序", () => {
     await fc.assert(
       fc.asyncProperty(arbSteps, arbLogs, async (steps, logs) => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeRecord(dataDir, steps, 0, logs ?? undefined);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
-        const completed = events.find((e) => e.type === "job.completed");
+        const completed = events.find(e => e.type === "job.completed");
         expect(completed).toBeDefined();
         expect(completed!.artifacts).toBeDefined();
         expect(completed!.artifacts!.length).toBeGreaterThan(0);
@@ -227,7 +236,7 @@ describe("Property 9: 事件序列顺序", () => {
         expect(completed!.metrics!.durationMs).toBeDefined();
         expect(completed!.metrics!.durationMs).toBeGreaterThanOrEqual(0);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

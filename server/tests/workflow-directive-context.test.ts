@@ -26,7 +26,11 @@ describe("buildWorkflowDirectiveContext", () => {
   });
 
   it("includes basic attachment metadata without vision analysis", () => {
-    const att = makeAttachment({ name: "readme.md", mimeType: "text/markdown", size: 500 });
+    const att = makeAttachment({
+      name: "readme.md",
+      mimeType: "text/markdown",
+      size: 500,
+    });
     const result = buildWorkflowDirectiveContext("task", [att]);
 
     expect(result).toContain("[Attachment 1] readme.md");
@@ -43,7 +47,8 @@ describe("buildWorkflowDirectiveContext", () => {
       size: 12345,
       content: "OCR text fallback",
       visionReady: true,
-      visualDescription: "A dashboard showing revenue charts with upward trends.",
+      visualDescription:
+        "A dashboard showing revenue charts with upward trends.",
     });
     const result = buildWorkflowDirectiveContext("analyze this", [att]);
 
@@ -51,7 +56,9 @@ describe("buildWorkflowDirectiveContext", () => {
     expect(result).toContain("MIME type: image/png");
     expect(result).toContain("File size: 12345 bytes");
     expect(result).toContain("[Vision Analysis] screenshot.png");
-    expect(result).toContain("A dashboard showing revenue charts with upward trends.");
+    expect(result).toContain(
+      "A dashboard showing revenue charts with upward trends."
+    );
     expect(result).toContain("Full parsed content:");
   });
 
@@ -87,7 +94,10 @@ describe("buildWorkflowDirectiveContext", () => {
       size: 200,
       content: "some notes",
     });
-    const result = buildWorkflowDirectiveContext("process files", [imgAtt, textAtt]);
+    const result = buildWorkflowDirectiveContext("process files", [
+      imgAtt,
+      textAtt,
+    ]);
 
     // Image attachment has vision analysis
     expect(result).toContain("[Vision Analysis] photo.jpg");

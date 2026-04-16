@@ -9,24 +9,38 @@
  * **Validates: Requirements 1.2**
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import fc from 'fast-check';
-import { existsSync, rmSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import fc from "fast-check";
+import { existsSync, rmSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { RoleTemplate, AuthorityLevel, RoleSource } from '../../shared/role-schema.js';
-import type { WorkflowNodeModelConfig } from '../../shared/organization-schema.js';
-import { RoleRegistry } from '../core/role-registry.js';
+import type {
+  RoleTemplate,
+  AuthorityLevel,
+  RoleSource,
+} from "../../shared/role-schema.js";
+import type { WorkflowNodeModelConfig } from "../../shared/organization-schema.js";
+import { RoleRegistry } from "../core/role-registry.js";
 
 const __test_dirname = dirname(fileURLToPath(import.meta.url));
-const TEST_STORE_DIR = resolve(__test_dirname, '../../data/__test_role_registry_prop__');
-const TEST_STORE_PATH = resolve(TEST_STORE_DIR, 'role-templates.json');
+const TEST_STORE_DIR = resolve(
+  __test_dirname,
+  "../../data/__test_role_registry_prop__"
+);
+const TEST_STORE_PATH = resolve(TEST_STORE_DIR, "role-templates.json");
 
 // ── Arbitraries ──────────────────────────────────────────────────
 
-const arbAuthorityLevel: fc.Arbitrary<AuthorityLevel> = fc.constantFrom('high', 'medium', 'low');
-const arbRoleSource: fc.Arbitrary<RoleSource> = fc.constantFrom('predefined', 'generated');
+const arbAuthorityLevel: fc.Arbitrary<AuthorityLevel> = fc.constantFrom(
+  "high",
+  "medium",
+  "low"
+);
+const arbRoleSource: fc.Arbitrary<RoleSource> = fc.constantFrom(
+  "predefined",
+  "generated"
+);
 
 const arbModelConfig: fc.Arbitrary<WorkflowNodeModelConfig> = fc.record({
   model: fc.string({ minLength: 1, maxLength: 30 }),
@@ -37,16 +51,16 @@ const arbModelConfig: fc.Arbitrary<WorkflowNodeModelConfig> = fc.record({
 /** Generate a valid ISO date string from a safe integer timestamp range */
 const arbISODate: fc.Arbitrary<string> = fc
   .integer({ min: 1577836800000, max: 1924905600000 }) // 2020-01-01 to 2030-12-31
-  .map((ts) => new Date(ts).toISOString());
+  .map(ts => new Date(ts).toISOString());
 
 /** Role ID: alphanumeric + hyphens, non-empty, starts with a letter */
 const arbRoleId: fc.Arbitrary<string> = fc
   .stringMatching(/^[a-z][a-z0-9-]{0,39}$/)
-  .filter((s) => s.length >= 1);
+  .filter(s => s.length >= 1);
 
 const arbStringList: fc.Arbitrary<string[]> = fc.array(
   fc.string({ minLength: 1, maxLength: 20 }),
-  { minLength: 0, maxLength: 10 },
+  { minLength: 0, maxLength: 10 }
 );
 
 const arbRoleTemplate: fc.Arbitrary<RoleTemplate> = fc.record({
@@ -64,7 +78,7 @@ const arbRoleTemplate: fc.Arbitrary<RoleTemplate> = fc.record({
 
 // ── Tests ────────────────────────────────────────────────────────
 
-describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', () => {
+describe("RoleRegistry Property 1: 角色模板注册/查询往返一致性", () => {
   let registry: RoleRegistry;
 
   beforeEach(() => {
@@ -78,9 +92,9 @@ describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', ()
   });
 
   // **Validates: Requirements 1.2**
-  it('get(roleId) returns the registered template with all fields equivalent', () => {
+  it("get(roleId) returns the registered template with all fields equivalent", () => {
     fc.assert(
-      fc.property(arbRoleTemplate, (template) => {
+      fc.property(arbRoleTemplate, template => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
 
         reg.register(template);
@@ -89,10 +103,14 @@ describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', ()
         expect(retrieved).toBeDefined();
         expect(retrieved!.roleId).toBe(template.roleId);
         expect(retrieved!.roleName).toBe(template.roleName);
-        expect(retrieved!.responsibilityPrompt).toBe(template.responsibilityPrompt);
+        expect(retrieved!.responsibilityPrompt).toBe(
+          template.responsibilityPrompt
+        );
         expect(retrieved!.requiredSkillIds).toEqual(template.requiredSkillIds);
         expect(retrieved!.mcpIds).toEqual(template.mcpIds);
-        expect(retrieved!.defaultModelConfig).toEqual(template.defaultModelConfig);
+        expect(retrieved!.defaultModelConfig).toEqual(
+          template.defaultModelConfig
+        );
         expect(retrieved!.authorityLevel).toBe(template.authorityLevel);
         expect(retrieved!.source).toBe(template.source);
         expect(retrieved!.createdAt).toBe(template.createdAt);
@@ -103,20 +121,20 @@ describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', ()
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.2**
-  it('list() includes the registered template', () => {
+  it("list() includes the registered template", () => {
     fc.assert(
-      fc.property(arbRoleTemplate, (template) => {
+      fc.property(arbRoleTemplate, template => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
 
         reg.register(template);
         const all = reg.list();
 
-        const found = all.find((t) => t.roleId === template.roleId);
+        const found = all.find(t => t.roleId === template.roleId);
         expect(found).toBeDefined();
         expect(found!.roleName).toBe(template.roleName);
         expect(found!.responsibilityPrompt).toBe(template.responsibilityPrompt);
@@ -125,26 +143,27 @@ describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', ()
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.2**
-  it('registering multiple templates with unique roleIds preserves all in list()', () => {
+  it("registering multiple templates with unique roleIds preserves all in list()", () => {
     fc.assert(
       fc.property(
-        fc.array(arbRoleTemplate, { minLength: 1, maxLength: 20 })
-          .map((templates) => {
+        fc
+          .array(arbRoleTemplate, { minLength: 1, maxLength: 20 })
+          .map(templates => {
             // Deduplicate by roleId
             const seen = new Set<string>();
-            return templates.filter((t) => {
+            return templates.filter(t => {
               if (seen.has(t.roleId)) return false;
               seen.add(t.roleId);
               return true;
             });
           })
-          .filter((arr) => arr.length > 0),
-        (templates) => {
+          .filter(arr => arr.length > 0),
+        templates => {
           const reg = new RoleRegistry(TEST_STORE_PATH);
 
           for (const t of templates) {
@@ -164,9 +183,9 @@ describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', ()
           if (existsSync(TEST_STORE_DIR)) {
             rmSync(TEST_STORE_DIR, { recursive: true, force: true });
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -185,24 +204,29 @@ describe('RoleRegistry Property 1: 角色模板注册/查询往返一致性', ()
  * **Validates: Requirements 1.3**
  */
 
-describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
+describe("RoleRegistry Property 2: 角色继承解析正确性", () => {
   /** Generate a parent-child template pair with distinct roleIds */
-  const arbParentChildPair: fc.Arbitrary<{ parent: RoleTemplate; child: RoleTemplate }> = fc
+  const arbParentChildPair: fc.Arbitrary<{
+    parent: RoleTemplate;
+    child: RoleTemplate;
+  }> = fc
     .tuple(arbRoleId, arbRoleId)
     .filter(([a, b]) => a !== b)
     .chain(([parentId, childId]) =>
-      fc.tuple(arbRoleTemplate, arbRoleTemplate).map(([parentBase, childBase]) => ({
-        parent: {
-          ...parentBase,
-          roleId: parentId,
-          extends: undefined, // parent has no parent
-        },
-        child: {
-          ...childBase,
-          roleId: childId,
-          extends: parentId,
-        },
-      })),
+      fc
+        .tuple(arbRoleTemplate, arbRoleTemplate)
+        .map(([parentBase, childBase]) => ({
+          parent: {
+            ...parentBase,
+            roleId: parentId,
+            extends: undefined, // parent has no parent
+          },
+          child: {
+            ...childBase,
+            roleId: childId,
+            extends: parentId,
+          },
+        }))
     );
 
   afterEach(() => {
@@ -212,7 +236,7 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
   });
 
   // **Validates: Requirements 1.3**
-  it('resolve() merges requiredSkillIds as union of parent and child', () => {
+  it("resolve() merges requiredSkillIds as union of parent and child", () => {
     fc.assert(
       fc.property(arbParentChildPair, ({ parent, child }) => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
@@ -221,19 +245,22 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
 
         const resolved = reg.resolve(child.roleId);
 
-        const expectedSkills = new Set([...parent.requiredSkillIds, ...child.requiredSkillIds]);
+        const expectedSkills = new Set([
+          ...parent.requiredSkillIds,
+          ...child.requiredSkillIds,
+        ]);
         expect(new Set(resolved.requiredSkillIds)).toEqual(expectedSkills);
 
         if (existsSync(TEST_STORE_DIR)) {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.3**
-  it('resolve() merges mcpIds as union of parent and child', () => {
+  it("resolve() merges mcpIds as union of parent and child", () => {
     fc.assert(
       fc.property(arbParentChildPair, ({ parent, child }) => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
@@ -249,12 +276,12 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.3**
-  it('resolve() responsibilityPrompt contains parent prompt content', () => {
+  it("resolve() responsibilityPrompt contains parent prompt content", () => {
     fc.assert(
       fc.property(arbParentChildPair, ({ parent, child }) => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
@@ -264,24 +291,28 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
         const resolved = reg.resolve(child.roleId);
 
         // The resolved prompt must contain the parent's prompt
-        expect(resolved.responsibilityPrompt).toContain(parent.responsibilityPrompt);
+        expect(resolved.responsibilityPrompt).toContain(
+          parent.responsibilityPrompt
+        );
         // It must also contain the child's prompt
-        expect(resolved.responsibilityPrompt).toContain(child.responsibilityPrompt);
+        expect(resolved.responsibilityPrompt).toContain(
+          child.responsibilityPrompt
+        );
         // Per design: parent prompt + "\n\n" + child prompt
         expect(resolved.responsibilityPrompt).toBe(
-          parent.responsibilityPrompt + '\n\n' + child.responsibilityPrompt,
+          parent.responsibilityPrompt + "\n\n" + child.responsibilityPrompt
         );
 
         if (existsSync(TEST_STORE_DIR)) {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.3**
-  it('resolve() uses child authorityLevel and defaultModelConfig (override fields)', () => {
+  it("resolve() uses child authorityLevel and defaultModelConfig (override fields)", () => {
     fc.assert(
       fc.property(arbParentChildPair, ({ parent, child }) => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
@@ -298,14 +329,14 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.3**
-  it('resolve() on a template without extends returns the template unchanged', () => {
+  it("resolve() on a template without extends returns the template unchanged", () => {
     fc.assert(
-      fc.property(arbRoleTemplate, (template) => {
+      fc.property(arbRoleTemplate, template => {
         // Ensure no extends field
         const noExtends = { ...template, extends: undefined };
         const reg = new RoleRegistry(TEST_STORE_PATH);
@@ -315,30 +346,36 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
 
         expect(resolved.requiredSkillIds).toEqual(noExtends.requiredSkillIds);
         expect(resolved.mcpIds).toEqual(noExtends.mcpIds);
-        expect(resolved.responsibilityPrompt).toBe(noExtends.responsibilityPrompt);
+        expect(resolved.responsibilityPrompt).toBe(
+          noExtends.responsibilityPrompt
+        );
         expect(resolved.authorityLevel).toBe(noExtends.authorityLevel);
-        expect(resolved.defaultModelConfig).toEqual(noExtends.defaultModelConfig);
+        expect(resolved.defaultModelConfig).toEqual(
+          noExtends.defaultModelConfig
+        );
 
         if (existsSync(TEST_STORE_DIR)) {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.3** — multi-level inheritance (grandparent → parent → child)
-  it('resolve() handles multi-level inheritance correctly', () => {
+  it("resolve() handles multi-level inheritance correctly", () => {
     const arbThreeIds = fc
       .tuple(arbRoleId, arbRoleId, arbRoleId)
       .filter(([a, b, c]) => a !== b && b !== c && a !== c);
 
     const arbThreeGen = arbThreeIds.chain(([gpId, pId, cId]) =>
-      fc.tuple(arbRoleTemplate, arbRoleTemplate, arbRoleTemplate).map(([gp, p, c]) => ({
-        grandparent: { ...gp, roleId: gpId, extends: undefined },
-        parent: { ...p, roleId: pId, extends: gpId },
-        child: { ...c, roleId: cId, extends: pId },
-      })),
+      fc
+        .tuple(arbRoleTemplate, arbRoleTemplate, arbRoleTemplate)
+        .map(([gp, p, c]) => ({
+          grandparent: { ...gp, roleId: gpId, extends: undefined },
+          parent: { ...p, roleId: pId, extends: gpId },
+          child: { ...c, roleId: cId, extends: pId },
+        }))
     );
 
     fc.assert(
@@ -367,9 +404,15 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
         expect(new Set(resolved.mcpIds)).toEqual(expectedMcps);
 
         // Prompt: grandparent + "\n\n" + parent + "\n\n" + child
-        expect(resolved.responsibilityPrompt).toContain(grandparent.responsibilityPrompt);
-        expect(resolved.responsibilityPrompt).toContain(parent.responsibilityPrompt);
-        expect(resolved.responsibilityPrompt).toContain(child.responsibilityPrompt);
+        expect(resolved.responsibilityPrompt).toContain(
+          grandparent.responsibilityPrompt
+        );
+        expect(resolved.responsibilityPrompt).toContain(
+          parent.responsibilityPrompt
+        );
+        expect(resolved.responsibilityPrompt).toContain(
+          child.responsibilityPrompt
+        );
 
         // Override fields: child wins
         expect(resolved.authorityLevel).toBe(child.authorityLevel);
@@ -379,7 +422,7 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -395,7 +438,7 @@ describe('RoleRegistry Property 2: 角色继承解析正确性', () => {
  * **Validates: Requirements 1.4, 1.5**
  */
 
-describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
+describe("RoleRegistry Property 3: 角色模板变更日志完整性", () => {
   afterEach(() => {
     if (existsSync(TEST_STORE_DIR)) {
       rmSync(TEST_STORE_DIR, { recursive: true, force: true });
@@ -405,7 +448,7 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
   // **Validates: Requirements 1.5**
   it('register() with source "created" appends a change log entry with changedBy, changedAt, and diff', () => {
     fc.assert(
-      fc.property(arbRoleTemplate, (template) => {
+      fc.property(arbRoleTemplate, template => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
 
         const logBefore = reg.getChangeLog().length;
@@ -417,22 +460,22 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
 
         const entry = logAfter[logAfter.length - 1];
         expect(entry.roleId).toBe(template.roleId);
-        expect(entry.action).toBe('created');
+        expect(entry.action).toBe("created");
         // changedBy must be present (non-empty string)
-        expect(typeof entry.changedBy).toBe('string');
+        expect(typeof entry.changedBy).toBe("string");
         expect(entry.changedBy.length).toBeGreaterThan(0);
         // changedAt must be a valid ISO date string
-        expect(typeof entry.changedAt).toBe('string');
+        expect(typeof entry.changedAt).toBe("string");
         expect(Number.isNaN(Date.parse(entry.changedAt))).toBe(false);
         // diff must be an object
-        expect(typeof entry.diff).toBe('object');
+        expect(typeof entry.diff).toBe("object");
         expect(entry.diff).not.toBeNull();
 
         if (existsSync(TEST_STORE_DIR)) {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -462,34 +505,36 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
 
           const entry = logAfterModify[logAfterModify.length - 1];
           expect(entry.roleId).toBe(template.roleId);
-          expect(entry.action).toBe('modified');
-          expect(typeof entry.changedBy).toBe('string');
+          expect(entry.action).toBe("modified");
+          expect(typeof entry.changedBy).toBe("string");
           expect(entry.changedBy.length).toBeGreaterThan(0);
-          expect(typeof entry.changedAt).toBe('string');
+          expect(typeof entry.changedAt).toBe("string");
           expect(Number.isNaN(Date.parse(entry.changedAt))).toBe(false);
-          expect(typeof entry.diff).toBe('object');
+          expect(typeof entry.diff).toBe("object");
           expect(entry.diff).not.toBeNull();
 
           // If the prompt actually changed, diff should contain the responsibilityPrompt field
           if (newPrompt !== template.responsibilityPrompt) {
-            expect(entry.diff).toHaveProperty('responsibilityPrompt');
-            expect(entry.diff['responsibilityPrompt'].old).toBe(template.responsibilityPrompt);
-            expect(entry.diff['responsibilityPrompt'].new).toBe(newPrompt);
+            expect(entry.diff).toHaveProperty("responsibilityPrompt");
+            expect(entry.diff["responsibilityPrompt"].old).toBe(
+              template.responsibilityPrompt
+            );
+            expect(entry.diff["responsibilityPrompt"].new).toBe(newPrompt);
           }
 
           if (existsSync(TEST_STORE_DIR)) {
             rmSync(TEST_STORE_DIR, { recursive: true, force: true });
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.5**
   it('unregister() appends a "deprecated" change log entry with changedBy, changedAt, and diff', () => {
     fc.assert(
-      fc.property(arbRoleTemplate, (template) => {
+      fc.property(arbRoleTemplate, template => {
         const reg = new RoleRegistry(TEST_STORE_PATH);
 
         reg.register(template);
@@ -502,19 +547,19 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
 
         const entry = logAfterDeprecate[logAfterDeprecate.length - 1];
         expect(entry.roleId).toBe(template.roleId);
-        expect(entry.action).toBe('deprecated');
-        expect(typeof entry.changedBy).toBe('string');
+        expect(entry.action).toBe("deprecated");
+        expect(typeof entry.changedBy).toBe("string");
         expect(entry.changedBy.length).toBeGreaterThan(0);
-        expect(typeof entry.changedAt).toBe('string');
+        expect(typeof entry.changedAt).toBe("string");
         expect(Number.isNaN(Date.parse(entry.changedAt))).toBe(false);
-        expect(typeof entry.diff).toBe('object');
+        expect(typeof entry.diff).toBe("object");
         expect(entry.diff).not.toBeNull();
 
         if (existsSync(TEST_STORE_DIR)) {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -530,10 +575,10 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
         const retrieved = reg.get(template.roleId);
         expect(retrieved).toBeDefined();
 
-        if (source === 'generated') {
-          expect(retrieved!.source).toBe('generated');
+        if (source === "generated") {
+          expect(retrieved!.source).toBe("generated");
         } else {
-          expect(retrieved!.source).toBe('predefined');
+          expect(retrieved!.source).toBe("predefined");
         }
 
         // The change log entry should also correspond to this template
@@ -544,12 +589,12 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
           rmSync(TEST_STORE_DIR, { recursive: true, force: true });
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 1.4, 1.5**
-  it('a sequence of create → modify → deprecate produces exactly 3 log entries with correct actions', () => {
+  it("a sequence of create → modify → deprecate produces exactly 3 log entries with correct actions", () => {
     fc.assert(
       fc.property(
         arbRoleTemplate,
@@ -574,27 +619,27 @@ describe('RoleRegistry Property 3: 角色模板变更日志完整性', () => {
           const log = reg.getChangeLog(template.roleId);
           expect(log.length).toBe(3);
 
-          expect(log[0].action).toBe('created');
-          expect(log[1].action).toBe('modified');
-          expect(log[2].action).toBe('deprecated');
+          expect(log[0].action).toBe("created");
+          expect(log[1].action).toBe("modified");
+          expect(log[2].action).toBe("deprecated");
 
           // All entries must have required fields
           for (const entry of log) {
             expect(entry.roleId).toBe(template.roleId);
-            expect(typeof entry.changedBy).toBe('string');
+            expect(typeof entry.changedBy).toBe("string");
             expect(entry.changedBy.length).toBeGreaterThan(0);
-            expect(typeof entry.changedAt).toBe('string');
+            expect(typeof entry.changedAt).toBe("string");
             expect(Number.isNaN(Date.parse(entry.changedAt))).toBe(false);
-            expect(typeof entry.diff).toBe('object');
+            expect(typeof entry.diff).toBe("object");
             expect(entry.diff).not.toBeNull();
           }
 
           if (existsSync(TEST_STORE_DIR)) {
             rmSync(TEST_STORE_DIR, { recursive: true, force: true });
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

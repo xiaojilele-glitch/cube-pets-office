@@ -32,7 +32,9 @@ function cleanup(): void {
 }
 
 function makeEntityInput(
-  overrides: Partial<Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">> = {},
+  overrides: Partial<
+    Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
+  > = {}
 ) {
   return {
     entityType: "CodeModule",
@@ -51,7 +53,7 @@ function makeEntityInput(
 function makeRelationInput(
   sourceEntityId: string,
   targetEntityId: string,
-  overrides: Partial<Omit<Relation, "relationId" | "createdAt">> = {},
+  overrides: Partial<Omit<Relation, "relationId" | "createdAt">> = {}
 ) {
   return {
     relationType: "DEPENDS_ON",
@@ -102,7 +104,9 @@ describe("KnowledgeGraphQuery", () => {
 
       // Verify monotonically decreasing confidence
       for (let i = 1; i < results.length; i++) {
-        expect(results[i].confidence).toBeLessThanOrEqual(results[i - 1].confidence);
+        expect(results[i].confidence).toBeLessThanOrEqual(
+          results[i - 1].confidence
+        );
       }
     });
   });
@@ -113,8 +117,12 @@ describe("KnowledgeGraphQuery", () => {
 
   describe("contextSummary low-confidence annotation", () => {
     it("annotates entities with confidence < 0.5 as [low confidence]", async () => {
-      const e1 = store.createEntity(makeEntityInput({ name: "Solid", confidence: 0.9 }));
-      const e2 = store.createEntity(makeEntityInput({ name: "Shaky", confidence: 0.3 }));
+      const e1 = store.createEntity(
+        makeEntityInput({ name: "Solid", confidence: 0.9 })
+      );
+      const e2 = store.createEntity(
+        makeEntityInput({ name: "Shaky", confidence: 0.3 })
+      );
       store.createRelation(makeRelationInput(e1.entityId, e2.entityId));
 
       const result = await query.getNeighbors(e1.entityId, [], 1);
@@ -126,8 +134,12 @@ describe("KnowledgeGraphQuery", () => {
     });
 
     it("does not annotate entities with confidence >= 0.5", async () => {
-      const e1 = store.createEntity(makeEntityInput({ name: "A", confidence: 0.9 }));
-      const e2 = store.createEntity(makeEntityInput({ name: "B", confidence: 0.5 }));
+      const e1 = store.createEntity(
+        makeEntityInput({ name: "A", confidence: 0.9 })
+      );
+      const e2 = store.createEntity(
+        makeEntityInput({ name: "B", confidence: 0.5 })
+      );
       store.createRelation(makeRelationInput(e1.entityId, e2.entityId));
 
       const result = await query.getNeighbors(e1.entityId, [], 1);
@@ -143,8 +155,12 @@ describe("KnowledgeGraphQuery", () => {
   describe("getNeighbors", () => {
     it("returns correct QueryResult with entities, relations, and contextSummary", async () => {
       const center = store.createEntity(makeEntityInput({ name: "Center" }));
-      const neighbor = store.createEntity(makeEntityInput({ name: "Neighbor" }));
-      store.createRelation(makeRelationInput(center.entityId, neighbor.entityId));
+      const neighbor = store.createEntity(
+        makeEntityInput({ name: "Neighbor" })
+      );
+      store.createRelation(
+        makeRelationInput(center.entityId, neighbor.entityId)
+      );
 
       const result = await query.getNeighbors(center.entityId, [], 1);
 
@@ -170,7 +186,7 @@ describe("KnowledgeGraphQuery", () => {
       // depth=2 should reach B and C
       const depth2 = await query.getNeighbors(a.entityId, [], 2);
       expect(depth2.entities).toHaveLength(2);
-      const names = depth2.entities.map((e) => e.name).sort();
+      const names = depth2.entities.map(e => e.name).sort();
       expect(names).toEqual(["B", "C"]);
     });
   });
@@ -216,8 +232,12 @@ describe("KnowledgeGraphQuery", () => {
       const a = store.createEntity(makeEntityInput({ name: "NodeA" }));
       const b = store.createEntity(makeEntityInput({ name: "NodeB" }));
       const c = store.createEntity(makeEntityInput({ name: "NodeC" }));
-      const relAB = store.createRelation(makeRelationInput(a.entityId, b.entityId));
-      const relBC = store.createRelation(makeRelationInput(b.entityId, c.entityId));
+      const relAB = store.createRelation(
+        makeRelationInput(a.entityId, b.entityId)
+      );
+      const relBC = store.createRelation(
+        makeRelationInput(b.entityId, c.entityId)
+      );
 
       const result = await query.subgraph([a.entityId, b.entityId, c.entityId]);
 
@@ -248,8 +268,12 @@ describe("KnowledgeGraphQuery", () => {
 
   describe("project isolation", () => {
     it("findEntities only returns entities from the requested project", async () => {
-      store.createEntity(makeEntityInput({ name: "Mine", projectId: TEST_PROJECT }));
-      store.createEntity(makeEntityInput({ name: "Theirs", projectId: OTHER_PROJECT }));
+      store.createEntity(
+        makeEntityInput({ name: "Mine", projectId: TEST_PROJECT })
+      );
+      store.createEntity(
+        makeEntityInput({ name: "Theirs", projectId: OTHER_PROJECT })
+      );
 
       const results = await query.findEntities({ projectId: TEST_PROJECT });
 
@@ -258,12 +282,22 @@ describe("KnowledgeGraphQuery", () => {
     });
 
     it("getNeighbors filters out entities from other projects", async () => {
-      const center = store.createEntity(makeEntityInput({ name: "Center", projectId: TEST_PROJECT }));
-      const sameProject = store.createEntity(makeEntityInput({ name: "Same", projectId: TEST_PROJECT }));
-      const otherProject = store.createEntity(makeEntityInput({ name: "Other", projectId: OTHER_PROJECT }));
+      const center = store.createEntity(
+        makeEntityInput({ name: "Center", projectId: TEST_PROJECT })
+      );
+      const sameProject = store.createEntity(
+        makeEntityInput({ name: "Same", projectId: TEST_PROJECT })
+      );
+      const otherProject = store.createEntity(
+        makeEntityInput({ name: "Other", projectId: OTHER_PROJECT })
+      );
 
-      store.createRelation(makeRelationInput(center.entityId, sameProject.entityId));
-      store.createRelation(makeRelationInput(center.entityId, otherProject.entityId));
+      store.createRelation(
+        makeRelationInput(center.entityId, sameProject.entityId)
+      );
+      store.createRelation(
+        makeRelationInput(center.entityId, otherProject.entityId)
+      );
 
       const result = await query.getNeighbors(center.entityId, [], 1);
 
@@ -273,8 +307,12 @@ describe("KnowledgeGraphQuery", () => {
     });
 
     it("subgraph filters out entities from other projects", async () => {
-      const a = store.createEntity(makeEntityInput({ name: "A", projectId: TEST_PROJECT }));
-      const b = store.createEntity(makeEntityInput({ name: "B", projectId: OTHER_PROJECT }));
+      const a = store.createEntity(
+        makeEntityInput({ name: "A", projectId: TEST_PROJECT })
+      );
+      const b = store.createEntity(
+        makeEntityInput({ name: "B", projectId: OTHER_PROJECT })
+      );
 
       const result = await query.subgraph([a.entityId, b.entityId]);
 
@@ -291,17 +329,36 @@ describe("KnowledgeGraphQuery", () => {
   describe("naturalLanguageQuery", () => {
     it("returns correct results when LLM translates successfully", async () => {
       // Seed some entities
-      store.createEntity(makeEntityInput({ name: "AuthService", entityType: "CodeModule", confidence: 0.9 }));
-      store.createEntity(makeEntityInput({ name: "PaymentAPI", entityType: "API", confidence: 0.85 }));
+      store.createEntity(
+        makeEntityInput({
+          name: "AuthService",
+          entityType: "CodeModule",
+          confidence: 0.9,
+        })
+      );
+      store.createEntity(
+        makeEntityInput({
+          name: "PaymentAPI",
+          entityType: "API",
+          confidence: 0.85,
+        })
+      );
 
       // Mock LLM that returns a structured query targeting CodeModule
       const mockLLM = {
         generate: async (_prompt: string) =>
-          JSON.stringify({ entityType: "CodeModule", name: null, confidenceMin: 0.0 }),
+          JSON.stringify({
+            entityType: "CodeModule",
+            name: null,
+            confidenceMin: 0.0,
+          }),
       };
       query.llmProvider = mockLLM;
 
-      const result = await query.naturalLanguageQuery("What code modules exist?", TEST_PROJECT);
+      const result = await query.naturalLanguageQuery(
+        "What code modules exist?",
+        TEST_PROJECT
+      );
 
       expect(result.entities).toHaveLength(1);
       expect(result.entities[0].name).toBe("AuthService");
@@ -312,12 +369,17 @@ describe("KnowledgeGraphQuery", () => {
 
     it("returns empty result with message when no LLM provider is set", async () => {
       // query has no llmProvider by default in this test suite
-      const result = await query.naturalLanguageQuery("What modules exist?", TEST_PROJECT);
+      const result = await query.naturalLanguageQuery(
+        "What modules exist?",
+        TEST_PROJECT
+      );
 
       expect(result.entities).toHaveLength(0);
       expect(result.relations).toHaveLength(0);
       expect(result.isPartial).toBe(false);
-      expect(result.contextSummary).toContain("Natural language query requires LLM provider");
+      expect(result.contextSummary).toContain(
+        "Natural language query requires LLM provider"
+      );
     });
 
     it("handles LLM failure gracefully and returns fallback result", async () => {
@@ -330,7 +392,10 @@ describe("KnowledgeGraphQuery", () => {
       };
       query.llmProvider = mockLLM;
 
-      const result = await query.naturalLanguageQuery("Find all modules", TEST_PROJECT);
+      const result = await query.naturalLanguageQuery(
+        "Find all modules",
+        TEST_PROJECT
+      );
 
       expect(result.entities).toHaveLength(0);
       expect(result.relations).toHaveLength(0);
@@ -344,23 +409,37 @@ describe("KnowledgeGraphQuery", () => {
       };
       query.llmProvider = mockLLM;
 
-      const result = await query.naturalLanguageQuery("What is the architecture?", TEST_PROJECT);
+      const result = await query.naturalLanguageQuery(
+        "What is the architecture?",
+        TEST_PROJECT
+      );
 
       expect(result.entities).toHaveLength(0);
       expect(result.contextSummary).toContain("LLM translation failed");
     });
 
     it("uses name filter from LLM response for fuzzy matching", async () => {
-      store.createEntity(makeEntityInput({ name: "UserService", entityType: "CodeModule" }));
-      store.createEntity(makeEntityInput({ name: "PaymentService", entityType: "CodeModule" }));
+      store.createEntity(
+        makeEntityInput({ name: "UserService", entityType: "CodeModule" })
+      );
+      store.createEntity(
+        makeEntityInput({ name: "PaymentService", entityType: "CodeModule" })
+      );
 
       const mockLLM = {
         generate: async (_prompt: string) =>
-          JSON.stringify({ entityType: "CodeModule", name: "User", confidenceMin: 0.0 }),
+          JSON.stringify({
+            entityType: "CodeModule",
+            name: "User",
+            confidenceMin: 0.0,
+          }),
       };
       query.llmProvider = mockLLM;
 
-      const result = await query.naturalLanguageQuery("Tell me about the user service", TEST_PROJECT);
+      const result = await query.naturalLanguageQuery(
+        "Tell me about the user service",
+        TEST_PROJECT
+      );
 
       expect(result.entities).toHaveLength(1);
       expect(result.entities[0].name).toBe("UserService");
@@ -379,136 +458,137 @@ describe("KnowledgeGraphQuery", () => {
     // Arbitrary for a list of 2-20 unique entity inputs with random confidence
     const entityListArb = fc
       .array(confidenceArb, { minLength: 2, maxLength: 20 })
-      .map((confidences) =>
+      .map(confidences =>
         confidences.map((conf, i) =>
-          makeEntityInput({ name: `Entity_${i}`, confidence: conf }),
-        ),
+          makeEntityInput({ name: `Entity_${i}`, confidence: conf })
+        )
       );
 
-    it(
-      "findEntities returns entities sorted by confidence descending",
-      async () => {
-        await fc.assert(
-          fc.asyncProperty(entityListArb, async (entityInputs) => {
-            // Clean slate per iteration
-            cleanup();
-            const localStore = new GraphStore();
-            const localRegistry = new OntologyRegistry();
-            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+    it("findEntities returns entities sorted by confidence descending", async () => {
+      await fc.assert(
+        fc.asyncProperty(entityListArb, async entityInputs => {
+          // Clean slate per iteration
+          cleanup();
+          const localStore = new GraphStore();
+          const localRegistry = new OntologyRegistry();
+          const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
 
-            for (const input of entityInputs) {
-              localStore.createEntity(input);
-            }
+          for (const input of entityInputs) {
+            localStore.createEntity(input);
+          }
 
-            const results = await localQuery.findEntities({ projectId: TEST_PROJECT });
+          const results = await localQuery.findEntities({
+            projectId: TEST_PROJECT,
+          });
 
-            // All entities returned
-            expect(results).toHaveLength(entityInputs.length);
+          // All entities returned
+          expect(results).toHaveLength(entityInputs.length);
 
-            // Confidence must be monotonically non-increasing
-            for (let i = 1; i < results.length; i++) {
-              expect(results[i].confidence).toBeLessThanOrEqual(results[i - 1].confidence);
-            }
-
-            localStore.forceSave();
-            cleanup();
-          }),
-          { numRuns: 100 },
-        );
-      },
-    );
-
-    it(
-      "getNeighbors returns entities sorted by confidence descending",
-      async () => {
-        await fc.assert(
-          fc.asyncProperty(entityListArb, async (entityInputs) => {
-            cleanup();
-            const localStore = new GraphStore();
-            const localRegistry = new OntologyRegistry();
-            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
-
-            // Create a hub entity and connect all others to it
-            const hub = localStore.createEntity(
-              makeEntityInput({ name: "Hub", confidence: 1.0 }),
+          // Confidence must be monotonically non-increasing
+          for (let i = 1; i < results.length; i++) {
+            expect(results[i].confidence).toBeLessThanOrEqual(
+              results[i - 1].confidence
             );
-            const created: Entity[] = [];
-            for (const input of entityInputs) {
-              const e = localStore.createEntity(input);
-              created.push(e);
-              localStore.createRelation(
-                makeRelationInput(hub.entityId, e.entityId),
-              );
-            }
+          }
 
-            const result = await localQuery.getNeighbors(hub.entityId, [], 1);
+          localStore.forceSave();
+          cleanup();
+        }),
+        { numRuns: 100 }
+      );
+    });
 
-            // Confidence must be monotonically non-increasing
-            for (let i = 1; i < result.entities.length; i++) {
-              expect(result.entities[i].confidence).toBeLessThanOrEqual(
-                result.entities[i - 1].confidence,
-              );
-            }
+    it("getNeighbors returns entities sorted by confidence descending", async () => {
+      await fc.assert(
+        fc.asyncProperty(entityListArb, async entityInputs => {
+          cleanup();
+          const localStore = new GraphStore();
+          const localRegistry = new OntologyRegistry();
+          const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
 
-            localStore.forceSave();
-            cleanup();
-          }),
-          { numRuns: 100 },
-        );
-      },
-    );
-
-    it(
-      "contextSummary annotates every entity with confidence < 0.5 as [low confidence]",
-      async () => {
-        await fc.assert(
-          fc.asyncProperty(entityListArb, async (entityInputs) => {
-            cleanup();
-            const localStore = new GraphStore();
-            const localRegistry = new OntologyRegistry();
-            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
-
-            // Create hub + neighbors so we get a QueryResult with contextSummary
-            const hub = localStore.createEntity(
-              makeEntityInput({ name: "Hub_Center", confidence: 1.0 }),
+          // Create a hub entity and connect all others to it
+          const hub = localStore.createEntity(
+            makeEntityInput({ name: "Hub", confidence: 1.0 })
+          );
+          const created: Entity[] = [];
+          for (const input of entityInputs) {
+            const e = localStore.createEntity(input);
+            created.push(e);
+            localStore.createRelation(
+              makeRelationInput(hub.entityId, e.entityId)
             );
-            for (const input of entityInputs) {
-              const e = localStore.createEntity(input);
-              localStore.createRelation(
-                makeRelationInput(hub.entityId, e.entityId),
+          }
+
+          const result = await localQuery.getNeighbors(hub.entityId, [], 1);
+
+          // Confidence must be monotonically non-increasing
+          for (let i = 1; i < result.entities.length; i++) {
+            expect(result.entities[i].confidence).toBeLessThanOrEqual(
+              result.entities[i - 1].confidence
+            );
+          }
+
+          localStore.forceSave();
+          cleanup();
+        }),
+        { numRuns: 100 }
+      );
+    });
+
+    it("contextSummary annotates every entity with confidence < 0.5 as [low confidence]", async () => {
+      await fc.assert(
+        fc.asyncProperty(entityListArb, async entityInputs => {
+          cleanup();
+          const localStore = new GraphStore();
+          const localRegistry = new OntologyRegistry();
+          const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+
+          // Create hub + neighbors so we get a QueryResult with contextSummary
+          const hub = localStore.createEntity(
+            makeEntityInput({ name: "Hub_Center", confidence: 1.0 })
+          );
+          for (const input of entityInputs) {
+            const e = localStore.createEntity(input);
+            localStore.createRelation(
+              makeRelationInput(hub.entityId, e.entityId)
+            );
+          }
+
+          const result = await localQuery.getNeighbors(hub.entityId, [], 1);
+          const summary = result.contextSummary;
+
+          for (const entity of result.entities) {
+            if (entity.confidence < 0.5) {
+              // Low-confidence entity must have [low confidence] annotation on its line
+              const escapedName = entity.name.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
               );
+              const linePattern = new RegExp(
+                `^- ${escapedName}\\s*\\([^\\n]*\\[low confidence\\]$`,
+                "m"
+              );
+              expect(summary).toMatch(linePattern);
+            } else {
+              // High-confidence entity must NOT have [low confidence] on its line
+              const escapedName = entity.name.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
+              );
+              const linePattern = new RegExp(
+                `^- ${escapedName}\\s*\\([^\\n]*\\[low confidence\\]$`,
+                "m"
+              );
+              expect(summary).not.toMatch(linePattern);
             }
+          }
 
-            const result = await localQuery.getNeighbors(hub.entityId, [], 1);
-            const summary = result.contextSummary;
-
-            for (const entity of result.entities) {
-              if (entity.confidence < 0.5) {
-                // Low-confidence entity must have [low confidence] annotation on its line
-                const escapedName = entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                const linePattern = new RegExp(
-                  `^- ${escapedName}\\s*\\([^\\n]*\\[low confidence\\]$`,
-                  "m",
-                );
-                expect(summary).toMatch(linePattern);
-              } else {
-                // High-confidence entity must NOT have [low confidence] on its line
-                const escapedName = entity.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                const linePattern = new RegExp(
-                  `^- ${escapedName}\\s*\\([^\\n]*\\[low confidence\\]$`,
-                  "m",
-                );
-                expect(summary).not.toMatch(linePattern);
-              }
-            }
-
-            localStore.forceSave();
-            cleanup();
-          }),
-          { numRuns: 100 },
-        );
-      },
-    );
+          localStore.forceSave();
+          cleanup();
+        }),
+        { numRuns: 100 }
+      );
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -516,7 +596,10 @@ describe("KnowledgeGraphQuery", () => {
   // -------------------------------------------------------------------------
 
   describe("findArchitectureDecisions", () => {
-    function makeDecision(name: string, overrides: Record<string, unknown> = {}) {
+    function makeDecision(
+      name: string,
+      overrides: Record<string, unknown> = {}
+    ) {
       return makeEntityInput({
         entityType: "ArchitectureDecision",
         name,
@@ -538,8 +621,16 @@ describe("KnowledgeGraphQuery", () => {
       const d3 = store.createEntity(makeDecision("Decision-v3"));
 
       // SUPERSEDES: new → old
-      store.createRelation(makeRelationInput(d2.entityId, d1.entityId, { relationType: "SUPERSEDES" }));
-      store.createRelation(makeRelationInput(d3.entityId, d2.entityId, { relationType: "SUPERSEDES" }));
+      store.createRelation(
+        makeRelationInput(d2.entityId, d1.entityId, {
+          relationType: "SUPERSEDES",
+        })
+      );
+      store.createRelation(
+        makeRelationInput(d3.entityId, d2.entityId, {
+          relationType: "SUPERSEDES",
+        })
+      );
 
       const result = await query.findArchitectureDecisions(TEST_PROJECT);
 
@@ -557,10 +648,20 @@ describe("KnowledgeGraphQuery", () => {
       const d2 = store.createEntity(makeDecision("Decision-v2"));
       const d3 = store.createEntity(makeDecision("Decision-v3"));
 
-      store.createRelation(makeRelationInput(d2.entityId, d1.entityId, { relationType: "SUPERSEDES" }));
-      store.createRelation(makeRelationInput(d3.entityId, d2.entityId, { relationType: "SUPERSEDES" }));
+      store.createRelation(
+        makeRelationInput(d2.entityId, d1.entityId, {
+          relationType: "SUPERSEDES",
+        })
+      );
+      store.createRelation(
+        makeRelationInput(d3.entityId, d2.entityId, {
+          relationType: "SUPERSEDES",
+        })
+      );
 
-      const result = await query.findArchitectureDecisions(TEST_PROJECT, { includeHistory: true });
+      const result = await query.findArchitectureDecisions(TEST_PROJECT, {
+        includeHistory: true,
+      });
 
       // All 3 decisions returned, ordered by createdAt ascending
       expect(result.entities).toHaveLength(3);
@@ -582,7 +683,10 @@ describe("KnowledgeGraphQuery", () => {
       expect(defaultResult.entities[0].name).toBe("Standalone-Decision");
 
       // History mode
-      const historyResult = await query.findArchitectureDecisions(TEST_PROJECT, { includeHistory: true });
+      const historyResult = await query.findArchitectureDecisions(
+        TEST_PROJECT,
+        { includeHistory: true }
+      );
       expect(historyResult.entities).toHaveLength(1);
       expect(historyResult.entities[0].name).toBe("Standalone-Decision");
     });
@@ -592,7 +696,9 @@ describe("KnowledgeGraphQuery", () => {
 
       expect(result.entities).toHaveLength(0);
       expect(result.relations).toHaveLength(0);
-      expect(result.contextSummary).toContain("No architecture decisions found");
+      expect(result.contextSummary).toContain(
+        "No architecture decisions found"
+      );
     });
 
     it("contextSummary lists the returned decisions", async () => {
@@ -617,153 +723,148 @@ describe("KnowledgeGraphQuery", () => {
      */
     const chainLengthArb = fc.integer({ min: 2, max: 8 });
 
-    it(
-      "default query returns only the latest (non-superseded) decision in a chain",
-      async () => {
-        await fc.assert(
-          fc.asyncProperty(chainLengthArb, async (chainLen) => {
-            cleanup();
-            const localStore = new GraphStore();
-            const localRegistry = new OntologyRegistry();
-            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+    it("default query returns only the latest (non-superseded) decision in a chain", async () => {
+      await fc.assert(
+        fc.asyncProperty(chainLengthArb, async chainLen => {
+          cleanup();
+          const localStore = new GraphStore();
+          const localRegistry = new OntologyRegistry();
+          const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
 
-            // Build a linear chain: D[0] ← D[1] ← ... ← D[chainLen-1]
-            // D[i+1] SUPERSEDES D[i], so D[chainLen-1] is the latest
-            const baseTime = new Date("2025-01-01T00:00:00Z").getTime();
-            const decisions: Entity[] = [];
+          // Build a linear chain: D[0] ← D[1] ← ... ← D[chainLen-1]
+          // D[i+1] SUPERSEDES D[i], so D[chainLen-1] is the latest
+          const baseTime = new Date("2025-01-01T00:00:00Z").getTime();
+          const decisions: Entity[] = [];
 
-            for (let i = 0; i < chainLen; i++) {
-              const entity = localStore.createEntity({
-                entityType: "ArchitectureDecision",
-                name: `Decision-v${i}`,
-                description: `Version ${i}`,
-                source: "user_defined" as const,
-                confidence: 0.9,
-                projectId: TEST_PROJECT,
-                needsReview: false,
-                linkedMemoryIds: [],
-                extendedAttributes: {
-                  context: "ctx",
-                  decision: "dec",
-                  alternatives: [],
-                  consequences: "cons",
-                },
-              });
-              // Override createdAt to guarantee ordering
-              localStore.updateEntity(entity.entityId, {
-                createdAt: new Date(baseTime + i * 1000).toISOString(),
-              });
-              decisions.push(entity);
-            }
+          for (let i = 0; i < chainLen; i++) {
+            const entity = localStore.createEntity({
+              entityType: "ArchitectureDecision",
+              name: `Decision-v${i}`,
+              description: `Version ${i}`,
+              source: "user_defined" as const,
+              confidence: 0.9,
+              projectId: TEST_PROJECT,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {
+                context: "ctx",
+                decision: "dec",
+                alternatives: [],
+                consequences: "cons",
+              },
+            });
+            // Override createdAt to guarantee ordering
+            localStore.updateEntity(entity.entityId, {
+              createdAt: new Date(baseTime + i * 1000).toISOString(),
+            });
+            decisions.push(entity);
+          }
 
-            // Create SUPERSEDES relations: D[i+1] → D[i]
-            for (let i = 0; i < chainLen - 1; i++) {
-              localStore.createRelation({
-                relationType: "SUPERSEDES",
-                sourceEntityId: decisions[i + 1].entityId,
-                targetEntityId: decisions[i].entityId,
-                weight: 1.0,
-                evidence: `v${i + 1} supersedes v${i}`,
-                source: "user_defined" as const,
-                confidence: 1.0,
-                needsReview: false,
-              });
-            }
+          // Create SUPERSEDES relations: D[i+1] → D[i]
+          for (let i = 0; i < chainLen - 1; i++) {
+            localStore.createRelation({
+              relationType: "SUPERSEDES",
+              sourceEntityId: decisions[i + 1].entityId,
+              targetEntityId: decisions[i].entityId,
+              weight: 1.0,
+              evidence: `v${i + 1} supersedes v${i}`,
+              source: "user_defined" as const,
+              confidence: 1.0,
+              needsReview: false,
+            });
+          }
 
-            const result = await localQuery.findArchitectureDecisions(TEST_PROJECT);
+          const result =
+            await localQuery.findArchitectureDecisions(TEST_PROJECT);
 
-            // Only the latest (last) decision should be returned
-            expect(result.entities).toHaveLength(1);
-            expect(result.entities[0].entityId).toBe(
-              decisions[chainLen - 1].entityId,
-            );
-            // No SUPERSEDES relations in default result
-            expect(result.relations).toHaveLength(0);
+          // Only the latest (last) decision should be returned
+          expect(result.entities).toHaveLength(1);
+          expect(result.entities[0].entityId).toBe(
+            decisions[chainLen - 1].entityId
+          );
+          // No SUPERSEDES relations in default result
+          expect(result.relations).toHaveLength(0);
 
-            localStore.forceSave();
-            cleanup();
-          }),
-          { numRuns: 100 },
-        );
-      },
-    );
+          localStore.forceSave();
+          cleanup();
+        }),
+        { numRuns: 100 }
+      );
+    });
 
-    it(
-      "includeHistory: true returns all decisions in the chain ordered by createdAt",
-      async () => {
-        await fc.assert(
-          fc.asyncProperty(chainLengthArb, async (chainLen) => {
-            cleanup();
-            const localStore = new GraphStore();
-            const localRegistry = new OntologyRegistry();
-            const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
+    it("includeHistory: true returns all decisions in the chain ordered by createdAt", async () => {
+      await fc.assert(
+        fc.asyncProperty(chainLengthArb, async chainLen => {
+          cleanup();
+          const localStore = new GraphStore();
+          const localRegistry = new OntologyRegistry();
+          const localQuery = new KnowledgeGraphQuery(localStore, localRegistry);
 
-            const baseTime = new Date("2025-01-01T00:00:00Z").getTime();
-            const decisions: Entity[] = [];
+          const baseTime = new Date("2025-01-01T00:00:00Z").getTime();
+          const decisions: Entity[] = [];
 
-            for (let i = 0; i < chainLen; i++) {
-              const entity = localStore.createEntity({
-                entityType: "ArchitectureDecision",
-                name: `Decision-v${i}`,
-                description: `Version ${i}`,
-                source: "user_defined" as const,
-                confidence: 0.9,
-                projectId: TEST_PROJECT,
-                needsReview: false,
-                linkedMemoryIds: [],
-                extendedAttributes: {
-                  context: "ctx",
-                  decision: "dec",
-                  alternatives: [],
-                  consequences: "cons",
-                },
-              });
-              localStore.updateEntity(entity.entityId, {
-                createdAt: new Date(baseTime + i * 1000).toISOString(),
-              });
-              decisions.push(entity);
-            }
+          for (let i = 0; i < chainLen; i++) {
+            const entity = localStore.createEntity({
+              entityType: "ArchitectureDecision",
+              name: `Decision-v${i}`,
+              description: `Version ${i}`,
+              source: "user_defined" as const,
+              confidence: 0.9,
+              projectId: TEST_PROJECT,
+              needsReview: false,
+              linkedMemoryIds: [],
+              extendedAttributes: {
+                context: "ctx",
+                decision: "dec",
+                alternatives: [],
+                consequences: "cons",
+              },
+            });
+            localStore.updateEntity(entity.entityId, {
+              createdAt: new Date(baseTime + i * 1000).toISOString(),
+            });
+            decisions.push(entity);
+          }
 
-            for (let i = 0; i < chainLen - 1; i++) {
-              localStore.createRelation({
-                relationType: "SUPERSEDES",
-                sourceEntityId: decisions[i + 1].entityId,
-                targetEntityId: decisions[i].entityId,
-                weight: 1.0,
-                evidence: `v${i + 1} supersedes v${i}`,
-                source: "user_defined" as const,
-                confidence: 1.0,
-                needsReview: false,
-              });
-            }
+          for (let i = 0; i < chainLen - 1; i++) {
+            localStore.createRelation({
+              relationType: "SUPERSEDES",
+              sourceEntityId: decisions[i + 1].entityId,
+              targetEntityId: decisions[i].entityId,
+              weight: 1.0,
+              evidence: `v${i + 1} supersedes v${i}`,
+              source: "user_defined" as const,
+              confidence: 1.0,
+              needsReview: false,
+            });
+          }
 
-            const result = await localQuery.findArchitectureDecisions(
-              TEST_PROJECT,
-              { includeHistory: true },
-            );
+          const result = await localQuery.findArchitectureDecisions(
+            TEST_PROJECT,
+            { includeHistory: true }
+          );
 
-            // All decisions in the chain should be returned
-            expect(result.entities).toHaveLength(chainLen);
+          // All decisions in the chain should be returned
+          expect(result.entities).toHaveLength(chainLen);
 
-            // Must be ordered by createdAt ascending
-            for (let i = 1; i < result.entities.length; i++) {
-              const prev = new Date(result.entities[i - 1].createdAt).getTime();
-              const curr = new Date(result.entities[i].createdAt).getTime();
-              expect(curr).toBeGreaterThanOrEqual(prev);
-            }
+          // Must be ordered by createdAt ascending
+          for (let i = 1; i < result.entities.length; i++) {
+            const prev = new Date(result.entities[i - 1].createdAt).getTime();
+            const curr = new Date(result.entities[i].createdAt).getTime();
+            expect(curr).toBeGreaterThanOrEqual(prev);
+          }
 
-            // All SUPERSEDES relations should be included
-            expect(result.relations).toHaveLength(chainLen - 1);
-            for (const rel of result.relations) {
-              expect(rel.relationType).toBe("SUPERSEDES");
-            }
+          // All SUPERSEDES relations should be included
+          expect(result.relations).toHaveLength(chainLen - 1);
+          for (const rel of result.relations) {
+            expect(rel.relationType).toBe("SUPERSEDES");
+          }
 
-            localStore.forceSave();
-            cleanup();
-          }),
-          { numRuns: 100 },
-        );
-      },
-    );
+          localStore.forceSave();
+          cleanup();
+        }),
+        { numRuns: 100 }
+      );
+    });
   });
 });

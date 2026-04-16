@@ -8,17 +8,20 @@
  *  15 — 语义化版本验证
  */
 
-import { describe, expect, it, beforeEach, vi } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it, beforeEach, vi } from "vitest";
+import fc from "fast-check";
 
 // Mock dynamic-organization to break circular dependency
-vi.mock('../core/dynamic-organization.js', () => ({
+vi.mock("../core/dynamic-organization.js", () => ({
   resolveMcp: () => [],
   skillRegistry: {},
 }));
 
-import type { SkillDefinition, SkillRecord } from '../../shared/skill-contracts.js';
-import { SkillRegistry } from '../core/skill-registry.js';
+import type {
+  SkillDefinition,
+  SkillRecord,
+} from "../../shared/skill-contracts.js";
+import { SkillRegistry } from "../core/skill-registry.js";
 
 /* ─── In-memory Database stub ─── */
 
@@ -31,7 +34,7 @@ function createInMemoryDb() {
       skills.find(s => s.id === id && s.version === version),
     upsertSkill(record: SkillRecord): SkillRecord {
       const idx = skills.findIndex(
-        s => s.id === record.id && s.version === record.version,
+        s => s.id === record.id && s.version === record.version
       );
       if (idx >= 0) {
         skills[idx] = { ...record, updatedAt: new Date().toISOString() };
@@ -42,7 +45,9 @@ function createInMemoryDb() {
     },
     createSkillAuditLog: () => ({ id: 1 }),
     // reset helper for tests
-    _reset: () => { skills = []; },
+    _reset: () => {
+      skills = [];
+    },
   };
 }
 
@@ -51,13 +56,23 @@ function createInMemoryDb() {
 /** Non-empty trimmed alphanumeric string (safe for IDs / names) */
 const arbId = fc
   .string({ minLength: 1, maxLength: 24 })
-  .map(s => s.replace(/[^a-z0-9-]/gi, 'a').slice(0, 24) || 'id');
+  .map(s => s.replace(/[^a-z0-9-]/gi, "a").slice(0, 24) || "id");
 
-const arbName = fc.string({ minLength: 1, maxLength: 40 }).map(s => s.trim() || 'name');
+const arbName = fc
+  .string({ minLength: 1, maxLength: 40 })
+  .map(s => s.trim() || "name");
 
-const arbCategory = fc.constantFrom('code', 'data', 'security', 'analysis', 'ops');
+const arbCategory = fc.constantFrom(
+  "code",
+  "data",
+  "security",
+  "analysis",
+  "ops"
+);
 
-const arbSummary = fc.string({ minLength: 1, maxLength: 80 }).map(s => s.trim() || 'summary');
+const arbSummary = fc
+  .string({ minLength: 1, maxLength: 80 })
+  .map(s => s.trim() || "summary");
 
 /** Prompt that always contains both required placeholders */
 const arbValidPrompt = fc
@@ -66,17 +81,16 @@ const arbValidPrompt = fc
 
 /** Semantic version X.Y.Z where X, Y, Z are non-negative integers */
 const arbSemver = fc
-  .tuple(
-    fc.nat({ max: 99 }),
-    fc.nat({ max: 99 }),
-    fc.nat({ max: 99 }),
-  )
+  .tuple(fc.nat({ max: 99 }), fc.nat({ max: 99 }), fc.nat({ max: 99 }))
   .map(([x, y, z]) => `${x}.${y}.${z}`);
 
-const arbTags = fc.array(fc.string({ minLength: 1, maxLength: 12 }).map(s => s.trim() || 'tag'), {
-  minLength: 0,
-  maxLength: 5,
-});
+const arbTags = fc.array(
+  fc.string({ minLength: 1, maxLength: 12 }).map(s => s.trim() || "tag"),
+  {
+    minLength: 0,
+    maxLength: 5,
+  }
+);
 
 const arbMcpIds = fc.array(arbId, { minLength: 0, maxLength: 3 });
 
@@ -95,7 +109,7 @@ const arbValidSkillDef: fc.Arbitrary<SkillDefinition> = fc.record({
 /* ─── Property 1: Skill 注册往返一致性 ─── */
 /* **Validates: Requirements 1.1, 1.2, 1.5** */
 
-describe('Feature: plugin-skill-system, Property 1: Skill 注册往返一致性', () => {
+describe("Feature: plugin-skill-system, Property 1: Skill 注册往返一致性", () => {
   let db: ReturnType<typeof createInMemoryDb>;
   let registry: SkillRegistry;
 
@@ -104,15 +118,17 @@ describe('Feature: plugin-skill-system, Property 1: Skill 注册往返一致性'
     registry = new SkillRegistry(db as any);
   });
 
-  it('registerSkill then querySkills returns equivalent record', () => {
+  it("registerSkill then querySkills returns equivalent record", () => {
     fc.assert(
-      fc.property(arbValidSkillDef, (def) => {
+      fc.property(arbValidSkillDef, def => {
         db._reset();
         const returned = registry.registerSkill(def);
 
         // Query back via querySkills
         const queried = registry.querySkills({ category: def.category });
-        const found = queried.find(s => s.id === def.id && s.version === def.version);
+        const found = queried.find(
+          s => s.id === def.id && s.version === def.version
+        );
 
         expect(found).toBeDefined();
         // Core fields must match
@@ -132,13 +148,13 @@ describe('Feature: plugin-skill-system, Property 1: Skill 注册往返一致性'
         expect(returned.enabled).toBe(true);
         expect(returned.createdAt).toBeDefined();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('registerSkill then getSkillVersions returns equivalent record', () => {
+  it("registerSkill then getSkillVersions returns equivalent record", () => {
     fc.assert(
-      fc.property(arbValidSkillDef, (def) => {
+      fc.property(arbValidSkillDef, def => {
         db._reset();
         registry.registerSkill(def);
 
@@ -155,16 +171,15 @@ describe('Feature: plugin-skill-system, Property 1: Skill 注册往返一致性'
         expect(found!.version).toBe(def.version);
         expect(found!.tags).toEqual(def.tags);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
 
-
 /* ─── Property 2: Prompt 模板验证 ─── */
 /* **Validates: Requirements 1.4** */
 
-describe('Feature: plugin-skill-system, Property 2: Prompt 模板验证', () => {
+describe("Feature: plugin-skill-system, Property 2: Prompt 模板验证", () => {
   let db: ReturnType<typeof createInMemoryDb>;
   let registry: SkillRegistry;
 
@@ -173,7 +188,7 @@ describe('Feature: plugin-skill-system, Property 2: Prompt 模板验证', () => 
     registry = new SkillRegistry(db as any);
   });
 
-  it('prompt with both {context} and {input} is accepted', () => {
+  it("prompt with both {context} and {input} is accepted", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
@@ -187,72 +202,79 @@ describe('Feature: plugin-skill-system, Property 2: Prompt 模板验证', () => 
 
           const record = registry.registerSkill(def);
           expect(record.prompt).toBe(prompt);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('prompt missing {context} is rejected', () => {
+  it("prompt missing {context} is rejected", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
-        fc.string({ minLength: 1, maxLength: 60 }).filter(s => !s.includes('{context}')),
+        fc
+          .string({ minLength: 1, maxLength: 60 })
+          .filter(s => !s.includes("{context}")),
         (baseDef, rawPrompt) => {
           db._reset();
           // Ensure {input} is present but {context} is not
-          const prompt = rawPrompt.includes('{input}') ? rawPrompt : `${rawPrompt} {input}`;
+          const prompt = rawPrompt.includes("{input}")
+            ? rawPrompt
+            : `${rawPrompt} {input}`;
           const def: SkillDefinition = { ...baseDef, prompt };
 
           expect(() => registry.registerSkill(def)).toThrow(/\{context\}/);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('prompt missing {input} is rejected', () => {
+  it("prompt missing {input} is rejected", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
-        fc.string({ minLength: 1, maxLength: 60 }).filter(s => !s.includes('{input}')),
+        fc
+          .string({ minLength: 1, maxLength: 60 })
+          .filter(s => !s.includes("{input}")),
         (baseDef, rawPrompt) => {
           db._reset();
           // Ensure {context} is present but {input} is not
-          const prompt = rawPrompt.includes('{context}') ? rawPrompt : `${rawPrompt} {context}`;
+          const prompt = rawPrompt.includes("{context}")
+            ? rawPrompt
+            : `${rawPrompt} {context}`;
           const def: SkillDefinition = { ...baseDef, prompt };
 
           expect(() => registry.registerSkill(def)).toThrow(/\{input\}/);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('prompt missing both placeholders is rejected', () => {
+  it("prompt missing both placeholders is rejected", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
-        fc.string({ minLength: 1, maxLength: 60 }).filter(
-          s => !s.includes('{context}') && !s.includes('{input}'),
-        ),
+        fc
+          .string({ minLength: 1, maxLength: 60 })
+          .filter(s => !s.includes("{context}") && !s.includes("{input}")),
         (baseDef, prompt) => {
           db._reset();
           const def: SkillDefinition = { ...baseDef, prompt };
 
           expect(() => registry.registerSkill(def)).toThrow();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
 
-
 /* ─── Property 3: 版本并存 ─── */
 /* **Validates: Requirements 1.3, 6.3** */
 
-describe('Feature: plugin-skill-system, Property 3: 版本并存', () => {
+describe("Feature: plugin-skill-system, Property 3: 版本并存", () => {
   let db: ReturnType<typeof createInMemoryDb>;
   let registry: SkillRegistry;
 
@@ -261,11 +283,15 @@ describe('Feature: plugin-skill-system, Property 3: 版本并存', () => {
     registry = new SkillRegistry(db as any);
   });
 
-  it('registering multiple distinct versions of the same skillId preserves all versions', () => {
+  it("registering multiple distinct versions of the same skillId preserves all versions", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
-        fc.uniqueArray(arbSemver, { minLength: 1, maxLength: 8, comparator: (a, b) => a === b }),
+        fc.uniqueArray(arbSemver, {
+          minLength: 1,
+          maxLength: 8,
+          comparator: (a, b) => a === b,
+        }),
         (baseDef, versions) => {
           db._reset();
 
@@ -280,13 +306,13 @@ describe('Feature: plugin-skill-system, Property 3: 版本并存', () => {
           for (const ver of versions) {
             expect(storedVersions.has(ver)).toBe(true);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('each version record retains its own field values', () => {
+  it("each version record retains its own field values", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
@@ -298,8 +324,16 @@ describe('Feature: plugin-skill-system, Property 3: 版本并存', () => {
           if (v1 === v2) return; // skip when equal
           db._reset();
 
-          registry.registerSkill({ ...baseDef, version: v1, summary: baseDef.summary });
-          registry.registerSkill({ ...baseDef, version: v2, summary: altSummary });
+          registry.registerSkill({
+            ...baseDef,
+            version: v1,
+            summary: baseDef.summary,
+          });
+          registry.registerSkill({
+            ...baseDef,
+            version: v2,
+            summary: altSummary,
+          });
 
           const versions = registry.getSkillVersions(baseDef.id);
           const rec1 = versions.find(s => s.version === v1);
@@ -309,18 +343,17 @@ describe('Feature: plugin-skill-system, Property 3: 版本并存', () => {
           expect(rec2).toBeDefined();
           expect(rec1!.summary).toBe(baseDef.summary);
           expect(rec2!.summary).toBe(altSummary);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
 
-
 /* ─── Property 15: 语义化版本验证 ─── */
 /* **Validates: Requirements 6.1** */
 
-describe('Feature: plugin-skill-system, Property 15: 语义化版本验证', () => {
+describe("Feature: plugin-skill-system, Property 15: 语义化版本验证", () => {
   let db: ReturnType<typeof createInMemoryDb>;
   let registry: SkillRegistry;
 
@@ -329,7 +362,7 @@ describe('Feature: plugin-skill-system, Property 15: 语义化版本验证', () 
     registry = new SkillRegistry(db as any);
   });
 
-  it('valid semver X.Y.Z is accepted by registerSkill', () => {
+  it("valid semver X.Y.Z is accepted by registerSkill", () => {
     fc.assert(
       fc.property(
         arbValidSkillDef,
@@ -343,13 +376,13 @@ describe('Feature: plugin-skill-system, Property 15: 语义化版本验证', () 
 
           const record = registry.registerSkill(def);
           expect(record.version).toBe(version);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('strings not matching X.Y.Z are rejected by registerSkill', () => {
+  it("strings not matching X.Y.Z are rejected by registerSkill", () => {
     const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 
     const arbInvalidVersion = fc
@@ -363,31 +396,31 @@ describe('Feature: plugin-skill-system, Property 15: 语义化版本验证', () 
 
         expect(() => registry.registerSkill(def)).toThrow(/version/i);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('edge cases: leading zeros, negative-like, extra dots are rejected', () => {
+  it("edge cases: leading zeros, negative-like, extra dots are rejected", () => {
     const invalidVersions = [
-      'v1.0.0',     // prefix
-      '1.0',        // missing patch
-      '1.0.0.0',    // extra segment
-      '1.0.0-beta', // pre-release suffix
-      'abc',        // non-numeric
-      '',           // empty
-      '1..0',       // double dot
-      '.1.0.0',     // leading dot
-      '1.0.0.',     // trailing dot
+      "v1.0.0", // prefix
+      "1.0", // missing patch
+      "1.0.0.0", // extra segment
+      "1.0.0-beta", // pre-release suffix
+      "abc", // non-numeric
+      "", // empty
+      "1..0", // double dot
+      ".1.0.0", // leading dot
+      "1.0.0.", // trailing dot
     ];
 
     for (const version of invalidVersions) {
       db._reset();
       const def: SkillDefinition = {
-        id: 'test-skill',
-        name: 'Test',
-        category: 'code',
-        summary: 'Test skill',
-        prompt: 'Do {context} with {input}',
+        id: "test-skill",
+        name: "Test",
+        category: "code",
+        summary: "Test skill",
+        prompt: "Do {context} with {input}",
         requiredMcp: [],
         version,
         tags: [],

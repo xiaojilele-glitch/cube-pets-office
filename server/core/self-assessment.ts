@@ -3,8 +3,8 @@ import type {
   AssessmentResult,
   AssessmentWeights,
   AutonomyConfig,
-} from '../../shared/autonomy-types.js';
-import type { CapabilityProfileManager } from './capability-profile-manager.js';
+} from "../../shared/autonomy-types.js";
+import type { CapabilityProfileManager } from "./capability-profile-manager.js";
 
 // ─── Local Types ─────────────────────────────────────────────
 
@@ -26,7 +26,7 @@ export interface TaskRequest {
 export class SelfAssessment {
   constructor(
     private readonly profileManager: CapabilityProfileManager,
-    private readonly config: AutonomyConfig,
+    private readonly config: AutonomyConfig
   ) {}
 
   /**
@@ -38,30 +38,40 @@ export class SelfAssessment {
     const profile = this.profileManager.getProfile(agentId);
     if (!profile) {
       return this.buildResult(
-        agentId, taskRequest.taskId, 0, 'REJECT_AND_REFER',
-        'profile missing', [], start,
+        agentId,
+        taskRequest.taskId,
+        0,
+        "REJECT_AND_REFER",
+        "profile missing",
+        [],
+        start
       );
     }
 
     // 1. Coarse filter
-    if (!this.coarseFilter(profile.specializationTags, taskRequest.requiredSkills)) {
+    if (
+      !this.coarseFilter(profile.specializationTags, taskRequest.requiredSkills)
+    ) {
       return this.buildResult(
-        agentId, taskRequest.taskId, 0, 'REJECT_AND_REFER',
-        'coarse filter failed: no skill overlap',
+        agentId,
+        taskRequest.taskId,
+        0,
+        "REJECT_AND_REFER",
+        "coarse filter failed: no skill overlap",
         this.generateReferralList(taskRequest, agentId),
-        start,
+        start
       );
     }
 
     // 2. Compute skill match (weighted cosine similarity)
     const skillMatch = this.computeSkillMatch(
       profile.skillVector,
-      taskRequest.requiredSkillWeights,
+      taskRequest.requiredSkillWeights
     );
 
     // 3. Compute resource adequacy
     const resourceAdequacy = this.computeResourceAdequacy(
-      profile.resourceQuota.remainingTokenBudget,
+      profile.resourceQuota.remainingTokenBudget
     );
 
     // 4. Compute fitness score
@@ -70,22 +80,28 @@ export class SelfAssessment {
       profile.loadFactor,
       profile.confidenceScore,
       resourceAdequacy,
-      this.config.assessmentWeights,
+      this.config.assessmentWeights
     );
 
     // 5. Make decision
     const decision = this.makeDecision(fitnessScore);
 
     // 6. Generate referral list if REJECT_AND_REFER
-    const referralList = decision === 'REJECT_AND_REFER'
-      ? this.generateReferralList(taskRequest, agentId)
-      : [];
+    const referralList =
+      decision === "REJECT_AND_REFER"
+        ? this.generateReferralList(taskRequest, agentId)
+        : [];
 
     const reason = this.buildReason(decision, fitnessScore, skillMatch);
 
     return this.buildResult(
-      agentId, taskRequest.taskId, fitnessScore, decision,
-      reason, referralList, start,
+      agentId,
+      taskRequest.taskId,
+      fitnessScore,
+      decision,
+      reason,
+      referralList,
+      start
     );
   }
 
@@ -97,7 +113,7 @@ export class SelfAssessment {
   coarseFilter(agentTags: string[], requiredSkills: string[]): boolean {
     if (agentTags.length === 0 || requiredSkills.length === 0) return false;
     const tagSet = new Set(agentTags);
-    return requiredSkills.some((skill) => tagSet.has(skill));
+    return requiredSkills.some(skill => tagSet.has(skill));
   }
 
   /**
@@ -110,7 +126,7 @@ export class SelfAssessment {
    */
   computeSkillMatch(
     agentSkills: Map<string, number>,
-    requiredSkills: Map<string, number>,
+    requiredSkills: Map<string, number>
   ): number {
     // Collect the union of all skill keys
     const allKeys = new Set([...agentSkills.keys(), ...requiredSkills.keys()]);
@@ -144,7 +160,7 @@ export class SelfAssessment {
     loadFactor: number,
     confidenceScore: number,
     resourceAdequacy: number,
-    weights: AssessmentWeights,
+    weights: AssessmentWeights
   ): number {
     const raw =
       weights.w1_skillMatch * skillMatch +
@@ -163,10 +179,10 @@ export class SelfAssessment {
    * - < 0.4 → REJECT_AND_REFER
    */
   makeDecision(fitnessScore: number): AssessmentDecision {
-    if (fitnessScore >= 0.8) return 'ACCEPT';
-    if (fitnessScore >= 0.6) return 'ACCEPT_WITH_CAVEAT';
-    if (fitnessScore >= 0.4) return 'REQUEST_ASSIST';
-    return 'REJECT_AND_REFER';
+    if (fitnessScore >= 0.8) return "ACCEPT";
+    if (fitnessScore >= 0.6) return "ACCEPT_WITH_CAVEAT";
+    if (fitnessScore >= 0.4) return "REQUEST_ASSIST";
+    return "REJECT_AND_REFER";
   }
 
   /**
@@ -176,7 +192,7 @@ export class SelfAssessment {
   generateReferralList(
     taskRequest: TaskRequest,
     excludeAgentId: string,
-    maxCount: number = 3,
+    maxCount: number = 3
   ): string[] {
     const allProfiles = this.profileManager.getAllProfiles();
 
@@ -187,24 +203,24 @@ export class SelfAssessment {
 
       const skillMatch = this.computeSkillMatch(
         profile.skillVector,
-        taskRequest.requiredSkillWeights,
+        taskRequest.requiredSkillWeights
       );
       const resourceAdequacy = this.computeResourceAdequacy(
-        profile.resourceQuota.remainingTokenBudget,
+        profile.resourceQuota.remainingTokenBudget
       );
       const fitness = this.computeFitnessScore(
         skillMatch,
         profile.loadFactor,
         profile.confidenceScore,
         resourceAdequacy,
-        this.config.assessmentWeights,
+        this.config.assessmentWeights
       );
 
       scored.push({ agentId: profile.agentId, fitness });
     }
 
     scored.sort((a, b) => b.fitness - a.fitness);
-    return scored.slice(0, maxCount).map((s) => s.agentId);
+    return scored.slice(0, maxCount).map(s => s.agentId);
   }
 
   /**
@@ -224,7 +240,7 @@ export class SelfAssessment {
     decision: AssessmentDecision,
     reason: string,
     referralList: string[],
-    startMs: number,
+    startMs: number
   ): AssessmentResult {
     return {
       agentId,
@@ -241,18 +257,18 @@ export class SelfAssessment {
   private buildReason(
     decision: AssessmentDecision,
     fitnessScore: number,
-    skillMatch: number,
+    skillMatch: number
   ): string {
     const score = fitnessScore.toFixed(3);
     const match = skillMatch.toFixed(3);
     switch (decision) {
-      case 'ACCEPT':
+      case "ACCEPT":
         return `Fully capable (fitness=${score}, skillMatch=${match})`;
-      case 'ACCEPT_WITH_CAVEAT':
+      case "ACCEPT_WITH_CAVEAT":
         return `Capable with review recommended (fitness=${score}, skillMatch=${match})`;
-      case 'REQUEST_ASSIST':
+      case "REQUEST_ASSIST":
         return `Partial capability, assistance needed (fitness=${score}, skillMatch=${match})`;
-      case 'REJECT_AND_REFER':
+      case "REJECT_AND_REFER":
         return `Insufficient capability (fitness=${score}, skillMatch=${match})`;
     }
   }

@@ -17,7 +17,7 @@ export function CompactPlanetInterior({
 }) {
   const ringGradient = detail.stages
     .map(
-      (stage) =>
+      stage =>
         `${STAGE_COLORS[stage.status]} ${stage.arcStart}deg ${stage.arcEnd}deg`
     )
     .join(", ");
@@ -61,7 +61,7 @@ export function CompactPlanetInterior({
 
       {/* Stage legend */}
       <div className="mt-1 flex flex-wrap justify-center gap-1.5">
-        {detail.stages.map((stage) => (
+        {detail.stages.map(stage => (
           <span
             key={stage.key}
             className="inline-flex items-center gap-1 rounded-full bg-stone-50/80 px-1.5 py-0.5 text-[9px] font-medium text-stone-600"

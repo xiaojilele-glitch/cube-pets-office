@@ -5,9 +5,9 @@
  * 历史归档、预警检查和 JSON 文件持久化。
  */
 
-import { randomUUID } from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
+import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
 import type {
   LLMCallRecord,
@@ -123,7 +123,7 @@ export class TelemetryStore {
       activeAgentCount: this.agentTimings.size,
       agentTimings,
       missionStageTimings: [], // 阶段耗时由 Mission 运行时填充
-      alerts: this.alerts.filter((a) => !a.resolved),
+      alerts: this.alerts.filter(a => !a.resolved),
       updatedAt: Date.now(),
     };
   }
@@ -225,7 +225,7 @@ export class TelemetryStore {
       const avg =
         records.reduce((s: number, r) => s + r.durationMs, 0) / records.length;
       const existing = this.alerts.find(
-        (a) => a.type === "agent_slow" && a.agentId === agentId && !a.resolved,
+        a => a.type === "agent_slow" && a.agentId === agentId && !a.resolved
       );
       if (avg > SLOW_AGENT_THRESHOLD_MS) {
         if (!existing) {
@@ -250,7 +250,7 @@ export class TelemetryStore {
     }
     const threshold = this.budget.maxTokens * this.budget.warningThreshold;
     const existingBudget = this.alerts.find(
-      (a) => a.type === "token_over_budget" && !a.resolved,
+      a => a.type === "token_over_budget" && !a.resolved
     );
     if (totalTokens > threshold) {
       if (!existingBudget) {
@@ -309,14 +309,14 @@ export class TelemetryStore {
         this.missionHistory = parsed.missions.slice(-MAX_HISTORY);
       } else {
         console.warn(
-          "[TelemetryStore] Unknown history file version, starting with empty history",
+          "[TelemetryStore] Unknown history file version, starting with empty history"
         );
         this.missionHistory = [];
       }
     } catch (err) {
       console.warn(
         "[TelemetryStore] Failed to load history, starting with empty history:",
-        err,
+        err
       );
       this.missionHistory = [];
     }

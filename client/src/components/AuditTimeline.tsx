@@ -10,9 +10,20 @@ import { Clock, AlertTriangle, Info, ShieldAlert } from "lucide-react";
 import type { AuditLogEntry, AuditSeverity } from "@shared/audit/contracts.js";
 import { useAuditStore } from "@/lib/audit-store";
 
-const SEVERITY_STYLES: Record<AuditSeverity, { bg: string; text: string; border: string }> = {
-  INFO: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-300" },
-  WARNING: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-300" },
+const SEVERITY_STYLES: Record<
+  AuditSeverity,
+  { bg: string; text: string; border: string }
+> = {
+  INFO: {
+    bg: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-300",
+  },
+  WARNING: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    border: "border-amber-300",
+  },
   CRITICAL: { bg: "bg-red-50", text: "text-red-700", border: "border-red-300" },
 };
 
@@ -63,7 +74,7 @@ function getSeverity(entry: AuditLogEntry): AuditSeverity {
 }
 
 export function AuditTimeline() {
-  const entries = useAuditStore((s) => s.entries);
+  const entries = useAuditStore(s => s.entries);
 
   if (entries.length === 0) {
     return (
@@ -80,7 +91,7 @@ export function AuditTimeline() {
       <div className="absolute left-5 top-0 bottom-0 w-px bg-stone-200" />
 
       <div className="space-y-4">
-        {entries.map((entry) => {
+        {entries.map(entry => {
           const severity = getSeverity(entry);
           const styles = SEVERITY_STYLES[severity];
           const dot = SEVERITY_DOT[severity];

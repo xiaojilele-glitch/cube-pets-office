@@ -4,8 +4,8 @@
  * 负责协作发现、请求路由、子任务委派和结果汇总。
  * 仅在当前 Mission 生命周期内有效，不持久化协作关系。
  */
-import type { MessageBus } from './message-bus.js';
-import type { MissionOrchestrator } from './mission-orchestrator.js';
+import type { MessageBus } from "./message-bus.js";
+import type { MissionOrchestrator } from "./mission-orchestrator.js";
 import type {
   CollaborationRequest,
   CollaborationResponse,
@@ -14,7 +14,7 @@ import type {
   PodCapability,
   SubTaskOutput,
   SwarmConfig,
-} from '../../shared/swarm.js';
+} from "../../shared/swarm.js";
 
 /** LLM 提供商抽象接口 */
 export interface LLMProvider {
@@ -51,7 +51,8 @@ export class SwarmOrchestrator {
   private readonly agentDirectory: AgentDirectory;
   private readonly missionOrchestrator: MissionOrchestrator | null;
   private readonly capabilityRegistry: Map<string, PodCapability> = new Map();
-  private readonly activeSessions: Map<string, CollaborationSession> = new Map();
+  private readonly activeSessions: Map<string, CollaborationSession> =
+    new Map();
 
   constructor(options: SwarmOrchestratorOptions) {
     this.messageBus = options.messageBus;
@@ -74,7 +75,7 @@ export class SwarmOrchestrator {
   /** 获取活跃会话列表（status === "active" 或 "pending"） */
   getActiveSessions(): CollaborationSession[] {
     return Array.from(this.activeSessions.values()).filter(
-      (s) => s.status === 'active' || s.status === 'pending',
+      s => s.status === "active" || s.status === "pending"
     );
   }
 
@@ -86,18 +87,22 @@ export class SwarmOrchestrator {
     const scored: Array<{ pod: PodCapability; matchCount: number }> = [];
 
     for (const pod of Array.from(this.capabilityRegistry.values())) {
-      const matchCount = pod.capabilities.filter((c: string) => requiredSet.has(c)).length;
+      const matchCount = pod.capabilities.filter((c: string) =>
+        requiredSet.has(c)
+      ).length;
       if (matchCount > 0) {
         scored.push({ pod, matchCount });
       }
     }
 
     scored.sort((a, b) => b.matchCount - a.matchCount);
-    return scored.map((s) => s.pod);
+    return scored.map(s => s.pod);
   }
 
   /** 分析心跳报告，发现协作机会 */
-  async analyzeHeartbeat(report: HeartbeatReport): Promise<CollaborationRequest | null> {
+  async analyzeHeartbeat(
+    report: HeartbeatReport
+  ): Promise<CollaborationRequest | null> {
     const { actionItems, observations } = report;
 
     // 1. If both are empty, nothing to analyze
@@ -111,12 +116,12 @@ export class SwarmOrchestrator {
 
     try {
       const prompt = [
-        'Analyze the following heartbeat report and determine if cross-Pod collaboration is needed.',
+        "Analyze the following heartbeat report and determine if cross-Pod collaboration is needed.",
         'Return a JSON object with { "needsCollaboration": boolean, "requiredCapabilities": string[] }.',
-        '',
+        "",
         `Action Items: ${JSON.stringify(actionItems)}`,
         `Observations: ${JSON.stringify(observations)}`,
-      ].join('\n');
+      ].join("\n");
 
       const raw = await this.llmProvider.generate(prompt);
 
@@ -143,7 +148,7 @@ export class SwarmOrchestrator {
 
     // 4. Match target Pod capabilities (excluding the source Pod)
     const matchingPods = this.matchCapabilities(requiredCapabilities).filter(
-      (p) => p.podId !== report.podId,
+      p => p.podId !== report.podId
     );
 
     // 5. No matching Pod found — log and abandon (requirement 3.4)
@@ -152,7 +157,7 @@ export class SwarmOrchestrator {
     }
 
     // 6. Generate and return a CollaborationRequest
-    const contextSummary = [...actionItems, ...observations].join('; ');
+    const contextSummary = [...actionItems, ...observations].join("; ");
 
     const request: CollaborationRequest = {
       id: `collab-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -161,7 +166,7 @@ export class SwarmOrchestrator {
       requiredCapabilities,
       contextSummary,
       depth: 1,
-      workflowId: '',
+      workflowId: "",
       createdAt: Date.now(),
     };
 
@@ -169,17 +174,19 @@ export class SwarmOrchestrator {
   }
 
   /** 处理收到的协作请求 */
-  async handleRequest(request: CollaborationRequest): Promise<CollaborationResponse> {
+  async handleRequest(
+    request: CollaborationRequest
+  ): Promise<CollaborationResponse> {
     const now = Date.now();
 
     // 1. Validate collaboration depth
     if (request.depth > this.config.maxDepth) {
       return {
         requestId: request.id,
-        targetPodId: '',
-        targetManagerId: '',
-        status: 'rejected',
-        reason: 'depth_exceeded',
+        targetPodId: "",
+        targetManagerId: "",
+        status: "rejected",
+        reason: "depth_exceeded",
         respondedAt: now,
       };
     }
@@ -188,10 +195,10 @@ export class SwarmOrchestrator {
     if (this.getActiveSessions().length >= this.config.maxConcurrentSessions) {
       return {
         requestId: request.id,
-        targetPodId: '',
-        targetManagerId: '',
-        status: 'busy',
-        reason: 'swarm_capacity_exceeded',
+        targetPodId: "",
+        targetManagerId: "",
+        status: "busy",
+        reason: "swarm_capacity_exceeded",
         respondedAt: now,
       };
     }
@@ -200,14 +207,16 @@ export class SwarmOrchestrator {
     const sourcePod = this.capabilityRegistry.get(request.sourcePodId);
     if (sourcePod) {
       const sourceCapSet = new Set(sourcePod.capabilities);
-      const allSelfCapable = request.requiredCapabilities.every((c) => sourceCapSet.has(c));
+      const allSelfCapable = request.requiredCapabilities.every(c =>
+        sourceCapSet.has(c)
+      );
       if (allSelfCapable) {
         return {
           requestId: request.id,
-          targetPodId: '',
-          targetManagerId: '',
-          status: 'rejected',
-          reason: 'self_capability',
+          targetPodId: "",
+          targetManagerId: "",
+          status: "rejected",
+          reason: "self_capability",
           respondedAt: now,
         };
       }
@@ -216,15 +225,15 @@ export class SwarmOrchestrator {
     // 4. Match capabilities to find a target Pod
     const matchingPods = this.matchCapabilities(request.requiredCapabilities);
     // Exclude the source Pod itself from matches
-    const targetPod = matchingPods.find((p) => p.podId !== request.sourcePodId);
+    const targetPod = matchingPods.find(p => p.podId !== request.sourcePodId);
 
     if (!targetPod) {
       return {
         requestId: request.id,
-        targetPodId: '',
-        targetManagerId: '',
-        status: 'rejected',
-        reason: 'no_matching_pod',
+        targetPodId: "",
+        targetManagerId: "",
+        status: "rejected",
+        reason: "no_matching_pod",
         respondedAt: now,
       };
     }
@@ -234,7 +243,7 @@ export class SwarmOrchestrator {
       requestId: request.id,
       targetPodId: targetPod.podId,
       targetManagerId: targetPod.managerId,
-      status: 'accepted',
+      status: "accepted",
       respondedAt: now,
     };
 
@@ -242,7 +251,7 @@ export class SwarmOrchestrator {
       id: `session-${request.id}-${now}`,
       request,
       response,
-      status: 'pending',
+      status: "pending",
       startedAt: now,
       updatedAt: now,
     };
@@ -253,7 +262,9 @@ export class SwarmOrchestrator {
   }
 
   /** 生成并分配子任务 */
-  async generateSubTasks(session: CollaborationSession): Promise<SubTaskOutput[]> {
+  async generateSubTasks(
+    session: CollaborationSession
+  ): Promise<SubTaskOutput[]> {
     try {
       // 1. Extract target Pod ID from session response
       const targetPodId = session.response?.targetPodId;
@@ -266,23 +277,26 @@ export class SwarmOrchestrator {
 
       // Determine fallback assignee: target manager if no workers available
       const targetManager = this.agentDirectory.getManagerByPod(targetPodId);
-      const fallbackAssigneeId = targetManager?.id ?? session.response!.targetManagerId;
+      const fallbackAssigneeId =
+        targetManager?.id ?? session.response!.targetManagerId;
 
       // 3. Call LLM to generate sub-task descriptions
       const prompt = [
-        'Based on the following collaboration request, generate sub-tasks to fulfill it.',
+        "Based on the following collaboration request, generate sub-tasks to fulfill it.",
         'Return a JSON object: { "tasks": [{ "description": string, "deliverable": string }] }',
-        '',
+        "",
         `Required Capabilities: ${JSON.stringify(session.request.requiredCapabilities)}`,
         `Context Summary: ${session.request.contextSummary}`,
-      ].join('\n');
+      ].join("\n");
 
       const raw = await this.llmProvider.generate(prompt);
 
       // 4. Parse the LLM response
       let tasks: Array<{ description: string; deliverable: string }>;
       try {
-        const parsed = JSON.parse(raw) as { tasks: Array<{ description: string; deliverable: string }> };
+        const parsed = JSON.parse(raw) as {
+          tasks: Array<{ description: string; deliverable: string }>;
+        };
         tasks = parsed.tasks ?? [];
       } catch {
         // Malformed LLM response — return empty array
@@ -306,7 +320,7 @@ export class SwarmOrchestrator {
           workerId: assigneeId,
           description: task.description,
           deliverable: task.deliverable,
-          status: 'done' as const,
+          status: "done" as const,
         };
       });
 
@@ -319,18 +333,21 @@ export class SwarmOrchestrator {
   }
 
   /** 提交子任务结果 */
-  async submitResult(sessionId: string, result: CollaborationResult): Promise<void> {
+  async submitResult(
+    sessionId: string,
+    result: CollaborationResult
+  ): Promise<void> {
     const session = this.activeSessions.get(sessionId);
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
     }
 
     // Determine overall status from sub-task outputs
-    const hasFailure = result.subTaskOutputs.some((o) => o.status === 'failed');
-    result.status = hasFailure ? 'failed' : 'completed';
+    const hasFailure = result.subTaskOutputs.some(o => o.status === "failed");
+    result.status = hasFailure ? "failed" : "completed";
 
     session.result = result;
-    session.status = hasFailure ? 'failed' : 'completed';
+    session.status = hasFailure ? "failed" : "completed";
     session.completedAt = Date.now();
     session.updatedAt = Date.now();
 
@@ -339,7 +356,7 @@ export class SwarmOrchestrator {
       try {
         await this.missionOrchestrator.appendCollaborationResult(
           session.request.workflowId,
-          session,
+          session
         );
       } catch {
         // Don't let mission integration failures break the collaboration flow
@@ -354,10 +371,10 @@ export class SwarmOrchestrator {
 
     for (const session of Array.from(this.activeSessions.values())) {
       if (
-        (session.status === 'active' || session.status === 'pending') &&
+        (session.status === "active" || session.status === "pending") &&
         session.startedAt + this.config.sessionTimeoutMs < now
       ) {
-        session.status = 'timeout';
+        session.status = "timeout";
         session.completedAt = now;
         session.updatedAt = now;
         timedOut.push(session);

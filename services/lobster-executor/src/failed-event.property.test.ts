@@ -44,10 +44,7 @@ afterEach(() => {
   tempDirs.length = 0;
 });
 
-function makeFailedRecord(
-  dataDir: string,
-  steps: number,
-): StoredJobRecord {
+function makeFailedRecord(dataDir: string, steps: number): StoredJobRecord {
   const logFile = join(dataDir, "executor.log");
   const planJob: ExecutionPlanJob = {
     id: "job-fail-1",
@@ -120,26 +117,29 @@ function makeFailedRecord(
 const arbSteps = fc.integer({ min: 1, max: 10 });
 
 /** stderr lines: 0–100 random non-empty strings */
-const arbStderrLines = fc.array(
-  fc.string({ minLength: 1, maxLength: 80 }),
-  { minLength: 0, maxLength: 100 },
-);
+const arbStderrLines = fc.array(fc.string({ minLength: 1, maxLength: 80 }), {
+  minLength: 0,
+  maxLength: 100,
+});
 
 /* ─── Tests ─── */
 
 describe("Property 10: 失败事件内容完整性", () => {
   it("failed job event has non-empty errorCode and metrics with durationMs >= 0", async () => {
     await fc.assert(
-      fc.asyncProperty(arbSteps, async (steps) => {
+      fc.asyncProperty(arbSteps, async steps => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeFailedRecord(dataDir, steps);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         // Find the job.failed event
-        const failedEvent = events.find((e) => e.type === "job.failed");
+        const failedEvent = events.find(e => e.type === "job.failed");
         expect(failedEvent).toBeDefined();
 
         // errorCode must be non-empty
@@ -154,19 +154,22 @@ describe("Property 10: 失败事件内容完整性", () => {
         expect(failedEvent!.metrics!.durationMs).toBeDefined();
         expect(failedEvent!.metrics!.durationMs!).toBeGreaterThanOrEqual(0);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("failed event sequence: job.started → job.progress* → job.failed", async () => {
     await fc.assert(
-      fc.asyncProperty(arbSteps, async (steps) => {
+      fc.asyncProperty(arbSteps, async steps => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeFailedRecord(dataDir, steps);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         // Must have at least 2 events: started + failed
         expect(events.length).toBeGreaterThanOrEqual(2);
@@ -187,13 +190,13 @@ describe("Property 10: 失败事件内容完整性", () => {
           expect(evt.status).toBe("running");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("stderr detail is truncated to at most 50 lines (pure property)", () => {
     fc.assert(
-      fc.property(arbStderrLines, (stderrLines) => {
+      fc.property(arbStderrLines, stderrLines => {
         // This mirrors DockerRunner.emitFailed logic:
         // detail = stderrLines.slice(-50).join("\n")
         const truncated = stderrLines.slice(-50);
@@ -217,28 +220,31 @@ describe("Property 10: 失败事件内容完整性", () => {
           expect(truncated.length).toBe(stderrLines.length);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("failed event contains artifacts list", async () => {
     await fc.assert(
-      fc.asyncProperty(arbSteps, async (steps) => {
+      fc.asyncProperty(arbSteps, async steps => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeFailedRecord(dataDir, steps);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
-        const failedEvent = events.find((e) => e.type === "job.failed");
+        const failedEvent = events.find(e => e.type === "job.failed");
         expect(failedEvent).toBeDefined();
 
         // Artifacts should be present
         expect(failedEvent!.artifacts).toBeDefined();
         expect(Array.isArray(failedEvent!.artifacts)).toBe(true);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

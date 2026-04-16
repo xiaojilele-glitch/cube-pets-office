@@ -10,7 +10,11 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 
-import { useSandboxStore, formatLogLine, type LogLine } from "../../lib/sandbox-store";
+import {
+  useSandboxStore,
+  formatLogLine,
+  type LogLine,
+} from "../../lib/sandbox-store";
 import type { ExecutorTerminalPanelProps } from "../ExecutorTerminalPanel";
 
 function makeLine(overrides?: Partial<LogLine>): LogLine {
@@ -57,14 +61,20 @@ describe("ExecutorTerminalPanel integration", () => {
     });
 
     it("interleaves stdout and stderr lines in order", () => {
-      useSandboxStore.getState().appendLog(makeLine({ stream: "stdout", data: "out-1" }));
-      useSandboxStore.getState().appendLog(makeLine({ stream: "stderr", data: "err-1" }));
-      useSandboxStore.getState().appendLog(makeLine({ stream: "stdout", data: "out-2" }));
+      useSandboxStore
+        .getState()
+        .appendLog(makeLine({ stream: "stdout", data: "out-1" }));
+      useSandboxStore
+        .getState()
+        .appendLog(makeLine({ stream: "stderr", data: "err-1" }));
+      useSandboxStore
+        .getState()
+        .appendLog(makeLine({ stream: "stdout", data: "out-2" }));
 
       const lines = useSandboxStore.getState().logLines;
       expect(lines).toHaveLength(3);
-      expect(lines.map((l) => l.stream)).toEqual(["stdout", "stderr", "stdout"]);
-      expect(lines.map((l) => l.data)).toEqual(["out-1", "err-1", "out-2"]);
+      expect(lines.map(l => l.stream)).toEqual(["stdout", "stderr", "stdout"]);
+      expect(lines.map(l => l.data)).toEqual(["out-1", "err-1", "out-2"]);
     });
 
     it("sets isStreaming to true when logs arrive", () => {

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { DocumentChunker } from '../rag/chunking/document-chunker.js';
-import type { ChunkMetadata } from '../../shared/rag/contracts.js';
+import { describe, expect, it } from "vitest";
+import { DocumentChunker } from "../rag/chunking/document-chunker.js";
+import type { ChunkMetadata } from "../../shared/rag/contracts.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -10,35 +10,35 @@ function makeMetadata(): ChunkMetadata {
   return {
     ingestedAt: new Date().toISOString(),
     lastAccessedAt: new Date().toISOString(),
-    contentHash: 'test-hash',
+    contentHash: "test-hash",
   };
 }
 
 /** Generate a string with exactly `n` whitespace-separated tokens */
-function makeTokens(n: number, prefix = 'w'): string {
-  return Array.from({ length: n }, (_, i) => `${prefix}${i}`).join(' ');
+function makeTokens(n: number, prefix = "w"): string {
+  return Array.from({ length: n }, (_, i) => `${prefix}${i}`).join(" ");
 }
 
 /** Build a document with paragraphs of given token counts separated by \n\n */
 function makeParagraphs(tokenCounts: number[]): string {
-  return tokenCounts.map((n, i) => makeTokens(n, `p${i}_`)).join('\n\n');
+  return tokenCounts.map((n, i) => makeTokens(n, `p${i}_`)).join("\n\n");
 }
 
 // ---------------------------------------------------------------------------
 // DocumentChunker — basic behavior
 // ---------------------------------------------------------------------------
 
-describe('DocumentChunker', () => {
+describe("DocumentChunker", () => {
   const meta = makeMetadata();
 
-  it('returns empty array for empty content', () => {
+  it("returns empty array for empty content", () => {
     const chunker = new DocumentChunker();
-    expect(chunker.chunk('', meta)).toEqual([]);
-    expect(chunker.chunk('   ', meta)).toEqual([]);
-    expect(chunker.chunk('\n\n\n', meta)).toEqual([]);
+    expect(chunker.chunk("", meta)).toEqual([]);
+    expect(chunker.chunk("   ", meta)).toEqual([]);
+    expect(chunker.chunk("\n\n\n", meta)).toEqual([]);
   });
 
-  it('returns single chunk for a single paragraph within range', () => {
+  it("returns single chunk for a single paragraph within range", () => {
     const chunker = new DocumentChunker({ minTokens: 1, maxTokens: 1024 });
     const content = makeTokens(100);
     const result = chunker.chunk(content, meta);
@@ -46,14 +46,14 @@ describe('DocumentChunker', () => {
     expect(result).toHaveLength(1);
     expect(result[0].tokenCount).toBe(100);
     expect(result[0].chunkIndex).toBe(0);
-    expect(result[0].sourceType).toBe('document');
+    expect(result[0].sourceType).toBe("document");
   });
 
   // -----------------------------------------------------------------------
   // Double newline splitting
   // -----------------------------------------------------------------------
 
-  it('splits content by double newlines into separate chunks', () => {
+  it("splits content by double newlines into separate chunks", () => {
     const chunker = new DocumentChunker({ minTokens: 1, maxTokens: 1024 });
     const content = makeParagraphs([80, 90, 70]);
     const result = chunker.chunk(content, meta);
@@ -64,11 +64,11 @@ describe('DocumentChunker', () => {
     expect(result[2].tokenCount).toBe(70);
   });
 
-  it('handles multiple blank lines between paragraphs', () => {
+  it("handles multiple blank lines between paragraphs", () => {
     const chunker = new DocumentChunker({ minTokens: 1, maxTokens: 1024 });
-    const p1 = makeTokens(80, 'a_');
-    const p2 = makeTokens(90, 'b_');
-    const content = p1 + '\n\n\n\n' + p2;
+    const p1 = makeTokens(80, "a_");
+    const p2 = makeTokens(90, "b_");
+    const content = p1 + "\n\n\n\n" + p2;
     const result = chunker.chunk(content, meta);
 
     expect(result).toHaveLength(2);
@@ -78,7 +78,7 @@ describe('DocumentChunker', () => {
   // Merge small paragraphs
   // -----------------------------------------------------------------------
 
-  it('merges small paragraphs with previous paragraph', () => {
+  it("merges small paragraphs with previous paragraph", () => {
     // Three paragraphs: 80, 20, 80 tokens. minTokens=64
     // 20 < 64 → merge with prev (80+20=100 <= 1024) → [100, 80]
     const chunker = new DocumentChunker({ minTokens: 64, maxTokens: 1024 });
@@ -90,7 +90,7 @@ describe('DocumentChunker', () => {
     expect(result[1].tokenCount).toBeGreaterThanOrEqual(64);
   });
 
-  it('merges first small paragraph forward when no previous exists', () => {
+  it("merges first small paragraph forward when no previous exists", () => {
     // Two paragraphs: 10, 80 tokens. minTokens=64
     // 10 < 64, no prev → stays. Then forward merge: 10+80=90 <= 1024 → merge → [90]
     const chunker = new DocumentChunker({ minTokens: 64, maxTokens: 1024 });
@@ -101,7 +101,7 @@ describe('DocumentChunker', () => {
     expect(result[0].tokenCount).toBe(90);
   });
 
-  it('does not merge if combined would exceed maxTokens', () => {
+  it("does not merge if combined would exceed maxTokens", () => {
     // Two paragraphs: 900, 30 tokens. minTokens=64, maxTokens=100
     // After split of 900: multiple chunks of <=100
     // 30 < 64 but prev is at maxTokens boundary → can't merge
@@ -118,7 +118,7 @@ describe('DocumentChunker', () => {
   // Split large paragraphs
   // -----------------------------------------------------------------------
 
-  it('splits paragraphs exceeding maxTokens', () => {
+  it("splits paragraphs exceeding maxTokens", () => {
     const chunker = new DocumentChunker({ minTokens: 1, maxTokens: 100 });
     const content = makeTokens(250);
     const result = chunker.chunk(content, meta);
@@ -134,7 +134,7 @@ describe('DocumentChunker', () => {
   // Token range invariant [minTokens, maxTokens]
   // -----------------------------------------------------------------------
 
-  it('ensures all chunks are within [minTokens, maxTokens] for large input', () => {
+  it("ensures all chunks are within [minTokens, maxTokens] for large input", () => {
     const chunker = new DocumentChunker({ minTokens: 64, maxTokens: 1024 });
     // 5 paragraphs of 400 tokens each
     const content = makeParagraphs([400, 400, 400, 400, 400]);
@@ -151,7 +151,7 @@ describe('DocumentChunker', () => {
   // ChunkRecord structure
   // -----------------------------------------------------------------------
 
-  it('produces valid ChunkRecord fields', () => {
+  it("produces valid ChunkRecord fields", () => {
     const chunker = new DocumentChunker({ minTokens: 1, maxTokens: 1024 });
     const content = makeParagraphs([80, 90]);
     const result = chunker.chunk(content, meta);
@@ -160,7 +160,7 @@ describe('DocumentChunker', () => {
       const chunk = result[i];
       expect(chunk.chunkId).toBe(`chunk:${i}`);
       expect(chunk.chunkIndex).toBe(i);
-      expect(chunk.sourceType).toBe('document');
+      expect(chunk.sourceType).toBe("document");
       expect(chunk.content).toBeTruthy();
       expect(chunk.tokenCount).toBeGreaterThan(0);
       expect(chunk.metadata).toBe(meta);
@@ -171,9 +171,9 @@ describe('DocumentChunker', () => {
   // fromConfig factory
   // -----------------------------------------------------------------------
 
-  it('creates instance from ChunkingConfig via fromConfig', () => {
+  it("creates instance from ChunkingConfig via fromConfig", () => {
     const chunker = DocumentChunker.fromConfig({
-      strategy: 'semantic_paragraph',
+      strategy: "semantic_paragraph",
       maxTokens: 200,
       minTokens: 10,
     });
@@ -186,7 +186,7 @@ describe('DocumentChunker', () => {
     }
   });
 
-  it('fromConfig uses defaults when config is undefined', () => {
+  it("fromConfig uses defaults when config is undefined", () => {
     const chunker = DocumentChunker.fromConfig(undefined);
     const content = makeParagraphs([200, 200, 200]);
     const result = chunker.chunk(content, meta);
@@ -198,17 +198,17 @@ describe('DocumentChunker', () => {
   // Preserves paragraph separation in merged content
   // -----------------------------------------------------------------------
 
-  it('uses double newline separator when merging paragraphs', () => {
+  it("uses double newline separator when merging paragraphs", () => {
     const chunker = new DocumentChunker({ minTokens: 64, maxTokens: 1024 });
     // Two small paragraphs that will be merged
-    const p1 = makeTokens(30, 'a_');
-    const p2 = makeTokens(30, 'b_');
-    const content = p1 + '\n\n' + p2;
+    const p1 = makeTokens(30, "a_");
+    const p2 = makeTokens(30, "b_");
+    const content = p1 + "\n\n" + p2;
     const result = chunker.chunk(content, meta);
 
     // Both < 64, first has no prev so stays, then forward merge
     expect(result).toHaveLength(1);
     // Merged content should contain \n\n separator
-    expect(result[0].content).toContain('\n\n');
+    expect(result[0].content).toContain("\n\n");
   });
 });

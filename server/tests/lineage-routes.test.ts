@@ -35,9 +35,29 @@ function makeNode(overrides?: Partial<DataLineageNode>): DataLineageNode {
 }
 
 const sampleNodes: DataLineageNode[] = [
-  makeNode({ lineageId: "node-1", type: "source", timestamp: 1000, sourceId: "src-1", resultHash: "hash-a" }),
-  makeNode({ lineageId: "node-2", type: "transformation", timestamp: 2000, agentId: "agent-1", upstream: ["node-1"] }),
-  makeNode({ lineageId: "node-3", type: "decision", timestamp: 3000, decisionId: "dec-1", upstream: ["node-2"], result: "approve", confidence: 0.95 }),
+  makeNode({
+    lineageId: "node-1",
+    type: "source",
+    timestamp: 1000,
+    sourceId: "src-1",
+    resultHash: "hash-a",
+  }),
+  makeNode({
+    lineageId: "node-2",
+    type: "transformation",
+    timestamp: 2000,
+    agentId: "agent-1",
+    upstream: ["node-1"],
+  }),
+  makeNode({
+    lineageId: "node-3",
+    type: "decision",
+    timestamp: 3000,
+    decisionId: "dec-1",
+    upstream: ["node-2"],
+    result: "approve",
+    confidence: 0.95,
+  }),
 ];
 
 function createMockStore(): LineageStorageAdapter {
@@ -45,13 +65,15 @@ function createMockStore(): LineageStorageAdapter {
     async batchInsertNodes() {},
     async batchInsertEdges() {},
     async getNode(id: string) {
-      return sampleNodes.find((n) => n.lineageId === id);
+      return sampleNodes.find(n => n.lineageId === id);
     },
     async queryNodes(filter: Record<string, unknown>) {
       let results = [...sampleNodes];
-      if (filter.type) results = results.filter((n) => n.type === filter.type);
-      if (filter.decisionId) results = results.filter((n) => n.decisionId === filter.decisionId);
-      if (filter.agentId) results = results.filter((n) => n.agentId === filter.agentId);
+      if (filter.type) results = results.filter(n => n.type === filter.type);
+      if (filter.decisionId)
+        results = results.filter(n => n.decisionId === filter.decisionId);
+      if (filter.agentId)
+        results = results.filter(n => n.agentId === filter.agentId);
       return results;
     },
     async queryEdges() {
@@ -78,7 +100,7 @@ function fetch(
   server: http.Server,
   method: string,
   path: string,
-  body?: unknown,
+  body?: unknown
 ): Promise<{ status: number; body: Record<string, unknown> }> {
   return new Promise((resolve, reject) => {
     const url = new URL(path, "http://localhost");
@@ -89,14 +111,17 @@ function fetch(
       path: url.pathname + url.search,
       headers: { "Content-Type": "application/json" },
     };
-    const req = http.request(options, (res) => {
+    const req = http.request(options, res => {
       let data = "";
-      res.on("data", (chunk) => (data += chunk));
+      res.on("data", chunk => (data += chunk));
       res.on("end", () => {
         try {
           resolve({ status: res.statusCode!, body: JSON.parse(data) });
         } catch {
-          resolve({ status: res.statusCode!, body: { raw: data } as Record<string, unknown> });
+          resolve({
+            status: res.statusCode!,
+            body: { raw: data } as Record<string, unknown>,
+          });
         }
       });
     });
@@ -112,7 +137,10 @@ function createApp() {
   const store = createMockStore();
   const queryService = new LineageQueryService(store);
   const auditService = new LineageAuditService(store, queryService);
-  const changeDetectionService = new ChangeDetectionService(store, queryService);
+  const changeDetectionService = new ChangeDetectionService(
+    store,
+    queryService
+  );
   const exportService = new LineageExportService(store);
 
   const app = express();
@@ -125,7 +153,7 @@ function createApp() {
       exportService,
       changeDetectionService,
       store,
-    }),
+    })
   );
   return app;
 }
@@ -137,17 +165,17 @@ describe("Lineage Routes", () => {
 
   beforeAll(
     () =>
-      new Promise<void>((resolve) => {
+      new Promise<void>(resolve => {
         const app = createApp();
         server = app.listen(0, resolve);
-      }),
+      })
   );
 
   afterAll(
     () =>
       new Promise<void>((resolve, reject) => {
-        server.close((err) => (err ? reject(err) : resolve()));
-      }),
+        server.close(err => (err ? reject(err) : resolve()));
+      })
   );
 
   // ── Query routes ──
@@ -157,7 +185,9 @@ describe("Lineage Routes", () => {
       const res = await fetch(server, "GET", "/api/lineage/node-1");
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
-      expect((res.body.node as Record<string, unknown>).lineageId).toBe("node-1");
+      expect((res.body.node as Record<string, unknown>).lineageId).toBe(
+        "node-1"
+      );
     });
 
     it("returns 404 for unknown node", async () => {
@@ -215,7 +245,11 @@ describe("Lineage Routes", () => {
     });
 
     it("returns full path graph", async () => {
-      const res = await fetch(server, "GET", "/api/lineage/path?sourceId=node-1&decisionId=node-3");
+      const res = await fetch(
+        server,
+        "GET",
+        "/api/lineage/path?sourceId=node-1&decisionId=node-3"
+      );
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
       expect(res.body.graph).toBeDefined();
@@ -244,7 +278,11 @@ describe("Lineage Routes", () => {
     });
 
     it("returns audit entries", async () => {
-      const res = await fetch(server, "GET", "/api/lineage/audit/trail?userId=user-1&start=0&end=99999");
+      const res = await fetch(
+        server,
+        "GET",
+        "/api/lineage/audit/trail?userId=user-1&start=0&end=99999"
+      );
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
       expect(Array.isArray(res.body.entries)).toBe(true);
@@ -259,7 +297,11 @@ describe("Lineage Routes", () => {
     });
 
     it("returns anomaly alerts", async () => {
-      const res = await fetch(server, "GET", "/api/lineage/audit/anomalies?start=0&end=99999");
+      const res = await fetch(
+        server,
+        "GET",
+        "/api/lineage/audit/anomalies?start=0&end=99999"
+      );
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
       expect(Array.isArray(res.body.alerts)).toBe(true);
@@ -286,7 +328,11 @@ describe("Lineage Routes", () => {
     });
 
     it("returns exported data", async () => {
-      const res = await fetch(server, "GET", "/api/lineage/export?startTime=0&endTime=99999");
+      const res = await fetch(
+        server,
+        "GET",
+        "/api/lineage/export?startTime=0&endTime=99999"
+      );
       expect(res.status).toBe(200);
       expect(res.body.ok).toBe(true);
       expect(res.body.data).toBeDefined();
@@ -317,7 +363,12 @@ describe("Lineage Routes", () => {
 
   describe("POST /api/lineage/changes/detect", () => {
     it("requires sourceId", async () => {
-      const res = await fetch(server, "POST", "/api/lineage/changes/detect", {});
+      const res = await fetch(
+        server,
+        "POST",
+        "/api/lineage/changes/detect",
+        {}
+      );
       expect(res.status).toBe(400);
       expect(res.body.ok).toBe(false);
     });

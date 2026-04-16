@@ -29,7 +29,7 @@ const arbAgentEvent: fc.Arbitrary<AgentEvent> = fc
       "execution",
       "review",
       "summary",
-      "evolution",
+      "evolution"
     ),
   })
   .map(({ workflowId, stage }) => ({
@@ -48,12 +48,12 @@ const arbTimeline: fc.Arbitrary<DemoTimelineEntry[]> = fc
       offsetMs: fc.integer({ min: 0, max: 5000 }),
       event: arbAgentEvent,
     }),
-    { minLength: 1, maxLength: 30 },
+    { minLength: 1, maxLength: 30 }
   )
-  .map((entries) =>
+  .map(entries =>
     entries
       .sort((a, b) => a.offsetMs - b.offsetMs)
-      .map((e) => ({ offsetMs: e.offsetMs, event: e.event })),
+      .map(e => ({ offsetMs: e.offsetMs, event: e.event }))
   );
 
 /** Build a minimal DemoDataBundle from a timeline */
@@ -65,7 +65,8 @@ function makeBundle(timeline: DemoTimelineEntry[]): DemoDataBundle {
       title: "test",
       description: "test",
       createdAt: new Date().toISOString(),
-      totalDurationMs: timeline.length > 0 ? timeline[timeline.length - 1].offsetMs : 0,
+      totalDurationMs:
+        timeline.length > 0 ? timeline[timeline.length - 1].offsetMs : 0,
       locale: "en-US",
     },
     timeline,
@@ -85,26 +86,29 @@ function makeBundle(timeline: DemoTimelineEntry[]): DemoDataBundle {
 // Test helpers
 // ---------------------------------------------------------------------------
 
-function collectEvents(
-  bundle: DemoDataBundle,
-): { firedEntries: DemoTimelineEntry[]; stateChanges: string[]; errors: Error[] } {
+function collectEvents(bundle: DemoDataBundle): {
+  firedEntries: DemoTimelineEntry[];
+  stateChanges: string[];
+  errors: Error[];
+} {
   const firedEntries: DemoTimelineEntry[] = [];
   const stateChanges: string[] = [];
   const errors: Error[] = [];
 
   const callbacks: PlaybackCallbacks = {
-    onEvent: (entry) => firedEntries.push(entry),
-    onStateChange: (state) => stateChanges.push(state),
-    onError: (err) => errors.push(err),
+    onEvent: entry => firedEntries.push(entry),
+    onStateChange: state => stateChanges.push(state),
+    onError: err => errors.push(err),
   };
 
   const engine = new DemoPlaybackEngine(bundle, callbacks);
   engine.start();
 
   // Advance fake timers past all scheduled events
-  const maxOffset = bundle.timeline.length > 0
-    ? bundle.timeline[bundle.timeline.length - 1].offsetMs
-    : 0;
+  const maxOffset =
+    bundle.timeline.length > 0
+      ? bundle.timeline[bundle.timeline.length - 1].offsetMs
+      : 0;
   vi.advanceTimersByTime(maxOffset + 100);
 
   engine.dispose();
@@ -131,7 +135,7 @@ afterEach(() => {
 describe("Property 1: 事件按时间戳顺序发射", () => {
   it("events fired by DemoPlaybackEngine are in non-decreasing timestampOffset order", () => {
     fc.assert(
-      fc.property(arbTimeline, (timeline) => {
+      fc.property(arbTimeline, timeline => {
         const bundle = makeBundle(timeline);
         const { firedEntries } = collectEvents(bundle);
 
@@ -146,11 +150,10 @@ describe("Property 1: 事件按时间戳顺序发射", () => {
         }
         return true;
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // Property 2: 暂停恢复不丢失不重复事件
@@ -172,14 +175,15 @@ describe("Property 2: 暂停恢复不丢失不重复事件", () => {
         fc.integer({ min: 0, max: 5000 }),
         (timeline, rawPauseAt) => {
           const bundle = makeBundle(timeline);
-          const maxOffset = timeline.length > 0 ? timeline[timeline.length - 1].offsetMs : 0;
+          const maxOffset =
+            timeline.length > 0 ? timeline[timeline.length - 1].offsetMs : 0;
           // Clamp pause point within the timeline range
           const pauseAt = rawPauseAt % (maxOffset + 1);
 
           // --- Run 1: no pause (baseline) ---
           const baselineEntries: DemoTimelineEntry[] = [];
           const baselineCallbacks: PlaybackCallbacks = {
-            onEvent: (entry) => baselineEntries.push(entry),
+            onEvent: entry => baselineEntries.push(entry),
             onStateChange: () => {},
             onError: () => {},
           };
@@ -192,7 +196,7 @@ describe("Property 2: 暂停恢复不丢失不重复事件", () => {
           // --- Run 2: with pause and resume ---
           const pausedEntries: DemoTimelineEntry[] = [];
           const pausedCallbacks: PlaybackCallbacks = {
-            onEvent: (entry) => pausedEntries.push(entry),
+            onEvent: entry => pausedEntries.push(entry),
             onStateChange: () => {},
             onError: () => {},
           };
@@ -219,14 +223,16 @@ describe("Property 2: 暂停恢复不丢失不重复事件", () => {
 
           // Same events in same order
           for (let i = 0; i < baselineEntries.length; i++) {
-            if (baselineEntries[i].offsetMs !== pausedEntries[i].offsetMs) return false;
-            if (baselineEntries[i].event.type !== pausedEntries[i].event.type) return false;
+            if (baselineEntries[i].offsetMs !== pausedEntries[i].offsetMs)
+              return false;
+            if (baselineEntries[i].event.type !== pausedEntries[i].event.type)
+              return false;
           }
 
           return true;
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -253,17 +259,17 @@ describe("Property 3: 异常导致 failed 状态转换", () => {
           const receivedErrors: Error[] = [];
 
           const callbacks: PlaybackCallbacks = {
-            onEvent: (_entry) => {
+            onEvent: _entry => {
               if (eventCount === throwIndex) {
                 eventCount++;
                 throw new Error(`Intentional throw at index ${throwIndex}`);
               }
               eventCount++;
             },
-            onStateChange: (state) => {
+            onStateChange: state => {
               finalState = state;
             },
-            onError: (err) => {
+            onError: err => {
               errorCount++;
               receivedErrors.push(err);
             },
@@ -273,7 +279,8 @@ describe("Property 3: 异常导致 failed 状态转换", () => {
           engine.start();
 
           // Advance past all events
-          const maxOffset = timeline.length > 0 ? timeline[timeline.length - 1].offsetMs : 0;
+          const maxOffset =
+            timeline.length > 0 ? timeline[timeline.length - 1].offsetMs : 0;
           vi.advanceTimersByTime(maxOffset + 100);
 
           const engineState = engine.getState();
@@ -286,12 +293,13 @@ describe("Property 3: 异常导致 failed 状态转换", () => {
           if (errorCount !== 1) return false;
 
           // The error message should contain our intentional throw info
-          if (!receivedErrors[0].message.includes("Intentional throw")) return false;
+          if (!receivedErrors[0].message.includes("Intentional throw"))
+            return false;
 
           return true;
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

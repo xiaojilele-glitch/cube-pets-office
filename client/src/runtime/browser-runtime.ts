@@ -20,7 +20,11 @@ import type {
   WorkflowRepository,
   WorkflowRuntime,
 } from "@shared/workflow-runtime";
-import type { MissionRecord, MissionStatus, SnapshotPayload } from "@shared/mission/contracts";
+import type {
+  MissionRecord,
+  MissionStatus,
+  SnapshotPayload,
+} from "@shared/mission/contracts";
 import {
   createSnapshotScheduler,
   type SnapshotScheduler,
@@ -43,7 +47,10 @@ function now(): string {
 function averageScore(tasks: TaskRecord[]): number | null {
   const scored = tasks.filter(task => task.total_score !== null);
   if (scored.length === 0) return null;
-  return scored.reduce((sum, task) => sum + (task.total_score || 0), 0) / scored.length;
+  return (
+    scored.reduce((sum, task) => sum + (task.total_score || 0), 0) /
+    scored.length
+  );
 }
 
 class BrowserWorkflowRepository implements WorkflowRepository {
@@ -56,7 +63,11 @@ class BrowserWorkflowRepository implements WorkflowRepository {
 
   constructor(private readonly agents: AgentRecord[]) {}
 
-  createWorkflow(id: string, directive: string, departments: string[]): WorkflowRecord {
+  createWorkflow(
+    id: string,
+    directive: string,
+    departments: string[]
+  ): WorkflowRecord {
     const workflow: WorkflowRecord = {
       id,
       directive,
@@ -126,7 +137,9 @@ class BrowserWorkflowRepository implements WorkflowRepository {
     return this.tasks.filter(task => task.workflow_id === workflowId);
   }
 
-  createTask(task: Omit<TaskRecord, "id" | "created_at" | "updated_at">): TaskRecord {
+  createTask(
+    task: Omit<TaskRecord, "id" | "created_at" | "updated_at">
+  ): TaskRecord {
     this.taskCounter += 1;
     const timestamp = now();
     const row: TaskRecord = {
@@ -183,7 +196,10 @@ class BrowserWorkflowRepository implements WorkflowRepository {
 
 class BrowserMemoryRepository implements MemoryRepository {
   private soulByAgent = new Map<string, string>();
-  private exchangesByAgent = new Map<string, Array<{ prompt: string; response: string }>>();
+  private exchangesByAgent = new Map<
+    string,
+    Array<{ prompt: string; response: string }>
+  >();
 
   constructor(agents: AgentRecord[]) {
     for (const agent of agents) {
@@ -191,11 +207,18 @@ class BrowserMemoryRepository implements MemoryRepository {
     }
   }
 
-  buildPromptContext(agentId: string, _query: string, _workflowId?: string): string[] {
+  buildPromptContext(
+    agentId: string,
+    _query: string,
+    _workflowId?: string
+  ): string[] {
     const exchanges = this.exchangesByAgent.get(agentId) || [];
-    return exchanges.slice(-3).map(
-      exchange => `Previous prompt:\n${exchange.prompt}\n\nPrevious response:\n${exchange.response}`
-    );
+    return exchanges
+      .slice(-3)
+      .map(
+        exchange =>
+          `Previous prompt:\n${exchange.prompt}\n\nPrevious response:\n${exchange.response}`
+      );
   }
 
   appendLLMExchange(
@@ -227,7 +250,11 @@ class BrowserMemoryRepository implements MemoryRepository {
 
   appendLearnedBehaviors(agentId: string, behaviors: string[]): string {
     const current = this.getSoulText(agentId);
-    const next = [current.trim(), "## Learned Behaviors", ...behaviors.map(item => `- ${item}`)]
+    const next = [
+      current.trim(),
+      "## Learned Behaviors",
+      ...behaviors.map(item => `- ${item}`),
+    ]
       .filter(Boolean)
       .join("\n\n");
     this.soulByAgent.set(agentId, next);
@@ -319,7 +346,9 @@ class BrowserMessageBus implements RuntimeMessageBus {
       throw new Error(`Hierarchy violation: ${fromId} -> ${toId}`);
     }
     if (!validateStageRoute(fromAgent, toAgent, stage as any)) {
-      throw new Error(`Stage route violation at ${stage}: ${fromId} -> ${toId}`);
+      throw new Error(
+        `Stage route violation at ${stage}: ${fromId} -> ${toId}`
+      );
     }
 
     const message = this.repo.createMessage({
@@ -361,7 +390,10 @@ class BrowserMessageBus implements RuntimeMessageBus {
     return message;
   }
 
-  async getInbox(agentId: string, workflowId?: string): Promise<MessageRecord[]> {
+  async getInbox(
+    agentId: string,
+    workflowId?: string
+  ): Promise<MessageRecord[]> {
     return this.repo.getInbox(agentId, workflowId);
   }
 
@@ -466,13 +498,15 @@ class BrowserAgentDirectory implements AgentDirectory {
 
   getManagerByDepartment(dept: string) {
     return Array.from(this.agents.values()).find(
-      agent => agent.config.role === "manager" && agent.config.department === dept
+      agent =>
+        agent.config.role === "manager" && agent.config.department === dept
     );
   }
 
   getWorkersByManager(managerId: string) {
     return Array.from(this.agents.values()).filter(
-      agent => agent.config.role === "worker" && agent.config.managerId === managerId
+      agent =>
+        agent.config.role === "worker" && agent.config.managerId === managerId
     );
   }
 
@@ -498,7 +532,7 @@ let _snapshotScheduler: SnapshotScheduler | null = null;
  */
 function buildCollectState(
   memoryRepo: BrowserMemoryRepository,
-  getMission: () => MissionRecord | null,
+  getMission: () => MissionRecord | null
 ): () => SnapshotPayload {
   return (): SnapshotPayload => {
     // --- Mission -----------------------------------------------------------
@@ -516,7 +550,7 @@ function buildCollectState(
 
     // --- Agent memories (best-effort from BrowserMemoryRepository) ---------
     const memEntries: [string, any][] = Array.from(
-      (memoryRepo as any).memories?.entries?.() ?? [],
+      (memoryRepo as any).memories?.entries?.() ?? []
     );
     const agentMemories = memEntries.map(([agentId, mem]) => ({
       agentId,
@@ -535,15 +569,15 @@ function buildCollectState(
 
     // --- Decision history (extract from mission stages) --------------------
     const decisionHistory = (mission.stages ?? [])
-      .filter((s) => s.status === "done" || s.status === "running")
-      .map((s) => ({
+      .filter(s => s.status === "done" || s.status === "running")
+      .map(s => ({
         stageKey: s.key,
         decision: mission.decision ?? { prompt: "", options: [] },
         timestamp: s.startedAt ?? Date.now(),
       }));
 
     // --- Attachment index (from mission artifacts) -------------------------
-    const attachmentIndex = (mission.artifacts ?? []).map((a) => ({
+    const attachmentIndex = (mission.artifacts ?? []).map(a => ({
       name: a.name,
       kind: a.kind,
       path: a.path,
@@ -554,10 +588,9 @@ function buildCollectState(
     // The Zustand store is not directly importable here without creating a
     // circular dependency. We read it through a well-known accessor that
     // Task 9.2 will register, falling back to safe defaults.
-    const zustandAccessor =
-      (globalThis as any).__snapshotZustandAccessor as
-        | (() => { runtimeMode: string; aiConfig: any; chatMessages: any[] })
-        | undefined;
+    const zustandAccessor = (globalThis as any).__snapshotZustandAccessor as
+      | (() => { runtimeMode: string; aiConfig: any; chatMessages: any[] })
+      | undefined;
     const zustand = zustandAccessor?.() ?? {
       runtimeMode: "frontend",
       aiConfig: {} as any,
@@ -594,7 +627,7 @@ export function getSnapshotScheduler(): SnapshotScheduler | null {
  */
 export function onMissionStatusChange(
   missionId: string,
-  status: MissionStatus,
+  status: MissionStatus
 ): void {
   const scheduler = _snapshotScheduler;
   if (!scheduler) return;
@@ -634,14 +667,14 @@ export function onMissionStageChange(): void {
  * during mode switches.
  */
 export async function checkForRecovery(
-  runtimeMode: string,
+  runtimeMode: string
 ): Promise<RecoveryCandidate | null> {
   // In Advanced mode, server snapshots take priority (Requirement 6.1).
   // Server-side recovery is not yet implemented — log and fall through
   // to local snapshot detection (Requirement 6.2).
   if (runtimeMode === "advanced") {
     console.log(
-      "[BrowserRuntime/Recovery] Advanced mode: checking server snapshot (not yet implemented), falling back to local",
+      "[BrowserRuntime/Recovery] Advanced mode: checking server snapshot (not yet implemented), falling back to local"
     );
   }
 
@@ -650,7 +683,7 @@ export async function checkForRecovery(
 
   if (candidate) {
     console.log(
-      `[BrowserRuntime/Recovery] Found local recovery candidate: mission=${candidate.snapshot.missionId}, valid=${candidate.isValid}`,
+      `[BrowserRuntime/Recovery] Found local recovery candidate: mission=${candidate.snapshot.missionId}, valid=${candidate.isValid}`
     );
   } else {
     console.log("[BrowserRuntime/Recovery] No recovery candidate found");
@@ -668,7 +701,11 @@ export function createBrowserRuntime(
   const memoryRepo = new BrowserMemoryRepository(options.agents);
   const eventEmitter = new BrowserEventEmitter(options.onEvent);
   const reportRepo = new BrowserReportRepository();
-  const messageBus = new BrowserMessageBus(workflowRepo, memoryRepo, eventEmitter);
+  const messageBus = new BrowserMessageBus(
+    workflowRepo,
+    memoryRepo,
+    eventEmitter
+  );
   const agentDirectory = new BrowserAgentDirectory(
     options.agents,
     options.llmProvider,
@@ -687,12 +724,12 @@ export function createBrowserRuntime(
   _snapshotScheduler = createSnapshotScheduler({
     intervalMs: SNAPSHOT_INTERVAL_MS,
     collectState,
-    onError: (err) => console.error("[BrowserRuntime/Snapshot]", err),
+    onError: err => console.error("[BrowserRuntime/Snapshot]", err),
   });
 
   // Expose a way for external code to supply the mission provider
   (globalThis as any).__snapshotRegisterMissionProvider = (
-    provider: () => MissionRecord | null,
+    provider: () => MissionRecord | null
   ) => {
     _missionProvider = provider;
   };

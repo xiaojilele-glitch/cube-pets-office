@@ -14,7 +14,10 @@ import {
   matchDomain,
   portInRanges,
 } from "../permission/checkers/network-checker.js";
-import type { PermissionConstraints, PortRange } from "../../shared/permission/contracts.js";
+import type {
+  PermissionConstraints,
+  PortRange,
+} from "../../shared/permission/contracts.js";
 
 const checker = new NetworkChecker();
 
@@ -23,8 +26,12 @@ const checker = new NetworkChecker();
 describe("NetworkChecker", () => {
   describe("parseIPv4", () => {
     it("parses valid IPs", () => {
-      expect(parseIPv4("192.168.1.1")).toBe((192 << 24 | 168 << 16 | 1 << 8 | 1) >>> 0);
-      expect(parseIPv4("10.0.0.1")).toBe((10 << 24 | 0 << 16 | 0 << 8 | 1) >>> 0);
+      expect(parseIPv4("192.168.1.1")).toBe(
+        ((192 << 24) | (168 << 16) | (1 << 8) | 1) >>> 0
+      );
+      expect(parseIPv4("10.0.0.1")).toBe(
+        ((10 << 24) | (0 << 16) | (0 << 8) | 1) >>> 0
+      );
       expect(parseIPv4("0.0.0.0")).toBe(0);
     });
 
@@ -113,7 +120,11 @@ describe("NetworkChecker", () => {
     });
 
     it("matches across multiple ranges", () => {
-      const ranges: PortRange[] = [{ from: 80, to: 80 }, { from: 443, to: 443 }, { from: 8000, to: 9000 }];
+      const ranges: PortRange[] = [
+        { from: 80, to: 80 },
+        { from: 443, to: 443 },
+        { from: 8000, to: 9000 },
+      ];
       expect(portInRanges(80, ranges)).toBe(true);
       expect(portInRanges(443, ranges)).toBe(true);
       expect(portInRanges(8500, ranges)).toBe(true);
@@ -127,30 +138,42 @@ describe("NetworkChecker", () => {
         domainPatterns: ["*"],
         cidrRanges: ["0.0.0.0/0"],
       };
-      expect(checker.checkConstraints("connect", "10.0.0.1:80", constraints)).toBe(false);
-      expect(checker.checkConstraints("connect", "192.168.1.1:443", constraints)).toBe(false);
-      expect(checker.checkConstraints("connect", "172.16.0.1:8080", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints("connect", "10.0.0.1:80", constraints)
+      ).toBe(false);
+      expect(
+        checker.checkConstraints("connect", "192.168.1.1:443", constraints)
+      ).toBe(false);
+      expect(
+        checker.checkConstraints("connect", "172.16.0.1:8080", constraints)
+      ).toBe(false);
     });
 
     it("allows public IP with matching CIDR", () => {
       const constraints: PermissionConstraints = {
         cidrRanges: ["8.8.0.0/16"],
       };
-      expect(checker.checkConstraints("connect", "8.8.8.8", constraints)).toBe(true);
+      expect(checker.checkConstraints("connect", "8.8.8.8", constraints)).toBe(
+        true
+      );
     });
 
     it("allows domain matching whitelist", () => {
       const constraints: PermissionConstraints = {
         domainPatterns: ["*.company.com"],
       };
-      expect(checker.checkConstraints("connect", "api.company.com:443", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints("connect", "api.company.com:443", constraints)
+      ).toBe(true);
     });
 
     it("denies domain not in whitelist", () => {
       const constraints: PermissionConstraints = {
         domainPatterns: ["*.company.com"],
       };
-      expect(checker.checkConstraints("connect", "evil.com:443", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints("connect", "evil.com:443", constraints)
+      ).toBe(false);
     });
 
     it("checks port ranges", () => {
@@ -158,8 +181,12 @@ describe("NetworkChecker", () => {
         domainPatterns: ["*"],
         ports: [{ from: 443, to: 443 }],
       };
-      expect(checker.checkConstraints("connect", "example.com:443", constraints)).toBe(true);
-      expect(checker.checkConstraints("connect", "example.com:80", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints("connect", "example.com:443", constraints)
+      ).toBe(true);
+      expect(
+        checker.checkConstraints("connect", "example.com:80", constraints)
+      ).toBe(false);
     });
   });
 });
@@ -175,24 +202,27 @@ describe("NetworkChecker Property Tests", () => {
    */
   describe("Property 7: Private IP always denied", () => {
     // Generator for private IPs in 10.0.0.0/8
-    const ip10 = fc.tuple(
-      fc.integer({ min: 0, max: 255 }),
-      fc.integer({ min: 0, max: 255 }),
-      fc.integer({ min: 0, max: 255 }),
-    ).map(([b, c, d]) => `10.${b}.${c}.${d}`);
+    const ip10 = fc
+      .tuple(
+        fc.integer({ min: 0, max: 255 }),
+        fc.integer({ min: 0, max: 255 }),
+        fc.integer({ min: 0, max: 255 })
+      )
+      .map(([b, c, d]) => `10.${b}.${c}.${d}`);
 
     // Generator for private IPs in 172.16.0.0/12
-    const ip172 = fc.tuple(
-      fc.integer({ min: 16, max: 31 }),
-      fc.integer({ min: 0, max: 255 }),
-      fc.integer({ min: 0, max: 255 }),
-    ).map(([b, c, d]) => `172.${b}.${c}.${d}`);
+    const ip172 = fc
+      .tuple(
+        fc.integer({ min: 16, max: 31 }),
+        fc.integer({ min: 0, max: 255 }),
+        fc.integer({ min: 0, max: 255 })
+      )
+      .map(([b, c, d]) => `172.${b}.${c}.${d}`);
 
     // Generator for private IPs in 192.168.0.0/16
-    const ip192 = fc.tuple(
-      fc.integer({ min: 0, max: 255 }),
-      fc.integer({ min: 0, max: 255 }),
-    ).map(([c, d]) => `192.168.${c}.${d}`);
+    const ip192 = fc
+      .tuple(fc.integer({ min: 0, max: 255 }), fc.integer({ min: 0, max: 255 }))
+      .map(([c, d]) => `192.168.${c}.${d}`);
 
     const privateIpArb = fc.oneof(ip10, ip172, ip192);
 
@@ -211,9 +241,11 @@ describe("NetworkChecker Property Tests", () => {
       fc.assert(
         fc.property(privateIpArb, portArb, actionArb, (ip, port, action) => {
           const resource = `${ip}:${port}`;
-          expect(checker.checkConstraints(action, resource, permissiveConstraints)).toBe(false);
+          expect(
+            checker.checkConstraints(action, resource, permissiveConstraints)
+          ).toBe(false);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
   });
@@ -226,20 +258,27 @@ describe("NetworkChecker Property Tests", () => {
    */
   describe("Property 8: Port range matching correctness", () => {
     const portArb = fc.integer({ min: 0, max: 65535 });
-    const portRangeArb = fc.tuple(
-      fc.integer({ min: 0, max: 65535 }),
-      fc.integer({ min: 0, max: 65535 }),
-    ).map(([a, b]): PortRange => ({ from: Math.min(a, b), to: Math.max(a, b) }));
-    const portRangesArb = fc.array(portRangeArb, { minLength: 1, maxLength: 5 });
+    const portRangeArb = fc
+      .tuple(
+        fc.integer({ min: 0, max: 65535 }),
+        fc.integer({ min: 0, max: 65535 })
+      )
+      .map(
+        ([a, b]): PortRange => ({ from: Math.min(a, b), to: Math.max(a, b) })
+      );
+    const portRangesArb = fc.array(portRangeArb, {
+      minLength: 1,
+      maxLength: 5,
+    });
 
     it("port in range returns true, port outside returns false", () => {
       fc.assert(
         fc.property(portArb, portRangesArb, (port, ranges) => {
           const result = portInRanges(port, ranges);
-          const expected = ranges.some((r) => port >= r.from && port <= r.to);
+          const expected = ranges.some(r => port >= r.from && port <= r.to);
           expect(result).toBe(expected);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
   });

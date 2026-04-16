@@ -1,9 +1,9 @@
 // Feature: nl-command-center, Property 20: historical command clone produces new ID
 // **Validates: Requirements 19.2**
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { v4 as uuidv4 } from 'uuid';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { v4 as uuidv4 } from "uuid";
 
 import type {
   StrategicCommand,
@@ -11,7 +11,7 @@ import type {
   CommandStatus,
   CommandConstraint,
   CommandTimeframe,
-} from '../../../shared/nl-command/contracts.js';
+} from "../../../shared/nl-command/contracts.js";
 
 // --- Clone function under test ---
 
@@ -24,26 +24,46 @@ function cloneStrategicCommand(source: StrategicCommand): StrategicCommand {
   return {
     ...source,
     commandId: uuidv4(),
-    status: 'draft',
+    status: "draft",
     timestamp: Date.now(),
-    constraints: source.constraints.map((c) => ({ ...c })),
+    constraints: source.constraints.map(c => ({ ...c })),
     objectives: [...source.objectives],
   };
 }
 
 // --- Generators ---
 
-const priorityArb: fc.Arbitrary<CommandPriority> = fc.constantFrom('critical', 'high', 'medium', 'low');
+const priorityArb: fc.Arbitrary<CommandPriority> = fc.constantFrom(
+  "critical",
+  "high",
+  "medium",
+  "low"
+);
 
 const statusArb: fc.Arbitrary<CommandStatus> = fc.constantFrom(
-  'draft', 'analyzing', 'clarifying', 'finalized', 'decomposing',
-  'planning', 'approving', 'executing', 'completed', 'failed', 'cancelled',
+  "draft",
+  "analyzing",
+  "clarifying",
+  "finalized",
+  "decomposing",
+  "planning",
+  "approving",
+  "executing",
+  "completed",
+  "failed",
+  "cancelled"
 );
 
 const nonEmptyStr = fc.string({ minLength: 1, maxLength: 60 });
 
 const constraintArb: fc.Arbitrary<CommandConstraint> = fc.record({
-  type: fc.constantFrom('budget' as const, 'time' as const, 'quality' as const, 'resource' as const, 'custom' as const),
+  type: fc.constantFrom(
+    "budget" as const,
+    "time" as const,
+    "quality" as const,
+    "resource" as const,
+    "custom" as const
+  ),
   description: nonEmptyStr,
   value: fc.option(nonEmptyStr, { nil: undefined }),
   unit: fc.option(nonEmptyStr, { nil: undefined }),
@@ -70,10 +90,10 @@ const strategicCommandArb: fc.Arbitrary<StrategicCommand> = fc.record({
 
 // --- Tests ---
 
-describe('Property 20: historical command clone produces new ID', () => {
-  it('cloning a StrategicCommand SHALL produce a new commandId but identical commandText, constraints, objectives, and priority', () => {
+describe("Property 20: historical command clone produces new ID", () => {
+  it("cloning a StrategicCommand SHALL produce a new commandId but identical commandText, constraints, objectives, and priority", () => {
     fc.assert(
-      fc.property(strategicCommandArb, (original) => {
+      fc.property(strategicCommandArb, original => {
         const cloned = cloneStrategicCommand(original);
 
         // New commandId
@@ -86,13 +106,13 @@ describe('Property 20: historical command clone produces new ID', () => {
         expect(cloned.objectives).toEqual(original.objectives);
         expect(cloned.priority).toBe(original.priority);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('cloned command constraints SHALL be a deep copy (no shared references)', () => {
+  it("cloned command constraints SHALL be a deep copy (no shared references)", () => {
     fc.assert(
-      fc.property(strategicCommandArb, (original) => {
+      fc.property(strategicCommandArb, original => {
         const cloned = cloneStrategicCommand(original);
 
         // Arrays should not be the same reference
@@ -105,17 +125,17 @@ describe('Property 20: historical command clone produces new ID', () => {
           expect(cloned.constraints[i]).toEqual(original.constraints[i]);
         }
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('cloned command SHALL have status reset to draft', () => {
+  it("cloned command SHALL have status reset to draft", () => {
     fc.assert(
-      fc.property(strategicCommandArb, (original) => {
+      fc.property(strategicCommandArb, original => {
         const cloned = cloneStrategicCommand(original);
-        expect(cloned.status).toBe('draft');
+        expect(cloned.status).toBe("draft");
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });

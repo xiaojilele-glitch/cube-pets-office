@@ -67,14 +67,14 @@ export class AuditRetention {
       const deleteCutoff = now - policy.deleteAfterDays * 24 * 60 * 60 * 1000;
 
       // Find entries matching this severity
-      const matchingEntries = allEntries.filter((entry) => {
+      const matchingEntries = allEntries.filter(entry => {
         const def = DEFAULT_EVENT_TYPE_REGISTRY[entry.event.eventType];
         return def && def.severity === policy.severity;
       });
 
       // Archive entries older than archiveAfterDays
       const toArchive = matchingEntries.filter(
-        (e) => e.event.timestamp < archiveCutoff,
+        e => e.event.timestamp < archiveCutoff
       );
       if (toArchive.length > 0) {
         const startSeq = toArchive[0].sequenceNumber;
@@ -94,7 +94,7 @@ export class AuditRetention {
 
       // Mark entries older than deleteAfterDays for deletion
       const toDelete = matchingEntries.filter(
-        (e) => e.event.timestamp < deleteCutoff,
+        e => e.event.timestamp < deleteCutoff
       );
       if (toDelete.length > 0) {
         // 11.4 删除前最终验证 + 审计记录
@@ -115,7 +115,7 @@ export class AuditRetention {
   archiveEntries(
     startSeq: number,
     endSeq: number,
-    targetPath: string,
+    targetPath: string
   ): { archivePath: string; hash: string; signature: string } {
     const entries = this.chain.getEntries(startSeq, endSeq);
     if (entries.length === 0) {
@@ -155,7 +155,12 @@ export class AuditRetention {
       action: "audit.archive",
       resource: { type: "audit", id: "audit-log" },
       result: "success",
-      metadata: { startSeq, endSeq, entryCount: entries.length, archivePath: targetPath },
+      metadata: {
+        startSeq,
+        endSeq,
+        entryCount: entries.length,
+        archivePath: targetPath,
+      },
     });
 
     return { archivePath: targetPath, hash: chainHash, signature };
@@ -197,14 +202,19 @@ export class AuditRetention {
     }
 
     // Verify signature
-    const signatureValid = this.chain.verifySignature(archive.chainHash, archive.signature);
+    const signatureValid = this.chain.verifySignature(
+      archive.chainHash,
+      archive.signature
+    );
     if (!signatureValid) {
       return { valid: false, entryCount: archive.entries.length };
     }
 
     // Verify hash chain continuity within the archive
     for (let i = 1; i < archive.entries.length; i++) {
-      if (archive.entries[i].previousHash !== archive.entries[i - 1].currentHash) {
+      if (
+        archive.entries[i].previousHash !== archive.entries[i - 1].currentHash
+      ) {
         return { valid: false, entryCount: archive.entries.length };
       }
     }
@@ -215,7 +225,7 @@ export class AuditRetention {
         entry.event,
         entry.timestamp.system,
         entry.previousHash,
-        entry.nonce,
+        entry.nonce
       );
       if (recomputed !== entry.currentHash) {
         return { valid: false, entryCount: archive.entries.length };
@@ -227,11 +237,8 @@ export class AuditRetention {
 
   // ─── 11.4 删除前验证 + AUDIT_DELETE 事件 ──────────────────────────────
 
-  private recordDeleteAudit(
-    entries: AuditLogEntry[],
-    severity: string,
-  ): void {
-    const seqNumbers = entries.map((e) => e.sequenceNumber);
+  private recordDeleteAudit(entries: AuditLogEntry[], severity: string): void {
+    const seqNumbers = entries.map(e => e.sequenceNumber);
     const minSeq = Math.min(...seqNumbers);
     const maxSeq = Math.max(...seqNumbers);
 

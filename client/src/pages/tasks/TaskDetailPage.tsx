@@ -24,7 +24,9 @@ export default function TaskDetailPage({
   const selectTask = useTasksStore(state => state.selectTask);
   const setDecisionNote = useTasksStore(state => state.setDecisionNote);
   const launchDecision = useTasksStore(state => state.launchDecision);
-  const submitOperatorAction = useTasksStore(state => state.submitOperatorAction);
+  const submitOperatorAction = useTasksStore(
+    state => state.submitOperatorAction
+  );
   const refresh = useTasksStore(state => state.refresh);
   const detailsById = useTasksStore(state => state.detailsById);
   const selectedTaskId = useTasksStore(state => state.selectedTaskId);
@@ -161,7 +163,7 @@ export default function TaskDetailPage({
           onSubmitOperatorAction={handleSubmitOperatorAction}
           operatorActionLoading={
             activeTaskId
-              ? operatorActionLoadingByMissionId[activeTaskId] ?? {}
+              ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
               : {}
           }
           onDecisionSubmitted={() =>

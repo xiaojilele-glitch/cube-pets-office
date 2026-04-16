@@ -37,7 +37,10 @@ const SAVE_DEBOUNCE_MS = 1000;
 // Entity change listener type
 // ---------------------------------------------------------------------------
 type EntityChangeAction = "created" | "updated" | "deleted";
-type EntityChangeListener = (entity: Entity, action: EntityChangeAction) => void;
+type EntityChangeListener = (
+  entity: Entity,
+  action: EntityChangeAction
+) => void;
 
 // ---------------------------------------------------------------------------
 // GraphStore
@@ -60,7 +63,7 @@ export class GraphStore {
   // -----------------------------------------------------------------------
 
   createEntity(
-    input: Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">,
+    input: Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
   ): Entity {
     const data = this.ensureProject(input.projectId);
     const now = new Date().toISOString();
@@ -72,8 +75,7 @@ export class GraphStore {
       updatedAt: now,
       status: "active",
       // user_defined entities get confidence 1.0
-      confidence:
-        input.source === "user_defined" ? 1.0 : input.confidence,
+      confidence: input.source === "user_defined" ? 1.0 : input.confidence,
     };
 
     data.entities.push(entity);
@@ -96,35 +98,30 @@ export class GraphStore {
 
   findEntities(filters: EntityFilters): Entity[] {
     const data = this.ensureProject(filters.projectId);
-    let results = data.entities.filter(
-      (e) => e.projectId === filters.projectId,
-    );
+    let results = data.entities.filter(e => e.projectId === filters.projectId);
 
     if (filters.entityType) {
-      results = results.filter((e) => e.entityType === filters.entityType);
+      results = results.filter(e => e.entityType === filters.entityType);
     }
     if (filters.name) {
       const needle = filters.name.toLowerCase();
-      results = results.filter((e) =>
-        e.name.toLowerCase().includes(needle),
-      );
+      results = results.filter(e => e.name.toLowerCase().includes(needle));
     }
     if (filters.confidenceMin !== undefined) {
-      results = results.filter((e) => e.confidence >= filters.confidenceMin!);
+      results = results.filter(e => e.confidence >= filters.confidenceMin!);
     }
     if (filters.status) {
-      results = results.filter((e) => e.status === filters.status);
+      results = results.filter(e => e.status === filters.status);
     }
 
     return results;
   }
 
-  updateEntity(
-    entityId: string,
-    updates: Partial<Entity>,
-  ): Entity | undefined {
+  updateEntity(entityId: string, updates: Partial<Entity>): Entity | undefined {
     for (const [projectId, data] of Array.from(this.dataByProject.entries())) {
-      const idx = data.entities.findIndex((e: Entity) => e.entityId === entityId);
+      const idx = data.entities.findIndex(
+        (e: Entity) => e.entityId === entityId
+      );
       if (idx !== -1) {
         const entity = data.entities[idx];
         const updated: Entity = {
@@ -156,7 +153,10 @@ export class GraphStore {
    *   deprecated → archived
    *   archived → active
    */
-  private static readonly ALLOWED_TRANSITIONS: ReadonlyMap<EntityStatus, EntityStatus> = new Map([
+  private static readonly ALLOWED_TRANSITIONS: ReadonlyMap<
+    EntityStatus,
+    EntityStatus
+  > = new Map([
     ["active", "deprecated"],
     ["deprecated", "archived"],
     ["archived", "active"],
@@ -175,7 +175,7 @@ export class GraphStore {
     newStatus: EntityStatus,
     reason: string,
     triggeredBy: LifecycleLogEntry["triggeredBy"],
-    lifecycleLog?: LifecycleLog,
+    lifecycleLog?: LifecycleLog
   ): Entity {
     const entity = this.getEntity(entityId);
     if (!entity) {
@@ -188,7 +188,7 @@ export class GraphStore {
     if (allowedTarget !== newStatus) {
       throw new Error(
         `Invalid status transition: ${currentStatus} → ${newStatus}. ` +
-        `Allowed: ${currentStatus} → ${allowedTarget ?? "none"}`,
+          `Allowed: ${currentStatus} → ${allowedTarget ?? "none"}`
       );
     }
 
@@ -222,7 +222,7 @@ export class GraphStore {
       entityType: string;
       projectId: string;
       name: string;
-    },
+    }
   ): Entity {
     const existing = this.findDuplicate(input);
 
@@ -263,9 +263,7 @@ export class GraphStore {
   // 关系 CRUD (Requirement 1.4)
   // -----------------------------------------------------------------------
 
-  createRelation(
-    input: Omit<Relation, "relationId" | "createdAt">,
-  ): Relation {
+  createRelation(input: Omit<Relation, "relationId" | "createdAt">): Relation {
     const now = new Date().toISOString();
 
     const relation: Relation = {
@@ -290,7 +288,9 @@ export class GraphStore {
 
   getRelation(relationId: string): Relation | undefined {
     for (const data of Array.from(this.dataByProject.values())) {
-      const found = data.relations.find((r: Relation) => r.relationId === relationId);
+      const found = data.relations.find(
+        (r: Relation) => r.relationId === relationId
+      );
       if (found) return found;
     }
     return undefined;
@@ -310,16 +310,16 @@ export class GraphStore {
     }
 
     if (filters.relationType) {
-      results = results.filter((r) => r.relationType === filters.relationType);
+      results = results.filter(r => r.relationType === filters.relationType);
     }
     if (filters.sourceEntityId) {
       results = results.filter(
-        (r) => r.sourceEntityId === filters.sourceEntityId,
+        r => r.sourceEntityId === filters.sourceEntityId
       );
     }
     if (filters.targetEntityId) {
       results = results.filter(
-        (r) => r.targetEntityId === filters.targetEntityId,
+        r => r.targetEntityId === filters.targetEntityId
       );
     }
 
@@ -328,10 +328,12 @@ export class GraphStore {
 
   updateRelation(
     relationId: string,
-    updates: Partial<Relation>,
+    updates: Partial<Relation>
   ): Relation | undefined {
     for (const [projectId, data] of Array.from(this.dataByProject.entries())) {
-      const idx = data.relations.findIndex((r: Relation) => r.relationId === relationId);
+      const idx = data.relations.findIndex(
+        (r: Relation) => r.relationId === relationId
+      );
       if (idx !== -1) {
         const relation = data.relations[idx];
         const updated: Relation = {
@@ -362,7 +364,7 @@ export class GraphStore {
   deduplicateEntity(entity: Partial<Entity>): Entity {
     if (!entity.entityType || !entity.projectId || !entity.name) {
       throw new Error(
-        "deduplicateEntity requires entityType, projectId, and name",
+        "deduplicateEntity requires entityType, projectId, and name"
       );
     }
     return this.mergeEntity(
@@ -370,7 +372,7 @@ export class GraphStore {
         entityType: string;
         projectId: string;
         name: string;
-      },
+      }
     );
   }
 
@@ -391,7 +393,7 @@ export class GraphStore {
   getNeighbors(
     entityId: string,
     relationTypes?: string[],
-    depth: number = 1,
+    depth: number = 1
   ): { entities: Entity[]; relations: Relation[] } {
     const allRelations = this.collectAllRelations();
     const visited = new Set<string>();
@@ -454,7 +456,7 @@ export class GraphStore {
    */
   findPath(
     sourceId: string,
-    targetId: string,
+    targetId: string
   ): { entities: Entity[]; relations: Relation[] } | null {
     if (sourceId === targetId) {
       const entity = this.getEntity(sourceId);
@@ -483,10 +485,7 @@ export class GraphStore {
 
     // BFS with parent tracking
     const visited = new Set<string>();
-    const parent = new Map<
-      string,
-      { entityId: string; relation: Relation }
-    >();
+    const parent = new Map<string, { entityId: string; relation: Relation }>();
     const queue: string[] = [sourceId];
     visited.add(sourceId);
 
@@ -514,9 +513,10 @@ export class GraphStore {
    * getSubgraph — Given a set of entity IDs, return those entities and ALL
    * relations between them.
    */
-  getSubgraph(
-    entityIds: string[],
-  ): { entities: Entity[]; relations: Relation[] } {
+  getSubgraph(entityIds: string[]): {
+    entities: Entity[];
+    relations: Relation[];
+  } {
     const idSet = new Set(entityIds);
     const allRelations = this.collectAllRelations();
 
@@ -527,7 +527,7 @@ export class GraphStore {
     }
 
     const relations = allRelations.filter(
-      (r) => idSet.has(r.sourceEntityId) && idSet.has(r.targetEntityId),
+      r => idSet.has(r.sourceEntityId) && idSet.has(r.targetEntityId)
     );
 
     return { entities, relations };
@@ -549,7 +549,7 @@ export class GraphStore {
     } catch (e) {
       console.error(
         `[GraphStore] Failed to load graph for project ${projectId}:`,
-        e,
+        e
       );
       // Return empty graph on failure — don't crash
     }
@@ -619,7 +619,7 @@ export class GraphStore {
   private reconstructPath(
     sourceId: string,
     targetId: string,
-    parent: Map<string, { entityId: string; relation: Relation }>,
+    parent: Map<string, { entityId: string; relation: Relation }>
   ): { entities: Entity[]; relations: Relation[] } {
     const pathEntityIds: string[] = [];
     const pathRelations: Relation[] = [];
@@ -679,13 +679,13 @@ export class GraphStore {
       entityType: string;
       projectId: string;
       name: string;
-    },
+    }
   ): Entity | undefined {
     const data = this.ensureProject(input.projectId);
     const inputFilePath = (input.extendedAttributes as Record<string, unknown>)
       ?.filePath as string | undefined;
 
-    return data.entities.find((e) => {
+    return data.entities.find(e => {
       if (
         e.entityType !== input.entityType ||
         e.projectId !== input.projectId ||
@@ -694,9 +694,8 @@ export class GraphStore {
         return false;
       }
       // Match filePath from extendedAttributes if present
-      const existingFilePath = (
-        e.extendedAttributes as Record<string, unknown>
-      )?.filePath as string | undefined;
+      const existingFilePath = (e.extendedAttributes as Record<string, unknown>)
+        ?.filePath as string | undefined;
       if (inputFilePath || existingFilePath) {
         return existingFilePath === inputFilePath;
       }
@@ -738,14 +737,14 @@ export class GraphStore {
     } catch (e) {
       console.error(
         `[GraphStore] Failed to save graph for project ${projectId}:`,
-        e,
+        e
       );
     }
   }
 
   private notifyEntityChanged(
     entity: Entity,
-    action: EntityChangeAction,
+    action: EntityChangeAction
   ): void {
     for (const listener of this.entityChangeListeners) {
       try {

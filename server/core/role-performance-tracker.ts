@@ -10,7 +10,7 @@
  * @see Requirements 4.1, 4.2, 4.3, 4.4, 4.5
  */
 
-import type { RolePerformanceRecord } from '../../shared/role-schema.js';
+import type { RolePerformanceRecord } from "../../shared/role-schema.js";
 
 const MAX_RECENT_TASKS = 50;
 const LOW_CONFIDENCE_THRESHOLD = 10;
@@ -39,7 +39,11 @@ class RolePerformanceTracker {
    * 8. Set lowConfidence = totalTasks < 10
    * 9. Clamp qualityScore to [0, 100]
    */
-  updateOnTaskComplete(agentId: string, roleId: string, taskResult: TaskResult): void {
+  updateOnTaskComplete(
+    agentId: string,
+    roleId: string,
+    taskResult: TaskResult
+  ): void {
     const agentMap = this.getOrCreateAgentMap(agentId);
     const record = this.getOrCreateRecord(agentMap, roleId);
 
@@ -51,7 +55,9 @@ class RolePerformanceTracker {
 
     // Track successful tasks via successRate
     // Derive previous successful count, add current, recompute rate
-    const previousSuccessful = Math.round(record.successRate * (record.totalTasks - 1));
+    const previousSuccessful = Math.round(
+      record.successRate * (record.totalTasks - 1)
+    );
     const newSuccessful = previousSuccessful + (taskResult.success ? 1 : 0);
     record.successRate = newSuccessful / record.totalTasks;
 
@@ -65,15 +71,23 @@ class RolePerformanceTracker {
 
     // Enforce ring buffer max size
     if (record.recentTasks.length > MAX_RECENT_TASKS) {
-      record.recentTasks = record.recentTasks.slice(record.recentTasks.length - MAX_RECENT_TASKS);
+      record.recentTasks = record.recentTasks.slice(
+        record.recentTasks.length - MAX_RECENT_TASKS
+      );
     }
 
     // Recalculate avgQualityScore from recentTasks
-    const totalQuality = record.recentTasks.reduce((sum, t) => sum + t.qualityScore, 0);
+    const totalQuality = record.recentTasks.reduce(
+      (sum, t) => sum + t.qualityScore,
+      0
+    );
     record.avgQualityScore = totalQuality / record.recentTasks.length;
 
     // Recalculate avgLatencyMs from recentTasks
-    const totalLatency = record.recentTasks.reduce((sum, t) => sum + t.latencyMs, 0);
+    const totalLatency = record.recentTasks.reduce(
+      (sum, t) => sum + t.latencyMs,
+      0
+    );
     record.avgLatencyMs = totalLatency / record.recentTasks.length;
 
     // Update lastActiveAt
@@ -106,7 +120,9 @@ class RolePerformanceTracker {
 
   // ── Private helpers ──────────────────────────────────────────────
 
-  private getOrCreateAgentMap(agentId: string): Map<string, RolePerformanceRecord> {
+  private getOrCreateAgentMap(
+    agentId: string
+  ): Map<string, RolePerformanceRecord> {
     let agentMap = this.data.get(agentId);
     if (!agentMap) {
       agentMap = new Map();
@@ -126,7 +142,7 @@ class RolePerformanceTracker {
         avgQualityScore: 0,
         avgLatencyMs: 0,
         successRate: 0,
-        lastActiveAt: '',
+        lastActiveAt: "",
         lowConfidence: true,
         recentTasks: [],
       };

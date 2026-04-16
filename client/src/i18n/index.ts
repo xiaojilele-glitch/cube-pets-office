@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import { useAppStore } from '@/lib/store';
+import { useAppStore } from "@/lib/store";
 
-import { getMessages } from './messages';
+import { getMessages } from "./messages";
 
 export function useI18n() {
   const locale = useAppStore(state => state.locale);

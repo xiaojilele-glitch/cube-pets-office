@@ -108,9 +108,9 @@ export const messages = {
           label: "审计",
           description: "检查审计链路、异常告警和事件记录。",
         },
-        lineage: {
-          label: "血缘",
-          description: "进入数据血缘视图，查看上下游和影响范围。",
+        debug: {
+          label: "调试",
+          description: "查看低频能力、诊断信息和实验性入口。",
         },
         help: {
           label: "帮助",
@@ -126,7 +126,7 @@ export const messages = {
         commandCenter: { label: "任务中台", sublabel: "TASKS" },
         permissions: { label: "权限", sublabel: "GUARD" },
         audit: { label: "审计", sublabel: "AUDIT" },
-        lineage: { label: "血缘", sublabel: "LINEAGE" },
+        debug: { label: "调试", sublabel: "DEBUG" },
       },
       quickTips: [
         "点击任意 Agent 可高亮角色，并把对话焦点切换到该角色。",
@@ -865,10 +865,10 @@ export const messages = {
           description:
             "Review the audit chain, anomaly alerts, and event history.",
         },
-        lineage: {
-          label: "Lineage",
+        debug: {
+          label: "Debug",
           description:
-            "Open the lineage workspace to inspect dependencies and impact.",
+            "Access low-frequency tools, diagnostic info, and experimental features.",
         },
         help: {
           label: "Help",
@@ -884,7 +884,7 @@ export const messages = {
         commandCenter: { label: "Task Hub", sublabel: "TASKS" },
         permissions: { label: "Permissions", sublabel: "GUARD" },
         audit: { label: "Audit", sublabel: "AUDIT" },
-        lineage: { label: "Lineage", sublabel: "LINEAGE" },
+        debug: { label: "Debug", sublabel: "DEBUG" },
       },
       quickTips: [
         "Click any Agent to highlight it and move chat focus to that role.",

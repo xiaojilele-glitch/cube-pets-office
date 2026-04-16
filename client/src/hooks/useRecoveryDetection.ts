@@ -30,14 +30,14 @@ export interface RecoveryState {
 }
 
 export function useRecoveryDetection(
-  navigate: (to: string) => void,
+  navigate: (to: string) => void
 ): RecoveryState {
   const [candidate, setCandidate] = useState<RecoveryCandidate | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
   const [restoreProgress, setRestoreProgress] = useState(0);
   const [restorePhase, setRestorePhase] = useState("");
 
-  const runtimeMode = useAppStore((s) => s.runtimeMode);
+  const runtimeMode = useAppStore(s => s.runtimeMode);
 
   // --- Snapshot lifecycle bridge (Task 9.2) ---------------------------------
   // Registers globalThis accessors and subscribes to workflow-store events
@@ -56,7 +56,9 @@ export function useRecoveryDetection(
         const params = new URLSearchParams(window.location.search);
         const restoreParam = params.get("restore");
         if (restoreParam) {
-          console.log("[Recovery] Importing session from URL restore parameter");
+          console.log(
+            "[Recovery] Importing session from URL restore parameter"
+          );
           await importSessionFromBase64(restoreParam);
           // Remove the param from URL without reload
           params.delete("restore");
@@ -67,7 +69,10 @@ export function useRecoveryDetection(
         }
       } catch (err) {
         // Req: URL restore 参数解码失败 → 忽略参数，正常启动
-        console.warn("[Recovery] Failed to import from URL restore param:", err);
+        console.warn(
+          "[Recovery] Failed to import from URL restore param:",
+          err
+        );
       }
 
       // 2. Detect local recovery candidate
@@ -106,7 +111,7 @@ export function useRecoveryDetection(
       setRestorePhase("恢复 3D 场景...");
 
       // Brief pause so the user sees the progress update
-      await new Promise((r) => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 200));
 
       setRestoreProgress(100);
       setRestorePhase("恢复完成");

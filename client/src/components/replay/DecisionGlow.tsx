@@ -8,10 +8,10 @@
  * Requirements: 8.3
  */
 
-import { useRef } from 'react';
+import { useRef } from "react";
 
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
 export interface DecisionGlowProps {
   position: [number, number, number];
@@ -23,7 +23,7 @@ export interface DecisionGlowProps {
 export function DecisionGlow({
   position,
   confidence,
-  color = '#FBBF24',
+  color = "#FBBF24",
 }: DecisionGlowProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -45,7 +45,10 @@ export function DecisionGlow({
   });
 
   return (
-    <mesh ref={meshRef} position={[position[0], position[1] + 2.0, position[2]]}>
+    <mesh
+      ref={meshRef}
+      position={[position[0], position[1] + 2.0, position[2]]}
+    >
       <sphereGeometry args={[0.3, 16, 16]} />
       <meshStandardMaterial
         ref={matRef}

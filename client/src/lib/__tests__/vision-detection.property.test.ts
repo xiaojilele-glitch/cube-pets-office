@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
 /* ─── Property 1: 图片类型检测准确性 ─── */
 /* **Validates: Requirements 1.1** */
@@ -23,19 +23,53 @@ function getFileExtension(name: string): string {
 }
 
 function isImageFile(file: { name: string; type: string }): boolean {
-  return file.type.startsWith("image/") || IMAGE_EXTENSIONS.has(getFileExtension(file.name));
+  return (
+    file.type.startsWith("image/") ||
+    IMAGE_EXTENSIONS.has(getFileExtension(file.name))
+  );
 }
 
 // ── Arbitraries ──
 
-const arbImageExtension = fc.constantFrom("jpg", "jpeg", "png", "webp", "gif", "bmp");
-const arbNonImageExtension = fc.constantFrom("txt", "pdf", "docx", "json", "xml", "csv", "html", "ts", "js");
-const arbImageMimeType = fc.constantFrom("image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/svg+xml");
-const arbNonImageMimeType = fc.constantFrom("text/plain", "application/pdf", "application/json", "text/html");
-const arbBaseName = fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.length > 0 && !s.includes('.'));
+const arbImageExtension = fc.constantFrom(
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "gif",
+  "bmp"
+);
+const arbNonImageExtension = fc.constantFrom(
+  "txt",
+  "pdf",
+  "docx",
+  "json",
+  "xml",
+  "csv",
+  "html",
+  "ts",
+  "js"
+);
+const arbImageMimeType = fc.constantFrom(
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/bmp",
+  "image/svg+xml"
+);
+const arbNonImageMimeType = fc.constantFrom(
+  "text/plain",
+  "application/pdf",
+  "application/json",
+  "text/html"
+);
+const arbBaseName = fc
+  .string({ minLength: 1, maxLength: 20 })
+  .filter(s => s.length > 0 && !s.includes("."));
 
-describe('Feature: multi-modal-vision, Property 1: 图片类型检测准确性', () => {
-  it('files with image extensions are detected as images regardless of MIME type', () => {
+describe("Feature: multi-modal-vision, Property 1: 图片类型检测准确性", () => {
+  it("files with image extensions are detected as images regardless of MIME type", () => {
     fc.assert(
       fc.property(
         arbBaseName,
@@ -44,13 +78,13 @@ describe('Feature: multi-modal-vision, Property 1: 图片类型检测准确性',
         (baseName, ext, mimeType) => {
           const file = { name: `${baseName}.${ext}`, type: mimeType };
           expect(isImageFile(file)).toBe(true);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('files with image MIME types are detected as images regardless of extension', () => {
+  it("files with image MIME types are detected as images regardless of extension", () => {
     fc.assert(
       fc.property(
         arbBaseName,
@@ -59,13 +93,13 @@ describe('Feature: multi-modal-vision, Property 1: 图片类型检测准确性',
         (baseName, ext, mimeType) => {
           const file = { name: `${baseName}.${ext}`, type: mimeType };
           expect(isImageFile(file)).toBe(true);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('files with neither image extension nor image MIME type are NOT detected as images', () => {
+  it("files with neither image extension nor image MIME type are NOT detected as images", () => {
     fc.assert(
       fc.property(
         arbBaseName,
@@ -74,23 +108,19 @@ describe('Feature: multi-modal-vision, Property 1: 图片类型检测准确性',
         (baseName, ext, mimeType) => {
           const file = { name: `${baseName}.${ext}`, type: mimeType };
           expect(isImageFile(file)).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('files with no extension and non-image MIME type are NOT detected as images', () => {
+  it("files with no extension and non-image MIME type are NOT detected as images", () => {
     fc.assert(
-      fc.property(
-        arbBaseName,
-        arbNonImageMimeType,
-        (baseName, mimeType) => {
-          const file = { name: baseName, type: mimeType };
-          expect(isImageFile(file)).toBe(false);
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(arbBaseName, arbNonImageMimeType, (baseName, mimeType) => {
+        const file = { name: baseName, type: mimeType };
+        expect(isImageFile(file)).toBe(false);
+      }),
+      { numRuns: 100 }
     );
   });
 });

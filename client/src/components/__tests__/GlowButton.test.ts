@@ -20,7 +20,7 @@ describe("GlowButton props contract", () => {
 
   it("accepts all three variant values", () => {
     const variants: GlowButtonVariant[] = ["primary", "danger", "ghost"];
-    variants.forEach((v) => {
+    variants.forEach(v => {
       const props: GlowButtonProps = { variant: v };
       expect(props.variant).toBe(v);
     });
@@ -45,7 +45,10 @@ describe("GlowButton props contract", () => {
 
 describe("GlowButton variant styles", () => {
   // Mirror the variant map from the component to validate correctness
-  const variantStyles: Record<GlowButtonVariant, { base: string; glow: string }> = {
+  const variantStyles: Record<
+    GlowButtonVariant,
+    { base: string; glow: string }
+  > = {
     primary: {
       base: "bg-gradient-to-r from-cyan-500 to-blue-600",
       glow: "hover:shadow-[0_0_20px_rgba(6,182,212,0.5)]",
@@ -66,7 +69,9 @@ describe("GlowButton variant styles", () => {
   });
 
   it("primary hover glow matches spec (AC-4.2)", () => {
-    expect(variantStyles.primary.glow).toContain("0_0_20px_rgba(6,182,212,0.5)");
+    expect(variantStyles.primary.glow).toContain(
+      "0_0_20px_rgba(6,182,212,0.5)"
+    );
   });
 
   it("danger uses red→orange gradient", () => {

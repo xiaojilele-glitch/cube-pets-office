@@ -21,11 +21,12 @@ const arbNumTasks = fc.integer({ min: 1, max: 50 });
 /* ─── Tests ─── */
 
 describe("Property 12: 并发 Job 限制", () => {
-  it(
-    "concurrent count never exceeds maxConcurrent",
-    async () => {
-      await fc.assert(
-        fc.asyncProperty(arbMaxConcurrent, arbNumTasks, async (maxConcurrent, numTasks) => {
+  it("concurrent count never exceeds maxConcurrent", async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        arbMaxConcurrent,
+        arbNumTasks,
+        async (maxConcurrent, numTasks) => {
           const limiter = new ConcurrencyLimiter(maxConcurrent);
 
           let concurrent = 0;
@@ -54,10 +55,9 @@ describe("Property 12: 并发 Job 限制", () => {
           expect(completed).toBe(numTasks);
           // Peak never exceeded limit
           expect(peakConcurrent).toBeLessThanOrEqual(maxConcurrent);
-        }),
-        { numRuns: 100 },
-      );
-    },
-    30_000,
-  );
+        }
+      ),
+      { numRuns: 100 }
+    );
+  }, 30_000);
 });

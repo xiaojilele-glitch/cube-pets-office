@@ -13,7 +13,7 @@
     - _Requirements: 1.1, 1.6, 2.1, 2.5_
   - [x] 1.2 扩展数据库 Schema `server/db/index.ts`
     - 在 DatabaseSchema 中新增 reputation_profiles、reputation_events、reputation_audit_log 表
-    - 新增 _counters 中的 reputation_events 和 reputation_audit_log 计数器
+    - 新增 \_counters 中的 reputation_events 和 reputation_audit_log 计数器
     - 实现 CRUD 方法：getReputationProfile、upsertReputationProfile、createReputationEvent、getReputationEvents、createAuditEntry、getAuditEntries
     - _Requirements: 1.1, 2.5, 7.5_
   - [x] 1.3 编写属性测试：信誉分整数范围不变量
@@ -164,7 +164,7 @@
     - 在 TrustTierEvaluator 中层级变更后推送 agent.trustTierChanged
     - _Requirements: 5.5, 9.6_
   - [x] 12.3 在 server/index.ts 中注册信誉路由
-    - 挂载 /api/agents/:id/reputation 和 /api/admin/reputation/* 路由
+    - 挂载 /api/agents/:id/reputation 和 /api/admin/reputation/\* 路由
     - _Requirements: 9.6_
   - [x] 12.4 编写属性测试：排行榜排序正确性
     - **Property 20: 排行榜排序正确性**

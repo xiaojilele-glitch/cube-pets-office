@@ -8,7 +8,7 @@
  * Requirements: 20.4
  */
 
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from "express";
 
 /**
  * Simple in-memory mapping of missionId → creator userId.
@@ -33,17 +33,21 @@ export function getMissionOwner(missionId: string): string | undefined {
  * - Otherwise, the user must be the mission creator.
  * - If headers are missing, returns 401.
  */
-export function replayAccessControl(req: Request, res: Response, next: NextFunction): void {
-  const userId = req.headers['x-user-id'] as string | undefined;
-  const userRole = req.headers['x-user-role'] as string | undefined;
+export function replayAccessControl(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void {
+  const userId = req.headers["x-user-id"] as string | undefined;
+  const userRole = req.headers["x-user-role"] as string | undefined;
 
   if (!userId) {
-    res.status(401).json({ error: 'Missing x-user-id header' });
+    res.status(401).json({ error: "Missing x-user-id header" });
     return;
   }
 
   // Admins can access everything
-  if (userRole === 'admin') {
+  if (userRole === "admin") {
     next();
     return;
   }
@@ -58,7 +62,9 @@ export function replayAccessControl(req: Request, res: Response, next: NextFunct
   const owner = missionOwners.get(missionId);
   // If no owner is registered, allow access (mission may not be tracked yet)
   if (owner && owner !== userId) {
-    res.status(403).json({ error: 'Access denied: you can only view your own mission replays' });
+    res.status(403).json({
+      error: "Access denied: you can only view your own mission replays",
+    });
     return;
   }
 

@@ -22,7 +22,8 @@ export const DEMO_TASKS: TaskRecord[] = [
     worker_id: "nova",
     manager_id: "pixel",
     department: "game",
-    description: "策划手游营销活动方案，包括限时活动、社交分享激励和新手引导优化",
+    description:
+      "策划手游营销活动方案，包括限时活动、社交分享激励和新手引导优化",
     deliverable:
       "营销活动策划方案 v1：1）首周登录送限定皮肤引导留存；2）组队通关奖励驱动社交裂变；3）赛季排行榜激发竞争消费。预计首月 DAU 提升 15%。",
     deliverable_v2:
@@ -49,7 +50,8 @@ export const DEMO_TASKS: TaskRecord[] = [
     worker_id: "blaze",
     manager_id: "pixel",
     department: "game",
-    description: "设计营销活动的技术实现方案，涵盖活动配置系统、A/B 测试框架和推送通知架构",
+    description:
+      "设计营销活动的技术实现方案，涵盖活动配置系统、A/B 测试框架和推送通知架构",
     deliverable:
       "技术实现方案 v1：采用配置化活动引擎 + Feature Flag 灰度发布，A/B 测试框架支持多维度分桶，推送系统基于用户活跃时段智能调度。",
     deliverable_v2:
@@ -103,7 +105,8 @@ export const DEMO_TASKS: TaskRecord[] = [
     worker_id: "tensor",
     manager_id: "nexus",
     department: "ai",
-    description: "设计营销数据采集与分析管道，包括用户行为埋点方案、实时数据流处理和效果归因分析",
+    description:
+      "设计营销数据采集与分析管道，包括用户行为埋点方案、实时数据流处理和效果归因分析",
     deliverable:
       "数据采集管道方案 v1：埋点覆盖 42 个关键事件，Kafka 实时流处理（延迟 < 200ms），ClickHouse 存储分析，归因模型采用多触点加权。",
     deliverable_v2:

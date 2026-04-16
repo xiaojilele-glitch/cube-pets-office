@@ -5,25 +5,25 @@
  * Feature: collaboration-replay
  */
 
-import { describe, it, expect, afterEach } from 'vitest';
-import * as fc from 'fast-check';
-import { rm } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { describe, it, expect, afterEach } from "vitest";
+import * as fc from "fast-check";
+import { rm } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 
-import type { AuditEntry } from '../../shared/replay/contracts';
-import { ReplayAuditLogger } from '../../server/replay/audit-logger';
+import type { AuditEntry } from "../../shared/replay/contracts";
+import { ReplayAuditLogger } from "../../server/replay/audit-logger";
 import {
   registerMissionOwner,
   replayAccessControl,
-} from '../../server/replay/access-control';
+} from "../../server/replay/access-control";
 
 /* ─── Helpers ─── */
 
-const BASE_DIR = resolve('data/replay');
+const BASE_DIR = resolve("data/replay");
 const createdMissions: string[] = [];
 
-function uniqueMissionId(prefix = 'audit'): string {
+function uniqueMissionId(prefix = "audit"): string {
   const id = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   createdMissions.push(id);
   return id;
@@ -42,10 +42,14 @@ afterEach(async () => {
 /* ─── Arbitraries ─── */
 
 const actionArb = fc.constantFrom(
-  'play' as const, 'pause' as const, 'seek' as const,
-  'export' as const, 'snapshot' as const, 'view' as const,
+  "play" as const,
+  "pause" as const,
+  "seek" as const,
+  "export" as const,
+  "snapshot" as const,
+  "view" as const
 );
-const userIdArb = fc.constantFrom('user-alice', 'user-bob', 'user-charlie');
+const userIdArb = fc.constantFrom("user-alice", "user-bob", "user-charlie");
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * Task 11.4 — Property 36: Audit log completeness
@@ -53,51 +57,47 @@ const userIdArb = fc.constantFrom('user-alice', 'user-bob', 'user-charlie');
  * Validates: Requirements 20.1
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 36: Audit log completeness', () => {
-  it('every logged action appears in the audit log with matching fields', async () => {
+describe("Property 36: Audit log completeness", () => {
+  it("every logged action appears in the audit log with matching fields", async () => {
     // **Validates: Requirements 20.1**
     let runIdx = 0;
     await fc.assert(
-      fc.asyncProperty(
-        userIdArb,
-        actionArb,
-        async (userId, action) => {
-          const logger = new ReplayAuditLogger();
-          const mid = uniqueMissionId(`completeness-${runIdx++}`);
+      fc.asyncProperty(userIdArb, actionArb, async (userId, action) => {
+        const logger = new ReplayAuditLogger();
+        const mid = uniqueMissionId(`completeness-${runIdx++}`);
 
-          const entry = await logger.logAction(userId, mid, action);
+        const entry = await logger.logAction(userId, mid, action);
 
-          expect(entry.userId).toBe(userId);
-          expect(entry.missionId).toBe(mid);
-          expect(entry.action).toBe(action);
-          expect(typeof entry.id).toBe('string');
-          expect(typeof entry.timestamp).toBe('number');
+        expect(entry.userId).toBe(userId);
+        expect(entry.missionId).toBe(mid);
+        expect(entry.action).toBe(action);
+        expect(typeof entry.id).toBe("string");
+        expect(typeof entry.timestamp).toBe("number");
 
-          // Query back and verify
-          const results = await logger.queryAuditLog({ missionId: mid });
-          const found = results.find((e) => e.id === entry.id);
-          expect(found).toBeDefined();
-          expect(found!.action).toBe(action);
-          expect(found!.userId).toBe(userId);
-        },
-      ),
-      { numRuns: 30 },
+        // Query back and verify
+        const results = await logger.queryAuditLog({ missionId: mid });
+        const found = results.find(e => e.id === entry.id);
+        expect(found).toBeDefined();
+        expect(found!.action).toBe(action);
+        expect(found!.userId).toBe(userId);
+      }),
+      { numRuns: 30 }
     );
   });
 
-  it('multiple actions are all recorded', async () => {
+  it("multiple actions are all recorded", async () => {
     const logger = new ReplayAuditLogger();
-    const mid = uniqueMissionId('multi-action');
+    const mid = uniqueMissionId("multi-action");
 
-    const actions: AuditEntry['action'][] = ['play', 'pause', 'seek', 'export'];
+    const actions: AuditEntry["action"][] = ["play", "pause", "seek", "export"];
     for (const action of actions) {
-      await logger.logAction('user-alice', mid, action);
+      await logger.logAction("user-alice", mid, action);
     }
 
     const results = await logger.queryAuditLog({ missionId: mid });
     expect(results.length).toBe(actions.length);
 
-    const loggedActions = results.map((e) => e.action).sort();
+    const loggedActions = results.map(e => e.action).sort();
     expect(loggedActions).toEqual([...actions].sort());
   });
 });
@@ -108,8 +108,8 @@ describe('Property 36: Audit log completeness', () => {
  * Validates: Requirements 20.2
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 37: Audit log query roundtrip', () => {
-  it('entries can be retrieved by userId filter', async () => {
+describe("Property 37: Audit log query roundtrip", () => {
+  it("entries can be retrieved by userId filter", async () => {
     // **Validates: Requirements 20.2**
     let runIdx = 0;
     await fc.assert(
@@ -125,30 +125,33 @@ describe('Property 37: Audit log query roundtrip', () => {
             await logger.logAction(userId, mid, action);
           }
           // Log an action from a different user
-          const otherUser = userId === 'user-alice' ? 'user-bob' : 'user-alice';
-          await logger.logAction(otherUser, mid, 'view');
+          const otherUser = userId === "user-alice" ? "user-bob" : "user-alice";
+          await logger.logAction(otherUser, mid, "view");
 
           // Query by userId
-          const results = await logger.queryAuditLog({ missionId: mid, userId });
+          const results = await logger.queryAuditLog({
+            missionId: mid,
+            userId,
+          });
           expect(results.length).toBe(actions.length);
           for (const entry of results) {
             expect(entry.userId).toBe(userId);
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('entries can be retrieved by time range', async () => {
+  it("entries can be retrieved by time range", async () => {
     // **Validates: Requirements 20.2**
     const logger = new ReplayAuditLogger();
-    const mid = uniqueMissionId('query-time');
+    const mid = uniqueMissionId("query-time");
 
-    const entry1 = await logger.logAction('user-alice', mid, 'play');
+    const entry1 = await logger.logAction("user-alice", mid, "play");
     // Small delay to ensure different timestamps
-    await new Promise((r) => setTimeout(r, 10));
-    const entry2 = await logger.logAction('user-alice', mid, 'pause');
+    await new Promise(r => setTimeout(r, 10));
+    const entry2 = await logger.logAction("user-alice", mid, "pause");
 
     // Query with time range that includes only the second entry
     const results = await logger.queryAuditLog({
@@ -160,7 +163,7 @@ describe('Property 37: Audit log query roundtrip', () => {
     expect(results[0].id).toBe(entry2.id);
   });
 
-  it('query with no missionId returns empty', async () => {
+  it("query with no missionId returns empty", async () => {
     const logger = new ReplayAuditLogger();
     const results = await logger.queryAuditLog({});
     expect(results).toEqual([]);
@@ -173,21 +176,39 @@ describe('Property 37: Audit log query roundtrip', () => {
  * Validates: Requirements 20.4
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 39: Role-based access control', () => {
-  function mockReqResNext(headers: Record<string, string>, params: Record<string, string> = {}) {
+describe("Property 39: Role-based access control", () => {
+  function mockReqResNext(
+    headers: Record<string, string>,
+    params: Record<string, string> = {}
+  ) {
     const req = { headers, params } as any;
     let statusCode = 0;
     let body: any = null;
     let nextCalled = false;
     const res = {
-      status(code: number) { statusCode = code; return res; },
-      json(data: any) { body = data; return res; },
+      status(code: number) {
+        statusCode = code;
+        return res;
+      },
+      json(data: any) {
+        body = data;
+        return res;
+      },
     } as any;
-    const next = () => { nextCalled = true; };
-    return { req, res, next, getStatus: () => statusCode, getBody: () => body, wasNextCalled: () => nextCalled };
+    const next = () => {
+      nextCalled = true;
+    };
+    return {
+      req,
+      res,
+      next,
+      getStatus: () => statusCode,
+      getBody: () => body,
+      wasNextCalled: () => nextCalled,
+    };
   }
 
-  it('admin role can access any mission', () => {
+  it("admin role can access any mission", () => {
     // **Validates: Requirements 20.4**
     fc.assert(
       fc.property(
@@ -195,51 +216,48 @@ describe('Property 39: Role-based access control', () => {
         fc.string({ minLength: 1, maxLength: 20 }),
         (userId, missionId) => {
           // Register a different owner
-          registerMissionOwner(missionId, 'someone-else');
+          registerMissionOwner(missionId, "someone-else");
 
           const { req, res, next, wasNextCalled } = mockReqResNext(
-            { 'x-user-id': userId, 'x-user-role': 'admin' },
-            { missionId },
+            { "x-user-id": userId, "x-user-role": "admin" },
+            { missionId }
           );
 
           replayAccessControl(req, res, next);
           expect(wasNextCalled()).toBe(true);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('regular user can access own mission', () => {
+  it("regular user can access own mission", () => {
     // **Validates: Requirements 20.4**
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 20 }),
-        (userId) => {
-          const missionId = `own-mission-${userId}`;
-          registerMissionOwner(missionId, userId);
+      fc.property(fc.string({ minLength: 1, maxLength: 20 }), userId => {
+        const missionId = `own-mission-${userId}`;
+        registerMissionOwner(missionId, userId);
 
-          const { req, res, next, wasNextCalled } = mockReqResNext(
-            { 'x-user-id': userId, 'x-user-role': 'user' },
-            { missionId },
-          );
+        const { req, res, next, wasNextCalled } = mockReqResNext(
+          { "x-user-id": userId, "x-user-role": "user" },
+          { missionId }
+        );
 
-          replayAccessControl(req, res, next);
-          expect(wasNextCalled()).toBe(true);
-        },
-      ),
-      { numRuns: 100 },
+        replayAccessControl(req, res, next);
+        expect(wasNextCalled()).toBe(true);
+      }),
+      { numRuns: 100 }
     );
   });
 
-  it('regular user is denied access to other users mission', () => {
+  it("regular user is denied access to other users mission", () => {
     // **Validates: Requirements 20.4**
-    const missionId = 'acl-test-mission';
-    registerMissionOwner(missionId, 'owner-user');
+    const missionId = "acl-test-mission";
+    registerMissionOwner(missionId, "owner-user");
 
     const { req, res, next, wasNextCalled, getStatus } = mockReqResNext(
-      { 'x-user-id': 'intruder', 'x-user-role': 'user' },
-      { missionId },
+      { "x-user-id": "intruder", "x-user-role": "user" },
+      { missionId }
     );
 
     replayAccessControl(req, res, next);
@@ -247,11 +265,11 @@ describe('Property 39: Role-based access control', () => {
     expect(getStatus()).toBe(403);
   });
 
-  it('missing x-user-id returns 401', () => {
+  it("missing x-user-id returns 401", () => {
     // **Validates: Requirements 20.4**
     const { req, res, next, wasNextCalled, getStatus } = mockReqResNext(
       {},
-      { missionId: 'any-mission' },
+      { missionId: "any-mission" }
     );
 
     replayAccessControl(req, res, next);

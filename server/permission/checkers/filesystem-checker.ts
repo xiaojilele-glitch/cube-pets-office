@@ -6,13 +6,20 @@
  * - 沙箱路径隔离（/sandbox/agent_<id>/）
  */
 
-import type { Action, PermissionConstraints } from "../../../shared/permission/contracts.js";
+import type {
+  Action,
+  PermissionConstraints,
+} from "../../../shared/permission/contracts.js";
 
 /** Sensitive directories — always denied regardless of permissions */
 export const SENSITIVE_DIRS = ["/etc", "/sys", "/proc", "~/.ssh"] as const;
 
 export interface ResourceChecker {
-  checkConstraints(action: Action, resource: string, constraints: PermissionConstraints): boolean;
+  checkConstraints(
+    action: Action,
+    resource: string,
+    constraints: PermissionConstraints
+  ): boolean;
 }
 
 /**
@@ -72,7 +79,11 @@ export function isSensitivePath(path: string): boolean {
 }
 
 export class FilesystemChecker implements ResourceChecker {
-  checkConstraints(action: Action, resource: string, constraints: PermissionConstraints): boolean {
+  checkConstraints(
+    action: Action,
+    resource: string,
+    constraints: PermissionConstraints
+  ): boolean {
     // 1. Sensitive directories — always denied
     if (isSensitivePath(resource)) {
       return false;
@@ -86,6 +97,6 @@ export class FilesystemChecker implements ResourceChecker {
     }
 
     // Check if resource matches at least one allowed pattern
-    return patterns.some((pattern) => matchGlob(pattern, resource));
+    return patterns.some(pattern => matchGlob(pattern, resource));
   }
 }

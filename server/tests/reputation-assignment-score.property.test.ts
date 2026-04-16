@@ -8,18 +8,24 @@
  * assignmentScore 应等于 fitnessScore * fitnessWeight + reputationFactor * reputationWeight。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { AssignmentScorer } from '../core/reputation/assignment-scorer.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { ReputationConfig, ReputationProfile } from '../../shared/reputation.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { AssignmentScorer } from "../core/reputation/assignment-scorer.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  ReputationConfig,
+  ReputationProfile,
+} from "../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** Build a minimal ReputationProfile with the given overallScore */
-function makeProfile(overallScore: number, agentId = 'agent-test'): ReputationProfile {
+function makeProfile(
+  overallScore: number,
+  agentId = "agent-test"
+): ReputationProfile {
   return {
     agentId,
     overallScore,
@@ -30,8 +36,8 @@ function makeProfile(overallScore: number, agentId = 'agent-test'): ReputationPr
       collaborationScore: 500,
       reliabilityScore: 500,
     },
-    grade: 'B' as const,
-    trustTier: 'standard' as const,
+    grade: "B" as const,
+    trustTier: "standard" as const,
     isExternal: false,
     totalTasks: 20,
     consecutiveHighQuality: 0,
@@ -55,7 +61,7 @@ const overallScoreArb = fc.integer({ min: 0, max: 1000 });
 /** Arbitrary for scheduling weights that sum to 1.0 */
 const schedulingWeightsArb = fc
   .double({ min: 0.01, max: 0.99, noNaN: true })
-  .map((reputationWeight) => ({
+  .map(reputationWeight => ({
     reputationWeight,
     fitnessWeight: 1 - reputationWeight,
   }));
@@ -64,30 +70,35 @@ const schedulingWeightsArb = fc
 // Property Tests
 // ---------------------------------------------------------------------------
 
-describe('Property 8: 任务分配得分公式', () => {
+describe("Property 8: 任务分配得分公式", () => {
   const scorer = new AssignmentScorer(DEFAULT_REPUTATION_CONFIG);
 
-  it('assignmentScore equals fitnessScore * fitnessWeight + reputationFactor * reputationWeight with default config', () => {
+  it("assignmentScore equals fitnessScore * fitnessWeight + reputationFactor * reputationWeight with default config", () => {
     fc.assert(
-      fc.property(fitnessScoreArb, overallScoreArb, (fitnessScore, overallScore) => {
-        const profile = makeProfile(overallScore);
-        const result = scorer.computeAssignmentScore(fitnessScore, profile);
+      fc.property(
+        fitnessScoreArb,
+        overallScoreArb,
+        (fitnessScore, overallScore) => {
+          const profile = makeProfile(overallScore);
+          const result = scorer.computeAssignmentScore(fitnessScore, profile);
 
-        const reputationFactor = overallScore / 1000;
-        const expected =
-          fitnessScore * DEFAULT_REPUTATION_CONFIG.scheduling.fitnessWeight +
-          reputationFactor * DEFAULT_REPUTATION_CONFIG.scheduling.reputationWeight;
+          const reputationFactor = overallScore / 1000;
+          const expected =
+            fitnessScore * DEFAULT_REPUTATION_CONFIG.scheduling.fitnessWeight +
+            reputationFactor *
+              DEFAULT_REPUTATION_CONFIG.scheduling.reputationWeight;
 
-        expect(result.assignmentScore).toBeCloseTo(expected, 10);
-        expect(result.reputationFactor).toBeCloseTo(reputationFactor, 10);
-        expect(result.fitnessScore).toBe(fitnessScore);
-        expect(result.agentId).toBe(profile.agentId);
-      }),
-      { numRuns: 200 },
+          expect(result.assignmentScore).toBeCloseTo(expected, 10);
+          expect(result.reputationFactor).toBeCloseTo(reputationFactor, 10);
+          expect(result.fitnessScore).toBe(fitnessScore);
+          expect(result.agentId).toBe(profile.agentId);
+        }
+      ),
+      { numRuns: 200 }
     );
   });
 
-  it('assignmentScore equals fitnessScore * fitnessWeight + reputationFactor * reputationWeight with arbitrary weights', () => {
+  it("assignmentScore equals fitnessScore * fitnessWeight + reputationFactor * reputationWeight with arbitrary weights", () => {
     fc.assert(
       fc.property(
         fitnessScoreArb,
@@ -103,7 +114,12 @@ describe('Property 8: 任务分配得分公式', () => {
             },
           };
           const profile = makeProfile(overallScore);
-          const result = scorer.computeAssignmentScore(fitnessScore, profile, undefined, customConfig);
+          const result = scorer.computeAssignmentScore(
+            fitnessScore,
+            profile,
+            undefined,
+            customConfig
+          );
 
           const reputationFactor = overallScore / 1000;
           const expected =
@@ -111,20 +127,20 @@ describe('Property 8: 任务分配得分公式', () => {
             reputationFactor * weights.reputationWeight;
 
           expect(result.assignmentScore).toBeCloseTo(expected, 10);
-        },
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('assignmentScore is 0 when both fitnessScore and overallScore are 0', () => {
+  it("assignmentScore is 0 when both fitnessScore and overallScore are 0", () => {
     const profile = makeProfile(0);
     const result = scorer.computeAssignmentScore(0, profile);
     expect(result.assignmentScore).toBe(0);
     expect(result.reputationFactor).toBe(0);
   });
 
-  it('assignmentScore equals sum of weights when fitnessScore is 1 and overallScore is 1000', () => {
+  it("assignmentScore equals sum of weights when fitnessScore is 1 and overallScore is 1000", () => {
     const profile = makeProfile(1000);
     const result = scorer.computeAssignmentScore(1, profile);
     const expected =
@@ -133,14 +149,14 @@ describe('Property 8: 任务分配得分公式', () => {
     expect(result.assignmentScore).toBeCloseTo(expected, 10);
   });
 
-  it('reputationFactor is always overallScore / 1000 when no taskRole is provided', () => {
+  it("reputationFactor is always overallScore / 1000 when no taskRole is provided", () => {
     fc.assert(
-      fc.property(overallScoreArb, (overallScore) => {
+      fc.property(overallScoreArb, overallScore => {
         const profile = makeProfile(overallScore);
         const result = scorer.computeAssignmentScore(0.5, profile);
         expect(result.reputationFactor).toBeCloseTo(overallScore / 1000, 10);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 });

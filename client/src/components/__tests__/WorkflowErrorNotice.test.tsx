@@ -26,7 +26,9 @@ describe("WorkflowErrorNotice", () => {
     );
 
     expect(markup).toContain("Showing cached preview data.");
-    expect(markup).toContain("Switch to advanced mode after the backend is ready.");
+    expect(markup).toContain(
+      "Switch to advanced mode after the backend is ready."
+    );
     expect(markup).toContain(getMessages("zh-CN").tasks.statuses.action.retry);
   });
 
@@ -46,6 +48,8 @@ describe("WorkflowErrorNotice", () => {
 
     expect(markup).toContain("The request failed with a validation error.");
     expect(markup).not.toContain("Retry");
-    expect(markup).not.toContain(getMessages("zh-CN").tasks.statuses.action.retry);
+    expect(markup).not.toContain(
+      getMessages("zh-CN").tasks.statuses.action.retry
+    );
   });
 });

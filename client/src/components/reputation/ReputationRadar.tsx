@@ -10,14 +10,23 @@ interface ReputationRadarProps {
   size?: number;
 }
 
-const LABELS = ["Quality", "Speed", "Efficiency", "Collaboration", "Reliability"];
+const LABELS = [
+  "Quality",
+  "Speed",
+  "Efficiency",
+  "Collaboration",
+  "Reliability",
+];
 
 function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-export function ReputationRadar({ dimensions, size = 200 }: ReputationRadarProps) {
+export function ReputationRadar({
+  dimensions,
+  size = 200,
+}: ReputationRadarProps) {
   const cx = size / 2;
   const cy = size / 2;
   const maxR = size * 0.4;
@@ -38,27 +47,62 @@ export function ReputationRadar({ dimensions, size = 200 }: ReputationRadarProps
     const r = (v / 1000) * maxR;
     return polarToCartesian(cx, cy, r, i * angleStep);
   });
-  const dataPath = dataPoints.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ") + "Z";
+  const dataPath =
+    dataPoints.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ") +
+    "Z";
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label="Reputation radar chart">
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      role="img"
+      aria-label="Reputation radar chart"
+    >
       {/* Grid rings */}
-      {rings.map((pct) => {
+      {rings.map(pct => {
         const ringPoints = Array.from({ length: 5 }, (_, i) =>
           polarToCartesian(cx, cy, maxR * pct, i * angleStep)
         );
-        const ringPath = ringPoints.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ") + "Z";
-        return <path key={pct} d={ringPath} fill="none" stroke="#444" strokeWidth={0.5} opacity={0.5} />;
+        const ringPath =
+          ringPoints
+            .map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`)
+            .join(" ") + "Z";
+        return (
+          <path
+            key={pct}
+            d={ringPath}
+            fill="none"
+            stroke="#444"
+            strokeWidth={0.5}
+            opacity={0.5}
+          />
+        );
       })}
 
       {/* Axis lines */}
       {Array.from({ length: 5 }, (_, i) => {
         const end = polarToCartesian(cx, cy, maxR, i * angleStep);
-        return <line key={i} x1={cx} y1={cy} x2={end.x} y2={end.y} stroke="#555" strokeWidth={0.5} />;
+        return (
+          <line
+            key={i}
+            x1={cx}
+            y1={cy}
+            x2={end.x}
+            y2={end.y}
+            stroke="#555"
+            strokeWidth={0.5}
+          />
+        );
       })}
 
       {/* Data polygon */}
-      <path d={dataPath} fill="rgba(59,130,246,0.3)" stroke="#3b82f6" strokeWidth={1.5} />
+      <path
+        d={dataPath}
+        fill="rgba(59,130,246,0.3)"
+        stroke="#3b82f6"
+        strokeWidth={1.5}
+      />
 
       {/* Data points */}
       {dataPoints.map((p, i) => (

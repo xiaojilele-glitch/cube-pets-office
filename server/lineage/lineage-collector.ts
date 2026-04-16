@@ -55,7 +55,7 @@ export class LineageCollector {
 
   constructor(
     private store: LineageStorageAdapter,
-    loggerOrOptions?: LineageLogger | LineageCollectorOptions,
+    loggerOrOptions?: LineageLogger | LineageCollectorOptions
   ) {
     if (loggerOrOptions && "debug" in loggerOrOptions) {
       // Legacy: plain logger argument
@@ -314,8 +314,9 @@ export class LineageCollector {
     // "    at filename:line:col"
     // "    at functionName (file:///C:/path/file.ts:line:col)"
     // "    at file:///C:/path/file.ts:line:col"
-    const match = targetLine.match(/\((?:file:\/\/\/)?(.+):(\d+):\d+\)/) ??
-                  targetLine.match(/at\s+(?:file:\/\/\/)?([^:\s]+(?::[^:\s]+)*):(\d+):\d+/);
+    const match =
+      targetLine.match(/\((?:file:\/\/\/)?(.+):(\d+):\d+\)/) ??
+      targetLine.match(/at\s+(?:file:\/\/\/)?([^:\s]+(?::[^:\s]+)*):(\d+):\d+/);
 
     if (match) {
       const rawPath = match[1];

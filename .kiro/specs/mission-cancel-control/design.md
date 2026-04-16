@@ -262,7 +262,7 @@ interface MissionRecord {
 不新增独立 event type，继续复用现有 `failed` / `progress` 并不合适。推荐新增：
 
 ```ts
-"cancelled"
+"cancelled";
 ```
 
 如果本阶段不扩展 `MISSION_EVENT_TYPES`，则至少需要用 `log` 并在 message 中注明取消来源。更推荐直接补齐 `cancelled` 事件类型，避免审计含义模糊。

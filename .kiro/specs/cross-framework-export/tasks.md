@@ -23,17 +23,17 @@
     - serializeIR 将 ExportIR 转为 JSON 字符串
     - deserializeIR 从 JSON 字符串还原 ExportIR，含基本类型校验
     - _Requirements: 8.1, 8.2, 8.3_
-  - [ ]* 1.4 编写 IR 构建的属性测试
+  - [ ]\* 1.4 编写 IR 构建的属性测试
     - 在 `server/tests/cross-framework-export.test.ts` 中使用 fast-check
     - 实现 `arbitraryWorkflowOrganizationSnapshot` 生成器
     - **Property 1: IR 构建保持组织结构完整性**
     - **Validates: Requirements 1.1, 1.2**
-  - [ ]* 1.5 编写 IR 管道和绑定的属性测试
+  - [ ]\* 1.5 编写 IR 管道和绑定的属性测试
     - **Property 2: IR 构建保持管道阶段完整性**
     - **Validates: Requirements 1.3**
     - **Property 3: IR 构建保持节点绑定完整性**
     - **Validates: Requirements 1.4, 1.5**
-  - [ ]* 1.6 编写 IR 序列化往返属性测试
+  - [ ]\* 1.6 编写 IR 序列化往返属性测试
     - 实现 `arbitraryExportIR` 生成器
     - **Property 10: IR 序列化往返一致性**
     - **Validates: Requirements 8.3**
@@ -48,7 +48,7 @@
     - 生成 crew.py：Crew 类定义、agent 实例化、task 编排
     - 生成 requirements.txt：列出 crewai 依赖
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
-  - [ ]* 3.2 编写 CrewAI 适配器属性测试
+  - [ ]\* 3.2 编写 CrewAI 适配器属性测试
     - **Property 4: CrewAI 适配器输出完整性**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
@@ -58,7 +58,7 @@
     - 生成 main.py：StateGraph 构建、每个 agent 对应节点处理函数、图编译运行
     - 生成 requirements.txt：列出 langgraph/langchain 依赖
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
-  - [ ]* 4.2 编写 LangGraph 适配器属性测试
+  - [ ]\* 4.2 编写 LangGraph 适配器属性测试
     - **Property 5: LangGraph 适配器输出完整性**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
 
@@ -69,7 +69,7 @@
     - 生成 main.py：agent 实例化、GroupChat 创建、对话启动
     - 生成 requirements.txt：列出 pyautogen 依赖
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
-  - [ ]* 5.2 编写 AutoGen 适配器属性测试
+  - [ ]\* 5.2 编写 AutoGen 适配器属性测试
     - **Property 6: AutoGen 适配器输出完整性**
     - **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
 
@@ -86,12 +86,12 @@
     - 单框架：文件放根目录；all：每个框架一个子目录
     - 生成文件名 `cube-export-{framework}-{timestamp}.zip`
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 6.2_
-  - [ ]* 7.2 编写 ZIP 打包属性测试
+  - [ ]\* 7.2 编写 ZIP 打包属性测试
     - **Property 7: ZIP 打包目录结构正确性**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4**
     - **Property 8: ZIP 文件名格式正确性**
     - **Validates: Requirements 5.5**
-  - [ ]* 7.3 编写框架参数验证属性测试
+  - [ ]\* 7.3 编写框架参数验证属性测试
     - **Property 9: 框架参数验证**
     - **Validates: Requirements 6.3**
 
@@ -107,7 +107,7 @@
   - [x] 8.2 在 `server/index.ts` 中注册 export 路由到 `/api/export`
     - 导入 export 路由并挂载
     - _Requirements: 6.1_
-  - [ ]* 8.3 编写 API 路由单元测试
+  - [ ]\* 8.3 编写 API 路由单元测试
     - 测试 400/404/500 错误响应
     - 测试成功导出返回 ZIP 流
     - _Requirements: 6.1, 6.3, 6.4, 6.5_

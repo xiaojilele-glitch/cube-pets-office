@@ -78,7 +78,7 @@ export interface CredentialInjectorConfig {
  */
 export function resolveAICredentials(
   payload: Record<string, unknown>,
-  hostEnv?: Record<string, string | undefined>,
+  hostEnv?: Record<string, string | undefined>
 ): AICredentials;
 
 /**
@@ -109,11 +109,15 @@ export class CredentialScrubber {
   scrubFile(filePath: string): { scrubbed: boolean; replacements: number };
 
   /** 清洗目录下所有文本文件 */
-  scrubDirectory(dirPath: string): { totalReplacements: number; filesProcessed: number };
+  scrubDirectory(dirPath: string): {
+    totalReplacements: number;
+    filesProcessed: number;
+  };
 }
 ```
 
 清洗规则：
+
 - 精确匹配已注入的 API Key 值
 - 模式匹配：`sk-[a-zA-Z0-9]{20,}` (OpenAI 格式)
 - 模式匹配：`clp_[a-zA-Z0-9]{20,}` (自定义格式)
@@ -167,10 +171,30 @@ export interface AITaskPreset {
 }
 
 export const AI_TASK_PRESETS: Record<string, AITaskPreset> = {
-  "text-generation":      { temperature: 0.7, maxTokens: 2048, jsonMode: false, supportsImageInput: false },
-  "code-generation":      { temperature: 0.2, maxTokens: 4096, jsonMode: false, supportsImageInput: false },
-  "data-analysis":        { temperature: 0.1, maxTokens: 4096, jsonMode: true,  supportsImageInput: false },
-  "image-understanding":  { temperature: 0.5, maxTokens: 2048, jsonMode: false, supportsImageInput: true  },
+  "text-generation": {
+    temperature: 0.7,
+    maxTokens: 2048,
+    jsonMode: false,
+    supportsImageInput: false,
+  },
+  "code-generation": {
+    temperature: 0.2,
+    maxTokens: 4096,
+    jsonMode: false,
+    supportsImageInput: false,
+  },
+  "data-analysis": {
+    temperature: 0.1,
+    maxTokens: 4096,
+    jsonMode: true,
+    supportsImageInput: false,
+  },
+  "image-understanding": {
+    temperature: 0.5,
+    maxTokens: 2048,
+    jsonMode: false,
+    supportsImageInput: true,
+  },
 };
 
 export function getAITaskPreset(taskType: string): AITaskPreset;
@@ -226,7 +250,7 @@ const MOCK_AI_RESULT = {
 ```typescript
 export interface LobsterExecutorConfig {
   // ... 现有字段
-  aiImage: string;          // LOBSTER_AI_IMAGE，默认 "cube-ai-sandbox:latest"
+  aiImage: string; // LOBSTER_AI_IMAGE，默认 "cube-ai-sandbox:latest"
 }
 ```
 
@@ -247,7 +271,11 @@ interface AIJobPayload {
   /** 是否启用 AI 能力 */
   aiEnabled?: boolean;
   /** AI 任务类型 */
-  aiTaskType?: "text-generation" | "code-generation" | "data-analysis" | "image-understanding";
+  aiTaskType?:
+    | "text-generation"
+    | "code-generation"
+    | "data-analysis"
+    | "image-understanding";
   /** 覆盖默认 LLM 配置 */
   llmConfig?: {
     apiKey?: string;
@@ -283,7 +311,7 @@ interface LobsterExecutorHealthResponse {
   aiCapability: {
     enabled: boolean;
     image: string;
-    llmProvider: string;  // 从 LLM_BASE_URL 推断
+    llmProvider: string; // 从 LLM_BASE_URL 推断
   };
 }
 ```
@@ -311,86 +339,85 @@ interface LobsterExecutorHealthResponse {
 }
 ```
 
-
-
 ## 正确性属性
 
-*正确性属性是系统在所有合法执行路径上都应保持为真的特征或行为——本质上是人类可读规格与机器可验证正确性保证之间的桥梁。*
+_正确性属性是系统在所有合法执行路径上都应保持为真的特征或行为——本质上是人类可读规格与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: AI 镜像选择正确性
 
-*For any* Job payload 和 executor 配置组合，当 `payload.aiEnabled` 为 true 且 `payload.image` 未设置时，`buildContainerOptions` 应返回 AI 镜像（来自 config.aiImage 或默认 "cube-ai-sandbox:latest"）；当 `payload.aiEnabled` 为 false 或未设置时，应返回默认镜像（来自 config.defaultImage 或 "node:20-slim"）；当 `payload.image` 显式设置时，无论 aiEnabled 值如何，应使用 payload.image。
+_For any_ Job payload 和 executor 配置组合，当 `payload.aiEnabled` 为 true 且 `payload.image` 未设置时，`buildContainerOptions` 应返回 AI 镜像（来自 config.aiImage 或默认 "cube-ai-sandbox:latest"）；当 `payload.aiEnabled` 为 false 或未设置时，应返回默认镜像（来自 config.defaultImage 或 "node:20-slim"）；当 `payload.image` 显式设置时，无论 aiEnabled 值如何，应使用 payload.image。
 
 **Validates: Requirements 1.3, 1.4, 7.1**
 
 ### Property 2: 凭证解析与覆盖优先级
 
-*For any* 宿主机环境变量（LLM_API_KEY、LLM_BASE_URL、LLM_MODEL）和 payload.llmConfig 的组合，`resolveAICredentials` 应遵循以下优先级：payload.llmConfig 中的值优先于宿主机环境变量。输出的环境变量数组应使用 AI_ 前缀（AI_API_KEY、AI_BASE_URL、AI_MODEL）。
+_For any_ 宿主机环境变量（LLM*API_KEY、LLM_BASE_URL、LLM_MODEL）和 payload.llmConfig 的组合，`resolveAICredentials` 应遵循以下优先级：payload.llmConfig 中的值优先于宿主机环境变量。输出的环境变量数组应使用 AI* 前缀（AI_API_KEY、AI_BASE_URL、AI_MODEL）。
 
 **Validates: Requirements 2.1, 2.2, 2.3**
 
 ### Property 3: 凭证验证拒绝无效输入
 
-*For any* API Key 字符串，若为空或长度 ≤ 8，`validateCredentials` 应抛出错误；若长度 > 8 且非空，应通过验证。当 aiEnabled 为 true 但无任何来源提供 API Key 时，系统应拒绝 Job。
+_For any_ API Key 字符串，若为空或长度 ≤ 8，`validateCredentials` 应抛出错误；若长度 > 8 且非空，应通过验证。当 aiEnabled 为 true 但无任何来源提供 API Key 时，系统应拒绝 Job。
 
 **Validates: Requirements 2.4, 2.5**
 
 ### Property 4: AI 任务预设映射
 
-*For any* 字符串作为 aiTaskType，`getAITaskPreset` 应返回正确的预设配置：已知类型（text-generation、code-generation、data-analysis、image-understanding）返回对应的 temperature/maxTokens/jsonMode 组合；未知类型回退到 text-generation 的默认配置。
+_For any_ 字符串作为 aiTaskType，`getAITaskPreset` 应返回正确的预设配置：已知类型（text-generation、code-generation、data-analysis、image-understanding）返回对应的 temperature/maxTokens/jsonMode 组合；未知类型回退到 text-generation 的默认配置。
 
 **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.6**
 
 ### Property 5: 凭证清洗完整性
 
-*For any* 包含已注入 API Key 值、或匹配 `sk-[a-zA-Z0-9]{20,}` 模式、或匹配 `clp_[a-zA-Z0-9]{20,}` 模式的字符串，`CredentialScrubber.scrubLine` 应将匹配部分替换为 "[REDACTED]"，且不修改不包含凭证的文本部分。
+_For any_ 包含已注入 API Key 值、或匹配 `sk-[a-zA-Z0-9]{20,}` 模式、或匹配 `clp_[a-zA-Z0-9]{20,}` 模式的字符串，`CredentialScrubber.scrubLine` 应将匹配部分替换为 "[REDACTED]"，且不修改不包含凭证的文本部分。
 
 **Validates: Requirements 6.1, 6.2, 6.3**
 
 ### Property 6: AI 结果 Artifact 完整性
 
-*For any* 成功的 AI 执行结果，写入 `/workspace/artifacts/ai-result.json` 的 JSON 对象应包含 content（string）、usage（含 promptTokens、completionTokens、totalTokens）、model（string）、taskType（string）四个必需字段，且反序列化后与原始结果等价。
+_For any_ 成功的 AI 执行结果，写入 `/workspace/artifacts/ai-result.json` 的 JSON 对象应包含 content（string）、usage（含 promptTokens、completionTokens、totalTokens）、model（string）、taskType（string）四个必需字段，且反序列化后与原始结果等价。
 
 **Validates: Requirements 3.6, 5.4**
 
 ### Property 7: Artifact 文件凭证清洗
 
-*For any* 文本文件内容包含已注入的 API Key，经过 `CredentialScrubber.scrubFile` 处理后，文件内容不应包含原始 API Key 字符串。
+_For any_ 文本文件内容包含已注入的 API Key，经过 `CredentialScrubber.scrubFile` 处理后，文件内容不应包含原始 API Key 字符串。
 
 **Validates: Requirements 6.4**
 
 ### Property 8: 非 AI Job 行为不变
 
-*For any* payload.aiEnabled 为 false 或未设置的 Job，`buildContainerOptions` 的输出应与未引入 AI 功能前的原始逻辑完全一致——不包含 AI_ 前缀的环境变量，不使用 AI 镜像。
+_For any_ payload.aiEnabled 为 false 或未设置的 Job，`buildContainerOptions` 的输出应与未引入 AI 功能前的原始逻辑完全一致——不包含 AI\_ 前缀的环境变量，不使用 AI 镜像。
 
 **Validates: Requirements 7.1**
 
 ### Property 9: AI 完成事件 contentPreview 截断
 
-*For any* AI 生成结果，job.completed 事件 payload 中的 `contentPreview` 字段长度应 ≤ 200 字符。若原始 content 长度 > 200，contentPreview 应为 content 的前 200 个字符。
+_For any_ AI 生成结果，job.completed 事件 payload 中的 `contentPreview` 字段长度应 ≤ 200 字符。若原始 content 长度 > 200，contentPreview 应为 content 的前 200 个字符。
 
 **Validates: Requirements 5.3**
 
 ### Property 10: Mock 模式 AI 响应一致性
 
-*For any* aiEnabled 为 true 的 Job 在 mock 模式下执行，完成事件应包含固定的模拟 AI 响应（content、usage、model 字段均为预定义值），且 artifact 中应包含 ai-result.json。
+_For any_ aiEnabled 为 true 的 Job 在 mock 模式下执行，完成事件应包含固定的模拟 AI 响应（content、usage、model 字段均为预定义值），且 artifact 中应包含 ai-result.json。
 
 **Validates: Requirements 7.4**
 
 ## 错误处理
 
-| 错误场景 | errorCode | 处理方式 |
-|---------|-----------|---------|
-| AI 凭证缺失（无 API Key） | `AI_CREDENTIALS_MISSING` | 拒绝 Job，发出 job.failed 事件 |
-| AI 凭证无效（长度 ≤ 8） | `AI_CREDENTIALS_INVALID` | 拒绝 Job，发出 job.failed 事件 |
-| AI API 调用失败 | `AI_API_ERROR` | 发出 job.failed 事件，detail 中包含脱敏后的错误信息 |
-| AI 镜像不存在 | `IMAGE_PULL_FAILED` | 复用现有 DockerRunner 的镜像拉取失败处理 |
-| 未知 aiTaskType | 无错误 | 回退到 text-generation 默认配置，记录警告日志 |
-| 凭证泄露检测 | 无错误 | CredentialScrubber 替换为 [REDACTED]，记录审计事件 |
+| 错误场景                  | errorCode                | 处理方式                                            |
+| ------------------------- | ------------------------ | --------------------------------------------------- |
+| AI 凭证缺失（无 API Key） | `AI_CREDENTIALS_MISSING` | 拒绝 Job，发出 job.failed 事件                      |
+| AI 凭证无效（长度 ≤ 8）   | `AI_CREDENTIALS_INVALID` | 拒绝 Job，发出 job.failed 事件                      |
+| AI API 调用失败           | `AI_API_ERROR`           | 发出 job.failed 事件，detail 中包含脱敏后的错误信息 |
+| AI 镜像不存在             | `IMAGE_PULL_FAILED`      | 复用现有 DockerRunner 的镜像拉取失败处理            |
+| 未知 aiTaskType           | 无错误                   | 回退到 text-generation 默认配置，记录警告日志       |
+| 凭证泄露检测              | 无错误                   | CredentialScrubber 替换为 [REDACTED]，记录审计事件  |
 
 ### 错误脱敏规则
 
 所有错误信息在通过回调发送前，必须经过 `CredentialScrubber` 处理：
+
 - job.failed 事件的 `message` 和 `detail` 字段
 - 日志文件中的每一行
 - artifact 文件中的文本内容
@@ -401,18 +428,18 @@ interface LobsterExecutorHealthResponse {
 
 使用 `fast-check` 库（项目已有依赖），每个属性测试运行至少 100 次迭代。
 
-| 属性 | 测试文件 | 标签 |
-|------|---------|------|
-| Property 1 | `ai-image-selection.property.test.ts` | Feature: ai-enabled-sandbox, Property 1: AI 镜像选择正确性 |
-| Property 2 | `credential-injector.property.test.ts` | Feature: ai-enabled-sandbox, Property 2: 凭证解析与覆盖优先级 |
-| Property 3 | `credential-injector.property.test.ts` | Feature: ai-enabled-sandbox, Property 3: 凭证验证拒绝无效输入 |
-| Property 4 | `ai-task-presets.property.test.ts` | Feature: ai-enabled-sandbox, Property 4: AI 任务预设映射 |
-| Property 5 | `credential-scrubber.property.test.ts` | Feature: ai-enabled-sandbox, Property 5: 凭证清洗完整性 |
-| Property 6 | `ai-result-artifact.property.test.ts` | Feature: ai-enabled-sandbox, Property 6: AI 结果 Artifact 完整性 |
-| Property 7 | `credential-scrubber.property.test.ts` | Feature: ai-enabled-sandbox, Property 7: Artifact 文件凭证清洗 |
-| Property 8 | `ai-image-selection.property.test.ts` | Feature: ai-enabled-sandbox, Property 8: 非 AI Job 行为不变 |
-| Property 9 | `ai-event-payload.property.test.ts` | Feature: ai-enabled-sandbox, Property 9: AI 完成事件 contentPreview 截断 |
-| Property 10 | `mock-ai-runner.property.test.ts` | Feature: ai-enabled-sandbox, Property 10: Mock 模式 AI 响应一致性 |
+| 属性        | 测试文件                               | 标签                                                                     |
+| ----------- | -------------------------------------- | ------------------------------------------------------------------------ |
+| Property 1  | `ai-image-selection.property.test.ts`  | Feature: ai-enabled-sandbox, Property 1: AI 镜像选择正确性               |
+| Property 2  | `credential-injector.property.test.ts` | Feature: ai-enabled-sandbox, Property 2: 凭证解析与覆盖优先级            |
+| Property 3  | `credential-injector.property.test.ts` | Feature: ai-enabled-sandbox, Property 3: 凭证验证拒绝无效输入            |
+| Property 4  | `ai-task-presets.property.test.ts`     | Feature: ai-enabled-sandbox, Property 4: AI 任务预设映射                 |
+| Property 5  | `credential-scrubber.property.test.ts` | Feature: ai-enabled-sandbox, Property 5: 凭证清洗完整性                  |
+| Property 6  | `ai-result-artifact.property.test.ts`  | Feature: ai-enabled-sandbox, Property 6: AI 结果 Artifact 完整性         |
+| Property 7  | `credential-scrubber.property.test.ts` | Feature: ai-enabled-sandbox, Property 7: Artifact 文件凭证清洗           |
+| Property 8  | `ai-image-selection.property.test.ts`  | Feature: ai-enabled-sandbox, Property 8: 非 AI Job 行为不变              |
+| Property 9  | `ai-event-payload.property.test.ts`    | Feature: ai-enabled-sandbox, Property 9: AI 完成事件 contentPreview 截断 |
+| Property 10 | `mock-ai-runner.property.test.ts`      | Feature: ai-enabled-sandbox, Property 10: Mock 模式 AI 响应一致性        |
 
 ### 单元测试
 

@@ -140,7 +140,10 @@ function parseBoolean(value: string | undefined, fallback = false): boolean {
   return fallback;
 }
 
-function parsePositiveInteger(value: string | undefined, fallback: number): number {
+function parsePositiveInteger(
+  value: string | undefined,
+  fallback: number
+): number {
   if (!value || !value.trim()) return fallback;
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -152,8 +155,14 @@ function executorStageLabel(stageKey: string | undefined): string {
 }
 
 function buildServerBaseUrl(request: Request): string {
-  const forwardedProto = request.header("x-forwarded-proto")?.split(",")[0]?.trim();
-  const forwardedHost = request.header("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProto = request
+    .header("x-forwarded-proto")
+    ?.split(",")[0]
+    ?.trim();
+  const forwardedHost = request
+    .header("x-forwarded-host")
+    ?.split(",")[0]
+    ?.trim();
   const protocol = forwardedProto || request.protocol;
   const host = forwardedHost || request.get("host") || "127.0.0.1";
   return `${protocol}://${host}`;
@@ -205,10 +214,14 @@ function verifyExecutorCallbackSignature(
       : Number.parseInt(timestamp, 10)
     : Number.NaN;
 
-  if (!Number.isFinite(timestampMs) || Math.abs(Date.now() - timestampMs) > maxSkewMs) {
-    response
-      .status(401)
-      .json({ ok: false, error: "Executor callback timestamp is invalid or expired" });
+  if (
+    !Number.isFinite(timestampMs) ||
+    Math.abs(Date.now() - timestampMs) > maxSkewMs
+  ) {
+    response.status(401).json({
+      ok: false,
+      error: "Executor callback timestamp is invalid or expired",
+    });
     return false;
   }
 
@@ -217,7 +230,11 @@ function verifyExecutorCallbackSignature(
     "hex"
   );
   const actual = parseHexSignature(signature);
-  if (!actual || actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+  if (
+    !actual ||
+    actual.length !== expected.length ||
+    !timingSafeEqual(actual, expected)
+  ) {
     response
       .status(401)
       .json({ ok: false, error: "Executor callback signature mismatch" });
@@ -233,13 +250,27 @@ function resolveExecutorStageKey(
 ): string {
   const rawStageKey = event.stageKey?.trim();
   if (rawStageKey) {
-    if (["receive", "understand", "plan", "provision", "execute", "finalize"].includes(rawStageKey)) {
+    if (
+      [
+        "receive",
+        "understand",
+        "plan",
+        "provision",
+        "execute",
+        "finalize",
+      ].includes(rawStageKey)
+    ) {
       return rawStageKey;
     }
-    if (rawStageKey === "scan" || rawStageKey === "analyze") return "understand";
+    if (rawStageKey === "scan" || rawStageKey === "analyze")
+      return "understand";
     if (rawStageKey === "build-plan") return "plan";
     if (rawStageKey === "dispatch") return "provision";
-    if (rawStageKey === "codegen" || rawStageKey === "execute" || rawStageKey === "custom") {
+    if (
+      rawStageKey === "codegen" ||
+      rawStageKey === "execute" ||
+      rawStageKey === "custom"
+    ) {
       return "execute";
     }
     if (rawStageKey === "report") return "finalize";
@@ -304,13 +335,19 @@ function normalizeExecutorInstance(
     id: instance.id?.trim() || undefined,
     image: instance.image?.trim() || undefined,
     command: Array.isArray(instance.command)
-      ? instance.command.filter((entry): entry is string => typeof entry === "string")
+      ? instance.command.filter(
+          (entry): entry is string => typeof entry === "string"
+        )
       : undefined,
     workspaceRoot: instance.workspaceRoot?.trim() || undefined,
-    startedAt: typeof instance.startedAt === "number" ? instance.startedAt : undefined,
+    startedAt:
+      typeof instance.startedAt === "number" ? instance.startedAt : undefined,
     completedAt:
-      typeof instance.completedAt === "number" ? instance.completedAt : undefined,
-    exitCode: typeof instance.exitCode === "number" ? instance.exitCode : undefined,
+      typeof instance.completedAt === "number"
+        ? instance.completedAt
+        : undefined,
+    exitCode:
+      typeof instance.exitCode === "number" ? instance.exitCode : undefined,
     host: instance.host?.trim() || undefined,
   };
 }
@@ -342,19 +379,21 @@ function normalizeExecutorDecision(
   if (!value?.prompt?.trim()) return undefined;
 
   const options = Array.isArray(value.options)
-    ? value.options.flatMap((option: NonNullable<typeof value.options>[number]) => {
-        if (!option?.id?.trim() || !option?.label?.trim()) {
-          return [];
-        }
+    ? value.options.flatMap(
+        (option: NonNullable<typeof value.options>[number]) => {
+          if (!option?.id?.trim() || !option?.label?.trim()) {
+            return [];
+          }
 
-        return [
-          {
-            id: option.id.trim(),
-            label: option.label.trim(),
-            description: option.description?.trim() || undefined,
-          },
-        ];
-      })
+          return [
+            {
+              id: option.id.trim(),
+              label: option.label.trim(),
+              description: option.description?.trim() || undefined,
+            },
+          ];
+        }
+      )
     : [];
 
   if (options.length === 0) return undefined;
@@ -374,7 +413,8 @@ function isSmokeEnabled(): boolean {
 function sendSmokeDisabled(response: Response): Response {
   return response.status(404).json({
     ok: false,
-    error: "Mission smoke routes are disabled. Set MISSION_SMOKE_ENABLED=true to enable them.",
+    error:
+      "Mission smoke routes are disabled. Set MISSION_SMOKE_ENABLED=true to enable them.",
   });
 }
 
@@ -419,31 +459,47 @@ async function startServer() {
   const { heartbeatScheduler } = await import("./core/heartbeat.js");
   const { sessionStore } = await import("./memory/session-store.js");
   const { missionRuntime } = await import("./tasks/mission-runtime.js");
-  const { createTaskRouter, createDecisionTemplatesRouter } = await import("./routes/tasks.js");
+  const { createTaskRouter, createDecisionTemplatesRouter } =
+    await import("./routes/tasks.js");
   const { createPlanetRouter } = await import("./routes/planets.js");
   const { createFeishuRouter } = await import("./routes/feishu.js");
-  const { buildExecutionPlan } = await import("./core/execution-plan-builder.js");
+  const { buildExecutionPlan } =
+    await import("./core/execution-plan-builder.js");
   const { ExecutorClient } = await import("./core/executor-client.js");
   const { EXECUTOR_API_ROUTES } = await import("../shared/executor/api.js");
 
   // Wire up workflow → mission enrichment bridge (workflow-decoupling Task 4.2)
-  const { serverRuntime, setOnStageCompleted } = await import("./runtime/server-runtime.js");
-  const { initEnrichmentBridge, onWorkflowStageCompleted, resolveWorkflowMission } = await import("./core/mission-enrichment-bridge.js");
+  const { serverRuntime, setOnStageCompleted } =
+    await import("./runtime/server-runtime.js");
+  const {
+    initEnrichmentBridge,
+    onWorkflowStageCompleted,
+    resolveWorkflowMission,
+  } = await import("./core/mission-enrichment-bridge.js");
   initEnrichmentBridge(missionRuntime, serverRuntime.workflowRepo);
   setOnStageCompleted(onWorkflowStageCompleted);
 
   // ── ExecutionBridge: bridge WorkflowEngine deliverables → Docker executor (executor-integration Task 9.1) ──
-  const { createExecutionBridge, buildCallbackUrl } = await import("./core/execution-bridge.js");
+  const { createExecutionBridge, buildCallbackUrl, HeartbeatMonitor } =
+    await import("./core/execution-bridge.js");
   const { workflowEngine } = await import("./core/workflow-engine.js");
 
   // Wire up resolveMissionId so bridgeToExecutor can find the missionId for a workflowId
   serverRuntime.resolveMissionId = resolveWorkflowMission;
 
+  const heartbeatMonitor = new HeartbeatMonitor(missionRuntime);
+
   const executionBridge = createExecutionBridge(missionRuntime, {
-    executorBaseUrl: process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() || DEFAULT_EXECUTOR_BASE_URL,
-    executionMode: process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real",
+    executorBaseUrl:
+      process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() ||
+      DEFAULT_EXECUTOR_BASE_URL,
+    executionMode:
+      process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real",
     defaultImage: process.env.LOBSTER_DEFAULT_IMAGE?.trim() || "node:20-slim",
-    callbackUrl: buildCallbackUrl(process.env.SERVER_BASE_URL?.trim() || "http://localhost:3000"),
+    callbackUrl: buildCallbackUrl(
+      process.env.SERVER_BASE_URL?.trim() || "http://localhost:3000"
+    ),
+    heartbeatMonitor,
   });
   workflowEngine.executionBridge = executionBridge;
 
@@ -503,7 +559,8 @@ async function startServer() {
   const { KnowledgeGraphQuery } = await import("./knowledge/query-service.js");
   const { KnowledgeService } = await import("./knowledge/knowledge-service.js");
   const { createKnowledgeRouter } = await import("./routes/knowledge.js");
-  const { createKnowledgeAdminRouter } = await import("./routes/knowledge-admin.js");
+  const { createKnowledgeAdminRouter } =
+    await import("./routes/knowledge-admin.js");
 
   const graphStore = new GraphStore();
   const ontologyRegistry = new OntologyRegistry();
@@ -511,13 +568,12 @@ async function startServer() {
   const queryService = new KnowledgeGraphQuery(graphStore, ontologyRegistry);
   const knowledgeService = new KnowledgeService(queryService, graphStore);
 
-  const { getSocketIO, registerSandboxRelay } = await import("./core/socket.js");
+  const { getSocketIO, registerSandboxRelay } =
+    await import("./core/socket.js");
   const { SandboxRelay } = await import("./core/sandbox-relay.js");
   const { SANDBOX_SOCKET_EVENTS } = await import("../shared/mission/socket.js");
-  const { HeartbeatMonitor } = await import("./core/execution-bridge.js");
   const sandboxRelay = new SandboxRelay();
   registerSandboxRelay(sandboxRelay);
-  const heartbeatMonitor = new HeartbeatMonitor(missionRuntime);
 
   graphStore.onEntityChanged((entity, action) => {
     const io = getSocketIO();
@@ -561,15 +617,23 @@ async function startServer() {
   app.use("/api/decision-templates", createDecisionTemplatesRouter());
   app.use("/api/planets", createPlanetRouter(missionRuntime));
   app.use("/api/feishu", createFeishuRouter());
-  app.use("/api/knowledge", createKnowledgeRouter({ graphStore, reviewQueue, knowledgeService }));
-  app.use("/api/admin/knowledge", createKnowledgeAdminRouter({ graphStore, ontologyRegistry, reviewQueue }));
+  app.use(
+    "/api/knowledge",
+    createKnowledgeRouter({ graphStore, reviewQueue, knowledgeService })
+  );
+  app.use(
+    "/api/admin/knowledge",
+    createKnowledgeAdminRouter({ graphStore, ontologyRegistry, reviewQueue })
+  );
 
   // ── Agent Permission Model ──
   const { RoleStore } = await import("./permission/role-store.js");
   const { PolicyStore } = await import("./permission/policy-store.js");
   const { TokenService } = await import("./permission/token-service.js");
-  const { DynamicPermissionManager } = await import("./permission/dynamic-manager.js");
-  const { ConflictDetector } = await import("./permission/conflict-detector.js");
+  const { DynamicPermissionManager } =
+    await import("./permission/dynamic-manager.js");
+  const { ConflictDetector } =
+    await import("./permission/conflict-detector.js");
   const { AuditLogger } = await import("./permission/audit-logger.js");
   const { createPermissionRouter } = await import("./routes/permissions.js");
 
@@ -578,30 +642,44 @@ async function startServer() {
   const permPolicyStore = new PolicyStore(db, permRoleStore);
   const permTokenService = new TokenService(permPolicyStore, permRoleStore);
   const permAuditLogger = new AuditLogger(db);
-  const permDynamicManager = new DynamicPermissionManager(permPolicyStore, permTokenService, db, permAuditLogger);
-  const permConflictDetector = new ConflictDetector(permPolicyStore, permRoleStore);
+  const permDynamicManager = new DynamicPermissionManager(
+    permPolicyStore,
+    permTokenService,
+    db,
+    permAuditLogger
+  );
+  const permConflictDetector = new ConflictDetector(
+    permPolicyStore,
+    permRoleStore
+  );
 
-  app.use("/api/permissions", createPermissionRouter({
-    roleStore: permRoleStore,
-    policyStore: permPolicyStore,
-    tokenService: permTokenService,
-    dynamicManager: permDynamicManager,
-    conflictDetector: permConflictDetector,
-    auditLogger: permAuditLogger,
-  }));
+  app.use(
+    "/api/permissions",
+    createPermissionRouter({
+      roleStore: permRoleStore,
+      policyStore: permPolicyStore,
+      tokenService: permTokenService,
+      dynamicManager: permDynamicManager,
+      conflictDetector: permConflictDetector,
+      auditLogger: permAuditLogger,
+    })
+  );
 
   // Wire permission system into workflow engine and agent layer
-  const { workflowEngine: wfEngine } = await import("./core/workflow-engine.js");
+  const { workflowEngine: wfEngine } =
+    await import("./core/workflow-engine.js");
   const { setPermissionCheckEngine } = await import("./core/agent.js");
-  const { PermissionCheckEngine } = await import("./permission/check-engine.js");
-  const { FilesystemChecker } = await import("./permission/checkers/filesystem-checker.js");
+  const { PermissionCheckEngine } =
+    await import("./permission/check-engine.js");
+  const { FilesystemChecker } =
+    await import("./permission/checkers/filesystem-checker.js");
 
   wfEngine.tokenService = permTokenService;
 
   const permCheckEngine = new PermissionCheckEngine(
     permTokenService,
     permAuditLogger,
-    new Map([["filesystem", new FilesystemChecker()]]),
+    new Map([["filesystem", new FilesystemChecker()]])
   );
   setPermissionCheckEngine(permCheckEngine);
 
@@ -619,33 +697,60 @@ async function startServer() {
     capabilities: [] as string[],
     description: agent.role ?? agent.name,
   }));
-  const a2aServer = new A2AServerClass({ agentExecutor: { execute: async () => "", executeStream: async function* () {} }, exposedAgents: a2aAgents });
+  const a2aServer = new A2AServerClass({
+    agentExecutor: {
+      execute: async () => "",
+      executeStream: async function* () {},
+    },
+    exposedAgents: a2aAgents,
+  });
   const a2aClient = new A2AClientClass();
   a2aRoutes.initA2ARoutes(a2aServer, a2aClient);
   app.use("/api/a2a", a2aRoutes.default);
+
+  // ── Mission Recovery (Tasks 4.3 & 4.4) ──
+  // Resume heartbeats for active missions on server restart
+  const activeMissions = missionRuntime
+    .listTasks()
+    .filter(m => m.status === "running" || m.status === "waiting");
+  for (const mission of activeMissions) {
+    if (mission.executor?.jobId) {
+      heartbeatMonitor.startHeartbeat(mission.id);
+    }
+  }
 
   // ── Data Lineage Tracking ──
   const { JsonLineageStorage } = await import("./lineage/lineage-store.js");
   const { LineageQueryService } = await import("./lineage/lineage-query.js");
   const { LineageAuditService } = await import("./lineage/lineage-audit.js");
-  const { ChangeDetectionService } = await import("./lineage/change-detection.js");
+  const { ChangeDetectionService } =
+    await import("./lineage/change-detection.js");
   const { LineageExportService } = await import("./lineage/lineage-export.js");
   const { createLineageRouter } = await import("./routes/lineage.js");
 
   const lineageStore = new JsonLineageStorage("data/lineage");
   lineageStore.init();
   const lineageQueryService = new LineageQueryService(lineageStore);
-  const lineageAuditService = new LineageAuditService(lineageStore, lineageQueryService);
-  const lineageChangeDetection = new ChangeDetectionService(lineageStore, lineageQueryService);
+  const lineageAuditService = new LineageAuditService(
+    lineageStore,
+    lineageQueryService
+  );
+  const lineageChangeDetection = new ChangeDetectionService(
+    lineageStore,
+    lineageQueryService
+  );
   const lineageExportService = new LineageExportService(lineageStore);
 
-  app.use("/api/lineage", createLineageRouter({
-    queryService: lineageQueryService,
-    auditService: lineageAuditService,
-    exportService: lineageExportService,
-    changeDetectionService: lineageChangeDetection,
-    store: lineageStore,
-  }));
+  app.use(
+    "/api/lineage",
+    createLineageRouter({
+      queryService: lineageQueryService,
+      auditService: lineageAuditService,
+      exportService: lineageExportService,
+      changeDetectionService: lineageChangeDetection,
+      store: lineageStore,
+    })
+  );
 
   // ── Guest Agents (agent-marketplace) ──
   const guestAgentRoutes = (await import("./routes/guest-agents.js")).default;
@@ -655,11 +760,17 @@ async function startServer() {
     const typedRequest = request as RequestWithRawBody;
     if (!verifyExecutorCallbackSignature(typedRequest, response)) return;
 
-    const event = (request.body as ExecutorCallbackRequestBody | undefined)?.event;
-    if (!event?.missionId?.trim() || !event?.jobId?.trim() || !event?.eventId?.trim()) {
+    const event = (request.body as ExecutorCallbackRequestBody | undefined)
+      ?.event;
+    if (
+      !event?.missionId?.trim() ||
+      !event?.jobId?.trim() ||
+      !event?.eventId?.trim()
+    ) {
       return response.status(400).json({
         ok: false,
-        error: "Executor callback body must include event.missionId, event.jobId, and event.eventId",
+        error:
+          "Executor callback body must include event.missionId, event.jobId, and event.eventId",
       });
     }
 
@@ -681,7 +792,8 @@ async function startServer() {
       event.detail?.trim() ||
       event.message?.trim() ||
       `Executor event at ${executorStageLabel(stageKey)}`;
-    const executorName = event.executor?.trim() || current.executor?.name || "executor";
+    const executorName =
+      event.executor?.trim() || current.executor?.name || "executor";
     const artifacts = normalizeExecutorArtifacts(event.artifacts);
     const instance = normalizeExecutorInstance(event.payload);
     const securitySummary = normalizeSecuritySummary(event.payload);
@@ -691,7 +803,7 @@ async function startServer() {
     const effectiveExecutorStatus =
       event.type === "job.started"
         ? "running"
-        : (event.status?.trim() || current.executor?.status);
+        : event.status?.trim() || current.executor?.status;
 
     missionRuntime.patchMissionExecution(missionId, {
       executor: {
@@ -713,10 +825,22 @@ async function startServer() {
 
     if (event.type === "job.started") {
       // Req 4.1: job.started → executor.status = running (handled above via effectiveExecutorStatus)
-      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+      missionRuntime.markMissionRunning(
+        missionId,
+        stageKey,
+        detail,
+        progress,
+        "executor"
+      );
     } else if (event.type === "job.progress") {
       // Req 4.2: job.progress → update mission progress
-      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+      missionRuntime.markMissionRunning(
+        missionId,
+        stageKey,
+        detail,
+        progress,
+        "executor"
+      );
     } else if (event.type === "job.log") {
       missionRuntime.logMission(
         missionId,
@@ -735,7 +859,9 @@ async function startServer() {
         missionId,
         jobId: event.jobId.trim(),
         stepIndex: typeof event.stepIndex === "number" ? event.stepIndex : 0,
-        stream: (event.stream === "stderr" ? "stderr" : "stdout") as "stdout" | "stderr",
+        stream: (event.stream === "stderr" ? "stderr" : "stdout") as
+          | "stdout"
+          | "stderr",
         data: event.data ?? "",
         timestamp: event.occurredAt?.trim() || new Date().toISOString(),
       };
@@ -760,7 +886,13 @@ async function startServer() {
         io.emit(SANDBOX_SOCKET_EVENTS.missionScreen, screenPayload);
       }
     } else if (event.type === "job.waiting" || event.status === "waiting") {
-      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+      missionRuntime.markMissionRunning(
+        missionId,
+        stageKey,
+        detail,
+        progress,
+        "executor"
+      );
       missionRuntime.waitOnMission(
         missionId,
         event.waitingFor?.trim() || detail,
@@ -771,7 +903,13 @@ async function startServer() {
       );
     } else if (event.type === "job.completed" || event.status === "completed") {
       // Req 4.3: job.completed → mission.status = done
-      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+      missionRuntime.markMissionRunning(
+        missionId,
+        stageKey,
+        detail,
+        progress,
+        "executor"
+      );
       missionRuntime.finishMission(
         missionId,
         event.summary?.trim() || detail,
@@ -782,10 +920,18 @@ async function startServer() {
     } else if (
       event.type === "job.failed" ||
       event.type === "job.cancelled" ||
+      event.type === "job.timeout" ||
       event.status === "failed" ||
-      event.status === "cancelled"
+      event.status === "cancelled" ||
+      event.status === "timeout"
     ) {
-      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+      missionRuntime.markMissionRunning(
+        missionId,
+        stageKey,
+        detail,
+        progress,
+        "executor"
+      );
       if (event.type === "job.cancelled" || event.status === "cancelled") {
         missionRuntime.cancelMission(missionId, {
           reason: event.summary?.trim() || detail,
@@ -793,7 +939,7 @@ async function startServer() {
           source: "executor",
         });
       } else {
-        // Req 4.4: job.failed → mission.status = failed
+        // Req 4.4: job.failed or job.timeout → mission.status = failed
         missionRuntime.failMission(
           missionId,
           event.summary?.trim() || detail,
@@ -803,7 +949,13 @@ async function startServer() {
       // Terminal event: clear heartbeat
       heartbeatMonitor.clearHeartbeat(missionId);
     } else {
-      missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
+      missionRuntime.markMissionRunning(
+        missionId,
+        stageKey,
+        detail,
+        progress,
+        "executor"
+      );
     }
 
     return response.json({
@@ -888,7 +1040,8 @@ async function startServer() {
         throw new Error("Execution plan did not produce any executor jobs.");
       }
 
-      const executionMode = process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real";
+      const executionMode =
+        process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real";
       if (executionMode === "mock") {
         // Mock mode: use fake runner for quick smoke testing without Docker
         firstJob.payload = {
@@ -909,9 +1062,18 @@ async function startServer() {
         firstJob.payload = {
           ...(firstJob.payload || {}),
           image: process.env.LOBSTER_DEFAULT_IMAGE || "node:20-slim",
-          command: outcome === "failed"
-            ? ["sh", "-c", "echo 'Smoke test running in Docker...' && sleep 2 && echo 'Failing as requested' && exit 1"]
-            : ["sh", "-c", "echo 'Smoke test running in Docker...' && sleep 2 && echo 'Success!' && mkdir -p /workspace/artifacts && echo '{\"smoke\":true}' > /workspace/artifacts/result.json"],
+          command:
+            outcome === "failed"
+              ? [
+                  "sh",
+                  "-c",
+                  "echo 'Smoke test running in Docker...' && sleep 2 && echo 'Failing as requested' && exit 1",
+                ]
+              : [
+                  "sh",
+                  "-c",
+                  "echo 'Smoke test running in Docker...' && sleep 2 && echo 'Success!' && mkdir -p /workspace/artifacts && echo '{\"smoke\":true}' > /workspace/artifacts/result.json",
+                ],
           env: {
             SMOKE_TEST: "true",
             SMOKE_OUTCOME: outcome,
@@ -932,12 +1094,15 @@ async function startServer() {
         callbackUrl,
       });
 
-      const dispatchResult = await executorClient.dispatchPlan(buildResult.plan, {
-        jobId: firstJob.id,
-        requestId: `smoke_${mission.id}`,
-        traceId: randomUUID(),
-        idempotencyKey: `smoke:${mission.id}:${outcome}`,
-      });
+      const dispatchResult = await executorClient.dispatchPlan(
+        buildResult.plan,
+        {
+          jobId: firstJob.id,
+          requestId: `smoke_${mission.id}`,
+          traceId: randomUUID(),
+          idempotencyKey: `smoke:${mission.id}:${outcome}`,
+        }
+      );
 
       missionRuntime.updateMissionStage(
         mission.id,
@@ -1006,13 +1171,20 @@ async function startServer() {
 
     const stageKey = body.stageKey?.trim() || "execute";
     const detail =
-      body.detail?.trim() || "Mission is mid-flight and waiting for server restart smoke.";
+      body.detail?.trim() ||
+      "Mission is mid-flight and waiting for server restart smoke.";
     const progress =
       typeof body.progress === "number"
         ? Math.max(1, Math.min(99, Math.round(body.progress)))
         : 52;
 
-    missionRuntime.markMissionRunning(mission.id, stageKey, detail, progress, "brain");
+    missionRuntime.markMissionRunning(
+      mission.id,
+      stageKey,
+      detail,
+      progress,
+      "brain"
+    );
 
     return response.json({
       ok: true,

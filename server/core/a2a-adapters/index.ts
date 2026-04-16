@@ -24,7 +24,7 @@ const adapterMap: Record<string, FrameworkAdapter> = {
 export function getAdapter(frameworkType: A2AFrameworkType): FrameworkAdapter {
   if (!Object.hasOwn(adapterMap, frameworkType)) {
     throw new Error(
-      `Unsupported framework type: "${frameworkType}". Supported frameworks: ${SUPPORTED_FRAMEWORKS.join(", ")}`,
+      `Unsupported framework type: "${frameworkType}". Supported frameworks: ${SUPPORTED_FRAMEWORKS.join(", ")}`
     );
   }
   return adapterMap[frameworkType];

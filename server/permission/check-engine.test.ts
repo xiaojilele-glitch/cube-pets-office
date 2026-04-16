@@ -29,17 +29,25 @@ function createInMemoryDb() {
   let templates: PermissionTemplate[] = [];
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: AgentRole[]) => { roles = r; },
+    setPermissionRoles: (r: AgentRole[]) => {
+      roles = r;
+    },
     getPermissionPolicies: () => policies,
-    setPermissionPolicies: (p: AgentPermissionPolicy[]) => { policies = p; },
+    setPermissionPolicies: (p: AgentPermissionPolicy[]) => {
+      policies = p;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
   };
 }
 
 /* ─── Always-allow checker stub ─── */
 class AlwaysAllowChecker implements ResourceChecker {
-  checkConstraints(): boolean { return true; }
+  checkConstraints(): boolean {
+    return true;
+  }
 }
 
 /* ─── Setup helper ─── */
@@ -60,7 +68,7 @@ function seedAgent(
   roleStore: RoleStore,
   policyStore: PolicyStore,
   agentId: string,
-  permissions: Permission[],
+  permissions: Permission[]
 ) {
   roleStore.createRole({
     roleId: `role-${agentId}`,
@@ -107,7 +115,9 @@ describe("LRUCache", () => {
     cache.set("k1", { allowed: true });
     // Entry should expire almost immediately
     const start = Date.now();
-    while (Date.now() - start < 5) { /* busy wait */ }
+    while (Date.now() - start < 5) {
+      /* busy wait */
+    }
     expect(cache.get("k1")).toBeUndefined();
   });
 
@@ -130,20 +140,42 @@ describe("PermissionCheckEngine", () => {
     it("allows access with valid token and matching allow rule", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", [
-        { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
       ]);
       const cap = tokenService.issueToken("agent-1");
-      const result = engine.checkPermission("agent-1", "filesystem", "read", "/data/file.txt", cap.token);
+      const result = engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "read",
+        "/data/file.txt",
+        cap.token
+      );
       expect(result.allowed).toBe(true);
     });
 
     it("denies access when no allow rule matches", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", [
-        { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
       ]);
       const cap = tokenService.issueToken("agent-1");
-      const result = engine.checkPermission("agent-1", "filesystem", "write", "/data/file.txt", cap.token);
+      const result = engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "write",
+        "/data/file.txt",
+        cap.token
+      );
       expect(result.allowed).toBe(false);
     });
 
@@ -155,7 +187,12 @@ describe("PermissionCheckEngine", () => {
         roleName: "Mixed",
         description: "",
         permissions: [
-          { resourceType: "network", action: "connect", constraints: {}, effect: "allow" },
+          {
+            resourceType: "network",
+            action: "connect",
+            constraints: {},
+            effect: "allow",
+          },
         ],
       });
       policyStore.createPolicy({
@@ -163,7 +200,12 @@ describe("PermissionCheckEngine", () => {
         assignedRoles: ["mixed"],
         customPermissions: [],
         deniedPermissions: [
-          { resourceType: "network", action: "connect", constraints: {}, effect: "deny" },
+          {
+            resourceType: "network",
+            action: "connect",
+            constraints: {},
+            effect: "deny",
+          },
         ],
         effectiveAt: new Date().toISOString(),
         expiresAt: null,
@@ -174,13 +216,25 @@ describe("PermissionCheckEngine", () => {
       // Let's create a custom token scenario
       const cap = tokenService.issueToken("agent-deny");
       // Since resolveEffectivePermissions removes denied, the token won't have network:connect
-      const result = engine.checkPermission("agent-deny", "network", "connect", "example.com:443", cap.token);
+      const result = engine.checkPermission(
+        "agent-deny",
+        "network",
+        "connect",
+        "example.com:443",
+        cap.token
+      );
       expect(result.allowed).toBe(false);
     });
 
     it("denies with invalid token", () => {
       const { engine } = setup();
-      const result = engine.checkPermission("agent-1", "filesystem", "read", "/file", "invalid.token.here");
+      const result = engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "read",
+        "/file",
+        "invalid.token.here"
+      );
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain("Invalid token");
     });
@@ -189,7 +243,13 @@ describe("PermissionCheckEngine", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", []);
       const cap = tokenService.issueToken("agent-1", 1); // 1ms TTL → 0 seconds → expired
-      const result = engine.checkPermission("agent-1", "filesystem", "read", "/file", cap.token);
+      const result = engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "read",
+        "/file",
+        cap.token
+      );
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain("expired");
     });
@@ -197,10 +257,21 @@ describe("PermissionCheckEngine", () => {
     it("denies when token agentId does not match", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", [
-        { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
       ]);
       const cap = tokenService.issueToken("agent-1");
-      const result = engine.checkPermission("agent-2", "filesystem", "read", "/file", cap.token);
+      const result = engine.checkPermission(
+        "agent-2",
+        "filesystem",
+        "read",
+        "/file",
+        cap.token
+      );
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain("mismatch");
     });
@@ -208,23 +279,51 @@ describe("PermissionCheckEngine", () => {
     it("uses cache on repeated checks", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", [
-        { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
       ]);
       const cap = tokenService.issueToken("agent-1");
-      engine.checkPermission("agent-1", "filesystem", "read", "/file", cap.token);
+      engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "read",
+        "/file",
+        cap.token
+      );
       expect(engine.getCacheSize()).toBe(1);
       // Second call should use cache
-      const result = engine.checkPermission("agent-1", "filesystem", "read", "/file", cap.token);
+      const result = engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "read",
+        "/file",
+        cap.token
+      );
       expect(result.allowed).toBe(true);
     });
 
     it("invalidateCache removes agent entries", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", [
-        { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
       ]);
       const cap = tokenService.issueToken("agent-1");
-      engine.checkPermission("agent-1", "filesystem", "read", "/file", cap.token);
+      engine.checkPermission(
+        "agent-1",
+        "filesystem",
+        "read",
+        "/file",
+        cap.token
+      );
       expect(engine.getCacheSize()).toBe(1);
       engine.invalidateCache("agent-1");
       expect(engine.getCacheSize()).toBe(0);
@@ -235,13 +334,31 @@ describe("PermissionCheckEngine", () => {
     it("returns results for multiple checks", () => {
       const { roleStore, policyStore, tokenService, engine } = setup();
       seedAgent(roleStore, policyStore, "agent-1", [
-        { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
       ]);
       const cap = tokenService.issueToken("agent-1");
-      const results = engine.checkPermissions([
-        { agentId: "agent-1", resourceType: "filesystem", action: "read", resource: "/a" },
-        { agentId: "agent-1", resourceType: "filesystem", action: "write", resource: "/b" },
-      ], cap.token);
+      const results = engine.checkPermissions(
+        [
+          {
+            agentId: "agent-1",
+            resourceType: "filesystem",
+            action: "read",
+            resource: "/a",
+          },
+          {
+            agentId: "agent-1",
+            resourceType: "filesystem",
+            action: "write",
+            resource: "/b",
+          },
+        ],
+        cap.token
+      );
       expect(results).toHaveLength(2);
       expect(results[0].allowed).toBe(true);
       expect(results[1].allowed).toBe(false);
@@ -305,13 +422,24 @@ describe("PermissionCheckEngine", () => {
           const craftedToken = signJwt(payload, SECRET);
 
           const checkers = new Map<ResourceType, ResourceChecker>();
-          for (const rt of RESOURCE_TYPES) checkers.set(rt, new AlwaysAllowChecker());
-          const engine = new PermissionCheckEngine(tokenService, undefined, checkers);
+          for (const rt of RESOURCE_TYPES)
+            checkers.set(rt, new AlwaysAllowChecker());
+          const engine = new PermissionCheckEngine(
+            tokenService,
+            undefined,
+            checkers
+          );
 
-          const result = engine.checkPermission("test-agent", resourceType, action, "test-resource", craftedToken);
+          const result = engine.checkPermission(
+            "test-agent",
+            resourceType,
+            action,
+            "test-resource",
+            craftedToken
+          );
           return result.allowed === false;
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
   });

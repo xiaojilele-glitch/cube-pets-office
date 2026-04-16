@@ -76,38 +76,22 @@ const INTENT_RULES: Array<{
   {
     kind: "report",
     confidence: 0.85,
-    patterns: [
-      /\breport\b/i,
-      /\bsummary\b/i,
-      /\bstatus\b/i,
-    ],
+    patterns: [/\breport\b/i, /\bsummary\b/i, /\bstatus\b/i],
   },
   {
     kind: "plan",
     confidence: 0.82,
-    patterns: [
-      /\bplan\b/i,
-      /\bstrategy\b/i,
-      /\broadmap\b/i,
-    ],
+    patterns: [/\bplan\b/i, /\bstrategy\b/i, /\broadmap\b/i],
   },
   {
     kind: "analyze",
     confidence: 0.78,
-    patterns: [
-      /\banaly[sz]e\b/i,
-      /\breview\b/i,
-      /\binvestigate\b/i,
-    ],
+    patterns: [/\banaly[sz]e\b/i, /\breview\b/i, /\binvestigate\b/i],
   },
   {
     kind: "scan",
     confidence: 0.74,
-    patterns: [
-      /\bscan\b/i,
-      /\binspect\b/i,
-      /\bgraph\b/i,
-    ],
+    patterns: [/\bscan\b/i, /\binspect\b/i, /\bgraph\b/i],
   },
 ];
 
@@ -122,7 +106,8 @@ const JOB_DETAILS: Record<
 > = {
   scan: {
     label: "Scan workspace",
-    description: "Inspect repository structure and collect the source context needed by downstream steps.",
+    description:
+      "Inspect repository structure and collect the source context needed by downstream steps.",
     acceptanceCriteria: [
       "Relevant source directories are scanned.",
       "Inputs needed for later execution steps are identified.",
@@ -131,7 +116,8 @@ const JOB_DETAILS: Record<
   },
   analyze: {
     label: "Analyze request",
-    description: "Translate the mission into concrete technical findings, constraints, and risks.",
+    description:
+      "Translate the mission into concrete technical findings, constraints, and risks.",
     acceptanceCriteria: [
       "Core objective is restated clearly.",
       "Blocking assumptions and risks are identified.",
@@ -140,7 +126,8 @@ const JOB_DETAILS: Record<
   },
   plan: {
     label: "Build plan",
-    description: "Produce an execution-ready plan with ordered work and explicit dependencies.",
+    description:
+      "Produce an execution-ready plan with ordered work and explicit dependencies.",
     acceptanceCriteria: [
       "Execution plan is structured and dependency-aware.",
       "Each follow-up step has a concrete output target.",
@@ -149,7 +136,8 @@ const JOB_DETAILS: Record<
   },
   codegen: {
     label: "Generate artifacts",
-    description: "Create code, scripts, or generated files described by the execution plan.",
+    description:
+      "Create code, scripts, or generated files described by the execution plan.",
     acceptanceCriteria: [
       "Generated artifacts match the mission objective.",
       "Outputs are attributable to a specific execution step.",
@@ -158,7 +146,8 @@ const JOB_DETAILS: Record<
   },
   execute: {
     label: "Run execution",
-    description: "Execute the prepared job flow and collect runtime results from the executor.",
+    description:
+      "Execute the prepared job flow and collect runtime results from the executor.",
     acceptanceCriteria: [
       "Execution starts with the expected run mode.",
       "Result metrics or failure details are produced.",
@@ -167,7 +156,8 @@ const JOB_DETAILS: Record<
   },
   report: {
     label: "Publish report",
-    description: "Summarize execution results and publish the artifacts needed by the caller.",
+    description:
+      "Summarize execution results and publish the artifacts needed by the caller.",
     acceptanceCriteria: [
       "A final summary is available.",
       "Result artifacts or report references are attached when possible.",
@@ -176,7 +166,8 @@ const JOB_DETAILS: Record<
   },
   custom: {
     label: "Custom action",
-    description: "Run a mission-specific action that does not fit the standard execution pipeline.",
+    description:
+      "Run a mission-specific action that does not fit the standard execution pipeline.",
     acceptanceCriteria: [
       "The custom action is described explicitly in the plan payload.",
       "The output is traceable to the mission objective.",
@@ -189,7 +180,10 @@ function normalizeText(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-function summarizeObjective(title: string | undefined, sourceText: string): string {
+function summarizeObjective(
+  title: string | undefined,
+  sourceText: string
+): string {
   const fromTitle = normalizeText(title || "");
   if (fromTitle) return fromTitle;
 
@@ -206,7 +200,8 @@ function classifyExecutionIntent(sourceText: string): ExecutionUnderstanding {
       intent: "custom",
       confidence: 0.3,
       objective: "Mission request",
-      summary: "Mission request is empty, so the plan falls back to a custom execution flow.",
+      summary:
+        "Mission request is empty, so the plan falls back to a custom execution flow.",
       evidence: ["empty request"],
       suggestedMode: DEFAULT_MODE,
     };
@@ -233,7 +228,8 @@ function classifyExecutionIntent(sourceText: string): ExecutionUnderstanding {
     intent: "custom",
     confidence: 0.45,
     objective: normalized.slice(0, 220),
-    summary: "Request does not cleanly match a known execution intent, so a custom plan will be used.",
+    summary:
+      "Request does not cleanly match a known execution intent, so a custom plan will be used.",
     evidence: ["fallback:custom"],
     suggestedMode: DEFAULT_MODE,
   };
@@ -259,7 +255,7 @@ function buildPlanJobs(
   jobKinds: ExecutionJobKind[],
   sourceText: string,
   objective: string,
-  topicId: string | undefined,
+  topicId: string | undefined
 ): ExecutionPlanJob[] {
   return jobKinds.map((jobKind, index) => {
     const details = JOB_DETAILS[jobKind];
@@ -284,13 +280,18 @@ function buildPlanJobs(
   });
 }
 
-function buildPlanSummary(understanding: ExecutionUnderstanding, jobKinds: ExecutionJobKind[]): string {
+function buildPlanSummary(
+  understanding: ExecutionUnderstanding,
+  jobKinds: ExecutionJobKind[]
+): string {
   const jobPreview = jobKinds.join(" -> ");
   return `${understanding.summary} Planned flow: ${jobPreview}.`;
 }
 
 export class ExecutionPlanBuilder {
-  async build(input: ExecutionPlanBuildInput): Promise<ExecutionPlanBuildResult> {
+  async build(
+    input: ExecutionPlanBuildInput
+  ): Promise<ExecutionPlanBuildResult> {
     const understanding = classifyExecutionIntent(input.sourceText);
     const objective = summarizeObjective(input.title, input.sourceText);
     const pipeline = INTENT_PIPELINES[understanding.intent];
@@ -300,7 +301,7 @@ export class ExecutionPlanBuilder {
       pipeline,
       input.sourceText,
       objective,
-      input.topicId,
+      input.topicId
     );
 
     const plan: ExecutionPlan = {
@@ -331,6 +332,8 @@ export class ExecutionPlanBuilder {
   }
 }
 
-export function buildExecutionPlan(input: ExecutionPlanBuildInput): Promise<ExecutionPlanBuildResult> {
+export function buildExecutionPlan(
+  input: ExecutionPlanBuildInput
+): Promise<ExecutionPlanBuildResult> {
   return new ExecutionPlanBuilder().build(input);
 }

@@ -7,10 +7,13 @@
  * @see Requirements 6.1, 6.2, 6.3
  */
 
-import db from '../../db/index.js';
-import { ReputationCalculator } from './reputation-calculator.js';
-import { TrustTierEvaluator } from './trust-tier-evaluator.js';
-import type { ReputationConfig, ReputationProfile } from '../../../shared/reputation.js';
+import db from "../../db/index.js";
+import { ReputationCalculator } from "./reputation-calculator.js";
+import { TrustTierEvaluator } from "./trust-tier-evaluator.js";
+import type {
+  ReputationConfig,
+  ReputationProfile,
+} from "../../../shared/reputation.js";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -20,7 +23,7 @@ export class DecayScheduler {
   constructor(
     private config: ReputationConfig,
     private evaluator: TrustTierEvaluator,
-    private calculator: ReputationCalculator,
+    private calculator: ReputationCalculator
   ) {}
 
   /** Start daily decay check (every 24 hours) */
@@ -54,7 +57,7 @@ export class DecayScheduler {
       // Subtract decayRate, clamp to decayFloor
       profile.overallScore = Math.max(
         this.config.decay.decayFloor,
-        oldOverallScore - this.config.decay.decayRate,
+        oldOverallScore - this.config.decay.decayRate
       );
 
       // Dimensions stay unchanged (Requirement 6.2)
@@ -85,14 +88,18 @@ export class DecayScheduler {
         },
         oldOverallScore,
         newOverallScore: profile.overallScore,
-        reason: 'inactivity_decay',
+        reason: "inactivity_decay",
         timestamp: new Date().toISOString(),
       });
     }
   }
 
   /** Check whether a profile is inactive (lastActiveAt is null or older than threshold) */
-  private isInactive(profile: ReputationProfile, nowMs: number, inactivityMs: number): boolean {
+  private isInactive(
+    profile: ReputationProfile,
+    nowMs: number,
+    inactivityMs: number
+  ): boolean {
     if (profile.lastActiveAt === null) return true;
     const lastActive = Date.parse(profile.lastActiveAt);
     if (!Number.isFinite(lastActive)) return true;

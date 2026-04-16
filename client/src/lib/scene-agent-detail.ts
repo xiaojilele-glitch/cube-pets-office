@@ -1,6 +1,10 @@
 import type { ReputationProfile } from "@shared/reputation";
 
-import { getAgentConfig, getAgentIdleText, getAgentTitle } from "@/lib/agent-config";
+import {
+  getAgentConfig,
+  getAgentIdleText,
+  getAgentTitle,
+} from "@/lib/agent-config";
 import type { AppLocale } from "@/lib/locale";
 import type { AgentRoleInfo } from "@/lib/role-store";
 import type {
@@ -213,9 +217,7 @@ function getWorkflowOrganization(
 ): WorkflowOrganizationSnapshot | null {
   const organization = workflow?.results?.organization;
   if (!organization || typeof organization !== "object") return null;
-  return Array.isArray(
-    (organization as WorkflowOrganizationSnapshot).nodes
-  )
+  return Array.isArray((organization as WorkflowOrganizationSnapshot).nodes)
     ? (organization as WorkflowOrganizationSnapshot)
     : null;
 }
@@ -248,10 +250,7 @@ export function selectWorkflowForAgent(params: {
   );
   if (relatedWorkflow) return relatedWorkflow;
 
-  if (
-    currentWorkflow &&
-    ACTIVE_WORKFLOW_STATUSES.has(currentWorkflow.status)
-  ) {
+  if (currentWorkflow && ACTIVE_WORKFLOW_STATUSES.has(currentWorkflow.status)) {
     return currentWorkflow;
   }
 
@@ -360,7 +359,9 @@ function buildWorkFocus(params: {
   const directTask =
     workflowTasks.find(
       task => task.worker_id === agent.id && isOpenWorkPackage(task.status)
-    ) || workflowTasks.find(task => task.worker_id === agent.id) || null;
+    ) ||
+    workflowTasks.find(task => task.worker_id === agent.id) ||
+    null;
 
   if (directTask) {
     return {
@@ -418,7 +419,10 @@ function buildWorkFocus(params: {
     } satisfies AgentWorkFocus;
   }
 
-  if (candidateWorkflow && ACTIVE_WORKFLOW_STATUSES.has(candidateWorkflow.status)) {
+  if (
+    candidateWorkflow &&
+    ACTIVE_WORKFLOW_STATUSES.has(candidateWorkflow.status)
+  ) {
     return {
       title:
         trimText(candidateWorkflow.directive, 72) ||
@@ -669,28 +673,27 @@ export function buildAgentDetailSnapshot(params: {
           },
     latestReport,
     reportCount: reports.length || heartbeat?.reportCount || 0,
-    reportEmpty:
-      latestReport
-        ? null
-        : {
-            title: t(locale, "还没有报告摘要", "No report summary yet"),
-            description:
-              runtimeMode === "advanced"
-                ? t(
-                    locale,
-                    "这个 Agent 还没有生成可展示的 heartbeat 报告。",
-                    "This agent has not generated a heartbeat report yet."
-                  )
-                : t(
-                    locale,
-                    "演示模式下如果本地流程没有触发 heartbeat，这里会显示为空态说明。",
-                    "If heartbeat has not been triggered in preview mode, this section stays in an explanatory empty state."
-                  ),
-            hint:
-              heartbeat?.focus || heartbeat?.lastError
-                ? trimText(heartbeat.focus || heartbeat.lastError, 120)
-                : null,
-          },
+    reportEmpty: latestReport
+      ? null
+      : {
+          title: t(locale, "还没有报告摘要", "No report summary yet"),
+          description:
+            runtimeMode === "advanced"
+              ? t(
+                  locale,
+                  "这个 Agent 还没有生成可展示的 heartbeat 报告。",
+                  "This agent has not generated a heartbeat report yet."
+                )
+              : t(
+                  locale,
+                  "演示模式下如果本地流程没有触发 heartbeat，这里会显示为空态说明。",
+                  "If heartbeat has not been triggered in preview mode, this section stays in an explanatory empty state."
+                ),
+          hint:
+            heartbeat?.focus || heartbeat?.lastError
+              ? trimText(heartbeat.focus || heartbeat.lastError, 120)
+              : null,
+        },
   } satisfies AgentDetailSnapshot;
 }
 
@@ -745,7 +748,9 @@ export function buildOfficeNoticeBoardSnapshot(params: {
   });
 
   const waitingMission =
-    sortMissionSummaries(missionTasks).find(task => task.status === "waiting") ||
+    sortMissionSummaries(missionTasks).find(
+      task => task.status === "waiting"
+    ) ||
     sortMissionSummaries(missionTasks).find(
       task => task.blocker || task.waitingFor
     ) ||

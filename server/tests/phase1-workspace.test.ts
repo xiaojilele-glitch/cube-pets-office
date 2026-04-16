@@ -1,15 +1,15 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
+import fs from "fs";
+import os from "os";
+import path from "path";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-describe('phase1 workspace hardening', () => {
+describe("phase1 workspace hardening", () => {
   const originalCwd = process.cwd();
-  let tempDir = '';
+  let tempDir = "";
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cube-pets-workspace-'));
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "cube-pets-workspace-"));
     process.chdir(tempDir);
     vi.resetModules();
   });
@@ -19,16 +19,15 @@ describe('phase1 workspace hardening', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it('materializes every requested agent workspace with the expected subdirectories', async () => {
-    const { ensureAgentWorkspaces, getAgentWorkspacePaths, getAgentsRootDir } = await import(
-      '../memory/workspace.js'
-    );
+  it("materializes every requested agent workspace with the expected subdirectories", async () => {
+    const { ensureAgentWorkspaces, getAgentWorkspacePaths, getAgentsRootDir } =
+      await import("../memory/workspace.js");
 
-    const agentIds = ['ceo', 'pixel', 'scout'];
+    const agentIds = ["ceo", "pixel", "scout"];
     const workspaces = ensureAgentWorkspaces(agentIds);
 
     expect(workspaces).toHaveLength(agentIds.length);
-    expect(getAgentsRootDir()).toBe(path.join(tempDir, 'data', 'agents'));
+    expect(getAgentsRootDir()).toBe(path.join(tempDir, "data", "agents"));
 
     for (const agentId of agentIds) {
       const workspace = getAgentWorkspacePaths(agentId);
@@ -39,9 +38,9 @@ describe('phase1 workspace hardening', () => {
     }
   });
 
-  it('rejects invalid agent identifiers before creating directories', async () => {
-    const { ensureAgentWorkspace } = await import('../memory/workspace.js');
+  it("rejects invalid agent identifiers before creating directories", async () => {
+    const { ensureAgentWorkspace } = await import("../memory/workspace.js");
 
-    expect(() => ensureAgentWorkspace('../scout')).toThrow(/Invalid agent ID/);
+    expect(() => ensureAgentWorkspace("../scout")).toThrow(/Invalid agent ID/);
   });
 });

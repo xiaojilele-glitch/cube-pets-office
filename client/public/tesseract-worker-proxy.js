@@ -37,4 +37,6 @@ console.error = (...args) => {
   originalConsoleError(...args);
 };
 
-importScripts("https://cdn.jsdelivr.net/npm/tesseract.js@v7.0.0/dist/worker.min.js");
+importScripts(
+  "https://cdn.jsdelivr.net/npm/tesseract.js@v7.0.0/dist/worker.min.js"
+);

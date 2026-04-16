@@ -1,7 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as fc from 'fast-check';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as fc from "fast-check";
 
-import type { ExecutionEvent, ReplayEventType } from '../../shared/replay/contracts';
+import type {
+  ExecutionEvent,
+  ReplayEventType,
+} from "../../shared/replay/contracts";
 import {
   REPLAY_EVENT_TYPES,
   MESSAGE_TYPES,
@@ -9,20 +12,20 @@ import {
   EXECUTION_STATUSES,
   RESOURCE_TYPES,
   ACCESS_TYPES,
-} from '../../shared/replay/contracts';
-import type { ReplayStoreInterface } from '../../shared/replay/store-interface';
-import { EventCollector } from '../../server/replay/event-collector';
+} from "../../shared/replay/contracts";
+import type { ReplayStoreInterface } from "../../shared/replay/store-interface";
+import { EventCollector } from "../../server/replay/event-collector";
 import {
   installMissionInterceptor,
   installMessageBusInterceptor,
   installExecutorInterceptor,
-} from '../../server/replay/interceptors';
+} from "../../server/replay/interceptors";
 import {
   encryptMessage,
   decryptMessage,
   generateEncryptionKey,
   maskSensitiveData,
-} from '../../server/replay/sensitive-data';
+} from "../../server/replay/sensitive-data";
 
 /* ─── Shared Helpers ─── */
 
@@ -37,12 +40,12 @@ function createMockStore(options?: {
     calls,
     appendEvents: vi.fn(async (missionId: string, events: ExecutionEvent[]) => {
       if (options?.neverResolve) return new Promise<void>(() => {});
-      if (options?.shouldFail) throw new Error('store write failed');
+      if (options?.shouldFail) throw new Error("store write failed");
       calls.push({ missionId, events });
     }),
     queryEvents: vi.fn(async () => []),
     getTimeline: vi.fn(async () => ({
-      missionId: '',
+      missionId: "",
       events: [],
       startTime: 0,
       endTime: 0,
@@ -55,9 +58,9 @@ function createMockStore(options?: {
         byResource: new Map(),
       },
       version: 0,
-      checksum: '',
+      checksum: "",
     })),
-    exportEvents: vi.fn(async () => ''),
+    exportEvents: vi.fn(async () => ""),
     verifyIntegrity: vi.fn(async () => true),
     compact: vi.fn(async () => {}),
     cleanup: vi.fn(async () => 0),
@@ -65,12 +68,12 @@ function createMockStore(options?: {
 }
 
 function makePartialEvent(
-  overrides: Partial<Omit<ExecutionEvent, 'eventId' | 'timestamp'>> = {},
-): Omit<ExecutionEvent, 'eventId' | 'timestamp'> {
+  overrides: Partial<Omit<ExecutionEvent, "eventId" | "timestamp">> = {}
+): Omit<ExecutionEvent, "eventId" | "timestamp"> {
   return {
-    missionId: overrides.missionId ?? 'mission-1',
-    eventType: overrides.eventType ?? ('AGENT_STARTED' as const),
-    sourceAgent: overrides.sourceAgent ?? 'agent-1',
+    missionId: overrides.missionId ?? "mission-1",
+    eventType: overrides.eventType ?? ("AGENT_STARTED" as const),
+    sourceAgent: overrides.sourceAgent ?? "agent-1",
     eventData: overrides.eventData ?? {},
     ...(overrides.targetAgent ? { targetAgent: overrides.targetAgent } : {}),
     ...(overrides.metadata ? { metadata: overrides.metadata } : {}),
@@ -79,12 +82,18 @@ function makePartialEvent(
 
 /* ─── Arbitraries for fast-check ─── */
 
-const eventTypeArb: fc.Arbitrary<ReplayEventType> = fc.constantFrom(...REPLAY_EVENT_TYPES);
+const eventTypeArb: fc.Arbitrary<ReplayEventType> = fc.constantFrom(
+  ...REPLAY_EVENT_TYPES
+);
 
-const partialEventArb: fc.Arbitrary<Omit<ExecutionEvent, 'eventId' | 'timestamp'>> = fc.record({
-  missionId: fc.string({ minLength: 1, maxLength: 20 }).map((s) => `m-${s}`),
+const partialEventArb: fc.Arbitrary<
+  Omit<ExecutionEvent, "eventId" | "timestamp">
+> = fc.record({
+  missionId: fc.string({ minLength: 1, maxLength: 20 }).map(s => `m-${s}`),
   eventType: eventTypeArb,
-  sourceAgent: fc.string({ minLength: 1, maxLength: 20 }).map((s) => `agent-${s}`),
+  sourceAgent: fc
+    .string({ minLength: 1, maxLength: 20 })
+    .map(s => `agent-${s}`),
   eventData: fc.constant({} as Record<string, unknown>),
 });
 
@@ -94,13 +103,13 @@ const partialEventArb: fc.Arbitrary<Omit<ExecutionEvent, 'eventId' | 'timestamp'
  * Validates: Requirements 1.4
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 2: Event collection non-blocking', () => {
-  it('emit() returns synchronously even when store never resolves', () => {
+describe("Property 2: Event collection non-blocking", () => {
+  it("emit() returns synchronously even when store never resolves", () => {
     // **Validates: Requirements 1.4**
     fc.assert(
       fc.property(
         fc.array(partialEventArb, { minLength: 1, maxLength: 50 }),
-        (events) => {
+        events => {
           // Store whose appendEvents returns a never-resolving promise
           const neverStore = createMockStore({ neverResolve: true });
           const collector = new EventCollector(neverStore, {
@@ -124,16 +133,16 @@ describe('Property 2: Event collection non-blocking', () => {
           } finally {
             collector.destroy();
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('emit() does not await persistence — store.appendEvents is not called synchronously', () => {
+  it("emit() does not await persistence — store.appendEvents is not called synchronously", () => {
     // **Validates: Requirements 1.4**
     fc.assert(
-      fc.property(partialEventArb, (evt) => {
+      fc.property(partialEventArb, evt => {
         const store = createMockStore({ neverResolve: true });
         const collector = new EventCollector(store, {
           bufferSize: 1000,
@@ -149,7 +158,7 @@ describe('Property 2: Event collection non-blocking', () => {
           collector.destroy();
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -160,22 +169,22 @@ describe('Property 2: Event collection non-blocking', () => {
  * Validates: Requirements 1.6
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 3: Collection failure buffering and retry', () => {
-  it('failed flush moves events to failedQueue; successful retry removes them', async () => {
+describe("Property 3: Collection failure buffering and retry", () => {
+  it("failed flush moves events to failedQueue; successful retry removes them", async () => {
     // **Validates: Requirements 1.6**
     await fc.assert(
       fc.asyncProperty(
         fc.array(partialEventArb, { minLength: 1, maxLength: 20 }),
-        async (events) => {
+        async events => {
           let callCount = 0;
           const store = createMockStore();
           // Override appendEvents: fail on first call, succeed on subsequent
           (store.appendEvents as ReturnType<typeof vi.fn>).mockImplementation(
             async (_missionId: string, _events: ExecutionEvent[]) => {
               callCount++;
-              if (callCount === 1) throw new Error('transient failure');
+              if (callCount === 1) throw new Error("transient failure");
               // success on retry
-            },
+            }
           );
 
           const collector = new EventCollector(store, {
@@ -216,9 +225,9 @@ describe('Property 3: Collection failure buffering and retry', () => {
           } finally {
             collector.destroy();
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -229,7 +238,7 @@ describe('Property 3: Collection failure buffering and retry', () => {
  * Validates: Requirements 1.3, 2.1
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Interceptor unit tests', () => {
+describe("Interceptor unit tests", () => {
   function createCollectorAndStore() {
     const store = createMockStore();
     const collector = new EventCollector(store, {
@@ -241,81 +250,87 @@ describe('Interceptor unit tests', () => {
 
   async function flushAndGetEvents(
     store: ReturnType<typeof createMockStore>,
-    collector: EventCollector,
+    collector: EventCollector
   ) {
     await collector.flush();
-    return store.calls.flatMap((c) => c.events);
+    return store.calls.flatMap(c => c.events);
   }
 
   /* ── installMissionInterceptor ── */
 
-  describe('installMissionInterceptor', () => {
-    it('emits AGENT_STARTED when mission is created', async () => {
+  describe("installMissionInterceptor", () => {
+    it("emits AGENT_STARTED when mission is created", async () => {
       const { store, collector } = createCollectorAndStore();
       try {
         const orchestrator: any = { hooks: {} };
         installMissionInterceptor(orchestrator, collector);
 
         await orchestrator.hooks.onMissionUpdated({
-          id: 'mission-1',
-          status: 'queued',
-          currentStageKey: 'receive',
-          title: 'Test',
-          kind: 'brain-dispatch',
-          events: [{ kind: 'created', source: 'brain' }],
+          id: "mission-1",
+          status: "queued",
+          currentStageKey: "receive",
+          title: "Test",
+          kind: "brain-dispatch",
+          events: [{ kind: "created", source: "brain" }],
         });
 
         const events = await flushAndGetEvents(store, collector);
         expect(events.length).toBeGreaterThanOrEqual(1);
-        expect(events.some((e) => e.eventType === 'AGENT_STARTED')).toBe(true);
+        expect(events.some(e => e.eventType === "AGENT_STARTED")).toBe(true);
       } finally {
         collector.destroy();
       }
     });
 
-    it('emits MILESTONE_REACHED when mission completes', async () => {
+    it("emits MILESTONE_REACHED when mission completes", async () => {
       const { store, collector } = createCollectorAndStore();
       try {
         const orchestrator: any = { hooks: {} };
         installMissionInterceptor(orchestrator, collector);
 
         await orchestrator.hooks.onMissionUpdated({
-          id: 'mission-2',
-          status: 'done',
-          currentStageKey: 'finalize',
-          summary: 'Done',
+          id: "mission-2",
+          status: "done",
+          currentStageKey: "finalize",
+          summary: "Done",
           progress: 100,
-          events: [{ kind: 'progress', source: 'executor' }],
+          events: [{ kind: "progress", source: "executor" }],
         });
 
         const events = await flushAndGetEvents(store, collector);
-        expect(events.some((e) => e.eventType === 'MILESTONE_REACHED')).toBe(true);
-        expect(events.some((e) => e.eventType === 'AGENT_STOPPED')).toBe(true);
+        expect(events.some(e => e.eventType === "MILESTONE_REACHED")).toBe(
+          true
+        );
+        expect(events.some(e => e.eventType === "AGENT_STOPPED")).toBe(true);
       } finally {
         collector.destroy();
       }
     });
 
-    it('emits MILESTONE_REACHED for stage transitions', async () => {
+    it("emits MILESTONE_REACHED for stage transitions", async () => {
       const { store, collector } = createCollectorAndStore();
       try {
         const orchestrator: any = { hooks: {} };
         installMissionInterceptor(orchestrator, collector);
 
         await orchestrator.hooks.onMissionUpdated({
-          id: 'mission-3',
-          status: 'running',
-          currentStageKey: 'plan',
+          id: "mission-3",
+          status: "running",
+          currentStageKey: "plan",
           progress: 30,
-          events: [{ kind: 'progress', source: 'brain', detail: 'Planning' }],
+          events: [{ kind: "progress", source: "brain", detail: "Planning" }],
         });
 
         const events = await flushAndGetEvents(store, collector);
-        expect(events.some((e) => e.eventType === 'MILESTONE_REACHED')).toBe(true);
-        const milestone = events.find((e) => e.eventType === 'MILESTONE_REACHED')!;
+        expect(events.some(e => e.eventType === "MILESTONE_REACHED")).toBe(
+          true
+        );
+        const milestone = events.find(
+          e => e.eventType === "MILESTONE_REACHED"
+        )!;
         expect(milestone.eventData).toMatchObject({
-          action: 'stage_transition',
-          stageKey: 'plan',
+          action: "stage_transition",
+          stageKey: "plan",
         });
       } finally {
         collector.destroy();
@@ -325,8 +340,8 @@ describe('Interceptor unit tests', () => {
 
   /* ── installMessageBusInterceptor ── */
 
-  describe('installMessageBusInterceptor', () => {
-    it('emits MESSAGE_SENT events when send() is called', async () => {
+  describe("installMessageBusInterceptor", () => {
+    it("emits MESSAGE_SENT events when send() is called", async () => {
       const { store, collector } = createCollectorAndStore();
       try {
         const messageBus: any = {
@@ -334,24 +349,24 @@ describe('Interceptor unit tests', () => {
         };
         installMessageBusInterceptor(messageBus, collector);
 
-        await messageBus.send('agent-a', 'agent-b', 'hello', 'wf-1', 'plan');
+        await messageBus.send("agent-a", "agent-b", "hello", "wf-1", "plan");
 
         const events = await flushAndGetEvents(store, collector);
-        const sent = events.find((e) => e.eventType === 'MESSAGE_SENT');
+        const sent = events.find(e => e.eventType === "MESSAGE_SENT");
         expect(sent).toBeDefined();
-        expect(sent!.sourceAgent).toBe('agent-a');
-        expect(sent!.targetAgent).toBe('agent-b');
+        expect(sent!.sourceAgent).toBe("agent-a");
+        expect(sent!.targetAgent).toBe("agent-b");
         expect(sent!.eventData).toMatchObject({
-          senderId: 'agent-a',
-          receiverId: 'agent-b',
-          messageContent: 'hello',
+          senderId: "agent-a",
+          receiverId: "agent-b",
+          messageContent: "hello",
         });
       } finally {
         collector.destroy();
       }
     });
 
-    it('emits MESSAGE_RECEIVED events when send() is called', async () => {
+    it("emits MESSAGE_RECEIVED events when send() is called", async () => {
       const { store, collector } = createCollectorAndStore();
       try {
         const messageBus: any = {
@@ -359,13 +374,13 @@ describe('Interceptor unit tests', () => {
         };
         installMessageBusInterceptor(messageBus, collector);
 
-        await messageBus.send('agent-x', 'agent-y', 'data', 'wf-2', 'execute');
+        await messageBus.send("agent-x", "agent-y", "data", "wf-2", "execute");
 
         const events = await flushAndGetEvents(store, collector);
-        const received = events.find((e) => e.eventType === 'MESSAGE_RECEIVED');
+        const received = events.find(e => e.eventType === "MESSAGE_RECEIVED");
         expect(received).toBeDefined();
-        expect(received!.sourceAgent).toBe('agent-y');
-        expect(received!.targetAgent).toBe('agent-x');
+        expect(received!.sourceAgent).toBe("agent-y");
+        expect(received!.targetAgent).toBe("agent-x");
       } finally {
         collector.destroy();
       }
@@ -374,22 +389,22 @@ describe('Interceptor unit tests', () => {
 
   /* ── installExecutorInterceptor ── */
 
-  describe('installExecutorInterceptor', () => {
-    it('emits CODE_EXECUTED for executor callback events', async () => {
+  describe("installExecutorInterceptor", () => {
+    it("emits CODE_EXECUTED for executor callback events", async () => {
       const { store, collector } = createCollectorAndStore();
       try {
         const middleware = installExecutorInterceptor(collector);
         const req = {
           body: {
             event: {
-              missionId: 'mission-exec',
-              eventId: 'evt-1',
-              jobId: 'job-1',
-              executor: 'lobster',
-              type: 'job.progress',
-              status: 'running',
-              stageKey: 'execute',
-              detail: 'Running code',
+              missionId: "mission-exec",
+              eventId: "evt-1",
+              jobId: "job-1",
+              executor: "lobster",
+              type: "job.progress",
+              status: "running",
+              stageKey: "execute",
+              detail: "Running code",
             },
           },
         } as any;
@@ -400,16 +415,16 @@ describe('Interceptor unit tests', () => {
         expect(next).toHaveBeenCalled();
 
         const events = await flushAndGetEvents(store, collector);
-        const codeEvent = events.find((e) => e.eventType === 'CODE_EXECUTED');
+        const codeEvent = events.find(e => e.eventType === "CODE_EXECUTED");
         expect(codeEvent).toBeDefined();
-        expect(codeEvent!.missionId).toBe('mission-exec');
-        expect(codeEvent!.sourceAgent).toBe('lobster');
+        expect(codeEvent!.missionId).toBe("mission-exec");
+        expect(codeEvent!.sourceAgent).toBe("lobster");
       } finally {
         collector.destroy();
       }
     });
 
-    it('calls next() even when body is missing', () => {
+    it("calls next() even when body is missing", () => {
       const { collector } = createCollectorAndStore();
       try {
         const middleware = installExecutorInterceptor(collector);
@@ -429,35 +444,36 @@ describe('Interceptor unit tests', () => {
  * Validates: Requirements 2.4, 5.5
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 5: Sensitive data protection', () => {
-  it('encryptMessage produces ciphertext different from plaintext, decryptMessage recovers original', () => {
+describe("Property 5: Sensitive data protection", () => {
+  it("encryptMessage produces ciphertext different from plaintext, decryptMessage recovers original", () => {
     // **Validates: Requirements 2.4, 5.5**
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 500 }),
-        (plaintext) => {
-          const key = generateEncryptionKey();
-          const encrypted = encryptMessage(plaintext, key);
+      fc.property(fc.string({ minLength: 1, maxLength: 500 }), plaintext => {
+        const key = generateEncryptionKey();
+        const encrypted = encryptMessage(plaintext, key);
 
-          // Ciphertext must differ from original plaintext
-          expect(encrypted.ciphertext).not.toBe(plaintext);
+        // Ciphertext must differ from original plaintext
+        expect(encrypted.ciphertext).not.toBe(plaintext);
 
-          // Decryption must recover the original
-          const decrypted = decryptMessage(encrypted, key);
-          expect(decrypted).toBe(plaintext);
-        },
-      ),
-      { numRuns: 100 },
+        // Decryption must recover the original
+        const decrypted = decryptMessage(encrypted, key);
+        expect(decrypted).toBe(plaintext);
+      }),
+      { numRuns: 100 }
     );
   });
 
-  it('maskSensitiveData changes text containing emails', () => {
+  it("maskSensitiveData changes text containing emails", () => {
     // **Validates: Requirements 2.4, 5.5**
     fc.assert(
       fc.property(
         fc.tuple(
-          fc.string({ minLength: 1, maxLength: 10 }).filter((s) => /^[a-z]+$/.test(s)),
-          fc.string({ minLength: 1, maxLength: 10 }).filter((s) => /^[a-z]+$/.test(s)),
+          fc
+            .string({ minLength: 1, maxLength: 10 })
+            .filter(s => /^[a-z]+$/.test(s)),
+          fc
+            .string({ minLength: 1, maxLength: 10 })
+            .filter(s => /^[a-z]+$/.test(s))
         ),
         ([local, domain]) => {
           const email = `${local}@${domain}.com`;
@@ -467,20 +483,20 @@ describe('Property 5: Sensitive data protection', () => {
           expect(masked).not.toBe(text);
           // The domain part should still be present
           expect(masked).toContain(`@${domain}.com`);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('maskSensitiveData changes text containing phone numbers', () => {
+  it("maskSensitiveData changes text containing phone numbers", () => {
     // **Validates: Requirements 2.4, 5.5**
     fc.assert(
       fc.property(
         // Generate valid 11-digit Chinese phone numbers: 1[3-9]X XXXX XXXX
         fc.tuple(
           fc.integer({ min: 3, max: 9 }),
-          fc.integer({ min: 100000000, max: 999999999 }),
+          fc.integer({ min: 100000000, max: 999999999 })
         ),
         ([secondDigit, rest]) => {
           const phone = `1${secondDigit}${rest}`;
@@ -490,32 +506,36 @@ describe('Property 5: Sensitive data protection', () => {
           // Phone number should be masked
           expect(masked).not.toContain(phone);
           expect(masked).not.toBe(text);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('maskSensitiveData changes text containing passwords', () => {
+  it("maskSensitiveData changes text containing passwords", () => {
     // **Validates: Requirements 2.4, 5.5**
     fc.assert(
       fc.property(
         // Generate alphanumeric passwords to avoid regex special chars
-        fc.array(
-          fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split('')),
-          { minLength: 3, maxLength: 20 },
-        ).map((chars) => chars.join('')),
-        (pwd) => {
+        fc
+          .array(
+            fc.constantFrom(
+              ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+            ),
+            { minLength: 3, maxLength: 20 }
+          )
+          .map(chars => chars.join("")),
+        pwd => {
           const text = `password=${pwd}`;
           const masked = maskSensitiveData(text);
           // Password value should be replaced with ***
-          expect(masked).toBe('password=***');
-          if (pwd !== '***') {
+          expect(masked).toBe("password=***");
+          if (pwd !== "***") {
             expect(masked).not.toBe(text);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

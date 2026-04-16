@@ -12,12 +12,12 @@
 
 ```typescript
 export const DECISION_TYPES = [
-  'approve',
-  'reject',
-  'request-info',
-  'escalate',
-  'custom-action',
-  'multi-choice',
+  "approve",
+  "reject",
+  "request-info",
+  "escalate",
+  "custom-action",
+  "multi-choice",
 ] as const;
 
 export type DecisionType = (typeof DECISION_TYPES)[number];
@@ -32,7 +32,7 @@ export interface MissionDecisionOption {
   description?: string;
   // --- 新增字段 ---
   action?: DecisionType;
-  severity?: 'info' | 'warn' | 'danger';
+  severity?: "info" | "warn" | "danger";
   requiresComment?: boolean;
 }
 ```
@@ -46,10 +46,10 @@ export interface MissionDecision {
   allowFreeText?: boolean;
   placeholder?: string;
   // --- 新增字段 ---
-  type?: DecisionType;          // 缺省视为 'custom-action'
-  templateId?: string;          // 引用的模板 ID
+  type?: DecisionType; // 缺省视为 'custom-action'
+  templateId?: string; // 引用的模板 ID
   payload?: Record<string, unknown>; // 结构化上下文数据
-  decisionId?: string;          // 唯一标识，用于历史追踪
+  decisionId?: string; // 唯一标识，用于历史追踪
 }
 ```
 
@@ -76,7 +76,7 @@ export interface DecisionHistoryEntry {
 ```typescript
 export interface MissionRecord {
   // ... 现有字段不变 ...
-  decisionHistory?: DecisionHistoryEntry[];  // 新增
+  decisionHistory?: DecisionHistoryEntry[]; // 新增
 }
 ```
 
@@ -105,17 +105,18 @@ export interface DecisionTemplate {
 
 ### 2.3 内置模板
 
-| templateId | name | defaultType | 选项 |
-|---|---|---|---|
-| `execution-plan-approval` | 执行计划审批 | `approve` | Approve / Reject / Request Changes |
-| `stage-gate` | 阶段门禁 | `approve` | Proceed / Hold / Abort |
-| `risk-confirmation` | 风险确认 | `custom-action` | Accept Risk / Mitigate / Escalate |
+| templateId                | name         | defaultType     | 选项                               |
+| ------------------------- | ------------ | --------------- | ---------------------------------- |
+| `execution-plan-approval` | 执行计划审批 | `approve`       | Approve / Reject / Request Changes |
+| `stage-gate`              | 阶段门禁     | `approve`       | Proceed / Hold / Abort             |
+| `risk-confirmation`       | 风险确认     | `custom-action` | Accept Risk / Mitigate / Escalate  |
 
 ### 2.4 模板 API
 
 `GET /api/decision-templates` → `{ ok: true, templates: DecisionTemplate[] }`
 
 路由常量添加到 `shared/mission/api.ts`：
+
 ```typescript
 listDecisionTemplates: '/api/decision-templates',
 ```
@@ -137,6 +138,7 @@ listDecisionTemplates: '/api/decision-templates',
 ### 3.3 MissionOrchestrator 升级
 
 `submitDecision()` 方法：
+
 1. 决策完成后检查 `onDecisionSubmitted` hook 返回的 `nextDecision?: MissionDecision`。
 2. 若有 `nextDecision`，自动调用 `markWaiting()` 进入下一个决策节点，而非恢复 running。
 3. 这实现了多步决策链：hook 可以根据当前决策结果决定是否需要后续决策。
@@ -150,6 +152,7 @@ decisionSubmitted: 'mission.decision.submitted',
 ```
 
 Payload：
+
 ```typescript
 export interface MissionSocketDecisionSubmittedEvent {
   type: typeof MISSION_SOCKET_TYPES.decisionSubmitted;
@@ -163,14 +166,15 @@ export interface MissionSocketDecisionSubmittedEvent {
 
 ### 3.5 新增 API 端点
 
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET | /api/tasks/:id/decisions | 返回决策历史 |
-| GET | /api/decision-templates | 返回可用模板列表 |
+| 方法 | 路径                     | 说明             |
+| ---- | ------------------------ | ---------------- |
+| GET  | /api/tasks/:id/decisions | 返回决策历史     |
+| GET  | /api/decision-templates  | 返回可用模板列表 |
 
 路由实现在 `server/routes/tasks.ts` 中扩展。
 
 决策历史响应：
+
 ```typescript
 interface ListDecisionHistoryResponse {
   ok: true;
@@ -186,6 +190,7 @@ interface ListDecisionHistoryResponse {
 新增 `client/src/components/tasks/DecisionPanel.tsx`。
 
 根据 `decision.type` 渲染不同布局：
+
 - `approve` / `reject`：双按钮布局（绿色 Approve + 红色 Reject）
 - `multi-choice`：选项卡片列表
 - `request-info`：文本输入框 + 提交按钮
@@ -193,6 +198,7 @@ interface ListDecisionHistoryResponse {
 - `custom-action`：通用选项按钮列表（当前行为）
 
 选项按 `severity` 渲染色调：
+
 - `info` → 蓝色
 - `warn` → 黄色/橙色
 - `danger` → 红色
@@ -204,6 +210,7 @@ interface ListDecisionHistoryResponse {
 新增 `client/src/components/tasks/DecisionHistory.tsx`。
 
 时间线布局，每条记录显示：
+
 - 时间戳（相对时间）
 - 决策类型图标
 - 选择结果（optionLabel）
@@ -215,6 +222,7 @@ interface ListDecisionHistoryResponse {
 ### 4.3 Zustand Store 扩展
 
 在 `client/src/lib/tasks-store.ts` 中：
+
 - 监听新的 `mission.decision.submitted` Socket 事件
 - 更新对应 Mission 的 `decisionHistory`
 
@@ -223,6 +231,7 @@ interface ListDecisionHistoryResponse {
 ### 5.1 等待决策视觉提示
 
 在 `client/src/components/three/` 中：
+
 - 当 Mission 处于 `waiting` 状态时，对应 Agent 宠物模型上方显示问号气泡 sprite
 - 使用 `<Html>` 组件（@react-three/drei）渲染浮动提示
 - 点击气泡触发路由跳转到 `/tasks/:id`
@@ -236,6 +245,7 @@ interface ListDecisionHistoryResponse {
 ### 6.1 决策卡片升级
 
 在 `server/feishu/bridge.ts` 中：
+
 - `createTaskCard()` 根据 `decision.type` 渲染不同样式的按钮
 - `escalate` 类型使用红色/高优先级卡片模板
 - 按钮文案使用 `option.label`，按钮值编码 `optionId`
@@ -243,6 +253,7 @@ interface ListDecisionHistoryResponse {
 ### 6.2 决策完成回传
 
 决策提交成功后，通过 `FeishuProgressBridge.handleTaskUpdate()` 更新飞书消息：
+
 - 卡片更新为"已决策"状态
 - 显示选择结果和决策时间
 
@@ -263,39 +274,43 @@ interface ListDecisionHistoryResponse {
 ## 正确性属性
 
 ### Property 1: 决策类型向后兼容性
+
 **验证: 需求 1.1**
 对于任意 `MissionDecision`，当 `type` 字段缺省时，系统应将其视为 `'custom-action'`。即 `resolveDecisionType(decision)` 对于 `type === undefined` 的输入始终返回 `'custom-action'`。
 
 ### Property 2: 决策历史单调递增
+
 **验证: 需求 2.1**
 对于任意 Mission，每次成功提交决策后，`decisionHistory.length` 严格递增 1，且新条目的 `submittedAt` 大于等于前一条目的 `submittedAt`。
 
 ### Property 3: requiresComment 校验一致性
+
 **验证: 需求 4.1**
 对于任意决策提交，当选中选项的 `requiresComment === true` 时：若 `freeText` 为空或仅含空白，提交必须失败（返回 400）；若 `freeText` 非空，提交可以成功。
 
 ### Property 4: 决策历史持久化完整性
+
 **验证: 需求 8.1**
 对于任意决策序列，持久化后恢复的 `decisionHistory` 与持久化前完全一致（长度相等、每条记录的 `decisionId` 和 `resolved` 字段相同）。
 
 ## 文件变更清单
 
-| 文件 | 变更类型 | 说明 |
-|---|---|---|
-| `shared/mission/contracts.ts` | 修改 | 新增 DecisionType、扩展 MissionDecisionOption/MissionDecision/MissionRecord |
-| `shared/mission/decision-templates.ts` | 新增 | 决策模板定义和内置模板 |
-| `shared/mission/api.ts` | 修改 | 新增路由常量和响应类型 |
-| `shared/mission/socket.ts` | 修改 | 新增 decisionSubmitted 事件类型 |
-| `shared/mission/index.ts` | 修改 | 导出新模块 |
-| `server/tasks/mission-decision.ts` | 修改 | requiresComment 校验、历史追加 |
-| `server/tasks/mission-store.ts` | 修改 | resolveWaiting 归档决策历史 |
-| `server/core/mission-orchestrator.ts` | 修改 | 多步决策链支持 |
-| `server/tasks/mission-runtime.ts` | 修改 | 新增 Socket 事件广播 |
-| `server/routes/tasks.ts` | 修改 | 新增 decisions 和 templates 端点 |
-| `client/src/components/tasks/DecisionPanel.tsx` | 新增 | 结构化决策面板 |
-| `client/src/components/tasks/DecisionHistory.tsx` | 新增 | 决策历史时间线 |
-| `client/src/components/tasks/TaskDetailView.tsx` | 修改 | 集成 DecisionPanel 和 DecisionHistory |
-| `client/src/lib/tasks-store.ts` | 修改 | 监听 decision.submitted 事件 |
-| `server/feishu/bridge.ts` | 修改 | 决策卡片样式增强 |
-| `server/tests/hitl-decision.test.ts` | 新增 | 决策引擎单元测试 |
-| `server/tests/hitl-decision.property.test.ts` | 新增 | 决策引擎 property-based 测试 |
+| 文件                                              | 变更类型 | 说明                                                                        |
+| ------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| `shared/mission/contracts.ts`                     | 修改     | 新增 DecisionType、扩展 MissionDecisionOption/MissionDecision/MissionRecord |
+| `shared/mission/decision-templates.ts`            | 新增     | 决策模板定义和内置模板                                                      |
+| `shared/mission/api.ts`                           | 修改     | 新增路由常量和响应类型                                                      |
+| `shared/mission/socket.ts`                        | 修改     | 新增 decisionSubmitted 事件类型                                             |
+| `shared/mission/index.ts`                         | 修改     | 导出新模块                                                                  |
+| `server/tasks/mission-decision.ts`                | 修改     | requiresComment 校验、历史追加                                              |
+| `server/tasks/mission-store.ts`                   | 修改     | resolveWaiting 归档决策历史                                                 |
+| `server/core/mission-orchestrator.ts`             | 修改     | 多步决策链支持                                                              |
+| `server/tasks/mission-runtime.ts`                 | 修改     | 新增 Socket 事件广播                                                        |
+| `server/routes/tasks.ts`                          | 修改     | 新增 decisions 和 templates 端点                                            |
+| `client/src/components/tasks/DecisionPanel.tsx`   | 新增     | 结构化决策面板                                                              |
+| `client/src/components/tasks/DecisionHistory.tsx` | 新增     | 决策历史时间线                                                              |
+| `client/src/components/tasks/TaskDetailView.tsx`  | 修改     | 集成 DecisionPanel 和 DecisionHistory                                       |
+| `client/src/lib/tasks-store.ts`                   | 修改     | 监听 decision.submitted 事件                                                |
+| `server/feishu/bridge.ts`                         | 修改     | 决策卡片样式增强                                                            |
+| `server/tests/hitl-decision.test.ts`              | 新增     | 决策引擎单元测试                                                            |
+| `server/tests/hitl-decision.property.test.ts`     | 新增     | 决策引擎 property-based 测试                                                |

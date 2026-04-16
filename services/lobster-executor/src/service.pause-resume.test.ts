@@ -83,7 +83,12 @@ function createSeededService(status: StoredJobRecord["status"] = "queued") {
   const service = createLobsterExecutorService({ dataRoot });
   const request = createTestRequest(`job-${randomUUID()}`);
   const receivedAt = new Date().toISOString();
-  const dataDirectory = join(dataRoot, "jobs", request.missionId, request.jobId);
+  const dataDirectory = join(
+    dataRoot,
+    "jobs",
+    request.missionId,
+    request.jobId
+  );
   mkdirSync(dataDirectory, { recursive: true });
 
   const logFile = join(dataDirectory, "executor.log");
@@ -111,7 +116,7 @@ function createSeededService(status: StoredJobRecord["status"] = "queued") {
     executionMode: "mock",
   };
 
-  ((service as unknown as { jobs: Map<string, StoredJobRecord> }).jobs).set(
+  (service as unknown as { jobs: Map<string, StoredJobRecord> }).jobs.set(
     request.jobId,
     record
   );

@@ -7,9 +7,9 @@
  * Requirements: 5.3, 9.2
  */
 
-import type { RetrievalResult } from '../../../shared/rag/contracts.js';
+import type { RetrievalResult } from "../../../shared/rag/contracts.js";
 
-export type ChunkStatus = 'injected' | 'pruned' | 'below_threshold';
+export type ChunkStatus = "injected" | "pruned" | "below_threshold";
 
 export interface BudgetedChunk {
   result: RetrievalResult;
@@ -26,7 +26,7 @@ export interface AllocationResult {
 export class TokenBudgetManager {
   constructor(
     private readonly budget: number = 4096,
-    private readonly minScore: number = 0.3,
+    private readonly minScore: number = 0.3
   ) {}
 
   /**
@@ -46,15 +46,15 @@ export class TokenBudgetManager {
       const tokenCount = this.estimateTokens(result.content);
 
       if (result.score < this.minScore) {
-        chunks.push({ result, status: 'below_threshold', tokenCount });
+        chunks.push({ result, status: "below_threshold", tokenCount });
         continue;
       }
 
       if (usedTokens + tokenCount <= this.budget) {
-        chunks.push({ result, status: 'injected', tokenCount });
+        chunks.push({ result, status: "injected", tokenCount });
         usedTokens += tokenCount;
       } else {
-        chunks.push({ result, status: 'pruned', tokenCount });
+        chunks.push({ result, status: "pruned", tokenCount });
       }
     }
 

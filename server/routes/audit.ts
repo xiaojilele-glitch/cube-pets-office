@@ -14,7 +14,14 @@ import {
   DEFAULT_RETENTION_POLICIES,
   DEFAULT_EVENT_TYPE_REGISTRY,
 } from "../../shared/audit/contracts.js";
-import type { AuditQueryFilters, PageOptions, AuditEventType, AuditSeverity, AuditCategory, ComplianceFramework } from "../../shared/audit/contracts.js";
+import type {
+  AuditQueryFilters,
+  PageOptions,
+  AuditEventType,
+  AuditSeverity,
+  AuditCategory,
+  ComplianceFramework,
+} from "../../shared/audit/contracts.js";
 import type { AuditChain } from "../audit/audit-chain.js";
 import type { AuditQuery } from "../audit/audit-query.js";
 import type { AuditVerifier } from "../audit/audit-verifier.js";
@@ -87,7 +94,9 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
     try {
       const entry = chain.getEntry(req.params.id);
       if (!entry) {
-        return res.status(404).json({ ok: false, error: "Audit entry not found" });
+        return res
+          .status(404)
+          .json({ ok: false, error: "Audit entry not found" });
       }
       res.json({ ok: true, entry });
     } catch (err) {
@@ -121,7 +130,7 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
       const { startSeq, endSeq } = req.body ?? {};
       const result = verifier.verifyChain(
         startSeq !== undefined ? Number(startSeq) : undefined,
-        endSeq !== undefined ? Number(endSeq) : undefined,
+        endSeq !== undefined ? Number(endSeq) : undefined
       );
       res.json({ ok: true, result });
     } catch (err) {
@@ -137,7 +146,11 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
     try {
       const result = verifier.getLastResult();
       if (!result) {
-        return res.json({ ok: true, valid: null, message: "No verification has been run yet" });
+        return res.json({
+          ok: true,
+          valid: null,
+          message: "No verification has been run yet",
+        });
       }
       res.json({ ok: true, result });
     } catch (err) {
@@ -164,13 +177,21 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
 
           const def = DEFAULT_EVENT_TYPE_REGISTRY[et];
           if (def) {
-            severityCounts[def.severity] = (severityCounts[def.severity] || 0) + 1;
-            categoryCounts[def.category] = (categoryCounts[def.category] || 0) + 1;
+            severityCounts[def.severity] =
+              (severityCounts[def.severity] || 0) + 1;
+            categoryCounts[def.category] =
+              (categoryCounts[def.category] || 0) + 1;
           }
         }
       }
 
-      res.json({ ok: true, totalEntries, eventTypeCounts, severityCounts, categoryCounts });
+      res.json({
+        ok: true,
+        totalEntries,
+        eventTypeCounts,
+        severityCounts,
+        categoryCounts,
+      });
     } catch (err) {
       res.status(500).json({ ok: false, error: errorMessage(err) });
     }
@@ -192,7 +213,12 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
         res.setHeader("Content-Type", "application/json");
       }
 
-      res.json({ ok: true, data: result.data, hash: result.hash, signature: result.signature });
+      res.json({
+        ok: true,
+        data: result.data,
+        hash: result.hash,
+        signature: result.signature,
+      });
     } catch (err) {
       res.status(500).json({ ok: false, error: errorMessage(err) });
     }
@@ -206,13 +232,18 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
     try {
       const { framework, startTime, endTime } = req.body ?? {};
       if (!framework) {
-        return res.status(400).json({ ok: false, error: "framework is required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "framework is required" });
       }
       const timeRange = {
         start: Number(startTime) || 0,
         end: Number(endTime) || Date.now(),
       };
-      const report = complianceMapper.generateReport(framework as ComplianceFramework, timeRange);
+      const report = complianceMapper.generateReport(
+        framework as ComplianceFramework,
+        timeRange
+      );
       res.json({ ok: true, report });
     } catch (err) {
       res.status(500).json({ ok: false, error: errorMessage(err) });
@@ -227,9 +258,10 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
     try {
       const startTime = req.query.startTime as string | undefined;
       const endTime = req.query.endTime as string | undefined;
-      const timeRange = startTime && endTime
-        ? { start: Number(startTime), end: Number(endTime) }
-        : undefined;
+      const timeRange =
+        startTime && endTime
+          ? { start: Number(startTime), end: Number(endTime) }
+          : undefined;
       const alerts = anomalyDetector.getAlerts(timeRange);
       res.json({ ok: true, alerts });
     } catch (err) {
@@ -265,9 +297,10 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
     try {
       const startTime = req.query.startTime as string | undefined;
       const endTime = req.query.endTime as string | undefined;
-      const timeRange = startTime && endTime
-        ? { start: Number(startTime), end: Number(endTime) }
-        : undefined;
+      const timeRange =
+        startTime && endTime
+          ? { start: Number(startTime), end: Number(endTime) }
+          : undefined;
       const entries = query.getPermissionViolations(timeRange);
       res.json({ ok: true, entries });
     } catch (err) {
@@ -284,9 +317,10 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
       const { agentId } = req.params;
       const startTime = req.query.startTime as string | undefined;
       const endTime = req.query.endTime as string | undefined;
-      const timeRange = startTime && endTime
-        ? { start: Number(startTime), end: Number(endTime) }
-        : undefined;
+      const timeRange =
+        startTime && endTime
+          ? { start: Number(startTime), end: Number(endTime) }
+          : undefined;
       const entries = query.getPermissionTrail(agentId, timeRange);
       res.json({ ok: true, entries });
     } catch (err) {
@@ -327,11 +361,24 @@ export function createAuditRouter(deps: AuditRouterDeps): Router {
     try {
       const { startSeq, endSeq, targetPath } = req.body ?? {};
       if (startSeq === undefined || endSeq === undefined) {
-        return res.status(400).json({ ok: false, error: "startSeq and endSeq are required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "startSeq and endSeq are required" });
       }
-      const archivePath = targetPath ?? `data/audit/archive/manual_${startSeq}_${endSeq}_${Date.now()}.json`;
-      const result = auditRetention.archiveEntries(Number(startSeq), Number(endSeq), archivePath);
-      res.json({ ok: true, archivePath: result.archivePath, hash: result.hash, signature: result.signature });
+      const archivePath =
+        targetPath ??
+        `data/audit/archive/manual_${startSeq}_${endSeq}_${Date.now()}.json`;
+      const result = auditRetention.archiveEntries(
+        Number(startSeq),
+        Number(endSeq),
+        archivePath
+      );
+      res.json({
+        ok: true,
+        archivePath: result.archivePath,
+        hash: result.hash,
+        signature: result.signature,
+      });
     } catch (err) {
       res.status(500).json({ ok: false, error: errorMessage(err) });
     }
@@ -355,15 +402,18 @@ function buildFilters(query: Record<string, unknown>): AuditQueryFilters {
   if (query.eventType) {
     const raw = query.eventType as string;
     const types = raw.includes(",") ? raw.split(",") : [raw];
-    filters.eventType = types.length === 1
-      ? types[0] as AuditEventType
-      : types as AuditEventType[];
+    filters.eventType =
+      types.length === 1
+        ? (types[0] as AuditEventType)
+        : (types as AuditEventType[]);
   }
   if (query.actorId) filters.actorId = query.actorId as string;
-  if (query.actorType) filters.actorType = query.actorType as "user" | "agent" | "system";
+  if (query.actorType)
+    filters.actorType = query.actorType as "user" | "agent" | "system";
   if (query.resourceType) filters.resourceType = query.resourceType as string;
   if (query.resourceId) filters.resourceId = query.resourceId as string;
-  if (query.result) filters.result = query.result as "success" | "failure" | "denied" | "error";
+  if (query.result)
+    filters.result = query.result as "success" | "failure" | "denied" | "error";
   if (query.severity) filters.severity = query.severity as AuditSeverity;
   if (query.category) filters.category = query.category as AuditCategory;
   if (query.keyword) filters.keyword = query.keyword as string;

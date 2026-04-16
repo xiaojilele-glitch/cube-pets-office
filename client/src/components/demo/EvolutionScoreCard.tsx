@@ -18,7 +18,12 @@ const DIMENSION_LABELS: Record<string, string> = {
   format: "格式规范",
 };
 
-function ScoreBar({ label, oldScore, newScore, animate }: {
+function ScoreBar({
+  label,
+  oldScore,
+  newScore,
+  animate,
+}: {
   label: string;
   oldScore: number;
   newScore: number;
@@ -37,7 +42,12 @@ function ScoreBar({ label, oldScore, newScore, animate }: {
   }, [animate, newScore]);
 
   const delta = newScore - oldScore;
-  const deltaColor = delta > 0 ? "text-emerald-600" : delta < 0 ? "text-red-500" : "text-gray-400";
+  const deltaColor =
+    delta > 0
+      ? "text-emerald-600"
+      : delta < 0
+        ? "text-red-500"
+        : "text-gray-400";
 
   return (
     <div className="flex items-center gap-2 py-1">
@@ -55,21 +65,31 @@ function ScoreBar({ label, oldScore, newScore, animate }: {
         {Math.round(displayScore)}
       </span>
       <span className={`w-8 text-right text-[10px] font-medium ${deltaColor}`}>
-        {delta > 0 ? `+${delta.toFixed(0)}` : delta === 0 ? "—" : delta.toFixed(0)}
+        {delta > 0
+          ? `+${delta.toFixed(0)}`
+          : delta === 0
+            ? "—"
+            : delta.toFixed(0)}
       </span>
     </div>
   );
 }
 
-function AgentCard({ agentId, logs, animate }: {
+function AgentCard({
+  agentId,
+  logs,
+  animate,
+}: {
   agentId: string;
   logs: DemoEvolutionLog[];
   animate: boolean;
 }) {
   return (
     <div className="rounded-xl border border-gray-100 bg-white/80 p-3">
-      <p className="mb-1.5 text-[11px] font-semibold text-gray-700">{agentId}</p>
-      {logs.map((log) => (
+      <p className="mb-1.5 text-[11px] font-semibold text-gray-700">
+        {agentId}
+      </p>
+      {logs.map(log => (
         <ScoreBar
           key={log.dimension}
           label={DIMENSION_LABELS[log.dimension] ?? log.dimension}
@@ -83,7 +103,7 @@ function AgentCard({ agentId, logs, animate }: {
 }
 
 export function EvolutionScoreCard({ animate = true }: { animate?: boolean }) {
-  const logs = useDemoStore((s) => s.evolutionLogs);
+  const logs = useDemoStore(s => s.evolutionLogs);
 
   if (logs.length === 0) return null;
 
@@ -101,7 +121,12 @@ export function EvolutionScoreCard({ animate = true }: { animate?: boolean }) {
         Evolution Scores
       </h4>
       {Array.from(byAgent.entries()).map(([agentId, agentLogs]) => (
-        <AgentCard key={agentId} agentId={agentId} logs={agentLogs} animate={animate} />
+        <AgentCard
+          key={agentId}
+          agentId={agentId}
+          logs={agentLogs}
+          animate={animate}
+        />
       ))}
     </div>
   );

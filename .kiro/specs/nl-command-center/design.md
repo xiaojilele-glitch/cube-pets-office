@@ -5,6 +5,7 @@
 自然语言指挥中心（NL Command Center）在现有 Mission Runtime 之上构建战略指令层。用户输入一条战略级自然语言指令，系统通过 LLM 解析意图和约束，自动分解为多个 Mission（复用现有 MissionRecord / MissionOrchestrator），为每个 Mission 生成执行计划和组织结构，并提供审批、监控、告警、决策支持和动态调整的完整闭环。
 
 核心设计原则：
+
 - **复用优先**：复用现有 MissionRecord、MissionOrchestrator、ExecutionPlanBuilder、动态组织生成等模块
 - **分层解耦**：指挥中心是 Mission 之上的编排层，不修改 Mission 核心状态机
 - **LLM 驱动**：指令解析、分解、风险评估均通过 LLM 完成，关键词匹配作为 fallback
@@ -203,13 +204,15 @@ class ExecutionPlanGenerator {
 
 class PlanApproval {
   /** 创建审批请求 */
-  async createApprovalRequest(plan: NLExecutionPlan): Promise<PlanApprovalRequest>;
+  async createApprovalRequest(
+    plan: NLExecutionPlan
+  ): Promise<PlanApprovalRequest>;
 
   /** 提交审批意见 */
   async submitApproval(
     requestId: string,
     approverId: string,
-    decision: 'approved' | 'rejected' | 'revision_requested',
+    decision: "approved" | "rejected" | "revision_requested",
     comments?: string
   ): Promise<PlanApprovalRequest>;
 
@@ -245,10 +248,14 @@ class DecisionSupportEngine {
   async analyzeRisks(plan: NLExecutionPlan): Promise<RiskAnalysis>;
 
   /** 生成成本优化建议 */
-  async suggestCostOptimization(plan: NLExecutionPlan): Promise<CostOptimizationSuggestion[]>;
+  async suggestCostOptimization(
+    plan: NLExecutionPlan
+  ): Promise<CostOptimizationSuggestion[]>;
 
   /** 生成资源调整建议 */
-  async suggestResourceAdjustment(plan: NLExecutionPlan): Promise<ResourceAdjustmentSuggestion[]>;
+  async suggestResourceAdjustment(
+    plan: NLExecutionPlan
+  ): Promise<ResourceAdjustmentSuggestion[]>;
 
   /** 收集执行数据用于学习 */
   async collectExecutionData(plan: NLExecutionPlan): Promise<ExecutionMetrics>;
@@ -271,7 +278,7 @@ class AuditTrail {
   async query(filter: AuditQueryFilter): Promise<AuditEntry[]>;
 
   /** 导出审计日志 */
-  async export(filter: AuditQueryFilter, format: 'json'): Promise<string>;
+  async export(filter: AuditQueryFilter, format: "json"): Promise<string>;
 }
 ```
 
@@ -328,16 +335,16 @@ POST   /api/nl-command/audit/export          // 导出审计日志
 // shared/nl-command/socket.ts
 
 // 服务端 → 前端
-'nl_command_created'        // 指令创建
-'nl_command_analysis'       // 指令解析完成
-'nl_clarification_question' // 澄清问题生成
-'nl_decomposition_complete' // 分解完成
-'nl_plan_generated'         // 执行计划生成
-'nl_plan_approved'          // 计划审批通过
-'nl_plan_adjusted'          // 计划调整
-'nl_alert'                  // 告警通知
-'nl_progress_update'        // 进度更新
-'nl_suggestion'             // 决策建议
+"nl_command_created"; // 指令创建
+"nl_command_analysis"; // 指令解析完成
+"nl_clarification_question"; // 澄清问题生成
+"nl_decomposition_complete"; // 分解完成
+"nl_plan_generated"; // 执行计划生成
+"nl_plan_approved"; // 计划审批通过
+"nl_plan_adjusted"; // 计划调整
+"nl_alert"; // 告警通知
+"nl_progress_update"; // 进度更新
+"nl_suggestion"; // 决策建议
 ```
 
 ## 数据模型
@@ -347,24 +354,24 @@ POST   /api/nl-command/audit/export          // 导出审计日志
 ```typescript
 // shared/nl-command/contracts.ts
 
-export const NL_COMMAND_CONTRACT_VERSION = '2026-06-01' as const;
+export const NL_COMMAND_CONTRACT_VERSION = "2026-06-01" as const;
 
 // ─── 战略指令 ───
 
-export type CommandPriority = 'critical' | 'high' | 'medium' | 'low';
+export type CommandPriority = "critical" | "high" | "medium" | "low";
 
 export type CommandStatus =
-  | 'draft'
-  | 'analyzing'
-  | 'clarifying'
-  | 'finalized'
-  | 'decomposing'
-  | 'planning'
-  | 'approving'
-  | 'executing'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+  | "draft"
+  | "analyzing"
+  | "clarifying"
+  | "finalized"
+  | "decomposing"
+  | "planning"
+  | "approving"
+  | "executing"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 export interface StrategicCommand {
   commandId: string;
@@ -380,7 +387,7 @@ export interface StrategicCommand {
 }
 
 export interface CommandConstraint {
-  type: 'budget' | 'time' | 'quality' | 'resource' | 'custom';
+  type: "budget" | "time" | "quality" | "resource" | "custom";
   description: string;
   value?: string;
   unit?: string;
@@ -408,7 +415,7 @@ export interface CommandAnalysis {
 
 export interface CommandEntity {
   name: string;
-  type: 'module' | 'service' | 'team' | 'technology' | 'concept' | 'custom';
+  type: "module" | "service" | "team" | "technology" | "concept" | "custom";
   description?: string;
 }
 
@@ -420,13 +427,13 @@ export interface ClarificationDialog {
   questions: ClarificationQuestion[];
   answers: ClarificationAnswer[];
   clarificationRounds: number;
-  status: 'active' | 'completed';
+  status: "active" | "completed";
 }
 
 export interface ClarificationQuestion {
   questionId: string;
   text: string;
-  type: 'free_text' | 'single_choice' | 'multi_choice';
+  type: "free_text" | "single_choice" | "multi_choice";
   options?: string[];
   context?: string;
 }
@@ -454,7 +461,7 @@ export interface MissionDecomposition {
   commandId: string;
   missions: DecomposedMission[];
   dependencies: MissionDependency[];
-  executionOrder: string[][];  // 二维数组，每层可并行
+  executionOrder: string[][]; // 二维数组，每层可并行
   totalEstimatedDuration: number;
   totalEstimatedCost: number;
 }
@@ -465,7 +472,7 @@ export interface DecomposedMission {
   description: string;
   objectives: string[];
   constraints: CommandConstraint[];
-  estimatedDuration: number;  // 分钟
+  estimatedDuration: number; // 分钟
   estimatedCost: number;
   priority: CommandPriority;
 }
@@ -473,7 +480,7 @@ export interface DecomposedMission {
 export interface MissionDependency {
   fromMissionId: string;
   toMissionId: string;
-  type: 'blocks' | 'depends_on' | 'related';
+  type: "blocks" | "depends_on" | "related";
   description?: string;
 }
 
@@ -502,7 +509,7 @@ export interface DecomposedTask {
 export interface TaskDependency {
   fromTaskId: string;
   toTaskId: string;
-  type: 'blocks' | 'depends_on';
+  type: "blocks" | "depends_on";
 }
 
 // ─── 执行计划 ───
@@ -510,7 +517,13 @@ export interface TaskDependency {
 export interface NLExecutionPlan {
   planId: string;
   commandId: string;
-  status: 'draft' | 'pending_approval' | 'approved' | 'executing' | 'completed' | 'failed';
+  status:
+    | "draft"
+    | "pending_approval"
+    | "approved"
+    | "executing"
+    | "completed"
+    | "failed";
   missions: DecomposedMission[];
   tasks: DecomposedTask[];
   timeline: PlanTimeline;
@@ -525,14 +538,14 @@ export interface NLExecutionPlan {
 export interface PlanTimeline {
   startDate: string;
   endDate: string;
-  criticalPath: string[];  // mission/task IDs on critical path
+  criticalPath: string[]; // mission/task IDs on critical path
   milestones: TimelineMilestone[];
   entries: TimelineEntry[];
 }
 
 export interface TimelineEntry {
   entityId: string;
-  entityType: 'mission' | 'task';
+  entityType: "mission" | "task";
   startTime: number;
   endTime: number;
   duration: number;
@@ -564,13 +577,13 @@ export interface ResourceEntry {
 
 export interface RiskAssessment {
   risks: IdentifiedRisk[];
-  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
+  overallRiskLevel: "low" | "medium" | "high" | "critical";
 }
 
 export interface IdentifiedRisk {
   id: string;
   description: string;
-  level: 'low' | 'medium' | 'high' | 'critical';
+  level: "low" | "medium" | "high" | "critical";
   probability: number;
   impact: number;
   mitigation: string;
@@ -603,7 +616,11 @@ export interface ContingencyAlternative {
 
 // ─── 审批 ───
 
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'revision_requested';
+export type ApprovalStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "revision_requested";
 
 export interface PlanApprovalRequest {
   requestId: string;
@@ -617,7 +634,7 @@ export interface PlanApprovalRequest {
 
 export interface ApprovalDecision {
   approverId: string;
-  decision: 'approved' | 'rejected' | 'revision_requested';
+  decision: "approved" | "rejected" | "revision_requested";
   comments?: string;
   timestamp: number;
 }
@@ -631,13 +648,13 @@ export interface PlanAdjustment {
   changes: AdjustmentChange[];
   impact: AdjustmentImpact;
   approvalRequired: boolean;
-  status: 'proposed' | 'approved' | 'applied' | 'rejected';
+  status: "proposed" | "approved" | "applied" | "rejected";
   createdAt: number;
 }
 
 export interface AdjustmentChange {
   entityId: string;
-  entityType: 'mission' | 'task' | 'resource' | 'timeline';
+  entityType: "mission" | "task" | "resource" | "timeline";
   field: string;
   oldValue: unknown;
   newValue: unknown;
@@ -651,8 +668,13 @@ export interface AdjustmentImpact {
 
 // ─── 告警 ───
 
-export type AlertType = 'TASK_DELAYED' | 'COST_EXCEEDED' | 'RISK_ESCALATED' | 'ERROR_OCCURRED' | 'APPROVAL_REQUIRED';
-export type AlertPriority = 'critical' | 'warning' | 'info';
+export type AlertType =
+  | "TASK_DELAYED"
+  | "COST_EXCEEDED"
+  | "RISK_ESCALATED"
+  | "ERROR_OCCURRED"
+  | "APPROVAL_REQUIRED";
+export type AlertPriority = "critical" | "warning" | "info";
 
 export interface Alert {
   alertId: string;
@@ -660,7 +682,7 @@ export interface Alert {
   priority: AlertPriority;
   message: string;
   entityId: string;
-  entityType: 'command' | 'mission' | 'task' | 'plan';
+  entityType: "command" | "mission" | "task" | "plan";
   triggeredAt: number;
   acknowledged: boolean;
   metadata?: Record<string, unknown>;
@@ -676,7 +698,7 @@ export interface AlertRule {
 
 export interface AlertCondition {
   metric: string;
-  operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  operator: "gt" | "lt" | "eq" | "gte" | "lte";
   threshold: number;
   unit?: string;
 }
@@ -686,7 +708,7 @@ export interface AlertCondition {
 export interface Comment {
   commentId: string;
   entityId: string;
-  entityType: 'command' | 'mission' | 'task' | 'plan';
+  entityType: "command" | "mission" | "task" | "plan";
   authorId: string;
   content: string;
   mentions: string[];
@@ -704,14 +726,24 @@ export interface CommentVersion {
 // ─── 审计 ───
 
 export type AuditOperationType =
-  | 'command_created' | 'command_analyzed' | 'command_finalized'
-  | 'clarification_question' | 'clarification_answer'
-  | 'decomposition_completed' | 'plan_generated'
-  | 'approval_submitted' | 'approval_completed'
-  | 'adjustment_proposed' | 'adjustment_applied'
-  | 'alert_triggered' | 'comment_created' | 'comment_edited'
-  | 'permission_changed' | 'report_generated'
-  | 'suggestion_applied' | 'template_saved';
+  | "command_created"
+  | "command_analyzed"
+  | "command_finalized"
+  | "clarification_question"
+  | "clarification_answer"
+  | "decomposition_completed"
+  | "plan_generated"
+  | "approval_submitted"
+  | "approval_completed"
+  | "adjustment_proposed"
+  | "adjustment_applied"
+  | "alert_triggered"
+  | "comment_created"
+  | "comment_edited"
+  | "permission_changed"
+  | "report_generated"
+  | "suggestion_applied"
+  | "template_saved";
 
 export interface AuditEntry {
   entryId: string;
@@ -719,7 +751,7 @@ export interface AuditEntry {
   operator: string;
   content: string;
   timestamp: number;
-  result: 'success' | 'failure';
+  result: "success" | "failure";
   entityId?: string;
   entityType?: string;
   metadata?: Record<string, unknown>;
@@ -773,7 +805,10 @@ export interface PlanTemplate {
   templateId: string;
   name: string;
   description: string;
-  plan: Omit<NLExecutionPlan, 'planId' | 'commandId' | 'status' | 'createdAt' | 'updatedAt'>;
+  plan: Omit<
+    NLExecutionPlan,
+    "planId" | "commandId" | "status" | "createdAt" | "updatedAt"
+  >;
   version: number;
   versions: TemplateVersion[];
   createdBy: string;
@@ -790,8 +825,14 @@ export interface TemplateVersion {
 
 // ─── 权限 ───
 
-export type Permission = 'view' | 'create' | 'edit' | 'approve' | 'execute' | 'cancel';
-export type UserRole = 'admin' | 'manager' | 'operator' | 'viewer';
+export type Permission =
+  | "view"
+  | "create"
+  | "edit"
+  | "approve"
+  | "execute"
+  | "cancel";
+export type UserRole = "admin" | "manager" | "operator" | "viewer";
 
 export interface PermissionConfig {
   role: UserRole;
@@ -828,164 +869,164 @@ export interface OptimizationReport {
 
 ### 存储策略
 
-| 数据类型 | 存储位置 | 说明 |
-|---------|---------|------|
-| StrategicCommand | `data/nl-commands.json` | 服务端本地 JSON |
-| ClarificationDialog | 内存 + `data/nl-commands.json` | 嵌入 Command 记录 |
-| MissionDecomposition | `data/nl-decompositions.json` | 服务端本地 JSON |
-| NLExecutionPlan | `data/nl-plans.json` | 服务端本地 JSON |
-| PlanApprovalRequest | 嵌入 NLExecutionPlan | 随计划一起持久化 |
-| Alert | 内存 + Socket 推送 | 告警不持久化，审计链记录 |
-| AuditEntry | `data/nl-audit.json` | 追加写入 |
-| Comment | `data/nl-comments.json` | 服务端本地 JSON |
-| PlanTemplate | `data/nl-templates.json` | 服务端本地 JSON |
-| ExecutionMetrics | `data/nl-metrics.json` | 追加写入 |
+| 数据类型             | 存储位置                       | 说明                     |
+| -------------------- | ------------------------------ | ------------------------ |
+| StrategicCommand     | `data/nl-commands.json`        | 服务端本地 JSON          |
+| ClarificationDialog  | 内存 + `data/nl-commands.json` | 嵌入 Command 记录        |
+| MissionDecomposition | `data/nl-decompositions.json`  | 服务端本地 JSON          |
+| NLExecutionPlan      | `data/nl-plans.json`           | 服务端本地 JSON          |
+| PlanApprovalRequest  | 嵌入 NLExecutionPlan           | 随计划一起持久化         |
+| Alert                | 内存 + Socket 推送             | 告警不持久化，审计链记录 |
+| AuditEntry           | `data/nl-audit.json`           | 追加写入                 |
+| Comment              | `data/nl-comments.json`        | 服务端本地 JSON          |
+| PlanTemplate         | `data/nl-templates.json`       | 服务端本地 JSON          |
+| ExecutionMetrics     | `data/nl-metrics.json`         | 追加写入                 |
 
 ## 正确性属性
 
-*正确性属性是系统在所有合法执行路径上都应保持的特征或行为——本质上是对系统行为的形式化陈述。属性是人类可读规格与机器可验证正确性保证之间的桥梁。*
+_正确性属性是系统在所有合法执行路径上都应保持的特征或行为——本质上是对系统行为的形式化陈述。属性是人类可读规格与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: StrategicCommand 结构完整性
 
-*For any* StrategicCommand object created by the system, the object SHALL contain non-undefined values for commandId, commandText, userId, timestamp, status, constraints (array), objectives (array), and priority fields.
+_For any_ StrategicCommand object created by the system, the object SHALL contain non-undefined values for commandId, commandText, userId, timestamp, status, constraints (array), objectives (array), and priority fields.
 
 **Validates: Requirements 1.1**
 
 ### Property 2: CommandAnalysis 结构完整性
 
-*For any* CommandAnalysis produced by the Command_Analyzer (with mocked LLM), the result SHALL contain non-undefined values for intent, entities (array), constraints (array), objectives (array), risks (array), assumptions (array), and confidence (number between 0 and 1).
+_For any_ CommandAnalysis produced by the Command_Analyzer (with mocked LLM), the result SHALL contain non-undefined values for intent, entities (array), constraints (array), objectives (array), risks (array), assumptions (array), and confidence (number between 0 and 1).
 
 **Validates: Requirements 1.2, 1.3**
 
 ### Property 3: 审计链记录不变量
 
-*For any* auditable operation (command creation, analysis, clarification, decomposition, approval, adjustment, alert, comment, permission change), after the operation completes, the Audit_Trail SHALL contain exactly one new entry with valid operator, operationType, content, timestamp, and result fields matching the operation.
+_For any_ auditable operation (command creation, analysis, clarification, decomposition, approval, adjustment, alert, comment, permission change), after the operation completes, the Audit_Trail SHALL contain exactly one new entry with valid operator, operationType, content, timestamp, and result fields matching the operation.
 
 **Validates: Requirements 1.4, 2.6, 3.6, 4.6, 7.6, 8.6, 10.5, 12.5, 17.4**
 
 ### Property 4: 澄清对话接受两种回答类型
 
-*For any* ClarificationQuestion, the Clarification_Dialog SHALL accept both a free-text ClarificationAnswer (with text field) and a selection-based ClarificationAnswer (with selectedOptions field), and both answer types SHALL be stored in the dialog's answers array.
+_For any_ ClarificationQuestion, the Clarification_Dialog SHALL accept both a free-text ClarificationAnswer (with text field) and a selection-based ClarificationAnswer (with selectedOptions field), and both answer types SHALL be stored in the dialog's answers array.
 
 **Validates: Requirements 2.3**
 
 ### Property 5: 澄清更新分析并最终确认
 
-*For any* StrategicCommand undergoing clarification, after each ClarificationAnswer is submitted, the Command_Analysis SHALL be updated (confidence or fields change). After all clarification rounds complete, a FinalizedCommand SHALL be produced containing the original commandId, originalText, refinedText, and a complete CommandAnalysis.
+_For any_ StrategicCommand undergoing clarification, after each ClarificationAnswer is submitted, the Command_Analysis SHALL be updated (confidence or fields change). After all clarification rounds complete, a FinalizedCommand SHALL be produced containing the original commandId, originalText, refinedText, and a complete CommandAnalysis.
 
 **Validates: Requirements 2.4, 2.5**
 
 ### Property 6: 分解执行顺序拓扑排序正确性
 
-*For any* MissionDecomposition or TaskDecomposition, the executionOrder SHALL be a valid topological ordering of the dependency graph: for every dependency edge (A depends on B), B SHALL appear in an earlier or same execution group as A. Additionally, all dependency references SHALL point to valid entity IDs within the decomposition.
+_For any_ MissionDecomposition or TaskDecomposition, the executionOrder SHALL be a valid topological ordering of the dependency graph: for every dependency edge (A depends on B), B SHALL appear in an earlier or same execution group as A. Additionally, all dependency references SHALL point to valid entity IDs within the decomposition.
 
 **Validates: Requirements 3.4, 3.5, 4.4, 4.5**
 
 ### Property 7: 分解输出结构完整性
 
-*For any* MissionDecomposition produced by the Mission_Decomposer, each DecomposedMission SHALL contain non-empty missionId, title, description, objectives, and a numeric estimatedDuration and estimatedCost. Similarly, for any TaskDecomposition, each DecomposedTask SHALL contain non-empty taskId, title, description, objectives, requiredSkills, and numeric estimatedDuration and estimatedCost.
+_For any_ MissionDecomposition produced by the Mission_Decomposer, each DecomposedMission SHALL contain non-empty missionId, title, description, objectives, and a numeric estimatedDuration and estimatedCost. Similarly, for any TaskDecomposition, each DecomposedTask SHALL contain non-empty taskId, title, description, objectives, requiredSkills, and numeric estimatedDuration and estimatedCost.
 
 **Validates: Requirements 3.2, 3.3, 4.2, 4.3**
 
 ### Property 8: 成本预算求和不变量
 
-*For any* NLExecutionPlan, the sum of all missionCosts in the CostBudget SHALL equal the totalBudget. The sum of all taskCosts for a given mission SHALL equal that mission's cost. The cost distribution by Agent and Model SHALL sum to the totalBudget.
+_For any_ NLExecutionPlan, the sum of all missionCosts in the CostBudget SHALL equal the totalBudget. The sum of all taskCosts for a given mission SHALL equal that mission's cost. The cost distribution by Agent and Model SHALL sum to the totalBudget.
 
 **Validates: Requirements 5.5, 15.5**
 
 ### Property 9: 时间线关键路径有效性
 
-*For any* NLExecutionPlan with a PlanTimeline, the criticalPath SHALL be the longest path through the dependency graph measured by duration. Every TimelineEntry on the critical path SHALL have isCriticalPath set to true. All TimelineEntry start times SHALL be greater than or equal to the end times of their dependencies.
+_For any_ NLExecutionPlan with a PlanTimeline, the criticalPath SHALL be the longest path through the dependency graph measured by duration. Every TimelineEntry on the critical path SHALL have isCriticalPath set to true. All TimelineEntry start times SHALL be greater than or equal to the end times of their dependencies.
 
 **Validates: Requirements 5.2**
 
 ### Property 10: 审批工作流完整性
 
-*For any* PlanApprovalRequest with N required approvers, the status SHALL remain 'pending' until all N approvers submit 'approved' decisions. When all N approvers approve, the status SHALL transition to 'approved'. If any approver submits 'rejected', the status SHALL transition to 'rejected'.
+_For any_ PlanApprovalRequest with N required approvers, the status SHALL remain 'pending' until all N approvers submit 'approved' decisions. When all N approvers approve, the status SHALL transition to 'approved'. If any approver submits 'rejected', the status SHALL transition to 'rejected'.
 
 **Validates: Requirements 7.2, 7.5, 8.4, 11.5, 15.3**
 
 ### Property 11: 计划调整更新不变量
 
-*For any* approved PlanAdjustment applied to an NLExecutionPlan, the plan's updatedAt SHALL be greater than its previous updatedAt, and the changes described in the PlanAdjustment SHALL be reflected in the updated plan fields.
+_For any_ approved PlanAdjustment applied to an NLExecutionPlan, the plan's updatedAt SHALL be greater than its previous updatedAt, and the changes described in the PlanAdjustment SHALL be reflected in the updated plan fields.
 
 **Validates: Requirements 8.5**
 
 ### Property 12: 告警规则评估正确性
 
-*For any* AlertRule with a numeric threshold and operator, and *for any* metric value, the Alert_Engine SHALL trigger an alert if and only if the metric value satisfies the operator condition against the threshold. The triggered alert SHALL have the priority specified in the rule.
+_For any_ AlertRule with a numeric threshold and operator, and _for any_ metric value, the Alert_Engine SHALL trigger an alert if and only if the metric value satisfies the operator condition against the threshold. The triggered alert SHALL have the priority specified in the rule.
 
 **Validates: Requirements 10.3, 10.4**
 
 ### Property 13: 过滤和排序正确性
 
-*For any* list of MissionRecord entries and *for any* filter criteria (status, priority), the filtered result SHALL contain only entries matching all filter criteria. When sorted by a field, the result SHALL be in the correct order according to the sort specification.
+_For any_ list of MissionRecord entries and _for any_ filter criteria (status, priority), the filtered result SHALL contain only entries matching all filter criteria. When sorted by a field, the result SHALL be in the correct order according to the sort specification.
 
 **Validates: Requirements 9.5**
 
 ### Property 14: 评论 CRUD 与版本历史
 
-*For any* Comment created on an entity, querying comments for that entity SHALL return the comment. After editing a comment, the comment SHALL have a new version entry in its versions array, and the previous content SHALL be preserved in the version history.
+_For any_ Comment created on an entity, querying comments for that entity SHALL return the comment. After editing a comment, the comment SHALL have a new version entry in its versions array, and the previous content SHALL be preserved in the version history.
 
 **Validates: Requirements 12.1, 12.3**
 
 ### Property 15: @mention 解析正确性
 
-*For any* comment content string containing @mention patterns (e.g., "@userId"), the mention parser SHALL extract all mentioned user IDs. The extracted mentions array SHALL contain exactly the user IDs present in the @mention patterns.
+_For any_ comment content string containing @mention patterns (e.g., "@userId"), the mention parser SHALL extract all mentioned user IDs. The extracted mentions array SHALL contain exactly the user IDs present in the @mention patterns.
 
 **Validates: Requirements 12.2**
 
 ### Property 16: 权限执行正确性
 
-*For any* user with a given role and *for any* operation requiring a specific permission, the permission check SHALL return true if and only if the role's permission set includes the required permission. Fine-grained entity-level permissions SHALL override role-level permissions.
+_For any_ user with a given role and _for any_ operation requiring a specific permission, the permission check SHALL return true if and only if the role's permission set includes the required permission. Fine-grained entity-level permissions SHALL override role-level permissions.
 
 **Validates: Requirements 17.1, 17.2, 17.3**
 
 ### Property 17: 审计查询过滤正确性
 
-*For any* set of AuditEntry records and *for any* AuditQueryFilter, the query result SHALL contain only entries matching all specified filter criteria (time range, operator, operationType, entityId). The result SHALL be ordered by timestamp descending.
+_For any_ set of AuditEntry records and _for any_ AuditQueryFilter, the query result SHALL contain only entries matching all specified filter criteria (time range, operator, operationType, entityId). The result SHALL be ordered by timestamp descending.
 
 **Validates: Requirements 16.1, 16.3**
 
 ### Property 18: 审计导出 JSON 往返一致性
 
-*For any* set of AuditEntry records, exporting to JSON and then parsing the JSON back SHALL produce an equivalent set of AuditEntry records.
+_For any_ set of AuditEntry records, exporting to JSON and then parsing the JSON back SHALL produce an equivalent set of AuditEntry records.
 
 **Validates: Requirements 16.4**
 
 ### Property 19: 模板保存/加载往返一致性
 
-*For any* NLExecutionPlan saved as a PlanTemplate, loading the template by templateId SHALL produce a plan structure equivalent to the original (excluding planId, commandId, status, timestamps). Updating a template SHALL increment the version number and preserve the previous version in the versions array.
+_For any_ NLExecutionPlan saved as a PlanTemplate, loading the template by templateId SHALL produce a plan structure equivalent to the original (excluding planId, commandId, status, timestamps). Updating a template SHALL increment the version number and preserve the previous version in the versions array.
 
 **Validates: Requirements 19.3, 19.4**
 
 ### Property 20: 历史指令克隆产生新 ID
 
-*For any* historical StrategicCommand, cloning it to create a new command SHALL produce a new StrategicCommand with a different commandId but identical commandText, constraints, objectives, and priority.
+_For any_ historical StrategicCommand, cloning it to create a new command SHALL produce a new StrategicCommand with a different commandId but identical commandText, constraints, objectives, and priority.
 
 **Validates: Requirements 19.2**
 
 ### Property 21: 执行指标收集与偏差计算
 
-*For any* completed NLExecutionPlan, the collected ExecutionMetrics SHALL contain actualDuration, actualCost, plannedDuration, plannedCost. The durationDeviation SHALL equal (actualDuration - plannedDuration) / plannedDuration, and costDeviation SHALL equal (actualCost - plannedCost) / plannedCost.
+_For any_ completed NLExecutionPlan, the collected ExecutionMetrics SHALL contain actualDuration, actualCost, plannedDuration, plannedCost. The durationDeviation SHALL equal (actualDuration - plannedDuration) / plannedDuration, and costDeviation SHALL equal (actualCost - plannedCost) / plannedCost.
 
 **Validates: Requirements 20.1, 20.2**
 
 ### Property 22: 报告结构完整性与格式正确性
 
-*For any* ExecutionReport generated for a plan, the report SHALL contain non-empty summary, progressAnalysis, costAnalysis, and riskAnalysis. When exported as JSON, the output SHALL be valid JSON. When exported as Markdown, the output SHALL contain section headers for each analysis area.
+_For any_ ExecutionReport generated for a plan, the report SHALL contain non-empty summary, progressAnalysis, costAnalysis, and riskAnalysis. When exported as JSON, the output SHALL be valid JSON. When exported as Markdown, the output SHALL contain section headers for each analysis area.
 
 **Validates: Requirements 13.1, 13.2**
 
 ### Property 23: 计划与实际对比正确性
 
-*For any* CostAnalysisResult, the variance SHALL equal (actualCost - plannedCost), and variancePercentage SHALL equal variance / plannedCost * 100. The sum of costByMission values SHALL equal actualCost.
+_For any_ CostAnalysisResult, the variance SHALL equal (actualCost - plannedCost), and variancePercentage SHALL equal variance / plannedCost \* 100. The sum of costByMission values SHALL equal actualCost.
 
 **Validates: Requirements 13.4**
 
 ### Property 24: 偏差检测正确性
 
-*For any* NLExecutionPlan in executing status and *for any* set of current progress data, the deviation detector SHALL flag a task as delayed if its actual progress is below the expected progress at the current time based on the timeline. The detector SHALL flag cost exceeded if actual cost exceeds the budgeted cost.
+_For any_ NLExecutionPlan in executing status and _for any_ set of current progress data, the deviation detector SHALL flag a task as delayed if its actual progress is below the expected progress at the current time based on the timeline. The detector SHALL flag cost exceeded if actual cost exceeds the budgeted cost.
 
 **Validates: Requirements 8.2**
 
@@ -993,35 +1034,35 @@ export interface OptimizationReport {
 
 ### LLM 调用失败
 
-| 场景 | 处理策略 |
-|------|---------|
-| LLM 超时 | 重试 2 次（指数退避），仍失败则记录 AuditEntry 并返回错误 |
+| 场景             | 处理策略                                                       |
+| ---------------- | -------------------------------------------------------------- |
+| LLM 超时         | 重试 2 次（指数退避），仍失败则记录 AuditEntry 并返回错误      |
 | LLM 返回格式异常 | 尝试 JSON 修复解析，失败则使用 fallback 策略（关键词匹配分解） |
-| LLM 不可用 | 使用 fallback LLM（复用现有 llm-client.ts 的 provider 链） |
+| LLM 不可用       | 使用 fallback LLM（复用现有 llm-client.ts 的 provider 链）     |
 
 ### 分解失败
 
-| 场景 | 处理策略 |
-|------|---------|
-| 指令过于模糊 | 触发澄清对话，不直接分解 |
-| 分解结果为空 | 返回错误，提示用户细化指令 |
+| 场景         | 处理策略                                 |
+| ------------ | ---------------------------------------- |
+| 指令过于模糊 | 触发澄清对话，不直接分解                 |
+| 分解结果为空 | 返回错误，提示用户细化指令               |
 | 依赖关系循环 | 检测循环依赖，拒绝分解并报告具体循环路径 |
 
 ### 审批流程异常
 
-| 场景 | 处理策略 |
-|------|---------|
-| 审批人不存在 | 返回错误，提示配置审批人 |
-| 审批超时 | 发送 APPROVAL_REQUIRED 告警，不自动通过 |
-| 审批人拒绝 | 标记计划为 rejected，通知创建者 |
+| 场景         | 处理策略                                |
+| ------------ | --------------------------------------- |
+| 审批人不存在 | 返回错误，提示配置审批人                |
+| 审批超时     | 发送 APPROVAL_REQUIRED 告警，不自动通过 |
+| 审批人拒绝   | 标记计划为 rejected，通知创建者         |
 
 ### 执行监控异常
 
-| 场景 | 处理策略 |
-|------|---------|
-| Socket 连接断开 | 前端自动重连，重连后拉取最新状态 |
-| 进度数据不一致 | 以服务端 MissionStore 为准，前端重新同步 |
-| 告警风暴 | 同类告警 5 分钟内去重，只发送第一条 |
+| 场景            | 处理策略                                 |
+| --------------- | ---------------------------------------- |
+| Socket 连接断开 | 前端自动重连，重连后拉取最新状态         |
+| 进度数据不一致  | 以服务端 MissionStore 为准，前端重新同步 |
+| 告警风暴        | 同类告警 5 分钟内去重，只发送第一条      |
 
 ## 测试策略
 
@@ -1029,38 +1070,39 @@ export interface OptimizationReport {
 
 使用 `fast-check` 库进行属性测试，每个属性测试至少运行 100 次迭代。
 
-| 属性 | 测试文件 | 说明 |
-|------|---------|------|
-| Property 6: 拓扑排序 | `server/tests/nl-command/decomposition.property.test.ts` | 生成随机 DAG，验证执行顺序 |
-| Property 8: 成本求和 | `server/tests/nl-command/cost-budget.property.test.ts` | 生成随机成本分布，验证求和不变量 |
-| Property 9: 关键路径 | `server/tests/nl-command/critical-path.property.test.ts` | 生成随机依赖图，验证关键路径 |
-| Property 10: 审批流程 | `server/tests/nl-command/approval.property.test.ts` | 生成随机审批序列，验证状态转换 |
-| Property 12: 告警规则 | `server/tests/nl-command/alert-rules.property.test.ts` | 生成随机指标和规则，验证触发逻辑 |
-| Property 13: 过滤排序 | `server/tests/nl-command/filter-sort.property.test.ts` | 生成随机列表和过滤条件，验证结果 |
-| Property 15: @mention | `server/tests/nl-command/mention-parser.property.test.ts` | 生成随机评论文本，验证解析 |
-| Property 16: 权限 | `server/tests/nl-command/permission.property.test.ts` | 生成随机角色和操作，验证权限检查 |
-| Property 17: 审计查询 | `server/tests/nl-command/audit-query.property.test.ts` | 生成随机审计条目和过滤条件 |
-| Property 18: 审计导出 | `server/tests/nl-command/audit-export.property.test.ts` | 生成随机审计条目，验证 JSON 往返 |
-| Property 19: 模板往返 | `server/tests/nl-command/template.property.test.ts` | 生成随机计划，验证保存/加载往返 |
-| Property 23: 成本对比 | `server/tests/nl-command/cost-comparison.property.test.ts` | 生成随机成本数据，验证偏差计算 |
+| 属性                  | 测试文件                                                   | 说明                             |
+| --------------------- | ---------------------------------------------------------- | -------------------------------- |
+| Property 6: 拓扑排序  | `server/tests/nl-command/decomposition.property.test.ts`   | 生成随机 DAG，验证执行顺序       |
+| Property 8: 成本求和  | `server/tests/nl-command/cost-budget.property.test.ts`     | 生成随机成本分布，验证求和不变量 |
+| Property 9: 关键路径  | `server/tests/nl-command/critical-path.property.test.ts`   | 生成随机依赖图，验证关键路径     |
+| Property 10: 审批流程 | `server/tests/nl-command/approval.property.test.ts`        | 生成随机审批序列，验证状态转换   |
+| Property 12: 告警规则 | `server/tests/nl-command/alert-rules.property.test.ts`     | 生成随机指标和规则，验证触发逻辑 |
+| Property 13: 过滤排序 | `server/tests/nl-command/filter-sort.property.test.ts`     | 生成随机列表和过滤条件，验证结果 |
+| Property 15: @mention | `server/tests/nl-command/mention-parser.property.test.ts`  | 生成随机评论文本，验证解析       |
+| Property 16: 权限     | `server/tests/nl-command/permission.property.test.ts`      | 生成随机角色和操作，验证权限检查 |
+| Property 17: 审计查询 | `server/tests/nl-command/audit-query.property.test.ts`     | 生成随机审计条目和过滤条件       |
+| Property 18: 审计导出 | `server/tests/nl-command/audit-export.property.test.ts`    | 生成随机审计条目，验证 JSON 往返 |
+| Property 19: 模板往返 | `server/tests/nl-command/template.property.test.ts`        | 生成随机计划，验证保存/加载往返  |
+| Property 23: 成本对比 | `server/tests/nl-command/cost-comparison.property.test.ts` | 生成随机成本数据，验证偏差计算   |
 
 每个属性测试必须包含注释标签：
+
 ```typescript
 // Feature: nl-command-center, Property 6: 分解执行顺序拓扑排序正确性
 ```
 
 ### 单元测试
 
-| 模块 | 测试文件 | 覆盖内容 |
-|------|---------|---------|
-| CommandAnalyzer | `server/tests/nl-command/command-analyzer.test.ts` | LLM mock、解析结构、澄清问题生成 |
-| MissionDecomposer | `server/tests/nl-command/mission-decomposer.test.ts` | 分解逻辑、依赖识别、组织生成触发 |
-| TaskDecomposer | `server/tests/nl-command/task-decomposer.test.ts` | Task 分解、依赖识别 |
-| ExecutionPlanGenerator | `server/tests/nl-command/execution-plan-generator.test.ts` | 计划生成、时间线计算、资源分配 |
-| PlanApproval | `server/tests/nl-command/plan-approval.test.ts` | 审批流程、多级审批、状态转换 |
-| AlertEngine | `server/tests/nl-command/alert-engine.test.ts` | 规则注册、评估、去重 |
-| AuditTrail | `server/tests/nl-command/audit-trail.test.ts` | 记录、查询、导出 |
-| REST API | `server/tests/nl-command/routes.test.ts` | 路由端点、请求验证、响应格式 |
+| 模块                   | 测试文件                                                   | 覆盖内容                         |
+| ---------------------- | ---------------------------------------------------------- | -------------------------------- |
+| CommandAnalyzer        | `server/tests/nl-command/command-analyzer.test.ts`         | LLM mock、解析结构、澄清问题生成 |
+| MissionDecomposer      | `server/tests/nl-command/mission-decomposer.test.ts`       | 分解逻辑、依赖识别、组织生成触发 |
+| TaskDecomposer         | `server/tests/nl-command/task-decomposer.test.ts`          | Task 分解、依赖识别              |
+| ExecutionPlanGenerator | `server/tests/nl-command/execution-plan-generator.test.ts` | 计划生成、时间线计算、资源分配   |
+| PlanApproval           | `server/tests/nl-command/plan-approval.test.ts`            | 审批流程、多级审批、状态转换     |
+| AlertEngine            | `server/tests/nl-command/alert-engine.test.ts`             | 规则注册、评估、去重             |
+| AuditTrail             | `server/tests/nl-command/audit-trail.test.ts`              | 记录、查询、导出                 |
+| REST API               | `server/tests/nl-command/routes.test.ts`                   | 路由端点、请求验证、响应格式     |
 
 ### 测试工具
 

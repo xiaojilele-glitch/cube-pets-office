@@ -4,7 +4,7 @@ import type {
   ContestantEntry,
   JudgingResult,
   JudgingScore,
-} from '../../shared/autonomy-types.js';
+} from "../../shared/autonomy-types.js";
 
 // ─── Local Types ─────────────────────────────────────────────
 
@@ -27,7 +27,7 @@ export class JudgeAgent {
 
   constructor(
     private readonly llmProvider: LLMProvider,
-    private readonly config: AutonomyConfig,
+    private readonly config: AutonomyConfig
   ) {}
 
   /**
@@ -43,15 +43,15 @@ export class JudgeAgent {
   async judge(session: CompetitionSession): Promise<JudgingResult> {
     // Step 1: filter valid contestants
     const valid = session.contestants.filter(
-      (c) => !c.timedOut && c.result != null && c.result !== '',
+      c => !c.timedOut && c.result != null && c.result !== ""
     );
 
     if (valid.length === 0) {
       return {
         scores: [],
         ranking: [],
-        rationaleText: 'No valid submissions received.',
-        winnerId: '',
+        rationaleText: "No valid submissions received.",
+        winnerId: "",
         mergeRequired: false,
       };
     }
@@ -64,15 +64,22 @@ export class JudgeAgent {
     }
 
     // Step 3: LLM review (anonymized) for quality + novelty
-    const reviewInputs = valid.map((c) => ({ id: c.agentId, content: c.result! }));
+    const reviewInputs = valid.map(c => ({
+      id: c.agentId,
+      content: c.result!,
+    }));
     const reviewMap = await this.llmReview(reviewInputs);
 
     // Step 4: compute efficiency
     const efficiencyMap = this.computeEfficiency(valid);
 
     // Step 5: build JudgingScore array
-    const scores: JudgingScore[] = valid.map((c) => {
-      const review = reviewMap.get(c.agentId) ?? { quality: 0.5, novelty: 0.5, rationale: '' };
+    const scores: JudgingScore[] = valid.map(c => {
+      const review = reviewMap.get(c.agentId) ?? {
+        quality: 0.5,
+        novelty: 0.5,
+        rationale: "",
+      };
       return {
         agentId: c.agentId,
         correctness: correctnessMap.get(c.agentId) ?? 0,
@@ -88,7 +95,7 @@ export class JudgeAgent {
 
     // Step 6: sort by totalWeighted descending → ranking
     weighted.sort((a, b) => b.totalWeighted - a.totalWeighted);
-    const ranking = weighted.map((s) => s.agentId);
+    const ranking = weighted.map(s => s.agentId);
 
     // Step 7: check merge required
     const mergeRequired = this.checkMergeRequired(weighted);
@@ -98,14 +105,14 @@ export class JudgeAgent {
       (s, i) =>
         `#${i + 1} ${s.agentId}: total=${s.totalWeighted.toFixed(3)} ` +
         `(correctness=${s.correctness.toFixed(2)}, quality=${s.quality.toFixed(2)}, ` +
-        `efficiency=${s.efficiency.toFixed(2)}, novelty=${s.novelty.toFixed(2)})`,
+        `efficiency=${s.efficiency.toFixed(2)}, novelty=${s.novelty.toFixed(2)})`
     );
 
     return {
       scores: weighted,
       ranking,
-      rationaleText: rationaleLines.join('\n'),
-      winnerId: ranking[0] ?? '',
+      rationaleText: rationaleLines.join("\n"),
+      winnerId: ranking[0] ?? "",
       mergeRequired,
     };
   }
@@ -115,8 +122,11 @@ export class JudgeAgent {
    * Returns 0.7 as default (real implementation would run test cases).
    * Returns 0 if result is empty.
    */
-  async verifyCorrectness(result: string, _constraints: string[]): Promise<number> {
-    if (!result || result.trim() === '') return 0;
+  async verifyCorrectness(
+    result: string,
+    _constraints: string[]
+  ): Promise<number> {
+    if (!result || result.trim() === "") return 0;
     return 0.7;
   }
 
@@ -128,14 +138,19 @@ export class JudgeAgent {
    * For now returns mock scores since real LLM integration comes later.
    */
   async llmReview(
-    results: { id: string; content: string }[],
-  ): Promise<Map<string, { quality: number; novelty: number; rationale: string }>> {
-    const output = new Map<string, { quality: number; novelty: number; rationale: string }>();
+    results: { id: string; content: string }[]
+  ): Promise<
+    Map<string, { quality: number; novelty: number; rationale: string }>
+  > {
+    const output = new Map<
+      string,
+      { quality: number; novelty: number; rationale: string }
+    >();
 
     if (results.length === 0) return output;
 
     // Anonymize: map real IDs to generic labels
-    const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const labels = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const anonymized = results.map((r, i) => ({
       label: `Submission ${labels[i] ?? i}`,
       content: r.content,
@@ -143,8 +158,8 @@ export class JudgeAgent {
 
     // Build prompt for LLM (anonymized — no agent IDs)
     const prompt = anonymized
-      .map((a) => `--- ${a.label} ---\n${a.content}`)
-      .join('\n\n');
+      .map(a => `--- ${a.label} ---\n${a.content}`)
+      .join("\n\n");
 
     // Call LLM provider (result unused for now — mock scores below)
     try {
@@ -158,7 +173,7 @@ export class JudgeAgent {
       output.set(r.id, {
         quality: 0.7,
         novelty: 0.5,
-        rationale: 'Mock review — real LLM integration pending.',
+        rationale: "Mock review — real LLM integration pending.",
       });
     }
 
@@ -176,8 +191,8 @@ export class JudgeAgent {
     const result = new Map<string, number>();
     if (contestants.length === 0) return result;
 
-    const maxTokens = Math.max(...contestants.map((c) => c.tokenConsumed));
-    const minTokens = Math.min(...contestants.map((c) => c.tokenConsumed));
+    const maxTokens = Math.max(...contestants.map(c => c.tokenConsumed));
+    const minTokens = Math.min(...contestants.map(c => c.tokenConsumed));
 
     // All consumed the same amount
     if (maxTokens === minTokens) {
@@ -201,12 +216,15 @@ export class JudgeAgent {
    * Clamp to [0, 1].
    */
   computeWeightedScores(scores: JudgingScore[]): JudgingScore[] {
-    return scores.map((s) => ({
+    return scores.map(s => ({
       ...s,
       totalWeighted: clamp(
-        0.35 * s.correctness + 0.30 * s.quality + 0.20 * s.efficiency + 0.15 * s.novelty,
+        0.35 * s.correctness +
+          0.3 * s.quality +
+          0.2 * s.efficiency +
+          0.15 * s.novelty,
         0,
-        1,
+        1
       ),
     }));
   }
@@ -219,7 +237,9 @@ export class JudgeAgent {
   checkMergeRequired(scores: JudgingScore[]): boolean {
     if (scores.length < 2) return false;
 
-    const sorted = [...scores].sort((a, b) => b.totalWeighted - a.totalWeighted);
+    const sorted = [...scores].sort(
+      (a, b) => b.totalWeighted - a.totalWeighted
+    );
     const top1 = sorted[0].totalWeighted;
     const top2 = sorted[1].totalWeighted;
 
@@ -242,7 +262,7 @@ export class JudgeAgent {
     if (this.judgeConfidenceScore < 0.5) {
       console.warn(
         `[JUDGE_RELIABILITY_LOW] judgeConfidenceScore=${this.judgeConfidenceScore.toFixed(2)} — ` +
-          'Judge reliability is low. Consider reviewing LLM configuration.',
+          "Judge reliability is low. Consider reviewing LLM configuration."
       );
     }
   }

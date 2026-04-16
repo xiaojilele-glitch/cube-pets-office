@@ -62,10 +62,10 @@ function makeCallbacks(overrides: Partial<PlaybackCallbacks> = {}): {
   const errors: Error[] = [];
 
   const callbacks: PlaybackCallbacks = {
-    onEvent: overrides.onEvent ?? ((entry) => firedEntries.push(entry)),
+    onEvent: overrides.onEvent ?? (entry => firedEntries.push(entry)),
     onStateChange:
-      overrides.onStateChange ?? ((state) => stateChanges.push(state)),
-    onError: overrides.onError ?? ((err) => errors.push(err)),
+      overrides.onStateChange ?? (state => stateChanges.push(state)),
+    onError: overrides.onError ?? (err => errors.push(err)),
   };
 
   return { callbacks, firedEntries, stateChanges, errors };
@@ -144,9 +144,7 @@ describe("completed state after all events", () => {
     engine.start();
     vi.advanceTimersByTime(300);
 
-    expect(firedEntries.map((e) => e.event)).toEqual(
-      timeline.map((e) => e.event),
-    );
+    expect(firedEntries.map(e => e.event)).toEqual(timeline.map(e => e.event));
 
     engine.dispose();
   });

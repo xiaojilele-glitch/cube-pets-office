@@ -1,9 +1,9 @@
-import { AlertCircle, Home } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { AlertCircle, Home } from "lucide-react";
+import { useLocation } from "wouter";
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useI18n } from '@/i18n';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useI18n } from "@/i18n";
 
 export default function NotFound() {
   const [, setLocation] = useLocation();
@@ -21,12 +21,16 @@ export default function NotFound() {
           </div>
 
           <h1 className="mb-2 text-4xl font-bold text-slate-900">404</h1>
-          <h2 className="mb-4 text-xl font-semibold text-slate-700">{copy.notFound.title}</h2>
+          <h2 className="mb-4 text-xl font-semibold text-slate-700">
+            {copy.notFound.title}
+          </h2>
 
-          <p className="mb-8 leading-relaxed text-slate-600">{copy.notFound.description}</p>
+          <p className="mb-8 leading-relaxed text-slate-600">
+            {copy.notFound.description}
+          </p>
 
           <Button
-            onClick={() => setLocation('/')}
+            onClick={() => setLocation("/")}
             className="rounded-lg bg-[#2D5F4A] px-6 py-2.5 text-white shadow-md transition-all duration-200 hover:bg-[#245040] hover:shadow-lg"
           >
             <Home className="mr-2 h-4 w-4" />

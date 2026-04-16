@@ -14,7 +14,7 @@ export class ExecutorClientError extends Error {
     message: string,
     readonly kind: "unavailable" | "protocol" | "rejected",
     readonly statusCode?: number,
-    options?: { cause?: unknown },
+    options?: { cause?: unknown }
   ) {
     super(message, options);
     this.name = "ExecutorClientError";
@@ -46,11 +46,17 @@ export interface DispatchExecutionPlanResult {
 }
 
 function joinUrl(baseUrl: string, path: string): string {
-  return new URL(path, baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`).toString();
+  return new URL(
+    path,
+    baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`
+  ).toString();
 }
 
 function createOpaqueId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
@@ -69,7 +75,10 @@ export class ExecutorClient {
   constructor(private readonly options: ExecutorClientOptions) {
     this.fetchImpl = options.fetchImpl || fetch;
     this.timeoutMs = Math.max(1_000, options.timeoutMs || 10_000);
-    this.callbackTimeoutMs = Math.max(1_000, options.callbackTimeoutMs || 10_000);
+    this.callbackTimeoutMs = Math.max(
+      1_000,
+      options.callbackTimeoutMs || 10_000
+    );
     this.healthPath = options.healthPath || "/health";
     this.executorName = options.executorName || "lobster";
     this.now = options.now || (() => new Date());
@@ -78,7 +87,7 @@ export class ExecutorClient {
 
   buildJobRequest(
     plan: ExecutionPlan,
-    dispatch: DispatchExecutionPlanOptions = {},
+    dispatch: DispatchExecutionPlanOptions = {}
   ): ExecutorJobRequest {
     return {
       version: EXECUTOR_CONTRACT_VERSION,
@@ -115,7 +124,7 @@ export class ExecutorClient {
         `Executor is unreachable at ${url}. Brain dispatch is failing fast instead of queueing blindly.`,
         "unavailable",
         undefined,
-        { cause: error },
+        { cause: error }
       );
     }
 
@@ -123,14 +132,14 @@ export class ExecutorClient {
       throw new ExecutorClientError(
         `Executor health check failed with HTTP ${response.status} at ${url}. Brain dispatch is failing fast.`,
         "unavailable",
-        response.status,
+        response.status
       );
     }
   }
 
   async dispatchPlan(
     plan: ExecutionPlan,
-    dispatch: DispatchExecutionPlanOptions = {},
+    dispatch: DispatchExecutionPlanOptions = {}
   ): Promise<DispatchExecutionPlanResult> {
     await this.assertReachable();
 
@@ -151,7 +160,7 @@ export class ExecutorClient {
         `Executor create-job request failed for ${url}. Brain dispatch is failing fast.`,
         "unavailable",
         undefined,
-        { cause: error },
+        { cause: error }
       );
     }
 
@@ -163,7 +172,7 @@ export class ExecutorClient {
       throw new ExecutorClientError(
         `Executor returned a non-JSON response while creating a job at ${url}.`,
         "protocol",
-        response.status,
+        response.status
       );
     }
 
@@ -179,7 +188,7 @@ export class ExecutorClient {
       throw new ExecutorClientError(
         `Executor rejected the job request: ${errorMessage}`,
         "rejected",
-        response.status,
+        response.status
       );
     }
 
@@ -195,7 +204,7 @@ export class ExecutorClient {
       throw new ExecutorClientError(
         `Executor create-job response is missing required fields.`,
         "protocol",
-        response.status,
+        response.status
       );
     }
 
@@ -220,7 +229,7 @@ export class ExecutorClient {
           `Executor request to ${url} timed out after ${this.timeoutMs}ms.`,
           "unavailable",
           undefined,
-          { cause: error },
+          { cause: error }
         );
       }
 

@@ -7,23 +7,26 @@
  * Requirements: 18.2
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import type { ExecutionTimeline, ReplayEventType } from '../../../../shared/replay/contracts';
-import type { ReplayEngine } from '@/lib/replay/replay-engine';
+import type {
+  ExecutionTimeline,
+  ReplayEventType,
+} from "../../../../shared/replay/contracts";
+import type { ReplayEngine } from "@/lib/replay/replay-engine";
 
 /* ─── Event type → color mapping ─── */
 
 const EVENT_COLORS: Record<ReplayEventType, string> = {
-  AGENT_STARTED: '#22c55e',
-  AGENT_STOPPED: '#6b7280',
-  MESSAGE_SENT: '#3b82f6',
-  MESSAGE_RECEIVED: '#60a5fa',
-  DECISION_MADE: '#f59e0b',
-  CODE_EXECUTED: '#a855f7',
-  RESOURCE_ACCESSED: '#14b8a6',
-  ERROR_OCCURRED: '#ef4444',
-  MILESTONE_REACHED: '#ec4899',
+  AGENT_STARTED: "#22c55e",
+  AGENT_STOPPED: "#6b7280",
+  MESSAGE_SENT: "#3b82f6",
+  MESSAGE_RECEIVED: "#60a5fa",
+  DECISION_MADE: "#f59e0b",
+  CODE_EXECUTED: "#a855f7",
+  RESOURCE_ACCESSED: "#14b8a6",
+  ERROR_OCCURRED: "#ef4444",
+  MILESTONE_REACHED: "#ec4899",
 };
 
 export interface TimelineBarProps {
@@ -35,7 +38,7 @@ export function TimelineBar({ engine, timeline }: TimelineBarProps) {
   const [currentTime, setCurrentTime] = useState(timeline.startTime);
 
   useEffect(() => {
-    const unsub = engine.onStateChange((state) => {
+    const unsub = engine.onStateChange(state => {
       setCurrentTime(state.currentTime);
     });
     return unsub;
@@ -45,7 +48,7 @@ export function TimelineBar({ engine, timeline }: TimelineBarProps) {
 
   const progress = useMemo(
     () => Math.min(((currentTime - timeline.startTime) / duration) * 100, 100),
-    [currentTime, timeline.startTime, duration],
+    [currentTime, timeline.startTime, duration]
   );
 
   const handleClick = useCallback(
@@ -55,7 +58,7 @@ export function TimelineBar({ engine, timeline }: TimelineBarProps) {
       const targetTime = timeline.startTime + pct * duration;
       engine.seek(targetTime);
     },
-    [engine, timeline.startTime, duration],
+    [engine, timeline.startTime, duration]
   );
 
   return (
@@ -64,8 +67,11 @@ export function TimelineBar({ engine, timeline }: TimelineBarProps) {
       <div className="mb-1.5 flex flex-wrap gap-3 text-[10px] text-white/60">
         {Object.entries(EVENT_COLORS).map(([type, color]) => (
           <span key={type} className="flex items-center gap-1">
-            <span className="inline-block size-2 rounded-full" style={{ background: color }} />
-            {type.replace(/_/g, ' ')}
+            <span
+              className="inline-block size-2 rounded-full"
+              style={{ background: color }}
+            />
+            {type.replace(/_/g, " ")}
           </span>
         ))}
       </div>
@@ -82,7 +88,7 @@ export function TimelineBar({ engine, timeline }: TimelineBarProps) {
         tabIndex={0}
       >
         {/* Event dots */}
-        {timeline.events.map((evt) => {
+        {timeline.events.map(evt => {
           const left = ((evt.timestamp - timeline.startTime) / duration) * 100;
           return (
             <span
@@ -90,7 +96,7 @@ export function TimelineBar({ engine, timeline }: TimelineBarProps) {
               className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-80"
               style={{
                 left: `${left}%`,
-                background: EVENT_COLORS[evt.eventType] ?? '#888',
+                background: EVENT_COLORS[evt.eventType] ?? "#888",
               }}
             />
           );

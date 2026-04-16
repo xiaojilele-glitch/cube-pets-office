@@ -29,7 +29,9 @@ function createInMemoryDb(): AuditLoggerDb {
 
 /* ─── Helper to create a raw log entry (without id/timestamp) ─── */
 
-function makeEntry(overrides: Partial<Omit<PermissionAuditEntry, "id" | "timestamp">> = {}) {
+function makeEntry(
+  overrides: Partial<Omit<PermissionAuditEntry, "id" | "timestamp">> = {}
+) {
   return {
     agentId: overrides.agentId ?? "agent-1",
     operation: overrides.operation ?? "check",
@@ -61,24 +63,26 @@ describe("AuditLogger", () => {
       expect(entries).toHaveLength(1);
       expect(entries[0].id).toBeDefined();
       expect(entries[0].id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
       );
       expect(entries[0].timestamp).toBeDefined();
       expect(new Date(entries[0].timestamp).getTime()).not.toBeNaN();
     });
 
     it("should preserve all fields from the input entry", () => {
-      logger.log(makeEntry({
-        agentId: "agent-x",
-        operation: "grant",
-        resourceType: "network",
-        action: "connect",
-        resource: "example.com",
-        result: "allowed",
-        reason: "test reason",
-        operator: "admin",
-        metadata: { key: "value" },
-      }));
+      logger.log(
+        makeEntry({
+          agentId: "agent-x",
+          operation: "grant",
+          resourceType: "network",
+          action: "connect",
+          resource: "example.com",
+          result: "allowed",
+          reason: "test reason",
+          operator: "admin",
+          metadata: { key: "value" },
+        })
+      );
       const entries = db.getPermissionAudit();
       expect(entries[0].agentId).toBe("agent-x");
       expect(entries[0].operation).toBe("grant");
@@ -107,7 +111,7 @@ describe("AuditLogger", () => {
 
       const trail = logger.getAuditTrail("agent-1");
       expect(trail).toHaveLength(2);
-      expect(trail.every((e) => e.agentId === "agent-1")).toBe(true);
+      expect(trail.every(e => e.agentId === "agent-1")).toBe(true);
     });
 
     it("should return empty array for unknown agent", () => {
@@ -159,10 +163,26 @@ describe("AuditLogger", () => {
 
   describe("getUsageReport()", () => {
     it("should aggregate allowed and denied counts", () => {
-      logger.log(makeEntry({ agentId: "a1", result: "allowed", resourceType: "filesystem" }));
-      logger.log(makeEntry({ agentId: "a1", result: "denied", resourceType: "filesystem" }));
-      logger.log(makeEntry({ agentId: "a1", result: "allowed", resourceType: "network" }));
-      logger.log(makeEntry({ agentId: "a1", result: "error", resourceType: "api" }));
+      logger.log(
+        makeEntry({
+          agentId: "a1",
+          result: "allowed",
+          resourceType: "filesystem",
+        })
+      );
+      logger.log(
+        makeEntry({
+          agentId: "a1",
+          result: "denied",
+          resourceType: "filesystem",
+        })
+      );
+      logger.log(
+        makeEntry({ agentId: "a1", result: "allowed", resourceType: "network" })
+      );
+      logger.log(
+        makeEntry({ agentId: "a1", result: "error", resourceType: "api" })
+      );
 
       const report = logger.getUsageReport("a1", {
         from: "2000-01-01T00:00:00.000Z",
@@ -176,22 +196,52 @@ describe("AuditLogger", () => {
     });
 
     it("should break down counts by resource type", () => {
-      logger.log(makeEntry({ agentId: "a1", result: "allowed", resourceType: "filesystem" }));
-      logger.log(makeEntry({ agentId: "a1", result: "denied", resourceType: "filesystem" }));
-      logger.log(makeEntry({ agentId: "a1", result: "allowed", resourceType: "network" }));
-      logger.log(makeEntry({ agentId: "a1", result: "denied", resourceType: "network" }));
-      logger.log(makeEntry({ agentId: "a1", result: "denied", resourceType: "network" }));
+      logger.log(
+        makeEntry({
+          agentId: "a1",
+          result: "allowed",
+          resourceType: "filesystem",
+        })
+      );
+      logger.log(
+        makeEntry({
+          agentId: "a1",
+          result: "denied",
+          resourceType: "filesystem",
+        })
+      );
+      logger.log(
+        makeEntry({ agentId: "a1", result: "allowed", resourceType: "network" })
+      );
+      logger.log(
+        makeEntry({ agentId: "a1", result: "denied", resourceType: "network" })
+      );
+      logger.log(
+        makeEntry({ agentId: "a1", result: "denied", resourceType: "network" })
+      );
 
       const report = logger.getUsageReport("a1", {
         from: "2000-01-01T00:00:00.000Z",
         to: "2099-12-31T23:59:59.000Z",
       });
 
-      expect(report.resourceBreakdown.filesystem).toEqual({ allowed: 1, denied: 1 });
-      expect(report.resourceBreakdown.network).toEqual({ allowed: 1, denied: 2 });
+      expect(report.resourceBreakdown.filesystem).toEqual({
+        allowed: 1,
+        denied: 1,
+      });
+      expect(report.resourceBreakdown.network).toEqual({
+        allowed: 1,
+        denied: 2,
+      });
       expect(report.resourceBreakdown.api).toEqual({ allowed: 0, denied: 0 });
-      expect(report.resourceBreakdown.database).toEqual({ allowed: 0, denied: 0 });
-      expect(report.resourceBreakdown.mcp_tool).toEqual({ allowed: 0, denied: 0 });
+      expect(report.resourceBreakdown.database).toEqual({
+        allowed: 0,
+        denied: 0,
+      });
+      expect(report.resourceBreakdown.mcp_tool).toEqual({
+        allowed: 0,
+        denied: 0,
+      });
     });
 
     it("should initialize all resource types even with no entries", () => {
@@ -218,7 +268,7 @@ describe("AuditLogger", () => {
 
       const violations = logger.getViolations();
       expect(violations).toHaveLength(2);
-      expect(violations.every((e) => e.result === "denied")).toBe(true);
+      expect(violations.every(e => e.result === "denied")).toBe(true);
     });
 
     it("should filter violations by time range", () => {
@@ -316,7 +366,12 @@ describe("AuditLogger", () => {
   /* **Validates: Requirements 11.4** */
 
   describe("Property 11: 权限变更审计完整性", () => {
-    const operationArb = fc.constantFrom("grant", "revoke", "escalate", "policy_change");
+    const operationArb = fc.constantFrom(
+      "grant",
+      "revoke",
+      "escalate",
+      "policy_change"
+    );
     const resourceTypeArb = fc.constantFrom(...RESOURCE_TYPES);
     const actionArb = fc.constantFrom(...ACTIONS);
 
@@ -326,15 +381,21 @@ describe("AuditLogger", () => {
       resourceType: resourceTypeArb,
       action: actionArb,
       resource: fc.stringMatching(/^\/[a-z]{1,10}$/),
-      result: fc.constantFrom("allowed" as const, "denied" as const, "error" as const),
-      reason: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+      result: fc.constantFrom(
+        "allowed" as const,
+        "denied" as const,
+        "error" as const
+      ),
+      reason: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+        nil: undefined,
+      }),
     });
 
     it("every permission change operation should produce a matching audit record", () => {
       fc.assert(
         fc.property(
           fc.array(auditEntryArb, { minLength: 1, maxLength: 20 }),
-          (entries) => {
+          entries => {
             const freshDb = createInMemoryDb();
             const freshLogger = new AuditLogger(freshDb);
 
@@ -347,13 +408,13 @@ describe("AuditLogger", () => {
             // Every logged entry must have a matching record
             for (const entry of entries) {
               const match = allAudit.find(
-                (a) =>
+                a =>
                   a.agentId === entry.agentId &&
                   a.operation === entry.operation &&
                   a.resourceType === entry.resourceType &&
                   a.action === entry.action &&
                   a.resource === entry.resource &&
-                  a.result === entry.result,
+                  a.result === entry.result
               );
               expect(match).toBeDefined();
               // Must have auto-generated id and timestamp
@@ -363,34 +424,31 @@ describe("AuditLogger", () => {
 
             // Total count must match
             expect(allAudit.length).toBe(entries.length);
-          },
+          }
         ),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
 
     it("audit records for change operations contain agentId, operation, and timestamp", () => {
       fc.assert(
-        fc.property(
-          auditEntryArb,
-          (entry) => {
-            const freshDb = createInMemoryDb();
-            const freshLogger = new AuditLogger(freshDb);
+        fc.property(auditEntryArb, entry => {
+          const freshDb = createInMemoryDb();
+          const freshLogger = new AuditLogger(freshDb);
 
-            freshLogger.log(entry);
+          freshLogger.log(entry);
 
-            const records = freshDb.getPermissionAudit();
-            expect(records).toHaveLength(1);
+          const records = freshDb.getPermissionAudit();
+          expect(records).toHaveLength(1);
 
-            const record = records[0];
-            expect(record.agentId).toBe(entry.agentId);
-            expect(record.operation).toBe(entry.operation);
-            expect(record.timestamp).toBeTruthy();
-            // Timestamp must be a valid ISO date
-            expect(new Date(record.timestamp).getTime()).not.toBeNaN();
-          },
-        ),
-        { numRuns: 100 },
+          const record = records[0];
+          expect(record.agentId).toBe(entry.agentId);
+          expect(record.operation).toBe(entry.operation);
+          expect(record.timestamp).toBeTruthy();
+          // Timestamp must be a valid ISO date
+          expect(new Date(record.timestamp).getTime()).not.toBeNaN();
+        }),
+        { numRuns: 100 }
       );
     });
   });

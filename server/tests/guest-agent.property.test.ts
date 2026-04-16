@@ -21,7 +21,7 @@ const guestAgentConfigArb: fc.Arbitrary<GuestAgentConfig> = fc.record({
       name: fc.string({ minLength: 1, maxLength: 30 }),
       description: fc.string({ minLength: 1, maxLength: 100 }),
     }),
-    { maxLength: 5 },
+    { maxLength: 5 }
   ),
   mcp: fc.constant([] as GuestAgentConfig["mcp"]),
   avatarHint: fc.constantFrom("cat", "dog", "bunny", "tiger", "lion"),
@@ -38,20 +38,17 @@ describe("Feature: agent-marketplace, Property 1: 访客代理创建返回 guest
         expect(id).toMatch(/^guest_[0-9a-f]{8}$/);
         expect(isGuestId(id)).toBe(true);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("isGuestId rejects IDs without guest_ prefix", () => {
     fc.assert(
-      fc.property(
-        fc.stringMatching(/^[0-9a-f]{8}$/),
-        (hex) => {
-          expect(isGuestId(hex)).toBe(false);
-          expect(isGuestId(`agent_${hex}`)).toBe(false);
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(fc.stringMatching(/^[0-9a-f]{8}$/), hex => {
+        expect(isGuestId(hex)).toBe(false);
+        expect(isGuestId(`agent_${hex}`)).toBe(false);
+      }),
+      { numRuns: 100 }
     );
   });
 });
@@ -62,11 +59,11 @@ describe("Feature: agent-marketplace, Property 1: 访客代理创建返回 guest
 describe("Feature: agent-marketplace, Property 10: GuestAgentConfig 序列化往返一致性", () => {
   it("JSON.parse(JSON.stringify(config)) produces a deep-equal result", () => {
     fc.assert(
-      fc.property(guestAgentConfigArb, (config) => {
+      fc.property(guestAgentConfigArb, config => {
         const roundTripped = JSON.parse(JSON.stringify(config));
         expect(roundTripped).toEqual(config);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -78,34 +75,34 @@ describe("Feature: agent-marketplace, Property 11: API 响应隐藏 apiKey", () 
   it("sanitizeGuestConfig replaces non-empty apiKey with '***'", () => {
     fc.assert(
       fc.property(
-        guestAgentConfigArb.filter((c) => c.apiKey != null),
-        (config) => {
+        guestAgentConfigArb.filter(c => c.apiKey != null),
+        config => {
           const sanitized = sanitizeGuestConfig(config);
           expect(sanitized.apiKey).toBe("***");
           // Original config is not mutated
           expect(config.apiKey).not.toBe("***");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("sanitizeGuestConfig preserves undefined apiKey as undefined", () => {
     fc.assert(
       fc.property(
-        guestAgentConfigArb.filter((c) => c.apiKey == null),
-        (config) => {
+        guestAgentConfigArb.filter(c => c.apiKey == null),
+        config => {
           const sanitized = sanitizeGuestConfig(config);
           expect(sanitized.apiKey).toBeUndefined();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("sanitizeGuestConfig preserves all other fields", () => {
     fc.assert(
-      fc.property(guestAgentConfigArb, (config) => {
+      fc.property(guestAgentConfigArb, config => {
         const sanitized = sanitizeGuestConfig(config);
         expect(sanitized.model).toBe(config.model);
         expect(sanitized.baseUrl).toBe(config.baseUrl);
@@ -113,7 +110,7 @@ describe("Feature: agent-marketplace, Property 11: API 响应隐藏 apiKey", () 
         expect(sanitized.mcp).toEqual(config.mcp);
         expect(sanitized.avatarHint).toBe(config.avatarHint);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -134,7 +131,7 @@ import type {
 /* ─── Helpers: build a minimal GuestAgentNode for testing ─── */
 
 function makeGuestOrgNode(
-  overrides: Partial<GuestAgentNode> & { guestConfig: GuestAgentConfig },
+  overrides: Partial<GuestAgentNode> & { guestConfig: GuestAgentConfig }
 ): GuestAgentNode {
   return {
     id: overrides.id ?? "guest_00000001",
@@ -151,7 +148,11 @@ function makeGuestOrgNode(
     summaryFocus: overrides.summaryFocus ?? [],
     skills: overrides.skills ?? [],
     mcp: overrides.mcp ?? [],
-    model: overrides.model ?? { model: "gpt-4", temperature: 0.7, maxTokens: 3000 },
+    model: overrides.model ?? {
+      model: "gpt-4",
+      temperature: 0.7,
+      maxTokens: 3000,
+    },
     execution: overrides.execution ?? {
       mode: "execute",
       strategy: "sequential",
@@ -166,21 +167,29 @@ function makeGuestOrgNode(
 
 /* ─── GuestAgentNode arbitrary for property tests ─── */
 
-const guestAgentNodeArb = (config: GuestAgentConfig): fc.Arbitrary<GuestAgentNode> =>
-  fc.record({
-    name: fc.string({ minLength: 1, maxLength: 20 }),
-    departmentId: fc.constantFrom("engineering", "design", "research"),
-    departmentLabel: fc.constantFrom("Engineering", "Design", "Research"),
-    role: fc.constant("worker" as const),
-    parentId: fc.constantFrom("mgr-eng", "mgr-design", "mgr-research"),
-    invitedBy: fc.constantFrom("ceo", "mgr-eng"),
-    source: fc.constantFrom("manual" as const, "feishu" as const, "natural_language" as const),
-  }).map((fields) =>
-    makeGuestOrgNode({
-      ...fields,
-      guestConfig: config,
-    }),
-  );
+const guestAgentNodeArb = (
+  config: GuestAgentConfig
+): fc.Arbitrary<GuestAgentNode> =>
+  fc
+    .record({
+      name: fc.string({ minLength: 1, maxLength: 20 }),
+      departmentId: fc.constantFrom("engineering", "design", "research"),
+      departmentLabel: fc.constantFrom("Engineering", "Design", "Research"),
+      role: fc.constant("worker" as const),
+      parentId: fc.constantFrom("mgr-eng", "mgr-design", "mgr-research"),
+      invitedBy: fc.constantFrom("ceo", "mgr-eng"),
+      source: fc.constantFrom(
+        "manual" as const,
+        "feishu" as const,
+        "natural_language" as const
+      ),
+    })
+    .map(fields =>
+      makeGuestOrgNode({
+        ...fields,
+        guestConfig: config,
+      })
+    );
 
 /* ─── Feature: agent-marketplace, Property 2: register/unregister 往返 ─── */
 /* **Validates: Requirements 2.4** */
@@ -200,7 +209,11 @@ describe("Feature: agent-marketplace, Property 2: register/unregister 往返", (
         fc.integer({ min: 0, max: 99999999 }),
         (config, seed) => {
           const id = `guest_${seed.toString(16).padStart(8, "0")}`;
-          const orgNode = makeGuestOrgNode({ id, agentId: id, guestConfig: config });
+          const orgNode = makeGuestOrgNode({
+            id,
+            agentId: id,
+            guestConfig: config,
+          });
           const agent = new GuestAgent(id, config, orgNode);
 
           // Register
@@ -213,9 +226,9 @@ describe("Feature: agent-marketplace, Property 2: register/unregister 往返", (
           registry.unregisterGuest(id);
           expect(registry.get(id)).toBeUndefined();
           expect(registry.isGuest(id)).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -234,7 +247,7 @@ describe("Feature: agent-marketplace, Property 4: 并发上限不变量", () => 
     fc.assert(
       fc.property(
         fc.array(guestAgentConfigArb, { minLength: 6, maxLength: 10 }),
-        (configs) => {
+        configs => {
           // Clean slate
           for (const g of registry.getGuestAgents()) {
             registry.unregisterGuest(g.config.id);
@@ -244,7 +257,11 @@ describe("Feature: agent-marketplace, Property 4: 并发上限不变量", () => 
 
           for (let i = 0; i < configs.length; i++) {
             const id = `guest_${i.toString(16).padStart(8, "0")}`;
-            const orgNode = makeGuestOrgNode({ id, agentId: id, guestConfig: configs[i] });
+            const orgNode = makeGuestOrgNode({
+              id,
+              agentId: id,
+              guestConfig: configs[i],
+            });
             const agent = new GuestAgent(id, configs[i], orgNode);
 
             if (i < MAX_GUESTS) {
@@ -256,7 +273,7 @@ describe("Feature: agent-marketplace, Property 4: 并发上限不变量", () => 
             } else {
               // Should throw
               expect(() => registry.registerGuest(id, agent)).toThrow(
-                /Maximum guest agent limit reached/,
+                /Maximum guest agent limit reached/
               );
               // Count must remain at MAX_GUESTS
               expect(registry.getGuestCount()).toBe(MAX_GUESTS);
@@ -267,9 +284,9 @@ describe("Feature: agent-marketplace, Property 4: 并发上限不变量", () => 
           for (const id of registered) {
             registry.unregisterGuest(id);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -286,8 +303,16 @@ describe("Feature: agent-marketplace, Property 9: 访客代理使用独立 LLM �
         (configA, configB) => {
           const idA = "guest_aaaaaaaa";
           const idB = "guest_bbbbbbbb";
-          const nodeA = makeGuestOrgNode({ id: idA, agentId: idA, guestConfig: configA });
-          const nodeB = makeGuestOrgNode({ id: idB, agentId: idB, guestConfig: configB });
+          const nodeA = makeGuestOrgNode({
+            id: idA,
+            agentId: idA,
+            guestConfig: configA,
+          });
+          const nodeB = makeGuestOrgNode({
+            id: idB,
+            agentId: idB,
+            guestConfig: configB,
+          });
 
           const agentA = new GuestAgent(idA, configA, nodeA);
           const agentB = new GuestAgent(idB, configB, nodeB);
@@ -311,20 +336,20 @@ describe("Feature: agent-marketplace, Property 9: 访客代理使用独立 LLM �
           // isGuest flag is set
           expect(agentA.config.isGuest).toBe(true);
           expect(agentB.config.isGuest).toBe(true);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("createGuestLLMProvider returns a provider with call and callJson methods", () => {
     fc.assert(
-      fc.property(guestAgentConfigArb, (config) => {
+      fc.property(guestAgentConfigArb, config => {
         const provider = createGuestLLMProvider(config);
         expect(typeof provider.call).toBe("function");
         expect(typeof provider.callJson).toBe("function");
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -360,7 +385,11 @@ describe("Feature: agent-marketplace, Property 3: 注销后注册表清空且工
         fc.integer({ min: 0, max: 99999999 }),
         async (config, seed) => {
           const id = `guest_${seed.toString(16).padStart(8, "0")}`;
-          const orgNode = makeGuestOrgNode({ id, agentId: id, guestConfig: config });
+          const orgNode = makeGuestOrgNode({
+            id,
+            agentId: id,
+            guestConfig: config,
+          });
           const agent = new GuestAgent(id, config, orgNode);
 
           // Register the guest agent
@@ -376,16 +405,16 @@ describe("Feature: agent-marketplace, Property 3: 注销后注册表清空且工
           await lifecycleManager.leaveOffice(id);
 
           // Agent should no longer be in the registry
-          const guestIds = registry.getGuestAgents().map((g) => g.config.id);
+          const guestIds = registry.getGuestAgents().map(g => g.config.id);
           expect(guestIds).not.toContain(id);
           expect(registry.get(id)).toBeUndefined();
           expect(registry.isGuest(id)).toBe(false);
 
           // Workspace directory should be deleted
           expect(fs.existsSync(workspacePath)).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -406,7 +435,7 @@ describe("Feature: agent-marketplace, Property 8: 任务结束自动清理所有
     await fc.assert(
       fc.asyncProperty(
         fc.array(guestAgentConfigArb, { minLength: 1, maxLength: MAX_GUESTS }),
-        async (configs) => {
+        async configs => {
           // Clean slate
           for (const g of registry.getGuestAgents()) {
             registry.unregisterGuest(g.config.id);
@@ -418,7 +447,11 @@ describe("Feature: agent-marketplace, Property 8: 任务结束自动清理所有
           // Register N guest agents and create their workspace directories
           for (let i = 0; i < configs.length; i++) {
             const id = `guest_${i.toString(16).padStart(8, "0")}`;
-            const orgNode = makeGuestOrgNode({ id, agentId: id, guestConfig: configs[i] });
+            const orgNode = makeGuestOrgNode({
+              id,
+              agentId: id,
+              guestConfig: configs[i],
+            });
             const agent = new GuestAgent(id, configs[i], orgNode);
             registry.registerGuest(id, agent);
             ids.push(id);
@@ -441,9 +474,9 @@ describe("Feature: agent-marketplace, Property 8: 任务结束自动清理所有
           for (const wp of workspacePaths) {
             expect(fs.existsSync(wp)).toBe(false);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -470,7 +503,9 @@ describe("Feature: agent-marketplace, Property 6: MessageBus 层级验证支持�
    * Helper: construct an AgentRow-compatible object for a guest agent,
    * mirroring the logic in MessageBus.assertAgentExists.
    */
-  function buildGuestAgentRow(guest: InstanceType<typeof GuestAgent>): AgentRow {
+  function buildGuestAgentRow(
+    guest: InstanceType<typeof GuestAgent>
+  ): AgentRow {
     return {
       id: guest.config.id,
       name: guest.config.name,
@@ -523,9 +558,9 @@ describe("Feature: agent-marketplace, Property 6: MessageBus 层级验证支持�
           expect(validateHierarchyRule(managerRow, guestRow)).toBe(true);
           // Guest (worker) → Manager should also be valid (isDirectReport: to is manager of from)
           expect(validateHierarchyRule(guestRow, managerRow)).toBe(true);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -535,7 +570,11 @@ describe("Feature: agent-marketplace, Property 6: MessageBus 层级验证支持�
         guestAgentConfigArb,
         fc.constantFrom("mgr-eng", "mgr-design", "mgr-research"),
         fc.constantFrom("engineering", "design", "research"),
-        fc.constantFrom("execution" as const, "review" as const, "revision" as const),
+        fc.constantFrom(
+          "execution" as const,
+          "review" as const,
+          "revision" as const
+        ),
         (config, managerId, dept, stage) => {
           const id = `guest_${Math.random().toString(16).slice(2, 10)}`;
           const orgNode = makeGuestOrgNode({
@@ -570,9 +609,9 @@ describe("Feature: agent-marketplace, Property 6: MessageBus 层级验证支持�
           if (stage === "review") {
             expect(validateStageRoute(managerRow, guestRow, stage)).toBe(true);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -608,9 +647,9 @@ describe("Feature: agent-marketplace, Property 6: MessageBus 层级验证支持�
 
           // Cleanup
           registry.unregisterGuest(id);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -628,19 +667,14 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
   const agentNameArb = fc.stringMatching(/^[a-zA-Z][a-zA-Z0-9_-]{0,19}$/);
 
   /** Arbitrary: Chinese invitation prefix */
-  const cnPrefixArb = fc.constantFrom(
-    "邀请",
-    "请",
-    "让",
-    "叫",
-  );
+  const cnPrefixArb = fc.constantFrom("邀请", "请", "让", "叫");
 
   /** Arbitrary: Chinese invitation suffix (for patterns that need one) */
   const cnSuffixMap: Record<string, string> = {
-    "邀请": "",
-    "请": " 加入",
-    "让": " 加入",
-    "叫": " 来",
+    邀请: "",
+    请: " 加入",
+    让: " 加入",
+    叫: " 来",
   };
 
   /** Arbitrary: English invitation prefix */
@@ -649,7 +683,7 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
     "Invite",
     "bring in",
     "add",
-    "call in",
+    "call in"
   );
 
   /** Arbitrary: trailing context text */
@@ -658,7 +692,7 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
     " 一起分析竞品",
     " 帮忙设计界面",
     " to help with data analysis",
-    " to assist with testing",
+    " to assist with testing"
   );
 
   it("messages with Chinese invitation pattern + @Name return non-null with matching guestName", () => {
@@ -674,9 +708,9 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
           expect(result).not.toBeNull();
           expect(result!.guestName).toBe(name);
           expect(result!.context).toBe(message);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -692,9 +726,9 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
           expect(result).not.toBeNull();
           expect(result!.guestName).toBe(name);
           expect(result!.context).toBe(message);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -710,15 +744,15 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
       "我们来讨论一下方案",
       "The meeting is at 3pm",
       "分析报告已经完成",
-      "Please review the code",
+      "Please review the code"
     );
 
     fc.assert(
-      fc.property(nonInvitationArb, (message) => {
+      fc.property(nonInvitationArb, message => {
         const result = parseInvitation(message);
         expect(result).toBeNull();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -730,8 +764,14 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
 
   it("concrete examples from design doc parse correctly", () => {
     const examples: Array<{ message: string; expectedName: string }> = [
-      { message: "邀请 @Claude-Researcher 一起分析竞品", expectedName: "Claude-Researcher" },
-      { message: "invite @DataAnalyst to help with data analysis", expectedName: "DataAnalyst" },
+      {
+        message: "邀请 @Claude-Researcher 一起分析竞品",
+        expectedName: "Claude-Researcher",
+      },
+      {
+        message: "invite @DataAnalyst to help with data analysis",
+        expectedName: "DataAnalyst",
+      },
       { message: "请 @Designer 加入帮忙设计界面", expectedName: "Designer" },
     ];
 
@@ -744,7 +784,6 @@ describe("Feature: agent-marketplace, Property 5: 自然语言邀请解析", () 
   });
 });
 
-
 /* ─── Imports for Task 9 property tests (AccessGuard + Memory Isolation) ─── */
 
 import { resolveAgentWorkspacePath } from "../../server/core/access-guard.js";
@@ -755,7 +794,9 @@ import { buildGuestPromptContext } from "../../server/core/guest-agent.js";
 
 describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", () => {
   /** Arbitrary: guest agent ID with guest_ prefix + 8 hex chars */
-  const guestIdArb = fc.stringMatching(/^[0-9a-f]{8}$/).map((hex) => `guest_${hex}`);
+  const guestIdArb = fc
+    .stringMatching(/^[0-9a-f]{8}$/)
+    .map(hex => `guest_${hex}`);
 
   /** Arbitrary: another agent ID (non-guest, simulating a resident agent) */
   const otherAgentIdArb = fc.constantFrom(
@@ -765,7 +806,7 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
     "scout",
     "writer",
     "reviewer",
-    "guest_ffffffff",
+    "guest_ffffffff"
   );
 
   /** Arbitrary: path segments containing ".." traversal attempts */
@@ -775,8 +816,8 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
     fc.constant("subdir/../../other_agent/secret.md"),
     fc.constant("../other_agent/SOUL.md"),
     fc.constant("foo/../../../bar.txt"),
-    fc.stringMatching(/^[a-z]{1,5}$/).map((s) => `../${s}/secret.txt`),
-    fc.stringMatching(/^[a-z]{1,5}$/).map((s) => `${s}/../../leak.md`),
+    fc.stringMatching(/^[a-z]{1,5}$/).map(s => `../${s}/secret.txt`),
+    fc.stringMatching(/^[a-z]{1,5}$/).map(s => `${s}/../../leak.md`)
   );
 
   /** Arbitrary: safe relative path (no traversal) */
@@ -785,7 +826,7 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
     fc.constant("reports/summary.txt"),
     fc.constant("sessions/workflow_001.jsonl"),
     fc.stringMatching(/^[a-z]{1,8}\.txt$/),
-    fc.stringMatching(/^[a-z]{1,5}\/[a-z]{1,8}\.md$/),
+    fc.stringMatching(/^[a-z]{1,5}\/[a-z]{1,8}\.md$/)
   );
 
   it("resolveAgentWorkspacePath with guest_ ID resolves inside data/agents/guest_xxx/", () => {
@@ -797,7 +838,7 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
         const normalizedResolved = resolved.replace(/\\/g, "/");
         expect(normalizedResolved).toContain(`/agents/${guestId}/`);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -806,7 +847,7 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
       fc.property(guestIdArb, traversalPathArb, (guestId, badPath) => {
         expect(() => resolveAgentWorkspacePath(guestId, badPath)).toThrow();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -829,21 +870,27 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
           // Guest's resolved path must NOT start with the other agent's workspace root
           const otherAgentRoot = otherResolved.substring(
             0,
-            otherResolved.indexOf(otherId) + otherId.length,
+            otherResolved.indexOf(otherId) + otherId.length
           );
-          expect(guestResolved.startsWith(otherAgentRoot + path.sep)).toBe(false);
+          expect(guestResolved.startsWith(otherAgentRoot + path.sep)).toBe(
+            false
+          );
           expect(guestResolved).not.toBe(otherAgentRoot);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("guest agent getSoulText returns guest-specific soul, not other agents' SOUL.md", () => {
     fc.assert(
-      fc.property(guestAgentConfigArb, (config) => {
+      fc.property(guestAgentConfigArb, config => {
         const id = "guest_aabbccdd";
-        const orgNode = makeGuestOrgNode({ id, agentId: id, guestConfig: config });
+        const orgNode = makeGuestOrgNode({
+          id,
+          agentId: id,
+          guestConfig: config,
+        });
         const agent = new GuestAgent(id, config, orgNode);
 
         // The agent's soulMd should be the guest-specific soul built from orgNode
@@ -852,17 +899,17 @@ describe("Feature: agent-marketplace, Property 7: AccessGuard 工作区隔离", 
         expect(agent.config.soulMd).toContain("guest agent");
         expect(agent.config.soulMd).toContain(orgNode.name);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("buildGuestPromptContext returns empty array when no workflowId is provided", () => {
     fc.assert(
-      fc.property(guestIdArb, (guestId) => {
+      fc.property(guestIdArb, guestId => {
         const result = buildGuestPromptContext(guestId, undefined);
         expect(result).toEqual([]);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -885,7 +932,7 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
    */
   function processSnapshotForGuests(snapshot: WorkflowOrganizationSnapshot) {
     const guestNodes = snapshot.nodes.filter(
-      (node) => "guestConfig" in node || node.agentId.startsWith("guest_"),
+      node => "guestConfig" in node || node.agentId.startsWith("guest_")
     );
 
     const GUEST_POD_POSITIONS: [number, number, number][] = [
@@ -897,11 +944,21 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
     ];
 
     const AVATAR_HINT_MAP: Record<string, string> = {
-      cat: "cat", dog: "dog", bunny: "bunny", tiger: "tiger",
-      lion: "lion", elephant: "elephant", monkey: "monkey",
-      parrot: "parrot", pig: "pig", fish: "fish",
-      giraffe: "giraffe", chick: "chick", cow: "cow",
-      hog: "hog", caterpillar: "caterpillar",
+      cat: "cat",
+      dog: "dog",
+      bunny: "bunny",
+      tiger: "tiger",
+      lion: "lion",
+      elephant: "elephant",
+      monkey: "monkey",
+      parrot: "parrot",
+      pig: "pig",
+      fish: "fish",
+      giraffe: "giraffe",
+      chick: "chick",
+      cow: "cow",
+      hog: "hog",
+      caterpillar: "caterpillar",
     };
 
     const sceneGuests = guestNodes.map((node, index) => {
@@ -931,14 +988,16 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
   });
 
   /** Arbitrary: a department for the snapshot */
-  const departmentArb: fc.Arbitrary<WorkflowOrganizationDepartment> = fc.record({
-    id: fc.constantFrom("engineering", "design", "research"),
-    label: fc.constantFrom("Engineering", "Design", "Research"),
-    managerNodeId: fc.constant("mgr-node-1"),
-    direction: fc.string({ minLength: 1, maxLength: 30 }),
-    strategy: fc.constantFrom("sequential" as const, "parallel" as const),
-    maxConcurrency: fc.integer({ min: 1, max: 4 }),
-  });
+  const departmentArb: fc.Arbitrary<WorkflowOrganizationDepartment> = fc.record(
+    {
+      id: fc.constantFrom("engineering", "design", "research"),
+      label: fc.constantFrom("Engineering", "Design", "Research"),
+      managerNodeId: fc.constant("mgr-node-1"),
+      direction: fc.string({ minLength: 1, maxLength: 30 }),
+      strategy: fc.constantFrom("sequential" as const, "parallel" as const),
+      maxConcurrency: fc.integer({ min: 1, max: 4 }),
+    }
+  );
 
   it("adding a GuestAgentNode to snapshot.nodes is processed without throwing and included in result", () => {
     fc.assert(
@@ -947,7 +1006,11 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
         minimalSnapshotArb,
         departmentArb,
         fc.string({ minLength: 1, maxLength: 20 }),
-        fc.constantFrom("manual" as const, "feishu" as const, "natural_language" as const),
+        fc.constantFrom(
+          "manual" as const,
+          "feishu" as const,
+          "natural_language" as const
+        ),
         (config, snapshotBase, dept, guestName, source) => {
           const guestId = generateGuestId();
           const guestNode = makeGuestOrgNode({
@@ -992,7 +1055,11 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
                 skills: [],
                 mcp: [],
                 model: { model: "gpt-4", temperature: 0.7, maxTokens: 3000 },
-                execution: { mode: "orchestrate", strategy: "sequential", maxConcurrency: 1 },
+                execution: {
+                  mode: "orchestrate",
+                  strategy: "sequential",
+                  maxConcurrency: 1,
+                },
               },
               guestNode,
             ],
@@ -1004,7 +1071,7 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
           // The guest node should be detected and included
           expect(result.sceneGuests.length).toBeGreaterThanOrEqual(1);
 
-          const guestEntry = result.sceneGuests.find((g) => g.id === guestId);
+          const guestEntry = result.sceneGuests.find(g => g.id === guestId);
           expect(guestEntry).toBeDefined();
           expect(guestEntry!.isGuest).toBe(true);
           expect(guestEntry!.id).toBe(guestId);
@@ -1019,17 +1086,29 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
 
           // Animal should be resolved from avatarHint
           const validAnimals = [
-            "cat", "dog", "bunny", "tiger", "lion", "elephant",
-            "monkey", "parrot", "pig", "fish", "giraffe", "chick",
-            "cow", "hog", "caterpillar",
+            "cat",
+            "dog",
+            "bunny",
+            "tiger",
+            "lion",
+            "elephant",
+            "monkey",
+            "parrot",
+            "pig",
+            "fish",
+            "giraffe",
+            "chick",
+            "cow",
+            "hog",
+            "caterpillar",
           ];
           expect(validAnimals).toContain(guestEntry!.animal);
 
           // Total nodes includes both root and guest
           expect(result.totalNodes).toBe(2);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -1037,7 +1116,7 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
     fc.assert(
       fc.property(
         fc.array(guestAgentConfigArb, { minLength: 2, maxLength: 5 }),
-        (configs) => {
+        configs => {
           const guestNodes = configs.map((config, i) => {
             const id = `guest_${i.toString(16).padStart(8, "0")}`;
             return makeGuestOrgNode({
@@ -1078,7 +1157,11 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
                 skills: [],
                 mcp: [],
                 model: { model: "gpt-4", temperature: 0.7, maxTokens: 3000 },
-                execution: { mode: "orchestrate", strategy: "sequential", maxConcurrency: 1 },
+                execution: {
+                  mode: "orchestrate",
+                  strategy: "sequential",
+                  maxConcurrency: 1,
+                },
               },
               ...guestNodes,
             ],
@@ -1098,25 +1181,42 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
           // Positions within the 5-slot limit should be unique
           if (configs.length <= 5) {
             const positionKeys = result.sceneGuests.map(
-              (g) => `${g.position[0]},${g.position[2]}`,
+              g => `${g.position[0]},${g.position[2]}`
             );
             expect(new Set(positionKeys).size).toBe(configs.length);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("GuestAgentNode with unknown avatarHint defaults to 'cat'", () => {
     fc.assert(
       fc.property(
-        fc.stringMatching(/^[a-z]{3,10}$/).filter(
-          (s) => !["cat", "dog", "bunny", "tiger", "lion", "elephant",
-            "monkey", "parrot", "pig", "fish", "giraffe", "chick",
-            "cow", "hog", "caterpillar"].includes(s),
-        ),
-        (unknownHint) => {
+        fc
+          .stringMatching(/^[a-z]{3,10}$/)
+          .filter(
+            s =>
+              ![
+                "cat",
+                "dog",
+                "bunny",
+                "tiger",
+                "lion",
+                "elephant",
+                "monkey",
+                "parrot",
+                "pig",
+                "fish",
+                "giraffe",
+                "chick",
+                "cow",
+                "hog",
+                "caterpillar",
+              ].includes(s)
+          ),
+        unknownHint => {
           const config: GuestAgentConfig = {
             model: "gpt-4",
             baseUrl: "http://localhost:8080",
@@ -1150,9 +1250,9 @@ describe("Feature: agent-marketplace, Property 12: GuestAgentNode 与组织快�
           const result = processSnapshotForGuests(snapshot);
           expect(result.sceneGuests.length).toBe(1);
           expect(result.sceneGuests[0].animal).toBe("cat");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

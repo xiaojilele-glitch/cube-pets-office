@@ -26,7 +26,10 @@ const SOC2_REQUIREMENTS: ComplianceRequirement[] = [
   {
     requirementId: "SOC2-CC6.1",
     description: "Logical and physical access controls",
-    requiredEventTypes: [AuditEventType.PERMISSION_GRANTED, AuditEventType.PERMISSION_REVOKED],
+    requiredEventTypes: [
+      AuditEventType.PERMISSION_GRANTED,
+      AuditEventType.PERMISSION_REVOKED,
+    ],
     minimumRetentionDays: 365,
   },
   {
@@ -53,7 +56,10 @@ const GDPR_REQUIREMENTS: ComplianceRequirement[] = [
   {
     requirementId: "GDPR-Art.30",
     description: "Records of processing activities",
-    requiredEventTypes: [AuditEventType.DATA_ACCESSED, AuditEventType.AGENT_EXECUTED],
+    requiredEventTypes: [
+      AuditEventType.DATA_ACCESSED,
+      AuditEventType.AGENT_EXECUTED,
+    ],
     minimumRetentionDays: 1095,
   },
   {
@@ -80,7 +86,11 @@ const PCI_DSS_REQUIREMENTS: ComplianceRequirement[] = [
   {
     requirementId: "PCI-DSS-Req10.2",
     description: "Audit trails for user actions",
-    requiredEventTypes: [AuditEventType.USER_LOGIN, AuditEventType.USER_LOGOUT, AuditEventType.DATA_ACCESSED],
+    requiredEventTypes: [
+      AuditEventType.USER_LOGIN,
+      AuditEventType.USER_LOGOUT,
+      AuditEventType.DATA_ACCESSED,
+    ],
     minimumRetentionDays: 365,
   },
   {
@@ -95,7 +105,10 @@ const HIPAA_REQUIREMENTS: ComplianceRequirement[] = [
   {
     requirementId: "HIPAA-164.312(b)",
     description: "Audit controls for information systems",
-    requiredEventTypes: [AuditEventType.DATA_ACCESSED, AuditEventType.PERMISSION_GRANTED],
+    requiredEventTypes: [
+      AuditEventType.DATA_ACCESSED,
+      AuditEventType.PERMISSION_GRANTED,
+    ],
     minimumRetentionDays: 2190,
   },
   {
@@ -110,24 +123,31 @@ const ISO27001_REQUIREMENTS: ComplianceRequirement[] = [
   {
     requirementId: "ISO27001-A.12.4",
     description: "Logging and monitoring",
-    requiredEventTypes: [AuditEventType.AGENT_EXECUTED, AuditEventType.AGENT_FAILED],
+    requiredEventTypes: [
+      AuditEventType.AGENT_EXECUTED,
+      AuditEventType.AGENT_FAILED,
+    ],
     minimumRetentionDays: 365,
   },
   {
     requirementId: "ISO27001-A.9.2",
     description: "User access management",
-    requiredEventTypes: [AuditEventType.PERMISSION_GRANTED, AuditEventType.PERMISSION_REVOKED],
+    requiredEventTypes: [
+      AuditEventType.PERMISSION_GRANTED,
+      AuditEventType.PERMISSION_REVOKED,
+    ],
     minimumRetentionDays: 365,
   },
 ];
 
-const FRAMEWORK_MAP: Map<ComplianceFramework, ComplianceRequirement[]> = new Map([
-  ["SOC2", SOC2_REQUIREMENTS],
-  ["GDPR", GDPR_REQUIREMENTS],
-  ["PCI-DSS", PCI_DSS_REQUIREMENTS],
-  ["HIPAA", HIPAA_REQUIREMENTS],
-  ["ISO27001", ISO27001_REQUIREMENTS],
-]);
+const FRAMEWORK_MAP: Map<ComplianceFramework, ComplianceRequirement[]> =
+  new Map([
+    ["SOC2", SOC2_REQUIREMENTS],
+    ["GDPR", GDPR_REQUIREMENTS],
+    ["PCI-DSS", PCI_DSS_REQUIREMENTS],
+    ["HIPAA", HIPAA_REQUIREMENTS],
+    ["ISO27001", ISO27001_REQUIREMENTS],
+  ]);
 
 // ─── ComplianceMapper 类 ───────────────────────────────────────────────────
 
@@ -152,7 +172,7 @@ export class ComplianceMapper {
   /** 生成合规报告（覆盖范围/评分/缺口/风险事件） */
   generateReport(
     framework: ComplianceFramework,
-    timeRange: { start: number; end: number },
+    timeRange: { start: number; end: number }
   ): ComplianceReport {
     const requirements = this.mapToFramework(framework);
     const entries = this.getEntriesInRange(timeRange);
@@ -173,7 +193,7 @@ export class ComplianceMapper {
 
     for (const req of requirements) {
       const missingTypes = req.requiredEventTypes.filter(
-        (et) => (eventStatistics[et] || 0) === 0,
+        et => (eventStatistics[et] || 0) === 0
       );
       if (missingTypes.length === 0) {
         coveredCount++;
@@ -188,12 +208,13 @@ export class ComplianceMapper {
     }
 
     const totalRequirements = requirements.length;
-    const coverageScore = totalRequirements > 0
-      ? Math.round((coveredCount / totalRequirements) * 100)
-      : 0;
+    const coverageScore =
+      totalRequirements > 0
+        ? Math.round((coveredCount / totalRequirements) * 100)
+        : 0;
 
     // Collect risk events (CRITICAL severity or failure/denied/error results)
-    const riskEvents = entries.filter((entry) => {
+    const riskEvents = entries.filter(entry => {
       const def = DEFAULT_EVENT_TYPE_REGISTRY[entry.event.eventType];
       return (
         (def && def.severity === "CRITICAL") ||
@@ -238,7 +259,7 @@ export class ComplianceMapper {
   /** 计算合规性评分: coveredRequirements / totalRequirements * 100 */
   getComplianceScore(
     framework: ComplianceFramework,
-    timeRange: { start: number; end: number },
+    timeRange: { start: number; end: number }
   ): number {
     const requirements = this.mapToFramework(framework);
     if (requirements.length === 0) return 0;
@@ -253,7 +274,9 @@ export class ComplianceMapper {
 
     let covered = 0;
     for (const req of requirements) {
-      const allPresent = req.requiredEventTypes.every((et) => presentTypes.has(et));
+      const allPresent = req.requiredEventTypes.every(et =>
+        presentTypes.has(et)
+      );
       if (allPresent) covered++;
     }
 
@@ -263,12 +286,17 @@ export class ComplianceMapper {
   // ─── 内部工具 ────────────────────────────────────────────────────────
 
   /** 获取时间范围内的条目 */
-  private getEntriesInRange(timeRange: { start: number; end: number }): AuditLogEntry[] {
+  private getEntriesInRange(timeRange: {
+    start: number;
+    end: number;
+  }): AuditLogEntry[] {
     const count = this.chain.getEntryCount();
     if (count === 0) return [];
     const all = this.chain.getEntries(0, count - 1);
     return all.filter(
-      (e) => e.event.timestamp >= timeRange.start && e.event.timestamp <= timeRange.end,
+      e =>
+        e.event.timestamp >= timeRange.start &&
+        e.event.timestamp <= timeRange.end
     );
   }
 }

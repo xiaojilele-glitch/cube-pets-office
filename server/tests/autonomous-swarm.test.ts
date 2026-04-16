@@ -33,21 +33,23 @@ const arbCollaborationRequest: fc.Arbitrary<CollaborationRequest> = fc.record({
   createdAt: fc.integer({ min: 0, max: 2_000_000_000_000 }),
 });
 
-const arbCollaborationResponse: fc.Arbitrary<CollaborationResponse> = fc.record({
-  requestId: fc.string({ minLength: 1, maxLength: 20 }),
-  targetPodId: fc.string({ minLength: 1, maxLength: 20 }),
-  targetManagerId: fc.string({ minLength: 1, maxLength: 20 }),
-  status: fc.constantFrom("accepted", "rejected", "busy") as fc.Arbitrary<
-    "accepted" | "rejected" | "busy"
-  >,
-  estimatedCompletionMs: fc.option(fc.integer({ min: 0, max: 600_000 }), {
-    nil: undefined,
-  }),
-  reason: fc.option(fc.string({ minLength: 1, maxLength: 100 }), {
-    nil: undefined,
-  }),
-  respondedAt: fc.integer({ min: 0, max: 2_000_000_000_000 }),
-});
+const arbCollaborationResponse: fc.Arbitrary<CollaborationResponse> = fc.record(
+  {
+    requestId: fc.string({ minLength: 1, maxLength: 20 }),
+    targetPodId: fc.string({ minLength: 1, maxLength: 20 }),
+    targetManagerId: fc.string({ minLength: 1, maxLength: 20 }),
+    status: fc.constantFrom("accepted", "rejected", "busy") as fc.Arbitrary<
+      "accepted" | "rejected" | "busy"
+    >,
+    estimatedCompletionMs: fc.option(fc.integer({ min: 0, max: 600_000 }), {
+      nil: undefined,
+    }),
+    reason: fc.option(fc.string({ minLength: 1, maxLength: 100 }), {
+      nil: undefined,
+    }),
+    respondedAt: fc.integer({ min: 0, max: 2_000_000_000_000 }),
+  }
+);
 
 const arbCollaborationResult: fc.Arbitrary<CollaborationResult> = fc.record({
   requestId: fc.string({ minLength: 1, maxLength: 20 }),
@@ -68,7 +70,7 @@ const arbSessionStatus = fc.constantFrom(
   "active",
   "completed",
   "failed",
-  "timeout",
+  "timeout"
 ) as fc.Arbitrary<"pending" | "active" | "completed" | "failed" | "timeout">;
 
 const arbCollaborationSession: fc.Arbitrary<CollaborationSession> = fc.record({
@@ -91,11 +93,11 @@ const arbCollaborationSession: fc.Arbitrary<CollaborationSession> = fc.record({
 describe("Feature: autonomous-swarm, Property 4: CollaborationSession 序列化往返一致性", () => {
   it("JSON.parse(JSON.stringify(session)) deep equals the original session", () => {
     fc.assert(
-      fc.property(arbCollaborationSession, (session) => {
+      fc.property(arbCollaborationSession, session => {
         const roundTripped = JSON.parse(JSON.stringify(session));
         expect(roundTripped).toEqual(session);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -122,15 +124,15 @@ describe("Feature: autonomous-swarm, Property 4: CollaborationSession 序列化�
           expect(roundTripped.response).toBeDefined();
           expect(roundTripped.result).toBeDefined();
           expect(roundTripped.completedAt).toBeDefined();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("round-trip preserves session when optional fields are absent", () => {
     fc.assert(
-      fc.property(arbCollaborationRequest, (request) => {
+      fc.property(arbCollaborationRequest, request => {
         const session: CollaborationSession = {
           id: "minimal-session",
           request,
@@ -144,7 +146,7 @@ describe("Feature: autonomous-swarm, Property 4: CollaborationSession 序列化�
         expect(roundTripped.result).toBeUndefined();
         expect(roundTripped.completedAt).toBeUndefined();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -175,9 +177,9 @@ describe("Feature: autonomous-swarm, Property 2: 非 Manager 跨 Pod 消息拒�
           const from = { role: fromRole, department: fromDept };
           const to = { role: toRole, department: toDept };
           expect(validateCrossPod(from, to)).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -192,40 +194,35 @@ describe("Feature: autonomous-swarm, Property 2: 非 Manager 跨 Pod 消息拒�
           const from = { role: fromRole, department: fromDept };
           const to = { role: toRole, department: toDept };
           expect(validateCrossPod(from, to)).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("returns false when both are managers but in the same department", () => {
     fc.assert(
-      fc.property(arbDepartment, (dept) => {
+      fc.property(arbDepartment, dept => {
         const from = { role: "manager" as const, department: dept };
         const to = { role: "manager" as const, department: dept };
         expect(validateCrossPod(from, to)).toBe(false);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("returns true when both are managers in different departments (positive case)", () => {
     fc.assert(
-      fc.property(
-        arbDepartment,
-        arbDepartment,
-        (deptA, deptB) => {
-          fc.pre(deptA !== deptB);
-          const from = { role: "manager" as const, department: deptA };
-          const to = { role: "manager" as const, department: deptB };
-          expect(validateCrossPod(from, to)).toBe(true);
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(arbDepartment, arbDepartment, (deptA, deptB) => {
+        fc.pre(deptA !== deptB);
+        const from = { role: "manager" as const, department: deptA };
+        const to = { role: "manager" as const, department: deptB };
+        expect(validateCrossPod(from, to)).toBe(true);
+      }),
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 1 Tests ─── */
 
@@ -246,7 +243,11 @@ vi.mock("../../server/db/index.js", () => ({
     getWorkflow: (id: string) => mockState.workflows.get(id),
     createMessage: (msg: any) => {
       mockState.messageCounter++;
-      return { ...msg, id: mockState.messageCounter, created_at: new Date().toISOString() };
+      return {
+        ...msg,
+        id: mockState.messageCounter,
+        created_at: new Date().toISOString(),
+      };
     },
   },
 }));
@@ -282,18 +283,26 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
     .string({
       minLength: 1,
       maxLength: 300,
-      unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789 ".split("")),
+      unit: fc.constantFrom(
+        ..."abcdefghijklmnopqrstuvwxyz0123456789 ".split("")
+      ),
     })
-    .filter((s) => s.trim().length > 0);
+    .filter(s => s.trim().length > 0);
 
   const arbDeptPair = fc.tuple(arbDept, arbDept).filter(([a, b]) => a !== b);
 
   /* ── Helpers ── */
   function registerManager(id: string, department: string) {
     mockState.agents.set(id, {
-      id, name: id, department, role: "manager",
-      manager_id: null, model: "gpt-4o-mini", soul_md: null,
-      heartbeat_config: null, is_active: 1,
+      id,
+      name: id,
+      department,
+      role: "manager",
+      manager_id: null,
+      model: "gpt-4o-mini",
+      soul_md: null,
+      heartbeat_config: null,
+      is_active: 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -301,10 +310,14 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
 
   function registerWorkflow(id: string) {
     mockState.workflows.set(id, {
-      id, directive: "test", status: "running",
-      current_stage: null, departments_involved: [],
+      id,
+      directive: "test",
+      status: "running",
+      current_stage: null,
+      departments_involved: [],
       started_at: new Date().toISOString(),
-      completed_at: null, results: null,
+      completed_at: null,
+      results: null,
       created_at: new Date().toISOString(),
     });
   }
@@ -323,7 +336,11 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
 
     await fc.assert(
       fc.asyncProperty(
-        arbAlphaId, arbAlphaId, arbDeptPair, arbAlphaId, arbContent,
+        arbAlphaId,
+        arbAlphaId,
+        arbDeptPair,
+        arbAlphaId,
+        arbContent,
         async (fromId, toId, [deptA, deptB], wfId, content) => {
           fc.pre(fromId !== toId);
           resetState();
@@ -331,18 +348,23 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
           registerManager(toId, deptB);
           registerWorkflow(wfId);
 
-          const msg = await messageBus.sendCrossPod(fromId, toId, content, wfId);
+          const msg = await messageBus.sendCrossPod(
+            fromId,
+            toId,
+            content,
+            wfId
+          );
 
           expect(msg.metadata).toBeDefined();
           expect(msg.metadata.crossPod).toBe(true);
           expect(msg.metadata.sourcePodId).toBe(deptA);
           expect(msg.metadata.targetPodId).toBe(deptB);
           expect(msg.metadata.contentPreview.length).toBeLessThanOrEqual(
-            DEFAULT_SWARM_CONFIG.summaryMaxLength,
+            DEFAULT_SWARM_CONFIG.summaryMaxLength
           );
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -351,7 +373,11 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
 
     await fc.assert(
       fc.asyncProperty(
-        arbAlphaId, arbAlphaId, arbDeptPair, arbAlphaId, arbContent,
+        arbAlphaId,
+        arbAlphaId,
+        arbDeptPair,
+        arbAlphaId,
+        arbContent,
         async (fromId, toId, [deptA, deptB], wfId, content) => {
           fc.pre(fromId !== toId);
           resetState();
@@ -359,10 +385,15 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
           registerManager(toId, deptB);
           registerWorkflow(wfId);
 
-          const msg = await messageBus.sendCrossPod(fromId, toId, content, wfId);
+          const msg = await messageBus.sendCrossPod(
+            fromId,
+            toId,
+            content,
+            wfId
+          );
 
           const crossPodEvents = mockState.emittedEvents.filter(
-            (e) => e.event === "cross_pod_message",
+            e => e.event === "cross_pod_message"
           );
           expect(crossPodEvents.length).toBe(1);
 
@@ -371,15 +402,14 @@ describe("Feature: autonomous-swarm, Property 1: 跨 Pod 消息投递与元数�
           expect(eventData.targetPodId).toBe(deptB);
           expect(eventData.messageId).toBe(msg.id);
           expect(eventData.contentPreview).toBe(
-            content.substring(0, DEFAULT_SWARM_CONFIG.summaryMaxLength),
+            content.substring(0, DEFAULT_SWARM_CONFIG.summaryMaxLength)
           );
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 3 Tests ─── */
 
@@ -402,9 +432,11 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
     .string({
       minLength: 1,
       maxLength: 500,
-      unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789 ".split("")),
+      unit: fc.constantFrom(
+        ..."abcdefghijklmnopqrstuvwxyz0123456789 ".split("")
+      ),
     })
-    .filter((s) => s.trim().length > 0);
+    .filter(s => s.trim().length > 0);
 
   const arbDeptPair = fc.tuple(arbDept, arbDept).filter(([a, b]) => a !== b);
 
@@ -413,9 +445,15 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
   /* ── Helpers ── */
   function registerManager(id: string, department: string) {
     mockState.agents.set(id, {
-      id, name: id, department, role: "manager",
-      manager_id: null, model: "gpt-4o-mini", soul_md: null,
-      heartbeat_config: null, is_active: 1,
+      id,
+      name: id,
+      department,
+      role: "manager",
+      manager_id: null,
+      model: "gpt-4o-mini",
+      soul_md: null,
+      heartbeat_config: null,
+      is_active: 1,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -423,10 +461,14 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
 
   function registerWorkflow(id: string) {
     mockState.workflows.set(id, {
-      id, directive: "test", status: "running",
-      current_stage: null, departments_involved: [],
+      id,
+      directive: "test",
+      status: "running",
+      current_stage: null,
+      departments_involved: [],
       started_at: new Date().toISOString(),
-      completed_at: null, results: null,
+      completed_at: null,
+      results: null,
       created_at: new Date().toISOString(),
     });
   }
@@ -445,7 +487,11 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
 
     await fc.assert(
       fc.asyncProperty(
-        arbAlphaId, arbAlphaId, arbDeptPair, arbAlphaId, arbContent,
+        arbAlphaId,
+        arbAlphaId,
+        arbDeptPair,
+        arbAlphaId,
+        arbContent,
         async (fromId, toId, [deptA, deptB], wfId, content) => {
           fc.pre(fromId !== toId);
           resetState();
@@ -453,12 +499,19 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
           registerManager(toId, deptB);
           registerWorkflow(wfId);
 
-          const msg = await messageBus.sendCrossPod(fromId, toId, content, wfId);
+          const msg = await messageBus.sendCrossPod(
+            fromId,
+            toId,
+            content,
+            wfId
+          );
 
-          expect(msg.metadata.contentPreview.length).toBeLessThanOrEqual(SUMMARY_MAX);
-        },
+          expect(msg.metadata.contentPreview.length).toBeLessThanOrEqual(
+            SUMMARY_MAX
+          );
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -470,13 +523,19 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
       .string({
         minLength: SUMMARY_MAX + 1,
         maxLength: 500,
-        unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")),
+        unit: fc.constantFrom(
+          ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+        ),
       })
-      .filter((s) => s.trim().length > 0);
+      .filter(s => s.trim().length > 0);
 
     await fc.assert(
       fc.asyncProperty(
-        arbAlphaId, arbAlphaId, arbDeptPair, arbAlphaId, arbLongContent,
+        arbAlphaId,
+        arbAlphaId,
+        arbDeptPair,
+        arbAlphaId,
+        arbLongContent,
         async (fromId, toId, [deptA, deptB], wfId, content) => {
           fc.pre(fromId !== toId);
           resetState();
@@ -484,12 +543,19 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
           registerManager(toId, deptB);
           registerWorkflow(wfId);
 
-          const msg = await messageBus.sendCrossPod(fromId, toId, content, wfId);
+          const msg = await messageBus.sendCrossPod(
+            fromId,
+            toId,
+            content,
+            wfId
+          );
 
-          expect(msg.metadata.contentPreview).toBe(content.substring(0, SUMMARY_MAX));
-        },
+          expect(msg.metadata.contentPreview).toBe(
+            content.substring(0, SUMMARY_MAX)
+          );
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -501,13 +567,19 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
       .string({
         minLength: 1,
         maxLength: SUMMARY_MAX,
-        unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")),
+        unit: fc.constantFrom(
+          ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+        ),
       })
-      .filter((s) => s.trim().length > 0);
+      .filter(s => s.trim().length > 0);
 
     await fc.assert(
       fc.asyncProperty(
-        arbAlphaId, arbAlphaId, arbDeptPair, arbAlphaId, arbShortContent,
+        arbAlphaId,
+        arbAlphaId,
+        arbDeptPair,
+        arbAlphaId,
+        arbShortContent,
         async (fromId, toId, [deptA, deptB], wfId, content) => {
           fc.pre(fromId !== toId);
           resetState();
@@ -515,16 +587,20 @@ describe("Feature: autonomous-swarm, Property 3: 跨 Pod 消息摘要截断", ()
           registerManager(toId, deptB);
           registerWorkflow(wfId);
 
-          const msg = await messageBus.sendCrossPod(fromId, toId, content, wfId);
+          const msg = await messageBus.sendCrossPod(
+            fromId,
+            toId,
+            content,
+            wfId
+          );
 
           expect(msg.metadata.contentPreview).toBe(content);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 5 Tests ─── */
 
@@ -535,9 +611,21 @@ import type { PodCapability } from "../../shared/swarm.js";
 // **Validates: Requirements 3.2**
 describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Pod", () => {
   const CAPABILITY_POOL = [
-    "coding", "design", "testing", "devops", "analytics",
-    "security", "ml", "frontend", "backend", "database",
-    "infra", "docs", "review", "deploy", "monitor",
+    "coding",
+    "design",
+    "testing",
+    "devops",
+    "analytics",
+    "security",
+    "ml",
+    "frontend",
+    "backend",
+    "database",
+    "infra",
+    "docs",
+    "review",
+    "deploy",
+    "monitor",
   ];
 
   const arbCapability = fc.constantFrom(...CAPABILITY_POOL);
@@ -548,8 +636,20 @@ describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Po
   });
 
   const arbPodCapability: fc.Arbitrary<PodCapability> = fc.record({
-    podId: fc.string({ minLength: 1, maxLength: 15, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")) }),
-    managerId: fc.string({ minLength: 1, maxLength: 15, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")) }),
+    podId: fc.string({
+      minLength: 1,
+      maxLength: 15,
+      unit: fc.constantFrom(
+        ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+      ),
+    }),
+    managerId: fc.string({
+      minLength: 1,
+      maxLength: 15,
+      unit: fc.constantFrom(
+        ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+      ),
+    }),
     capabilities: arbCapabilitySet,
     currentLoad: fc.integer({ min: 0, max: 10 }),
     maxConcurrency: fc.integer({ min: 1, max: 10 }),
@@ -558,15 +658,15 @@ describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Po
   /** Generate a list of PodCapabilities with unique podIds */
   const arbPodRegistry = fc
     .array(arbPodCapability, { minLength: 1, maxLength: 8 })
-    .map((pods) => {
+    .map(pods => {
       const seen = new Set<string>();
-      return pods.filter((p) => {
+      return pods.filter(p => {
         if (seen.has(p.podId)) return false;
         seen.add(p.podId);
         return true;
       });
     })
-    .filter((pods) => pods.length > 0);
+    .filter(pods => pods.length > 0);
 
   function createOrchestrator(): SwarmOrchestrator {
     return new SwarmOrchestrator({
@@ -592,11 +692,11 @@ describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Po
         const requiredSet = new Set(required);
 
         for (const pod of results) {
-          const intersection = pod.capabilities.filter((c) => requiredSet.has(c));
+          const intersection = pod.capabilities.filter(c => requiredSet.has(c));
           expect(intersection.length).toBeGreaterThan(0);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -612,12 +712,16 @@ describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Po
         const requiredSet = new Set(required);
 
         for (let i = 1; i < results.length; i++) {
-          const prevCount = results[i - 1].capabilities.filter((c) => requiredSet.has(c)).length;
-          const currCount = results[i].capabilities.filter((c) => requiredSet.has(c)).length;
+          const prevCount = results[i - 1].capabilities.filter(c =>
+            requiredSet.has(c)
+          ).length;
+          const currCount = results[i].capabilities.filter(c =>
+            requiredSet.has(c)
+          ).length;
           expect(prevCount).toBeGreaterThanOrEqual(currCount);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -630,17 +734,19 @@ describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Po
         }
 
         const results = orchestrator.matchCapabilities(required);
-        const resultIds = new Set(results.map((p) => p.podId));
+        const resultIds = new Set(results.map(p => p.podId));
         const requiredSet = new Set(required);
 
         for (const pod of pods) {
-          const matchCount = pod.capabilities.filter((c) => requiredSet.has(c)).length;
+          const matchCount = pod.capabilities.filter(c =>
+            requiredSet.has(c)
+          ).length;
           if (matchCount === 0) {
             expect(resultIds.has(pod.podId)).toBe(false);
           }
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -653,21 +759,22 @@ describe("Feature: autonomous-swarm, Property 5: Pod 能力匹配返回相关 Po
         }
 
         const results = orchestrator.matchCapabilities(required);
-        const resultIds = new Set(results.map((p) => p.podId));
+        const resultIds = new Set(results.map(p => p.podId));
         const requiredSet = new Set(required);
 
         for (const pod of pods) {
-          const matchCount = pod.capabilities.filter((c) => requiredSet.has(c)).length;
+          const matchCount = pod.capabilities.filter(c =>
+            requiredSet.has(c)
+          ).length;
           if (matchCount > 0) {
             expect(resultIds.has(pod.podId)).toBe(true);
           }
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 7 Tests ─── */
 
@@ -709,7 +816,10 @@ describe("Feature: autonomous-swarm, Property 7: 协作深度限制执行", () =
     });
   }
 
-  function makeRequest(depth: number, sourcePodId: string): CollaborationRequest {
+  function makeRequest(
+    depth: number,
+    sourcePodId: string
+  ): CollaborationRequest {
     return {
       id: `req-depth-${depth}-${Date.now()}`,
       sourcePodId,
@@ -733,14 +843,14 @@ describe("Feature: autonomous-swarm, Property 7: 协作深度限制执行", () =
           setupPods(orchestrator, "source-pod");
 
           const response = await orchestrator.handleRequest(
-            makeRequest(depth, "source-pod"),
+            makeRequest(depth, "source-pod")
           );
 
           expect(response.status).toBe("rejected");
           expect(response.reason).toBe("depth_exceeded");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -755,27 +865,27 @@ describe("Feature: autonomous-swarm, Property 7: 协作深度限制执行", () =
           setupPods(orchestrator, "source-pod");
 
           const response = await orchestrator.handleRequest(
-            makeRequest(depth, "source-pod"),
+            makeRequest(depth, "source-pod")
           );
 
           // Should NOT be rejected due to depth
           if (response.status === "rejected") {
             expect(response.reason).not.toBe("depth_exceeded");
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("depth exactly equal to maxDepth is accepted (boundary)", async () => {
     await fc.assert(
-      fc.asyncProperty(arbMaxDepth, async (maxDepth) => {
+      fc.asyncProperty(arbMaxDepth, async maxDepth => {
         const orchestrator = createOrchestratorWithDepth(maxDepth);
         setupPods(orchestrator, "source-pod");
 
         const response = await orchestrator.handleRequest(
-          makeRequest(maxDepth, "source-pod"),
+          makeRequest(maxDepth, "source-pod")
         );
 
         // Boundary: depth === maxDepth should NOT be rejected for depth
@@ -783,11 +893,10 @@ describe("Feature: autonomous-swarm, Property 7: 协作深度限制执行", () =
           expect(response.reason).not.toBe("depth_exceeded");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 8 Tests ─── */
 
@@ -796,7 +905,9 @@ describe("Feature: autonomous-swarm, Property 7: 协作深度限制执行", () =
 describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制", () => {
   const arbMaxSessions = fc.integer({ min: 1, max: 8 });
 
-  function createOrchestratorWithSessions(maxConcurrentSessions: number): SwarmOrchestrator {
+  function createOrchestratorWithSessions(
+    maxConcurrentSessions: number
+  ): SwarmOrchestrator {
     return new SwarmOrchestrator({
       messageBus: {} as any,
       config: { ...DEFAULT_SWARM_CONFIG, maxConcurrentSessions, maxDepth: 100 },
@@ -815,7 +926,7 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
    */
   function setupPodsForCapacity(
     orchestrator: SwarmOrchestrator,
-    numSourcePods: number,
+    numSourcePods: number
   ) {
     // Target pod has the capability we'll request
     orchestrator.registerPodCapability({
@@ -853,7 +964,7 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
 
   it("when active sessions >= maxConcurrentSessions, new requests return busy with swarm_capacity_exceeded", async () => {
     await fc.assert(
-      fc.asyncProperty(arbMaxSessions, async (maxSessions) => {
+      fc.asyncProperty(arbMaxSessions, async maxSessions => {
         const orchestrator = createOrchestratorWithSessions(maxSessions);
         // Need enough source pods to fill capacity + 1 extra
         setupPodsForCapacity(orchestrator, maxSessions + 1);
@@ -866,13 +977,13 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
 
         // The next request should be rejected due to capacity
         const overflowResp = await orchestrator.handleRequest(
-          makeValidRequest(maxSessions),
+          makeValidRequest(maxSessions)
         );
 
         expect(overflowResp.status).toBe("busy");
         expect(overflowResp.reason).toBe("swarm_capacity_exceeded");
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -893,21 +1004,21 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
 
           // The next request should NOT be rejected due to capacity
           const resp = await orchestrator.handleRequest(
-            makeValidRequest(actualFill),
+            makeValidRequest(actualFill)
           );
 
           if (resp.status === "busy") {
             expect(resp.reason).not.toBe("swarm_capacity_exceeded");
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("exactly at maxConcurrentSessions - 1 active sessions, one more request is accepted (boundary)", async () => {
     await fc.assert(
-      fc.asyncProperty(arbMaxSessions, async (maxSessions) => {
+      fc.asyncProperty(arbMaxSessions, async maxSessions => {
         const orchestrator = createOrchestratorWithSessions(maxSessions);
         setupPodsForCapacity(orchestrator, maxSessions);
 
@@ -919,7 +1030,7 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
 
         // One more should still be accepted (boundary: exactly at limit)
         const boundaryResp = await orchestrator.handleRequest(
-          makeValidRequest(maxSessions - 1),
+          makeValidRequest(maxSessions - 1)
         );
 
         // Should NOT be rejected due to capacity
@@ -927,11 +1038,10 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
           expect(boundaryResp.reason).not.toBe("swarm_capacity_exceeded");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 9 Tests ─── */
 
@@ -939,9 +1049,21 @@ describe("Feature: autonomous-swarm, Property 8: 并发协作会话数量限制"
 // **Validates: Requirements 5.3**
 describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () => {
   const CAPABILITY_POOL = [
-    "coding", "design", "testing", "devops", "analytics",
-    "security", "ml", "frontend", "backend", "database",
-    "infra", "docs", "review", "deploy", "monitor",
+    "coding",
+    "design",
+    "testing",
+    "devops",
+    "analytics",
+    "security",
+    "ml",
+    "frontend",
+    "backend",
+    "database",
+    "infra",
+    "docs",
+    "review",
+    "deploy",
+    "monitor",
   ];
 
   const arbCapability = fc.constantFrom(...CAPABILITY_POOL);
@@ -954,7 +1076,11 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
   function createOrchestrator(): SwarmOrchestrator {
     return new SwarmOrchestrator({
       messageBus: {} as any,
-      config: { ...DEFAULT_SWARM_CONFIG, maxDepth: 100, maxConcurrentSessions: 100 },
+      config: {
+        ...DEFAULT_SWARM_CONFIG,
+        maxDepth: 100,
+        maxConcurrentSessions: 100,
+      },
       llmProvider: { generate: async () => "" },
       agentDirectory: {
         getManagerByPod: () => undefined,
@@ -967,8 +1093,20 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
     await fc.assert(
       fc.asyncProperty(
         arbCapabilitySet,
-        fc.string({ minLength: 1, maxLength: 10, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")) }),
-        fc.string({ minLength: 1, maxLength: 10, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")) }),
+        fc.string({
+          minLength: 1,
+          maxLength: 10,
+          unit: fc.constantFrom(
+            ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+          ),
+        }),
+        fc.string({
+          minLength: 1,
+          maxLength: 10,
+          unit: fc.constantFrom(
+            ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+          ),
+        }),
         async (capabilities, sourcePodId, targetPodId) => {
           fc.pre(sourcePodId !== targetPodId);
 
@@ -995,7 +1133,7 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
           // Pick a non-empty subset of the source's capabilities as required
           const requiredCapabilities = capabilities.slice(
             0,
-            Math.max(1, Math.floor(capabilities.length / 2)),
+            Math.max(1, Math.floor(capabilities.length / 2))
           );
 
           const request: CollaborationRequest = {
@@ -1013,9 +1151,9 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
 
           expect(response.status).toBe("rejected");
           expect(response.reason).toBe("self_capability");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -1024,14 +1162,33 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
       fc.asyncProperty(
         arbCapabilitySet,
         arbCapabilitySet,
-        fc.string({ minLength: 1, maxLength: 10, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")) }),
-        fc.string({ minLength: 1, maxLength: 10, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")) }),
-        async (sourceCapabilities, extraCapabilities, sourcePodId, targetPodId) => {
+        fc.string({
+          minLength: 1,
+          maxLength: 10,
+          unit: fc.constantFrom(
+            ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+          ),
+        }),
+        fc.string({
+          minLength: 1,
+          maxLength: 10,
+          unit: fc.constantFrom(
+            ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+          ),
+        }),
+        async (
+          sourceCapabilities,
+          extraCapabilities,
+          sourcePodId,
+          targetPodId
+        ) => {
           fc.pre(sourcePodId !== targetPodId);
 
           // Ensure at least one required capability is NOT in the source's set
           const sourceCapSet = new Set(sourceCapabilities);
-          const missingCaps = extraCapabilities.filter((c) => !sourceCapSet.has(c));
+          const missingCaps = extraCapabilities.filter(
+            c => !sourceCapSet.has(c)
+          );
           fc.pre(missingCaps.length > 0);
 
           // Required capabilities = some source has + at least one it doesn't
@@ -1055,7 +1212,9 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
           orchestrator.registerPodCapability({
             podId: targetPodId,
             managerId: `mgr-${targetPodId}`,
-            capabilities: [...new Set([...sourceCapabilities, ...extraCapabilities])],
+            capabilities: [
+              ...new Set([...sourceCapabilities, ...extraCapabilities]),
+            ],
             currentLoad: 0,
             maxConcurrency: 10,
           });
@@ -1077,13 +1236,12 @@ describe("Feature: autonomous-swarm, Property 9: 协作请求能力验证", () =
           if (response.status === "rejected") {
             expect(response.reason).not.toBe("self_capability");
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 6 Tests ─── */
 
@@ -1093,7 +1251,11 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
   function createOrchestrator(): SwarmOrchestrator {
     return new SwarmOrchestrator({
       messageBus: {} as any,
-      config: { ...DEFAULT_SWARM_CONFIG, maxDepth: 100, maxConcurrentSessions: 100 },
+      config: {
+        ...DEFAULT_SWARM_CONFIG,
+        maxDepth: 100,
+        maxConcurrentSessions: 100,
+      },
       llmProvider: { generate: async () => "" },
       agentDirectory: {
         getManagerByPod: () => undefined,
@@ -1119,7 +1281,9 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
     });
   }
 
-  async function createSession(orchestrator: SwarmOrchestrator): Promise<string> {
+  async function createSession(
+    orchestrator: SwarmOrchestrator
+  ): Promise<string> {
     const request: CollaborationRequest = {
       id: `req-p6-${Date.now()}-${Math.random()}`,
       sourcePodId: "source-pod",
@@ -1134,7 +1298,7 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
     expect(response.status).toBe("accepted");
     // Retrieve the session ID from active sessions
     const sessions = orchestrator.getActiveSessions();
-    const session = sessions.find((s) => s.request.id === request.id);
+    const session = sessions.find(s => s.request.id === request.id);
     expect(session).toBeDefined();
     return session!.id;
   }
@@ -1143,7 +1307,7 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
     await fc.assert(
       fc.asyncProperty(
         fc.array(arbSubTaskOutput, { minLength: 0, maxLength: 10 }),
-        async (subTaskOutputs) => {
+        async subTaskOutputs => {
           const orchestrator = createOrchestrator();
           setupPods(orchestrator);
           const sessionId = await createSession(orchestrator);
@@ -1166,9 +1330,9 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
           for (let i = 0; i < subTaskOutputs.length; i++) {
             expect(result.subTaskOutputs[i]).toEqual(subTaskOutputs[i]);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -1184,7 +1348,7 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
     await fc.assert(
       fc.asyncProperty(
         fc.array(arbDoneOutput, { minLength: 1, maxLength: 10 }),
-        async (subTaskOutputs) => {
+        async subTaskOutputs => {
           const orchestrator = createOrchestrator();
           setupPods(orchestrator);
           const sessionId = await createSession(orchestrator);
@@ -1202,9 +1366,9 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
 
           // result.status should be overridden to "completed"
           expect(result.status).toBe("completed");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -1212,10 +1376,10 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
     // Generate at least one failed sub-task mixed with done sub-tasks
     const arbMixedOutputsWithFailure = fc
       .array(arbSubTaskOutput, { minLength: 1, maxLength: 10 })
-      .filter((outputs) => outputs.some((o) => o.status === "failed"));
+      .filter(outputs => outputs.some(o => o.status === "failed"));
 
     await fc.assert(
-      fc.asyncProperty(arbMixedOutputsWithFailure, async (subTaskOutputs) => {
+      fc.asyncProperty(arbMixedOutputsWithFailure, async subTaskOutputs => {
         const orchestrator = createOrchestrator();
         setupPods(orchestrator);
         const sessionId = await createSession(orchestrator);
@@ -1234,11 +1398,10 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
         // result.status should be overridden to "failed"
         expect(result.status).toBe("failed");
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 10 Tests ─── */
 
@@ -1246,7 +1409,10 @@ describe("Feature: autonomous-swarm, Property 6: 协作结果封装保留所有�
 // **Validates: Requirements 5.4**
 describe("Feature: autonomous-swarm, Property 10: 超时会话自动终止", () => {
   const arbSessionTimeoutMs = fc.integer({ min: 1000, max: 600_000 });
-  const arbBaseTime = fc.integer({ min: 1_000_000_000_000, max: 1_500_000_000_000 });
+  const arbBaseTime = fc.integer({
+    min: 1_000_000_000_000,
+    max: 1_500_000_000_000,
+  });
 
   function createOrchestrator(sessionTimeoutMs: number): SwarmOrchestrator {
     return new SwarmOrchestrator({
@@ -1323,9 +1489,9 @@ describe("Feature: autonomous-swarm, Property 10: 超时会话自动终止", () 
           expect(timedOut[0].completedAt).toBe(futureTime);
 
           dateNowSpy.mockRestore();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -1363,9 +1529,9 @@ describe("Feature: autonomous-swarm, Property 10: 超时会话自动终止", () 
           expect(activeSessions[0].status).not.toBe("timeout");
 
           dateNowSpy.mockRestore();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -1416,17 +1582,20 @@ describe("Feature: autonomous-swarm, Property 10: 超时会话自动终止", () 
           expect(timedOut.length).toBe(0);
 
           dateNowSpy.mockRestore();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
 
-
 /* ─── Task 6.1: analyzeHeartbeat Unit Tests ─── */
 
-import type { HeartbeatReport, LLMProvider, AgentDirectory } from "../../server/core/swarm-orchestrator.js";
+import type {
+  HeartbeatReport,
+  LLMProvider,
+  AgentDirectory,
+} from "../../server/core/swarm-orchestrator.js";
 
 // Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现
 // Validates: Requirements 3.1, 3.2, 3.3, 3.4
@@ -1437,8 +1606,12 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
   }) {
     const llmProvider: LLMProvider = {
       generate: opts?.llmShouldThrow
-        ? async () => { throw new Error("LLM unavailable"); }
-        : async () => opts?.llmResponse ?? '{"needsCollaboration":false,"requiredCapabilities":[]}',
+        ? async () => {
+            throw new Error("LLM unavailable");
+          }
+        : async () =>
+            opts?.llmResponse ??
+            '{"needsCollaboration":false,"requiredCapabilities":[]}',
     };
 
     const agentDirectory: AgentDirectory = {
@@ -1448,7 +1621,11 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
 
     const orchestrator = new SwarmOrchestrator({
       messageBus: {} as any,
-      config: { ...DEFAULT_SWARM_CONFIG, maxDepth: 10, maxConcurrentSessions: 10 },
+      config: {
+        ...DEFAULT_SWARM_CONFIG,
+        maxDepth: 10,
+        maxConcurrentSessions: 10,
+      },
       llmProvider,
       agentDirectory,
     });
@@ -1470,14 +1647,15 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
   it("returns null when both actionItems and observations are empty", async () => {
     const orchestrator = createOrchestratorForHeartbeat();
     const result = await orchestrator.analyzeHeartbeat(
-      makeReport({ actionItems: [], observations: [] }),
+      makeReport({ actionItems: [], observations: [] })
     );
     expect(result).toBeNull();
   });
 
   it("returns null when LLM says needsCollaboration is false", async () => {
     const orchestrator = createOrchestratorForHeartbeat({
-      llmResponse: '{"needsCollaboration":false,"requiredCapabilities":["design"]}',
+      llmResponse:
+        '{"needsCollaboration":false,"requiredCapabilities":["design"]}',
     });
     const result = await orchestrator.analyzeHeartbeat(makeReport());
     expect(result).toBeNull();
@@ -1492,7 +1670,9 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
   });
 
   it("returns null when LLM call throws an error", async () => {
-    const orchestrator = createOrchestratorForHeartbeat({ llmShouldThrow: true });
+    const orchestrator = createOrchestratorForHeartbeat({
+      llmShouldThrow: true,
+    });
     const result = await orchestrator.analyzeHeartbeat(makeReport());
     expect(result).toBeNull();
   });
@@ -1507,7 +1687,8 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
 
   it("returns null when no matching Pod is found (requirement 3.4)", async () => {
     const orchestrator = createOrchestratorForHeartbeat({
-      llmResponse: '{"needsCollaboration":true,"requiredCapabilities":["quantum-computing"]}',
+      llmResponse:
+        '{"needsCollaboration":true,"requiredCapabilities":["quantum-computing"]}',
     });
     // Register only the source Pod — no other Pod has "quantum-computing"
     orchestrator.registerPodCapability({
@@ -1523,7 +1704,8 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
 
   it("returns null when only the source Pod matches (excludes self)", async () => {
     const orchestrator = createOrchestratorForHeartbeat({
-      llmResponse: '{"needsCollaboration":true,"requiredCapabilities":["coding"]}',
+      llmResponse:
+        '{"needsCollaboration":true,"requiredCapabilities":["coding"]}',
     });
     orchestrator.registerPodCapability({
       podId: "pod-a",
@@ -1538,7 +1720,8 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
 
   it("returns a CollaborationRequest when a matching target Pod exists", async () => {
     const orchestrator = createOrchestratorForHeartbeat({
-      llmResponse: '{"needsCollaboration":true,"requiredCapabilities":["design"]}',
+      llmResponse:
+        '{"needsCollaboration":true,"requiredCapabilities":["design"]}',
     });
     orchestrator.registerPodCapability({
       podId: "pod-a",
@@ -1572,7 +1755,8 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
 
   it("works when only actionItems are present (observations empty)", async () => {
     const orchestrator = createOrchestratorForHeartbeat({
-      llmResponse: '{"needsCollaboration":true,"requiredCapabilities":["testing"]}',
+      llmResponse:
+        '{"needsCollaboration":true,"requiredCapabilities":["testing"]}',
     });
     orchestrator.registerPodCapability({
       podId: "pod-a",
@@ -1590,7 +1774,7 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
     });
 
     const result = await orchestrator.analyzeHeartbeat(
-      makeReport({ actionItems: ["run integration tests"], observations: [] }),
+      makeReport({ actionItems: ["run integration tests"], observations: [] })
     );
 
     expect(result).not.toBeNull();
@@ -1599,7 +1783,8 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
 
   it("works when only observations are present (actionItems empty)", async () => {
     const orchestrator = createOrchestratorForHeartbeat({
-      llmResponse: '{"needsCollaboration":true,"requiredCapabilities":["devops"]}',
+      llmResponse:
+        '{"needsCollaboration":true,"requiredCapabilities":["devops"]}',
     });
     orchestrator.registerPodCapability({
       podId: "pod-a",
@@ -1617,14 +1802,16 @@ describe("Feature: autonomous-swarm, analyzeHeartbeat: 协作机会自主发现"
     });
 
     const result = await orchestrator.analyzeHeartbeat(
-      makeReport({ actionItems: [], observations: ["deployment pipeline is slow"] }),
+      makeReport({
+        actionItems: [],
+        observations: ["deployment pipeline is slow"],
+      })
     );
 
     expect(result).not.toBeNull();
     expect(result!.contextSummary).toBe("deployment pipeline is slow");
   });
 });
-
 
 /* ─── Task 6.2: generateSubTasks Unit Tests ─── */
 
@@ -1639,19 +1826,27 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
   }) {
     const llmProvider: LLMProvider = {
       generate: opts?.llmShouldThrow
-        ? async () => { throw new Error("LLM unavailable"); }
+        ? async () => {
+            throw new Error("LLM unavailable");
+          }
         : async () => opts?.llmResponse ?? '{"tasks":[]}',
     };
 
     const agentDirectory: AgentDirectory = {
       getManagerByPod: () =>
-        opts?.manager === null ? undefined : (opts?.manager ?? { id: "mgr-target", role: "manager" }),
+        opts?.manager === null
+          ? undefined
+          : (opts?.manager ?? { id: "mgr-target", role: "manager" }),
       getAvailableWorkers: () => opts?.workers ?? [],
     };
 
     const orchestrator = new SwarmOrchestrator({
       messageBus: {} as any,
-      config: { ...DEFAULT_SWARM_CONFIG, maxDepth: 10, maxConcurrentSessions: 10 },
+      config: {
+        ...DEFAULT_SWARM_CONFIG,
+        maxDepth: 10,
+        maxConcurrentSessions: 10,
+      },
       llmProvider,
       agentDirectory,
     });
@@ -1659,7 +1854,9 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
     return orchestrator;
   }
 
-  function makeSession(overrides?: Partial<CollaborationSession>): CollaborationSession {
+  function makeSession(
+    overrides?: Partial<CollaborationSession>
+  ): CollaborationSession {
     return {
       id: "session-test-1",
       request: {
@@ -1694,7 +1891,9 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
   });
 
   it("returns empty array when LLM call throws", async () => {
-    const orchestrator = createOrchestratorForSubTasks({ llmShouldThrow: true });
+    const orchestrator = createOrchestratorForSubTasks({
+      llmShouldThrow: true,
+    });
     const result = await orchestrator.generateSubTasks(makeSession());
     expect(result).toEqual([]);
   });
@@ -1752,9 +1951,7 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
   it("assigns tasks to target manager when no workers are available", async () => {
     const orchestrator = createOrchestratorForSubTasks({
       llmResponse: JSON.stringify({
-        tasks: [
-          { description: "Task A", deliverable: "Deliverable A" },
-        ],
+        tasks: [{ description: "Task A", deliverable: "Deliverable A" }],
       }),
       workers: [],
       manager: { id: "mgr-target", role: "manager" },
@@ -1786,9 +1983,7 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
   it("generates correct SubTaskOutput structure", async () => {
     const orchestrator = createOrchestratorForSubTasks({
       llmResponse: JSON.stringify({
-        tasks: [
-          { description: "Design the UI", deliverable: "Figma mockup" },
-        ],
+        tasks: [{ description: "Design the UI", deliverable: "Figma mockup" }],
       }),
       workers: [{ id: "worker-1", role: "worker" }],
     });
@@ -1821,7 +2016,7 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
     const session = makeSession();
     const result = await orchestrator.generateSubTasks(session);
 
-    const taskIds = result.map((r) => r.taskId);
+    const taskIds = result.map(r => r.taskId);
     const uniqueIds = new Set(taskIds);
     expect(uniqueIds.size).toBe(taskIds.length);
   });
@@ -1864,7 +2059,6 @@ describe("Feature: autonomous-swarm, generateSubTasks: 子任务生成与委派"
   });
 });
 
-
 /* ─── Task 6.4: HeartbeatScheduler & SwarmOrchestrator Integration Tests ─── */
 
 import { HeartbeatScheduler } from "../../server/core/heartbeat.js";
@@ -1896,7 +2090,11 @@ describe("Feature: autonomous-swarm, HeartbeatScheduler ↔ SwarmOrchestrator in
   it("analyzeHeartbeat generates a CollaborationRequest when called with heartbeat-like data", async () => {
     const orchestrator = new SwarmOrchestrator({
       messageBus: {} as any,
-      config: { ...DEFAULT_SWARM_CONFIG, maxDepth: 10, maxConcurrentSessions: 10 },
+      config: {
+        ...DEFAULT_SWARM_CONFIG,
+        maxDepth: 10,
+        maxConcurrentSessions: 10,
+      },
       llmProvider: {
         generate: async () =>
           '{"needsCollaboration":true,"requiredCapabilities":["security"]}',
@@ -1939,7 +2137,9 @@ describe("Feature: autonomous-swarm, HeartbeatScheduler ↔ SwarmOrchestrator in
     expect(request!.sourceManagerId).toBe("mgr-eng");
     expect(request!.requiredCapabilities).toEqual(["security"]);
     expect(request!.contextSummary).toContain("security audit needed");
-    expect(request!.contextSummary).toContain("detected potential vulnerability");
+    expect(request!.contextSummary).toContain(
+      "detected potential vulnerability"
+    );
   });
 
   it("when analyzeHeartbeat throws, the error is silently caught (fire-and-forget pattern)", async () => {
@@ -2003,19 +2203,23 @@ describe("Feature: autonomous-swarm, HeartbeatScheduler ↔ SwarmOrchestrator in
   });
 });
 
-
 /* ─── Property 11 Tests ─── */
 
 import { MissionOrchestrator } from "../../server/core/mission-orchestrator.js";
 import type { MissionRepository } from "../../server/core/mission-orchestrator.js";
-import type { MissionRecord, MissionEvent } from "../../shared/mission/contracts.js";
+import type {
+  MissionRecord,
+  MissionEvent,
+} from "../../shared/mission/contracts.js";
 import { ExecutorClient } from "../../server/core/executor-client.js";
 
 // Feature: autonomous-swarm, Property 11: 协作结果正确汇总到 Mission
 // **Validates: Requirements 6.1, 6.3**
 describe("Feature: autonomous-swarm, Property 11: 协作结果正确汇总到 Mission", () => {
   /** Simple in-memory repository for testing */
-  function createInMemoryRepo(): MissionRepository & { seed(record: MissionRecord): void } {
+  function createInMemoryRepo(): MissionRepository & {
+    seed(record: MissionRecord): void;
+  } {
     const records = new Map<string, MissionRecord>();
     return {
       create(record: MissionRecord): MissionRecord {
@@ -2073,42 +2277,51 @@ describe("Feature: autonomous-swarm, Property 11: 协作结果正确汇总到 Mi
     status: arbSessionStatus,
     startedAt: fc.integer({ min: 1_000_000_000_000, max: 1_500_000_000_000 }),
     updatedAt: fc.integer({ min: 1_000_000_000_000, max: 1_500_000_000_000 }),
-    completedAt: fc.option(fc.integer({ min: 1_000_000_000_000, max: 1_500_000_000_000 }), {
-      nil: undefined,
-    }),
+    completedAt: fc.option(
+      fc.integer({ min: 1_000_000_000_000, max: 1_500_000_000_000 }),
+      {
+        nil: undefined,
+      }
+    ),
   });
 
   it("after appendCollaborationResult, the Mission events contain a collaboration_result event", async () => {
     await fc.assert(
-      fc.asyncProperty(arbSessionForMission, async (session) => {
+      fc.asyncProperty(arbSessionForMission, async session => {
         const repo = createInMemoryRepo();
         const missionId = `mission-p11-${Math.random().toString(36).slice(2)}`;
         repo.seed(createMinimalMission(missionId));
         const orchestrator = createOrchestrator(repo);
 
-        const updatedMission = await orchestrator.appendCollaborationResult(missionId, session);
+        const updatedMission = await orchestrator.appendCollaborationResult(
+          missionId,
+          session
+        );
 
         const collabEvents = updatedMission.events.filter(
-          (e: MissionEvent) => e.type === "collaboration_result",
+          (e: MissionEvent) => e.type === "collaboration_result"
         );
         expect(collabEvents.length).toBeGreaterThanOrEqual(1);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("the event contains correct source Pod ID and target Pod ID", async () => {
     await fc.assert(
-      fc.asyncProperty(arbSessionForMission, async (session) => {
+      fc.asyncProperty(arbSessionForMission, async session => {
         const repo = createInMemoryRepo();
         const missionId = `mission-p11-${Math.random().toString(36).slice(2)}`;
         repo.seed(createMinimalMission(missionId));
         const orchestrator = createOrchestrator(repo);
 
-        const updatedMission = await orchestrator.appendCollaborationResult(missionId, session);
+        const updatedMission = await orchestrator.appendCollaborationResult(
+          missionId,
+          session
+        );
 
         const collabEvent = updatedMission.events.find(
-          (e: MissionEvent) => e.type === "collaboration_result",
+          (e: MissionEvent) => e.type === "collaboration_result"
         );
         expect(collabEvent).toBeDefined();
 
@@ -2118,22 +2331,25 @@ describe("Feature: autonomous-swarm, Property 11: 协作结果正确汇总到 Mi
         expect(collabEvent!.message).toContain(sourcePodId);
         expect(collabEvent!.message).toContain(targetPodId);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("the event description includes the collaboration status", async () => {
     await fc.assert(
-      fc.asyncProperty(arbSessionForMission, async (session) => {
+      fc.asyncProperty(arbSessionForMission, async session => {
         const repo = createInMemoryRepo();
         const missionId = `mission-p11-${Math.random().toString(36).slice(2)}`;
         repo.seed(createMinimalMission(missionId));
         const orchestrator = createOrchestrator(repo);
 
-        const updatedMission = await orchestrator.appendCollaborationResult(missionId, session);
+        const updatedMission = await orchestrator.appendCollaborationResult(
+          missionId,
+          session
+        );
 
         const collabEvent = updatedMission.events.find(
-          (e: MissionEvent) => e.type === "collaboration_result",
+          (e: MissionEvent) => e.type === "collaboration_result"
         );
         expect(collabEvent).toBeDefined();
 
@@ -2141,7 +2357,7 @@ describe("Feature: autonomous-swarm, Property 11: 协作结果正确汇总到 Mi
         const expectedStatus = session.result?.status ?? session.status;
         expect(collabEvent!.message).toContain(expectedStatus);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

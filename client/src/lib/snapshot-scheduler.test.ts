@@ -7,7 +7,10 @@
  * Requirements: 1.1, 1.2, 8.2
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { SnapshotPayload, SnapshotRecord } from "../../../shared/mission/contracts";
+import type {
+  SnapshotPayload,
+  SnapshotRecord,
+} from "../../../shared/mission/contracts";
 
 // ─── Mocks ───
 
@@ -77,7 +80,6 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-
 
 // ─── isRunning / start / stop ───
 
@@ -205,7 +207,7 @@ describe("createSnapshotScheduler - timer", () => {
     await vi.advanceTimersByTimeAsync(10000);
     expect(mockedSerialize).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ missionId: "mission-A" }),
+      expect.objectContaining({ missionId: "mission-A" })
     );
 
     scheduler.stop();
@@ -213,7 +215,7 @@ describe("createSnapshotScheduler - timer", () => {
     await vi.advanceTimersByTimeAsync(10000);
     expect(mockedSerialize).toHaveBeenLastCalledWith(
       expect.anything(),
-      expect.objectContaining({ missionId: "mission-B" }),
+      expect.objectContaining({ missionId: "mission-B" })
     );
 
     scheduler.stop();
@@ -254,7 +256,11 @@ describe("createSnapshotScheduler - triggerImmediate", () => {
 
   it("should derive meta from payload", async () => {
     const payload = makePayload({
-      mission: { id: "m-x", title: "My Custom Mission", status: "waiting" } as any,
+      mission: {
+        id: "m-x",
+        title: "My Custom Mission",
+        status: "waiting",
+      } as any,
     });
     const scheduler = createSnapshotScheduler({
       intervalMs: 30000,
@@ -353,7 +359,7 @@ describe("createSnapshotScheduler - error handling", () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       "[SnapshotScheduler]",
-      expect.any(Error),
+      expect.any(Error)
     );
 
     consoleSpy.mockRestore();

@@ -21,7 +21,7 @@ import type { RoleStore } from "./role-store.js";
 export class ConflictDetector {
   constructor(
     private policyStore: PolicyStore,
-    private roleStore: RoleStore,
+    private roleStore: RoleStore
   ) {}
 
   // ── Conflict Detection ─────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export class ConflictDetector {
    */
   assessRisk(agentId: string): RiskAssessment {
     const allPermissions = this.getAllPermissions(agentId);
-    const allowPermissions = allPermissions.filter((p) => p.effect === "allow");
+    const allowPermissions = allPermissions.filter(p => p.effect === "allow");
 
     const factors: RiskFactor[] = [];
 
@@ -109,12 +109,12 @@ export class ConflictDetector {
 
   private detectAllowDenyOverlap(
     agentId: string,
-    permissions: Permission[],
+    permissions: Permission[]
   ): PermissionConflict[] {
     const conflicts: PermissionConflict[] = [];
 
-    const allowSet = permissions.filter((p) => p.effect === "allow");
-    const denySet = permissions.filter((p) => p.effect === "deny");
+    const allowSet = permissions.filter(p => p.effect === "allow");
+    const denySet = permissions.filter(p => p.effect === "deny");
 
     for (const allow of allowSet) {
       for (const deny of denySet) {
@@ -124,14 +124,14 @@ export class ConflictDetector {
         ) {
           // Avoid duplicate conflict entries for the same pair
           const alreadyReported = conflicts.some(
-            (c) =>
+            c =>
               c.conflictType === "allow_deny_overlap" &&
               c.permissions.some(
-                (p) =>
+                p =>
                   p.resourceType === allow.resourceType &&
                   p.action === allow.action &&
-                  p.effect === "allow",
-              ),
+                  p.effect === "allow"
+              )
           );
           if (!alreadyReported) {
             conflicts.push({
@@ -153,10 +153,10 @@ export class ConflictDetector {
 
   private detectExcessiveScope(
     agentId: string,
-    permissions: Permission[],
+    permissions: Permission[]
   ): PermissionConflict[] {
     const conflicts: PermissionConflict[] = [];
-    const allowPerms = permissions.filter((p) => p.effect === "allow");
+    const allowPerms = permissions.filter(p => p.effect === "allow");
 
     for (const perm of allowPerms) {
       if (this.hasWildcardScope(perm)) {
@@ -181,28 +181,32 @@ export class ConflictDetector {
 
     // Filesystem: pathPatterns contains "*" or "**" or "/**"
     if (perm.resourceType === "filesystem" && c.pathPatterns) {
-      if (c.pathPatterns.some((p) => p === "*" || p === "**" || p === "/**" || p === "/*")) {
+      if (
+        c.pathPatterns.some(
+          p => p === "*" || p === "**" || p === "/**" || p === "/*"
+        )
+      ) {
         return true;
       }
     }
 
     // Network: domainPatterns contains "*"
     if (perm.resourceType === "network" && c.domainPatterns) {
-      if (c.domainPatterns.some((d) => d === "*")) {
+      if (c.domainPatterns.some(d => d === "*")) {
         return true;
       }
     }
 
     // API: endpoints contains "*"
     if (perm.resourceType === "api" && c.endpoints) {
-      if (c.endpoints.some((e) => e === "*" || e === "/*")) {
+      if (c.endpoints.some(e => e === "*" || e === "/*")) {
         return true;
       }
     }
 
     // Database: tables contains "*"
     if (perm.resourceType === "database" && c.tables) {
-      if (c.tables.some((t) => t === "*")) {
+      if (c.tables.some(t => t === "*")) {
         return true;
       }
     }
@@ -217,17 +221,17 @@ export class ConflictDetector {
 
   private detectDangerousCombination(
     agentId: string,
-    permissions: Permission[],
+    permissions: Permission[]
   ): PermissionConflict[] {
     const conflicts: PermissionConflict[] = [];
-    const allowPerms = permissions.filter((p) => p.effect === "allow");
+    const allowPerms = permissions.filter(p => p.effect === "allow");
 
     // Check: filesystem write + network connect = data exfiltration risk
     const fsWrite = allowPerms.find(
-      (p) => p.resourceType === "filesystem" && p.action === "write",
+      p => p.resourceType === "filesystem" && p.action === "write"
     );
     const netConnect = allowPerms.find(
-      (p) => p.resourceType === "network" && p.action === "connect",
+      p => p.resourceType === "network" && p.action === "connect"
     );
 
     if (fsWrite && netConnect) {
@@ -242,10 +246,10 @@ export class ConflictDetector {
 
     // Check: database delete + filesystem write = data destruction + cover-up risk
     const dbDelete = allowPerms.find(
-      (p) => p.resourceType === "database" && p.action === "delete",
+      p => p.resourceType === "database" && p.action === "delete"
     );
     const fsWriteForDb = allowPerms.find(
-      (p) => p.resourceType === "filesystem" && p.action === "write",
+      p => p.resourceType === "filesystem" && p.action === "write"
     );
 
     if (dbDelete && fsWriteForDb) {
@@ -260,10 +264,10 @@ export class ConflictDetector {
 
     // Check: filesystem execute + network connect = remote code execution risk
     const fsExec = allowPerms.find(
-      (p) => p.resourceType === "filesystem" && p.action === "execute",
+      p => p.resourceType === "filesystem" && p.action === "execute"
     );
     const netConnectForExec = allowPerms.find(
-      (p) => p.resourceType === "network" && p.action === "connect",
+      p => p.resourceType === "network" && p.action === "connect"
     );
 
     if (fsExec && netConnectForExec) {
@@ -282,30 +286,31 @@ export class ConflictDetector {
   // ── Private: Risk Assessment Dimensions ────────────────────────────────
 
   private assessFilesystemRisk(permissions: Permission[]): RiskFactor[] {
-    const fsPerms = permissions.filter((p) => p.resourceType === "filesystem");
+    const fsPerms = permissions.filter(p => p.resourceType === "filesystem");
     if (fsPerms.length === 0) return [];
 
     const factors: RiskFactor[] = [];
 
     // Check scope breadth
-    const hasSystemDir = fsPerms.some((p) =>
-      p.constraints.pathPatterns?.some((pp) =>
-        /^\/(etc|sys|proc|root)/.test(pp) || /~\/\.ssh/.test(pp),
-      ),
-    );
-    const hasFullWildcard = fsPerms.some((p) =>
+    const hasSystemDir = fsPerms.some(p =>
       p.constraints.pathPatterns?.some(
-        (pp) => pp === "*" || pp === "**" || pp === "/**" || pp === "/*",
-      ),
+        pp => /^\/(etc|sys|proc|root)/.test(pp) || /~\/\.ssh/.test(pp)
+      )
+    );
+    const hasFullWildcard = fsPerms.some(p =>
+      p.constraints.pathPatterns?.some(
+        pp => pp === "*" || pp === "**" || pp === "/**" || pp === "/*"
+      )
     );
     const hasMultiDir = fsPerms.some(
-      (p) => (p.constraints.pathPatterns?.length ?? 0) > 3,
+      p => (p.constraints.pathPatterns?.length ?? 0) > 3
     );
 
     if (hasSystemDir) {
       factors.push({
         category: "filesystem_scope",
-        description: "Access to system-sensitive directories (/etc, /sys, /proc, ~/.ssh)",
+        description:
+          "Access to system-sensitive directories (/etc, /sys, /proc, ~/.ssh)",
         severity: "critical",
       });
     } else if (hasFullWildcard) {
@@ -332,32 +337,33 @@ export class ConflictDetector {
   }
 
   private assessNetworkRisk(permissions: Permission[]): RiskFactor[] {
-    const netPerms = permissions.filter((p) => p.resourceType === "network");
+    const netPerms = permissions.filter(p => p.resourceType === "network");
     if (netPerms.length === 0) return [];
 
     const factors: RiskFactor[] = [];
 
-    const hasPrivateIp = netPerms.some((p) =>
+    const hasPrivateIp = netPerms.some(p =>
       p.constraints.cidrRanges?.some(
-        (r) =>
+        r =>
           r.startsWith("10.") ||
           r.startsWith("172.16.") ||
-          r.startsWith("192.168."),
-      ),
+          r.startsWith("192.168.")
+      )
     );
-    const hasFullDomain = netPerms.some((p) =>
-      p.constraints.domainPatterns?.some((d) => d === "*"),
+    const hasFullDomain = netPerms.some(p =>
+      p.constraints.domainPatterns?.some(d => d === "*")
     );
     const hasWhitelist = netPerms.some(
-      (p) =>
+      p =>
         (p.constraints.domainPatterns?.length ?? 0) > 0 &&
-        !p.constraints.domainPatterns?.some((d) => d === "*"),
+        !p.constraints.domainPatterns?.some(d => d === "*")
     );
 
     if (hasPrivateIp) {
       factors.push({
         category: "network_access",
-        description: "Access to private IP ranges (potential internal network exposure)",
+        description:
+          "Access to private IP ranges (potential internal network exposure)",
         severity: "critical",
       });
     } else if (hasFullDomain) {
@@ -384,25 +390,27 @@ export class ConflictDetector {
   }
 
   private assessDatabaseRisk(permissions: Permission[]): RiskFactor[] {
-    const dbPerms = permissions.filter((p) => p.resourceType === "database");
+    const dbPerms = permissions.filter(p => p.resourceType === "database");
     if (dbPerms.length === 0) return [];
 
     const factors: RiskFactor[] = [];
 
-    const hasDelete = dbPerms.some((p) => p.action === "delete");
+    const hasDelete = dbPerms.some(p => p.action === "delete");
     const hasInsertUpdate = dbPerms.some(
-      (p) => p.action === "insert" || p.action === "update",
+      p => p.action === "insert" || p.action === "update"
     );
-    const hasDangerousOps = dbPerms.some((p) =>
-      p.constraints.forbiddenOperations === undefined ||
-      p.constraints.forbiddenOperations?.length === 0,
+    const hasDangerousOps = dbPerms.some(
+      p =>
+        p.constraints.forbiddenOperations === undefined ||
+        p.constraints.forbiddenOperations?.length === 0
     );
-    const hasSelectOnly = dbPerms.every((p) => p.action === "select");
+    const hasSelectOnly = dbPerms.every(p => p.action === "select");
 
     if (hasDelete && hasDangerousOps) {
       factors.push({
         category: "database_operations",
-        description: "Database delete access without forbidden operation restrictions",
+        description:
+          "Database delete access without forbidden operation restrictions",
         severity: "high",
       });
     } else if (hasDelete) {
@@ -429,22 +437,25 @@ export class ConflictDetector {
   }
 
   private assessMcpRisk(permissions: Permission[]): RiskFactor[] {
-    const mcpPerms = permissions.filter((p) => p.resourceType === "mcp_tool");
+    const mcpPerms = permissions.filter(p => p.resourceType === "mcp_tool");
     if (mcpPerms.length === 0) return [];
 
     const factors: RiskFactor[] = [];
 
-    const hasExecute = mcpPerms.some((p) => p.action === "execute");
-    const hasWrite = mcpPerms.some((p) => p.action === "write");
-    const hasReadOnly = mcpPerms.every((p) => p.action === "read" || p.action === "call");
+    const hasExecute = mcpPerms.some(p => p.action === "execute");
+    const hasWrite = mcpPerms.some(p => p.action === "write");
+    const hasReadOnly = mcpPerms.every(
+      p => p.action === "read" || p.action === "call"
+    );
     const hasAllTools = mcpPerms.some(
-      (p) => !p.constraints.endpoints || p.constraints.endpoints.length === 0,
+      p => !p.constraints.endpoints || p.constraints.endpoints.length === 0
     );
 
     if (hasAllTools && (hasExecute || hasWrite)) {
       factors.push({
         category: "mcp_tools",
-        description: "Unrestricted MCP tool access with execute/write permissions",
+        description:
+          "Unrestricted MCP tool access with execute/write permissions",
         severity: "critical",
       });
     } else if (hasExecute) {

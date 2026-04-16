@@ -1,11 +1,11 @@
-import { ExternalLink, Github, Star } from 'lucide-react';
+import { ExternalLink, Github, Star } from "lucide-react";
 
 import {
   GITHUB_REPOSITORY,
   GITHUB_REPOSITORY_URL,
   IS_GITHUB_PAGES,
-} from '@/lib/deploy-target';
-import { cn } from '@/lib/utils';
+} from "@/lib/deploy-target";
+import { cn } from "@/lib/utils";
 
 type GitHubRepoBadgeProps = {
   className?: string;
@@ -21,10 +21,10 @@ export function GitHubRepoBadge({ className }: GitHubRepoBadgeProps) {
       rel="noreferrer"
       aria-label={`Open ${GITHUB_REPOSITORY} on GitHub`}
       className={cn(
-        'glass-panel group block rounded-[24px] p-3.5 text-white/90',
-        'transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white/18',
-        'active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2',
-        'focus-visible:ring-cyan-400/35',
+        "glass-panel group block rounded-[24px] p-3.5 text-white/90",
+        "transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white/18",
+        "active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2",
+        "focus-visible:ring-cyan-400/35",
         className
       )}
     >
@@ -41,7 +41,7 @@ export function GitHubRepoBadge({ className }: GitHubRepoBadgeProps) {
             {GITHUB_REPOSITORY}
           </p>
           <p className="mt-1 truncate text-[11px] text-white/50">
-            {GITHUB_REPOSITORY_URL.replace(/^https?:\/\//, '')}
+            {GITHUB_REPOSITORY_URL.replace(/^https?:\/\//, "")}
           </p>
         </div>
 

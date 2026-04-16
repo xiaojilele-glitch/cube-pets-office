@@ -28,24 +28,24 @@
 
 ## 建议映射表示例
 
-| 旧表达 | 新表达 |
-|---|---|
-| Dynamic Teaming Flow | Execution Coordination Flow |
-| Org Assembly | Team Setup |
-| Department Summary | Team Handoff |
-| Temporary Organization | Execution Team |
-| Directive | Execution Brief |
-| Parallel Run | Parallel Delivery |
+| 旧表达                 | 新表达                      |
+| ---------------------- | --------------------------- |
+| Dynamic Teaming Flow   | Execution Coordination Flow |
+| Org Assembly           | Team Setup                  |
+| Department Summary     | Team Handoff                |
+| Temporary Organization | Execution Team              |
+| Directive              | Execution Brief             |
+| Parallel Run           | Parallel Delivery           |
 
 中文示例：
 
-| 旧表达 | 新表达 |
-|---|---|
+| 旧表达         | 新表达       |
+| -------------- | ------------ |
 | 动态组队工作流 | 执行协同流程 |
-| 组织生成 | 团队就位 |
-| 部门汇总 | 团队交付汇总 |
-| 临时组织 | 执行团队 |
-| 指令说明 | 执行简报 |
+| 组织生成       | 团队就位     |
+| 部门汇总       | 团队交付汇总 |
+| 临时组织       | 执行团队     |
+| 指令说明       | 执行简报     |
 
 ## 作用范围
 

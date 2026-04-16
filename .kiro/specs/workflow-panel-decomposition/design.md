@@ -13,16 +13,16 @@
 
 ## 内容映射表
 
-| 原视图 | 新落点 | 主要 owner |
-|---|---|---|
-| directive | 任务页顶部命令区 | `task-hub-convergence` |
-| sessions | 任务上下文会话 / 兼容历史区 | `task-hub-convergence` |
-| workflow | 任务详情执行区 | `tasks-store` |
-| review | 任务详情评审区 | `tasks-store` |
-| history | 任务列表筛选 / 历史状态视图 | `tasks-store` |
-| org | 办公室 Agent/组织视图 | `scene-agent-interaction` |
-| memory | Agent 详情侧栏 | `scene-agent-interaction` |
-| reports | Agent 详情侧栏 / 报告卡片 | `scene-agent-interaction` |
+| 原视图    | 新落点                      | 主要 owner                |
+| --------- | --------------------------- | ------------------------- |
+| directive | 任务页顶部命令区            | `task-hub-convergence`    |
+| sessions  | 任务上下文会话 / 兼容历史区 | `task-hub-convergence`    |
+| workflow  | 任务详情执行区              | `tasks-store`             |
+| review    | 任务详情评审区              | `tasks-store`             |
+| history   | 任务列表筛选 / 历史状态视图 | `tasks-store`             |
+| org       | 办公室 Agent/组织视图       | `scene-agent-interaction` |
+| memory    | Agent 详情侧栏              | `scene-agent-interaction` |
+| reports   | Agent 详情侧栏 / 报告卡片   | `scene-agent-interaction` |
 
 ## 状态收口策略
 

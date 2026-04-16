@@ -21,10 +21,10 @@ export interface ModelPricing {
 
 /** 定价表：各模型的 input/output 单价 */
 export const PRICING_TABLE: Record<string, ModelPricing> = {
-  'glm-5-turbo': { input: 0.001, output: 0.002 },
-  'glm-4.6':     { input: 0.002, output: 0.004 },
-  'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
-  'gpt-4o':      { input: 0.005, output: 0.015 },
+  "glm-5-turbo": { input: 0.001, output: 0.002 },
+  "glm-4.6": { input: 0.002, output: 0.004 },
+  "gpt-4o-mini": { input: 0.00015, output: 0.0006 },
+  "gpt-4o": { input: 0.005, output: 0.015 },
 };
 
 /** 未知模型的兜底定价 */
@@ -40,9 +40,15 @@ export const DEFAULT_PRICING: ModelPricing = { input: 0.001, output: 0.002 };
  * @param tokensOut - output token 数量
  * @returns 预估费用（美元）
  */
-export function estimateCost(model: string, tokensIn: number, tokensOut: number): number {
+export function estimateCost(
+  model: string,
+  tokensIn: number,
+  tokensOut: number
+): number {
   const pricing = PRICING_TABLE[model] ?? DEFAULT_PRICING;
-  return (tokensIn / 1000) * pricing.input + (tokensOut / 1000) * pricing.output;
+  return (
+    (tokensIn / 1000) * pricing.input + (tokensOut / 1000) * pricing.output
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +101,7 @@ export interface DowngradePolicy {
 }
 
 /** 降级状态 */
-export type DowngradeLevel = 'none' | 'soft' | 'hard';
+export type DowngradeLevel = "none" | "soft" | "hard";
 
 // ---------------------------------------------------------------------------
 // 预警
@@ -104,7 +110,7 @@ export type DowngradeLevel = 'none' | 'soft' | 'hard';
 /** 成本预警 */
 export interface CostAlert {
   id: string;
-  type: 'cost_warning' | 'cost_exceeded' | 'token_warning' | 'token_exceeded';
+  type: "cost_warning" | "cost_exceeded" | "token_warning" | "token_exceeded";
   message: string;
   timestamp: number;
   resolved: boolean;
@@ -166,6 +172,6 @@ export const DEFAULT_BUDGET: Budget = {
 
 export const DEFAULT_DOWNGRADE_POLICY: DowngradePolicy = {
   enabled: true,
-  lowCostModel: 'glm-4.6',
+  lowCostModel: "glm-4.6",
   criticalAgentIds: [],
 };

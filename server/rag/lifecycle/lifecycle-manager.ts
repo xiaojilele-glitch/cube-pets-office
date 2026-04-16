@@ -7,15 +7,18 @@
  * Requirements: 7.1, 7.2, 7.4, 7.5
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
-import type { LifecycleLog, SourceType } from '../../../shared/rag/contracts.js';
-import type { VectorStoreAdapter } from '../store/vector-store-adapter.js';
-import type { MetadataStore } from '../store/metadata-store.js';
-import type { HotColdManager } from './hot-cold-manager.js';
-import { getRAGConfig } from '../config.js';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
+import type {
+  LifecycleLog,
+  SourceType,
+} from "../../../shared/rag/contracts.js";
+import type { VectorStoreAdapter } from "../store/vector-store-adapter.js";
+import type { MetadataStore } from "../store/metadata-store.js";
+import type { HotColdManager } from "./hot-cold-manager.js";
+import { getRAGConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,7 +49,10 @@ interface LogFile {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DEFAULT_LOG_PATH = resolve(__dirname, '../../../data/rag_lifecycle_log.json');
+const DEFAULT_LOG_PATH = resolve(
+  __dirname,
+  "../../../data/rag_lifecycle_log.json"
+);
 
 // ---------------------------------------------------------------------------
 // LifecycleManager
@@ -60,7 +66,7 @@ export class LifecycleManager {
     private readonly vectorStore: VectorStoreAdapter,
     private readonly metadataStore: MetadataStore,
     private readonly hotColdManager: HotColdManager,
-    private readonly logFilePath: string = DEFAULT_LOG_PATH,
+    private readonly logFilePath: string = DEFAULT_LOG_PATH
   ) {
     this.loadLogs();
   }
@@ -71,14 +77,18 @@ export class LifecycleManager {
     const config = getRAGConfig();
 
     // 1. Archive: hot → cold for stale chunks
-    const staleIds = this.hotColdManager.getStaleHotChunks(config.lifecycle.archiveAfterDays);
+    const staleIds = this.hotColdManager.getStaleHotChunks(
+      config.lifecycle.archiveAfterDays
+    );
     const archived = await this.hotColdManager.archive(staleIds);
     if (archived > 0) {
-      this.addLog('archive', archived, 'hot→cold');
+      this.addLog("archive", archived, "hot→cold");
     }
 
     // 2. Delete: expired cold chunks
-    const expiredIds = this.hotColdManager.getExpiredColdChunks(config.lifecycle.deleteAfterDays);
+    const expiredIds = this.hotColdManager.getExpiredColdChunks(
+      config.lifecycle.deleteAfterDays
+    );
     let deleted = 0;
     if (expiredIds.length > 0) {
       // Delete from vector store (grouped by project)
@@ -86,11 +96,13 @@ export class LifecycleManager {
       for (const entry of Array.from(byProject.entries())) {
         try {
           await this.vectorStore.delete(`rag_${entry[0]}`, entry[1]);
-        } catch { /* log and continue */ }
+        } catch {
+          /* log and continue */
+        }
       }
       deleted = this.metadataStore.deleteBatch(expiredIds);
       if (deleted > 0) {
-        this.addLog('delete', deleted, 'cold-expired');
+        this.addLog("delete", deleted, "cold-expired");
       }
     }
 
@@ -125,11 +137,13 @@ export class LifecycleManager {
     for (const entry of Array.from(byProject.entries())) {
       try {
         await this.vectorStore.delete(`rag_${entry[0]}`, entry[1]);
-      } catch { /* continue */ }
+      } catch {
+        /* continue */
+      }
     }
 
     const deletedCount = this.metadataStore.deleteBatch(ids);
-    this.addLog('purge', deletedCount, 'manual');
+    this.addLog("purge", deletedCount, "manual");
 
     return { deletedCount, durationMs: Date.now() - start };
   }
@@ -139,7 +153,9 @@ export class LifecycleManager {
     return this.logs.slice(-limit);
   }
 
-  async flush(): Promise<void> { await this.writeQueue; }
+  async flush(): Promise<void> {
+    await this.writeQueue;
+  }
 
   // -----------------------------------------------------------------------
   // Internal
@@ -149,7 +165,7 @@ export class LifecycleManager {
     const map = new Map<string, string[]>();
     for (const id of chunkIds) {
       const row = this.metadataStore.getByChunkId(id);
-      const projectId = row?.project_id ?? 'unknown';
+      const projectId = row?.project_id ?? "unknown";
       const list = map.get(projectId) ?? [];
       list.push(id);
       map.set(projectId, list);
@@ -157,7 +173,11 @@ export class LifecycleManager {
     return map;
   }
 
-  private addLog(operation: LifecycleLog['operation'], affectedCount: number, collection: string): void {
+  private addLog(
+    operation: LifecycleLog["operation"],
+    affectedCount: number,
+    collection: string
+  ): void {
     const log: LifecycleLog = {
       logId: randomUUID(),
       operation,
@@ -173,10 +193,12 @@ export class LifecycleManager {
   private loadLogs(): void {
     if (!existsSync(this.logFilePath)) return;
     try {
-      const raw = readFileSync(this.logFilePath, 'utf-8');
+      const raw = readFileSync(this.logFilePath, "utf-8");
       const parsed = JSON.parse(raw) as LogFile;
       this.logs = Array.isArray(parsed?.logs) ? parsed.logs : [];
-    } catch { /* start empty */ }
+    } catch {
+      /* start empty */
+    }
   }
 
   private scheduleSave(): void {
@@ -187,9 +209,9 @@ export class LifecycleManager {
     const data: LogFile = { version: 1, logs: this.logs };
     try {
       mkdirSync(dirname(this.logFilePath), { recursive: true });
-      writeFileSync(this.logFilePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.logFilePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[LifecycleManager] Failed to save logs:', err);
+      console.error("[LifecycleManager] Failed to save logs:", err);
     }
   }
 }

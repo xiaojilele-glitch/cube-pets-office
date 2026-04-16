@@ -52,7 +52,7 @@ export class DynamicPermissionManager {
     private policyStore: PolicyStore,
     private tokenService: TokenService,
     private db: DynamicManagerDb,
-    private auditLogger?: AuditLogger,
+    private auditLogger?: AuditLogger
   ) {}
 
   /** Optionally attach the check engine for cache invalidation */
@@ -71,7 +71,7 @@ export class DynamicPermissionManager {
   grantTemporaryPermission(
     agentId: string,
     permission: Permission,
-    durationMs: number,
+    durationMs: number
   ): void {
     const policy = this.policyStore.getPolicy(agentId);
     if (!policy) {
@@ -91,7 +91,7 @@ export class DynamicPermissionManager {
 
     // Add to customPermissions (avoid duplicates)
     const existing = policy.customPermissions.find(
-      (p) => permissionKey(p) === key,
+      p => permissionKey(p) === key
     );
     if (!existing) {
       this.policyStore.updatePolicy(agentId, {
@@ -128,16 +128,19 @@ export class DynamicPermissionManager {
 
     // Remove from customPermissions
     const filteredCustom = policy.customPermissions.filter(
-      (p) => permissionKey(p) !== key,
+      p => permissionKey(p) !== key
     );
 
     // Add to deniedPermissions (avoid duplicates)
     const alreadyDenied = policy.deniedPermissions.some(
-      (p) => permissionKey(p) === key,
+      p => permissionKey(p) === key
     );
     const newDenied = alreadyDenied
       ? policy.deniedPermissions
-      : [...policy.deniedPermissions, { ...permission, effect: "deny" as const }];
+      : [
+          ...policy.deniedPermissions,
+          { ...permission, effect: "deny" as const },
+        ];
 
     this.policyStore.updatePolicy(agentId, {
       customPermissions: filteredCustom,
@@ -160,7 +163,7 @@ export class DynamicPermissionManager {
   escalatePermission(
     agentId: string,
     reason: string,
-    approverList: string[],
+    approverList: string[]
   ): string {
     const escalationId = randomUUID();
     const escalation: PermissionEscalation = {
@@ -231,7 +234,7 @@ export class DynamicPermissionManager {
 
       const expiredKeySet = new Set(expiredKeys);
       const filteredCustom = policy.customPermissions.filter(
-        (p) => !expiredKeySet.has(permissionKey(p)),
+        p => !expiredKeySet.has(permissionKey(p))
       );
 
       // Only update if something actually changed
@@ -270,7 +273,11 @@ export class DynamicPermissionManager {
     }
   }
 
-  private audit(agentId: string, operation: string, permission: Permission): void {
+  private audit(
+    agentId: string,
+    operation: string,
+    permission: Permission
+  ): void {
     if (!this.auditLogger) return;
     try {
       this.auditLogger.log({

@@ -7,7 +7,10 @@
 export { JsonLineageStorage, getRetentionDays } from "./lineage-store.js";
 export type { LineageStorageAdapter } from "./lineage-store.js";
 export { LineageCollector } from "./lineage-collector.js";
-export type { LineageLogger, LineageCollectorOptions } from "./lineage-collector.js";
+export type {
+  LineageLogger,
+  LineageCollectorOptions,
+} from "./lineage-collector.js";
 export { LineageQueryService } from "./lineage-query.js";
 export { LineageAuditService } from "./lineage-audit.js";
 export { ChangeDetectionService } from "./change-detection.js";
@@ -22,14 +25,16 @@ import { getRetentionDays } from "./lineage-store.js";
  */
 export function startRetentionCleanup(
   store: LineageStorageAdapter,
-  intervalMs = 3_600_000,
+  intervalMs = 3_600_000
 ): NodeJS.Timeout {
   const retentionDays = getRetentionDays();
   return setInterval(async () => {
     const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
     const purged = await store.purgeExpired(cutoff);
     if (purged > 0) {
-      console.log(`[Lineage] Purged ${purged} expired nodes (retention: ${retentionDays} days)`);
+      console.log(
+        `[Lineage] Purged ${purged} expired nodes (retention: ${retentionDays} days)`
+      );
     }
   }, intervalMs);
 }

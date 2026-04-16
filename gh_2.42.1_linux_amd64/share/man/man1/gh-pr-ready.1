@@ -1,0 +1,40 @@
+.nh
+.TH "GH-PR-READY" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-pr-ready - Mark a pull request as ready for review
+
+
+.SH SYNOPSIS
+.PP
+\fBgh pr ready [<number> | <url> | <branch>] [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Mark a pull request as ready for review.
+
+.PP
+Without an argument, the pull request that belongs to the current branch
+is marked as ready.
+
+.PP
+If supported by your plan, convert to draft with \fB--undo\fR
+
+
+.SH OPTIONS
+.TP
+\fB--undo\fR
+Convert a pull request to "draft"
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH SEE ALSO
+.PP
+\fBgh-pr(1)\fR

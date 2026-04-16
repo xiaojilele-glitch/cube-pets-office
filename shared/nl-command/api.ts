@@ -47,7 +47,8 @@ export const NL_COMMAND_API_ROUTES = {
 
   // 澄清对话
   clarificationPreview: `${NL_COMMAND_API_BASE}/clarification-preview`,
-  commandClarify: (id: string) => `${NL_COMMAND_API_BASE}/commands/${id}/clarify`,
+  commandClarify: (id: string) =>
+    `${NL_COMMAND_API_BASE}/commands/${id}/clarify`,
   commandDialog: (id: string) => `${NL_COMMAND_API_BASE}/commands/${id}/dialog`,
 
   // 执行计划
@@ -62,7 +63,8 @@ export const NL_COMMAND_API_ROUTES = {
 
   // 决策支持
   planRisks: (id: string) => `${NL_COMMAND_API_BASE}/plans/${id}/risks`,
-  planSuggestions: (id: string) => `${NL_COMMAND_API_BASE}/plans/${id}/suggestions`,
+  planSuggestions: (id: string) =>
+    `${NL_COMMAND_API_BASE}/plans/${id}/suggestions`,
   planApplySuggestion: (id: string) =>
     `${NL_COMMAND_API_BASE}/plans/${id}/apply-suggestion`,
 

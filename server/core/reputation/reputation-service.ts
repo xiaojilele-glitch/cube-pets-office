@@ -7,11 +7,11 @@
  * @see Requirements 1.3, 1.4, 1.5, 2.1, 2.3, 2.5, 3.1, 3.2, 3.4
  */
 
-import db from '../../db/index.js';
-import { emitReputationChanged, emitTrustTierChanged } from '../socket.js';
-import { ReputationCalculator } from './reputation-calculator.js';
-import { TrustTierEvaluator } from './trust-tier-evaluator.js';
-import { AnomalyDetector } from './anomaly-detector.js';
+import db from "../../db/index.js";
+import { emitReputationChanged, emitTrustTierChanged } from "../socket.js";
+import { ReputationCalculator } from "./reputation-calculator.js";
+import { TrustTierEvaluator } from "./trust-tier-evaluator.js";
+import { AnomalyDetector } from "./anomaly-detector.js";
 import type {
   ReputationConfig,
   ReputationProfile,
@@ -21,15 +21,15 @@ import type {
   DimensionDeltas,
   ReputationGrade,
   TrustTier,
-} from '../../../shared/reputation.js';
+} from "../../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Leaderboard types
 // ---------------------------------------------------------------------------
 
 export interface LeaderboardOptions {
-  sortBy?: keyof DimensionScores | 'overallScore';
-  order?: 'asc' | 'desc';
+  sortBy?: keyof DimensionScores | "overallScore";
+  order?: "asc" | "desc";
   limit?: number;
   offset?: number;
   trustTier?: TrustTier;
@@ -76,7 +76,7 @@ export class ReputationService {
     private calculator: ReputationCalculator,
     private evaluator: TrustTierEvaluator,
     private detector: AnomalyDetector,
-    private config: ReputationConfig,
+    private config: ReputationConfig
   ) {}
 
   // -------------------------------------------------------------------------
@@ -98,7 +98,9 @@ export class ReputationService {
       : this.config.internalInitialScore;
 
     const grade = this.evaluator.computeGrade(score);
-    const trustTier = isExternal ? 'probation' as TrustTier : this.evaluator.computeTrustTier(grade);
+    const trustTier = isExternal
+      ? ("probation" as TrustTier)
+      : this.evaluator.computeTrustTier(grade);
 
     const ts = now();
     const profile: ReputationProfile = {
@@ -157,11 +159,14 @@ export class ReputationService {
 
     // 2. Anomaly detection
     const recentEvents = db.getReputationEvents(signal.agentId, 100);
-    const anomalyResult = this.detector.checkAnomalyThreshold(signal.agentId, recentEvents);
+    const anomalyResult = this.detector.checkAnomalyThreshold(
+      signal.agentId,
+      recentEvents
+    );
     if (anomalyResult.isAnomaly) {
       db.createAuditEntry({
         agentId: signal.agentId,
-        type: 'anomaly',
+        type: "anomaly",
         detail: `Anomaly detected: total delta ${anomalyResult.totalDelta} exceeds threshold ${this.config.anomaly.threshold}. Update paused.`,
         snapshot: { ...profile },
         timestamp: now(),
@@ -174,7 +179,7 @@ export class ReputationService {
     const grindingResult = this.detector.checkGrindingPattern(signal.agentId, [
       {
         taskId: signal.taskId,
-        complexity: signal.taskComplexity ?? 'medium',
+        complexity: signal.taskComplexity ?? "medium",
         completedAt: signal.timestamp,
       },
     ]);
@@ -187,50 +192,76 @@ export class ReputationService {
     const rawDeltas = this.calculator.computeDimensionDeltas(
       profile.dimensions,
       signal,
-      profile.consecutiveHighQuality,
+      profile.consecutiveHighQuality
     );
 
     // 6. Apply grinding weight and probation damping to positive deltas
     const adjustedDeltas: DimensionDeltas = {
-      qualityDelta: rawDeltas.qualityDelta > 0
-        ? rawDeltas.qualityDelta * grindingWeight * probationDamping
-        : rawDeltas.qualityDelta,
-      speedDelta: rawDeltas.speedDelta > 0
-        ? rawDeltas.speedDelta * grindingWeight * probationDamping
-        : rawDeltas.speedDelta,
-      efficiencyDelta: rawDeltas.efficiencyDelta > 0
-        ? rawDeltas.efficiencyDelta * grindingWeight * probationDamping
-        : rawDeltas.efficiencyDelta,
-      collaborationDelta: rawDeltas.collaborationDelta > 0
-        ? rawDeltas.collaborationDelta * grindingWeight * probationDamping
-        : rawDeltas.collaborationDelta,
-      reliabilityDelta: rawDeltas.reliabilityDelta > 0
-        ? rawDeltas.reliabilityDelta * grindingWeight * probationDamping
-        : rawDeltas.reliabilityDelta,
+      qualityDelta:
+        rawDeltas.qualityDelta > 0
+          ? rawDeltas.qualityDelta * grindingWeight * probationDamping
+          : rawDeltas.qualityDelta,
+      speedDelta:
+        rawDeltas.speedDelta > 0
+          ? rawDeltas.speedDelta * grindingWeight * probationDamping
+          : rawDeltas.speedDelta,
+      efficiencyDelta:
+        rawDeltas.efficiencyDelta > 0
+          ? rawDeltas.efficiencyDelta * grindingWeight * probationDamping
+          : rawDeltas.efficiencyDelta,
+      collaborationDelta:
+        rawDeltas.collaborationDelta > 0
+          ? rawDeltas.collaborationDelta * grindingWeight * probationDamping
+          : rawDeltas.collaborationDelta,
+      reliabilityDelta:
+        rawDeltas.reliabilityDelta > 0
+          ? rawDeltas.reliabilityDelta * grindingWeight * probationDamping
+          : rawDeltas.reliabilityDelta,
     };
 
     // 7. Clamp deltas
-    const clampedDeltas = this.calculator.clampDeltas(adjustedDeltas, this.config.maxDeltaPerUpdate);
+    const clampedDeltas = this.calculator.clampDeltas(
+      adjustedDeltas,
+      this.config.maxDeltaPerUpdate
+    );
 
     // 8. Apply deltas to dimensions (clamp each to [0, 1000])
     profile.dimensions.qualityScore = clamp(
-      Math.round(profile.dimensions.qualityScore + clampedDeltas.qualityDelta), 0, 1000,
+      Math.round(profile.dimensions.qualityScore + clampedDeltas.qualityDelta),
+      0,
+      1000
     );
     profile.dimensions.speedScore = clamp(
-      Math.round(profile.dimensions.speedScore + clampedDeltas.speedDelta), 0, 1000,
+      Math.round(profile.dimensions.speedScore + clampedDeltas.speedDelta),
+      0,
+      1000
     );
     profile.dimensions.efficiencyScore = clamp(
-      Math.round(profile.dimensions.efficiencyScore + clampedDeltas.efficiencyDelta), 0, 1000,
+      Math.round(
+        profile.dimensions.efficiencyScore + clampedDeltas.efficiencyDelta
+      ),
+      0,
+      1000
     );
     profile.dimensions.collaborationScore = clamp(
-      Math.round(profile.dimensions.collaborationScore + clampedDeltas.collaborationDelta), 0, 1000,
+      Math.round(
+        profile.dimensions.collaborationScore + clampedDeltas.collaborationDelta
+      ),
+      0,
+      1000
     );
     profile.dimensions.reliabilityScore = clamp(
-      Math.round(profile.dimensions.reliabilityScore + clampedDeltas.reliabilityDelta), 0, 1000,
+      Math.round(
+        profile.dimensions.reliabilityScore + clampedDeltas.reliabilityDelta
+      ),
+      0,
+      1000
     );
 
     // 9. Compute new overall score
-    profile.overallScore = this.calculator.computeOverallScore(profile.dimensions);
+    profile.overallScore = this.calculator.computeOverallScore(
+      profile.dimensions
+    );
 
     // 10. Update grade and trust tier
     const newGrade = this.evaluator.computeGrade(profile.overallScore);
@@ -243,12 +274,15 @@ export class ReputationService {
 
     // 11. Evaluate grade change events
     const gradeEvents = this.evaluator.evaluateGradeChange(
-      oldGrade, newGrade, signal.agentId, signal.taskId,
+      oldGrade,
+      newGrade,
+      signal.agentId,
+      signal.taskId
     );
     for (const evt of gradeEvents) {
       db.createAuditEntry({
         agentId: signal.agentId,
-        type: 'anomaly_review',
+        type: "anomaly_review",
         detail: `${evt.type}: ${evt.detail}`,
         timestamp: now(),
       });
@@ -280,7 +314,7 @@ export class ReputationService {
       dimensionDeltas: clampedDeltas,
       oldOverallScore,
       newOverallScore: profile.overallScore,
-      reason: 'task_completed',
+      reason: "task_completed",
       timestamp: now(),
     });
 
@@ -294,8 +328,12 @@ export class ReputationService {
     });
 
     // WebSocket: push trust tier change if it changed
-    const oldTier = oldGrade === 'S' || oldGrade === 'A' ? 'trusted'
-      : oldGrade === 'B' ? 'standard' : 'probation';
+    const oldTier =
+      oldGrade === "S" || oldGrade === "A"
+        ? "trusted"
+        : oldGrade === "B"
+          ? "standard"
+          : "probation";
     if (profile.trustTier !== oldTier) {
       emitTrustTierChanged({
         agentId: signal.agentId,
@@ -310,7 +348,10 @@ export class ReputationService {
   // Role reputation helper
   // -------------------------------------------------------------------------
 
-  private updateRoleReputation(profile: ReputationProfile, signal: ReputationSignal): void {
+  private updateRoleReputation(
+    profile: ReputationProfile,
+    signal: ReputationSignal
+  ): void {
     const roleId = signal.roleId!;
     let roleRep = profile.roleReputation[roleId];
 
@@ -329,30 +370,57 @@ export class ReputationService {
 
     // Compute deltas for role dimensions using same signal
     const roleDeltas = this.calculator.computeDimensionDeltas(
-      roleRep.dimensions, signal, profile.consecutiveHighQuality,
+      roleRep.dimensions,
+      signal,
+      profile.consecutiveHighQuality
     );
-    const clampedRoleDeltas = this.calculator.clampDeltas(roleDeltas, this.config.maxDeltaPerUpdate);
+    const clampedRoleDeltas = this.calculator.clampDeltas(
+      roleDeltas,
+      this.config.maxDeltaPerUpdate
+    );
 
     // Apply deltas
     roleRep.dimensions.qualityScore = clamp(
-      Math.round(roleRep.dimensions.qualityScore + clampedRoleDeltas.qualityDelta), 0, 1000,
+      Math.round(
+        roleRep.dimensions.qualityScore + clampedRoleDeltas.qualityDelta
+      ),
+      0,
+      1000
     );
     roleRep.dimensions.speedScore = clamp(
-      Math.round(roleRep.dimensions.speedScore + clampedRoleDeltas.speedDelta), 0, 1000,
+      Math.round(roleRep.dimensions.speedScore + clampedRoleDeltas.speedDelta),
+      0,
+      1000
     );
     roleRep.dimensions.efficiencyScore = clamp(
-      Math.round(roleRep.dimensions.efficiencyScore + clampedRoleDeltas.efficiencyDelta), 0, 1000,
+      Math.round(
+        roleRep.dimensions.efficiencyScore + clampedRoleDeltas.efficiencyDelta
+      ),
+      0,
+      1000
     );
     roleRep.dimensions.collaborationScore = clamp(
-      Math.round(roleRep.dimensions.collaborationScore + clampedRoleDeltas.collaborationDelta), 0, 1000,
+      Math.round(
+        roleRep.dimensions.collaborationScore +
+          clampedRoleDeltas.collaborationDelta
+      ),
+      0,
+      1000
     );
     roleRep.dimensions.reliabilityScore = clamp(
-      Math.round(roleRep.dimensions.reliabilityScore + clampedRoleDeltas.reliabilityDelta), 0, 1000,
+      Math.round(
+        roleRep.dimensions.reliabilityScore + clampedRoleDeltas.reliabilityDelta
+      ),
+      0,
+      1000
     );
 
-    roleRep.overallScore = this.calculator.computeOverallScore(roleRep.dimensions);
+    roleRep.overallScore = this.calculator.computeOverallScore(
+      roleRep.dimensions
+    );
     roleRep.totalTasksInRole += 1;
-    roleRep.lowConfidence = roleRep.totalTasksInRole < this.config.lowConfidence.taskThreshold;
+    roleRep.lowConfidence =
+      roleRep.totalTasksInRole < this.config.lowConfidence.taskThreshold;
 
     profile.roleReputation[roleId] = roleRep;
   }
@@ -373,7 +441,10 @@ export class ReputationService {
    * Return the role reputation record for an agent in a specific role.
    * @see Requirement 3.4
    */
-  getReputationByRole(agentId: string, roleId: string): RoleReputationRecord | undefined {
+  getReputationByRole(
+    agentId: string,
+    roleId: string
+  ): RoleReputationRecord | undefined {
     const profile = db.getReputationProfile(agentId);
     if (!profile) return undefined;
     return profile.roleReputation[roleId];
@@ -387,16 +458,25 @@ export class ReputationService {
    * Manually adjust a specific dimension score.
    * Recomputes overall score, saves, and creates audit entry.
    */
-  adjustReputation(agentId: string, dimension: keyof DimensionScores, delta: number, reason: string): void {
+  adjustReputation(
+    agentId: string,
+    dimension: keyof DimensionScores,
+    delta: number,
+    reason: string
+  ): void {
     const profile = db.getReputationProfile(agentId);
     if (!profile) return;
 
     const oldOverallScore = profile.overallScore;
 
     profile.dimensions[dimension] = clamp(
-      Math.round(profile.dimensions[dimension] + delta), 0, 1000,
+      Math.round(profile.dimensions[dimension] + delta),
+      0,
+      1000
     );
-    profile.overallScore = this.calculator.computeOverallScore(profile.dimensions);
+    profile.overallScore = this.calculator.computeOverallScore(
+      profile.dimensions
+    );
     profile.grade = this.evaluator.computeGrade(profile.overallScore);
     if (profile.isExternal) {
       profile.trustTier = this.evaluator.evaluateExternalUpgrade(profile);
@@ -415,7 +495,10 @@ export class ReputationService {
       collaborationDelta: 0,
       reliabilityDelta: 0,
     };
-    const deltaKey = dimension.replace('Score', 'Delta') as keyof DimensionDeltas;
+    const deltaKey = dimension.replace(
+      "Score",
+      "Delta"
+    ) as keyof DimensionDeltas;
     (dimensionDeltas as any)[deltaKey] = delta;
 
     db.createReputationEvent({
@@ -424,13 +507,13 @@ export class ReputationService {
       dimensionDeltas,
       oldOverallScore,
       newOverallScore: profile.overallScore,
-      reason: 'admin_adjust',
+      reason: "admin_adjust",
       timestamp: now(),
     });
 
     db.createAuditEntry({
       agentId,
-      type: 'admin_adjust',
+      type: "admin_adjust",
       detail: `Admin adjusted ${dimension} by ${delta}: ${reason}`,
       timestamp: now(),
     });
@@ -452,7 +535,7 @@ export class ReputationService {
     profile.dimensions = makeDimensions(score);
     profile.grade = this.evaluator.computeGrade(score);
     profile.trustTier = profile.isExternal
-      ? 'probation'
+      ? "probation"
       : this.evaluator.computeTrustTier(profile.grade);
     profile.consecutiveHighQuality = 0;
     profile.roleReputation = {};
@@ -472,13 +555,13 @@ export class ReputationService {
       },
       oldOverallScore,
       newOverallScore: score,
-      reason: 'admin_reset',
+      reason: "admin_reset",
       timestamp: now(),
     });
 
     db.createAuditEntry({
       agentId,
-      type: 'admin_reset',
+      type: "admin_reset",
       detail: `Admin reset reputation to ${score}`,
       timestamp: now(),
     });
@@ -494,8 +577,8 @@ export class ReputationService {
    */
   getLeaderboard(options: LeaderboardOptions = {}): LeaderboardEntry[] {
     const {
-      sortBy = 'overallScore',
-      order = 'desc',
+      sortBy = "overallScore",
+      order = "desc",
       limit = 50,
       offset = 0,
       trustTier,
@@ -510,9 +593,11 @@ export class ReputationService {
 
     // Sort
     profiles.sort((a, b) => {
-      const aVal = sortBy === 'overallScore' ? a.overallScore : a.dimensions[sortBy];
-      const bVal = sortBy === 'overallScore' ? b.overallScore : b.dimensions[sortBy];
-      return order === 'desc' ? bVal - aVal : aVal - bVal;
+      const aVal =
+        sortBy === "overallScore" ? a.overallScore : a.dimensions[sortBy];
+      const bVal =
+        sortBy === "overallScore" ? b.overallScore : b.dimensions[sortBy];
+      return order === "desc" ? bVal - aVal : aVal - bVal;
     });
 
     // Paginate

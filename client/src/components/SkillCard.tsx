@@ -44,7 +44,9 @@ export function SkillCard({ skill }: SkillCardProps) {
           )}
           <span className="font-medium truncate">{skill.name}</span>
           {skill.version && (
-            <span className="text-xs text-muted-foreground">v{skill.version}</span>
+            <span className="text-xs text-muted-foreground">
+              v{skill.version}
+            </span>
           )}
           {skill.category && (
             <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
@@ -65,7 +67,9 @@ export function SkillCard({ skill }: SkillCardProps) {
         <div className="mt-2 space-y-2 border-t border-border/30 pt-2">
           {skill.prompt && (
             <div>
-              <span className="text-xs font-medium text-muted-foreground">Prompt:</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                Prompt:
+              </span>
               <pre className="mt-0.5 whitespace-pre-wrap rounded bg-muted/50 p-2 text-xs">
                 {skill.prompt}
               </pre>
@@ -73,7 +77,9 @@ export function SkillCard({ skill }: SkillCardProps) {
           )}
           {skill.requiredMcp && skill.requiredMcp.length > 0 && (
             <div>
-              <span className="text-xs font-medium text-muted-foreground">MCP Tools:</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                MCP Tools:
+              </span>
               <div className="mt-0.5 flex flex-wrap gap-1">
                 {skill.requiredMcp.map(mcp => (
                   <span

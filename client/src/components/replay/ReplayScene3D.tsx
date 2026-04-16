@@ -12,25 +12,25 @@
  * Requirements: 8.1, 8.7
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type {
   CommunicationEventData,
   DecisionEventData,
   ExecutionEvent,
   ExecutionTimeline,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
-import { OfficeRoom } from '../three/OfficeRoom';
-import { PetWorkers } from '../three/PetWorkers';
+import { OfficeRoom } from "../three/OfficeRoom";
+import { PetWorkers } from "../three/PetWorkers";
 
-import type { ReplayEngine } from '../../lib/replay/replay-engine';
+import type { ReplayEngine } from "../../lib/replay/replay-engine";
 
-import { AgentActivityOverlay } from './AgentActivityOverlay';
-import type { AgentActivity } from './AgentActivityOverlay';
-import { CommunicationLine } from './CommunicationLine';
-import { DecisionGlow } from './DecisionGlow';
-import { ErrorHighlight } from './ErrorHighlight';
+import { AgentActivityOverlay } from "./AgentActivityOverlay";
+import type { AgentActivity } from "./AgentActivityOverlay";
+import { CommunicationLine } from "./CommunicationLine";
+import { DecisionGlow } from "./DecisionGlow";
+import { ErrorHighlight } from "./ErrorHighlight";
 
 /* ─── Props ─── */
 
@@ -76,25 +76,25 @@ function deriveOverlay(event: ExecutionEvent | null): OverlayState {
   if (!event) return EMPTY_OVERLAY;
 
   const activities = new Map<string, AgentActivity>();
-  const commLines: OverlayState['commLines'] = [];
-  const decisions: OverlayState['decisions'] = [];
+  const commLines: OverlayState["commLines"] = [];
+  const decisions: OverlayState["decisions"] = [];
   const errors: string[] = [];
 
   switch (event.eventType) {
-    case 'AGENT_STARTED':
-      activities.set(event.sourceAgent, 'working');
+    case "AGENT_STARTED":
+      activities.set(event.sourceAgent, "working");
       break;
 
-    case 'AGENT_STOPPED':
-      activities.set(event.sourceAgent, 'done');
+    case "AGENT_STOPPED":
+      activities.set(event.sourceAgent, "done");
       break;
 
-    case 'MESSAGE_SENT':
-    case 'MESSAGE_RECEIVED': {
+    case "MESSAGE_SENT":
+    case "MESSAGE_RECEIVED": {
       const data = event.eventData as unknown as CommunicationEventData;
-      activities.set(data.senderId ?? event.sourceAgent, 'working');
+      activities.set(data.senderId ?? event.sourceAgent, "working");
       if (event.targetAgent) {
-        activities.set(event.targetAgent, 'thinking');
+        activities.set(event.targetAgent, "thinking");
         commLines.push({
           from: data.senderId ?? event.sourceAgent,
           to: data.receiverId ?? event.targetAgent,
@@ -103,31 +103,31 @@ function deriveOverlay(event: ExecutionEvent | null): OverlayState {
       break;
     }
 
-    case 'DECISION_MADE': {
+    case "DECISION_MADE": {
       const data = event.eventData as unknown as DecisionEventData;
-      activities.set(event.sourceAgent, 'thinking');
+      activities.set(event.sourceAgent, "thinking");
       decisions.push({
         agentId: data.agentId ?? event.sourceAgent,
-        confidence: typeof data.confidence === 'number' ? data.confidence : 0.5,
+        confidence: typeof data.confidence === "number" ? data.confidence : 0.5,
       });
       break;
     }
 
-    case 'CODE_EXECUTED':
-      activities.set(event.sourceAgent, 'working');
+    case "CODE_EXECUTED":
+      activities.set(event.sourceAgent, "working");
       break;
 
-    case 'RESOURCE_ACCESSED':
-      activities.set(event.sourceAgent, 'working');
+    case "RESOURCE_ACCESSED":
+      activities.set(event.sourceAgent, "working");
       break;
 
-    case 'ERROR_OCCURRED':
-      activities.set(event.sourceAgent, 'error');
+    case "ERROR_OCCURRED":
+      activities.set(event.sourceAgent, "error");
       errors.push(event.sourceAgent);
       break;
 
-    case 'MILESTONE_REACHED':
-      activities.set(event.sourceAgent, 'done');
+    case "MILESTONE_REACHED":
+      activities.set(event.sourceAgent, "done");
       break;
   }
 
@@ -141,12 +141,12 @@ export function ReplayScene3D({ engine, timeline }: ReplayScene3DProps) {
 
   /* Subscribe to engine events */
   useEffect(() => {
-    const unsubEvent = engine.onEvent((evt) => {
+    const unsubEvent = engine.onEvent(evt => {
       setCurrentEvent(evt);
     });
 
-    const unsubState = engine.onStateChange((state) => {
-      if (state.state === 'stopped' || state.state === 'idle') {
+    const unsubState = engine.onStateChange(state => {
+      if (state.state === "stopped" || state.state === "idle") {
         setCurrentEvent(null);
       }
     });
@@ -170,10 +170,7 @@ export function ReplayScene3D({ engine, timeline }: ReplayScene3DProps) {
     return Array.from(ids);
   }, [timeline]);
 
-  const positionOf = useCallback(
-    (id: string) => agentPosition(id),
-    [],
-  );
+  const positionOf = useCallback((id: string) => agentPosition(id), []);
 
   return (
     <group>
@@ -182,9 +179,9 @@ export function ReplayScene3D({ engine, timeline }: ReplayScene3DProps) {
       <PetWorkers />
 
       {/* Activity overlays */}
-      {agentIds.map((id) => {
+      {agentIds.map(id => {
         const activity = overlay.activities.get(id);
-        if (!activity || activity === 'idle') return null;
+        if (!activity || activity === "idle") return null;
         return (
           <AgentActivityOverlay
             key={`act-${id}`}
@@ -206,7 +203,7 @@ export function ReplayScene3D({ engine, timeline }: ReplayScene3DProps) {
       ))}
 
       {/* Decision glows */}
-      {overlay.decisions.map((d) => (
+      {overlay.decisions.map(d => (
         <DecisionGlow
           key={`dec-${d.agentId}`}
           position={positionOf(d.agentId)}
@@ -215,7 +212,7 @@ export function ReplayScene3D({ engine, timeline }: ReplayScene3DProps) {
       ))}
 
       {/* Error highlights */}
-      {overlay.errors.map((id) => (
+      {overlay.errors.map(id => (
         <ErrorHighlight key={`err-${id}`} position={positionOf(id)} />
       ))}
     </group>

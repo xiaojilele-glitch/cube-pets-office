@@ -3,11 +3,11 @@
  * Startup always refreshes these records so corrupted text in old data
  * does not keep polluting prompts or the UI.
  */
-import db from './index.js';
-import { getAIConfig } from '../core/ai-config.js';
+import db from "./index.js";
+import { getAIConfig } from "../core/ai-config.js";
 
-type Department = 'game' | 'ai' | 'life' | 'meta';
-type Role = 'ceo' | 'manager' | 'worker';
+type Department = "game" | "ai" | "life" | "meta";
+type Role = "ceo" | "manager" | "worker";
 
 interface AgentSeed {
   id: string;
@@ -32,12 +32,12 @@ const MANAGER_OUTPUT_SCHEMA = `输出 JSON：
 
 const AGENT_SEEDS: AgentSeed[] = [
   {
-    id: 'ceo',
-    name: 'CEO Gateway',
-    department: 'meta',
-    role: 'ceo',
+    id: "ceo",
+    name: "CEO Gateway",
+    department: "meta",
+    role: "ceo",
     manager_id: null,
-    model: 'gpt-4.1-mini',
+    model: "gpt-4.1-mini",
     soul_md: `# CEO Gateway
 ## 身份
 你是整个组织的最高协调者，负责把用户指令拆解成跨部门可执行的方向。
@@ -72,12 +72,12 @@ const AGENT_SEEDS: AgentSeed[] = [
 - 若任务本质上不需要某部门，不要为了形式把它加入`,
   },
   {
-    id: 'pixel',
-    name: 'Pixel · 游戏部经理',
-    department: 'game',
-    role: 'manager',
-    manager_id: 'ceo',
-    model: 'gpt-4.1-mini',
+    id: "pixel",
+    name: "Pixel · 游戏部经理",
+    department: "game",
+    role: "manager",
+    manager_id: "ceo",
+    model: "gpt-4.1-mini",
     soul_md: `# Pixel
 ## 身份
 你是游戏部经理，负责把 CEO 下达的部门方向拆成清晰任务，并分配给最合适的成员。
@@ -102,12 +102,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 兼顾创意、实现成本和用户体验`,
   },
   {
-    id: 'nova',
-    name: 'Nova',
-    department: 'game',
-    role: 'worker',
-    manager_id: 'pixel',
-    model: 'gpt-4.1-mini',
+    id: "nova",
+    name: "Nova",
+    department: "game",
+    role: "worker",
+    manager_id: "pixel",
+    model: "gpt-4.1-mini",
     soul_md: `# Nova
 ## 身份
 你是游戏部成员，专长是游戏策划、玩法包装和活动方案设计。
@@ -123,12 +123,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 避免空泛的“加强体验”“提升趣味性”式表述`,
   },
   {
-    id: 'blaze',
-    name: 'Blaze',
-    department: 'game',
-    role: 'worker',
-    manager_id: 'pixel',
-    model: 'gpt-4.1-mini',
+    id: "blaze",
+    name: "Blaze",
+    department: "game",
+    role: "worker",
+    manager_id: "pixel",
+    model: "gpt-4.1-mini",
     soul_md: `# Blaze
 ## 身份
 你是游戏部成员，专长是技术架构、实现方案和性能优化。
@@ -144,12 +144,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 必要时给出分阶段实施建议`,
   },
   {
-    id: 'lyra',
-    name: 'Lyra',
-    department: 'game',
-    role: 'worker',
-    manager_id: 'pixel',
-    model: 'gpt-4.1-mini',
+    id: "lyra",
+    name: "Lyra",
+    department: "game",
+    role: "worker",
+    manager_id: "pixel",
+    model: "gpt-4.1-mini",
     soul_md: `# Lyra
 ## 身份
 你是游戏部成员，专长是用户体验、交互设计和体验优化。
@@ -165,12 +165,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 重点说明交互变化会带来的行为改善`,
   },
   {
-    id: 'volt',
-    name: 'Volt',
-    department: 'game',
-    role: 'worker',
-    manager_id: 'pixel',
-    model: 'gpt-4.1-mini',
+    id: "volt",
+    name: "Volt",
+    department: "game",
+    role: "worker",
+    manager_id: "pixel",
+    model: "gpt-4.1-mini",
     soul_md: `# Volt
 ## 身份
 你是游戏部成员，专长是数据分析、指标体系和增长优化。
@@ -186,12 +186,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 给出可追踪的优化目标`,
   },
   {
-    id: 'nexus',
-    name: 'Nexus · AI 部经理',
-    department: 'ai',
-    role: 'manager',
-    manager_id: 'ceo',
-    model: 'gpt-4.1-mini',
+    id: "nexus",
+    name: "Nexus · AI 部经理",
+    department: "ai",
+    role: "manager",
+    manager_id: "ceo",
+    model: "gpt-4.1-mini",
     soul_md: `# Nexus
 ## 身份
 你是 AI 部经理，负责把部门方向拆成模型、数据、算法和应用层面的执行任务。
@@ -216,12 +216,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 不要为了“看起来高级”而堆砌模型术语`,
   },
   {
-    id: 'flux',
-    name: 'Flux',
-    department: 'ai',
-    role: 'worker',
-    manager_id: 'nexus',
-    model: 'gpt-4.1-mini',
+    id: "flux",
+    name: "Flux",
+    department: "ai",
+    role: "worker",
+    manager_id: "nexus",
+    model: "gpt-4.1-mini",
     soul_md: `# Flux
 ## 身份
 你是 AI 部成员，专长是模型训练、调优和推理表现优化。
@@ -237,12 +237,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 同时考虑效果、速度和成本`,
   },
   {
-    id: 'tensor',
-    name: 'Tensor',
-    department: 'ai',
-    role: 'worker',
-    manager_id: 'nexus',
-    model: 'gpt-4.1-mini',
+    id: "tensor",
+    name: "Tensor",
+    department: "ai",
+    role: "worker",
+    manager_id: "nexus",
+    model: "gpt-4.1-mini",
     soul_md: `# Tensor
 ## 身份
 你是 AI 部成员，专长是数据工程、特征处理和数据质量建设。
@@ -258,12 +258,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 对数据偏差和脏数据保持警惕`,
   },
   {
-    id: 'quark',
-    name: 'Quark',
-    department: 'ai',
-    role: 'worker',
-    manager_id: 'nexus',
-    model: 'gpt-4.1-mini',
+    id: "quark",
+    name: "Quark",
+    department: "ai",
+    role: "worker",
+    manager_id: "nexus",
+    model: "gpt-4.1-mini",
     soul_md: `# Quark
 ## 身份
 你是 AI 部成员，专长是算法研究、方案比较和前沿方法判断。
@@ -279,12 +279,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 避免只有结论没有推理过程`,
   },
   {
-    id: 'iris',
-    name: 'Iris',
-    department: 'ai',
-    role: 'worker',
-    manager_id: 'nexus',
-    model: 'gpt-4.1-mini',
+    id: "iris",
+    name: "Iris",
+    department: "ai",
+    role: "worker",
+    manager_id: "nexus",
+    model: "gpt-4.1-mini",
     soul_md: `# Iris
 ## 身份
 你是 AI 部成员，专长是 AI 应用集成、产品落地和部署方案。
@@ -300,12 +300,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 把“如何真正用起来”讲清楚`,
   },
   {
-    id: 'echo',
-    name: 'Echo · 生活部经理',
-    department: 'life',
-    role: 'manager',
-    manager_id: 'ceo',
-    model: 'gpt-4.1-mini',
+    id: "echo",
+    name: "Echo · 生活部经理",
+    department: "life",
+    role: "manager",
+    manager_id: "ceo",
+    model: "gpt-4.1-mini",
     soul_md: `# Echo
 ## 身份
 你是生活部经理，负责内容表达、社区运营、用户沟通和品牌温度相关任务。
@@ -328,12 +328,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 不要把抽象口号当成方案`,
   },
   {
-    id: 'zen',
-    name: 'Zen',
-    department: 'life',
-    role: 'worker',
-    manager_id: 'echo',
-    model: 'gpt-4.1-mini',
+    id: "zen",
+    name: "Zen",
+    department: "life",
+    role: "worker",
+    manager_id: "echo",
+    model: "gpt-4.1-mini",
     soul_md: `# Zen
 ## 身份
 你是生活部成员，专长是内容创作、文案策划和品牌表达。
@@ -349,12 +349,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 避免空洞套话和过度营销腔`,
   },
   {
-    id: 'coco',
-    name: 'Coco',
-    department: 'life',
-    role: 'worker',
-    manager_id: 'echo',
-    model: 'gpt-4.1-mini',
+    id: "coco",
+    name: "Coco",
+    department: "life",
+    role: "worker",
+    manager_id: "echo",
+    model: "gpt-4.1-mini",
     soul_md: `# Coco
 ## 身份
 你是生活部成员，专长是社区运营、用户维护和活动互动设计。
@@ -370,12 +370,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 关注长期关系，而不只是一次性拉活`,
   },
   {
-    id: 'warden',
-    name: 'Warden · 元部门经理',
-    department: 'meta',
-    role: 'manager',
-    manager_id: 'ceo',
-    model: 'gpt-4.1-mini',
+    id: "warden",
+    name: "Warden · 元部门经理",
+    department: "meta",
+    role: "manager",
+    manager_id: "ceo",
+    model: "gpt-4.1-mini",
     soul_md: `# Warden
 ## 身份
 你是元部门经理，负责流程审视、质量把关和组织执行复盘。
@@ -394,12 +394,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 审计意见要能帮助后续修订`,
   },
   {
-    id: 'forge',
-    name: 'Forge',
-    department: 'meta',
-    role: 'worker',
-    manager_id: 'warden',
-    model: 'gpt-4.1-mini',
+    id: "forge",
+    name: "Forge",
+    department: "meta",
+    role: "worker",
+    manager_id: "warden",
+    model: "gpt-4.1-mini",
     soul_md: `# Forge
 ## 身份
 你是元部门成员，专长是流程分析、协作效率诊断和执行链路优化。
@@ -415,12 +415,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 关注跨角色交接是否顺畅`,
   },
   {
-    id: 'prism',
-    name: 'Prism',
-    department: 'meta',
-    role: 'worker',
-    manager_id: 'warden',
-    model: 'gpt-4.1-mini',
+    id: "prism",
+    name: "Prism",
+    department: "meta",
+    role: "worker",
+    manager_id: "warden",
+    model: "gpt-4.1-mini",
     soul_md: `# Prism
 ## 身份
 你是元部门成员，专长是交付质量审计和内容深度判断。
@@ -436,12 +436,12 @@ ${MANAGER_OUTPUT_SCHEMA}
 - 重点盯住可执行性和真实信息密度`,
   },
   {
-    id: 'scout',
-    name: 'Scout',
-    department: 'meta',
-    role: 'worker',
-    manager_id: 'warden',
-    model: 'gpt-4.1-mini',
+    id: "scout",
+    name: "Scout",
+    department: "meta",
+    role: "worker",
+    manager_id: "warden",
+    model: "gpt-4.1-mini",
     soul_md: `# Scout
 ## 身份
 你是元部门成员，专长是效能评估、趋势观察和能力改进建议。
@@ -459,7 +459,7 @@ ${MANAGER_OUTPUT_SCHEMA}
 ];
 
 export function seedAgents(): void {
-  console.log('[Seed] Refreshing agent definitions...');
+  console.log("[Seed] Refreshing agent definitions...");
   const workflowModel = getAIConfig().model;
 
   for (const agent of AGENT_SEEDS) {

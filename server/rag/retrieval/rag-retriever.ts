@@ -9,15 +9,22 @@
  * Requirements: 4.1, 4.2, 4.3
  */
 
-import type { RetrievalResult, SourceType, ChunkMetadata } from '../../../shared/rag/contracts.js';
-import type { RetrievalOptions } from '../../../shared/rag/api.js';
-import type { EmbeddingGenerator } from '../embedding/embedding-generator.js';
-import type { VectorStoreAdapter, SearchHit } from '../store/vector-store-adapter.js';
-import type { MetadataStore } from '../store/metadata-store.js';
-import type { KeywordSearcher } from './keyword-searcher.js';
-import type { ContextExpander } from './context-expander.js';
-import { rrfMerge } from './rrf-merger.js';
-import { getRAGConfig } from '../config.js';
+import type {
+  RetrievalResult,
+  SourceType,
+  ChunkMetadata,
+} from "../../../shared/rag/contracts.js";
+import type { RetrievalOptions } from "../../../shared/rag/api.js";
+import type { EmbeddingGenerator } from "../embedding/embedding-generator.js";
+import type {
+  VectorStoreAdapter,
+  SearchHit,
+} from "../store/vector-store-adapter.js";
+import type { MetadataStore } from "../store/metadata-store.js";
+import type { KeywordSearcher } from "./keyword-searcher.js";
+import type { ContextExpander } from "./context-expander.js";
+import { rrfMerge } from "./rrf-merger.js";
+import { getRAGConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // RAGRetriever
@@ -38,40 +45,48 @@ export class RAGRetriever {
     this.deps = deps;
   }
 
-  async search(query: string, options: RetrievalOptions): Promise<RetrievalResult[]> {
+  async search(
+    query: string,
+    options: RetrievalOptions
+  ): Promise<RetrievalResult[]> {
     const config = getRAGConfig();
     const topK = options.topK ?? config.retrieval.defaultTopK;
     const minScore = options.minScore ?? config.retrieval.defaultMinScore;
     const mode = options.mode ?? config.retrieval.defaultMode;
     const expandContext = options.expandContext ?? false;
-    const contextWindowChunks = options.contextWindowChunks ?? config.retrieval.contextWindowChunks;
+    const contextWindowChunks =
+      options.contextWindowChunks ?? config.retrieval.contextWindowChunks;
 
     const collectionName = `rag_${options.projectId}`;
 
     let hits: SearchHit[] = [];
 
-    if (mode === 'semantic' || mode === 'hybrid') {
+    if (mode === "semantic" || mode === "hybrid") {
       // Vectorize query
       try {
-        const queryVector = await this.deps.embeddingGenerator.generateSingle(query);
+        const queryVector =
+          await this.deps.embeddingGenerator.generateSingle(query);
 
         // Build filter
         const filter: Record<string, any> = {};
         if (options.sourceTypes?.length) {
-          filter.sourceType = options.sourceTypes.length === 1
-            ? options.sourceTypes[0]
-            : options.sourceTypes;
+          filter.sourceType =
+            options.sourceTypes.length === 1
+              ? options.sourceTypes[0]
+              : options.sourceTypes;
         }
         if (options.agentId) filter.agentId = options.agentId;
         if (options.codeLanguage) filter.codeLanguage = options.codeLanguage;
         if (options.timeRange) {
           filter.timestamp = {
-            gte: options.timeRange.start instanceof Date
-              ? options.timeRange.start.toISOString()
-              : options.timeRange.start,
-            lte: options.timeRange.end instanceof Date
-              ? options.timeRange.end.toISOString()
-              : options.timeRange.end,
+            gte:
+              options.timeRange.start instanceof Date
+                ? options.timeRange.start.toISOString()
+                : options.timeRange.start,
+            lte:
+              options.timeRange.end instanceof Date
+                ? options.timeRange.end.toISOString()
+                : options.timeRange.end,
           };
         }
 
@@ -82,11 +97,11 @@ export class RAGRetriever {
         });
       } catch {
         // Vectorization failed — fall back to keyword-only if hybrid
-        if (mode === 'semantic') return [];
+        if (mode === "semantic") return [];
       }
     }
 
-    if (mode === 'keyword' || mode === 'hybrid') {
+    if (mode === "keyword" || mode === "hybrid") {
       const keywordHits = this.deps.keywordSearcher.search(query, {
         projectId: options.projectId,
         topK: topK * 2,
@@ -95,9 +110,9 @@ export class RAGRetriever {
         codeLanguage: options.codeLanguage,
       });
 
-      if (mode === 'hybrid' && hits.length > 0) {
+      if (mode === "hybrid" && hits.length > 0) {
         hits = rrfMerge(hits, keywordHits);
-      } else if (mode === 'keyword' || hits.length === 0) {
+      } else if (mode === "keyword" || hits.length === 0) {
         hits = keywordHits;
       }
     }
@@ -121,7 +136,10 @@ export class RAGRetriever {
     return results;
   }
 
-  private assembleResults(hits: SearchHit[], totalCandidates: number): RetrievalResult[] {
+  private assembleResults(
+    hits: SearchHit[],
+    totalCandidates: number
+  ): RetrievalResult[] {
     return hits.map(hit => {
       const metaRow = this.deps.metadataStore.getByChunkId(hit.id);
       const metadata: ChunkMetadata = metaRow
@@ -133,17 +151,17 @@ export class RAGRetriever {
             functionSignature: metaRow.function_signature ?? undefined,
           }
         : {
-            ingestedAt: '',
-            lastAccessedAt: '',
-            contentHash: '',
+            ingestedAt: "",
+            lastAccessedAt: "",
+            contentHash: "",
           };
 
       return {
         chunkId: hit.id,
         score: hit.score,
-        content: (hit.metadata?.content as string) ?? '',
-        sourceType: (hit.metadata?.sourceType as SourceType) ?? 'document',
-        sourceId: (hit.metadata?.sourceId as string) ?? '',
+        content: (hit.metadata?.content as string) ?? "",
+        sourceType: (hit.metadata?.sourceType as SourceType) ?? "document",
+        sourceId: (hit.metadata?.sourceId as string) ?? "",
         metadata,
         totalCandidates,
       };

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "dev:frontend": "vite --host",
-    "dev:server": "tsx watch --include server/**/* --include shared/**/* --exclude data/**/* --exclude client/**/* --exclude dist/**/* --exclude .git/**/* --exclude .manus-logs/**/* server/index.ts",
+    "dev:server": "tsx watch --include 'server/**/*' --include 'shared/**/*' --exclude 'data/**/*' --exclude 'client/**/*' --exclude 'dist/**/*' --exclude '.git/**/*' --exclude '.manus-logs/**/*' server/index.ts",
     "dev:all": "node scripts/dev-all.mjs",
     "dev:advanced": "node scripts/dev-all.mjs",
     "dev:stop": "node scripts/dev-stop.mjs",
@@ -15,6 +15,9 @@
     "start": "node scripts/start-prod.mjs",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
+    "lint": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run test:client && npm run test:server && npm run test:executor",
     "test:client": "vitest run client/src",
     "test:server": "node --max-old-space-size=6144 ./node_modules/vitest/vitest.mjs run --config vitest.config.server.ts server shared --pool=forks --poolOptions.forks.singleFork --no-file-parallelism --silent",
     "test:executor": "vitest run --config services/lobster-executor/vitest.config.ts",

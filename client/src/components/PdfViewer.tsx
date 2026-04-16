@@ -1,10 +1,17 @@
-import { BookOpen, ChevronLeft, ChevronRight, Maximize2, Minimize2, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import {
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import { useViewportTier } from '@/hooks/useViewportTier';
-import { useI18n } from '@/i18n';
-import { PDF_PAGES, PDF_TOTAL_PAGES } from '@/lib/assets';
-import { useAppStore } from '@/lib/store';
+import { useViewportTier } from "@/hooks/useViewportTier";
+import { useI18n } from "@/i18n";
+import { PDF_PAGES, PDF_TOTAL_PAGES } from "@/lib/assets";
+import { useAppStore } from "@/lib/store";
 
 export function PdfViewer() {
   const { currentPage, setCurrentPage, isPdfOpen, closePdf } = useAppStore();
@@ -22,15 +29,15 @@ export function PdfViewer() {
 
   const isOverlayFullscreen = isMobile || isFullscreen;
   const shellClass = isOverlayFullscreen
-    ? 'inset-0 rounded-none'
+    ? "inset-0 rounded-none"
     : isTablet
-      ? 'inset-y-4 right-4 left-auto w-[min(56vw,560px)] rounded-[28px]'
-      : 'inset-y-6 right-6 left-auto w-[min(42vw,560px)] rounded-[32px]';
+      ? "inset-y-4 right-4 left-auto w-[min(56vw,560px)] rounded-[28px]"
+      : "inset-y-6 right-6 left-auto w-[min(42vw,560px)] rounded-[32px]";
 
   return (
     <div
       className={`fixed z-[72] flex border border-[#E8DDD0]/60 bg-[#FEFBF7]/98 shadow-[-12px_0_40px_rgba(0,0,0,0.1)] backdrop-blur-2xl animate-in slide-in-from-right duration-300 ${shellClass} flex-col`}
-      style={{ pointerEvents: 'auto' }}
+      style={{ pointerEvents: "auto" }}
     >
       <div className="flex items-center justify-between border-b border-[#E8DDD0]/60 bg-gradient-to-r from-[#FFF8F0] to-[#FFF5EC] px-4 py-3 sm:px-5 sm:py-3.5">
         <div className="flex min-w-0 items-center gap-3">
@@ -54,7 +61,9 @@ export function PdfViewer() {
             <button
               onClick={() => setIsFullscreen(prev => !prev)}
               className="rounded-xl p-2 transition-colors hover:bg-[#F0E8E0]"
-              title={isFullscreen ? copy.pdf.exitFullscreen : copy.pdf.fullscreen}
+              title={
+                isFullscreen ? copy.pdf.exitFullscreen : copy.pdf.fullscreen
+              }
             >
               {isFullscreen ? (
                 <Minimize2 className="h-4 w-4 text-[#8B7355]" />
@@ -73,7 +82,10 @@ export function PdfViewer() {
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4">
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-3 py-3 sm:px-5 sm:py-4"
+      >
         <div className="relative overflow-hidden rounded-xl border border-[#F0E8E0] bg-white shadow-[0_2px_20px_rgba(0,0,0,0.06)]">
           {!imageLoaded && (
             <div
@@ -91,7 +103,7 @@ export function PdfViewer() {
           <img
             src={PDF_PAGES[currentPage - 1]}
             alt={`${copy.pdf.page} ${currentPage}`}
-            className={`h-auto w-full transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`h-auto w-full transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
             onLoad={() => setImageLoaded(true)}
           />
         </div>
@@ -111,7 +123,9 @@ export function PdfViewer() {
         </button>
 
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-[#8B7355]">{copy.pdf.page}</label>
+          <label className="text-xs font-medium text-[#8B7355]">
+            {copy.pdf.page}
+          </label>
           <input
             type="number"
             min={1}
@@ -126,7 +140,9 @@ export function PdfViewer() {
             }}
             className="w-16 rounded-xl border border-[#E8DDD0] bg-white py-1.5 text-center text-sm font-semibold text-[#3A2A1A] transition-all focus:border-[#C4956A] focus:outline-none focus:ring-2 focus:ring-[#C4956A]/30"
           />
-          <span className="text-sm font-medium text-[#8B7355]">/ {PDF_TOTAL_PAGES}</span>
+          <span className="text-sm font-medium text-[#8B7355]">
+            / {PDF_TOTAL_PAGES}
+          </span>
         </div>
 
         <button

@@ -2,8 +2,8 @@
  * Zustand store for dynamic role system.
  * Tracks agent role state and subscribes to WebSocket role change events.
  */
-import { create } from 'zustand';
-import type { Socket } from 'socket.io-client';
+import { create } from "zustand";
+import type { Socket } from "socket.io-client";
 
 export interface AgentCurrentRole {
   roleId: string;
@@ -59,20 +59,30 @@ export const useRoleStore = create<RoleState>((set, get) => ({
   handleRoleChanged: (event: RoleChangedEvent) => {
     set(state => {
       const next = new Map(state.agentRoles);
-      const existing = next.get(event.agentId) || { currentRole: null, roleHistory: [] };
+      const existing = next.get(event.agentId) || {
+        currentRole: null,
+        roleHistory: [],
+      };
 
       const currentRole: AgentCurrentRole | null = event.toRoleId
-        ? { roleId: event.toRoleId, roleName: event.toRoleName || event.toRoleId, loadedAt: event.timestamp }
+        ? {
+            roleId: event.toRoleId,
+            roleName: event.toRoleName || event.toRoleId,
+            loadedAt: event.timestamp,
+          }
         : null;
 
       const historyEntry: RoleHistoryEntry = {
         fromRole: event.fromRoleId,
         toRole: event.toRoleId,
-        missionName: event.missionName || '',
+        missionName: event.missionName || "",
         timestamp: event.timestamp,
       };
 
-      const roleHistory = [historyEntry, ...existing.roleHistory].slice(0, MAX_HISTORY);
+      const roleHistory = [historyEntry, ...existing.roleHistory].slice(
+        0,
+        MAX_HISTORY
+      );
 
       next.set(event.agentId, { currentRole, roleHistory });
       return { agentRoles: next };
@@ -94,12 +104,12 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         return { agentRoles: next };
       });
     } catch (err) {
-      console.error('[RoleStore] Failed to fetch agent role:', err);
+      console.error("[RoleStore] Failed to fetch agent role:", err);
     }
   },
 
   initWebSocket: (socket: Socket) => {
-    socket.on('agent.roleChanged', (event: RoleChangedEvent) => {
+    socket.on("agent.roleChanged", (event: RoleChangedEvent) => {
       get().handleRoleChanged(event);
     });
   },

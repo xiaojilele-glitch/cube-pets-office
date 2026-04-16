@@ -18,7 +18,10 @@ import type { PhaseAssignment } from "../../shared/role-schema.js";
 import type { ExecutionPlan } from "../../shared/executor/contracts.js";
 import type { AutonomyConfig } from "../../shared/autonomy-types.js";
 import type { TaskAllocator } from "./task-allocator.js";
-import type { CompetitionEngine, CompetitionTaskRequest } from "./competition-engine.js";
+import type {
+  CompetitionEngine,
+  CompetitionTaskRequest,
+} from "./competition-engine.js";
 import type { TaskforceManager } from "./taskforce-manager.js";
 import type { TaskRequest } from "./self-assessment.js";
 import type { ExecutionBridge, BridgeResult } from "./execution-bridge.js";
@@ -86,14 +89,22 @@ interface WorkflowIssue {
 }
 
 function createWorkflowId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
   return `wf_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function bestDeliverable(task: TaskRecord): string {
-  return task.deliverable_v3 || task.deliverable_v2 || task.deliverable || "(no deliverable)";
+  return (
+    task.deliverable_v3 ||
+    task.deliverable_v2 ||
+    task.deliverable ||
+    "(no deliverable)"
+  );
 }
 
 async function runWithConcurrencyLimit<T>(
@@ -104,12 +115,15 @@ async function runWithConcurrencyLimit<T>(
   const concurrency = Math.max(1, limit);
   let index = 0;
 
-  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
-    while (index < items.length) {
-      const current = items[index++];
-      await handler(current);
+  const workers = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    async () => {
+      while (index < items.length) {
+        const current = items[index++];
+        await handler(current);
+      }
     }
-  });
+  );
 
   await Promise.all(workers);
 }
@@ -134,7 +148,9 @@ export class WorkflowEngine {
   constructor(private readonly runtime: WorkflowRuntime) {}
 
   /** Type guard: checks whether a node is an ExternalAgentNode. */
-  private isExternalAgent(node: WorkflowOrganizationNode): node is ExternalAgentNode {
+  private isExternalAgent(
+    node: WorkflowOrganizationNode
+  ): node is ExternalAgentNode {
     return "frameworkType" in node && "a2aEndpoint" in node;
   }
 
@@ -142,7 +158,9 @@ export class WorkflowEngine {
     return this.runtime.workflowRepo;
   }
 
-  protected emit(event: Parameters<WorkflowRuntime["eventEmitter"]["emit"]>[0]) {
+  protected emit(
+    event: Parameters<WorkflowRuntime["eventEmitter"]["emit"]>[0]
+  ) {
     this.runtime.eventEmitter.emit(event);
   }
 
@@ -150,7 +168,10 @@ export class WorkflowEngine {
     return this.runtime.llmProvider.isTemporarilyUnavailable?.(error) || false;
   }
 
-  private getWorkflowDirectiveContext(workflowId: string, fallbackDirective: string) {
+  private getWorkflowDirectiveContext(
+    workflowId: string,
+    fallbackDirective: string
+  ) {
     const workflow = this.repo.getWorkflow(workflowId);
     const inputContext = workflow?.results?.input?.directiveContext;
     return typeof inputContext === "string" && inputContext.trim()
@@ -163,7 +184,9 @@ export class WorkflowEngine {
     options: WorkflowStartOptions = {}
   ): Promise<string> {
     const workflowId = createWorkflowId();
-    const attachments = Array.isArray(options.attachments) ? options.attachments : [];
+    const attachments = Array.isArray(options.attachments)
+      ? options.attachments
+      : [];
     const directiveContext =
       options.directiveContext ||
       buildWorkflowDirectiveContext(directive, attachments);
@@ -200,7 +223,10 @@ export class WorkflowEngine {
     return workflowId;
   }
 
-  private async runPipeline(workflowId: string, directive: string): Promise<void> {
+  private async runPipeline(
+    workflowId: string,
+    directive: string
+  ): Promise<void> {
     try {
       const organization = await this.runDirection(workflowId, directive);
       await this.emitStageCompleted(workflowId, "direction");
@@ -268,7 +294,7 @@ export class WorkflowEngine {
         await guestLifecycleManager.onMissionComplete(workflowId);
       } catch (cleanupError: any) {
         console.warn(
-          `[WorkflowEngine] Guest agent cleanup after completion failed: ${cleanupError.message}`,
+          `[WorkflowEngine] Guest agent cleanup after completion failed: ${cleanupError.message}`
         );
       }
 
@@ -298,7 +324,7 @@ export class WorkflowEngine {
         await guestLifecycleManager.onMissionFailed(workflowId);
       } catch (cleanupError: any) {
         console.warn(
-          `[WorkflowEngine] Guest agent cleanup after failure failed: ${cleanupError.message}`,
+          `[WorkflowEngine] Guest agent cleanup after failure failed: ${cleanupError.message}`
         );
       }
 
@@ -337,15 +363,17 @@ export class WorkflowEngine {
     }
 
     // Enforce allowSelfReview constraint (default false)
-    const allAgentIds = Array.from(new Set([
-      ...currentStep.assignments.map(a => a.agentId),
-      ...nextStep.assignments.map(a => a.agentId),
-    ]));
+    const allAgentIds = Array.from(
+      new Set([
+        ...currentStep.assignments.map(a => a.agentId),
+        ...nextStep.assignments.map(a => a.agentId),
+      ])
+    );
     const adjustedAssignments = this.enforceAllowSelfReview(
       nextStep.assignments,
       currentStep.assignments,
       allAgentIds,
-      false, // allowSelfReview defaults to false
+      false // allowSelfReview defaults to false
     );
 
     // Detect differences and execute role switches
@@ -365,14 +393,14 @@ export class WorkflowEngine {
           await agentHandle.switchRole(nextAssignment.roleId, workflowId);
           console.log(
             `[WorkflowEngine] Phase role switch: agent=${nextAssignment.agentId} ` +
-            `from=${currentRoleId} to=${nextAssignment.roleId} ` +
-            `(${currentStepKey} 鈫?${nextStepKey})`,
+              `from=${currentRoleId} to=${nextAssignment.roleId} ` +
+              `(${currentStepKey} 鈫?${nextStepKey})`
           );
         }
       } catch (err) {
         console.warn(
           `[WorkflowEngine] Role switch failed for agent ${nextAssignment.agentId}: ` +
-          `${err instanceof Error ? err.message : err}`,
+            `${err instanceof Error ? err.message : err}`
         );
         this.recordWorkflowIssue(workflowId, {
           stage: nextStepKey as Stage,
@@ -417,7 +445,9 @@ export class WorkflowEngine {
     const result: PhaseAssignment[] = [];
 
     for (const assignment of assignments) {
-      const isReviewRole = WorkflowEngine.REVIEW_ROLES.has(assignment.roleId.toLowerCase());
+      const isReviewRole = WorkflowEngine.REVIEW_ROLES.has(
+        assignment.roleId.toLowerCase()
+      );
       const wasExecutor = executionAgents.has(assignment.agentId);
 
       if (isReviewRole && wasExecutor) {
@@ -427,20 +457,25 @@ export class WorkflowEngine {
             id !== assignment.agentId &&
             !executionAgents.has(id) &&
             // Ensure the alternative isn't already assigned a review role in this batch
-            !result.some(r => r.agentId === id && r.roleId === assignment.roleId),
+            !result.some(
+              r => r.agentId === id && r.roleId === assignment.roleId
+            )
         );
 
         if (alternativeAgentId) {
           console.log(
             `[WorkflowEngine] allowSelfReview=false: reassigning review ` +
-            `from ${assignment.agentId} to ${alternativeAgentId} (role=${assignment.roleId})`,
+              `from ${assignment.agentId} to ${alternativeAgentId} (role=${assignment.roleId})`
           );
-          result.push({ agentId: alternativeAgentId, roleId: assignment.roleId });
+          result.push({
+            agentId: alternativeAgentId,
+            roleId: assignment.roleId,
+          });
         } else {
           // No alternative available 鈥?keep original assignment with a warning
           console.warn(
             `[WorkflowEngine] allowSelfReview=false: no alternative agent available ` +
-            `for review role ${assignment.roleId}, keeping ${assignment.agentId}`,
+              `for review role ${assignment.roleId}, keeping ${assignment.agentId}`
           );
           result.push(assignment);
         }
@@ -461,14 +496,17 @@ export class WorkflowEngine {
    * Emit a stage_complete event and invoke the optional onStageCompleted callback.
    * Called from runPipeline after each stage finishes successfully.
    */
-  private async emitStageCompleted(workflowId: string, completedStage: string): Promise<void> {
+  private async emitStageCompleted(
+    workflowId: string,
+    completedStage: string
+  ): Promise<void> {
     this.emit({ type: "stage_complete", workflowId, stage: completedStage });
     try {
       await this.runtime.onStageCompleted?.(workflowId, completedStage);
     } catch (err) {
       console.warn(
         `[WorkflowEngine] onStageCompleted callback failed for ${workflowId}/${completedStage}:`,
-        err instanceof Error ? err.message : err,
+        err instanceof Error ? err.message : err
       );
     }
   }
@@ -485,7 +523,7 @@ export class WorkflowEngine {
     const missionId = this.runtime.resolveMissionId?.(workflowId);
     if (!missionId) {
       console.warn(
-        `[WorkflowEngine] bridgeToExecutor: no missionId found for workflow ${workflowId}, skipping.`,
+        `[WorkflowEngine] bridgeToExecutor: no missionId found for workflow ${workflowId}, skipping.`
       );
       return;
     }
@@ -493,8 +531,8 @@ export class WorkflowEngine {
     // Collect all task deliverables for this workflow
     const tasks = this.repo.getTasksByWorkflow(workflowId);
     const deliverables = tasks
-      .map((t) => bestDeliverable(t))
-      .filter((d) => d !== "(no deliverable)");
+      .map(t => bestDeliverable(t))
+      .filter(d => d !== "(no deliverable)");
 
     if (deliverables.length === 0) {
       return;
@@ -511,19 +549,19 @@ export class WorkflowEngine {
       const result: BridgeResult = await this.executionBridge.bridge(
         missionId,
         deliverables,
-        metadata,
+        metadata
       );
 
       if (result.triggered) {
         console.log(
           `[WorkflowEngine] ExecutionBridge triggered for workflow ${workflowId}: ` +
-            `jobId=${result.jobId ?? "n/a"}, reason=${result.reason}`,
+            `jobId=${result.jobId ?? "n/a"}, reason=${result.reason}`
         );
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.warn(
-        `[WorkflowEngine] bridgeToExecutor failed for workflow ${workflowId}: ${message}`,
+        `[WorkflowEngine] bridgeToExecutor failed for workflow ${workflowId}: ${message}`
       );
       this.recordWorkflowIssue(workflowId, {
         stage: "execution",
@@ -570,7 +608,9 @@ export class WorkflowEngine {
 
   private getOrganization(workflowId: string): WorkflowOrganizationSnapshot {
     const workflow = this.repo.getWorkflow(workflowId);
-    const organization = workflow?.results?.organization as WorkflowOrganizationSnapshot | undefined;
+    const organization = workflow?.results?.organization as
+      | WorkflowOrganizationSnapshot
+      | undefined;
     if (!organization?.nodes?.length) {
       throw new Error("Workflow organization is not available.");
     }
@@ -581,8 +621,12 @@ export class WorkflowEngine {
     return new Map(organization.nodes.map(node => [node.id, node]));
   }
 
-  private getRootNode(organization: WorkflowOrganizationSnapshot): WorkflowOrganizationNode {
-    const root = organization.nodes.find(node => node.id === organization.rootNodeId);
+  private getRootNode(
+    organization: WorkflowOrganizationSnapshot
+  ): WorkflowOrganizationNode {
+    const root = organization.nodes.find(
+      node => node.id === organization.rootNodeId
+    );
     if (!root) {
       throw new Error("Root organization node not found.");
     }
@@ -593,7 +637,9 @@ export class WorkflowEngine {
     organization: WorkflowOrganizationSnapshot,
     department: WorkflowOrganizationDepartment
   ): WorkflowOrganizationNode {
-    const node = organization.nodes.find(item => item.id === department.managerNodeId);
+    const node = organization.nodes.find(
+      item => item.id === department.managerNodeId
+    );
     if (!node) {
       throw new Error(`Manager node missing for department ${department.id}.`);
     }
@@ -609,14 +655,20 @@ export class WorkflowEngine {
     );
   }
 
-  private getAuditNodes(organization: WorkflowOrganizationSnapshot): WorkflowOrganizationNode[] {
+  private getAuditNodes(
+    organization: WorkflowOrganizationSnapshot
+  ): WorkflowOrganizationNode[] {
     return organization.nodes.filter(node => node.execution.mode === "audit");
   }
 
   private getAgent(agentId: string): AgentHandle {
-    return this.runtime.agentDirectory.get(agentId) || Agent.fromDB(agentId) || (() => {
-      throw new Error(`Agent ${agentId} is not available.`);
-    })();
+    return (
+      this.runtime.agentDirectory.get(agentId) ||
+      Agent.fromDB(agentId) ||
+      (() => {
+        throw new Error(`Agent ${agentId} is not available.`);
+      })()
+    );
   }
 
   private applyDefaultReview(task: TaskRecord, feedback: string): void {
@@ -637,7 +689,10 @@ export class WorkflowEngine {
   ): Promise<WorkflowOrganizationSnapshot> {
     this.emitStage(workflowId, "direction");
 
-    const rootStatusPlaceholder = `wf-${workflowId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toLowerCase()}-root`;
+    const rootStatusPlaceholder = `wf-${workflowId
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .slice(0, 10)
+      .toLowerCase()}-root`;
     this.emit({
       type: "agent_active",
       agentId: rootStatusPlaceholder,
@@ -661,7 +716,10 @@ export class WorkflowEngine {
         try {
           const capToken = this.tokenService.issueToken(node.agentId);
           const agent = this.getAgent(node.agentId);
-          if (agent instanceof Agent && typeof agent.setPermissionToken === "function") {
+          if (
+            agent instanceof Agent &&
+            typeof agent.setPermissionToken === "function"
+          ) {
             agent.setPermissionToken(capToken.token);
           }
         } catch {
@@ -736,8 +794,13 @@ export class WorkflowEngine {
       managers.map(async ({ department, managerNode }) => {
         const manager = this.getAgent(managerNode.agentId);
         const workers = this.getWorkersForManager(organization, managerNode);
-        const inbox = await this.runtime.messageBus.getInbox(managerNode.agentId, workflowId);
-        const directionMessage = inbox.find(message => message.stage === "direction");
+        const inbox = await this.runtime.messageBus.getInbox(
+          managerNode.agentId,
+          workflowId
+        );
+        const directionMessage = inbox.find(
+          message => message.stage === "direction"
+        );
         if (!directionMessage) return;
 
         this.emit({
@@ -785,7 +848,9 @@ Rules:
         );
 
         for (const task of plan.tasks || []) {
-          const workerNode = workers.find(worker => worker.agentId === task.worker_id);
+          const workerNode = workers.find(
+            worker => worker.agentId === task.worker_id
+          );
           if (!workerNode) continue;
 
           // 鈹€鈹€鈹€ Autonomy-aware task allocation 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
@@ -797,90 +862,104 @@ Rules:
                 taskId: `${workflowId}-${department.id}-${task.worker_id}-${Date.now()}`,
                 requiredSkills: workerNode.skills.map(s => s.id),
                 requiredSkillWeights: new Map(
-                  workerNode.skills.map(s => [s.id, 1.0]),
+                  workerNode.skills.map(s => [s.id, 1.0])
                 ),
               };
 
-              const allocationDecision = await this.taskAllocator.allocateTask(taskRequest);
+              const allocationDecision =
+                await this.taskAllocator.allocateTask(taskRequest);
 
               // Handle TASKFORCE strategy 鈥?form a taskforce when REQUEST_ASSIST
               if (
-                allocationDecision.strategy === 'TASKFORCE' &&
+                allocationDecision.strategy === "TASKFORCE" &&
                 this.taskforceManager
               ) {
                 try {
                   const session = await this.taskforceManager.formTaskforce(
                     taskRequest,
-                    allocationDecision.assignedAgentId,
+                    allocationDecision.assignedAgentId
                   );
                   console.log(
                     `[WorkflowEngine] Taskforce formed: ${session.taskforceId} ` +
-                    `for task ${taskRequest.taskId}, lead=${session.leadAgentId}`,
+                      `for task ${taskRequest.taskId}, lead=${session.leadAgentId}`
                   );
                 } catch (tfErr) {
                   console.warn(
                     `[WorkflowEngine] Taskforce formation failed, using allocated agent: ` +
-                    `${tfErr instanceof Error ? tfErr.message : tfErr}`,
+                      `${tfErr instanceof Error ? tfErr.message : tfErr}`
                   );
                 }
               }
 
               // Check if competition mode should be triggered
-              if (this.competitionEngine && allocationDecision.assessments.length > 0) {
+              if (
+                this.competitionEngine &&
+                allocationDecision.assessments.length > 0
+              ) {
                 const bestFitness = Math.max(
-                  ...allocationDecision.assessments.map(a => a.fitnessScore),
+                  ...allocationDecision.assessments.map(a => a.fitnessScore)
                 );
                 const competitionTask: CompetitionTaskRequest = {
                   ...taskRequest,
-                  priority: 'normal',
-                  qualityRequirement: 'normal',
-                  dataSecurityLevel: 'normal',
+                  priority: "normal",
+                  qualityRequirement: "normal",
+                  dataSecurityLevel: "normal",
                   estimatedDurationMs: 60_000,
                   manualCompetition: false,
                   historicalFailRate: 0,
                   descriptionAmbiguity: 0,
                 };
 
-                if (this.competitionEngine.shouldTrigger(competitionTask, bestFitness)) {
+                if (
+                  this.competitionEngine.shouldTrigger(
+                    competitionTask,
+                    bestFitness
+                  )
+                ) {
                   try {
-                    const contestants = this.competitionEngine.selectContestants(
-                      allocationDecision.assessments.map(a => a.agentId),
-                      this.autonomyConfig.competition.defaultContestantCount,
-                    );
+                    const contestants =
+                      this.competitionEngine.selectContestants(
+                        allocationDecision.assessments.map(a => a.agentId),
+                        this.autonomyConfig.competition.defaultContestantCount
+                      );
                     if (contestants.length >= 2) {
                       const deadline = this.competitionEngine.computeDeadline(
-                        competitionTask.estimatedDurationMs,
+                        competitionTask.estimatedDurationMs
                       );
-                      const session = await this.competitionEngine.runCompetition(
-                        competitionTask,
-                        contestants,
-                        deadline,
-                      );
+                      const session =
+                        await this.competitionEngine.runCompetition(
+                          competitionTask,
+                          contestants,
+                          deadline
+                        );
                       console.log(
                         `[WorkflowEngine] Competition started: ${session.id} ` +
-                        `for task ${taskRequest.taskId}, contestants=${contestants.length}`,
+                          `for task ${taskRequest.taskId}, contestants=${contestants.length}`
                       );
                     }
                   } catch (compErr) {
                     console.warn(
                       `[WorkflowEngine] Competition failed, using direct allocation: ` +
-                      `${compErr instanceof Error ? compErr.message : compErr}`,
+                        `${compErr instanceof Error ? compErr.message : compErr}`
                     );
                   }
                 }
               }
 
               // Resolve the allocated agent to a worker node (if different)
-              if (allocationDecision.assignedAgentId && allocationDecision.assignedAgentId !== workerNode.agentId) {
+              if (
+                allocationDecision.assignedAgentId &&
+                allocationDecision.assignedAgentId !== workerNode.agentId
+              ) {
                 const alternativeNode = workers.find(
-                  w => w.agentId === allocationDecision.assignedAgentId,
+                  w => w.agentId === allocationDecision.assignedAgentId
                 );
                 if (alternativeNode) {
                   assignedWorkerNode = alternativeNode;
                   console.log(
                     `[WorkflowEngine] Autonomy re-assigned task from ` +
-                    `${workerNode.agentId} to ${assignedWorkerNode.agentId} ` +
-                    `(strategy=${allocationDecision.strategy})`,
+                      `${workerNode.agentId} to ${assignedWorkerNode.agentId} ` +
+                      `(strategy=${allocationDecision.strategy})`
                   );
                 }
               }
@@ -888,7 +967,7 @@ Rules:
               // Autonomy allocation failed 鈥?fall back to static assignment
               console.warn(
                 `[WorkflowEngine] Autonomy allocation failed, using static assignment: ` +
-                `${autonomyErr instanceof Error ? autonomyErr.message : autonomyErr}`,
+                  `${autonomyErr instanceof Error ? autonomyErr.message : autonomyErr}`
               );
             }
           }
@@ -961,7 +1040,7 @@ Rules:
           // Log when a guest agent is assigned a task (Requirements 5.1)
           if (isGuestId(task.worker_id)) {
             console.log(
-              `[WorkflowEngine] Guest agent ${task.worker_id} assigned task ${task.id} in execution stage`,
+              `[WorkflowEngine] Guest agent ${task.worker_id} assigned task ${task.id} in execution stage`
             );
           }
 
@@ -981,7 +1060,9 @@ Rules:
           });
 
           // Check if worker is an external agent — route via A2A
-          const extWorkerNode = organization.nodes.find(n => n.agentId === task.worker_id);
+          const extWorkerNode = organization.nodes.find(
+            n => n.agentId === task.worker_id
+          );
           if (extWorkerNode && this.isExternalAgent(extWorkerNode)) {
             try {
               const response = await this.a2aClient.invoke(
@@ -994,18 +1075,27 @@ Rules:
                 },
                 extWorkerNode.frameworkType,
                 extWorkerNode.a2aEndpoint,
-                extWorkerNode.a2aAuth,
+                extWorkerNode.a2aAuth
               );
 
-              const deliverable = response.result?.output ?? response.error?.message ?? "No output";
-              this.repo.updateTask(task.id, { deliverable, status: "submitted" });
+              const deliverable =
+                response.result?.output ??
+                response.error?.message ??
+                "No output";
+              this.repo.updateTask(task.id, {
+                deliverable,
+                status: "submitted",
+              });
 
               await this.runtime.messageBus.sendA2A(
                 task.worker_id,
                 extWorkerNode.id,
                 deliverable,
                 workflowId,
-                { frameworkType: extWorkerNode.frameworkType, sessionId: response.id },
+                {
+                  frameworkType: extWorkerNode.frameworkType,
+                  sessionId: response.id,
+                }
               );
 
               this.emit({
@@ -1046,15 +1136,14 @@ Rules:
             );
             const skillActivator = new SkillActivator();
             const skillBindings = workerNode?.skills
-              ? skillRegistry.resolveSkills(
-                  workerNode.skills.map(s => s.id)
-                )
+              ? skillRegistry.resolveSkills(workerNode.skills.map(s => s.id))
               : [];
             const activatedSkills = skillActivator.activateSkills(
               skillBindings,
               task.description
             );
-            const skillPrompt = skillActivator.buildSkillPromptSection(activatedSkills);
+            const skillPrompt =
+              skillActivator.buildSkillPromptSection(activatedSkills);
 
             if (activatedSkills.length > 0) {
               console.log(
@@ -1140,7 +1229,9 @@ Requirements:
 
     await Promise.all(
       Array.from(tasksByManager.entries()).map(async ([managerId, tasks]) => {
-        const managerNode = organization.nodes.find(node => node.agentId === managerId);
+        const managerNode = organization.nodes.find(
+          node => node.agentId === managerId
+        );
         if (!managerNode) return;
         const manager = this.getAgent(managerId);
 
@@ -1185,7 +1276,10 @@ Return valid JSON only:
               { workflowId, stage: "review" }
             );
 
-            const accuracy = Math.min(5, Math.max(0, Math.round(score.accuracy || 0)));
+            const accuracy = Math.min(
+              5,
+              Math.max(0, Math.round(score.accuracy || 0))
+            );
             const completeness = Math.min(
               5,
               Math.max(0, Math.round(score.completeness || 0))
@@ -1194,7 +1288,10 @@ Return valid JSON only:
               5,
               Math.max(0, Math.round(score.actionability || 0))
             );
-            const format = Math.min(5, Math.max(0, Math.round(score.format || 0)));
+            const format = Math.min(
+              5,
+              Math.max(0, Math.round(score.format || 0))
+            );
             const total = accuracy + completeness + actionability + format;
 
             this.repo.updateTask(task.id, {
@@ -1224,7 +1321,10 @@ Return valid JSON only:
               { taskId: task.id }
             );
           } catch (error: any) {
-            this.applyDefaultReview(task, "Review failed, falling back to a default score.");
+            this.applyDefaultReview(
+              task,
+              "Review failed, falling back to a default score."
+            );
             this.recordWorkflowIssue(workflowId, {
               stage: "review",
               scope: "task",
@@ -1296,7 +1396,9 @@ Return a concise audit with concrete findings and revision guidance.`,
         );
         auditResults.push(`[${auditorNode.name}]\n${audit}`);
       } catch (error: any) {
-        auditResults.push(`[${auditorNode.name}] Analysis failed: ${error.message}`);
+        auditResults.push(
+          `[${auditorNode.name}] Analysis failed: ${error.message}`
+        );
         this.recordWorkflowIssue(workflowId, {
           stage: "meta_audit",
           scope: "agent",
@@ -1351,42 +1453,47 @@ Return a concise audit with concrete findings and revision guidance.`,
     }
 
     await Promise.all(
-      Array.from(tasksByWorker.entries()).map(async ([workerId, workerTasks]) => {
-        const worker = this.getAgent(workerId);
+      Array.from(tasksByWorker.entries()).map(
+        async ([workerId, workerTasks]) => {
+          const worker = this.getAgent(workerId);
 
-        // Log when a guest agent is assigned revision tasks (Requirements 5.1)
-        if (isGuestId(workerId)) {
-          console.log(
-            `[WorkflowEngine] Guest agent ${workerId} assigned ${workerTasks.length} revision task(s)`,
-          );
-        }
-
-        let llmOutageMessage: string | null = null;
-
-        for (const task of workerTasks) {
-          if (llmOutageMessage) {
-            this.repo.updateTask(task.id, { status: "passed" });
-            continue;
+          // Log when a guest agent is assigned revision tasks (Requirements 5.1)
+          if (isGuestId(workerId)) {
+            console.log(
+              `[WorkflowEngine] Guest agent ${workerId} assigned ${workerTasks.length} revision task(s)`
+            );
           }
 
-          this.emit({
-            type: "agent_active",
-            agentId: workerId,
-            action: "revising",
-            workflowId,
-          });
-          this.repo.updateTask(task.id, { status: "revising" });
+          let llmOutageMessage: string | null = null;
 
-          try {
-            const combinedFeedback = [
-              task.manager_feedback ? `Manager feedback: ${task.manager_feedback}` : "",
-              task.meta_audit_feedback ? `Meta audit feedback: ${task.meta_audit_feedback}` : "",
-            ]
-              .filter(Boolean)
-              .join("\n\n");
+          for (const task of workerTasks) {
+            if (llmOutageMessage) {
+              this.repo.updateTask(task.id, { status: "passed" });
+              continue;
+            }
 
-            const revised = await worker.invoke(
-              `Revise your previous deliverable based on the feedback below.
+            this.emit({
+              type: "agent_active",
+              agentId: workerId,
+              action: "revising",
+              workflowId,
+            });
+            this.repo.updateTask(task.id, { status: "revising" });
+
+            try {
+              const combinedFeedback = [
+                task.manager_feedback
+                  ? `Manager feedback: ${task.manager_feedback}`
+                  : "",
+                task.meta_audit_feedback
+                  ? `Meta audit feedback: ${task.meta_audit_feedback}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join("\n\n");
+
+              const revised = await worker.invoke(
+                `Revise your previous deliverable based on the feedback below.
 
 Original task:
 ${task.description}
@@ -1401,47 +1508,48 @@ Feedback received:
 ${combinedFeedback}
 
 Return a complete v2 deliverable that directly fixes the issues.`,
-              undefined,
-              { workflowId, stage: "revision" }
-            );
+                undefined,
+                { workflowId, stage: "revision" }
+              );
 
-            this.repo.updateTask(task.id, {
-              deliverable_v2: revised,
-              version: 2,
-              status: "submitted",
-            });
+              this.repo.updateTask(task.id, {
+                deliverable_v2: revised,
+                version: 2,
+                status: "submitted",
+              });
 
-            await this.runtime.messageBus.send(
-              task.worker_id,
-              task.manager_id,
-              revised,
-              workflowId,
-              "revision",
-              { taskId: task.id, version: 2 }
-            );
-          } catch (error: any) {
-            this.repo.updateTask(task.id, { status: "passed" });
-            this.recordWorkflowIssue(workflowId, {
-              stage: "revision",
-              scope: "task",
-              severity: "warning",
-              taskId: task.id,
-              agentId: task.worker_id,
-              message: `Revision failed: ${error.message}`,
-            });
-            if (this.isTemporaryLLMError(error)) {
-              llmOutageMessage = error.message;
+              await this.runtime.messageBus.send(
+                task.worker_id,
+                task.manager_id,
+                revised,
+                workflowId,
+                "revision",
+                { taskId: task.id, version: 2 }
+              );
+            } catch (error: any) {
+              this.repo.updateTask(task.id, { status: "passed" });
+              this.recordWorkflowIssue(workflowId, {
+                stage: "revision",
+                scope: "task",
+                severity: "warning",
+                taskId: task.id,
+                agentId: task.worker_id,
+                message: `Revision failed: ${error.message}`,
+              });
+              if (this.isTemporaryLLMError(error)) {
+                llmOutageMessage = error.message;
+              }
             }
-          }
 
-          this.emit({
-            type: "agent_active",
-            agentId: workerId,
-            action: "idle",
-            workflowId,
-          });
+            this.emit({
+              type: "agent_active",
+              agentId: workerId,
+              action: "idle",
+              workflowId,
+            });
+          }
         }
-      })
+      )
     );
   }
 
@@ -1461,26 +1569,27 @@ Return a complete v2 deliverable that directly fixes the issues.`,
     }
 
     await Promise.all(
-      Array.from(tasksByManager.entries()).map(async ([managerId, managerTasks]) => {
-        const manager = this.getAgent(managerId);
-        let llmOutageMessage: string | null = null;
+      Array.from(tasksByManager.entries()).map(
+        async ([managerId, managerTasks]) => {
+          const manager = this.getAgent(managerId);
+          let llmOutageMessage: string | null = null;
 
-        for (const task of managerTasks) {
-          if (llmOutageMessage) {
-            this.repo.updateTask(task.id, { status: "passed" });
-            continue;
-          }
+          for (const task of managerTasks) {
+            if (llmOutageMessage) {
+              this.repo.updateTask(task.id, { status: "passed" });
+              continue;
+            }
 
-          this.emit({
-            type: "agent_active",
-            agentId: managerId,
-            action: "verifying",
-            workflowId,
-          });
+            this.emit({
+              type: "agent_active",
+              agentId: managerId,
+              action: "verifying",
+              workflowId,
+            });
 
-          try {
-            const result = await manager.invokeJson<VerifyResult>(
-              `Check whether the revised deliverable fully addresses the feedback.
+            try {
+              const result = await manager.invokeJson<VerifyResult>(
+                `Check whether the revised deliverable fully addresses the feedback.
 
 Original feedback:
 ${task.manager_feedback || "(No manager feedback)"}
@@ -1500,31 +1609,32 @@ Return valid JSON only:
   "unaddressed_ratio": 0.0,
   "verdict": "pass"
 }`,
-              undefined,
-              { workflowId, stage: "verify" }
-            );
+                undefined,
+                { workflowId, stage: "verify" }
+              );
 
-            this.repo.updateTask(task.id, {
-              verify_result: result,
-              status:
-                result.verdict === "pass" || (result.unaddressed_ratio || 0) <= 0.3
-                  ? "passed"
-                  : "verified",
-            });
+              this.repo.updateTask(task.id, {
+                verify_result: result,
+                status:
+                  result.verdict === "pass" ||
+                  (result.unaddressed_ratio || 0) <= 0.3
+                    ? "passed"
+                    : "verified",
+              });
 
-            if (
-              result.verdict === "needs_v3" &&
-              (result.unaddressed_ratio || 0) > 0.3 &&
-              !task.deliverable_v3
-            ) {
-              const worker = this.getAgent(task.worker_id);
-              const unresolved = result.items
-                .filter(item => !item.addressed)
-                .map(item => `- ${item.point}: ${item.comment}`)
-                .join("\n");
+              if (
+                result.verdict === "needs_v3" &&
+                (result.unaddressed_ratio || 0) > 0.3 &&
+                !task.deliverable_v3
+              ) {
+                const worker = this.getAgent(task.worker_id);
+                const unresolved = result.items
+                  .filter(item => !item.addressed)
+                  .map(item => `- ${item.point}: ${item.comment}`)
+                  .join("\n");
 
-              const v3 = await worker.invoke(
-                `Your v2 deliverable still leaves some feedback unresolved. Continue revising.
+                const v3 = await worker.invoke(
+                  `Your v2 deliverable still leaves some feedback unresolved. Continue revising.
 
 Unresolved feedback points:
 ${unresolved}
@@ -1533,41 +1643,42 @@ Your v2 deliverable:
 ${task.deliverable_v2}
 
 Return a complete v3 deliverable.`,
-                undefined,
-                { workflowId, stage: "verify" }
-              );
+                  undefined,
+                  { workflowId, stage: "verify" }
+                );
 
-              this.repo.updateTask(task.id, {
-                deliverable_v3: v3,
-                version: 3,
-                status: "passed",
-              });
-            } else {
+                this.repo.updateTask(task.id, {
+                  deliverable_v3: v3,
+                  version: 3,
+                  status: "passed",
+                });
+              } else {
+                this.repo.updateTask(task.id, { status: "passed" });
+              }
+            } catch (error: any) {
               this.repo.updateTask(task.id, { status: "passed" });
+              this.recordWorkflowIssue(workflowId, {
+                stage: "verify",
+                scope: "task",
+                severity: "warning",
+                taskId: task.id,
+                agentId: managerId,
+                message: `Verification failed: ${error.message}`,
+              });
+              if (this.isTemporaryLLMError(error)) {
+                llmOutageMessage = error.message;
+              }
             }
-          } catch (error: any) {
-            this.repo.updateTask(task.id, { status: "passed" });
-            this.recordWorkflowIssue(workflowId, {
-              stage: "verify",
-              scope: "task",
-              severity: "warning",
-              taskId: task.id,
-              agentId: managerId,
-              message: `Verification failed: ${error.message}`,
-            });
-            if (this.isTemporaryLLMError(error)) {
-              llmOutageMessage = error.message;
-            }
-          }
 
-          this.emit({
-            type: "agent_active",
-            agentId: managerId,
-            action: "idle",
-            workflowId,
-          });
+            this.emit({
+              type: "agent_active",
+              agentId: managerId,
+              action: "idle",
+              workflowId,
+            });
+          }
         }
-      })
+      )
     );
   }
 
@@ -1703,7 +1814,10 @@ Cover:
     const workflow = this.repo.getWorkflow(workflowId);
     const summaryMessages = this.repo
       .getMessagesByWorkflow(workflowId)
-      .filter(message => message.stage === "summary" && message.to_agent === rootNode.agentId);
+      .filter(
+        message =>
+          message.stage === "summary" && message.to_agent === rootNode.agentId
+      );
     const summaryText = summaryMessages
       .map(message => `[${message.from_agent}]\n${message.content}`)
       .join("\n\n---\n\n");
@@ -1799,7 +1913,9 @@ Cover:
           scoredTasks.length
         : null;
 
-    const departmentReports = Array.isArray(workflow.results?.department_reports)
+    const departmentReports = Array.isArray(
+      workflow.results?.department_reports
+    )
       ? workflow.results.department_reports
       : [];
 
@@ -1813,7 +1929,9 @@ Cover:
           );
         }
         if (task.manager_feedback) {
-          items.push(`Manager feedback for task ${task.id}: ${task.manager_feedback}`);
+          items.push(
+            `Manager feedback for task ${task.id}: ${task.manager_feedback}`
+          );
         }
         return items;
       })

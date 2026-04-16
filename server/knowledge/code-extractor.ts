@@ -64,7 +64,10 @@ export interface ExtractionOptions {
   sinceCommit?: string; // Task 5.2
 }
 
-type EntityInput = Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">;
+type EntityInput = Omit<
+  Entity,
+  "entityId" | "createdAt" | "updatedAt" | "status"
+>;
 type RelationInput = Omit<Relation, "relationId" | "createdAt">;
 
 interface ChangedFilesResult {
@@ -94,15 +97,47 @@ const EXCLUDED_DIRS = new Set([
 ]);
 
 /** Express-style HTTP method names used in route definitions */
-const HTTP_METHODS = new Set(["get", "post", "put", "delete", "patch", "options", "head", "all"]);
+const HTTP_METHODS = new Set([
+  "get",
+  "post",
+  "put",
+  "delete",
+  "patch",
+  "options",
+  "head",
+  "all",
+]);
 
 /** Source file extensions for language-agnostic scanning (LLM extraction) */
 const SOURCE_EXTENSIONS = new Set([
-  ".py", ".rb", ".go", ".rs", ".java", ".kt", ".scala", ".cs",
-  ".cpp", ".c", ".h", ".hpp", ".swift", ".m", ".php", ".lua",
-  ".r", ".jl", ".ex", ".exs", ".clj", ".hs", ".erl",
+  ".py",
+  ".rb",
+  ".go",
+  ".rs",
+  ".java",
+  ".kt",
+  ".scala",
+  ".cs",
+  ".cpp",
+  ".c",
+  ".h",
+  ".hpp",
+  ".swift",
+  ".m",
+  ".php",
+  ".lua",
+  ".r",
+  ".jl",
+  ".ex",
+  ".exs",
+  ".clj",
+  ".hs",
+  ".erl",
   // Also include TS/JS for completeness in scanAllFiles
-  ".ts", ".tsx", ".js", ".jsx",
+  ".ts",
+  ".tsx",
+  ".js",
+  ".jsx",
 ]);
 
 // ---------------------------------------------------------------------------
@@ -117,7 +152,7 @@ export class CodeKnowledgeExtractor {
   constructor(
     graphStore: GraphStore,
     ontologyRegistry: OntologyRegistry,
-    llmProvider?: CodeExtractorLLMProvider | null,
+    llmProvider?: CodeExtractorLLMProvider | null
   ) {
     this.graphStore = graphStore;
     this.ontologyRegistry = ontologyRegistry;
@@ -148,7 +183,11 @@ export class CodeKnowledgeExtractor {
 
         // Mark deleted files as deprecated (Requirement 6.2)
         if (changedResult.deleted.length > 0) {
-          this.markDeletedAsDeprecated(changedResult.deleted, sinceCommit, projectId);
+          this.markDeletedAsDeprecated(
+            changedResult.deleted,
+            sinceCommit,
+            projectId
+          );
         }
       } else {
         files = this.scanFiles(repoPath);
@@ -192,13 +231,22 @@ export class CodeKnowledgeExtractor {
         const changedResult = this.getChangedFiles(repoPath, sinceCommit);
         files = changedResult.changed;
         if (changedResult.deleted.length > 0) {
-          this.markDeletedAsDeprecated(changedResult.deleted, sinceCommit, projectId);
+          this.markDeletedAsDeprecated(
+            changedResult.deleted,
+            sinceCommit,
+            projectId
+          );
         }
       } else {
         files = this.scanAllFiles(repoPath);
       }
 
-      const result = await this.extractWithLLM(files, language, repoPath, projectId);
+      const result = await this.extractWithLLM(
+        files,
+        language,
+        repoPath,
+        projectId
+      );
 
       // Write entities to graph store
       for (const entityInput of result.entities) {
@@ -226,7 +274,7 @@ export class CodeKnowledgeExtractor {
 
     // No LLM provider configured — return empty result with warning
     console.warn(
-      `[CodeKnowledgeExtractor] Language "${language}" is not directly supported and no LLM provider is configured. Returning empty result.`,
+      `[CodeKnowledgeExtractor] Language "${language}" is not directly supported and no LLM provider is configured. Returning empty result.`
     );
     const emptyStats: ExtractionStats = {
       filesAnalyzed: 0,
@@ -285,7 +333,7 @@ export class CodeKnowledgeExtractor {
   private extractTypeScript(
     files: string[],
     repoPath: string,
-    projectId: string,
+    projectId: string
   ): ExtractionResult {
     const entities: EntityInput[] = [];
     const relations: RelationInput[] = [];
@@ -313,7 +361,11 @@ export class CodeKnowledgeExtractor {
           content,
           ts.ScriptTarget.Latest,
           true,
-          ext === ".tsx" ? ts.ScriptKind.TSX : ext === ".jsx" ? ts.ScriptKind.JSX : undefined,
+          ext === ".tsx"
+            ? ts.ScriptKind.TSX
+            : ext === ".jsx"
+              ? ts.ScriptKind.JSX
+              : undefined
         );
 
         // Extract CodeModule entity
@@ -350,7 +402,7 @@ export class CodeKnowledgeExtractor {
           relPath,
           repoPath,
           projectId,
-          fileToModuleName,
+          fileToModuleName
         );
         relations.push(...importRelations);
       } catch (e) {
@@ -406,7 +458,8 @@ export class CodeKnowledgeExtractor {
         case ts.SyntaxKind.BinaryExpression: {
           const binExpr = node as ts.BinaryExpression;
           if (
-            binExpr.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken ||
+            binExpr.operatorToken.kind ===
+              ts.SyntaxKind.AmpersandAmpersandToken ||
             binExpr.operatorToken.kind === ts.SyntaxKind.BarBarToken
           ) {
             complexity++;
@@ -438,17 +491,21 @@ export class CodeKnowledgeExtractor {
       if (ts.canHaveModifiers(node)) {
         const modifiers = ts.getModifiers(node);
         const hasExport = modifiers?.some(
-          (m) => m.kind === ts.SyntaxKind.ExportKeyword,
+          m => m.kind === ts.SyntaxKind.ExportKeyword
         );
         const hasDefault = modifiers?.some(
-          (m) => m.kind === ts.SyntaxKind.DefaultKeyword,
+          m => m.kind === ts.SyntaxKind.DefaultKeyword
         );
 
         if (hasExport) {
           if (ts.isFunctionDeclaration(node) && node.name) {
-            exports.push(hasDefault ? `default(${node.name.text})` : node.name.text);
+            exports.push(
+              hasDefault ? `default(${node.name.text})` : node.name.text
+            );
           } else if (ts.isClassDeclaration(node) && node.name) {
-            exports.push(hasDefault ? `default(${node.name.text})` : node.name.text);
+            exports.push(
+              hasDefault ? `default(${node.name.text})` : node.name.text
+            );
           } else if (ts.isVariableStatement(node)) {
             for (const decl of node.declarationList.declarations) {
               if (ts.isIdentifier(decl.name)) {
@@ -510,7 +567,7 @@ export class CodeKnowledgeExtractor {
   private extractAPIs(
     sourceFile: ts.SourceFile,
     relPath: string,
-    projectId: string,
+    projectId: string
   ): EntityInput[] {
     const apis: EntityInput[] = [];
 
@@ -577,7 +634,7 @@ export class CodeKnowledgeExtractor {
     relPath: string,
     repoPath: string,
     projectId: string,
-    fileToModuleName: Map<string, string>,
+    fileToModuleName: Map<string, string>
   ): RelationInput[] {
     const relations: RelationInput[] = [];
     const currentModuleName = this.filePathToModuleName(relPath);
@@ -594,7 +651,7 @@ export class CodeKnowledgeExtractor {
             projectId,
             currentModuleName,
             fileToModuleName,
-            relations,
+            relations
           );
         }
       }
@@ -614,7 +671,7 @@ export class CodeKnowledgeExtractor {
             projectId,
             currentModuleName,
             fileToModuleName,
-            relations,
+            relations
           );
         }
       }
@@ -637,7 +694,7 @@ export class CodeKnowledgeExtractor {
     projectId: string,
     currentModuleName: string,
     fileToModuleName: Map<string, string>,
-    relations: RelationInput[],
+    relations: RelationInput[]
   ): void {
     // Skip external packages (non-relative imports)
     if (!specifier.startsWith(".")) {
@@ -648,18 +705,21 @@ export class CodeKnowledgeExtractor {
     // Strip .js/.ts extensions from specifier for resolution
     let cleanSpecifier = specifier.replace(/\.(js|ts|jsx|tsx)$/, "");
     const resolvedRel = path.posix.normalize(
-      path.posix.join(currentDir, cleanSpecifier),
+      path.posix.join(currentDir, cleanSpecifier)
     );
 
     // Try to find the target module in our file map
-    const targetModuleName = this.resolveImportTarget(resolvedRel, fileToModuleName);
+    const targetModuleName = this.resolveImportTarget(
+      resolvedRel,
+      fileToModuleName
+    );
 
     if (targetModuleName && targetModuleName !== currentModuleName) {
       // Avoid duplicate relations for the same source→target pair
       const alreadyExists = relations.some(
-        (r) =>
+        r =>
           r.sourceEntityId === `${projectId}::${currentModuleName}` &&
-          r.targetEntityId === `${projectId}::${targetModuleName}`,
+          r.targetEntityId === `${projectId}::${targetModuleName}`
       );
 
       if (!alreadyExists) {
@@ -683,7 +743,7 @@ export class CodeKnowledgeExtractor {
    */
   private resolveImportTarget(
     resolvedRel: string,
-    fileToModuleName: Map<string, string>,
+    fileToModuleName: Map<string, string>
   ): string | null {
     const entries = Array.from(fileToModuleName.entries());
 
@@ -732,7 +792,10 @@ export class CodeKnowledgeExtractor {
    *
    * Returns absolute paths for changed files, relative paths for deleted files.
    */
-  private getChangedFiles(repoPath: string, sinceCommit: string): ChangedFilesResult {
+  private getChangedFiles(
+    repoPath: string,
+    sinceCommit: string
+  ): ChangedFilesResult {
     const result: ChangedFilesResult = { changed: [], deleted: [] };
 
     let output: string;
@@ -745,7 +808,7 @@ export class CodeKnowledgeExtractor {
     } catch (e) {
       console.error(
         `[CodeKnowledgeExtractor] git diff failed (repo may not be a git repo):`,
-        e instanceof Error ? e.message : String(e),
+        e instanceof Error ? e.message : String(e)
       );
       return result;
     }
@@ -797,7 +860,7 @@ export class CodeKnowledgeExtractor {
   private markDeletedAsDeprecated(
     deletedFiles: string[],
     sinceCommit: string,
-    projectId: string,
+    projectId: string
   ): void {
     for (const relPath of deletedFiles) {
       const moduleName = this.filePathToModuleName(relPath);
@@ -810,7 +873,7 @@ export class CodeKnowledgeExtractor {
       });
 
       // findEntities does fuzzy match on name, so filter for exact match
-      const moduleEntity = entities.find((e) => e.name === moduleName);
+      const moduleEntity = entities.find(e => e.name === moduleName);
       if (!moduleEntity) continue;
 
       // Mark the module entity as deprecated
@@ -820,7 +883,7 @@ export class CodeKnowledgeExtractor {
             moduleEntity.entityId,
             "deprecated",
             `File deleted since commit ${sinceCommit}`,
-            "code_change",
+            "code_change"
           );
           // Also set deprecationReason on the entity
           this.graphStore.updateEntity(moduleEntity.entityId, {
@@ -829,7 +892,7 @@ export class CodeKnowledgeExtractor {
         } catch (e) {
           console.error(
             `[CodeKnowledgeExtractor] Failed to deprecate entity ${moduleEntity.entityId}:`,
-            e instanceof Error ? e.message : String(e),
+            e instanceof Error ? e.message : String(e)
           );
         }
       }
@@ -858,7 +921,7 @@ export class CodeKnowledgeExtractor {
               targetId,
               "deprecated",
               `Dependent file deleted since commit ${sinceCommit}`,
-              "code_change",
+              "code_change"
             );
             this.graphStore.updateEntity(targetId, {
               deprecationReason: `Dependent file deleted since commit ${sinceCommit}`,
@@ -866,7 +929,7 @@ export class CodeKnowledgeExtractor {
           } catch (e) {
             console.error(
               `[CodeKnowledgeExtractor] Failed to deprecate target entity ${targetId}:`,
-              e instanceof Error ? e.message : String(e),
+              e instanceof Error ? e.message : String(e)
             );
           }
         }
@@ -887,9 +950,10 @@ export class CodeKnowledgeExtractor {
       entitiesExtracted: stats.entitiesExtracted,
       relationsExtracted: stats.relationsExtracted,
       extractionDurationMs: stats.extractionDurationMs,
-      errors: stats.errors.length > 0
-        ? stats.errors.map((e) => `${e.filePath}: ${e.reason}`)
-        : "none",
+      errors:
+        stats.errors.length > 0
+          ? stats.errors.map(e => `${e.filePath}: ${e.reason}`)
+          : "none",
     });
   }
 
@@ -943,7 +1007,7 @@ export class CodeKnowledgeExtractor {
     files: string[],
     language: string,
     repoPath: string,
-    projectId: string,
+    projectId: string
   ): Promise<ExtractionResult> {
     const entities: EntityInput[] = [];
     const relations: RelationInput[] = [];
@@ -966,7 +1030,10 @@ export class CodeKnowledgeExtractor {
     // Build ontology context for the prompt
     const entityTypes = this.ontologyRegistry.getEntityTypes();
     const relationTypes = this.ontologyRegistry.getRelationTypes();
-    const ontologyContext = this.buildOntologyPromptContext(entityTypes, relationTypes);
+    const ontologyContext = this.buildOntologyPromptContext(
+      entityTypes,
+      relationTypes
+    );
 
     for (const filePath of files) {
       const relPath = path.relative(repoPath, filePath).replace(/\\/g, "/");
@@ -975,16 +1042,27 @@ export class CodeKnowledgeExtractor {
 
         // Skip very large files to avoid token limits
         if (content.length > 50_000) {
-          errors.push({ filePath: relPath, reason: "File too large for LLM extraction (>50KB)" });
+          errors.push({
+            filePath: relPath,
+            reason: "File too large for LLM extraction (>50KB)",
+          });
           continue;
         }
 
-        const prompt = this.buildExtractionPrompt(content, relPath, language, ontologyContext);
+        const prompt = this.buildExtractionPrompt(
+          content,
+          relPath,
+          language,
+          ontologyContext
+        );
         const llmResponse = await this.llmProvider.generate(prompt);
         const parsed = this.parseLLMExtractionResponse(llmResponse);
 
         if (!parsed) {
-          errors.push({ filePath: relPath, reason: "Failed to parse LLM response as JSON" });
+          errors.push({
+            filePath: relPath,
+            reason: "Failed to parse LLM response as JSON",
+          });
           continue;
         }
 
@@ -998,7 +1076,9 @@ export class CodeKnowledgeExtractor {
           const entity: EntityInput = {
             entityType: rawEntity.entityType,
             name: rawEntity.name,
-            description: rawEntity.description || `${rawEntity.entityType}: ${rawEntity.name}`,
+            description:
+              rawEntity.description ||
+              `${rawEntity.entityType}: ${rawEntity.name}`,
             source: "llm_inferred" as EntitySource,
             confidence: 0.7,
             projectId,
@@ -1016,7 +1096,12 @@ export class CodeKnowledgeExtractor {
 
         // Process extracted relations
         for (const rawRelation of parsed.relations) {
-          if (!rawRelation.relationType || !rawRelation.sourceEntityName || !rawRelation.targetEntityName) continue;
+          if (
+            !rawRelation.relationType ||
+            !rawRelation.sourceEntityName ||
+            !rawRelation.targetEntityName
+          )
+            continue;
 
           const relation: RelationInput = {
             relationType: rawRelation.relationType,
@@ -1055,14 +1140,21 @@ export class CodeKnowledgeExtractor {
    * buildOntologyPromptContext — Format ontology model for inclusion in LLM prompt.
    */
   private buildOntologyPromptContext(
-    entityTypes: Array<{ name: string; description: string; extendedAttributes: string[] }>,
-    relationTypes: Array<{ name: string; description: string }>,
+    entityTypes: Array<{
+      name: string;
+      description: string;
+      extendedAttributes: string[];
+    }>,
+    relationTypes: Array<{ name: string; description: string }>
   ): string {
     const entitySection = entityTypes
-      .map((et) => `  - ${et.name}: ${et.description} (attributes: ${et.extendedAttributes.join(", ") || "none"})`)
+      .map(
+        et =>
+          `  - ${et.name}: ${et.description} (attributes: ${et.extendedAttributes.join(", ") || "none"})`
+      )
       .join("\n");
     const relationSection = relationTypes
-      .map((rt) => `  - ${rt.name}: ${rt.description}`)
+      .map(rt => `  - ${rt.name}: ${rt.description}`)
       .join("\n");
 
     return `Entity Types:\n${entitySection}\n\nRelation Types:\n${relationSection}`;
@@ -1075,7 +1167,7 @@ export class CodeKnowledgeExtractor {
     code: string,
     filePath: string,
     language: string,
-    ontologyContext: string,
+    ontologyContext: string
   ): string {
     return `You are a code analysis assistant. Analyze the following ${language} code and extract structured knowledge entities and relations.
 
@@ -1119,15 +1211,18 @@ Focus on the most important entities: modules, classes, functions, and their dep
   /**
    * parseLLMExtractionResponse — Parse LLM JSON response, handling common issues.
    */
-  parseLLMExtractionResponse(
-    response: string,
-  ): { entities: LLMExtractedEntity[]; relations: LLMExtractedRelation[] } | null {
+  parseLLMExtractionResponse(response: string): {
+    entities: LLMExtractedEntity[];
+    relations: LLMExtractedRelation[];
+  } | null {
     try {
       // Try to extract JSON from the response (LLM may wrap in markdown code blocks)
       let jsonStr = response.trim();
 
       // Strip markdown code fences if present
-      const jsonBlockMatch = jsonStr.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+      const jsonBlockMatch = jsonStr.match(
+        /```(?:json)?\s*\n?([\s\S]*?)\n?```/
+      );
       if (jsonBlockMatch) {
         jsonStr = jsonBlockMatch[1].trim();
       }
@@ -1135,12 +1230,18 @@ Focus on the most important entities: modules, classes, functions, and their dep
       const parsed = JSON.parse(jsonStr);
 
       // Validate structure
-      const entities: LLMExtractedEntity[] = Array.isArray(parsed.entities) ? parsed.entities : [];
-      const relations: LLMExtractedRelation[] = Array.isArray(parsed.relations) ? parsed.relations : [];
+      const entities: LLMExtractedEntity[] = Array.isArray(parsed.entities)
+        ? parsed.entities
+        : [];
+      const relations: LLMExtractedRelation[] = Array.isArray(parsed.relations)
+        ? parsed.relations
+        : [];
 
       return { entities, relations };
     } catch {
-      console.warn("[CodeKnowledgeExtractor] Failed to parse LLM extraction response");
+      console.warn(
+        "[CodeKnowledgeExtractor] Failed to parse LLM extraction response"
+      );
       return null;
     }
   }

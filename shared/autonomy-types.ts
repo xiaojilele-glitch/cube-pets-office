@@ -1,17 +1,17 @@
-import type { RingBuffer } from './ring-buffer';
+import type { RingBuffer } from "./ring-buffer";
 
 // ─── Agent 能力画像 ───────────────────────────────────────────
 
 /** Agent 能力画像 */
 export interface CapabilityProfile {
   agentId: string;
-  skillVector: Map<string, number>;          // 技能类别 → 熟练度 0.0-1.0
-  loadFactor: number;                         // activeTasks / maxConcurrentTasks
-  confidenceScore: number;                    // 综合置信度
+  skillVector: Map<string, number>; // 技能类别 → 熟练度 0.0-1.0
+  loadFactor: number; // activeTasks / maxConcurrentTasks
+  confidenceScore: number; // 综合置信度
   resourceQuota: ResourceQuota;
   specializationTags: string[];
-  avgLatencyMs: Map<string, number>;          // 技能类别 → 平均耗时 ms
-  taskHistory: RingBuffer<TaskHistoryEntry>;  // 最近 100 次任务
+  avgLatencyMs: Map<string, number>; // 技能类别 → 平均耗时 ms
+  taskHistory: RingBuffer<TaskHistoryEntry>; // 最近 100 次任务
   needsReview: boolean;
   completedTaskCount: number;
   lastUpdatedAt: number;
@@ -26,7 +26,7 @@ export interface ResourceQuota {
 export interface TaskHistoryEntry {
   taskId: string;
   skillCategory: string;
-  qualityScore: number;   // 0.0-1.0
+  qualityScore: number; // 0.0-1.0
   success: boolean;
   completedAt: number;
 }
@@ -46,17 +46,17 @@ export interface AssessmentResult {
   fitnessScore: number;
   decision: AssessmentDecision;
   reason: string;
-  referralList: string[];   // 仅 REJECT_AND_REFER 时有值
+  referralList: string[]; // 仅 REJECT_AND_REFER 时有值
   assessedAt: number;
   durationMs: number;
 }
 
 /** 自评估权重配置 */
 export interface AssessmentWeights {
-  w1_skillMatch: number;    // 默认 0.4
-  w2_loadFactor: number;    // 默认 0.2
-  w3_confidence: number;    // 默认 0.25
-  w4_resource: number;      // 默认 0.15
+  w1_skillMatch: number; // 默认 0.4
+  w2_loadFactor: number; // 默认 0.2
+  w3_confidence: number; // 默认 0.25
+  w4_resource: number; // 默认 0.15
 }
 
 // ─── 分配决策 ────────────────────────────────────────────────
@@ -108,25 +108,25 @@ export interface ContestantEntry {
 /** 裁判评选结果 */
 export interface JudgingResult {
   scores: JudgingScore[];
-  ranking: string[];          // agentId 按总分降序
+  ranking: string[]; // agentId 按总分降序
   rationaleText: string;
   winnerId: string;
-  mergeRequired: boolean;     // Top1 与 Top2 差 < 5%
+  mergeRequired: boolean; // Top1 与 Top2 差 < 5%
 }
 
 export interface JudgingScore {
   agentId: string;
-  correctness: number;        // 权重 0.35
-  quality: number;            // 权重 0.30
-  efficiency: number;         // 权重 0.20
-  novelty: number;            // 权重 0.15
+  correctness: number; // 权重 0.35
+  quality: number; // 权重 0.30
+  efficiency: number; // 权重 0.20
+  novelty: number; // 权重 0.15
   totalWeighted: number;
 }
 
 export interface CompetitionCost {
   totalTokens: number;
   estimatedNormalTokens: number;
-  roi: number;                // qualityScore / normalQualityEstimate
+  roi: number; // qualityScore / normalQualityEstimate
 }
 
 // ─── 工作组 ──────────────────────────────────────────────────
@@ -184,17 +184,17 @@ export interface AutonomyConfig {
   enabled: boolean;
   assessmentWeights: AssessmentWeights;
   competition: {
-    defaultContestantCount: number;   // 默认 3，范围 2-5
-    maxDeadlineMs: number;            // 默认 300000
-    budgetRatio: number;              // 默认 0.3
+    defaultContestantCount: number; // 默认 3，范围 2-5
+    maxDeadlineMs: number; // 默认 300000
+    budgetRatio: number; // 默认 0.3
   };
   taskforce: {
-    heartbeatIntervalMs: number;      // 默认 30000
-    maxMissedHeartbeats: number;      // 默认 3
+    heartbeatIntervalMs: number; // 默认 30000
+    maxMissedHeartbeats: number; // 默认 3
   };
   skillDecay: {
-    inactiveDays: number;             // 默认 30
-    decayRatePerWeek: number;         // 默认 0.05
+    inactiveDays: number; // 默认 30
+    decayRatePerWeek: number; // 默认 0.05
   };
 }
 

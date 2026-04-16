@@ -3,9 +3,9 @@ import type {
   AllocationStrategy,
   AssessmentResult,
   AutonomyConfig,
-} from '../../shared/autonomy-types.js';
-import type { CapabilityProfileManager } from './capability-profile-manager.js';
-import type { SelfAssessment, TaskRequest } from './self-assessment.js';
+} from "../../shared/autonomy-types.js";
+import type { CapabilityProfileManager } from "./capability-profile-manager.js";
+import type { SelfAssessment, TaskRequest } from "./self-assessment.js";
 
 // ─── Reject-rate sliding window size ─────────────────────────
 const REJECT_WINDOW_SIZE = 50;
@@ -25,7 +25,7 @@ export class TaskAllocator {
   constructor(
     private readonly selfAssessment: SelfAssessment,
     private readonly profileManager: CapabilityProfileManager,
-    private readonly config: AutonomyConfig,
+    private readonly config: AutonomyConfig
   ) {}
 
   /**
@@ -41,7 +41,11 @@ export class TaskAllocator {
     const candidates = this.filterCandidates(taskRequest.requiredSkills);
 
     if (candidates.length === 0) {
-      return this.buildErrorDecision(taskRequest.taskId, [], 'NO_CANDIDATES_AVAILABLE');
+      return this.buildErrorDecision(
+        taskRequest.taskId,
+        [],
+        "NO_CANDIDATES_AVAILABLE"
+      );
     }
 
     // 2. Static assignment when autonomy is disabled
@@ -50,7 +54,11 @@ export class TaskAllocator {
     }
 
     // 3. Broadcast assessment
-    const results = await this.broadcastAssessment(taskRequest, candidates, 200);
+    const results = await this.broadcastAssessment(
+      taskRequest,
+      candidates,
+      200
+    );
 
     // 4. Select best agent
     const decision = this.selectBestAgent(results, taskRequest);
@@ -60,7 +68,7 @@ export class TaskAllocator {
 
     // 6. Update reject rates for all assessed agents
     for (const r of results) {
-      this.updateRejectRate(r.agentId, r.decision === 'REJECT_AND_REFER');
+      this.updateRejectRate(r.agentId, r.decision === "REJECT_AND_REFER");
     }
 
     return finalDecision;
@@ -74,21 +82,21 @@ export class TaskAllocator {
   async broadcastAssessment(
     taskRequest: TaskRequest,
     candidates: string[],
-    timeoutMs: number = 200,
+    timeoutMs: number = 200
   ): Promise<AssessmentResult[]> {
-    const assessmentPromises = candidates.map((agentId) => {
+    const assessmentPromises = candidates.map(agentId => {
       const assessPromise = Promise.resolve(
-        this.selfAssessment.assess(agentId, taskRequest),
+        this.selfAssessment.assess(agentId, taskRequest)
       );
 
-      const timeoutPromise = new Promise<AssessmentResult>((resolve) => {
+      const timeoutPromise = new Promise<AssessmentResult>(resolve => {
         setTimeout(() => {
           resolve({
             agentId,
             taskId: taskRequest.taskId,
             fitnessScore: 0,
-            decision: 'REJECT_AND_REFER',
-            reason: 'assessment timeout',
+            decision: "REJECT_AND_REFER",
+            reason: "assessment timeout",
             referralList: [],
             assessedAt: Date.now(),
             durationMs: timeoutMs,
@@ -113,47 +121,47 @@ export class TaskAllocator {
    */
   selectBestAgent(
     results: AssessmentResult[],
-    taskRequest: TaskRequest,
+    taskRequest: TaskRequest
   ): AllocationDecision | null {
     const accepts = results
-      .filter((r) => r.decision === 'ACCEPT')
+      .filter(r => r.decision === "ACCEPT")
       .sort((a, b) => b.fitnessScore - a.fitnessScore);
 
     if (accepts.length > 0) {
       return this.buildDecision(
         taskRequest.taskId,
-        'DIRECT_ASSIGN',
+        "DIRECT_ASSIGN",
         accepts[0].agentId,
         results,
-        `Direct assign to highest-fitness ACCEPT agent (fitness=${accepts[0].fitnessScore.toFixed(3)})`,
+        `Direct assign to highest-fitness ACCEPT agent (fitness=${accepts[0].fitnessScore.toFixed(3)})`
       );
     }
 
     const caveats = results
-      .filter((r) => r.decision === 'ACCEPT_WITH_CAVEAT')
+      .filter(r => r.decision === "ACCEPT_WITH_CAVEAT")
       .sort((a, b) => b.fitnessScore - a.fitnessScore);
 
     if (caveats.length > 0) {
       return this.buildDecision(
         taskRequest.taskId,
-        'CAVEAT_ASSIGN',
+        "CAVEAT_ASSIGN",
         caveats[0].agentId,
         results,
-        `Caveat assign to highest-fitness ACCEPT_WITH_CAVEAT agent (fitness=${caveats[0].fitnessScore.toFixed(3)})`,
+        `Caveat assign to highest-fitness ACCEPT_WITH_CAVEAT agent (fitness=${caveats[0].fitnessScore.toFixed(3)})`
       );
     }
 
     const assists = results
-      .filter((r) => r.decision === 'REQUEST_ASSIST')
+      .filter(r => r.decision === "REQUEST_ASSIST")
       .sort((a, b) => b.fitnessScore - a.fitnessScore);
 
     if (assists.length > 0) {
       return this.buildDecision(
         taskRequest.taskId,
-        'TASKFORCE',
+        "TASKFORCE",
         assists[0].agentId,
         results,
-        `Taskforce strategy: highest-fitness REQUEST_ASSIST agent (fitness=${assists[0].fitnessScore.toFixed(3)})`,
+        `Taskforce strategy: highest-fitness REQUEST_ASSIST agent (fitness=${assists[0].fitnessScore.toFixed(3)})`
       );
     }
 
@@ -170,12 +178,12 @@ export class TaskAllocator {
    */
   forceAssign(
     results: AssessmentResult[],
-    taskRequest: TaskRequest,
+    taskRequest: TaskRequest
   ): AllocationDecision {
     // Count referral frequency
     const referralCounts = new Map<string, number>();
     for (const r of results) {
-      if (r.decision === 'REJECT_AND_REFER') {
+      if (r.decision === "REJECT_AND_REFER") {
         for (const ref of r.referralList) {
           referralCounts.set(ref, (referralCounts.get(ref) ?? 0) + 1);
         }
@@ -188,7 +196,7 @@ export class TaskAllocator {
     if (referralCounts.size > 0) {
       // Pick agent with highest referral count
       let maxCount = 0;
-      let bestReferral = '';
+      let bestReferral = "";
       for (const [agentId, count] of referralCounts) {
         if (count > maxCount) {
           maxCount = count;
@@ -199,17 +207,19 @@ export class TaskAllocator {
       forceAssignReason = `Force assigned to most-referred agent (referralCount=${maxCount})`;
     } else {
       // No referrals — pick highest fitnessScore
-      const sorted = [...results].sort((a, b) => b.fitnessScore - a.fitnessScore);
+      const sorted = [...results].sort(
+        (a, b) => b.fitnessScore - a.fitnessScore
+      );
       assignedAgentId = sorted[0].agentId;
       forceAssignReason = `Force assigned to highest-fitness agent (fitness=${sorted[0].fitnessScore.toFixed(3)}), no referrals available`;
     }
 
     return {
       taskId: taskRequest.taskId,
-      strategy: 'FORCE_ASSIGN',
+      strategy: "FORCE_ASSIGN",
       assignedAgentId,
       assessments: results,
-      reason: 'All candidates rejected; executing force-assign fallback',
+      reason: "All candidates rejected; executing force-assign fallback",
       forceAssignReason,
       timestamp: Date.now(),
     };
@@ -237,7 +247,7 @@ export class TaskAllocator {
   checkRejectRateAlert(agentId: string): boolean {
     const window = this.rejectHistory.get(agentId);
     if (!window) return false;
-    const rejectCount = window.filter((v) => v).length;
+    const rejectCount = window.filter(v => v).length;
     return rejectCount > REJECT_ALERT_THRESHOLD;
   }
 
@@ -252,8 +262,8 @@ export class TaskAllocator {
     const requiredSet = new Set(requiredSkills);
 
     return allProfiles
-      .filter((p) => p.specializationTags.some((tag) => requiredSet.has(tag)))
-      .map((p) => p.agentId);
+      .filter(p => p.specializationTags.some(tag => requiredSet.has(tag)))
+      .map(p => p.agentId);
   }
 
   private buildDecision(
@@ -261,33 +271,43 @@ export class TaskAllocator {
     strategy: AllocationStrategy,
     assignedAgentId: string,
     assessments: AssessmentResult[],
-    reason: string,
-  ): AllocationDecision {
-    return { taskId, strategy, assignedAgentId, assessments, reason, timestamp: Date.now() };
-  }
-
-  private buildErrorDecision(
-    taskId: string,
-    assessments: AssessmentResult[],
-    reason: string,
+    reason: string
   ): AllocationDecision {
     return {
       taskId,
-      strategy: 'FORCE_ASSIGN',
-      assignedAgentId: '',
+      strategy,
+      assignedAgentId,
       assessments,
       reason,
       timestamp: Date.now(),
     };
   }
 
-  private buildStaticDecision(taskId: string, agentId: string): AllocationDecision {
+  private buildErrorDecision(
+    taskId: string,
+    assessments: AssessmentResult[],
+    reason: string
+  ): AllocationDecision {
     return {
       taskId,
-      strategy: 'DIRECT_ASSIGN',
+      strategy: "FORCE_ASSIGN",
+      assignedAgentId: "",
+      assessments,
+      reason,
+      timestamp: Date.now(),
+    };
+  }
+
+  private buildStaticDecision(
+    taskId: string,
+    agentId: string
+  ): AllocationDecision {
+    return {
+      taskId,
+      strategy: "DIRECT_ASSIGN",
       assignedAgentId: agentId,
       assessments: [],
-      reason: 'Static assignment (autonomy disabled)',
+      reason: "Static assignment (autonomy disabled)",
       timestamp: Date.now(),
     };
   }

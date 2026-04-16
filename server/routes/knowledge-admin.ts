@@ -24,7 +24,11 @@ import type {
   DailyTrend,
   KnowledgeApiErrorResponse,
 } from "../../shared/knowledge/api.js";
-import type { Entity, Relation, EntityStatus } from "../../shared/knowledge/types.js";
+import type {
+  Entity,
+  Relation,
+  EntityStatus,
+} from "../../shared/knowledge/types.js";
 import type { GraphStore } from "../knowledge/graph-store.js";
 import type { OntologyRegistry } from "../knowledge/ontology-registry.js";
 import type { KnowledgeReviewQueue } from "../knowledge/review-queue.js";
@@ -72,7 +76,6 @@ function collectAllRelations(graphStore: GraphStore): Relation[] {
   return all;
 }
 
-
 // ---------------------------------------------------------------------------
 // Route prefix — strip the common prefix so we can mount at /api/admin/knowledge
 // ---------------------------------------------------------------------------
@@ -104,7 +107,10 @@ export function createKnowledgeAdminRouter(deps: {
       const relations = collectAllRelations(graphStore);
 
       // By project
-      const projectMap = new Map<string, { entities: number; relations: number }>();
+      const projectMap = new Map<
+        string,
+        { entities: number; relations: number }
+      >();
       for (const e of entities) {
         const p = projectMap.get(e.projectId) ?? { entities: 0, relations: 0 };
         p.entities++;
@@ -112,9 +118,12 @@ export function createKnowledgeAdminRouter(deps: {
       }
       for (const r of relations) {
         // Find the project from source entity
-        const srcEntity = entities.find((e) => e.entityId === r.sourceEntityId);
+        const srcEntity = entities.find(e => e.entityId === r.sourceEntityId);
         if (srcEntity) {
-          const p = projectMap.get(srcEntity.projectId) ?? { entities: 0, relations: 0 };
+          const p = projectMap.get(srcEntity.projectId) ?? {
+            entities: 0,
+            relations: 0,
+          };
           p.relations++;
           projectMap.set(srcEntity.projectId, p);
         }
@@ -124,7 +133,7 @@ export function createKnowledgeAdminRouter(deps: {
           projectId,
           entityCount: counts.entities,
           relationCount: counts.relations,
-        }),
+        })
       );
 
       // By entity type
@@ -133,7 +142,7 @@ export function createKnowledgeAdminRouter(deps: {
         typeMap.set(e.entityType, (typeMap.get(e.entityType) ?? 0) + 1);
       }
       const byEntityType: EntityTypeCount[] = Array.from(typeMap.entries()).map(
-        ([entityType, count]) => ({ entityType, count }),
+        ([entityType, count]) => ({ entityType, count })
       );
 
       // Status distribution
@@ -142,7 +151,7 @@ export function createKnowledgeAdminRouter(deps: {
         statusMap.set(e.status, (statusMap.get(e.status) ?? 0) + 1);
       }
       const statusDistribution: StatusDistribution[] = Array.from(
-        statusMap.entries(),
+        statusMap.entries()
       ).map(([status, count]) => ({ status, count }));
 
       // Average confidence
@@ -159,10 +168,10 @@ export function createKnowledgeAdminRouter(deps: {
         day.setDate(day.getDate() - i);
         const dateStr = day.toISOString().slice(0, 10);
         const entitiesCreated = entities.filter(
-          (e) => e.createdAt.slice(0, 10) === dateStr,
+          e => e.createdAt.slice(0, 10) === dateStr
         ).length;
         const relationsCreated = relations.filter(
-          (r) => r.createdAt.slice(0, 10) === dateStr,
+          r => r.createdAt.slice(0, 10) === dateStr
         ).length;
         trends.push({ date: dateStr, entitiesCreated, relationsCreated });
       }
@@ -222,7 +231,9 @@ export function createKnowledgeAdminRouter(deps: {
     const task = reindexTasks.get(taskId);
 
     if (!task) {
-      const errResp: KnowledgeApiErrorResponse = { error: `Task not found: ${taskId}` };
+      const errResp: KnowledgeApiErrorResponse = {
+        error: `Task not found: ${taskId}`,
+      };
       return res.status(404).json(errResp);
     }
 

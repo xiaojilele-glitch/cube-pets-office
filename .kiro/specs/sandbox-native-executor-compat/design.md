@@ -24,12 +24,12 @@ This is important because “no Docker” is no longer a single case:
 
 ## Runtime Matrix
 
-| Environment | Server | Executor | Effective runtime | Notes |
-| --- | --- | --- | --- | --- |
-| Local + Docker reachable | yes | yes | `real` | Full Docker-backed execution |
-| Local + Docker unreachable | yes | yes | `native` | Host-process execution, still writes logs/artifacts |
-| Local + explicit `mock` | yes | yes | `mock` | Pure simulated executor path |
-| GitHub Pages static build | no | no | `frontend` browser runtime | No Advanced Runtime, no executor |
+| Environment                | Server | Executor | Effective runtime          | Notes                                               |
+| -------------------------- | ------ | -------- | -------------------------- | --------------------------------------------------- |
+| Local + Docker reachable   | yes    | yes      | `real`                     | Full Docker-backed execution                        |
+| Local + Docker unreachable | yes    | yes      | `native`                   | Host-process execution, still writes logs/artifacts |
+| Local + explicit `mock`    | yes    | yes      | `mock`                     | Pure simulated executor path                        |
+| GitHub Pages static build  | no     | no       | `frontend` browser runtime | No Advanced Runtime, no executor                    |
 
 ## Code Mapping
 

@@ -12,10 +12,7 @@ import type {
   MissionStatus,
 } from "../../../shared/mission/contracts";
 import { SNAPSHOT_VERSION } from "../../../shared/mission/contracts";
-import {
-  serializeSnapshot,
-  validateChecksum,
-} from "./snapshot-serializer";
+import { serializeSnapshot, validateChecksum } from "./snapshot-serializer";
 import type { SnapshotMeta } from "./snapshot-serializer";
 
 // ─── Helpers ───
@@ -55,7 +52,7 @@ async function computeSHA256Hex(data: string): Promise<string> {
   const buffer = encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 // ─── serializeSnapshot tests ───
@@ -112,11 +109,11 @@ describe("serializeSnapshot", () => {
     const meta = makeMeta();
     const r1 = await serializeSnapshot(
       makePayload({ mission: { id: "a", title: "A" } as any }),
-      meta,
+      meta
     );
     const r2 = await serializeSnapshot(
       makePayload({ mission: { id: "b", title: "B" } as any }),
-      meta,
+      meta
     );
 
     expect(r1.checksum).not.toBe(r2.checksum);
@@ -159,18 +156,23 @@ describe("validateChecksum", () => {
   it("should validate correctly with complex payload data", async () => {
     const payload = makePayload({
       agentMemories: [
-        { agentId: "agent-1", soulMdHash: "abc", recentExchanges: [{ q: "hi", a: "hello" }] },
+        {
+          agentId: "agent-1",
+          soulMdHash: "abc",
+          recentExchanges: [{ q: "hi", a: "hello" }],
+        },
       ],
       decisionHistory: [
         {
           stageKey: "plan",
-          decision: { prompt: "Choose", options: [{ id: "o1", label: "Option 1" }] },
+          decision: {
+            prompt: "Choose",
+            options: [{ id: "o1", label: "Option 1" }],
+          },
           timestamp: Date.now(),
         },
       ],
-      attachmentIndex: [
-        { name: "report.pdf", kind: "file", size: 1024 },
-      ],
+      attachmentIndex: [{ name: "report.pdf", kind: "file", size: 1024 }],
     });
 
     const record = await serializeSnapshot(payload, makeMeta());

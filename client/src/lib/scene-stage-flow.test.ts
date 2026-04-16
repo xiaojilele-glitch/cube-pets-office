@@ -46,9 +46,7 @@ function makeMissionTask(
   };
 }
 
-function makeWorkflow(
-  overrides: Partial<WorkflowInfo> = {}
-): WorkflowInfo {
+function makeWorkflow(overrides: Partial<WorkflowInfo> = {}): WorkflowInfo {
   return {
     id: "wf-1",
     directive: "Create the next workflow pass",

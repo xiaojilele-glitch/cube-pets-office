@@ -5,23 +5,28 @@
  * Feature: collaboration-replay
  */
 
-import { describe, it, expect, afterEach } from 'vitest';
-import * as fc from 'fast-check';
-import { rm, readFile as fsReadFile, writeFile as fsWriteFile, utimes } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { describe, it, expect, afterEach } from "vitest";
+import * as fc from "fast-check";
+import {
+  rm,
+  readFile as fsReadFile,
+  writeFile as fsWriteFile,
+  utimes,
+} from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 
 import type {
   ExecutionEvent,
   ReplayEventType,
   ExecutionTimeline,
-} from '../../shared/replay/contracts';
-import { REPLAY_EVENT_TYPES } from '../../shared/replay/contracts';
-import { ServerReplayStore } from '../../server/replay/replay-store';
+} from "../../shared/replay/contracts";
+import { REPLAY_EVENT_TYPES } from "../../shared/replay/contracts";
+import { ServerReplayStore } from "../../server/replay/replay-store";
 
 /* ─── Helpers ─── */
 
-const BASE_DIR = resolve('data/replay');
+const BASE_DIR = resolve("data/replay");
 
 /** Track mission IDs created during tests for cleanup */
 const createdMissions: string[] = [];
@@ -29,11 +34,12 @@ const createdMissions: string[] = [];
 /** Create a minimal valid ExecutionEvent */
 function makeEvent(overrides: Partial<ExecutionEvent> = {}): ExecutionEvent {
   return {
-    eventId: overrides.eventId ?? `evt-${Math.random().toString(36).slice(2, 10)}`,
-    missionId: overrides.missionId ?? 'mission-1',
+    eventId:
+      overrides.eventId ?? `evt-${Math.random().toString(36).slice(2, 10)}`,
+    missionId: overrides.missionId ?? "mission-1",
     timestamp: overrides.timestamp ?? Date.now(),
-    eventType: overrides.eventType ?? 'AGENT_STARTED',
-    sourceAgent: overrides.sourceAgent ?? 'agent-1',
+    eventType: overrides.eventType ?? "AGENT_STARTED",
+    sourceAgent: overrides.sourceAgent ?? "agent-1",
     eventData: overrides.eventData ?? {},
     ...(overrides.targetAgent ? { targetAgent: overrides.targetAgent } : {}),
     ...(overrides.metadata ? { metadata: overrides.metadata } : {}),
@@ -41,7 +47,7 @@ function makeEvent(overrides: Partial<ExecutionEvent> = {}): ExecutionEvent {
 }
 
 /** Generate a unique mission ID for test isolation */
-function uniqueMissionId(prefix = 'test'): string {
+function uniqueMissionId(prefix = "test"): string {
   const id = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   createdMissions.push(id);
   return id;
@@ -49,13 +55,17 @@ function uniqueMissionId(prefix = 'test'): string {
 
 /* ─── Arbitraries ─── */
 
-const eventTypeArb: fc.Arbitrary<ReplayEventType> = fc.constantFrom(...REPLAY_EVENT_TYPES);
+const eventTypeArb: fc.Arbitrary<ReplayEventType> = fc.constantFrom(
+  ...REPLAY_EVENT_TYPES
+);
 
-const agentIdArb = fc.stringMatching(/^[a-z][a-z0-9]{0,9}$/).filter((s) => s.length >= 1);
+const agentIdArb = fc
+  .stringMatching(/^[a-z][a-z0-9]{0,9}$/)
+  .filter(s => s.length >= 1);
 
 const executionEventArb: fc.Arbitrary<ExecutionEvent> = fc.record({
   eventId: fc.uuid(),
-  missionId: fc.constant('mission-test'),
+  missionId: fc.constant("mission-test"),
   timestamp: fc.integer({ min: 1_000_000_000_000, max: 2_000_000_000_000 }),
   eventType: eventTypeArb,
   sourceAgent: agentIdArb,
@@ -63,12 +73,18 @@ const executionEventArb: fc.Arbitrary<ExecutionEvent> = fc.record({
 });
 
 /** Generate a sorted list of events (by timestamp) */
-const sortedEventsArb = (minLen = 1, maxLen = 30): fc.Arbitrary<ExecutionEvent[]> =>
+const sortedEventsArb = (
+  minLen = 1,
+  maxLen = 30
+): fc.Arbitrary<ExecutionEvent[]> =>
   fc
     .array(executionEventArb, { minLength: minLen, maxLength: maxLen })
-    .map((events) => {
+    .map(events => {
       const sorted = [...events].sort((a, b) => a.timestamp - b.timestamp);
-      return sorted.map((e, i) => ({ ...e, eventId: `evt-${i}-${e.eventId.slice(0, 8)}` }));
+      return sorted.map((e, i) => ({
+        ...e,
+        eventId: `evt-${i}-${e.eventId.slice(0, 8)}`,
+      }));
     });
 
 /* ─── Cleanup ─── */
@@ -90,11 +106,11 @@ afterEach(async () => {
  * Validates: Requirements 6.1
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 9: Timeline consistency', () => {
-  it('for any sorted event list, the built timeline satisfies all consistency invariants', () => {
+describe("Property 9: Timeline consistency", () => {
+  it("for any sorted event list, the built timeline satisfies all consistency invariants", () => {
     // **Validates: Requirements 6.1**
     fc.assert(
-      fc.property(sortedEventsArb(2, 50), (events) => {
+      fc.property(sortedEventsArb(2, 50), events => {
         const startTime = events[0].timestamp;
         const endTime = events[events.length - 1].timestamp;
         const totalDuration = endTime - startTime;
@@ -114,10 +130,12 @@ describe('Property 9: Timeline consistency', () => {
 
         // events are sorted by timestamp ascending
         for (let i = 1; i < events.length; i++) {
-          expect(events[i].timestamp).toBeGreaterThanOrEqual(events[i - 1].timestamp);
+          expect(events[i].timestamp).toBeGreaterThanOrEqual(
+            events[i - 1].timestamp
+          );
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -128,8 +146,10 @@ describe('Property 9: Timeline consistency', () => {
  * Validates: Requirements 6.2
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 10: Multi-dimensional index correctness', () => {
-  function buildIndicesLocal(events: ExecutionEvent[]): ExecutionTimeline['indices'] {
+describe("Property 10: Multi-dimensional index correctness", () => {
+  function buildIndicesLocal(
+    events: ExecutionEvent[]
+  ): ExecutionTimeline["indices"] {
     const byTime = new Map<number, number[]>();
     const byAgent = new Map<string, number[]>();
     const byType = new Map<ReplayEventType, number[]>();
@@ -152,7 +172,7 @@ describe('Property 10: Multi-dimensional index correctness', () => {
       byType.get(ev.eventType)!.push(i);
 
       const resourceId = (ev.eventData as Record<string, unknown>)?.resourceId;
-      if (typeof resourceId === 'string') {
+      if (typeof resourceId === "string") {
         if (!byResource.has(resourceId)) byResource.set(resourceId, []);
         byResource.get(resourceId)!.push(i);
       }
@@ -160,33 +180,37 @@ describe('Property 10: Multi-dimensional index correctness', () => {
     return { byTime, byAgent, byType, byResource };
   }
 
-  it('byAgent index returns exactly the events matching a given agentId', () => {
+  it("byAgent index returns exactly the events matching a given agentId", () => {
     // **Validates: Requirements 6.2**
     fc.assert(
-      fc.property(sortedEventsArb(3, 40), (events) => {
+      fc.property(sortedEventsArb(3, 40), events => {
         const indices = buildIndicesLocal(events);
 
         for (const [agentId, eventIndices] of indices.byAgent) {
           for (const idx of eventIndices) {
             const ev = events[idx];
-            expect(ev.sourceAgent === agentId || ev.targetAgent === agentId).toBe(true);
+            expect(
+              ev.sourceAgent === agentId || ev.targetAgent === agentId
+            ).toBe(true);
           }
 
           const bruteForce = events
-            .map((e, i) => (e.sourceAgent === agentId || e.targetAgent === agentId ? i : -1))
-            .filter((i) => i >= 0);
+            .map((e, i) =>
+              e.sourceAgent === agentId || e.targetAgent === agentId ? i : -1
+            )
+            .filter(i => i >= 0);
 
           expect(eventIndices.sort()).toEqual(bruteForce.sort());
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('byType index returns exactly the events matching a given eventType', () => {
+  it("byType index returns exactly the events matching a given eventType", () => {
     // **Validates: Requirements 6.2**
     fc.assert(
-      fc.property(sortedEventsArb(3, 40), (events) => {
+      fc.property(sortedEventsArb(3, 40), events => {
         const indices = buildIndicesLocal(events);
 
         for (const [eventType, eventIndices] of indices.byType) {
@@ -196,19 +220,19 @@ describe('Property 10: Multi-dimensional index correctness', () => {
 
           const bruteForce = events
             .map((e, i) => (e.eventType === eventType ? i : -1))
-            .filter((i) => i >= 0);
+            .filter(i => i >= 0);
 
           expect(eventIndices.sort()).toEqual(bruteForce.sort());
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('byTime index returns exactly the events in the correct time bucket', () => {
+  it("byTime index returns exactly the events in the correct time bucket", () => {
     // **Validates: Requirements 6.2**
     fc.assert(
-      fc.property(sortedEventsArb(3, 40), (events) => {
+      fc.property(sortedEventsArb(3, 40), events => {
         const indices = buildIndicesLocal(events);
 
         for (const [timeBucket, eventIndices] of indices.byTime) {
@@ -218,13 +242,15 @@ describe('Property 10: Multi-dimensional index correctness', () => {
           }
 
           const bruteForce = events
-            .map((e, i) => (Math.floor(e.timestamp / 1000) * 1000 === timeBucket ? i : -1))
-            .filter((i) => i >= 0);
+            .map((e, i) =>
+              Math.floor(e.timestamp / 1000) * 1000 === timeBucket ? i : -1
+            )
+            .filter(i => i >= 0);
 
           expect(eventIndices.sort()).toEqual(bruteForce.sort());
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -235,11 +261,11 @@ describe('Property 10: Multi-dimensional index correctness', () => {
  * Validates: Requirements 6.6, 15.1
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 13: JSON export roundtrip', () => {
-  it('for any event list, JSON export then parse produces deeply equal events', () => {
+describe("Property 13: JSON export roundtrip", () => {
+  it("for any event list, JSON export then parse produces deeply equal events", () => {
     // **Validates: Requirements 6.6, 15.1**
     fc.assert(
-      fc.property(sortedEventsArb(1, 30), (events) => {
+      fc.property(sortedEventsArb(1, 30), events => {
         const exported = JSON.stringify(events, null, 2);
         const parsed: ExecutionEvent[] = JSON.parse(exported);
 
@@ -253,14 +279,14 @@ describe('Property 13: JSON export roundtrip', () => {
           expect(parsed[i].eventData).toEqual(events[i].eventData);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('store exportEvents JSON roundtrip preserves event data', async () => {
+  it("store exportEvents JSON roundtrip preserves event data", async () => {
     // **Validates: Requirements 6.6, 15.1**
     const store = new ServerReplayStore();
-    const mid = uniqueMissionId('json-rt');
+    const mid = uniqueMissionId("json-rt");
 
     const events = Array.from({ length: 5 }, (_, i) =>
       makeEvent({
@@ -269,11 +295,11 @@ describe('Property 13: JSON export roundtrip', () => {
         timestamp: 1_000_000_000_000 + i * 1000,
         sourceAgent: `agent-${i % 3}`,
         eventType: REPLAY_EVENT_TYPES[i % REPLAY_EVENT_TYPES.length],
-      }),
+      })
     );
 
     await store.appendEvents(mid, events);
-    const exported = await store.exportEvents(mid, 'json');
+    const exported = await store.exportEvents(mid, "json");
     const parsed: ExecutionEvent[] = JSON.parse(exported);
 
     expect(parsed).toHaveLength(events.length);
@@ -291,19 +317,19 @@ describe('Property 13: JSON export roundtrip', () => {
  * Validates: Requirements 6.4, 19.3
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 12: Incremental append invariant', () => {
-  it('appending N events increases eventCount by N and preserves original order', async () => {
+describe("Property 12: Incremental append invariant", () => {
+  it("appending N events increases eventCount by N and preserves original order", async () => {
     // **Validates: Requirements 6.4, 19.3**
     const store = new ServerReplayStore();
-    const mid = uniqueMissionId('append');
+    const mid = uniqueMissionId("append");
 
     const initialEvents = Array.from({ length: 5 }, (_, i) =>
       makeEvent({
         missionId: mid,
         eventId: `init-${i}`,
         timestamp: 1_000_000_000_000 + i * 1000,
-        sourceAgent: 'agent-a',
-      }),
+        sourceAgent: "agent-a",
+      })
     );
 
     await store.appendEvents(mid, initialEvents);
@@ -315,8 +341,8 @@ describe('Property 12: Incremental append invariant', () => {
         missionId: mid,
         eventId: `new-${i}`,
         timestamp: 1_000_000_010_000 + i * 1000,
-        sourceAgent: 'agent-b',
-      }),
+        sourceAgent: "agent-b",
+      })
     );
 
     await store.appendEvents(mid, newEvents);
@@ -333,11 +359,13 @@ describe('Property 12: Incremental append invariant', () => {
 
     // New events appear at the end
     for (let i = 0; i < newEvents.length; i++) {
-      expect(tlAfter.events[initialEvents.length + i].eventId).toBe(newEvents[i].eventId);
+      expect(tlAfter.events[initialEvents.length + i].eventId).toBe(
+        newEvents[i].eventId
+      );
     }
   });
 
-  it('property: for any two batches, append preserves order and count', async () => {
+  it("property: for any two batches, append preserves order and count", async () => {
     // **Validates: Requirements 6.4, 19.3**
     let runIdx = 0;
     await fc.assert(
@@ -353,7 +381,7 @@ describe('Property 12: Incremental append invariant', () => {
               missionId: mid,
               eventId: `b1-${i}`,
               timestamp: 1_000_000_000_000 + i * 1000,
-            }),
+            })
           );
 
           const batch2 = Array.from({ length: batch2Size }, (_, i) =>
@@ -361,7 +389,7 @@ describe('Property 12: Incremental append invariant', () => {
               missionId: mid,
               eventId: `b2-${i}`,
               timestamp: 1_000_000_100_000 + i * 1000,
-            }),
+            })
           );
 
           await store.appendEvents(mid, batch1);
@@ -376,9 +404,9 @@ describe('Property 12: Incremental append invariant', () => {
           for (let i = 0; i < batch1Size; i++) {
             expect(tl2.events[i].eventId).toBe(batch1[i].eventId);
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });
@@ -389,75 +417,72 @@ describe('Property 12: Incremental append invariant', () => {
  * Validates: Requirements 20.3
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 38: Data integrity verification', () => {
-  it('untampered data passes integrity verification', async () => {
+describe("Property 38: Data integrity verification", () => {
+  it("untampered data passes integrity verification", async () => {
     // **Validates: Requirements 20.3**
     const store = new ServerReplayStore();
-    const mid = uniqueMissionId('integrity-ok');
+    const mid = uniqueMissionId("integrity-ok");
 
     const events = Array.from({ length: 5 }, (_, i) =>
       makeEvent({
         missionId: mid,
         eventId: `int-${i}`,
         timestamp: 1_000_000_000_000 + i * 1000,
-      }),
+      })
     );
 
     await store.appendEvents(mid, events);
     expect(await store.verifyIntegrity(mid)).toBe(true);
   });
 
-  it('tampered event data fails integrity verification', async () => {
+  it("tampered event data fails integrity verification", async () => {
     // **Validates: Requirements 20.3**
     const store = new ServerReplayStore();
-    const mid = uniqueMissionId('integrity-tamper');
+    const mid = uniqueMissionId("integrity-tamper");
 
     const events = Array.from({ length: 3 }, (_, i) =>
       makeEvent({
         missionId: mid,
         eventId: `tam-${i}`,
         timestamp: 1_000_000_000_000 + i * 1000,
-      }),
+      })
     );
 
     await store.appendEvents(mid, events);
     expect(await store.verifyIntegrity(mid)).toBe(true);
 
     // Tamper with the events file
-    const eventsFilePath = resolve(BASE_DIR, mid, 'events.jsonl');
-    const content = await fsReadFile(eventsFilePath, 'utf-8');
+    const eventsFilePath = resolve(BASE_DIR, mid, "events.jsonl");
+    const content = await fsReadFile(eventsFilePath, "utf-8");
     const tampered =
       content +
       '{"eventId":"fake","missionId":"x","timestamp":0,"eventType":"AGENT_STARTED","sourceAgent":"x","eventData":{}}\n';
-    await fsWriteFile(eventsFilePath, tampered, 'utf-8');
+    await fsWriteFile(eventsFilePath, tampered, "utf-8");
 
     // Checksum mismatch → false
     expect(await store.verifyIntegrity(mid)).toBe(false);
   });
 
-  it('property: for any events, untampered store always verifies true', async () => {
+  it("property: for any events, untampered store always verifies true", async () => {
     // **Validates: Requirements 20.3**
     let runIdx = 0;
     await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 1, max: 8 }),
-        async (numEvents) => {
-          const store = new ServerReplayStore();
-          const mid = uniqueMissionId(`integrity-prop-${runIdx++}`);
+      fc.asyncProperty(fc.integer({ min: 1, max: 8 }), async numEvents => {
+        const store = new ServerReplayStore();
+        const mid = uniqueMissionId(`integrity-prop-${runIdx++}`);
 
-          const events = Array.from({ length: numEvents }, (_, i) =>
-            makeEvent({
-              missionId: mid,
-              eventId: `vp-${i}`,
-              timestamp: 1_000_000_000_000 + i * 1000,
-            }),
-          );
+        const events = Array.from({ length: numEvents }, (_, i) =>
+          makeEvent({
+            missionId: mid,
+            eventId: `vp-${i}`,
+            timestamp: 1_000_000_000_000 + i * 1000,
+          })
+        );
 
-          await store.appendEvents(mid, events);
-          expect(await store.verifyIntegrity(mid)).toBe(true);
-        },
-      ),
-      { numRuns: 15 },
+        await store.appendEvents(mid, events);
+        expect(await store.verifyIntegrity(mid)).toBe(true);
+      }),
+      { numRuns: 15 }
     );
   });
 });
@@ -468,11 +493,11 @@ describe('Property 38: Data integrity verification', () => {
  * Validates: Requirements 19.4
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 35: Version increment invariant', () => {
-  it('each appendEvents call strictly increments the version', async () => {
+describe("Property 35: Version increment invariant", () => {
+  it("each appendEvents call strictly increments the version", async () => {
     // **Validates: Requirements 19.4**
     const store = new ServerReplayStore();
-    const mid = uniqueMissionId('version');
+    const mid = uniqueMissionId("version");
 
     const versions: number[] = [];
 
@@ -482,7 +507,7 @@ describe('Property 35: Version increment invariant', () => {
           missionId: mid,
           eventId: `ver-${batch}-${i}`,
           timestamp: 1_000_000_000_000 + batch * 10000 + i * 1000,
-        }),
+        })
       );
 
       await store.appendEvents(mid, events);
@@ -495,34 +520,31 @@ describe('Property 35: Version increment invariant', () => {
     }
   });
 
-  it('property: N sequential appends produce strictly increasing versions', async () => {
+  it("property: N sequential appends produce strictly increasing versions", async () => {
     // **Validates: Requirements 19.4**
     let runIdx = 0;
     await fc.assert(
-      fc.asyncProperty(
-        fc.integer({ min: 2, max: 6 }),
-        async (numBatches) => {
-          const store = new ServerReplayStore();
-          const mid = uniqueMissionId(`ver-prop-${runIdx++}`);
-          const versions: number[] = [];
+      fc.asyncProperty(fc.integer({ min: 2, max: 6 }), async numBatches => {
+        const store = new ServerReplayStore();
+        const mid = uniqueMissionId(`ver-prop-${runIdx++}`);
+        const versions: number[] = [];
 
-          for (let b = 0; b < numBatches; b++) {
-            const ev = makeEvent({
-              missionId: mid,
-              eventId: `vp-${b}`,
-              timestamp: 1_000_000_000_000 + b * 10000,
-            });
-            await store.appendEvents(mid, [ev]);
-            const tl = await store.getTimeline(mid);
-            versions.push(tl.version);
-          }
+        for (let b = 0; b < numBatches; b++) {
+          const ev = makeEvent({
+            missionId: mid,
+            eventId: `vp-${b}`,
+            timestamp: 1_000_000_000_000 + b * 10000,
+          });
+          await store.appendEvents(mid, [ev]);
+          const tl = await store.getTimeline(mid);
+          versions.push(tl.version);
+        }
 
-          for (let i = 1; i < versions.length; i++) {
-            expect(versions[i]).toBeGreaterThan(versions[i - 1]);
-          }
-        },
-      ),
-      { numRuns: 15 },
+        for (let i = 1; i < versions.length; i++) {
+          expect(versions[i]).toBeGreaterThan(versions[i - 1]);
+        }
+      }),
+      { numRuns: 15 }
     );
   });
 });
@@ -533,17 +555,17 @@ describe('Property 35: Version increment invariant', () => {
  * Validates: Requirements 19.5
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 34: Data cleanup correctness', () => {
-  it('cleanup deletes old data and preserves recent data', async () => {
+describe("Property 34: Data cleanup correctness", () => {
+  it("cleanup deletes old data and preserves recent data", async () => {
     // **Validates: Requirements 19.5**
     const store = new ServerReplayStore();
 
-    const oldMid = uniqueMissionId('old');
+    const oldMid = uniqueMissionId("old");
     await store.appendEvents(oldMid, [
       makeEvent({ missionId: oldMid, timestamp: 1_000_000_000_000 }),
     ]);
 
-    const recentMid = uniqueMissionId('recent');
+    const recentMid = uniqueMissionId("recent");
     await store.appendEvents(recentMid, [
       makeEvent({ missionId: recentMid, timestamp: Date.now() }),
     ]);
@@ -563,12 +585,12 @@ describe('Property 34: Data cleanup correctness', () => {
     expect(existsSync(resolve(BASE_DIR, recentMid))).toBe(true);
   });
 
-  it('cleanup with very large threshold preserves all data', async () => {
+  it("cleanup with very large threshold preserves all data", async () => {
     // **Validates: Requirements 19.5**
     const store = new ServerReplayStore();
 
-    const mid1 = uniqueMissionId('keep1');
-    const mid2 = uniqueMissionId('keep2');
+    const mid1 = uniqueMissionId("keep1");
+    const mid2 = uniqueMissionId("keep2");
 
     await store.appendEvents(mid1, [
       makeEvent({ missionId: mid1, timestamp: Date.now() }),
@@ -585,13 +607,13 @@ describe('Property 34: Data cleanup correctness', () => {
     expect(existsSync(resolve(BASE_DIR, mid2))).toBe(true);
   });
 
-  it('property: cleanup threshold correctly partitions old vs recent data', async () => {
+  it("property: cleanup threshold correctly partitions old vs recent data", async () => {
     // **Validates: Requirements 19.5**
     let runIdx = 0;
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 1, max: 3 }),  // number of old missions
-        fc.integer({ min: 1, max: 3 }),  // number of recent missions
+        fc.integer({ min: 1, max: 3 }), // number of old missions
+        fc.integer({ min: 1, max: 3 }), // number of recent missions
         fc.integer({ min: 10, max: 90 }), // threshold days
         async (numOld, numRecent, thresholdDays) => {
           const store = new ServerReplayStore();
@@ -603,10 +625,16 @@ describe('Property 34: Data cleanup correctness', () => {
             const mid = uniqueMissionId(`cleanup-old-${runIdx}-${i}`);
             oldIds.push(mid);
             await store.appendEvents(mid, [
-              makeEvent({ missionId: mid, eventId: `o-${i}`, timestamp: 1_000_000_000_000 }),
+              makeEvent({
+                missionId: mid,
+                eventId: `o-${i}`,
+                timestamp: 1_000_000_000_000,
+              }),
             ]);
             // Backdate to beyond threshold
-            const oldTime = new Date(Date.now() - (thresholdDays + 10) * 24 * 60 * 60 * 1000);
+            const oldTime = new Date(
+              Date.now() - (thresholdDays + 10) * 24 * 60 * 60 * 1000
+            );
             await utimes(resolve(BASE_DIR, mid), oldTime, oldTime);
           }
 
@@ -615,7 +643,11 @@ describe('Property 34: Data cleanup correctness', () => {
             const mid = uniqueMissionId(`cleanup-recent-${runIdx}-${i}`);
             recentIds.push(mid);
             await store.appendEvents(mid, [
-              makeEvent({ missionId: mid, eventId: `r-${i}`, timestamp: Date.now() }),
+              makeEvent({
+                missionId: mid,
+                eventId: `r-${i}`,
+                timestamp: Date.now(),
+              }),
             ]);
           }
 
@@ -629,9 +661,9 @@ describe('Property 34: Data cleanup correctness', () => {
           for (const mid of recentIds) {
             expect(existsSync(resolve(BASE_DIR, mid))).toBe(true);
           }
-        },
+        }
       ),
-      { numRuns: 10 },
+      { numRuns: 10 }
     );
   });
 });

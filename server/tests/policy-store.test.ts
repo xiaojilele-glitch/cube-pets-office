@@ -27,12 +27,22 @@ function createInMemoryDb() {
 
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: AgentRole[]) => { roles = r; },
+    setPermissionRoles: (r: AgentRole[]) => {
+      roles = r;
+    },
     getPermissionPolicies: () => policies,
-    setPermissionPolicies: (p: AgentPermissionPolicy[]) => { policies = p; },
+    setPermissionPolicies: (p: AgentPermissionPolicy[]) => {
+      policies = p;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
-    _reset: () => { roles = []; policies = []; templates = []; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
+    _reset: () => {
+      roles = [];
+      policies = [];
+      templates = [];
+    },
   };
 }
 
@@ -42,7 +52,9 @@ type StubDb = ReturnType<typeof createInMemoryDb>;
 
 function minimalPolicy(
   agentId: string,
-  overrides: Partial<Omit<AgentPermissionPolicy, "version" | "createdAt" | "updatedAt">> = {},
+  overrides: Partial<
+    Omit<AgentPermissionPolicy, "version" | "createdAt" | "updatedAt">
+  > = {}
 ): Omit<AgentPermissionPolicy, "version" | "createdAt" | "updatedAt"> {
   return {
     agentId,
@@ -81,7 +93,7 @@ describe("PolicyStore", () => {
     it("throws when creating a duplicate agentId policy", () => {
       store.createPolicy(minimalPolicy("agent-1"));
       expect(() => store.createPolicy(minimalPolicy("agent-1"))).toThrow(
-        'Policy for agent "agent-1" already exists',
+        'Policy for agent "agent-1" already exists'
       );
     });
 
@@ -102,7 +114,7 @@ describe("PolicyStore", () => {
         minimalPolicy("agent-2", {
           customPermissions: [custom],
           deniedPermissions: [denied],
-        }),
+        })
       );
       expect(policy.customPermissions).toHaveLength(1);
       expect(policy.deniedPermissions).toHaveLength(1);
@@ -122,7 +134,9 @@ describe("PolicyStore", () => {
     });
 
     it("returns the latest version when multiple versions exist", () => {
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["reader"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["reader"] })
+      );
       store.updatePolicy("agent-1", { assignedRoles: ["writer"] });
       const latest = store.getPolicy("agent-1");
       expect(latest!.version).toBe(2);
@@ -133,7 +147,9 @@ describe("PolicyStore", () => {
   describe("updatePolicy", () => {
     it("increments version and preserves history", () => {
       store.createPolicy(minimalPolicy("agent-1"));
-      const updated = store.updatePolicy("agent-1", { assignedRoles: ["admin"] });
+      const updated = store.updatePolicy("agent-1", {
+        assignedRoles: ["admin"],
+      });
       expect(updated.version).toBe(2);
       expect(updated.assignedRoles).toEqual(["admin"]);
       // History preserved: 2 entries in DB
@@ -142,7 +158,7 @@ describe("PolicyStore", () => {
 
     it("throws for non-existent agent", () => {
       expect(() => store.updatePolicy("nope", { assignedRoles: [] })).toThrow(
-        'Policy for agent "nope" not found',
+        'Policy for agent "nope" not found'
       );
     });
 
@@ -151,11 +167,18 @@ describe("PolicyStore", () => {
         minimalPolicy("agent-1", {
           assignedRoles: ["reader"],
           customPermissions: [
-            { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+            {
+              resourceType: "filesystem",
+              action: "read",
+              constraints: {},
+              effect: "allow",
+            },
           ],
-        }),
+        })
       );
-      const updated = store.updatePolicy("agent-1", { assignedRoles: ["writer"] });
+      const updated = store.updatePolicy("agent-1", {
+        assignedRoles: ["writer"],
+      });
       expect(updated.customPermissions).toHaveLength(1);
     });
   });
@@ -202,10 +225,17 @@ describe("PolicyStore", () => {
         roleName: "Reader",
         description: "",
         permissions: [
-          { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+          {
+            resourceType: "filesystem",
+            action: "read",
+            constraints: {},
+            effect: "allow",
+          },
         ],
       });
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["reader"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["reader"] })
+      );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toHaveLength(1);
       expect(effective[0].resourceType).toBe("filesystem");
@@ -218,7 +248,12 @@ describe("PolicyStore", () => {
         roleName: "Reader",
         description: "",
         permissions: [
-          { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+          {
+            resourceType: "filesystem",
+            action: "read",
+            constraints: {},
+            effect: "allow",
+          },
         ],
       });
       roleStore.createRole({
@@ -226,10 +261,17 @@ describe("PolicyStore", () => {
         roleName: "Net",
         description: "",
         permissions: [
-          { resourceType: "network", action: "connect", constraints: {}, effect: "allow" },
+          {
+            resourceType: "network",
+            action: "connect",
+            constraints: {},
+            effect: "allow",
+          },
         ],
       });
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["reader", "net"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["reader", "net"] })
+      );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toHaveLength(2);
     });
@@ -258,7 +300,7 @@ describe("PolicyStore", () => {
         minimalPolicy("agent-1", {
           assignedRoles: ["reader"],
           customPermissions: [customPerm],
-        }),
+        })
       );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toHaveLength(1);
@@ -271,17 +313,32 @@ describe("PolicyStore", () => {
         roleName: "Admin",
         description: "",
         permissions: [
-          { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
-          { resourceType: "network", action: "connect", constraints: {}, effect: "allow" },
+          {
+            resourceType: "filesystem",
+            action: "read",
+            constraints: {},
+            effect: "allow",
+          },
+          {
+            resourceType: "network",
+            action: "connect",
+            constraints: {},
+            effect: "allow",
+          },
         ],
       });
       store.createPolicy(
         minimalPolicy("agent-1", {
           assignedRoles: ["admin"],
           deniedPermissions: [
-            { resourceType: "network", action: "connect", constraints: {}, effect: "deny" },
+            {
+              resourceType: "network",
+              action: "connect",
+              constraints: {},
+              effect: "deny",
+            },
           ],
-        }),
+        })
       );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toHaveLength(1);
@@ -299,16 +356,23 @@ describe("PolicyStore", () => {
         minimalPolicy("agent-1", {
           customPermissions: [customPerm],
           deniedPermissions: [
-            { resourceType: "network", action: "connect", constraints: {}, effect: "deny" },
+            {
+              resourceType: "network",
+              action: "connect",
+              constraints: {},
+              effect: "deny",
+            },
           ],
-        }),
+        })
       );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toHaveLength(0);
     });
 
     it("skips non-existent roles gracefully", () => {
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["nonexistent"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["nonexistent"] })
+      );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toEqual([]);
     });
@@ -319,11 +383,23 @@ describe("PolicyStore", () => {
         roleName: "Mixed",
         description: "",
         permissions: [
-          { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
-          { resourceType: "network", action: "connect", constraints: {}, effect: "deny" },
+          {
+            resourceType: "filesystem",
+            action: "read",
+            constraints: {},
+            effect: "allow",
+          },
+          {
+            resourceType: "network",
+            action: "connect",
+            constraints: {},
+            effect: "deny",
+          },
         ],
       });
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["mixed"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["mixed"] })
+      );
       const effective = store.resolveEffectivePermissions("agent-1");
       expect(effective).toHaveLength(1);
       expect(effective[0].effect).toBe("allow");
@@ -351,7 +427,9 @@ describe("PolicyStore", () => {
 
   describe("rollbackPolicy", () => {
     it("creates a new version with content from target version", () => {
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["reader"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["reader"] })
+      );
       store.updatePolicy("agent-1", { assignedRoles: ["admin"] });
       const rolledBack = store.rollbackPolicy("agent-1", 1);
       expect(rolledBack.version).toBe(3);
@@ -361,18 +439,20 @@ describe("PolicyStore", () => {
     it("throws for non-existent version", () => {
       store.createPolicy(minimalPolicy("agent-1"));
       expect(() => store.rollbackPolicy("agent-1", 99)).toThrow(
-        'Version 99 not found for agent "agent-1"',
+        'Version 99 not found for agent "agent-1"'
       );
     });
 
     it("throws for non-existent agent", () => {
       expect(() => store.rollbackPolicy("nope", 1)).toThrow(
-        'Version 1 not found for agent "nope"',
+        'Version 1 not found for agent "nope"'
       );
     });
 
     it("preserves full history after rollback", () => {
-      store.createPolicy(minimalPolicy("agent-1", { assignedRoles: ["reader"] }));
+      store.createPolicy(
+        minimalPolicy("agent-1", { assignedRoles: ["reader"] })
+      );
       store.updatePolicy("agent-1", { assignedRoles: ["admin"] });
       store.rollbackPolicy("agent-1", 1);
       const history = store.getPolicyHistory("agent-1");
@@ -397,7 +477,7 @@ describe("PolicyStore", () => {
     // ── Generators ─────────────────────────────────────────────────────
 
     const arbResourceType: fc.Arbitrary<ResourceType> = fc.constantFrom(
-      ...RESOURCE_TYPES,
+      ...RESOURCE_TYPES
     );
 
     const arbAction: fc.Arbitrary<Action> = fc.constantFrom(...ACTIONS);
@@ -433,11 +513,36 @@ describe("PolicyStore", () => {
               roleName: "Test",
               description: "",
               permissions: [
-                { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
-                { resourceType: "network", action: "connect", constraints: {}, effect: "allow" },
-                { resourceType: "api", action: "call", constraints: {}, effect: "allow" },
-                { resourceType: "database", action: "select", constraints: {}, effect: "allow" },
-                { resourceType: "mcp_tool", action: "call", constraints: {}, effect: "allow" },
+                {
+                  resourceType: "filesystem",
+                  action: "read",
+                  constraints: {},
+                  effect: "allow",
+                },
+                {
+                  resourceType: "network",
+                  action: "connect",
+                  constraints: {},
+                  effect: "allow",
+                },
+                {
+                  resourceType: "api",
+                  action: "call",
+                  constraints: {},
+                  effect: "allow",
+                },
+                {
+                  resourceType: "database",
+                  action: "select",
+                  constraints: {},
+                  effect: "allow",
+                },
+                {
+                  resourceType: "mcp_tool",
+                  action: "call",
+                  constraints: {},
+                  effect: "allow",
+                },
               ],
             });
 
@@ -450,9 +555,10 @@ describe("PolicyStore", () => {
               expiresAt: null,
             });
 
-            const effective = localStore.resolveEffectivePermissions("test-agent");
+            const effective =
+              localStore.resolveEffectivePermissions("test-agent");
             const deniedKeys = new Set(
-              deniedPerms.map((p) => `${p.resourceType}:${p.action}`),
+              deniedPerms.map(p => `${p.resourceType}:${p.action}`)
             );
 
             // No effective permission should match a denied key
@@ -463,74 +569,71 @@ describe("PolicyStore", () => {
               }
             }
             return true;
-          },
+          }
         ),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
 
     it("custom permissions override role permissions of same resourceType+action", () => {
       fc.assert(
-        fc.property(
-          arbResourceType,
-          arbAction,
-          (resourceType, action) => {
-            const localDb = createInMemoryDb();
-            const localRoleStore = new RoleStore(localDb as any);
-            const localStore = new PolicyStore(localDb as any, localRoleStore);
+        fc.property(arbResourceType, arbAction, (resourceType, action) => {
+          const localDb = createInMemoryDb();
+          const localRoleStore = new RoleStore(localDb as any);
+          const localStore = new PolicyStore(localDb as any, localRoleStore);
 
-            // Role has a permission with "role-marker" path pattern
-            localRoleStore.createRole({
-              roleId: "base-role",
-              roleName: "Base",
-              description: "",
-              permissions: [
-                {
-                  resourceType,
-                  action,
-                  constraints: { pathPatterns: ["/role-default/**"] },
-                  effect: "allow",
-                },
-              ],
-            });
+          // Role has a permission with "role-marker" path pattern
+          localRoleStore.createRole({
+            roleId: "base-role",
+            roleName: "Base",
+            description: "",
+            permissions: [
+              {
+                resourceType,
+                action,
+                constraints: { pathPatterns: ["/role-default/**"] },
+                effect: "allow",
+              },
+            ],
+          });
 
-            // Custom permission overrides with "custom-marker" path pattern
-            const customPerm: Permission = {
-              resourceType,
-              action,
-              constraints: { pathPatterns: ["/custom-override/**"] },
-              effect: "allow",
-            };
+          // Custom permission overrides with "custom-marker" path pattern
+          const customPerm: Permission = {
+            resourceType,
+            action,
+            constraints: { pathPatterns: ["/custom-override/**"] },
+            effect: "allow",
+          };
 
-            localStore.createPolicy({
-              agentId: "test-agent",
-              assignedRoles: ["base-role"],
-              customPermissions: [customPerm],
-              deniedPermissions: [],
-              effectiveAt: new Date().toISOString(),
-              expiresAt: null,
-            });
+          localStore.createPolicy({
+            agentId: "test-agent",
+            assignedRoles: ["base-role"],
+            customPermissions: [customPerm],
+            deniedPermissions: [],
+            effectiveAt: new Date().toISOString(),
+            expiresAt: null,
+          });
 
-            const effective = localStore.resolveEffectivePermissions("test-agent");
+          const effective =
+            localStore.resolveEffectivePermissions("test-agent");
 
-            // Find the permission matching our resourceType+action
-            const matching = effective.filter(
-              (p) => p.resourceType === resourceType && p.action === action,
-            );
+          // Find the permission matching our resourceType+action
+          const matching = effective.filter(
+            p => p.resourceType === resourceType && p.action === action
+          );
 
-            // Should have exactly 1 (the custom one, not the role one)
-            if (matching.length !== 1) return false;
-            // The constraints should be from the custom permission
-            if (
-              !matching[0].constraints.pathPatterns ||
-              matching[0].constraints.pathPatterns[0] !== "/custom-override/**"
-            ) {
-              return false;
-            }
-            return true;
-          },
-        ),
-        { numRuns: 100 },
+          // Should have exactly 1 (the custom one, not the role one)
+          if (matching.length !== 1) return false;
+          // The constraints should be from the custom permission
+          if (
+            !matching[0].constraints.pathPatterns ||
+            matching[0].constraints.pathPatterns[0] !== "/custom-override/**"
+          ) {
+            return false;
+          }
+          return true;
+        }),
+        { numRuns: 100 }
       );
     });
   });

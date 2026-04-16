@@ -8,14 +8,14 @@
  * Requirements: 3.3, 3.4
  */
 
-import type { VectorRecord } from '../../../shared/rag/contracts.js';
+import type { VectorRecord } from "../../../shared/rag/contracts.js";
 import type {
   VectorStoreAdapter,
   SearchOptions,
   SearchHit,
   CollectionInfo,
   HealthStatus,
-} from './vector-store-adapter.js';
+} from "./vector-store-adapter.js";
 
 // ---------------------------------------------------------------------------
 // Qdrant REST API 响应类型
@@ -48,14 +48,14 @@ interface QdrantSearchHit {
 // ---------------------------------------------------------------------------
 
 function buildQdrantFilter(
-  filter: Record<string, any>,
+  filter: Record<string, any>
 ): Record<string, unknown> | undefined {
   const must: Record<string, unknown>[] = [];
 
   for (const [key, value] of Object.entries(filter)) {
     if (value === undefined || value === null) continue;
 
-    if (key === 'timestamp' && typeof value === 'object') {
+    if (key === "timestamp" && typeof value === "object") {
       // 时间范围过滤：{ gte?: string, lte?: string }
       const range: Record<string, unknown> = {};
       if (value.gte) range.gte = value.gte;
@@ -92,7 +92,7 @@ export class QdrantAdapter implements VectorStoreAdapter {
   private readonly timeoutMs: number;
 
   constructor(connectionUrl: string, timeoutMs = 10_000) {
-    this.baseUrl = connectionUrl.replace(/\/+$/, '');
+    this.baseUrl = connectionUrl.replace(/\/+$/, "");
     this.timeoutMs = timeoutMs;
   }
 
@@ -102,29 +102,29 @@ export class QdrantAdapter implements VectorStoreAdapter {
 
   async createCollection(name: string, dimension: number): Promise<void> {
     // 1. 创建 collection（cosine 距离）
-    await this.request('PUT', `/collections/${name}`, {
+    await this.request("PUT", `/collections/${name}`, {
       vectors: {
         size: dimension,
-        distance: 'Cosine',
+        distance: "Cosine",
       },
     });
 
     // 2. 创建过滤索引（sourceType / agentId / timestamp / codeLanguage）
-    const keywordIndexes = ['sourceType', 'agentId', 'codeLanguage'];
-    const integerIndexes = ['timestamp'];
+    const keywordIndexes = ["sourceType", "agentId", "codeLanguage"];
+    const integerIndexes = ["timestamp"];
 
     const indexPromises = [
-      ...keywordIndexes.map((field) =>
-        this.request('PUT', `/collections/${name}/index`, {
+      ...keywordIndexes.map(field =>
+        this.request("PUT", `/collections/${name}/index`, {
           field_name: field,
-          field_schema: 'keyword',
-        }),
+          field_schema: "keyword",
+        })
       ),
-      ...integerIndexes.map((field) =>
-        this.request('PUT', `/collections/${name}/index`, {
+      ...integerIndexes.map(field =>
+        this.request("PUT", `/collections/${name}/index`, {
           field_name: field,
-          field_schema: 'integer',
-        }),
+          field_schema: "integer",
+        })
       ),
     ];
 
@@ -135,22 +135,19 @@ export class QdrantAdapter implements VectorStoreAdapter {
   // upsert
   // -----------------------------------------------------------------------
 
-  async upsert(
-    collection: string,
-    records: VectorRecord[],
-  ): Promise<void> {
+  async upsert(collection: string, records: VectorRecord[]): Promise<void> {
     if (records.length === 0) return;
 
-    const points = records.map((r) => ({
+    const points = records.map(r => ({
       id: r.id,
       vector: r.vector,
       payload: {
         content: r.content,
-        ...(r.metadata as Record<string, unknown> ?? {}),
+        ...((r.metadata as Record<string, unknown>) ?? {}),
       },
     }));
 
-    await this.request('PUT', `/collections/${collection}/points`, {
+    await this.request("PUT", `/collections/${collection}/points`, {
       points,
     });
   }
@@ -162,7 +159,7 @@ export class QdrantAdapter implements VectorStoreAdapter {
   async search(
     collection: string,
     query: number[],
-    options: SearchOptions,
+    options: SearchOptions
   ): Promise<SearchHit[]> {
     const body: Record<string, unknown> = {
       vector: query,
@@ -179,12 +176,12 @@ export class QdrantAdapter implements VectorStoreAdapter {
     }
 
     const data = await this.request<{ result: QdrantSearchHit[] }>(
-      'POST',
+      "POST",
       `/collections/${collection}/points/search`,
-      body,
+      body
     );
 
-    const hits: SearchHit[] = (data.result ?? []).map((hit) => ({
+    const hits: SearchHit[] = (data.result ?? []).map(hit => ({
       id: String(hit.id),
       score: hit.score,
       metadata: (hit.payload as Record<string, any>) ?? undefined,
@@ -200,11 +197,9 @@ export class QdrantAdapter implements VectorStoreAdapter {
   async delete(collection: string, ids: string[]): Promise<void> {
     if (ids.length === 0) return;
 
-    await this.request(
-      'POST',
-      `/collections/${collection}/points/delete`,
-      { points: ids },
-    );
+    await this.request("POST", `/collections/${collection}/points/delete`, {
+      points: ids,
+    });
   }
 
   // -----------------------------------------------------------------------
@@ -213,8 +208,8 @@ export class QdrantAdapter implements VectorStoreAdapter {
 
   async collectionInfo(name: string): Promise<CollectionInfo> {
     const data = await this.request<{ result: QdrantCollectionInfo }>(
-      'GET',
-      `/collections/${name}`,
+      "GET",
+      `/collections/${name}`
     );
 
     const info = data.result;
@@ -223,7 +218,7 @@ export class QdrantAdapter implements VectorStoreAdapter {
     // 从 config 中提取维度
     let dimension = 0;
     const params = info.config?.params;
-    if (params?.vectors && typeof params.vectors === 'object') {
+    if (params?.vectors && typeof params.vectors === "object") {
       dimension = (params.vectors as { size?: number }).size ?? 0;
     }
 
@@ -231,7 +226,7 @@ export class QdrantAdapter implements VectorStoreAdapter {
       name,
       vectorCount,
       dimension,
-      status: info.status ?? 'unknown',
+      status: info.status ?? "unknown",
     };
   }
 
@@ -242,16 +237,16 @@ export class QdrantAdapter implements VectorStoreAdapter {
   async healthCheck(): Promise<HealthStatus> {
     const start = Date.now();
     try {
-      await this.request('GET', '/healthz');
+      await this.request("GET", "/healthz");
       return {
         connected: true,
-        backend: 'qdrant',
+        backend: "qdrant",
         latencyMs: Date.now() - start,
       };
     } catch {
       return {
         connected: false,
-        backend: 'qdrant',
+        backend: "qdrant",
         latencyMs: Date.now() - start,
       };
     }
@@ -264,7 +259,7 @@ export class QdrantAdapter implements VectorStoreAdapter {
   private async request<T = unknown>(
     method: string,
     path: string,
-    body?: unknown,
+    body?: unknown
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const controller = new AbortController();
@@ -273,7 +268,7 @@ export class QdrantAdapter implements VectorStoreAdapter {
     try {
       const init: RequestInit = {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         signal: controller.signal,
       };
 
@@ -284,23 +279,23 @@ export class QdrantAdapter implements VectorStoreAdapter {
       const response = await fetch(url, init);
 
       if (!response.ok) {
-        const errText = await response.text().catch(() => '');
+        const errText = await response.text().catch(() => "");
         throw new Error(
-          `Qdrant API error ${response.status} ${method} ${path}: ${errText.substring(0, 300)}`,
+          `Qdrant API error ${response.status} ${method} ${path}: ${errText.substring(0, 300)}`
         );
       }
 
       // 某些端点（如 healthz）可能返回非 JSON
-      const contentType = response.headers.get('content-type') ?? '';
-      if (contentType.includes('application/json')) {
+      const contentType = response.headers.get("content-type") ?? "";
+      if (contentType.includes("application/json")) {
         return (await response.json()) as T;
       }
 
       return {} as T;
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         throw new Error(
-          `Qdrant request timed out after ${this.timeoutMs}ms: ${method} ${path}`,
+          `Qdrant request timed out after ${this.timeoutMs}ms: ${method} ${path}`
         );
       }
       throw error;

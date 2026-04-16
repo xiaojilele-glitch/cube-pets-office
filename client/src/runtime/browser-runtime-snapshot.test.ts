@@ -40,7 +40,8 @@ vi.mock("../lib/browser-runtime-storage", () => ({
 // Mock recovery-detector module
 const mockDetectRecoveryCandidate = vi.fn();
 vi.mock("../lib/recovery-detector", () => ({
-  detectRecoveryCandidate: (...args: any[]) => mockDetectRecoveryCandidate(...args),
+  detectRecoveryCandidate: (...args: any[]) =>
+    mockDetectRecoveryCandidate(...args),
 }));
 
 // Mock shared modules used by BrowserRuntime internals
@@ -114,7 +115,7 @@ describe("browser-runtime snapshot integration", () => {
         intervalMs: 30_000,
         collectState: expect.any(Function),
         onError: expect.any(Function),
-      }),
+      })
     );
   });
 
@@ -253,7 +254,8 @@ describe("collectState function", () => {
       ],
     };
 
-    const registerProvider = (globalThis as any).__snapshotRegisterMissionProvider;
+    const registerProvider = (globalThis as any)
+      .__snapshotRegisterMissionProvider;
     expect(registerProvider).toBeDefined();
     registerProvider(() => fakeMission);
 

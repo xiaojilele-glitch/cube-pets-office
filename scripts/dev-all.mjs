@@ -8,7 +8,10 @@ const children = [];
 let shuttingDown = false;
 
 function resolveCommand(command) {
-  if (process.platform === "win32" && (command === "npm" || command === "npx")) {
+  if (
+    process.platform === "win32" &&
+    (command === "npm" || command === "npx")
+  ) {
     return `${command}.cmd`;
   }
   return command;
@@ -79,7 +82,10 @@ async function resolveDevEnvironment() {
     };
   }
 
-  const dockerHost = process.env.LOBSTER_DOCKER_HOST || process.env.DOCKER_HOST || defaultDockerHost();
+  const dockerHost =
+    process.env.LOBSTER_DOCKER_HOST ||
+    process.env.DOCKER_HOST ||
+    defaultDockerHost();
   const dockerReachable = await isDockerReachable(dockerHost);
 
   if (dockerReachable) {
@@ -142,13 +148,13 @@ function run(name, command, args = [], extraEnv = {}, options = {}) {
       : resolvedCommand,
     process.platform === "win32" ? [] : args,
     {
-    stdio: waitForReady ? ["inherit", "pipe", "pipe"] : "inherit",
-    env: {
-      ...process.env,
-      ...extraEnv,
-    },
-    shell: process.platform === "win32",
-    detached: process.platform !== "win32",
+      stdio: waitForReady ? ["inherit", "pipe", "pipe"] : "inherit",
+      env: {
+        ...process.env,
+        ...extraEnv,
+      },
+      shell: process.platform === "win32",
+      detached: process.platform !== "win32",
     }
   );
 
@@ -166,7 +172,7 @@ function run(name, command, args = [], extraEnv = {}, options = {}) {
     : Promise.resolve();
 
   if (waitForReady) {
-    child.stdout?.on("data", (chunk) => {
+    child.stdout?.on("data", chunk => {
       const text = chunk.toString();
       process.stdout.write(text);
       stdoutBuffer += text;
@@ -177,14 +183,14 @@ function run(name, command, args = [], extraEnv = {}, options = {}) {
       }
     });
 
-    child.stderr?.on("data", (chunk) => {
+    child.stderr?.on("data", chunk => {
       const text = chunk.toString();
       process.stderr.write(text);
       stderrBuffer += text;
     });
   }
 
-  child.on("error", (error) => {
+  child.on("error", error => {
     if (waitForReady && !isReady) {
       readyReject?.(error);
     }
@@ -227,7 +233,10 @@ function shutdown(exitCode = 0) {
     terminateChild(child);
   }
 
-  const exitTimer = setTimeout(() => process.exit(exitCode), process.platform === "win32" ? 1800 : 400);
+  const exitTimer = setTimeout(
+    () => process.exit(exitCode),
+    process.platform === "win32" ? 1800 : 400
+  );
   exitTimer.unref?.();
 }
 
@@ -256,7 +265,10 @@ async function main() {
       server.readyPromise,
       new Promise((_, reject) =>
         setTimeout(
-          () => reject(new Error("Timed out waiting for dev server readiness log.")),
+          () =>
+            reject(
+              new Error("Timed out waiting for dev server readiness log.")
+            ),
           180000
         )
       ),

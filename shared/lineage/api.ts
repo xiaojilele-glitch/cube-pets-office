@@ -19,28 +19,28 @@ import type {
 
 export const LINEAGE_API = {
   // 查询
-  getUpstream:       "GET    /api/lineage/:id/upstream",
-  getDownstream:     "GET    /api/lineage/:id/downstream",
-  getFullPath:       "GET    /api/lineage/path",
+  getUpstream: "GET    /api/lineage/:id/upstream",
+  getDownstream: "GET    /api/lineage/:id/downstream",
+  getFullPath: "GET    /api/lineage/path",
   getImpactAnalysis: "GET    /api/lineage/:id/impact",
-  getNode:           "GET    /api/lineage/:id",
-  queryNodes:        "GET    /api/lineage",
+  getNode: "GET    /api/lineage/:id",
+  queryNodes: "GET    /api/lineage",
 
   // 审计
-  getAuditTrail:     "GET    /api/lineage/audit/trail",
-  exportReport:      "GET    /api/lineage/audit/report/:decisionId",
-  detectAnomalies:   "GET    /api/lineage/audit/anomalies",
+  getAuditTrail: "GET    /api/lineage/audit/trail",
+  exportReport: "GET    /api/lineage/audit/report/:decisionId",
+  detectAnomalies: "GET    /api/lineage/audit/anomalies",
 
   // 导入导出
-  exportLineage:     "GET    /api/lineage/export",
-  importLineage:     "POST   /api/lineage/import",
+  exportLineage: "GET    /api/lineage/export",
+  importLineage: "POST   /api/lineage/import",
 
   // 变更检测
-  detectChanges:     "POST   /api/lineage/changes/detect",
+  detectChanges: "POST   /api/lineage/changes/detect",
   getQualityMetrics: "GET    /api/lineage/quality/:dataId",
 
   // 统计
-  getStats:          "GET    /api/lineage/stats",
+  getStats: "GET    /api/lineage/stats",
 } as const;
 
 // ─── 通用错误响应 ──────────────────────────────────────────────────────────

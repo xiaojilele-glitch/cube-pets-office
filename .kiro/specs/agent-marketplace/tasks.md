@@ -13,10 +13,10 @@
     - _Requirements: 1.1, 1.2_
   - [x] 1.2 在 shared/runtime-agent.ts 的 RuntimeAgentConfig 中新增 isGuest 可选布尔字段
     - _Requirements: 1.3_
-  - [x] 1.3 新增 shared/guest-agent-utils.ts，实现 generateGuestId() 函数（返回 "guest_" + 8位随机hex）和 isGuestId(id) 判断函数，以及 sanitizeGuestConfig(config) 函数（将 apiKey 替换为 "***"）
+  - [x] 1.3 新增 shared/guest-agent-utils.ts，实现 generateGuestId() 函数（返回 "guest\_" + 8位随机hex）和 isGuestId(id) 判断函数，以及 sanitizeGuestConfig(config) 函数（将 apiKey 替换为 "\*\*\*"）
     - _Requirements: 1.4, 7.3_
   - [x] 1.4 为 guest-agent-utils 编写属性测试
-    - **Property 1: 访客代理创建返回 guest_ 前缀 ID**
+    - **Property 1: 访客代理创建返回 guest\_ 前缀 ID**
     - **Property 10: GuestAgentConfig 序列化往返一致性**
     - **Property 11: API 响应隐藏 apiKey**
     - **Validates: Requirements 1.4, 2.1, 7.1, 7.2, 7.3**
@@ -89,7 +89,7 @@
   - 确保所有测试通过，如有问题请询问用户。
 
 - [x] 9. 实现 AccessGuard 和记忆隔离
-  - [x] 9.1 验证现有 AccessGuard 对 guest_ 前缀 ID 的路径隔离
+  - [x] 9.1 验证现有 AccessGuard 对 guest\_ 前缀 ID 的路径隔离
     - 确认 resolveAgentWorkspacePath 对 guest_xxx ID 正确隔离到 data/agents/guest_xxx/
     - 确认路径遍历攻击（"../other_agent/"）被阻止
     - _Requirements: 5.6_
@@ -107,7 +107,7 @@
     - 为访客代理生成 SceneAgentConfig，包含 Guest Pod 位置
     - _Requirements: 4.1_
   - [x] 10.2 扩展 client/src/components/three/PetWorkers.tsx
-    - 在 createDynamicSceneData 中处理 GuestAgentNode（检测 isGuest 或 guest_ 前缀）
+    - 在 createDynamicSceneData 中处理 GuestAgentNode（检测 isGuest 或 guest\_ 前缀）
     - 为访客代理分配 Guest Pod 位置（场景底部区域）
     - 名牌 HTML 中添加 "Guest" 徽章样式
     - _Requirements: 4.1, 4.2, 4.5_

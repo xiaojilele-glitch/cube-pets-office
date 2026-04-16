@@ -1,7 +1,7 @@
 /*
  * @Author: wangchunji
  * @Date: 2026-04-01 10:14:21
- * @Description: 
+ * @Description:
  * @LastEditTime: 2026-04-01 10:25:10
  * @LastEditors: wangchunji
  */
@@ -22,9 +22,7 @@ import type {
   WorkflowStage,
   FinalWorkflowReportRecord,
 } from "../workflow-runtime.js";
-import type {
-  WorkflowOrganizationSnapshot,
-} from "../organization-schema.js";
+import type { WorkflowOrganizationSnapshot } from "../organization-schema.js";
 
 // ---------------------------------------------------------------------------
 // 时间线事件：回放引擎按此顺序触发 UI 更新

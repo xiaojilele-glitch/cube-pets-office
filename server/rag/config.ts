@@ -8,7 +8,7 @@
  * 分块配置通过 JSON 环境变量 RAG_CHUNKING_OVERRIDES 传入。
  */
 
-import type { SourceType } from '../../shared/rag/contracts.js';
+import type { SourceType } from "../../shared/rag/contracts.js";
 
 // ---------------------------------------------------------------------------
 // RAGConfig 接口（与设计文档 "配置模型（rag.* 配置项）" 一致）
@@ -25,7 +25,7 @@ export interface ChunkingConfig {
 export interface RAGConfig {
   enabled: boolean;
   embedding: {
-    provider: 'openai' | 'local';
+    provider: "openai" | "local";
     model: string;
     dimension: number;
     batchSize: number;
@@ -33,7 +33,7 @@ export interface RAGConfig {
     baseUrl?: string;
   };
   vectorStore: {
-    backend: 'qdrant' | 'milvus' | 'pgvector';
+    backend: "qdrant" | "milvus" | "pgvector";
     connectionUrl: string;
   };
   chunking: {
@@ -42,13 +42,13 @@ export interface RAGConfig {
   retrieval: {
     defaultTopK: number;
     defaultMinScore: number;
-    defaultMode: 'semantic' | 'keyword' | 'hybrid';
+    defaultMode: "semantic" | "keyword" | "hybrid";
     contextWindowChunks: number;
   };
   augmentation: {
-    mode: 'auto' | 'on_demand' | 'disabled';
+    mode: "auto" | "on_demand" | "disabled";
     tokenBudget: number;
-    reranker: 'noop' | 'llm' | 'cross_encoder';
+    reranker: "noop" | "llm" | "cross_encoder";
   };
   lifecycle: {
     archiveAfterDays: number;
@@ -70,8 +70,8 @@ export interface RAGConfig {
 function readBoolean(value: string | undefined, fallback: boolean): boolean {
   if (!value) return fallback;
   const v = value.trim().toLowerCase();
-  if (['1', 'true', 'yes', 'on'].includes(v)) return true;
-  if (['0', 'false', 'no', 'off'].includes(v)) return false;
+  if (["1", "true", "yes", "on"].includes(v)) return true;
+  if (["0", "false", "no", "off"].includes(v)) return false;
   return fallback;
 }
 
@@ -84,7 +84,7 @@ function readNumber(value: string | undefined, fallback: number): number {
 function readEnum<T extends string>(
   value: string | undefined,
   allowed: readonly T[],
-  fallback: T,
+  fallback: T
 ): T {
   if (!value?.trim()) return fallback;
   const v = value.trim().toLowerCase() as T;
@@ -104,43 +104,43 @@ function readJson<T>(value: string | undefined): T | undefined {
 // 默认分块配置（按 sourceType）
 // ---------------------------------------------------------------------------
 
-const DEFAULT_CHUNKING: RAGConfig['chunking'] = {
+const DEFAULT_CHUNKING: RAGConfig["chunking"] = {
   code_snippet: {
-    strategy: 'syntax_aware',
+    strategy: "syntax_aware",
     maxTokens: 1024,
     minTokens: 64,
   },
   conversation: {
-    strategy: 'conversation_turn',
+    strategy: "conversation_turn",
     maxTokens: 1024,
     minTokens: 64,
   },
   document: {
-    strategy: 'semantic_paragraph',
+    strategy: "semantic_paragraph",
     maxTokens: 1024,
     minTokens: 64,
   },
   task_result: {
-    strategy: 'sliding_window',
+    strategy: "sliding_window",
     maxTokens: 1024,
     minTokens: 64,
     windowSize: 512,
     overlap: 64,
   },
   mission_log: {
-    strategy: 'sliding_window',
+    strategy: "sliding_window",
     maxTokens: 1024,
     minTokens: 64,
     windowSize: 512,
     overlap: 64,
   },
   architecture_decision: {
-    strategy: 'passthrough',
+    strategy: "passthrough",
     maxTokens: 1024,
     minTokens: 64,
   },
   bug_report: {
-    strategy: 'sliding_window',
+    strategy: "sliding_window",
     maxTokens: 1024,
     minTokens: 64,
     windowSize: 512,
@@ -160,14 +160,14 @@ let _cachedConfig: RAGConfig | null = null;
  */
 export function getRAGConfig(
   env: NodeJS.ProcessEnv = process.env,
-  { noCache = false }: { noCache?: boolean } = {},
+  { noCache = false }: { noCache?: boolean } = {}
 ): RAGConfig {
   if (_cachedConfig && !noCache) return _cachedConfig;
 
   // --- chunking: 合并默认 + 环境变量覆盖 ---
   const chunkingOverrides =
-    readJson<Partial<RAGConfig['chunking']>>(env.RAG_CHUNKING_OVERRIDES) ?? {};
-  const mergedChunking: RAGConfig['chunking'] = { ...DEFAULT_CHUNKING };
+    readJson<Partial<RAGConfig["chunking"]>>(env.RAG_CHUNKING_OVERRIDES) ?? {};
+  const mergedChunking: RAGConfig["chunking"] = { ...DEFAULT_CHUNKING };
   for (const [key, override] of Object.entries(chunkingOverrides)) {
     const sourceType = key as SourceType;
     const base = mergedChunking[sourceType];
@@ -179,27 +179,38 @@ export function getRAGConfig(
   }
 
   // --- quota: 从 JSON 环境变量读取 ---
-  const quota = readJson<RAGConfig['quota']>(env.RAG_QUOTA) ?? {};
+  const quota = readJson<RAGConfig["quota"]>(env.RAG_QUOTA) ?? {};
 
   const config: RAGConfig = {
     enabled: readBoolean(env.RAG_ENABLED, false),
 
     embedding: {
-      provider: readEnum(env.RAG_EMBEDDING_PROVIDER, ['openai', 'local'] as const, 'openai'),
-      model: env.RAG_EMBEDDING_MODEL?.trim() || 'text-embedding-3-small',
+      provider: readEnum(
+        env.RAG_EMBEDDING_PROVIDER,
+        ["openai", "local"] as const,
+        "openai"
+      ),
+      model: env.RAG_EMBEDDING_MODEL?.trim() || "text-embedding-3-small",
       dimension: readNumber(env.RAG_EMBEDDING_DIMENSION, 1536),
       batchSize: readNumber(env.RAG_EMBEDDING_BATCH_SIZE, 64),
-      apiKey: env.RAG_EMBEDDING_API_KEY?.trim() || env.OPENAI_API_KEY?.trim() || undefined,
-      baseUrl: env.RAG_EMBEDDING_BASE_URL?.trim() || env.OPENAI_BASE_URL?.trim() || undefined,
+      apiKey:
+        env.RAG_EMBEDDING_API_KEY?.trim() ||
+        env.OPENAI_API_KEY?.trim() ||
+        undefined,
+      baseUrl:
+        env.RAG_EMBEDDING_BASE_URL?.trim() ||
+        env.OPENAI_BASE_URL?.trim() ||
+        undefined,
     },
 
     vectorStore: {
       backend: readEnum(
         env.RAG_VECTOR_STORE_BACKEND,
-        ['qdrant', 'milvus', 'pgvector'] as const,
-        'qdrant',
+        ["qdrant", "milvus", "pgvector"] as const,
+        "qdrant"
       ),
-      connectionUrl: env.RAG_VECTOR_STORE_URL?.trim() || 'http://localhost:6333',
+      connectionUrl:
+        env.RAG_VECTOR_STORE_URL?.trim() || "http://localhost:6333",
     },
 
     chunking: mergedChunking,
@@ -209,8 +220,8 @@ export function getRAGConfig(
       defaultMinScore: readNumber(env.RAG_RETRIEVAL_MIN_SCORE, 0.5),
       defaultMode: readEnum(
         env.RAG_RETRIEVAL_MODE,
-        ['semantic', 'keyword', 'hybrid'] as const,
-        'hybrid',
+        ["semantic", "keyword", "hybrid"] as const,
+        "hybrid"
       ),
       contextWindowChunks: readNumber(env.RAG_RETRIEVAL_CONTEXT_WINDOW, 1),
     },
@@ -218,14 +229,14 @@ export function getRAGConfig(
     augmentation: {
       mode: readEnum(
         env.RAG_AUGMENTATION_MODE,
-        ['auto', 'on_demand', 'disabled'] as const,
-        'auto',
+        ["auto", "on_demand", "disabled"] as const,
+        "auto"
       ),
       tokenBudget: readNumber(env.RAG_AUGMENTATION_TOKEN_BUDGET, 4096),
       reranker: readEnum(
         env.RAG_AUGMENTATION_RERANKER,
-        ['noop', 'llm', 'cross_encoder'] as const,
-        'noop',
+        ["noop", "llm", "cross_encoder"] as const,
+        "noop"
       ),
     },
 

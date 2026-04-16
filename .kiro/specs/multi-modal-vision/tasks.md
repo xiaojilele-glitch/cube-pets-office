@@ -20,9 +20,9 @@
     - **Validates: Requirements 3.4**
 
 - [x] 2. 实现 Vision Provider 配置与调用
-  - [x] 2.1 新增 Vision 配置读取函数 getVisionConfig()，实现 VISION_LLM_* → FALLBACK_LLM_* → LLM_* 的 fallback 链
+  - [x] 2.1 新增 Vision 配置读取函数 getVisionConfig()，实现 VISION*LLM*_ → FALLBACK*LLM*_ → LLM\_\* 的 fallback 链
     - 新建 `server/core/vision-provider.ts`
-    - 从 `server/core/ai-config.ts` 读取基础配置，叠加 VISION_LLM_* 环境变量
+    - 从 `server/core/ai-config.ts` 读取基础配置，叠加 VISION*LLM*\* 环境变量
     - 导出 VisionProviderConfig 接口和 getVisionConfig 函数
     - _Requirements: 2.1, 2.2, 7.1_
   - [x] 2.2 编写 Vision 配置解析与 Fallback 链属性测试
@@ -128,7 +128,7 @@
     - _Requirements: 6.1, 6.3_
 
 - [x] 11. 环境变量与文档更新
-  - [x] 11.1 在 .env.example 中新增 VISION_LLM_* 系列环境变量模板和注释
+  - [x] 11.1 在 .env.example 中新增 VISION*LLM*\* 系列环境变量模板和注释
     - 修改 `.env.example`
     - 新增 VISION_LLM_API_KEY、VISION_LLM_BASE_URL、VISION_LLM_MODEL、VISION_LLM_WIRE_API、VISION_LLM_MAX_TOKENS、VISION_LLM_DETAIL、VISION_LLM_TIMEOUT_MS
     - _Requirements: 2.1_

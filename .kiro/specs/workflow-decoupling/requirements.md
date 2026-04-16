@@ -18,7 +18,7 @@
 - **MissionMessageLogEntry**: Mission 原生的消息日志条目，包含发送者、内容、时间戳、阶段
 - **useMissionNativeData**: 特性开关常量，控制 tasks-store 使用 Mission 原生数据源还是 Workflow 补充层
 - **mission_event**: Mission 域的 Socket.IO 事件名（shared/mission/socket.ts）
-- **workflow_***: Workflow 域的 Socket.IO 事件前缀（workflow-store 监听的事件族）
+- **workflow\_\***: Workflow 域的 Socket.IO 事件前缀（workflow-store 监听的事件族）
 
 ## 需求
 
@@ -30,7 +30,7 @@
 
 1. THE Inventory SHALL list every import statement in tasks-store.ts that references workflow-store or workflow-related types, with line numbers and the specific data fields being accessed
 2. THE Inventory SHALL list every reference in TaskDetailView.tsx, TaskPlanetInterior.tsx, and task-helpers.ts that reads data from workflow sources (WorkflowRecord, WorkflowInfo, workflow-store)
-3. THE Inventory SHALL list every Socket event listener in tasks-related code that listens to workflow_* events (as opposed to mission_event)
+3. THE Inventory SHALL list every Socket event listener in tasks-related code that listens to workflow\_\* events (as opposed to mission_event)
 4. THE Inventory SHALL list every cross-reference in shared/mission/ types that imports from or depends on shared/workflow-runtime.ts or shared/workflow-kernel.ts types
 5. FOR EACH dependency point, THE Inventory SHALL document: the file and line, what data field is being accessed, what the data is used for in the UI, and what the mission-native replacement would be
 6. THE Inventory SHALL be stored as a markdown file at `.kiro/specs/workflow-decoupling/inventory.md`
@@ -58,7 +58,7 @@
 1. THE tasks-store SHALL introduce a feature flag `useMissionNativeData` (default: false initially, flipped to true after validation)
 2. WHEN useMissionNativeData is true, THE tasks-store SHALL derive ALL MissionTaskSummary fields exclusively from MissionRecord, without reading from workflow-store
 3. WHEN useMissionNativeData is true, THE tasks-store SHALL derive ALL MissionTaskDetail fields exclusively from MissionRecord and its enriched fields, without reading from workflow-store
-4. WHEN useMissionNativeData is true, THE tasks-store SHALL NOT listen to any workflow_* Socket events for task-related data
+4. WHEN useMissionNativeData is true, THE tasks-store SHALL NOT listen to any workflow\_\* Socket events for task-related data
 5. WHEN useMissionNativeData is false, THE tasks-store SHALL continue using the existing workflow supplementary layer (backward compatible fallback)
 6. THE feature flag SHALL be configurable via a constant in tasks-store.ts (not a runtime toggle), so it can be flipped in code review
 7. FOR EACH data field that switches source, THE output SHALL be equivalent — the UI should render identically regardless of which data source is active
@@ -72,7 +72,7 @@
 1. AFTER useMissionNativeData is permanently set to true, THE tasks-store SHALL remove all imports from workflow-store
 2. THE tasks-store SHALL remove all workflow supplementary layer functions (any function that reads from WorkflowRecord or WorkflowInfo to populate mission UI fields)
 3. THE tasks-store SHALL remove the useMissionNativeData feature flag itself
-4. THE tasks-related components SHALL NOT contain any references to workflow_* Socket events
+4. THE tasks-related components SHALL NOT contain any references to workflow\_\* Socket events
 5. THE shared/mission/ types SHALL NOT import from shared/workflow-runtime.ts or shared/workflow-kernel.ts (mission types should be self-contained)
 6. AFTER cleanup, THE tasks-store.ts file size SHALL be reduced by at least 30% from its current 2800+ lines
 
@@ -83,7 +83,7 @@
 #### 验收标准
 
 1. WHEN grep is run for "workflow-store" in tasks-store.ts, THE result SHALL return zero matches
-2. WHEN grep is run for "workflow_" event names in client/src/components/tasks/, THE result SHALL return zero matches
+2. WHEN grep is run for "workflow\_" event names in client/src/components/tasks/, THE result SHALL return zero matches
 3. WHEN grep is run for "WorkflowRecord" or "WorkflowInfo" in client/src/lib/tasks-store.ts, THE result SHALL return zero matches
 4. THE WorkflowPanel.tsx and workflow-store.ts SHALL continue to function independently for the workflow view (they are NOT being removed)
 5. ALL existing tests in server/tests/ SHALL continue to pass

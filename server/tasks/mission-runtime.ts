@@ -4,7 +4,7 @@ import {
   type MissionSocketPayload,
   type MissionSocketRecordEvent,
   type MissionSocketDecisionSubmittedEvent,
-} from '../../shared/mission/socket.js';
+} from "../../shared/mission/socket.js";
 import type {
   MissionArtifact,
   MissionDecision,
@@ -16,24 +16,26 @@ import type {
   MissionInstanceContext,
   MissionRecord,
   MissionStage,
-} from '../../shared/mission/contracts.js';
-import { getSocketIO } from '../core/socket.js';
-import { DatabaseMissionSnapshotStore } from '../db/mission-storage.js';
-import { MISSION_CORE_STAGE_BLUEPRINT } from '../../shared/mission/contracts.js';
+} from "../../shared/mission/contracts.js";
+import { getSocketIO } from "../core/socket.js";
+import { DatabaseMissionSnapshotStore } from "../db/mission-storage.js";
+import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
 import {
   MissionStore,
   type CancelMissionInput,
   type CreateMissionInput,
   type PatchMissionExecutionInput,
-} from './mission-store.js';
+} from "./mission-store.js";
 
 // ─── Lineage Collector Integration (module-level, opt-in) ──────────────────
 
-import type { LineageCollectorLike } from '../../shared/runtime-agent.js';
+import type { LineageCollectorLike } from "../../shared/runtime-agent.js";
 
 let _missionLineageCollector: LineageCollectorLike | null = null;
 
-export function setMissionLineageCollector(collector: LineageCollectorLike | null): void {
+export function setMissionLineageCollector(
+  collector: LineageCollectorLike | null
+): void {
   _missionLineageCollector = collector;
 }
 
@@ -49,11 +51,11 @@ export interface MissionRuntimeOptions {
 
 function resolveSocketEventType(
   task: MissionRecord
-): MissionSocketRecordEvent['type'] {
-  if (task.status === 'waiting') return MISSION_SOCKET_TYPES.recordWaiting;
-  if (task.status === 'done') return MISSION_SOCKET_TYPES.recordCompleted;
-  if (task.status === 'failed') return MISSION_SOCKET_TYPES.recordFailed;
-  if (task.status === 'cancelled') return MISSION_SOCKET_TYPES.recordCancelled;
+): MissionSocketRecordEvent["type"] {
+  if (task.status === "waiting") return MISSION_SOCKET_TYPES.recordWaiting;
+  if (task.status === "done") return MISSION_SOCKET_TYPES.recordCompleted;
+  if (task.status === "failed") return MISSION_SOCKET_TYPES.recordFailed;
+  if (task.status === "cancelled") return MISSION_SOCKET_TYPES.recordCancelled;
   return MISSION_SOCKET_TYPES.recordUpdated;
 }
 
@@ -62,8 +64,7 @@ export class MissionRuntime {
 
   constructor(options: MissionRuntimeOptions = {}) {
     this.store =
-      options.store ??
-      new MissionStore(new DatabaseMissionSnapshotStore());
+      options.store ?? new MissionStore(new DatabaseMissionSnapshotStore());
 
     if (options.autoRecover) {
       this.recoverInterruptedMissions(options.recoveryMessage);
@@ -98,7 +99,7 @@ export class MissionRuntime {
     topicId?: string
   ): MissionRecord {
     return this.createTask({
-      kind: 'chat',
+      kind: "chat",
       title,
       sourceText,
       topicId,
@@ -133,13 +134,22 @@ export class MissionRuntime {
    */
   patchEnrichment(
     id: string,
-    enrichment: Partial<Pick<MissionRecord, 'organization' | 'workPackages' | 'messageLog' | 'agentCrew'>>,
+    enrichment: Partial<
+      Pick<
+        MissionRecord,
+        "organization" | "workPackages" | "messageLog" | "agentCrew"
+      >
+    >
   ): MissionRecord | undefined {
-    const task = this.store.update(id, (record) => {
-      if (enrichment.organization !== undefined) record.organization = enrichment.organization;
-      if (enrichment.workPackages !== undefined) record.workPackages = enrichment.workPackages;
-      if (enrichment.messageLog !== undefined) record.messageLog = enrichment.messageLog;
-      if (enrichment.agentCrew !== undefined) record.agentCrew = enrichment.agentCrew;
+    const task = this.store.update(id, record => {
+      if (enrichment.organization !== undefined)
+        record.organization = enrichment.organization;
+      if (enrichment.workPackages !== undefined)
+        record.workPackages = enrichment.workPackages;
+      if (enrichment.messageLog !== undefined)
+        record.messageLog = enrichment.messageLog;
+      if (enrichment.agentCrew !== undefined)
+        record.agentCrew = enrichment.agentCrew;
     });
     this.emitMissionUpdate(task);
     return task;
@@ -150,7 +160,7 @@ export class MissionRuntime {
     stageKey?: string,
     detail?: string,
     progress?: number,
-    source: MissionEvent['source'] = 'mission-core'
+    source: MissionEvent["source"] = "mission-core"
   ): MissionRecord | undefined {
     const task = this.store.markRunning(id, stageKey, detail, progress, source);
     this.emitMissionUpdate(task);
@@ -162,7 +172,7 @@ export class MissionRuntime {
     stageKey: string,
     patch: Partial<MissionStage>,
     progress?: number,
-    source: MissionEvent['source'] = 'mission-core'
+    source: MissionEvent["source"] = "mission-core"
   ): MissionRecord | undefined {
     const task = this.store.updateStage(id, stageKey, patch, progress, source);
     this.emitMissionUpdate(task);
@@ -172,9 +182,9 @@ export class MissionRuntime {
   logMission(
     id: string,
     message: string,
-    level: MissionEventLevel = 'info',
+    level: MissionEventLevel = "info",
     progress?: number,
-    source: MissionEvent['source'] = 'mission-core'
+    source: MissionEvent["source"] = "mission-core"
   ): MissionRecord | undefined {
     const task = this.store.log(id, message, level, progress, source);
     this.emitMissionUpdate(task);
@@ -187,7 +197,7 @@ export class MissionRuntime {
     detail?: string,
     progress?: number,
     decision?: MissionDecision,
-    source: MissionEvent['source'] = 'mission-core'
+    source: MissionEvent["source"] = "mission-core"
   ): MissionRecord | undefined {
     const task = this.store.markWaiting(
       id,
@@ -204,7 +214,7 @@ export class MissionRuntime {
   finishMission(
     id: string,
     summary?: string,
-    source: MissionEvent['source'] = 'mission-core'
+    source: MissionEvent["source"] = "mission-core"
   ): MissionRecord | undefined {
     const task = this.store.markDone(id, summary, source);
     this.emitMissionUpdate(task);
@@ -217,7 +227,7 @@ export class MissionRuntime {
           decisionId: id,
           agentId: undefined,
           inputLineageIds: [],
-          result: 'done',
+          result: "done",
           context: { missionId: id },
           metadata: { summary, source },
         });
@@ -232,7 +242,7 @@ export class MissionRuntime {
   failMission(
     id: string,
     message: string,
-    source: MissionEvent['source'] = 'mission-core'
+    source: MissionEvent["source"] = "mission-core"
   ): MissionRecord | undefined {
     const task = this.store.markFailed(id, message, source);
     this.emitMissionUpdate(task);
@@ -241,7 +251,7 @@ export class MissionRuntime {
 
   updateMission(
     id: string,
-    updater: (task: MissionRecord) => void,
+    updater: (task: MissionRecord) => void
   ): MissionRecord | undefined {
     const task = this.store.update(id, updater);
     this.emitMissionUpdate(task);
@@ -260,7 +270,7 @@ export class MissionRuntime {
   resumeMissionFromDecision(
     id: string,
     submission: { detail: string; progress?: number },
-    source: MissionEvent['source'] = 'user'
+    source: MissionEvent["source"] = "user"
   ): MissionRecord | undefined {
     const task = this.store.resolveWaiting(id, submission, source);
     this.emitMissionUpdate(task);
@@ -268,7 +278,7 @@ export class MissionRuntime {
   }
 
   recoverInterruptedMissions(
-    message = 'Server restarted before the mission completed.'
+    message = "Server restarted before the mission completed."
   ): MissionRecord[] {
     const recovered = this.store.recoverInterrupted({ message });
     for (const task of recovered) {
@@ -280,7 +290,7 @@ export class MissionRuntime {
   emitDecisionSubmitted(
     task: MissionRecord,
     historyEntry: DecisionHistoryEntry,
-    resolved: MissionDecisionResolved,
+    resolved: MissionDecisionResolved
   ): void {
     const io = getSocketIO();
     if (!io) return;

@@ -3,6 +3,7 @@
 ## 简介
 
 当前系统存在两条断裂的执行管线：
+
 1. **WorkflowEngine 管线**：用户提交 Mission → WorkflowEngine 编排 Agent 协作 → LLM 生成结果 → Mission 完成
 2. **Docker 执行管线**：ExecutionPlanBuilder 构建计划 → ExecutorClient 分发到 lobster-executor → DockerRunner 创建容器 → 容器执行 → 结果回收
 

@@ -2,7 +2,7 @@ import type {
   AutonomyConfig,
   CompetitionCost,
   CompetitionSession,
-} from '../../shared/autonomy-types.js';
+} from "../../shared/autonomy-types.js";
 
 // ─── Local Types ─────────────────────────────────────────────
 
@@ -44,11 +44,11 @@ export class CostMonitor {
    */
   checkCompetitionBudget(
     estimatedTokens: number,
-    missionRemainingBudget: number,
+    missionRemainingBudget: number
   ): { approved: boolean; reason?: string } {
     const limit = missionRemainingBudget * this.config.competition.budgetRatio;
     if (estimatedTokens > limit) {
-      return { approved: false, reason: 'budget exceeded' };
+      return { approved: false, reason: "budget exceeded" };
     }
     return { approved: true };
   }
@@ -62,13 +62,13 @@ export class CostMonitor {
   recordCompetitionCost(session: CompetitionSession): CompetitionCost {
     const totalTokens = session.contestants.reduce(
       (sum, c) => sum + c.tokenConsumed,
-      0,
+      0
     );
 
     // Use the winner's quality score from judging result, default to 0.5
     const winnerQuality =
       session.judgingResult?.scores.find(
-        (s) => s.agentId === session.judgingResult?.winnerId,
+        s => s.agentId === session.judgingResult?.winnerId
       )?.totalWeighted ?? 0.5;
 
     // Estimate what a single normal execution would have cost
@@ -77,12 +77,15 @@ export class CostMonitor {
         ? Math.round(totalTokens / session.contestants.length)
         : totalTokens;
 
-    const roi = this.computeROI(winnerQuality, estimatedNormalTokens > 0 ? 1.0 : 0);
+    const roi = this.computeROI(
+      winnerQuality,
+      estimatedNormalTokens > 0 ? 1.0 : 0
+    );
 
     if (roi < 1.0) {
       console.warn(
         `[COMPETITION_LOW_ROI] session=${session.id} roi=${roi.toFixed(3)} — ` +
-          'Competition ROI is below 1.0.',
+          "Competition ROI is below 1.0."
       );
     }
 

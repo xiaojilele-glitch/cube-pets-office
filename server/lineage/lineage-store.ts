@@ -81,7 +81,7 @@ export class JsonLineageStorage implements LineageStorageAdapter {
 
   async batchInsertNodes(nodes: DataLineageNode[]): Promise<void> {
     if (nodes.length === 0) return;
-    const lines = nodes.map((n) => JSON.stringify(n)).join("\n") + "\n";
+    const lines = nodes.map(n => JSON.stringify(n)).join("\n") + "\n";
     fs.appendFileSync(this.nodesPath, lines, "utf-8");
     for (const node of nodes) {
       this.indexNode(node);
@@ -90,7 +90,7 @@ export class JsonLineageStorage implements LineageStorageAdapter {
 
   async batchInsertEdges(edges: LineageEdge[]): Promise<void> {
     if (edges.length === 0) return;
-    const lines = edges.map((e) => JSON.stringify(e)).join("\n") + "\n";
+    const lines = edges.map(e => JSON.stringify(e)).join("\n") + "\n";
     fs.appendFileSync(this.edgesPath, lines, "utf-8");
     for (const edge of edges) {
       this.edges.push(edge);
@@ -114,20 +114,37 @@ export class JsonLineageStorage implements LineageStorageAdapter {
       candidates = this.byAgent.get(filter.agentId) ?? [];
     } else if (filter.sessionId) {
       candidates = this.bySession.get(filter.sessionId) ?? [];
-    } else if (filter.fromTimestamp !== undefined || filter.toTimestamp !== undefined) {
-      candidates = this.rangeByTimestamp(filter.fromTimestamp, filter.toTimestamp);
+    } else if (
+      filter.fromTimestamp !== undefined ||
+      filter.toTimestamp !== undefined
+    ) {
+      candidates = this.rangeByTimestamp(
+        filter.fromTimestamp,
+        filter.toTimestamp
+      );
     } else {
       candidates = this.byTimestamp;
     }
 
-    let results = candidates.filter((node) => {
+    let results = candidates.filter(node => {
       if (filter.type && node.type !== filter.type) return false;
       if (filter.agentId && node.agentId !== filter.agentId) return false;
-      if (filter.sessionId && node.context.sessionId !== filter.sessionId) return false;
-      if (filter.missionId && node.context.missionId !== filter.missionId) return false;
-      if (filter.decisionId && node.decisionId !== filter.decisionId) return false;
-      if (filter.fromTimestamp !== undefined && node.timestamp < filter.fromTimestamp) return false;
-      if (filter.toTimestamp !== undefined && node.timestamp > filter.toTimestamp) return false;
+      if (filter.sessionId && node.context.sessionId !== filter.sessionId)
+        return false;
+      if (filter.missionId && node.context.missionId !== filter.missionId)
+        return false;
+      if (filter.decisionId && node.decisionId !== filter.decisionId)
+        return false;
+      if (
+        filter.fromTimestamp !== undefined &&
+        node.timestamp < filter.fromTimestamp
+      )
+        return false;
+      if (
+        filter.toTimestamp !== undefined &&
+        node.timestamp > filter.toTimestamp
+      )
+        return false;
       return true;
     });
 
@@ -139,12 +156,20 @@ export class JsonLineageStorage implements LineageStorageAdapter {
   }
 
   async queryEdges(filter: LineageEdgeFilter): Promise<LineageEdge[]> {
-    let results = this.edges.filter((edge) => {
+    let results = this.edges.filter(edge => {
       if (filter.fromId && edge.fromId !== filter.fromId) return false;
       if (filter.toId && edge.toId !== filter.toId) return false;
       if (filter.type && edge.type !== filter.type) return false;
-      if (filter.fromTimestamp !== undefined && edge.timestamp < filter.fromTimestamp) return false;
-      if (filter.toTimestamp !== undefined && edge.timestamp > filter.toTimestamp) return false;
+      if (
+        filter.fromTimestamp !== undefined &&
+        edge.timestamp < filter.fromTimestamp
+      )
+        return false;
+      if (
+        filter.toTimestamp !== undefined &&
+        edge.timestamp > filter.toTimestamp
+      )
+        return false;
       return true;
     });
 
@@ -176,7 +201,7 @@ export class JsonLineageStorage implements LineageStorageAdapter {
       if (node.agentId) {
         const arr = this.byAgent.get(node.agentId);
         if (arr) {
-          const filtered = arr.filter((n) => n.lineageId !== id);
+          const filtered = arr.filter(n => n.lineageId !== id);
           if (filtered.length === 0) this.byAgent.delete(node.agentId);
           else this.byAgent.set(node.agentId, filtered);
         }
@@ -185,8 +210,9 @@ export class JsonLineageStorage implements LineageStorageAdapter {
       if (node.context.sessionId) {
         const arr = this.bySession.get(node.context.sessionId);
         if (arr) {
-          const filtered = arr.filter((n) => n.lineageId !== id);
-          if (filtered.length === 0) this.bySession.delete(node.context.sessionId);
+          const filtered = arr.filter(n => n.lineageId !== id);
+          if (filtered.length === 0)
+            this.bySession.delete(node.context.sessionId);
           else this.bySession.set(node.context.sessionId, filtered);
         }
       }
@@ -197,11 +223,13 @@ export class JsonLineageStorage implements LineageStorageAdapter {
     }
 
     // 重建 byTimestamp
-    this.byTimestamp = this.byTimestamp.filter((n) => n.timestamp >= beforeTimestamp);
+    this.byTimestamp = this.byTimestamp.filter(
+      n => n.timestamp >= beforeTimestamp
+    );
 
     // 移除关联的边
     this.edges = this.edges.filter(
-      (e) => !toRemove.includes(e.fromId) && !toRemove.includes(e.toId),
+      e => !toRemove.includes(e.fromId) && !toRemove.includes(e.toId)
     );
 
     // 重写 JSONL 文件
@@ -222,7 +250,7 @@ export class JsonLineageStorage implements LineageStorageAdapter {
     let oldest = Infinity;
     let newest = 0;
 
-    this.byId.forEach((node) => {
+    this.byId.forEach(node => {
       nodesByType[node.type] = (nodesByType[node.type] || 0) + 1;
       if (node.timestamp < oldest) oldest = node.timestamp;
       if (node.timestamp > newest) newest = node.timestamp;
@@ -348,12 +376,20 @@ export class JsonLineageStorage implements LineageStorageAdapter {
   private rewriteFiles(): void {
     // 重写节点文件 — 按 byTimestamp 顺序保持一致
     const allNodes: DataLineageNode[] = [];
-    this.byId.forEach((n) => allNodes.push(n));
-    const nodeLines = allNodes.map((n) => JSON.stringify(n)).join("\n");
-    fs.writeFileSync(this.nodesPath, nodeLines ? nodeLines + "\n" : "", "utf-8");
+    this.byId.forEach(n => allNodes.push(n));
+    const nodeLines = allNodes.map(n => JSON.stringify(n)).join("\n");
+    fs.writeFileSync(
+      this.nodesPath,
+      nodeLines ? nodeLines + "\n" : "",
+      "utf-8"
+    );
 
     // 重写边文件
-    const edgeLines = this.edges.map((e) => JSON.stringify(e)).join("\n");
-    fs.writeFileSync(this.edgesPath, edgeLines ? edgeLines + "\n" : "", "utf-8");
+    const edgeLines = this.edges.map(e => JSON.stringify(e)).join("\n");
+    fs.writeFileSync(
+      this.edgesPath,
+      edgeLines ? edgeLines + "\n" : "",
+      "utf-8"
+    );
   }
 }

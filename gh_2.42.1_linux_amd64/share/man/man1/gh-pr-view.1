@@ -1,0 +1,56 @@
+.nh
+.TH "GH-PR-VIEW" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-pr-view - View a pull request
+
+
+.SH SYNOPSIS
+.PP
+\fBgh pr view [<number> | <url> | <branch>] [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Display the title, body, and other information about a pull request.
+
+.PP
+Without an argument, the pull request that belongs to the current branch
+is displayed.
+
+.PP
+With \fB--web\fR flag, open the pull request in a web browser instead.
+
+
+.SH OPTIONS
+.TP
+\fB-c\fR, \fB--comments\fR
+View pull request comments
+
+.TP
+\fB-q\fR, \fB--jq\fR \fB<expression>\fR
+Filter JSON output using a jq expression
+
+.TP
+\fB--json\fR \fB<fields>\fR
+Output JSON with the specified fields
+
+.TP
+\fB-t\fR, \fB--template\fR \fB<string>\fR
+Format JSON output using a Go template; see "gh help formatting"
+
+.TP
+\fB-w\fR, \fB--web\fR
+Open a pull request in the browser
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH SEE ALSO
+.PP
+\fBgh-pr(1)\fR

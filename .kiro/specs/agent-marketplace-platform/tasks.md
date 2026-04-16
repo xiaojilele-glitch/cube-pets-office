@@ -10,7 +10,7 @@
   - [ ] 1.1 创建 `shared/marketplace/contracts.ts`，定义所有核心数据模型类型、常量枚举（DeveloperAccount、AgentPackage、SecurityAudit、AgentListing、Purchase、License、AgentIntegration、DependencyGraph、AgentHealthCheck、AgentVersion、Revenue、UserFeedback、AgentSuite、SecurityPolicy、CompliancePolicy、MarketplaceAnalytics、AuditEntry 等）
     - 包含所有状态常量数组和类型（DEVELOPER_VERIFICATION_LEVELS、LISTING_STATUSES、LICENSE_STATUSES 等）
     - _Requirements: 1.1, 2.1, 3.1, 4.1, 7.1, 8.1, 9.1, 10.1, 11.1, 12.1, 13.1, 14.1, 16.1, 17.1, 18.1_
-  - [ ]* 1.2 编写数据模型序列化往返属性测试
+  - [ ]\* 1.2 编写数据模型序列化往返属性测试
     - **Property 1: 数据模型序列化往返一致性**
     - **Validates: Requirements 1.1, 2.1, 3.1, 4.1, 7.1, 8.1, 9.1, 10.1, 11.1, 12.1, 13.1, 14.1, 16.1, 17.1, 18.1**
   - [ ] 1.3 创建 `shared/marketplace/api.ts`，定义所有 REST API 路由常量和请求/响应类型
@@ -25,7 +25,7 @@
     - 实现 getEntries() 查询方法，支持按 entityType、entityId、actorId 过滤
     - 实现 verifyChain() 方法，验证审计链完整性
     - _Requirements: 1.7, 2.8, 3.9, 4.8, 6.8, 7.7, 8.8, 9.7, 11.8, 12.8, 13.7, 14.7, 15.7, 16.6, 17.6, 18.7_
-  - [ ]* 2.2 编写审计链完整性属性测试
+  - [ ]\* 2.2 编写审计链完整性属性测试
     - **Property 2: 审计链完整性**
     - **Validates: Requirements 1.7, 2.8, 3.9, 4.8, 6.8, 7.7, 8.8, 9.7, 11.8, 12.8, 13.7, 14.7, 15.7, 16.6, 17.6, 18.7**
 
@@ -41,7 +41,7 @@
     - 认证级别与权限/收益比例映射
     - 所有操作调用审计链
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
-  - [ ]* 4.2 编写认证级别与权限映射属性测试
+  - [ ]\* 4.2 编写认证级别与权限映射属性测试
     - **Property 18: 认证级别与权限映射**
     - **Validates: Requirements 1.4, 1.5**
 
@@ -50,7 +50,7 @@
     - 实现 validatePackage()：检查格式、元数据完整性、SOUL.md 存在、文档存在、语义化版本、依赖声明
     - 实现 createPackage()、getPackage()、listPackages()
     - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
-  - [ ]* 5.2 编写语义化版本格式验证属性测试
+  - [ ]\* 5.2 编写语义化版本格式验证属性测试
     - **Property 7: 语义化版本格式验证**
     - **Validates: Requirements 2.6, 12.2**
   - [ ] 5.3 创建 `server/marketplace/version-service.ts`，实现版本管理
@@ -58,7 +58,7 @@
     - 支持 stable/beta/pre_release/deprecated/end_of_life 状态
     - 支持生命周期管理（supportEndDate）
     - _Requirements: 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8_
-  - [ ]* 5.4 编写版本回滚正确性属性测试
+  - [ ]\* 5.4 编写版本回滚正确性属性测试
     - **Property 21: 版本回滚正确性**
     - **Validates: Requirements 12.6**
 
@@ -80,7 +80,7 @@
     - 实现 lockVersions()、updateDependencies()
     - 支持 agent/mcp_tool/model/system 四种依赖类型
     - _Requirements: 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8_
-  - [ ]* 8.2 编写依赖冲突检测属性测试
+  - [ ]\* 8.2 编写依赖冲突检测属性测试
     - **Property 13: 依赖冲突检测**
     - **Validates: Requirements 3.5, 10.6, 10.7**
 
@@ -91,7 +91,7 @@
     - 支持分类、标签、定价模式（free/one_time/subscription/usage_based）
     - 支持版本管理和发布说明
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8_
-  - [ ]* 9.2 编写发布状态机转换属性测试
+  - [ ]\* 9.2 编写发布状态机转换属性测试
     - **Property 6: 发布状态机转换合法性**
     - **Validates: Requirements 4.2**
 
@@ -102,13 +102,13 @@
     - 实现 browseByCategory()、getRecommendations()
     - 搜索结果包含基本信息、评分、价格、下载量
     - _Requirements: 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
-  - [ ]* 10.2 编写搜索过滤正确性属性测试
+  - [ ]\* 10.2 编写搜索过滤正确性属性测试
     - **Property 3: 搜索过滤正确性**
     - **Validates: Requirements 5.2, 5.3, 5.4, 5.7**
-  - [ ]* 10.3 编写搜索排序正确性属性测试
+  - [ ]\* 10.3 编写搜索排序正确性属性测试
     - **Property 4: 搜索排序正确性**
     - **Validates: Requirements 5.5**
-  - [ ]* 10.4 编写搜索结果信息完整性属性测试
+  - [ ]\* 10.4 编写搜索结果信息完整性属性测试
     - **Property 5: 搜索结果信息完整性**
     - **Validates: Requirements 5.8**
 
@@ -117,7 +117,7 @@
     - 实现 createReview()、listReviews()、upvoteReview()、replyToReview()、reportReview()
     - 实现 calculateAverageRating()：计算 Agent 平均评分
     - _Requirements: 6.6, 6.7, 6.8_
-  - [ ]* 11.2 编写评价操作正确性属性测试
+  - [ ]\* 11.2 编写评价操作正确性属性测试
     - **Property 19: 评价操作正确性**
     - **Validates: Requirements 6.6, 6.7**
 
@@ -131,7 +131,7 @@
     - 购买完成后生成 licenseKey 并创建 License 记录
     - 支持多种支付方式
     - _Requirements: 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
-  - [ ]* 13.2 编写购买生成许可证属性测试
+  - [ ]\* 13.2 编写购买生成许可证属性测试
     - **Property 10: 购买生成许可证**
     - **Validates: Requirements 7.6**
   - [ ] 13.3 创建 `server/marketplace/license-service.ts`，实现许可证管理
@@ -140,10 +140,10 @@
     - 实现过期自动禁用逻辑
     - 状态机：inactive → active → expired/revoked/transferred
     - _Requirements: 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8_
-  - [ ]* 13.4 编写许可证限制执行属性测试
+  - [ ]\* 13.4 编写许可证限制执行属性测试
     - **Property 8: 许可证限制执行**
     - **Validates: Requirements 8.3, 8.4**
-  - [ ]* 13.5 编写许可证生命周期状态机属性测试
+  - [ ]\* 13.5 编写许可证生命周期状态机属性测试
     - **Property 9: 许可证生命周期状态机**
     - **Validates: Requirements 8.2, 8.5, 8.6, 8.7**
 
@@ -153,14 +153,14 @@
     - 支持参数配置、版本选择、权限配置
     - 实现使用监控（callCount、totalCost）
     - _Requirements: 9.2, 9.3, 9.4, 9.5, 9.6, 9.7_
-  - [ ]* 14.2 编写集成配置持久化属性测试
+  - [ ]\* 14.2 编写集成配置持久化属性测试
     - **Property 20: 集成配置持久化**
     - **Validates: Requirements 9.2, 9.3, 9.4, 9.5**
   - [ ] 14.3 创建 `server/marketplace/health-service.ts`，实现健康检查
     - 实现 performHealthCheck()：可用性、性能、错误率、安全检查
     - 实现阈值告警逻辑
     - _Requirements: 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8_
-  - [ ]* 14.4 编写健康检查阈值告警属性测试
+  - [ ]\* 14.4 编写健康检查阈值告警属性测试
     - **Property 17: 健康检查阈值告警**
     - **Validates: Requirements 11.5, 11.7**
 
@@ -171,10 +171,10 @@
     - 实现 requestWithdrawal()：支持最低提现金额限制
     - 支持月/季/年结算周期
     - _Requirements: 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
-  - [ ]* 15.2 编写收益计算正确性属性测试
+  - [ ]\* 15.2 编写收益计算正确性属性测试
     - **Property 11: 收益计算正确性**
     - **Validates: Requirements 13.2, 13.3**
-  - [ ]* 15.3 编写最低提现金额限制属性测试
+  - [ ]\* 15.3 编写最低提现金额限制属性测试
     - **Property 12: 最低提现金额限制**
     - **Validates: Requirements 13.6**
   - [ ] 15.4 创建 `server/marketplace/feedback-service.ts`，实现用户反馈
@@ -182,7 +182,7 @@
     - 实现 getFeedbackAnalytics()：统计分析
     - 支持分类和优先级排序
     - _Requirements: 14.2, 14.3, 14.4, 14.5, 14.6, 14.7_
-  - [ ]* 15.5 编写反馈统计分析正确性属性测试
+  - [ ]\* 15.5 编写反馈统计分析正确性属性测试
     - **Property 22: 反馈统计分析正确性**
     - **Validates: Requirements 14.5, 14.6**
 
@@ -191,16 +191,16 @@
     - 实现 createSuite()、updateSuite()、listSuites()
     - 实现捆绑折扣计算和多开发者收益分配
     - _Requirements: 16.2, 16.3, 16.4, 16.5, 16.6_
-  - [ ]* 16.2 编写套件折扣正确性属性测试
+  - [ ]\* 16.2 编写套件折扣正确性属性测试
     - **Property 14: 套件折扣正确性**
     - **Validates: Requirements 16.3**
-  - [ ]* 16.3 编写套件收益分配属性测试
+  - [ ]\* 16.3 编写套件收益分配属性测试
     - **Property 15: 套件收益分配**
     - **Validates: Requirements 16.4**
   - [ ] 16.4 创建 `server/marketplace/security-service.ts`，实现安全策略
     - 实现权限声明管理、数据访问控制、权限撤销、数据删除
     - _Requirements: 17.2, 17.3, 17.4, 17.7, 17.8_
-  - [ ]* 16.5 编写权限访问控制属性测试
+  - [ ]\* 16.5 编写权限访问控制属性测试
     - **Property 16: 权限访问控制**
     - **Validates: Requirements 17.3, 17.4, 17.7, 17.8, 18.5**
   - [ ] 16.6 创建 `server/marketplace/compliance-service.ts`，实现合规检查
@@ -219,7 +219,7 @@
     - 实现 getAnalyticsByDimension()：按时间/分类/开发者维度分析
     - 实现 identifyTrends()：识别 trending/emerging/declining Agent
     - _Requirements: 20.1, 20.2, 20.3, 20.4, 20.5_
-  - [ ]* 18.3 编写运营分析指标正确性属性测试
+  - [ ]\* 18.3 编写运营分析指标正确性属性测试
     - **Property 23: 运营分析指标正确性**
     - **Validates: Requirements 20.1, 20.2, 20.3**
 
@@ -234,7 +234,7 @@
   - [ ] 19.3 实现 Socket.IO 事件广播
     - 在关键操作（发布、购买、评价、健康告警、版本发布、审核完成）时广播 Socket 事件
     - _Requirements: 全部_
-  - [ ]* 19.4 编写 API 路由单元测试
+  - [ ]\* 19.4 编写 API 路由单元测试
     - 测试关键路由的请求验证、响应格式、错误处理
     - _Requirements: 全部_
 

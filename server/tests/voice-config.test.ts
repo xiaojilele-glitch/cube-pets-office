@@ -92,7 +92,9 @@ describe("getVoiceConfig", () => {
     const cfg = getVoiceConfig();
 
     expect(cfg.stt.available).toBe(true);
-    expect(cfg.stt.apiUrl).toBe("https://stt.example.com/v1/audio/transcriptions");
+    expect(cfg.stt.apiUrl).toBe(
+      "https://stt.example.com/v1/audio/transcriptions"
+    );
     expect(cfg.stt.apiKey).toBe("stt-secret");
   });
 

@@ -9,7 +9,10 @@ import path from "node:path";
 import os from "node:os";
 import { JsonLineageStorage } from "../lineage/lineage-store.js";
 import { LineageQueryService } from "../lineage/lineage-query.js";
-import type { DataLineageNode, LineageEdge } from "../../shared/lineage/contracts.js";
+import type {
+  DataLineageNode,
+  LineageEdge,
+} from "../../shared/lineage/contracts.js";
 
 // ─── 辅助 ──────────────────────────────────────────────────────────────────
 
@@ -97,7 +100,7 @@ describe("LineageQueryService", () => {
 
       const result = await query.getUpstream("trans");
       expect(result.nodes).toHaveLength(2);
-      const ids = result.nodes.map((n) => n.lineageId).sort();
+      const ids = result.nodes.map(n => n.lineageId).sort();
       expect(ids).toEqual(["src", "trans"]);
       expect(result.edges.length).toBeGreaterThanOrEqual(1);
     });
@@ -114,7 +117,7 @@ describe("LineageQueryService", () => {
 
       const result = await query.getUpstream("leaf");
       expect(result.nodes).toHaveLength(3);
-      const ids = result.nodes.map((n) => n.lineageId).sort();
+      const ids = result.nodes.map(n => n.lineageId).sort();
       expect(ids).toEqual(["leaf", "mid", "src"]);
     });
 
@@ -130,7 +133,7 @@ describe("LineageQueryService", () => {
 
       const result = await query.getUpstream("c", 1);
       expect(result.nodes).toHaveLength(2);
-      const ids = result.nodes.map((n) => n.lineageId).sort();
+      const ids = result.nodes.map(n => n.lineageId).sort();
       expect(ids).toEqual(["b", "c"]);
     });
 
@@ -182,7 +185,7 @@ describe("LineageQueryService", () => {
 
       const result = await query.getDownstream("src");
       expect(result.nodes).toHaveLength(3);
-      const ids = result.nodes.map((n) => n.lineageId).sort();
+      const ids = result.nodes.map(n => n.lineageId).sort();
       expect(ids).toEqual(["leaf", "mid", "src"]);
     });
 
@@ -208,7 +211,7 @@ describe("LineageQueryService", () => {
 
       const result = await query.getDownstream("a", 1);
       expect(result.nodes).toHaveLength(2);
-      const ids = result.nodes.map((n) => n.lineageId).sort();
+      const ids = result.nodes.map(n => n.lineageId).sort();
       expect(ids).toEqual(["a", "b"]);
     });
 
@@ -265,9 +268,7 @@ describe("LineageQueryService", () => {
         upstream: ["src"],
       });
       await store.batchInsertNodes([src, dec]);
-      await store.batchInsertEdges([
-        makeEdge({ fromId: "src", toId: "dec" }),
-      ]);
+      await store.batchInsertEdges([makeEdge({ fromId: "src", toId: "dec" })]);
 
       const result = await query.getFullPath("src", "dec");
       expect(result.nodes).toHaveLength(2);
@@ -304,7 +305,11 @@ describe("LineageQueryService", () => {
     });
 
     it("should maintain topological order in edges", async () => {
-      const src = makeNode({ lineageId: "src", type: "source", timestamp: 1000 });
+      const src = makeNode({
+        lineageId: "src",
+        type: "source",
+        timestamp: 1000,
+      });
       const mid = makeNode({
         lineageId: "mid",
         type: "transformation",
@@ -325,7 +330,7 @@ describe("LineageQueryService", () => {
 
       const result = await query.getFullPath("src", "dec");
       // Each edge's fromId should appear before toId in the node list
-      const nodeIds = result.nodes.map((n) => n.lineageId);
+      const nodeIds = result.nodes.map(n => n.lineageId);
       for (const edge of result.edges) {
         const fromIdx = nodeIds.indexOf(edge.fromId);
         const toIdx = nodeIds.indexOf(edge.toId);
@@ -377,18 +382,18 @@ describe("LineageQueryService", () => {
 
     it("should return medium risk for > 2 decisions", async () => {
       const src = makeNode({ lineageId: "src" });
-      const decisions = [1, 2, 3].map((i) =>
+      const decisions = [1, 2, 3].map(i =>
         makeNode({
           lineageId: `d${i}`,
           type: "decision",
           decisionId: `dec${i}`,
           upstream: ["src"],
           confidence: 0.5,
-        }),
+        })
       );
       await store.batchInsertNodes([src, ...decisions]);
       await store.batchInsertEdges(
-        decisions.map((d) => makeEdge({ fromId: "src", toId: d.lineageId })),
+        decisions.map(d => makeEdge({ fromId: "src", toId: d.lineageId }))
       );
 
       const result = await query.getImpactAnalysis("src");
@@ -397,18 +402,18 @@ describe("LineageQueryService", () => {
 
     it("should return high risk for > 5 decisions", async () => {
       const src = makeNode({ lineageId: "src" });
-      const decisions = [1, 2, 3, 4, 5, 6].map((i) =>
+      const decisions = [1, 2, 3, 4, 5, 6].map(i =>
         makeNode({
           lineageId: `d${i}`,
           type: "decision",
           decisionId: `dec${i}`,
           upstream: ["src"],
           confidence: 0.5,
-        }),
+        })
       );
       await store.batchInsertNodes([src, ...decisions]);
       await store.batchInsertEdges(
-        decisions.map((d) => makeEdge({ fromId: "src", toId: d.lineageId })),
+        decisions.map(d => makeEdge({ fromId: "src", toId: d.lineageId }))
       );
 
       const result = await query.getImpactAnalysis("src");
@@ -424,11 +429,11 @@ describe("LineageQueryService", () => {
           decisionId: `dec${i}`,
           upstream: ["src"],
           confidence: 0.5,
-        }),
+        })
       );
       await store.batchInsertNodes([src, ...decisions]);
       await store.batchInsertEdges(
-        decisions.map((d) => makeEdge({ fromId: "src", toId: d.lineageId })),
+        decisions.map(d => makeEdge({ fromId: "src", toId: d.lineageId }))
       );
 
       const result = await query.getImpactAnalysis("src");

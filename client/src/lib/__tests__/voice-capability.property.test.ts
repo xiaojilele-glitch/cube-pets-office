@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
 /* ─── Property 5: 语音能力检测驱动 UI 可见性 ─── */
 /* **Validates: Requirements 3.6, 3.7** */
@@ -21,11 +21,17 @@ import fc from 'fast-check';
 // Pure visibility functions — replicate ChatPanel detection logic
 // ---------------------------------------------------------------------------
 
-function computeSTTVisibility(browserSTTAvailable: boolean, serverSTTAvailable: boolean): boolean {
+function computeSTTVisibility(
+  browserSTTAvailable: boolean,
+  serverSTTAvailable: boolean
+): boolean {
   return browserSTTAvailable || serverSTTAvailable;
 }
 
-function computeTTSVisibility(browserTTSAvailable: boolean, serverTTSAvailable: boolean): boolean {
+function computeTTSVisibility(
+  browserTTSAvailable: boolean,
+  serverTTSAvailable: boolean
+): boolean {
   return browserTTSAvailable || serverTTSAvailable;
 }
 
@@ -39,68 +45,80 @@ const arbBool = fc.boolean();
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Feature: multi-modal-agent, Property 5: 语音能力检测驱动 UI 可见性', () => {
-  it('STT button visibility equals (browserSTT || serverSTT) for any capability combination', () => {
+describe("Feature: multi-modal-agent, Property 5: 语音能力检测驱动 UI 可见性", () => {
+  it("STT button visibility equals (browserSTT || serverSTT) for any capability combination", () => {
     fc.assert(
       fc.property(arbBool, arbBool, (browserSTT, serverSTT) => {
         const visible = computeSTTVisibility(browserSTT, serverSTT);
         expect(visible).toBe(browserSTT || serverSTT);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('TTS toggle visibility equals (browserTTS || serverTTS) for any capability combination', () => {
+  it("TTS toggle visibility equals (browserTTS || serverTTS) for any capability combination", () => {
     fc.assert(
       fc.property(arbBool, arbBool, (browserTTS, serverTTS) => {
         const visible = computeTTSVisibility(browserTTS, serverTTS);
         expect(visible).toBe(browserTTS || serverTTS);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('both controls hidden only when all four capabilities are false', () => {
+  it("both controls hidden only when all four capabilities are false", () => {
     fc.assert(
-      fc.property(arbBool, arbBool, arbBool, arbBool, (browserSTT, serverSTT, browserTTS, serverTTS) => {
-        const sttVisible = computeSTTVisibility(browserSTT, serverSTT);
-        const ttsVisible = computeTTSVisibility(browserTTS, serverTTS);
+      fc.property(
+        arbBool,
+        arbBool,
+        arbBool,
+        arbBool,
+        (browserSTT, serverSTT, browserTTS, serverTTS) => {
+          const sttVisible = computeSTTVisibility(browserSTT, serverSTT);
+          const ttsVisible = computeTTSVisibility(browserTTS, serverTTS);
 
-        // Both hidden iff all sources are false
-        if (!browserSTT && !serverSTT && !browserTTS && !serverTTS) {
-          expect(sttVisible).toBe(false);
-          expect(ttsVisible).toBe(false);
-        }
+          // Both hidden iff all sources are false
+          if (!browserSTT && !serverSTT && !browserTTS && !serverTTS) {
+            expect(sttVisible).toBe(false);
+            expect(ttsVisible).toBe(false);
+          }
 
-        // If any STT source is true, STT must be visible
-        if (browserSTT || serverSTT) {
-          expect(sttVisible).toBe(true);
-        }
+          // If any STT source is true, STT must be visible
+          if (browserSTT || serverSTT) {
+            expect(sttVisible).toBe(true);
+          }
 
-        // If any TTS source is true, TTS must be visible
-        if (browserTTS || serverTTS) {
-          expect(ttsVisible).toBe(true);
+          // If any TTS source is true, TTS must be visible
+          if (browserTTS || serverTTS) {
+            expect(ttsVisible).toBe(true);
+          }
         }
-      }),
-      { numRuns: 100 },
+      ),
+      { numRuns: 100 }
     );
   });
 
-  it('STT and TTS visibility are independent of each other', () => {
+  it("STT and TTS visibility are independent of each other", () => {
     fc.assert(
-      fc.property(arbBool, arbBool, arbBool, arbBool, (browserSTT, serverSTT, browserTTS, serverTTS) => {
-        const sttVisible = computeSTTVisibility(browserSTT, serverSTT);
-        const ttsVisible = computeTTSVisibility(browserTTS, serverTTS);
+      fc.property(
+        arbBool,
+        arbBool,
+        arbBool,
+        arbBool,
+        (browserSTT, serverSTT, browserTTS, serverTTS) => {
+          const sttVisible = computeSTTVisibility(browserSTT, serverSTT);
+          const ttsVisible = computeTTSVisibility(browserTTS, serverTTS);
 
-        // STT visibility depends only on STT sources
-        expect(sttVisible).toBe(browserSTT || serverSTT);
-        // TTS visibility depends only on TTS sources
-        expect(ttsVisible).toBe(browserTTS || serverTTS);
+          // STT visibility depends only on STT sources
+          expect(sttVisible).toBe(browserSTT || serverSTT);
+          // TTS visibility depends only on TTS sources
+          expect(ttsVisible).toBe(browserTTS || serverTTS);
 
-        // Changing TTS sources should not affect STT visibility (and vice versa)
-        // Verified implicitly: sttVisible doesn't reference browserTTS/serverTTS
-      }),
-      { numRuns: 100 },
+          // Changing TTS sources should not affect STT visibility (and vice versa)
+          // Verified implicitly: sttVisible doesn't reference browserTTS/serverTTS
+        }
+      ),
+      { numRuns: 100 }
     );
   });
 });

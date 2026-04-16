@@ -15,12 +15,15 @@ import type {
   FinalizedCommand,
   MissionDecomposition,
   MissionDependency,
-} from '../../../shared/nl-command/contracts.js';
-import type { ILLMProvider, LLMMessage } from '../../../shared/llm/contracts.js';
-import type { WorkflowOrganizationSnapshot } from '../../../shared/organization-schema.js';
-import type { AuditTrail } from './audit-trail.js';
-import { topoSortWithGroups, CyclicDependencyError } from './topo-sort.js';
-import type { Edge } from './topo-sort.js';
+} from "../../../shared/nl-command/contracts.js";
+import type {
+  ILLMProvider,
+  LLMMessage,
+} from "../../../shared/llm/contracts.js";
+import type { WorkflowOrganizationSnapshot } from "../../../shared/organization-schema.js";
+import type { AuditTrail } from "./audit-trail.js";
+import { topoSortWithGroups, CyclicDependencyError } from "./topo-sort.js";
+import type { Edge } from "./topo-sort.js";
 
 // ─── Options ───
 
@@ -31,7 +34,10 @@ export interface MissionDecomposerOptions {
   /** Callback invoked after each mission is decomposed (e.g. to create MissionRecord) */
   onMissionCreated?: (mission: DecomposedMission) => Promise<void>;
   /** Callback to trigger organization generation for a mission */
-  onOrganizationNeeded?: (missionId: string, complexity: number) => Promise<WorkflowOrganizationSnapshot>;
+  onOrganizationNeeded?: (
+    missionId: string,
+    complexity: number
+  ) => Promise<WorkflowOrganizationSnapshot>;
 }
 
 // ─── LLM retry / parse helpers (same pattern as command-analyzer) ───
@@ -42,7 +48,7 @@ const BASE_DELAY_MS = 500;
 async function callLLMWithRetry(
   provider: ILLMProvider,
   messages: LLMMessage[],
-  model: string,
+  model: string
 ): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -60,7 +66,7 @@ async function callLLMWithRetry(
         break;
       }
       const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((r) => setTimeout(r, delay));
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   throw lastError;
@@ -91,7 +97,7 @@ interface MissionsLLMResponse {
     description: string;
     objectives: string[];
     constraints: Array<{
-      type: CommandConstraint['type'];
+      type: CommandConstraint["type"];
       description: string;
       value?: string;
       unit?: string;
@@ -106,7 +112,7 @@ interface DependenciesLLMResponse {
   dependencies: Array<{
     fromMissionId: string;
     toMissionId: string;
-    type: 'blocks' | 'depends_on' | 'related';
+    type: "blocks" | "depends_on" | "related";
     description?: string;
   }>;
 }
@@ -117,8 +123,13 @@ export class MissionDecomposer {
   private readonly llmProvider: ILLMProvider;
   private readonly model: string;
   private readonly auditTrail: AuditTrail;
-  private readonly onMissionCreated?: (mission: DecomposedMission) => Promise<void>;
-  private readonly onOrganizationNeeded?: (missionId: string, complexity: number) => Promise<WorkflowOrganizationSnapshot>;
+  private readonly onMissionCreated?: (
+    mission: DecomposedMission
+  ) => Promise<void>;
+  private readonly onOrganizationNeeded?: (
+    missionId: string,
+    complexity: number
+  ) => Promise<WorkflowOrganizationSnapshot>;
 
   constructor(options: MissionDecomposerOptions) {
     this.llmProvider = options.llmProvider;
@@ -144,10 +155,10 @@ export class MissionDecomposer {
     const dependencies = await this.identifyDependencies(command, missions);
 
     // Step 3: Compute topological execution order
-    const missionIds = missions.map((m) => m.missionId);
+    const missionIds = missions.map(m => m.missionId);
     const edges: Edge[] = dependencies
-      .filter((d) => d.type === 'blocks' || d.type === 'depends_on')
-      .map((d) => ({ from: d.fromMissionId, to: d.toMissionId }));
+      .filter(d => d.type === "blocks" || d.type === "depends_on")
+      .map(d => ({ from: d.fromMissionId, to: d.toMissionId }));
 
     let executionOrder: string[][];
     try {
@@ -157,13 +168,13 @@ export class MissionDecomposer {
         // Record audit entry for cyclic dependency failure
         await this.auditTrail.record({
           entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          operationType: 'decomposition_completed',
-          operator: 'system',
+          operationType: "decomposition_completed",
+          operator: "system",
           content: `Decomposition failed: cyclic dependency detected — ${err.message}`,
           timestamp: Date.now(),
-          result: 'failure',
+          result: "failure",
           entityId: command.commandId,
-          entityType: 'command',
+          entityType: "command",
           metadata: { decompositionId, cycle: err.cycle },
         });
         throw err;
@@ -178,8 +189,14 @@ export class MissionDecomposer {
       }
     }
 
-    const totalEstimatedDuration = missions.reduce((sum, m) => sum + m.estimatedDuration, 0);
-    const totalEstimatedCost = missions.reduce((sum, m) => sum + m.estimatedCost, 0);
+    const totalEstimatedDuration = missions.reduce(
+      (sum, m) => sum + m.estimatedDuration,
+      0
+    );
+    const totalEstimatedCost = missions.reduce(
+      (sum, m) => sum + m.estimatedCost,
+      0
+    );
 
     const result: MissionDecomposition = {
       decompositionId,
@@ -194,13 +211,13 @@ export class MissionDecomposer {
     // Step 5: Record audit entry
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'decomposition_completed',
-      operator: 'system',
+      operationType: "decomposition_completed",
+      operator: "system",
       content: `Decomposed command into ${missions.length} missions with ${dependencies.length} dependencies`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: command.commandId,
-      entityType: 'command',
+      entityType: "command",
       metadata: { decompositionId, missionCount: missions.length },
     });
 
@@ -214,7 +231,7 @@ export class MissionDecomposer {
    */
   async generateOrganization(
     missionId: string,
-    complexity: number,
+    complexity: number
   ): Promise<WorkflowOrganizationSnapshot | null> {
     if (!this.onOrganizationNeeded) {
       return null;
@@ -224,16 +241,18 @@ export class MissionDecomposer {
 
   // ─── Private helpers ───
 
-  private async generateMissions(command: FinalizedCommand): Promise<DecomposedMission[]> {
+  private async generateMissions(
+    command: FinalizedCommand
+  ): Promise<DecomposedMission[]> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content: `You are a strategic mission decomposer. Given a finalized command, decompose it into concrete, actionable missions.
 Each mission should have a unique missionId (format: "mission-<index>"), title, description, objectives, constraints, estimatedDuration (in minutes), estimatedCost (numeric), and priority.
 Return JSON: { "missions": [...] }`,
       },
       {
-        role: 'user',
+        role: "user",
         content: JSON.stringify({
           commandId: command.commandId,
           originalText: command.originalText,
@@ -250,24 +269,27 @@ Return JSON: { "missions": [...] }`,
     const parsed = safeParseJSON<MissionsLLMResponse>(raw);
 
     if (!parsed?.missions?.length) {
-      throw new Error('LLM returned empty or invalid mission list');
+      throw new Error("LLM returned empty or invalid mission list");
     }
 
     return parsed.missions.map((m, idx) => ({
       missionId: m.missionId || `mission-${idx + 1}`,
       title: m.title || `Mission ${idx + 1}`,
-      description: m.description || '',
+      description: m.description || "",
       objectives: Array.isArray(m.objectives) ? m.objectives : [],
       constraints: Array.isArray(m.constraints) ? m.constraints : [],
-      estimatedDuration: typeof m.estimatedDuration === 'number' ? m.estimatedDuration : 60,
-      estimatedCost: typeof m.estimatedCost === 'number' ? m.estimatedCost : 0,
-      priority: (['critical', 'high', 'medium', 'low'].includes(m.priority) ? m.priority : 'medium') as CommandPriority,
+      estimatedDuration:
+        typeof m.estimatedDuration === "number" ? m.estimatedDuration : 60,
+      estimatedCost: typeof m.estimatedCost === "number" ? m.estimatedCost : 0,
+      priority: (["critical", "high", "medium", "low"].includes(m.priority)
+        ? m.priority
+        : "medium") as CommandPriority,
     }));
   }
 
   private async identifyDependencies(
     command: FinalizedCommand,
-    missions: DecomposedMission[],
+    missions: DecomposedMission[]
   ): Promise<MissionDependency[]> {
     if (missions.length <= 1) {
       return [];
@@ -275,17 +297,17 @@ Return JSON: { "missions": [...] }`,
 
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content: `You are a dependency analyzer. Given a list of missions decomposed from a strategic command, identify dependency relationships between them.
 Dependency types: "blocks" (A must complete before B starts), "depends_on" (B needs output from A), "related" (informational).
 Only include real dependencies. Return JSON: { "dependencies": [{ "fromMissionId", "toMissionId", "type", "description" }] }
 fromMissionId depends on toMissionId (toMissionId must execute first).`,
       },
       {
-        role: 'user',
+        role: "user",
         content: JSON.stringify({
           commandIntent: command.analysis.intent,
-          missions: missions.map((m) => ({
+          missions: missions.map(m => ({
             missionId: m.missionId,
             title: m.title,
             description: m.description,
@@ -302,20 +324,20 @@ fromMissionId depends on toMissionId (toMissionId must execute first).`,
       return [];
     }
 
-    const validIds = new Set(missions.map((m) => m.missionId));
+    const validIds = new Set(missions.map(m => m.missionId));
 
     return parsed.dependencies
       .filter(
-        (d) =>
+        d =>
           validIds.has(d.fromMissionId) &&
           validIds.has(d.toMissionId) &&
           d.fromMissionId !== d.toMissionId &&
-          ['blocks', 'depends_on', 'related'].includes(d.type),
+          ["blocks", "depends_on", "related"].includes(d.type)
       )
-      .map((d) => ({
+      .map(d => ({
         fromMissionId: d.fromMissionId,
         toMissionId: d.toMissionId,
-        type: d.type as MissionDependency['type'],
+        type: d.type as MissionDependency["type"],
         description: d.description,
       }));
   }

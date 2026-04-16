@@ -5,6 +5,7 @@
 本设计文档描述预录演示数据引擎的技术架构，该引擎为 Cube Pets Office 前端 Demo 模式提供数据层支撑。核心目标是构建一套静态可导入的 TypeScript 数据模块和配套的序列化/反序列化工具，使前端能在无 LLM API Key 的情况下驱动完整的十阶段工作流演示。
 
 设计遵循以下原则：
+
 - 数据结构严格符合 `shared/` 目录下的现有契约类型
 - 以 TypeScript 模块形式存储，支持 tree-shaking
 - 基于现有 18 个 seed agent 定义构建演示组织
@@ -132,6 +133,7 @@ export interface DemoDataBundle {
 基于现有 18 个 seed agent 构建演示组织快照。选取 1 CEO（ceo）、2 Manager（pixel, nexus）和 4 Worker（nova, blaze, flux, tensor）组成演示团队，模拟"设计手游营销推广方案"场景。
 
 组织结构：
+
 - CEO Gateway（ceo）— 根节点
   - Pixel · 游戏部经理（pixel）
     - Nova — 游戏策划（nova）
@@ -143,6 +145,7 @@ export interface DemoDataBundle {
 ### 3. 事件序列（events.ts）
 
 事件序列按时间戳偏移量排序，覆盖全部十阶段。每个阶段包含：
+
 - `stage_change` 事件标记阶段开始
 - `agent_active` 事件标记智能体激活
 - `message_sent` 事件标记消息发送
@@ -187,6 +190,7 @@ export function deserializeDemoData(json: string): DemoDataBundle {
 ```
 
 验证逻辑（validateDemoDataBundle）检查：
+
 - `version` 字段为 1
 - `organization` 存在且 `kind` 为 `"workflow_organization"`
 - `workflow` 存在且包含必要字段（id, directive, status）
@@ -202,7 +206,12 @@ export function deserializeDemoData(json: string): DemoDataBundle {
 ### 5. 统一导出（index.ts）
 
 ```typescript
-export type { DemoDataBundle, DemoMemoryEntry, DemoEvolutionLog, DemoTimedEvent } from "./schema";
+export type {
+  DemoDataBundle,
+  DemoMemoryEntry,
+  DemoEvolutionLog,
+  DemoTimedEvent,
+} from "./schema";
 export { serializeDemoData, deserializeDemoData } from "./serializer";
 export { DEMO_BUNDLE } from "./bundle";
 ```
@@ -213,23 +222,24 @@ export { DEMO_BUNDLE } from "./bundle";
 
 ### DemoDataBundle 字段映射
 
-| 字段 | 类型 | 来源契约 | 说明 |
-|------|------|---------|------|
-| version | `1` | 自定义 | 数据包版本 |
-| scenarioName | `string` | 自定义 | 场景名称 |
-| scenarioDescription | `string` | 自定义 | 场景描述 |
-| organization | `WorkflowOrganizationSnapshot` | shared/organization-schema.ts | 组织快照 |
-| workflow | `WorkflowRecord` | shared/workflow-runtime.ts | 工作流记录 |
-| agents | `AgentRecord[]` | shared/workflow-runtime.ts | 智能体列表 |
-| messages | `MessageRecord[]` | shared/workflow-runtime.ts | 消息列表（≥20条） |
-| tasks | `TaskRecord[]` | shared/workflow-runtime.ts | 任务列表（≥4条） |
-| memoryEntries | `DemoMemoryEntry[]` | 自定义 | 记忆条目 |
-| evolutionLogs | `DemoEvolutionLog[]` | 自定义 | 进化日志 |
-| events | `DemoTimedEvent[]` | 自定义（包装 AgentEvent） | 事件序列 |
+| 字段                | 类型                           | 来源契约                      | 说明              |
+| ------------------- | ------------------------------ | ----------------------------- | ----------------- |
+| version             | `1`                            | 自定义                        | 数据包版本        |
+| scenarioName        | `string`                       | 自定义                        | 场景名称          |
+| scenarioDescription | `string`                       | 自定义                        | 场景描述          |
+| organization        | `WorkflowOrganizationSnapshot` | shared/organization-schema.ts | 组织快照          |
+| workflow            | `WorkflowRecord`               | shared/workflow-runtime.ts    | 工作流记录        |
+| agents              | `AgentRecord[]`                | shared/workflow-runtime.ts    | 智能体列表        |
+| messages            | `MessageRecord[]`              | shared/workflow-runtime.ts    | 消息列表（≥20条） |
+| tasks               | `TaskRecord[]`                 | shared/workflow-runtime.ts    | 任务列表（≥4条）  |
+| memoryEntries       | `DemoMemoryEntry[]`            | 自定义                        | 记忆条目          |
+| evolutionLogs       | `DemoEvolutionLog[]`           | 自定义                        | 进化日志          |
+| events              | `DemoTimedEvent[]`             | 自定义（包装 AgentEvent）     | 事件序列          |
 
 ### 消息流转模式
 
 演示数据中的消息覆盖以下流转路径：
+
 1. CEO → Manager（direction 阶段方向下发）
 2. Manager → Worker（planning 阶段任务分配）
 3. Worker → Manager（execution 阶段交付提交）
@@ -238,37 +248,37 @@ export { DEMO_BUNDLE } from "./bundle";
 
 ### 记忆条目类型
 
-| 类型 | kind 值 | 触发阶段 | 内容示例 |
-|------|---------|---------|---------|
-| 短期记忆 | `short_term` | execution | LLM 交互日志片段 |
-| 中期记忆 | `medium_term` | summary | 工作流摘要 |
-| 长期记忆 | `long_term` | evolution | SOUL.md 补丁内容 |
+| 类型     | kind 值       | 触发阶段  | 内容示例         |
+| -------- | ------------- | --------- | ---------------- |
+| 短期记忆 | `short_term`  | execution | LLM 交互日志片段 |
+| 中期记忆 | `medium_term` | summary   | 工作流摘要       |
+| 长期记忆 | `long_term`   | evolution | SOUL.md 补丁内容 |
 
 ## 正确性属性
 
-*属性是系统在所有有效执行中应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_属性是系统在所有有效执行中应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 序列化 Round-Trip 一致性
 
-*For any* 有效的 DemoDataBundle 实例，调用 serializeDemoData 序列化后再调用 deserializeDemoData 反序列化，SHALL 产生与原始实例深度相等的对象。
+_For any_ 有效的 DemoDataBundle 实例，调用 serializeDemoData 序列化后再调用 deserializeDemoData 反序列化，SHALL 产生与原始实例深度相等的对象。
 
 **Validates: Requirements 2.2, 2.3, 2.4**
 
 ### Property 2: 事件序列时间戳单调递增
 
-*For any* 有效的 DemoDataBundle 实例，events 数组中的 DemoTimedEvent 按索引顺序排列时，每个事件的 timestampOffset 应大于或等于前一个事件的 timestampOffset。
+_For any_ 有效的 DemoDataBundle 实例，events 数组中的 DemoTimedEvent 按索引顺序排列时，每个事件的 timestampOffset 应大于或等于前一个事件的 timestampOffset。
 
 **Validates: Requirements 1.3**
 
 ### Property 3: 序列化输出为格式化 JSON
 
-*For any* 有效的 DemoDataBundle 实例，serializeDemoData 的输出字符串应包含换行符和缩进空格，且为合法的 JSON 字符串（JSON.parse 不抛出异常）。
+_For any_ 有效的 DemoDataBundle 实例，serializeDemoData 的输出字符串应包含换行符和缩进空格，且为合法的 JSON 字符串（JSON.parse 不抛出异常）。
 
 **Validates: Requirements 2.5**
 
 ### Property 4: 反序列化无效输入产生描述性错误
 
-*For any* 不符合 DemoDataBundle 结构的 JSON 字符串（缺少必要字段或字段类型错误），deserializeDemoData 应抛出包含具体字段路径信息的错误。
+_For any_ 不符合 DemoDataBundle 结构的 JSON 字符串（缺少必要字段或字段类型错误），deserializeDemoData 应抛出包含具体字段路径信息的错误。
 
 **Validates: Requirements 2.6**
 
@@ -293,6 +303,7 @@ export { DEMO_BUNDLE } from "./bundle";
 使用 `fast-check` 库进行属性测试，每个属性至少运行 100 次迭代。
 
 需要构建 `DemoDataBundle` 的 fast-check Arbitrary 生成器：
+
 - 生成符合 `WorkflowOrganizationSnapshot` 结构的随机组织快照
 - 生成符合 `AgentRecord`、`MessageRecord`、`TaskRecord` 结构的随机记录
 - 生成按时间戳排序的随机事件序列
@@ -300,6 +311,7 @@ export { DEMO_BUNDLE } from "./bundle";
 - 生成包含评分变化的随机进化日志
 
 每个属性测试标注对应的设计属性编号：
+
 - **Feature: demo-data-engine, Property 1: 序列化 Round-Trip 一致性**
 - **Feature: demo-data-engine, Property 2: 事件序列时间戳单调递增**
 - **Feature: demo-data-engine, Property 3: 序列化输出为格式化 JSON**

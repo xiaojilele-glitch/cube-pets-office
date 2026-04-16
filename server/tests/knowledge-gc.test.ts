@@ -21,7 +21,9 @@ function uniqueProjectId(prefix: string): string {
 
 function makeEntity(
   store: GraphStore,
-  overrides?: Partial<Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">>,
+  overrides?: Partial<
+    Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
+  >
 ): Entity {
   return store.createEntity({
     entityType: overrides?.entityType ?? "CodeModule",
@@ -40,11 +42,13 @@ function makeEntity(
 function backdateEntity(
   store: GraphStore,
   entityId: string,
-  daysAgo: number,
+  daysAgo: number
 ): void {
-  const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+  const date = new Date(
+    Date.now() - daysAgo * 24 * 60 * 60 * 1000
+  ).toISOString();
   const data = store.getGraphData(currentProject);
-  const entity = data.entities.find((e) => e.entityId === entityId);
+  const entity = data.entities.find(e => e.entityId === entityId);
   if (entity) {
     entity.createdAt = date;
     entity.updatedAt = date;
@@ -79,7 +83,13 @@ describe("archiveExpiredDeprecated", () => {
 
     const entity = makeEntity(store);
     // Deprecate it
-    store.enforceStatusTransition(entity.entityId, "deprecated", "old", "manual", lifecycleLog);
+    store.enforceStatusTransition(
+      entity.entityId,
+      "deprecated",
+      "old",
+      "manual",
+      lifecycleLog
+    );
     // Backdate so it's older than 90 days
     backdateEntity(store, entity.entityId, 100);
 
@@ -96,7 +106,13 @@ describe("archiveExpiredDeprecated", () => {
     });
 
     const entity = makeEntity(store);
-    store.enforceStatusTransition(entity.entityId, "deprecated", "recent", "manual", lifecycleLog);
+    store.enforceStatusTransition(
+      entity.entityId,
+      "deprecated",
+      "recent",
+      "manual",
+      lifecycleLog
+    );
     // Only 10 days old 鈥?should NOT be archived
     backdateEntity(store, entity.entityId, 10);
 
@@ -113,14 +129,23 @@ describe("archiveExpiredDeprecated", () => {
     });
 
     const entity = makeEntity(store);
-    store.enforceStatusTransition(entity.entityId, "deprecated", "old", "manual", lifecycleLog);
+    store.enforceStatusTransition(
+      entity.entityId,
+      "deprecated",
+      "old",
+      "manual",
+      lifecycleLog
+    );
     backdateEntity(store, entity.entityId, 10);
 
     gc.archiveExpiredDeprecated();
 
-    const logs = lifecycleLog.query({ entityId: entity.entityId, action: "status_change" });
+    const logs = lifecycleLog.query({
+      entityId: entity.entityId,
+      action: "status_change",
+    });
     // Should have at least 2: one from enforceStatusTransition (deprecated), one from GC (archived)
-    const archiveLog = logs.find((l) => l.newStatus === "archived");
+    const archiveLog = logs.find(l => l.newStatus === "archived");
     expect(archiveLog).toBeDefined();
     expect(archiveLog!.triggeredBy).toBe("auto_cleanup");
   });
@@ -233,14 +258,26 @@ describe("mergeDuplicateEntities", () => {
   it("merges entities with identical names in same type and project", () => {
     const gc = new KnowledgeGarbageCollector(store, lifecycleLog);
 
-    makeEntity(store, { name: "UserService", entityType: "CodeModule", confidence: 0.6 });
-    makeEntity(store, { name: "UserService", entityType: "CodeModule", confidence: 0.9 });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "CodeModule",
+      confidence: 0.6,
+    });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "CodeModule",
+      confidence: 0.9,
+    });
 
     const count = gc.mergeDuplicateEntities();
     expect(count).toBe(1);
 
     // Only one entity should remain
-    const remaining = store.findEntities({ projectId: currentProject, entityType: "CodeModule", name: "UserService" });
+    const remaining = store.findEntities({
+      projectId: currentProject,
+      entityType: "CodeModule",
+      name: "UserService",
+    });
     expect(remaining).toHaveLength(1);
     expect(remaining[0].confidence).toBe(0.9);
   });
@@ -250,14 +287,27 @@ describe("mergeDuplicateEntities", () => {
       duplicateSimilarityThreshold: 0.9,
     });
 
-    makeEntity(store, { name: "UserService", entityType: "CodeModule", confidence: 0.7 });
-    makeEntity(store, { name: "userservice", entityType: "CodeModule", confidence: 0.5 });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "CodeModule",
+      confidence: 0.7,
+    });
+    makeEntity(store, {
+      name: "userservice",
+      entityType: "CodeModule",
+      confidence: 0.5,
+    });
 
     const count = gc.mergeDuplicateEntities();
     expect(count).toBe(1);
 
-    const remaining = store.findEntities({ projectId: currentProject, entityType: "CodeModule" });
-    const userServices = remaining.filter((e) => e.name.toLowerCase().includes("userservice"));
+    const remaining = store.findEntities({
+      projectId: currentProject,
+      entityType: "CodeModule",
+    });
+    const userServices = remaining.filter(e =>
+      e.name.toLowerCase().includes("userservice")
+    );
     expect(userServices).toHaveLength(1);
     expect(userServices[0].confidence).toBe(0.7);
   });
@@ -265,8 +315,16 @@ describe("mergeDuplicateEntities", () => {
   it("does not merge entities with different types", () => {
     const gc = new KnowledgeGarbageCollector(store, lifecycleLog);
 
-    makeEntity(store, { name: "UserService", entityType: "CodeModule", confidence: 0.6 });
-    makeEntity(store, { name: "UserService", entityType: "API", confidence: 0.9 });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "CodeModule",
+      confidence: 0.6,
+    });
+    makeEntity(store, {
+      name: "UserService",
+      entityType: "API",
+      confidence: 0.9,
+    });
 
     const count = gc.mergeDuplicateEntities();
     expect(count).toBe(0);
@@ -310,7 +368,11 @@ describe("mergeDuplicateEntities", () => {
 
     gc.mergeDuplicateEntities();
 
-    const remaining = store.findEntities({ projectId: currentProject, entityType: "CodeModule", name: "AuthModule" });
+    const remaining = store.findEntities({
+      projectId: currentProject,
+      entityType: "CodeModule",
+      name: "AuthModule",
+    });
     expect(remaining).toHaveLength(1);
     // Winner's attrs take precedence, loser's fill gaps
     expect(remaining[0].extendedAttributes).toMatchObject({
@@ -323,8 +385,16 @@ describe("mergeDuplicateEntities", () => {
   it("writes lifecycle log for merged entities", () => {
     const gc = new KnowledgeGarbageCollector(store, lifecycleLog);
 
-    makeEntity(store, { name: "Dup", entityType: "CodeModule", confidence: 0.9 });
-    makeEntity(store, { name: "Dup", entityType: "CodeModule", confidence: 0.3 });
+    makeEntity(store, {
+      name: "Dup",
+      entityType: "CodeModule",
+      confidence: 0.9,
+    });
+    makeEntity(store, {
+      name: "Dup",
+      entityType: "CodeModule",
+      confidence: 0.3,
+    });
 
     gc.mergeDuplicateEntities();
 
@@ -348,7 +418,13 @@ describe("run", () => {
 
     // Phase 1 candidate: deprecated + old
     const deprecated = makeEntity(store, { confidence: 0.8 });
-    store.enforceStatusTransition(deprecated.entityId, "deprecated", "old", "manual", lifecycleLog);
+    store.enforceStatusTransition(
+      deprecated.entityId,
+      "deprecated",
+      "old",
+      "manual",
+      lifecycleLog
+    );
     backdateEntity(store, deprecated.entityId, 20);
 
     // Phase 2 candidate: low confidence + old + no relations
@@ -356,8 +432,16 @@ describe("run", () => {
     backdateEntity(store, lowQuality.entityId, 15);
 
     // Phase 3 candidate: duplicate names
-    makeEntity(store, { name: "DupService", entityType: "API", confidence: 0.9 });
-    makeEntity(store, { name: "DupService", entityType: "API", confidence: 0.4 });
+    makeEntity(store, {
+      name: "DupService",
+      entityType: "API",
+      confidence: 0.9,
+    });
+    makeEntity(store, {
+      name: "DupService",
+      entityType: "API",
+      confidence: 0.4,
+    });
 
     const result = gc.run();
 
@@ -384,11 +468,13 @@ function backdateEntityForProject(
   store: GraphStore,
   entityId: string,
   projectId: string,
-  daysAgo: number,
+  daysAgo: number
 ): void {
-  const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000).toISOString();
+  const date = new Date(
+    Date.now() - daysAgo * 24 * 60 * 60 * 1000
+  ).toISOString();
   const data = store.getGraphData(projectId);
-  const entity = data.entities.find((e) => e.entityId === entityId);
+  const entity = data.entities.find(e => e.entityId === entityId);
   if (entity) {
     entity.createdAt = date;
     entity.updatedAt = date;
@@ -452,10 +538,15 @@ describe("Property 18: garbage collection correctness", () => {
               "deprecated",
               "test deprecation",
               "manual",
-              gcLifecycleLog,
+              gcLifecycleLog
             );
             // Backdate beyond the threshold
-            backdateEntityForProject(gcStore, entity.entityId, projectId, archiveAfterDays + daysOver);
+            backdateEntityForProject(
+              gcStore,
+              entity.entityId,
+              projectId,
+              archiveAfterDays + daysOver
+            );
             entityIds.push(entity.entityId);
           }
 
@@ -467,9 +558,9 @@ describe("Property 18: garbage collection correctness", () => {
             const e = gcStore.getEntity(id);
             expect(e?.status).toBe("archived");
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -488,7 +579,12 @@ describe("Property 18: garbage collection correctness", () => {
 
           // Fresh store per iteration to avoid cross-iteration interference
           const iterStore = new GraphStore();
-          const iterLog = new LifecycleLog(path.join(gcTmpDir, `iter-${Math.random().toString(36).slice(2)}.jsonl`));
+          const iterLog = new LifecycleLog(
+            path.join(
+              gcTmpDir,
+              `iter-${Math.random().toString(36).slice(2)}.jsonl`
+            )
+          );
           iterStore.lifecycleLog = iterLog;
 
           const projectId = `prop18b-${Math.random().toString(36).slice(2, 8)}`;
@@ -514,9 +610,14 @@ describe("Property 18: garbage collection correctness", () => {
               "deprecated",
               "test deprecation",
               "manual",
-              iterLog,
+              iterLog
             );
-            backdateEntityForProject(iterStore, entity.entityId, projectId, daysAge);
+            backdateEntityForProject(
+              iterStore,
+              entity.entityId,
+              projectId,
+              daysAge
+            );
             entityIds.push(entity.entityId);
           }
 
@@ -528,9 +629,9 @@ describe("Property 18: garbage collection correctness", () => {
             const e = iterStore.getEntity(id);
             expect(e?.status).toBe("deprecated");
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -567,7 +668,12 @@ describe("Property 18: garbage collection correctness", () => {
               linkedMemoryIds: [],
               extendedAttributes: {},
             });
-            backdateEntityForProject(gcStore, entity.entityId, projectId, maxAgeDays + daysOver);
+            backdateEntityForProject(
+              gcStore,
+              entity.entityId,
+              projectId,
+              maxAgeDays + daysOver
+            );
             entityIds.push(entity.entityId);
           }
 
@@ -578,9 +684,9 @@ describe("Property 18: garbage collection correctness", () => {
           for (const id of entityIds) {
             expect(gcStore.getEntity(id)).toBeUndefined();
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -646,9 +752,9 @@ describe("Property 18: garbage collection correctness", () => {
           for (const id of entityIds) {
             expect(gcStore.getEntity(id)).toBeDefined();
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -688,9 +794,9 @@ describe("Property 18: garbage collection correctness", () => {
           for (const id of entityIds) {
             expect(gcStore.getEntity(id)).toBeDefined();
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
@@ -705,7 +811,12 @@ describe("Property 18: garbage collection correctness", () => {
 
           // Fresh store per iteration to avoid cross-iteration interference
           const iterStore = new GraphStore();
-          const iterLog = new LifecycleLog(path.join(gcTmpDir, `iter-${Math.random().toString(36).slice(2)}.jsonl`));
+          const iterLog = new LifecycleLog(
+            path.join(
+              gcTmpDir,
+              `iter-${Math.random().toString(36).slice(2)}.jsonl`
+            )
+          );
           iterStore.lifecycleLog = iterLog;
 
           const projectId = `prop18f-${Math.random().toString(36).slice(2, 8)}`;
@@ -727,7 +838,12 @@ describe("Property 18: garbage collection correctness", () => {
               linkedMemoryIds: [],
               extendedAttributes: {},
             });
-            backdateEntityForProject(iterStore, entity.entityId, projectId, daysAge);
+            backdateEntityForProject(
+              iterStore,
+              entity.entityId,
+              projectId,
+              daysAge
+            );
             entityIds.push(entity.entityId);
           }
 
@@ -737,9 +853,9 @@ describe("Property 18: garbage collection correctness", () => {
           for (const id of entityIds) {
             expect(iterStore.getEntity(id)).toBeDefined();
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });

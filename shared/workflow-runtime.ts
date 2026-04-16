@@ -112,7 +112,10 @@ export interface EvolutionLogInput {
 
 export type LLMMessageContentPart =
   | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string; detail?: "low" | "high" | "auto" } };
+  | {
+      type: "image_url";
+      image_url: { url: string; detail?: "low" | "high" | "auto" };
+    };
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
@@ -344,7 +347,10 @@ export interface WorkflowRuntime {
   messageBus: RuntimeMessageBus;
   evolutionService: EvolutionService;
   /** Called after a workflow stage completes. Used by MissionOrchestrator to enrich MissionRecord. */
-  onStageCompleted?(workflowId: string, completedStage: string): void | Promise<void>;
+  onStageCompleted?(
+    workflowId: string,
+    completedStage: string
+  ): void | Promise<void>;
   /** Resolve the missionId linked to a given workflowId. Used by ExecutionBridge integration. */
   resolveMissionId?(workflowId: string): string | undefined;
 }

@@ -55,7 +55,7 @@ export interface EventMappingInput {
  * If not a number, default to 0.
  */
 export function mapExecutorEventToAction(
-  input: EventMappingInput,
+  input: EventMappingInput
 ): EventMappingResult {
   const clampedProgress =
     typeof input.progress === "number"
@@ -63,7 +63,10 @@ export function mapExecutorEventToAction(
       : 0;
 
   const summaryText =
-    input.summary?.trim() || input.detail?.trim() || input.message?.trim() || "";
+    input.summary?.trim() ||
+    input.detail?.trim() ||
+    input.message?.trim() ||
+    "";
 
   switch (input.type) {
     case "job.started":
@@ -76,13 +79,22 @@ export function mapExecutorEventToAction(
       return { action: "done", summary: summaryText };
 
     case "job.failed":
-      return { action: "failed", error: summaryText || input.errorCode || "unknown error" };
+      return {
+        action: "failed",
+        error: summaryText || input.errorCode || "unknown error",
+      };
 
     case "job.cancelled":
-      return { action: "cancelled", reason: summaryText || input.errorCode || "cancelled" };
+      return {
+        action: "cancelled",
+        reason: summaryText || input.errorCode || "cancelled",
+      };
 
     case "job.log":
-      return { action: "log", message: input.log?.message?.trim() || summaryText };
+      return {
+        action: "log",
+        message: input.log?.message?.trim() || summaryText,
+      };
 
     case "job.log_stream":
       return { action: "log_stream" };

@@ -17,7 +17,13 @@
 
 import type { GraphStore } from "./graph-store.js";
 import type { OntologyRegistry } from "./ontology-registry.js";
-import type { Entity, Relation, EntityFilters, QueryResult, EntityTypeDefinition } from "../../shared/knowledge/types.js";
+import type {
+  Entity,
+  Relation,
+  EntityFilters,
+  QueryResult,
+  EntityTypeDefinition,
+} from "../../shared/knowledge/types.js";
 import type { CodeExtractorLLMProvider } from "./code-extractor.js";
 
 /** Timeout for natural language queries (includes LLM round-trip) — Req 4.6 */
@@ -27,7 +33,7 @@ const TIMEOUT_NL_QUERY = 3000;
 // 默认超时（毫秒）
 // ---------------------------------------------------------------------------
 
-const TIMEOUT_SIMPLE = 200;   // getEntity, findEntities
+const TIMEOUT_SIMPLE = 200; // getEntity, findEntities
 const TIMEOUT_TRAVERSE = 200; // getNeighbors
 const TIMEOUT_COMPLEX = 1000; // findPath, subgraph
 
@@ -48,15 +54,15 @@ function filterByProject(
   entities: Entity[],
   relations: Relation[],
   projectId: string,
-  extraEntityIds?: Set<string>,
+  extraEntityIds?: Set<string>
 ): { entities: Entity[]; relations: Relation[] } {
-  const filtered = entities.filter((e) => e.projectId === projectId);
-  const entityIds = new Set(filtered.map((e) => e.entityId));
+  const filtered = entities.filter(e => e.projectId === projectId);
+  const entityIds = new Set(filtered.map(e => e.entityId));
   if (extraEntityIds) {
     for (const id of Array.from(extraEntityIds)) entityIds.add(id);
   }
   const filteredRelations = relations.filter(
-    (r) => entityIds.has(r.sourceEntityId) && entityIds.has(r.targetEntityId),
+    r => entityIds.has(r.sourceEntityId) && entityIds.has(r.targetEntityId)
   );
   return { entities: filtered, relations: filteredRelations };
 }
@@ -69,9 +75,9 @@ function filterByProject(
 function withTimeout<T>(
   fn: () => T,
   timeoutMs: number,
-  fallback: T,
+  fallback: T
 ): Promise<{ result: T; timedOut: boolean }> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const timer = setTimeout(() => {
       resolve({ result: fallback, timedOut: true });
     }, timeoutMs);
@@ -96,7 +102,11 @@ export class KnowledgeGraphQuery {
   private ontologyRegistry: OntologyRegistry;
   llmProvider: CodeExtractorLLMProvider | null;
 
-  constructor(graphStore: GraphStore, ontologyRegistry: OntologyRegistry, llmProvider?: CodeExtractorLLMProvider | null) {
+  constructor(
+    graphStore: GraphStore,
+    ontologyRegistry: OntologyRegistry,
+    llmProvider?: CodeExtractorLLMProvider | null
+  ) {
     this.graphStore = graphStore;
     this.ontologyRegistry = ontologyRegistry;
     this.llmProvider = llmProvider ?? null;
@@ -110,7 +120,7 @@ export class KnowledgeGraphQuery {
     const { result, timedOut } = await withTimeout(
       () => this.graphStore.getEntity(entityId),
       TIMEOUT_SIMPLE,
-      undefined,
+      undefined
     );
     // 超时时返回 undefined（单实体无部分结果概念）
     return timedOut ? undefined : result;
@@ -127,7 +137,7 @@ export class KnowledgeGraphQuery {
         return sortByConfidenceDesc(entities);
       },
       TIMEOUT_SIMPLE,
-      [] as Entity[],
+      [] as Entity[]
     );
     if (timedOut) return sortByConfidenceDesc(result);
     return result;
@@ -140,7 +150,7 @@ export class KnowledgeGraphQuery {
   async getNeighbors(
     entityId: string,
     relationTypes: string[],
-    depth: number,
+    depth: number
   ): Promise<QueryResult> {
     // 先获取源实体以确定 projectId（项目隔离）
     const sourceEntity = this.graphStore.getEntity(entityId);
@@ -151,10 +161,10 @@ export class KnowledgeGraphQuery {
         this.graphStore.getNeighbors(
           entityId,
           relationTypes.length > 0 ? relationTypes : undefined,
-          depth,
+          depth
         ),
       TIMEOUT_TRAVERSE,
-      { entities: [] as Entity[], relations: [] as Relation[] },
+      { entities: [] as Entity[], relations: [] as Relation[] }
     );
 
     let { entities, relations } = result;
@@ -163,7 +173,10 @@ export class KnowledgeGraphQuery {
     // 源实体本身不在 neighbors 结果中，但关系可能引用它，所以加入 extraEntityIds
     if (projectId) {
       ({ entities, relations } = filterByProject(
-        entities, relations, projectId, new Set([entityId]),
+        entities,
+        relations,
+        projectId,
+        new Set([entityId])
       ));
     }
 
@@ -183,7 +196,7 @@ export class KnowledgeGraphQuery {
 
   async findPath(
     sourceEntityId: string,
-    targetEntityId: string,
+    targetEntityId: string
   ): Promise<QueryResult> {
     const sourceEntity = this.graphStore.getEntity(sourceEntityId);
     const projectId = sourceEntity?.projectId;
@@ -191,7 +204,7 @@ export class KnowledgeGraphQuery {
     const { result, timedOut } = await withTimeout(
       () => this.graphStore.findPath(sourceEntityId, targetEntityId),
       TIMEOUT_COMPLEX,
-      null,
+      null
     );
 
     if (!result) {
@@ -206,7 +219,11 @@ export class KnowledgeGraphQuery {
     let { entities, relations } = result;
 
     if (projectId) {
-      ({ entities, relations } = filterByProject(entities, relations, projectId));
+      ({ entities, relations } = filterByProject(
+        entities,
+        relations,
+        projectId
+      ));
     }
 
     sortByConfidenceDesc(entities);
@@ -237,13 +254,17 @@ export class KnowledgeGraphQuery {
     const { result, timedOut } = await withTimeout(
       () => this.graphStore.getSubgraph(entityIds),
       TIMEOUT_COMPLEX,
-      { entities: [] as Entity[], relations: [] as Relation[] },
+      { entities: [] as Entity[], relations: [] as Relation[] }
     );
 
     let { entities, relations } = result;
 
     if (projectId) {
-      ({ entities, relations } = filterByProject(entities, relations, projectId));
+      ({ entities, relations } = filterByProject(
+        entities,
+        relations,
+        projectId
+      ));
     }
 
     sortByConfidenceDesc(entities);
@@ -262,7 +283,7 @@ export class KnowledgeGraphQuery {
 
   async findArchitectureDecisions(
     projectId: string,
-    options?: { includeHistory?: boolean },
+    options?: { includeHistory?: boolean }
   ): Promise<QueryResult> {
     const includeHistory = options?.includeHistory ?? false;
 
@@ -282,14 +303,19 @@ export class KnowledgeGraphQuery {
     }
 
     // Step 2: Find all SUPERSEDES relations between decisions
-    const decisionIds = new Set(allDecisions.map((d) => d.entityId));
+    const decisionIds = new Set(allDecisions.map(d => d.entityId));
     const supersedesRelations = this.graphStore
       .findRelations({ projectId, relationType: "SUPERSEDES" })
-      .filter((r) => decisionIds.has(r.sourceEntityId) && decisionIds.has(r.targetEntityId));
+      .filter(
+        r =>
+          decisionIds.has(r.sourceEntityId) && decisionIds.has(r.targetEntityId)
+      );
 
     // Step 3: Determine which decisions are superseded
     // SUPERSEDES relation: new → old, so targetEntityId is the superseded one
-    const supersededIds = new Set(supersedesRelations.map((r) => r.targetEntityId));
+    const supersededIds = new Set(
+      supersedesRelations.map(r => r.targetEntityId)
+    );
 
     let resultEntities: Entity[];
     let resultRelations: Relation[];
@@ -297,12 +323,13 @@ export class KnowledgeGraphQuery {
     if (includeHistory) {
       // Return all decisions, ordered by createdAt ascending
       resultEntities = [...allDecisions].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
       resultRelations = supersedesRelations;
     } else {
       // Return only latest (non-superseded) decisions, sorted by confidence desc
-      resultEntities = allDecisions.filter((d) => !supersededIds.has(d.entityId));
+      resultEntities = allDecisions.filter(d => !supersededIds.has(d.entityId));
       sortByConfidenceDesc(resultEntities);
       resultRelations = [];
     }
@@ -319,7 +346,10 @@ export class KnowledgeGraphQuery {
   // naturalLanguageQuery — 自然语言查询（Req 4.2, 4.3）
   // -------------------------------------------------------------------------
 
-  async naturalLanguageQuery(question: string, projectId: string): Promise<QueryResult> {
+  async naturalLanguageQuery(
+    question: string,
+    projectId: string
+  ): Promise<QueryResult> {
     // No LLM provider → return empty result with explanation
     if (!this.llmProvider) {
       return {
@@ -332,7 +362,10 @@ export class KnowledgeGraphQuery {
 
     try {
       // Step 1: Translate question → structured query via LLM
-      const filters = await this.translateToStructuredQuery(question, projectId);
+      const filters = await this.translateToStructuredQuery(
+        question,
+        projectId
+      );
 
       // Step 2: Execute graph query
       const entities = await this.findEntities(filters);
@@ -364,7 +397,7 @@ export class KnowledgeGraphQuery {
 
   private async translateToStructuredQuery(
     question: string,
-    projectId: string,
+    projectId: string
   ): Promise<EntityFilters> {
     const entityTypes = this.ontologyRegistry.getEntityTypes();
     const relationTypes = this.ontologyRegistry.getRelationTypes();
@@ -374,17 +407,19 @@ export class KnowledgeGraphQuery {
       "Given a natural language question, translate it into a structured JSON query.",
       "",
       "Available entity types:",
-      ...entityTypes.map((t: EntityTypeDefinition) => `- ${t.name}: ${t.description}`),
+      ...entityTypes.map(
+        (t: EntityTypeDefinition) => `- ${t.name}: ${t.description}`
+      ),
       "",
       "Available relation types:",
-      ...relationTypes.map((t) => `- ${t.name}: ${t.description}`),
+      ...relationTypes.map(t => `- ${t.name}: ${t.description}`),
       "",
       "Respond with ONLY a JSON object (no markdown, no explanation):",
-      '{',
+      "{",
       '  "entityType": "optional entity type filter or null",',
       '  "name": "optional name search term or null",',
       '  "confidenceMin": 0.0',
-      '}',
+      "}",
       "",
       `Question: ${question}`,
     ].join("\n");
@@ -422,7 +457,10 @@ export class KnowledgeGraphQuery {
   // buildContextSummary — 生成查询结果的文本摘要（Req 4.4）
   // -------------------------------------------------------------------------
 
-  private buildContextSummary(entities: Entity[], relations: Relation[]): string {
+  private buildContextSummary(
+    entities: Entity[],
+    relations: Relation[]
+  ): string {
     if (entities.length === 0 && relations.length === 0) {
       return "No results found.";
     }
@@ -430,15 +468,21 @@ export class KnowledgeGraphQuery {
     const lines: string[] = [];
 
     if (entities.length > 0) {
-      lines.push(`Found ${entities.length} entit${entities.length === 1 ? "y" : "ies"}:`);
+      lines.push(
+        `Found ${entities.length} entit${entities.length === 1 ? "y" : "ies"}:`
+      );
       for (const e of entities) {
         const lowConf = e.confidence < 0.5 ? " [low confidence]" : "";
-        lines.push(`- ${e.name} (${e.entityType}, confidence: ${e.confidence})${lowConf}`);
+        lines.push(
+          `- ${e.name} (${e.entityType}, confidence: ${e.confidence})${lowConf}`
+        );
       }
     }
 
     if (relations.length > 0) {
-      lines.push(`${entities.length > 0 ? "\n" : ""}Found ${relations.length} relation${relations.length === 1 ? "" : "s"}.`);
+      lines.push(
+        `${entities.length > 0 ? "\n" : ""}Found ${relations.length} relation${relations.length === 1 ? "" : "s"}.`
+      );
     }
 
     return lines.join("\n");

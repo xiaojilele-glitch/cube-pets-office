@@ -156,4 +156,3 @@ Artifacts（最小集合）：
   - server 发起的执行任务在 UI 中可看到真实日志与最终状态
 - 在有 Docker 的环境中：
   - `LOBSTER_EXECUTION_MODE=real` 继续使用 DockerRunner，不影响现有行为
-

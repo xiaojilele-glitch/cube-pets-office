@@ -10,19 +10,25 @@
  * 纯函数，无副作用。
  */
 
-import type { ExportIR, ExportFile, AgentDefinition, SkillDefinition } from "../../../shared/export-schema.js";
+import type {
+  ExportIR,
+  ExportFile,
+  AgentDefinition,
+  SkillDefinition,
+} from "../../../shared/export-schema.js";
 
 // ---------------------------------------------------------------------------
 // 辅助：将字符串转为 snake_case 标识符
 // ---------------------------------------------------------------------------
 
 function toSnakeCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9\s_-]/g, "")
-    .replace(/[\s-]+/g, "_")
-    .toLowerCase()
-    .replace(/^_+|_+$/g, "")
-    || "unnamed";
+  return (
+    str
+      .replace(/[^a-zA-Z0-9\s_-]/g, "")
+      .replace(/[\s-]+/g, "_")
+      .toLowerCase()
+      .replace(/^_+|_+$/g, "") || "unnamed"
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -34,7 +40,7 @@ function yamlScalar(value: string, indent: number): string {
     const pad = " ".repeat(indent);
     return `|\n${value
       .split("\n")
-      .map((line) => `${pad}${line}`)
+      .map(line => `${pad}${line}`)
       .join("\n")}`;
   }
   // 如果包含特殊字符，用双引号包裹
@@ -48,7 +54,9 @@ function yamlScalar(value: string, indent: number): string {
 // 构建 skill 查找表
 // ---------------------------------------------------------------------------
 
-function buildSkillMap(skills: SkillDefinition[]): Map<string, SkillDefinition> {
+function buildSkillMap(
+  skills: SkillDefinition[]
+): Map<string, SkillDefinition> {
   const map = new Map<string, SkillDefinition>();
   for (const skill of skills) {
     map.set(skill.id, skill);
@@ -74,9 +82,9 @@ function buildBackstory(
 
   // 嵌入 skill prompts（Requirement 2.5）
   const skillPrompts = agent.skillIds
-    .map((id) => skillMap.get(id))
+    .map(id => skillMap.get(id))
     .filter((s): s is SkillDefinition => s != null)
-    .map((s) => s.prompt);
+    .map(s => s.prompt);
 
   if (skillPrompts.length > 0) {
     parts.push(`Skills:\n${skillPrompts.join("\n")}`);
@@ -123,11 +131,16 @@ function generateTasksYaml(ir: ExportIR): string {
     const taskKey = toSnakeCase(stage.name);
 
     // 根据参与角色选择最匹配的 agent
-    const agentKey = pickAgentForStage(ir, stage.participantRoles) ?? defaultAgentKey;
+    const agentKey =
+      pickAgentForStage(ir, stage.participantRoles) ?? defaultAgentKey;
 
     lines.push(`${taskKey}:`);
-    lines.push(`  description: ${yamlScalar(`Execute the ${stage.label} stage: ${stage.name}`, 4)}`);
-    lines.push(`  expected_output: ${yamlScalar(`Completed ${stage.label} stage output`, 4)}`);
+    lines.push(
+      `  description: ${yamlScalar(`Execute the ${stage.label} stage: ${stage.name}`, 4)}`
+    );
+    lines.push(
+      `  expected_output: ${yamlScalar(`Completed ${stage.label} stage output`, 4)}`
+    );
     lines.push(`  agent: ${agentKey}`);
     lines.push("");
   }
@@ -145,7 +158,7 @@ function pickAgentForStage(
 ): string | undefined {
   // 优先匹配第一个角色
   for (const role of participantRoles) {
-    const agent = ir.agents.find((a) => a.role === role);
+    const agent = ir.agents.find(a => a.role === role);
     if (agent) return toSnakeCase(agent.name);
   }
   return undefined;
@@ -156,11 +169,11 @@ function pickAgentForStage(
 // ---------------------------------------------------------------------------
 
 function generateCrewPy(ir: ExportIR): string {
-  const agentKeys = ir.agents.map((a) => toSnakeCase(a.name));
-  const taskKeys = ir.pipeline.stages.map((s) => toSnakeCase(s.name));
+  const agentKeys = ir.agents.map(a => toSnakeCase(a.name));
+  const taskKeys = ir.pipeline.stages.map(s => toSnakeCase(s.name));
 
   // 判断 process 类型：如果有 team 且 strategy 包含 parallel → hierarchical
-  const hasHierarchical = ir.teams.some((t) => t.strategy === "parallel");
+  const hasHierarchical = ir.teams.some(t => t.strategy === "parallel");
   const process = hasHierarchical ? "hierarchical" : "sequential";
 
   const lines: string[] = [];
@@ -190,7 +203,9 @@ function generateCrewPy(ir: ExportIR): string {
 
   // Task 实例化
   lines.push(`    # --- Tasks ---`);
-  lines.push(`    agent_map = {${agentKeys.map((k) => `"${k}": ${k}`).join(", ")}}`);
+  lines.push(
+    `    agent_map = {${agentKeys.map(k => `"${k}": ${k}`).join(", ")}}`
+  );
   lines.push(`    tasks = []`);
   for (const key of taskKeys) {
     lines.push(`    _t_cfg = tasks_cfg["${key}"]`);
@@ -223,7 +238,9 @@ function generateCrewPy(ir: ExportIR): string {
 // ---------------------------------------------------------------------------
 
 function generateRequirementsTxt(): string {
-  return ["crewai>=0.28.0", "crewai-tools>=0.1.0", "pyyaml>=6.0", ""].join("\n");
+  return ["crewai>=0.28.0", "crewai-tools>=0.1.0", "pyyaml>=6.0", ""].join(
+    "\n"
+  );
 }
 
 // ---------------------------------------------------------------------------

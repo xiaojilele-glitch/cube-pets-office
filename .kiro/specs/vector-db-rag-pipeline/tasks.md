@@ -78,7 +78,7 @@
     - _Requirements: 3.3_
   - [x] 4.2 创建 server/rag/store/qdrant-adapter.ts，实现 Qdrant 适配器
     - 使用 Qdrant HTTP API
-    - 按 projectId 分 collection（rag_{projectId}）
+    - 按 projectId 分 collection（rag\_{projectId}）
     - 创建 sourceType/agentId/timestamp/codeLanguage 过滤索引
     - _Requirements: 3.3, 3.4_
   - [x] 4.3 创建 server/rag/store/metadata-store.ts，实现元数据存储

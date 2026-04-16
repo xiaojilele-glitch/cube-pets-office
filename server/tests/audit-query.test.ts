@@ -47,7 +47,10 @@ describe("AuditQuery", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     const keys = generateTestKeys();
-    chain = new AuditChain({ privateKey: keys.privateKey, publicKey: keys.publicKey });
+    chain = new AuditChain({
+      privateKey: keys.privateKey,
+      publicKey: keys.publicKey,
+    });
     tsProvider = new TimestampProvider();
     collector = new AuditCollector(chain, tsProvider);
     query = new AuditQuery(chain, collector);
@@ -74,10 +77,14 @@ describe("AuditQuery", () => {
 
       const result = query.query(
         { eventType: AuditEventType.AGENT_EXECUTED },
-        { pageSize: 50, pageNum: 1 },
+        { pageSize: 50, pageNum: 1 }
       );
       expect(result.total).toBe(2);
-      expect(result.entries.every((e) => e.event.eventType === AuditEventType.AGENT_EXECUTED)).toBe(true);
+      expect(
+        result.entries.every(
+          e => e.event.eventType === AuditEventType.AGENT_EXECUTED
+        )
+      ).toBe(true);
     });
 
     it("should filter by eventType (array)", () => {
@@ -86,8 +93,10 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ eventType: AuditEventType.CONFIG_CHANGED }));
 
       const result = query.query(
-        { eventType: [AuditEventType.AGENT_EXECUTED, AuditEventType.USER_LOGIN] },
-        { pageSize: 50, pageNum: 1 },
+        {
+          eventType: [AuditEventType.AGENT_EXECUTED, AuditEventType.USER_LOGIN],
+        },
+        { pageSize: 50, pageNum: 1 }
       );
       expect(result.total).toBe(2);
     });
@@ -97,7 +106,10 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ actor: { type: "agent", id: "a-2" } }));
       chain.append(makeEvent({ actor: { type: "agent", id: "a-1" } }));
 
-      const result = query.query({ actorId: "a-1" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { actorId: "a-1" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(2);
     });
 
@@ -105,7 +117,10 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ actor: { type: "agent", id: "a-1" } }));
       chain.append(makeEvent({ actor: { type: "user", id: "u-1" } }));
 
-      const result = query.query({ actorType: "user" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { actorType: "user" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(1);
       expect(result.entries[0].event.actor.type).toBe("user");
     });
@@ -115,10 +130,16 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ resource: { type: "config", id: "c-1" } }));
       chain.append(makeEvent({ resource: { type: "mission", id: "m-2" } }));
 
-      const r1 = query.query({ resourceType: "mission" }, { pageSize: 50, pageNum: 1 });
+      const r1 = query.query(
+        { resourceType: "mission" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(r1.total).toBe(2);
 
-      const r2 = query.query({ resourceId: "m-1" }, { pageSize: 50, pageNum: 1 });
+      const r2 = query.query(
+        { resourceId: "m-1" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(r2.total).toBe(1);
     });
 
@@ -127,7 +148,10 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ result: "denied" }));
       chain.append(makeEvent({ result: "failure" }));
 
-      const result = query.query({ result: "denied" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { result: "denied" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(1);
       expect(result.entries[0].event.result).toBe("denied");
     });
@@ -138,9 +162,14 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ eventType: AuditEventType.AGENT_FAILED }));
       chain.append(makeEvent({ eventType: AuditEventType.DECISION_MADE }));
 
-      const result = query.query({ severity: "CRITICAL" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { severity: "CRITICAL" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(1);
-      expect(result.entries[0].event.eventType).toBe(AuditEventType.DECISION_MADE);
+      expect(result.entries[0].event.eventType).toBe(
+        AuditEventType.DECISION_MADE
+      );
     });
 
     it("should filter by category via DEFAULT_EVENT_TYPE_REGISTRY", () => {
@@ -149,7 +178,10 @@ describe("AuditQuery", () => {
       chain.append(makeEvent({ eventType: AuditEventType.USER_LOGIN }));
       chain.append(makeEvent({ eventType: AuditEventType.AUDIT_QUERY }));
 
-      const result = query.query({ category: "security" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { category: "security" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(1);
       expect(result.entries[0].event.eventType).toBe(AuditEventType.USER_LOGIN);
     });
@@ -161,7 +193,7 @@ describe("AuditQuery", () => {
 
       const result = query.query(
         { timeRange: { start: 1500, end: 2500 } },
-        { pageSize: 50, pageNum: 1 },
+        { pageSize: 50, pageNum: 1 }
       );
       expect(result.total).toBe(1);
       expect(result.entries[0].event.timestamp).toBe(2000);
@@ -170,20 +202,43 @@ describe("AuditQuery", () => {
     it("should filter by keyword in action/resource/metadata", () => {
       chain.append(makeEvent({ action: "deploy_service" }));
       chain.append(makeEvent({ action: "execute_task" }));
-      chain.append(makeEvent({ action: "deploy_container", metadata: { note: "urgent" } }));
+      chain.append(
+        makeEvent({ action: "deploy_container", metadata: { note: "urgent" } })
+      );
 
-      const result = query.query({ keyword: "deploy" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { keyword: "deploy" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(2);
     });
 
     it("should combine multiple filters", () => {
-      chain.append(makeEvent({ eventType: AuditEventType.AGENT_EXECUTED, actor: { type: "agent", id: "a-1" }, result: "success" }));
-      chain.append(makeEvent({ eventType: AuditEventType.AGENT_EXECUTED, actor: { type: "agent", id: "a-2" }, result: "success" }));
-      chain.append(makeEvent({ eventType: AuditEventType.USER_LOGIN, actor: { type: "user", id: "a-1" }, result: "success" }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.AGENT_EXECUTED,
+          actor: { type: "agent", id: "a-1" },
+          result: "success",
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.AGENT_EXECUTED,
+          actor: { type: "agent", id: "a-2" },
+          result: "success",
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.USER_LOGIN,
+          actor: { type: "user", id: "a-1" },
+          result: "success",
+        })
+      );
 
       const result = query.query(
         { eventType: AuditEventType.AGENT_EXECUTED, actorId: "a-1" },
-        { pageSize: 50, pageNum: 1 },
+        { pageSize: 50, pageNum: 1 }
       );
       expect(result.total).toBe(1);
     });
@@ -242,7 +297,9 @@ describe("AuditQuery", () => {
     });
 
     it("should match keyword in resource.id", () => {
-      chain.append(makeEvent({ resource: { type: "mission", id: "m-special-123" } }));
+      chain.append(
+        makeEvent({ resource: { type: "mission", id: "m-special-123" } })
+      );
       chain.append(makeEvent({ resource: { type: "mission", id: "m-other" } }));
 
       const result = query.search("special", { pageSize: 50, pageNum: 1 });
@@ -250,18 +307,31 @@ describe("AuditQuery", () => {
     });
 
     it("should match keyword in resource.name", () => {
-      chain.append(makeEvent({ resource: { type: "mission", id: "m-1", name: "ImportantMission" } }));
-      chain.append(makeEvent({ resource: { type: "mission", id: "m-2", name: "OtherMission" } }));
+      chain.append(
+        makeEvent({
+          resource: { type: "mission", id: "m-1", name: "ImportantMission" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          resource: { type: "mission", id: "m-2", name: "OtherMission" },
+        })
+      );
 
       const result = query.search("important", { pageSize: 50, pageNum: 1 });
       expect(result.total).toBe(1);
     });
 
     it("should match keyword in metadata (JSON stringified)", () => {
-      chain.append(makeEvent({ metadata: { description: "critical_deployment" } }));
+      chain.append(
+        makeEvent({ metadata: { description: "critical_deployment" } })
+      );
       chain.append(makeEvent({ metadata: { note: "routine check" } }));
 
-      const result = query.search("critical_deployment", { pageSize: 50, pageNum: 1 });
+      const result = query.search("critical_deployment", {
+        pageSize: 50,
+        pageNum: 1,
+      });
       expect(result.total).toBe(1);
     });
 
@@ -287,7 +357,10 @@ describe("AuditQuery", () => {
 
     it("should return empty for no matches", () => {
       chain.append(makeEvent({ action: "execute_task" }));
-      const result = query.search("nonexistent_keyword", { pageSize: 50, pageNum: 1 });
+      const result = query.search("nonexistent_keyword", {
+        pageSize: 50,
+        pageNum: 1,
+      });
       expect(result.total).toBe(0);
     });
   });
@@ -296,15 +369,19 @@ describe("AuditQuery", () => {
 
   describe("7.3 getPermissionTrail()", () => {
     it("should return permission events where agent is actor", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        actor: { type: "system", id: "agent-x" },
-        resource: { type: "permission", id: "perm-1" },
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.AGENT_EXECUTED,
-        actor: { type: "agent", id: "agent-x" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          actor: { type: "system", id: "agent-x" },
+          resource: { type: "permission", id: "perm-1" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.AGENT_EXECUTED,
+          actor: { type: "agent", id: "agent-x" },
+        })
+      );
 
       const trail = query.getPermissionTrail("agent-x");
       expect(trail).toHaveLength(1);
@@ -312,11 +389,13 @@ describe("AuditQuery", () => {
     });
 
     it("should return permission events where agent is resource target", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_REVOKED,
-        actor: { type: "system", id: "admin" },
-        resource: { type: "agent", id: "agent-y" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_REVOKED,
+          actor: { type: "system", id: "admin" },
+          resource: { type: "agent", id: "agent-y" },
+        })
+      );
 
       const trail = query.getPermissionTrail("agent-y");
       expect(trail).toHaveLength(1);
@@ -324,11 +403,13 @@ describe("AuditQuery", () => {
     });
 
     it("should include ESCALATION_APPROVED events", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.ESCALATION_APPROVED,
-        actor: { type: "user", id: "admin" },
-        resource: { type: "agent", id: "agent-z" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.ESCALATION_APPROVED,
+          actor: { type: "user", id: "admin" },
+          resource: { type: "agent", id: "agent-z" },
+        })
+      );
 
       const trail = query.getPermissionTrail("agent-z");
       expect(trail).toHaveLength(1);
@@ -336,41 +417,54 @@ describe("AuditQuery", () => {
     });
 
     it("should filter by timeRange", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        timestamp: 1000,
-        actor: { type: "system", id: "agent-a" },
-        resource: { type: "permission", id: "p-1" },
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        timestamp: 3000,
-        actor: { type: "system", id: "agent-a" },
-        resource: { type: "permission", id: "p-2" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          timestamp: 1000,
+          actor: { type: "system", id: "agent-a" },
+          resource: { type: "permission", id: "p-1" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          timestamp: 3000,
+          actor: { type: "system", id: "agent-a" },
+          resource: { type: "permission", id: "p-2" },
+        })
+      );
 
-      const trail = query.getPermissionTrail("agent-a", { start: 2000, end: 4000 });
+      const trail = query.getPermissionTrail("agent-a", {
+        start: 2000,
+        end: 4000,
+      });
       expect(trail).toHaveLength(1);
       expect(trail[0].event.timestamp).toBe(3000);
     });
 
     it("should return sorted by timestamp", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        timestamp: 3000,
-        actor: { type: "system", id: "agent-b" },
-        resource: { type: "permission", id: "p-1" },
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_REVOKED,
-        timestamp: 1000,
-        actor: { type: "system", id: "agent-b" },
-        resource: { type: "permission", id: "p-2" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          timestamp: 3000,
+          actor: { type: "system", id: "agent-b" },
+          resource: { type: "permission", id: "p-1" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_REVOKED,
+          timestamp: 1000,
+          actor: { type: "system", id: "agent-b" },
+          resource: { type: "permission", id: "p-2" },
+        })
+      );
 
       const trail = query.getPermissionTrail("agent-b");
       expect(trail).toHaveLength(2);
-      expect(trail[0].event.timestamp).toBeLessThanOrEqual(trail[1].event.timestamp);
+      expect(trail[0].event.timestamp).toBeLessThanOrEqual(
+        trail[1].event.timestamp
+      );
     });
 
     it("should return empty for agent with no permission events", () => {
@@ -391,14 +485,17 @@ describe("AuditQuery", () => {
 
       const violations = query.getPermissionViolations();
       expect(violations).toHaveLength(2);
-      expect(violations.every((e) => e.event.result === "denied")).toBe(true);
+      expect(violations.every(e => e.event.result === "denied")).toBe(true);
     });
 
     it("should filter by timeRange", () => {
       chain.append(makeEvent({ result: "denied", timestamp: 1000 }));
       chain.append(makeEvent({ result: "denied", timestamp: 3000 }));
 
-      const violations = query.getPermissionViolations({ start: 2000, end: 4000 });
+      const violations = query.getPermissionViolations({
+        start: 2000,
+        end: 4000,
+      });
       expect(violations).toHaveLength(1);
       expect(violations[0].event.timestamp).toBe(3000);
     });
@@ -409,7 +506,9 @@ describe("AuditQuery", () => {
 
       const violations = query.getPermissionViolations();
       expect(violations).toHaveLength(2);
-      expect(violations[0].event.timestamp).toBeLessThanOrEqual(violations[1].event.timestamp);
+      expect(violations[0].event.timestamp).toBeLessThanOrEqual(
+        violations[1].event.timestamp
+      );
     });
 
     it("should return empty when no violations exist", () => {
@@ -441,9 +540,21 @@ describe("AuditQuery", () => {
     });
 
     it("should match both lineageId and resource.id", () => {
-      chain.append(makeEvent({ lineageId: "data-x", resource: { type: "data", id: "other" } }));
-      chain.append(makeEvent({ lineageId: "other", resource: { type: "data", id: "data-x" } }));
-      chain.append(makeEvent({ lineageId: "nope", resource: { type: "data", id: "nope" } }));
+      chain.append(
+        makeEvent({
+          lineageId: "data-x",
+          resource: { type: "data", id: "other" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          lineageId: "other",
+          resource: { type: "data", id: "data-x" },
+        })
+      );
+      chain.append(
+        makeEvent({ lineageId: "nope", resource: { type: "data", id: "nope" } })
+      );
 
       const result = query.getDataLineageAudit("data-x");
       expect(result).toHaveLength(2);
@@ -455,7 +566,9 @@ describe("AuditQuery", () => {
 
       const result = query.getDataLineageAudit("d-1");
       expect(result).toHaveLength(2);
-      expect(result[0].event.timestamp).toBeLessThanOrEqual(result[1].event.timestamp);
+      expect(result[0].event.timestamp).toBeLessThanOrEqual(
+        result[1].event.timestamp
+      );
     });
 
     it("should return empty for unknown dataId", () => {

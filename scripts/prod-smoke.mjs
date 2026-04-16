@@ -7,7 +7,7 @@ const probeIntervalMs = 500;
 const routesToCheck = ["/", "/tasks", "/command-center", "/lineage"];
 
 function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function waitForHealth(url, timeoutMs) {
@@ -45,7 +45,7 @@ async function assertHtmlRoute(url) {
 }
 
 function terminate(child) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (child.exitCode !== null) {
       resolve();
       return;
@@ -75,11 +75,11 @@ const child = spawn(process.execPath, ["scripts/start-prod.mjs"], {
 let stdout = "";
 let stderr = "";
 
-child.stdout.on("data", (chunk) => {
+child.stdout.on("data", chunk => {
   stdout += chunk.toString();
 });
 
-child.stderr.on("data", (chunk) => {
+child.stderr.on("data", chunk => {
   stderr += chunk.toString();
 });
 

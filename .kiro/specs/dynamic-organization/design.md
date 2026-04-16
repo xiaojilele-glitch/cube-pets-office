@@ -51,17 +51,18 @@ persistOrganizationDebugLog()
 ## 核心数据模型
 
 ### PlannerOutput (LLM 输出)
+
 ```typescript
 interface PlannerOutput {
-  taskProfile: string;       // 任务类型标签
-  reasoning: string;         // LLM 推理过程
+  taskProfile: string; // 任务类型标签
+  reasoning: string; // LLM 推理过程
   departments: PlannerDepartment[];
 }
 
 interface PlannerDepartment {
   id: string;
   label: string;
-  direction: string;         // 部门方向
+  direction: string; // 部门方向
   strategy: "parallel" | "sequential" | "batched";
   maxConcurrency: number;
   manager: RoleTemplate;
@@ -83,10 +84,11 @@ interface RoleTemplate {
 ```
 
 ### WorkflowOrganizationNode
+
 ```typescript
 interface WorkflowOrganizationNode {
-  id: string;                // 节点 ID (sanitized)
-  agentId: string;           // 智能体 ID (workflowId 前缀)
+  id: string; // 节点 ID (sanitized)
+  agentId: string; // 智能体 ID (workflowId 前缀)
   parentId: string | null;
   departmentId: string;
   departmentLabel: string;
@@ -108,13 +110,13 @@ interface WorkflowOrganizationNode {
 
 `inferTaskProfile()` 通过关键词匹配推断任务类型：
 
-| 关键词模式 | 任务类型 | 默认部门配置 |
-|-----------|---------|-------------|
-| code/develop/implement/bug | coding | 架构部 + 开发部 + 测试部 |
-| market/growth/campaign | marketing | 策略部 + 内容部 + 数据部 |
-| research/analyze/investigate | research | 调研部 + 分析部 |
-| design/ui/ux | design | 设计部 + 用户研究部 |
-| 其他 | general | 规划部 + 执行部 + 质量部 |
+| 关键词模式                   | 任务类型  | 默认部门配置             |
+| ---------------------------- | --------- | ------------------------ |
+| code/develop/implement/bug   | coding    | 架构部 + 开发部 + 测试部 |
+| market/growth/campaign       | marketing | 策略部 + 内容部 + 数据部 |
+| research/analyze/investigate | research  | 调研部 + 分析部          |
+| design/ui/ux                 | design    | 设计部 + 用户研究部      |
+| 其他                         | general   | 规划部 + 执行部 + 质量部 |
 
 ## SOUL.md 生成规则
 
@@ -124,26 +126,32 @@ interface WorkflowOrganizationNode {
 # {name} - {title}
 
 ## 身份
+
 - 部门：{departmentLabel}
 - 角色：{role}
 - 职责：{responsibility}
 
 ## 专业领域
+
 {responsibilities 列表}
 
 ## 目标
+
 {goals 列表}
 
 ## 汇总关注点
+
 {summaryFocus 列表}
 
 ## Skills
+
 {skills 列表及 prompt}
 ```
 
 ## 调试日志
 
 每次组织生成都会持久化 `OrganizationGenerationDebugLog`：
+
 - `prompt`: 发送给 LLM 的完整 prompt
 - `rawResponse`: LLM 原始返回
 - `parsedPlan`: 解析后的 PlannerOutput

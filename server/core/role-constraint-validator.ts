@@ -10,8 +10,8 @@
  * @see Requirements 6.1, 6.2, 6.3, 6.4, 6.5
  */
 
-import type { RoleConstraintError } from '../../shared/role-schema.js';
-import { roleRegistry, type RoleRegistry } from './role-registry.js';
+import type { RoleConstraintError } from "../../shared/role-schema.js";
+import { roleRegistry, type RoleRegistry } from "./role-registry.js";
 
 /** Minimal agent interface needed by the validator */
 export interface ValidatableAgent {
@@ -58,13 +58,13 @@ class RoleConstraintValidator {
     // 1. AGENT_BUSY — Agent has incomplete tasks
     if (context.hasIncompleteTasks) {
       const error: RoleConstraintError = {
-        code: 'AGENT_BUSY',
+        code: "AGENT_BUSY",
         agentId,
         requestedRoleId: targetRoleId,
         denialReason: `Agent ${agentId} has incomplete tasks and cannot switch roles`,
         timestamp: new Date().toISOString(),
       };
-      console.warn('[RoleConstraintValidator]', error.code, error.denialReason);
+      console.warn("[RoleConstraintValidator]", error.code, error.denialReason);
       return error;
     }
 
@@ -75,13 +75,17 @@ class RoleConstraintValidator {
       if (elapsed < cooldownMs) {
         const remainingMs = cooldownMs - elapsed;
         const error: RoleConstraintError = {
-          code: 'COOLDOWN_ACTIVE',
+          code: "COOLDOWN_ACTIVE",
           agentId,
           requestedRoleId: targetRoleId,
           denialReason: `Agent ${agentId} is within cooldown period (${remainingMs}ms remaining)`,
           timestamp: new Date().toISOString(),
         };
-        console.warn('[RoleConstraintValidator]', error.code, error.denialReason);
+        console.warn(
+          "[RoleConstraintValidator]",
+          error.code,
+          error.denialReason
+        );
         return error;
       }
     }
@@ -96,13 +100,17 @@ class RoleConstraintValidator {
           currentTemplate.incompatibleRoles.includes(targetRoleId)
         ) {
           const error: RoleConstraintError = {
-            code: 'ROLE_SWITCH_DENIED',
+            code: "ROLE_SWITCH_DENIED",
             agentId,
             requestedRoleId: targetRoleId,
             denialReason: `Role ${targetRoleId} is in the incompatibleRoles list of current role ${context.currentRoleId}`,
             timestamp: new Date().toISOString(),
           };
-          console.warn('[RoleConstraintValidator]', error.code, error.denialReason);
+          console.warn(
+            "[RoleConstraintValidator]",
+            error.code,
+            error.denialReason
+          );
           return error;
         }
 
@@ -112,13 +120,17 @@ class RoleConstraintValidator {
           !currentTemplate.compatibleRoles.includes(targetRoleId)
         ) {
           const error: RoleConstraintError = {
-            code: 'ROLE_SWITCH_DENIED',
+            code: "ROLE_SWITCH_DENIED",
             agentId,
             requestedRoleId: targetRoleId,
             denialReason: `Role ${targetRoleId} is not in the compatibleRoles list of current role ${context.currentRoleId}`,
             timestamp: new Date().toISOString(),
           };
-          console.warn('[RoleConstraintValidator]', error.code, error.denialReason);
+          console.warn(
+            "[RoleConstraintValidator]",
+            error.code,
+            error.denialReason
+          );
           return error;
         }
       }
@@ -135,13 +147,17 @@ class RoleConstraintValidator {
 
         if (targetRank > currentRank) {
           const error: RoleConstraintError = {
-            code: 'AUTHORITY_APPROVAL_REQUIRED',
+            code: "AUTHORITY_APPROVAL_REQUIRED",
             agentId,
             requestedRoleId: targetRoleId,
             denialReason: `Switching from ${currentTemplate.authorityLevel} authority (${context.currentRoleId}) to ${targetTemplate.authorityLevel} authority (${targetRoleId}) requires orchestrator approval`,
             timestamp: new Date().toISOString(),
           };
-          console.warn('[RoleConstraintValidator]', error.code, error.denialReason);
+          console.warn(
+            "[RoleConstraintValidator]",
+            error.code,
+            error.denialReason
+          );
           return error;
         }
       }

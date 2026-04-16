@@ -10,16 +10,22 @@
  * @see Requirements 7.1, 7.2, 7.3, 7.4, 7.5
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { RoleUsageSummary, AgentRoleDistribution } from '../../shared/role-schema.js';
-import { roleRegistry, RoleRegistry } from './role-registry.js';
+import type {
+  RoleUsageSummary,
+  AgentRoleDistribution,
+} from "../../shared/role-schema.js";
+import { roleRegistry, RoleRegistry } from "./role-registry.js";
 
 const __ra_filename = fileURLToPath(import.meta.url);
 const __ra_dirname = dirname(__ra_filename);
-const DEFAULT_STORE_PATH = resolve(__ra_dirname, '../../data/role-analytics.json');
+const DEFAULT_STORE_PATH = resolve(
+  __ra_dirname,
+  "../../data/role-analytics.json"
+);
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -41,7 +47,7 @@ interface RoleAnalyticsStore {
 }
 
 export interface RoleAlert {
-  type: 'ROLE_UNUSED' | 'AGENT_ROLE_THRASHING';
+  type: "ROLE_UNUSED" | "AGENT_ROLE_THRASHING";
   detail: string;
 }
 
@@ -73,7 +79,11 @@ class RoleAnalyticsService {
   private _getNow: () => Date;
   private _registry: RoleRegistry;
 
-  constructor(storePath?: string, getNow?: () => Date, registry?: RoleRegistry) {
+  constructor(
+    storePath?: string,
+    getNow?: () => Date,
+    registry?: RoleRegistry
+  ) {
     this.storePath = storePath ?? DEFAULT_STORE_PATH;
     this._getNow = getNow ?? (() => new Date());
     this._registry = registry ?? roleRegistry;
@@ -160,7 +170,7 @@ class RoleAnalyticsService {
         const lastLoadTime = new Date(lastLoadStr).getTime();
         if (now - lastLoadTime > SEVEN_DAYS_MS) {
           alerts.push({
-            type: 'ROLE_UNUSED',
+            type: "ROLE_UNUSED",
             detail: `Role "${role.roleName}" (${role.roleId}) has not been loaded for over 7 days (last load: ${lastLoadStr})`,
           });
         }
@@ -170,7 +180,7 @@ class RoleAnalyticsService {
         const createdTime = new Date(role.createdAt).getTime();
         if (now - createdTime > SEVEN_DAYS_MS) {
           alerts.push({
-            type: 'ROLE_UNUSED',
+            type: "ROLE_UNUSED",
             detail: `Role "${role.roleName}" (${role.roleId}) is registered but has never been loaded (created: ${role.createdAt})`,
           });
         }
@@ -180,12 +190,12 @@ class RoleAnalyticsService {
     // Also check roles that have load counts but are no longer registered
     for (const roleId of Object.keys(this.roleLoadCounts)) {
       if (this.roleLoadCounts[roleId] > 0 && this.roleLastLoadAt[roleId]) {
-        const alreadyCovered = registeredRoles.some((r) => r.roleId === roleId);
+        const alreadyCovered = registeredRoles.some(r => r.roleId === roleId);
         if (!alreadyCovered) {
           const lastLoadTime = new Date(this.roleLastLoadAt[roleId]).getTime();
           if (now - lastLoadTime > SEVEN_DAYS_MS) {
             alerts.push({
-              type: 'ROLE_UNUSED',
+              type: "ROLE_UNUSED",
               detail: `Role "${roleId}" has not been loaded for over 7 days (last load: ${this.roleLastLoadAt[roleId]})`,
             });
           }
@@ -194,15 +204,17 @@ class RoleAnalyticsService {
     }
 
     // ── AGENT_ROLE_THRASHING ────────────────────────────────────
-    for (const [agentId, timestamps] of Object.entries(this.agentSwitchTimestamps)) {
+    for (const [agentId, timestamps] of Object.entries(
+      this.agentSwitchTimestamps
+    )) {
       const cutoff = now - TWENTY_FOUR_HOURS_MS;
       const recentCount = timestamps.filter(
-        (ts) => new Date(ts).getTime() > cutoff
+        ts => new Date(ts).getTime() > cutoff
       ).length;
 
       if (recentCount > THRASHING_THRESHOLD) {
         alerts.push({
-          type: 'AGENT_ROLE_THRASHING',
+          type: "AGENT_ROLE_THRASHING",
           detail: `Agent "${agentId}" has switched roles ${recentCount} times in the last 24 hours (threshold: ${THRASHING_THRESHOLD})`,
         });
       }
@@ -219,13 +231,16 @@ class RoleAnalyticsService {
    * Uses roleRegistry to resolve roleName.
    */
   getRoleUsageSummary(): RoleUsageSummary[] {
-    const roleIds = new Set<string>(
-      [...Object.keys(this.roleLoadCounts), ...Object.keys(this.roleActiveDurations)]
-    );
+    const roleIds = new Set<string>([
+      ...Object.keys(this.roleLoadCounts),
+      ...Object.keys(this.roleActiveDurations),
+    ]);
 
-    const avgMatchScore = this.matchScoreHistogram.length > 0
-      ? this.matchScoreHistogram.reduce((sum, s) => sum + s, 0) / this.matchScoreHistogram.length
-      : 0;
+    const avgMatchScore =
+      this.matchScoreHistogram.length > 0
+        ? this.matchScoreHistogram.reduce((sum, s) => sum + s, 0) /
+          this.matchScoreHistogram.length
+        : 0;
 
     const summaries: RoleUsageSummary[] = [];
 
@@ -251,7 +266,10 @@ class RoleAnalyticsService {
     const distributions: AgentRoleDistribution[] = [];
 
     for (const [agentId, roleLoads] of Object.entries(this.agentRoleLoads)) {
-      const totalLoads = Object.values(roleLoads).reduce((sum, c) => sum + c, 0);
+      const totalLoads = Object.values(roleLoads).reduce(
+        (sum, c) => sum + c,
+        0
+      );
       if (totalLoads === 0) continue;
 
       const roles = Object.entries(roleLoads).map(([roleId, count]) => {
@@ -284,42 +302,60 @@ class RoleAnalyticsService {
     const lines: string[] = [];
 
     // role_load_total
-    lines.push('# HELP role_load_total Total number of role loads');
-    lines.push('# TYPE role_load_total counter');
+    lines.push("# HELP role_load_total Total number of role loads");
+    lines.push("# TYPE role_load_total counter");
     for (const [roleId, count] of Object.entries(this.roleLoadCounts)) {
       lines.push(`role_load_total{roleId="${roleId}"} ${count}`);
     }
 
     // role_active_duration_seconds
-    lines.push('# HELP role_active_duration_seconds Total active duration per role');
-    lines.push('# TYPE role_active_duration_seconds counter');
+    lines.push(
+      "# HELP role_active_duration_seconds Total active duration per role"
+    );
+    lines.push("# TYPE role_active_duration_seconds counter");
     for (const [roleId, duration] of Object.entries(this.roleActiveDurations)) {
-      lines.push(`role_active_duration_seconds{roleId="${roleId}"} ${duration}`);
+      lines.push(
+        `role_active_duration_seconds{roleId="${roleId}"} ${duration}`
+      );
     }
 
     // role_switch_total
-    lines.push('# HELP role_switch_total Total number of role switches per agent');
-    lines.push('# TYPE role_switch_total counter');
+    lines.push(
+      "# HELP role_switch_total Total number of role switches per agent"
+    );
+    lines.push("# TYPE role_switch_total counter");
     for (const [agentId, count] of Object.entries(this.agentSwitchCounts)) {
       lines.push(`role_switch_total{agentId="${agentId}"} ${count}`);
     }
 
     // role_match_score_histogram
-    lines.push('# HELP role_match_score_histogram Distribution of role match scores');
-    lines.push('# TYPE role_match_score_histogram histogram');
+    lines.push(
+      "# HELP role_match_score_histogram Distribution of role match scores"
+    );
+    lines.push("# TYPE role_match_score_histogram histogram");
     if (this.matchScoreHistogram.length > 0) {
       const sum = this.matchScoreHistogram.reduce((a, b) => a + b, 0);
-      lines.push(`role_match_score_histogram_count ${this.matchScoreHistogram.length}`);
+      lines.push(
+        `role_match_score_histogram_count ${this.matchScoreHistogram.length}`
+      );
       lines.push(`role_match_score_histogram_sum ${sum}`);
       // Buckets: 0.1, 0.2, ..., 1.0
-      for (let bucket = 0.1; bucket <= 1.0; bucket = Math.round((bucket + 0.1) * 10) / 10) {
-        const count = this.matchScoreHistogram.filter((s) => s <= bucket).length;
-        lines.push(`role_match_score_histogram_bucket{le="${bucket}"} ${count}`);
+      for (
+        let bucket = 0.1;
+        bucket <= 1.0;
+        bucket = Math.round((bucket + 0.1) * 10) / 10
+      ) {
+        const count = this.matchScoreHistogram.filter(s => s <= bucket).length;
+        lines.push(
+          `role_match_score_histogram_bucket{le="${bucket}"} ${count}`
+        );
       }
-      lines.push(`role_match_score_histogram_bucket{le="+Inf"} ${this.matchScoreHistogram.length}`);
+      lines.push(
+        `role_match_score_histogram_bucket{le="+Inf"} ${this.matchScoreHistogram.length}`
+      );
     }
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   // ── Persistence ───────────────────────────────────────────────
@@ -330,7 +366,7 @@ class RoleAnalyticsService {
     }
 
     try {
-      const raw = readFileSync(this.storePath, 'utf-8');
+      const raw = readFileSync(this.storePath, "utf-8");
       const parsed = JSON.parse(raw) as RoleAnalyticsStore;
 
       this.roleLoadCounts = parsed.roleLoadCounts ?? {};
@@ -361,9 +397,9 @@ class RoleAnalyticsService {
 
     try {
       mkdirSync(dirname(this.storePath), { recursive: true });
-      writeFileSync(this.storePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.storePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[RoleAnalyticsService] Persistence write failed:', err);
+      console.error("[RoleAnalyticsService] Persistence write failed:", err);
     }
   }
 }

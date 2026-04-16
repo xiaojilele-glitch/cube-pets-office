@@ -2,7 +2,10 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1"
+    />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <title>Cube Pets Office · 立方宠物研究室</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -21,9 +24,9 @@
       const analyticsWebsiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
 
       if (analyticsEndpoint && analyticsWebsiteId) {
-        const script = document.createElement('script');
+        const script = document.createElement("script");
         script.defer = true;
-        script.src = `${analyticsEndpoint.replace(/\/$/, '')}/umami`;
+        script.src = `${analyticsEndpoint.replace(/\/$/, "")}/umami`;
         script.dataset.websiteId = analyticsWebsiteId;
         document.body.appendChild(script);
       }

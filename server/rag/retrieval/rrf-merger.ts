@@ -8,7 +8,7 @@
  * Requirements: 4.4
  */
 
-import type { SearchHit } from '../store/vector-store-adapter.js';
+import type { SearchHit } from "../store/vector-store-adapter.js";
 
 /**
  * RRF 合并两个排序列表。
@@ -17,7 +17,7 @@ import type { SearchHit } from '../store/vector-store-adapter.js';
 export function rrfMerge(
   semanticResults: SearchHit[],
   keywordResults: SearchHit[],
-  k: number = 60,
+  k: number = 60
 ): SearchHit[] {
   const scores = new Map<string, number>();
   const hitMap = new Map<string, SearchHit>();

@@ -1,0 +1,41 @@
+.nh
+.TH "GH-REPO-CLONE" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-repo-clone - Clone a repository locally
+
+
+.SH SYNOPSIS
+.PP
+\fBgh repo clone <repository> [<directory>] [-- <gitflags>...]\fR
+
+
+.SH DESCRIPTION
+.PP
+Clone a GitHub repository locally. Pass additional \fBgit clone\fR flags by listing
+them after \fB--\fR\&.
+
+.PP
+If the \fBOWNER/\fR portion of the \fBOWNER/REPO\fR repository argument is omitted, it
+defaults to the name of the authenticating user.
+
+.PP
+If the repository is a fork, its parent repository will be added as an additional
+git remote called \fBupstream\fR\&. The remote name can be configured using \fB--upstream-remote-name\fR\&.
+The \fB--upstream-remote-name\fR option supports an \fB@owner\fR value which will name
+the remote after the owner of the parent repository.
+
+.PP
+If the repository is a fork, its parent repository will be set as the default remote repository.
+
+
+.SH OPTIONS
+.TP
+\fB-u\fR, \fB--upstream-remote-name\fR \fB<string>\fR
+Upstream remote name when cloning a fork
+
+
+.SH SEE ALSO
+.PP
+\fBgh-repo(1)\fR

@@ -26,11 +26,13 @@ import { EXECUTOR_EVENT_TYPES } from "../../shared/executor/contracts.js";
 /** Arbitrary progress value — any finite number (including out-of-range) */
 const arbProgress = fc.oneof(
   fc.integer({ min: -500, max: 500 }),
-  fc.double({ min: -1000, max: 1000, noNaN: true, noDefaultInfinity: true }),
+  fc.double({ min: -1000, max: 1000, noNaN: true, noDefaultInfinity: true })
 );
 
 /** Arbitrary non-empty trimmed string for summary/message fields */
-const arbText = fc.string({ minLength: 1, maxLength: 100 }).map((s) => s.trim() || "fallback");
+const arbText = fc
+  .string({ minLength: 1, maxLength: 100 })
+  .map(s => s.trim() || "fallback");
 
 /** Arbitrary execution mode — mock or real (used to verify mode-agnostic behavior) */
 const arbMode = fc.constantFrom("mock" as const, "real" as const);
@@ -46,7 +48,6 @@ const arbOptionalText = fc.option(arbText, { nil: undefined });
 // **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 7.4**
 
 describe("Feature: executor-integration, Property 7: 事件到状态映射", () => {
-
   // ── 7a: job.started → action "running" (Req 4.1) ──────────────────────────
 
   it("job.started always maps to action=running regardless of mode", () => {
@@ -65,9 +66,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           };
           const result = mapExecutorEventToAction(input);
           expect(result.action).toBe("running");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -89,9 +90,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           };
           const result = mapExecutorEventToAction(input);
           expect(result.action).toBe("done");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -113,9 +114,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           };
           const result = mapExecutorEventToAction(input);
           expect(result.action).toBe("failed");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -135,9 +136,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           };
           const result = mapExecutorEventToAction(input);
           expect(result.action).toBe("cancelled");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -164,9 +165,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
             const expected = Math.max(0, Math.min(100, progress));
             expect(result.progress).toBe(expected);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -174,7 +175,7 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
 
   it("job.started also clamps progress to [0, 100]", () => {
     fc.assert(
-      fc.property(arbProgress, (progress) => {
+      fc.property(arbProgress, progress => {
         const input: EventMappingInput = {
           type: "job.started",
           progress,
@@ -187,7 +188,7 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           expect(result.progress).toBe(expected);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -199,7 +200,7 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
       "job.progress" as const,
       "job.completed" as const,
       "job.failed" as const,
-      "job.cancelled" as const,
+      "job.cancelled" as const
     );
 
     fc.assert(
@@ -230,8 +231,10 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
 
           // Same progress if applicable
           if (
-            (mockResult.action === "running" || mockResult.action === "progress") &&
-            (realResult.action === "running" || realResult.action === "progress")
+            (mockResult.action === "running" ||
+              mockResult.action === "progress") &&
+            (realResult.action === "running" ||
+              realResult.action === "progress")
           ) {
             expect(mockResult.progress).toBe(realResult.progress);
           }
@@ -240,7 +243,10 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           if (mockResult.action === "done" && realResult.action === "done") {
             expect(mockResult.summary).toBe(realResult.summary);
           }
-          if (mockResult.action === "failed" && realResult.action === "failed") {
+          if (
+            mockResult.action === "failed" &&
+            realResult.action === "failed"
+          ) {
             expect(mockResult.error).toBe(realResult.error);
           }
           if (
@@ -249,9 +255,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           ) {
             expect(mockResult.reason).toBe(realResult.reason);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -260,7 +266,7 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
   it("undefined progress defaults to 0 for started and progress events", () => {
     const arbStartOrProgress = fc.constantFrom(
       "job.started" as const,
-      "job.progress" as const,
+      "job.progress" as const
     );
 
     fc.assert(
@@ -275,7 +281,7 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           expect(result.progress).toBe(0);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -308,9 +314,9 @@ describe("Feature: executor-integration, Property 7: 事件到状态映射", () 
           };
           const result = mapExecutorEventToAction(input);
           expect(result.action).not.toBe("unknown");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

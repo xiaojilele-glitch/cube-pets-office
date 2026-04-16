@@ -33,10 +33,10 @@
     - _Requirements: 1.3, 1.4, 1.5_
 
   - [ ] 1.5 创建 .dockerignore
-    - 排除 .env、.git、node_modules、data/、.manus-logs/、docs/、*.md（README 除外）、测试文件
+    - 排除 .env、.git、node_modules、data/、.manus-logs/、docs/、\*.md（README 除外）、测试文件
     - _Requirements: 9.4_
 
-  - [ ]* 1.6 编写 Dockerfile 非 root 用户属性测试
+  - [ ]\* 1.6 编写 Dockerfile 非 root 用户属性测试
     - **Property 6: Dockerfile 非 root 用户**
     - 解析所有 Dockerfile，验证最终阶段包含非 root USER 指令
     - **Validates: Requirements 1.4**
@@ -48,12 +48,12 @@
     - 实现 requestLogMiddleware(logger) Express 中间件，记录 HTTP 请求的 method、path、statusCode、durationMs
     - _Requirements: 5.1, 5.3, 5.4_
 
-  - [ ]* 2.2 编写日志格式与级别正确性属性测试
+  - [ ]\* 2.2 编写日志格式与级别正确性属性测试
     - **Property 1: 日志格式与级别正确性**
     - 使用 fast-check 生成随机日志级别和消息，验证输出 JSON 格式和字段正确性
     - **Validates: Requirements 5.1, 5.3**
 
-  - [ ]* 2.3 编写 HTTP 请求日志完整性属性测试
+  - [ ]\* 2.3 编写 HTTP 请求日志完整性属性测试
     - **Property 2: HTTP 请求日志完整性**
     - 使用 fast-check 生成随机 HTTP method/path/statusCode，验证中间件输出包含对应字段
     - **Validates: Requirements 5.4**
@@ -70,7 +70,7 @@
     - 监听 SIGTERM 和 SIGINT，调用 server.close()，等待超时（默认 30s），执行清理回调后退出
     - _Requirements: 4.3_
 
-  - [ ]* 2.6 编写优雅关闭属性测试
+  - [ ]\* 2.6 编写优雅关闭属性测试
     - **Property 5: 优雅关闭完成性**
     - 创建 HTTP 服务器，发起随机数量的并发请求，触发关闭信号，验证所有请求完成后服务器才退出
     - **Validates: Requirements 4.3**
@@ -80,7 +80,7 @@
     - 缺失时返回包含所有缺失变量名的错误对象
     - _Requirements: 3.4_
 
-  - [ ]* 2.8 编写环境变量缺失检测属性测试
+  - [ ]\* 2.8 编写环境变量缺失检测属性测试
     - **Property 4: 环境变量缺失检测**
     - 使用 fast-check 生成必需变量的随机子集，验证验证函数正确报告所有缺失项
     - **Validates: Requirements 3.4**
@@ -119,7 +119,7 @@
     - 添加 GRAFANA_ADMIN_PASSWORD 和 GRAFANA_PORT 变量
     - _Requirements: 3.1, 3.2, 3.3_
 
-  - [ ]* 4.4 编写环境配置完整性属性测试
+  - [ ]\* 4.4 编写环境配置完整性属性测试
     - **Property 3: 环境配置完整性**
     - 解析所有 .env 文件，验证每个文件包含所有必需环境变量键
     - **Validates: Requirements 3.3**

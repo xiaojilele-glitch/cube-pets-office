@@ -7,10 +7,26 @@
 
 // ─── 资源类型与操作 ─────────────────────────────────────────────────────────
 
-export const RESOURCE_TYPES = ["filesystem", "network", "api", "database", "mcp_tool"] as const;
+export const RESOURCE_TYPES = [
+  "filesystem",
+  "network",
+  "api",
+  "database",
+  "mcp_tool",
+] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
-export const ACTIONS = ["read", "write", "execute", "delete", "connect", "call", "select", "insert", "update"] as const;
+export const ACTIONS = [
+  "read",
+  "write",
+  "execute",
+  "delete",
+  "connect",
+  "call",
+  "select",
+  "insert",
+  "update",
+] as const;
 export type Action = (typeof ACTIONS)[number];
 
 export const RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
@@ -161,7 +177,10 @@ export interface RiskFactor {
 
 export interface PermissionConflict {
   agentId: string;
-  conflictType: "allow_deny_overlap" | "excessive_scope" | "dangerous_combination";
+  conflictType:
+    | "allow_deny_overlap"
+    | "excessive_scope"
+    | "dangerous_combination";
   permissions: Permission[];
   description: string;
   suggestion: string;

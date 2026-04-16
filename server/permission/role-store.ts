@@ -15,110 +15,191 @@ type Database = typeof db;
 
 // ─── Builtin Role Definitions ───────────────────────────────────────────────
 
-const BUILTIN_ROLES: Omit<AgentRole, "version" | "createdAt" | "updatedAt">[] = [
-  {
-    roleId: "reader",
-    roleName: "Reader",
-    description: "Filesystem read-only access within agent workspace",
-    permissions: [
-      {
-        resourceType: "filesystem",
-        action: "read",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**"] },
-        effect: "allow",
-      },
-    ],
-  },
-  {
-    roleId: "writer",
-    roleName: "Writer",
-    description: "Filesystem read and write access within agent workspace",
-    permissions: [
-      {
-        resourceType: "filesystem",
-        action: "read",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**"] },
-        effect: "allow",
-      },
-      {
-        resourceType: "filesystem",
-        action: "write",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**"] },
-        effect: "allow",
-      },
-    ],
-  },
-  {
-    roleId: "admin",
-    roleName: "Admin",
-    description: "Full access to all resources without constraints",
-    permissions: [
-      { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
-      { resourceType: "filesystem", action: "write", constraints: {}, effect: "allow" },
-      { resourceType: "filesystem", action: "execute", constraints: {}, effect: "allow" },
-      { resourceType: "filesystem", action: "delete", constraints: {}, effect: "allow" },
-      { resourceType: "network", action: "connect", constraints: {}, effect: "allow" },
-      { resourceType: "network", action: "call", constraints: {}, effect: "allow" },
-      { resourceType: "api", action: "call", constraints: {}, effect: "allow" },
-      { resourceType: "database", action: "select", constraints: {}, effect: "allow" },
-      { resourceType: "database", action: "insert", constraints: {}, effect: "allow" },
-      { resourceType: "database", action: "update", constraints: {}, effect: "allow" },
-      { resourceType: "database", action: "delete", constraints: {}, effect: "allow" },
-      { resourceType: "mcp_tool", action: "call", constraints: {}, effect: "allow" },
-    ],
-  },
-  {
-    roleId: "executor",
-    roleName: "Executor",
-    description: "Filesystem read, write, and execute within agent workspace and /tmp",
-    permissions: [
-      {
-        resourceType: "filesystem",
-        action: "read",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"] },
-        effect: "allow",
-      },
-      {
-        resourceType: "filesystem",
-        action: "write",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"] },
-        effect: "allow",
-      },
-      {
-        resourceType: "filesystem",
-        action: "execute",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"] },
-        effect: "allow",
-      },
-    ],
-  },
-  {
-    roleId: "network-caller",
-    roleName: "NetworkCaller",
-    description: "Network connect/http/https with domain whitelist",
-    permissions: [
-      {
-        resourceType: "network",
-        action: "connect",
-        constraints: { domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"] },
-        effect: "allow",
-      },
-      {
-        resourceType: "network",
-        action: "call",
-        constraints: {
-          domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"],
-          methods: ["GET", "POST", "PUT", "DELETE"],
+const BUILTIN_ROLES: Omit<AgentRole, "version" | "createdAt" | "updatedAt">[] =
+  [
+    {
+      roleId: "reader",
+      roleName: "Reader",
+      description: "Filesystem read-only access within agent workspace",
+      permissions: [
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**"] },
+          effect: "allow",
         },
-        effect: "allow",
-      },
-    ],
-  },
-];
+      ],
+    },
+    {
+      roleId: "writer",
+      roleName: "Writer",
+      description: "Filesystem read and write access within agent workspace",
+      permissions: [
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**"] },
+          effect: "allow",
+        },
+        {
+          resourceType: "filesystem",
+          action: "write",
+          constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**"] },
+          effect: "allow",
+        },
+      ],
+    },
+    {
+      roleId: "admin",
+      roleName: "Admin",
+      description: "Full access to all resources without constraints",
+      permissions: [
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "filesystem",
+          action: "write",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "filesystem",
+          action: "execute",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "filesystem",
+          action: "delete",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "network",
+          action: "connect",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "network",
+          action: "call",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "api",
+          action: "call",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "database",
+          action: "select",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "database",
+          action: "insert",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "database",
+          action: "update",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "database",
+          action: "delete",
+          constraints: {},
+          effect: "allow",
+        },
+        {
+          resourceType: "mcp_tool",
+          action: "call",
+          constraints: {},
+          effect: "allow",
+        },
+      ],
+    },
+    {
+      roleId: "executor",
+      roleName: "Executor",
+      description:
+        "Filesystem read, write, and execute within agent workspace and /tmp",
+      permissions: [
+        {
+          resourceType: "filesystem",
+          action: "read",
+          constraints: {
+            pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"],
+          },
+          effect: "allow",
+        },
+        {
+          resourceType: "filesystem",
+          action: "write",
+          constraints: {
+            pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"],
+          },
+          effect: "allow",
+        },
+        {
+          resourceType: "filesystem",
+          action: "execute",
+          constraints: {
+            pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"],
+          },
+          effect: "allow",
+        },
+      ],
+    },
+    {
+      roleId: "network-caller",
+      roleName: "NetworkCaller",
+      description: "Network connect/http/https with domain whitelist",
+      permissions: [
+        {
+          resourceType: "network",
+          action: "connect",
+          constraints: {
+            domainPatterns: [
+              "*.company.com",
+              "*.googleapis.com",
+              "*.openai.com",
+            ],
+          },
+          effect: "allow",
+        },
+        {
+          resourceType: "network",
+          action: "call",
+          constraints: {
+            domainPatterns: [
+              "*.company.com",
+              "*.googleapis.com",
+              "*.openai.com",
+            ],
+            methods: ["GET", "POST", "PUT", "DELETE"],
+          },
+          effect: "allow",
+        },
+      ],
+    },
+  ];
 
 // ─── Builtin Template Definitions ───────────────────────────────────────────
 
-const BUILTIN_TEMPLATES: Omit<PermissionTemplate, "version" | "createdAt" | "updatedAt">[] = [
+const BUILTIN_TEMPLATES: Omit<
+  PermissionTemplate,
+  "version" | "createdAt" | "updatedAt"
+>[] = [
   {
     templateId: "tpl-code-executor",
     templateName: "CodeExecutor",
@@ -129,24 +210,40 @@ const BUILTIN_TEMPLATES: Omit<PermissionTemplate, "version" | "createdAt" | "upd
       {
         resourceType: "filesystem",
         action: "read",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"] },
+        constraints: {
+          pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"],
+        },
         effect: "allow",
       },
       {
         resourceType: "filesystem",
         action: "write",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"] },
+        constraints: {
+          pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"],
+        },
         effect: "allow",
       },
       {
         resourceType: "filesystem",
         action: "execute",
-        constraints: { pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"] },
+        constraints: {
+          pathPatterns: ["/sandbox/agent_*/workspace/**", "/tmp/**"],
+        },
         effect: "allow",
       },
       // Explicit deny network
-      { resourceType: "network", action: "connect", constraints: {}, effect: "deny" },
-      { resourceType: "network", action: "call", constraints: {}, effect: "deny" },
+      {
+        resourceType: "network",
+        action: "connect",
+        constraints: {},
+        effect: "deny",
+      },
+      {
+        resourceType: "network",
+        action: "call",
+        constraints: {},
+        effect: "deny",
+      },
     ],
   },
   {
@@ -166,13 +263,17 @@ const BUILTIN_TEMPLATES: Omit<PermissionTemplate, "version" | "createdAt" | "upd
       {
         resourceType: "network",
         action: "connect",
-        constraints: { domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"] },
+        constraints: {
+          domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"],
+        },
         effect: "allow",
       },
       {
         resourceType: "network",
         action: "call",
-        constraints: { domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"] },
+        constraints: {
+          domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"],
+        },
         effect: "allow",
       },
       // Database select
@@ -204,8 +305,18 @@ const BUILTIN_TEMPLATES: Omit<PermissionTemplate, "version" | "createdAt" | "upd
         effect: "allow",
       },
       // Explicit deny network
-      { resourceType: "network", action: "connect", constraints: {}, effect: "deny" },
-      { resourceType: "network", action: "call", constraints: {}, effect: "deny" },
+      {
+        resourceType: "network",
+        action: "connect",
+        constraints: {},
+        effect: "deny",
+      },
+      {
+        resourceType: "network",
+        action: "call",
+        constraints: {},
+        effect: "deny",
+      },
     ],
   },
   {
@@ -225,13 +336,17 @@ const BUILTIN_TEMPLATES: Omit<PermissionTemplate, "version" | "createdAt" | "upd
       {
         resourceType: "network",
         action: "connect",
-        constraints: { domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"] },
+        constraints: {
+          domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"],
+        },
         effect: "allow",
       },
       {
         resourceType: "network",
         action: "call",
-        constraints: { domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"] },
+        constraints: {
+          domainPatterns: ["*.company.com", "*.googleapis.com", "*.openai.com"],
+        },
         effect: "allow",
       },
       // API call
@@ -259,9 +374,24 @@ const BUILTIN_TEMPLATES: Omit<PermissionTemplate, "version" | "createdAt" | "upd
         effect: "allow",
       },
       // Explicit deny database write
-      { resourceType: "database", action: "insert", constraints: {}, effect: "deny" },
-      { resourceType: "database", action: "update", constraints: {}, effect: "deny" },
-      { resourceType: "database", action: "delete", constraints: {}, effect: "deny" },
+      {
+        resourceType: "database",
+        action: "insert",
+        constraints: {},
+        effect: "deny",
+      },
+      {
+        resourceType: "database",
+        action: "update",
+        constraints: {},
+        effect: "deny",
+      },
+      {
+        resourceType: "database",
+        action: "delete",
+        constraints: {},
+        effect: "deny",
+      },
     ],
   },
 ];
@@ -274,10 +404,10 @@ export class RoleStore {
   // ── Role CRUD ──────────────────────────────────────────────────────────
 
   createRole(
-    role: Omit<AgentRole, "version" | "createdAt" | "updatedAt">,
+    role: Omit<AgentRole, "version" | "createdAt" | "updatedAt">
   ): AgentRole {
     const roles = this.db.getPermissionRoles();
-    if (roles.find((r) => r.roleId === role.roleId)) {
+    if (roles.find(r => r.roleId === role.roleId)) {
       throw new Error(`Role "${role.roleId}" already exists`);
     }
     const now = new Date().toISOString();
@@ -293,7 +423,7 @@ export class RoleStore {
   }
 
   getRole(roleId: string): AgentRole | undefined {
-    return this.db.getPermissionRoles().find((r) => r.roleId === roleId);
+    return this.db.getPermissionRoles().find(r => r.roleId === roleId);
   }
 
   listRoles(): AgentRole[] {
@@ -302,10 +432,12 @@ export class RoleStore {
 
   updateRole(
     roleId: string,
-    updates: Partial<Pick<AgentRole, "roleName" | "description" | "permissions">>,
+    updates: Partial<
+      Pick<AgentRole, "roleName" | "description" | "permissions">
+    >
   ): AgentRole {
     const roles = this.db.getPermissionRoles();
-    const idx = roles.findIndex((r) => r.roleId === roleId);
+    const idx = roles.findIndex(r => r.roleId === roleId);
     if (idx === -1) {
       throw new Error(`Role "${roleId}" not found`);
     }
@@ -325,7 +457,7 @@ export class RoleStore {
 
   initBuiltinRoles(): void {
     const existing = this.db.getPermissionRoles();
-    const existingIds = new Set(existing.map((r) => r.roleId));
+    const existingIds = new Set(existing.map(r => r.roleId));
     const now = new Date().toISOString();
     let changed = false;
 
@@ -349,10 +481,10 @@ export class RoleStore {
   // ── Template CRUD ─────────────────────────────────────────────────────
 
   createTemplate(
-    template: Omit<PermissionTemplate, "version" | "createdAt" | "updatedAt">,
+    template: Omit<PermissionTemplate, "version" | "createdAt" | "updatedAt">
   ): PermissionTemplate {
     const templates = this.db.getPermissionTemplates();
-    if (templates.find((t) => t.templateId === template.templateId)) {
+    if (templates.find(t => t.templateId === template.templateId)) {
       throw new Error(`Template "${template.templateId}" already exists`);
     }
     const now = new Date().toISOString();
@@ -370,7 +502,7 @@ export class RoleStore {
   getTemplate(templateId: string): PermissionTemplate | undefined {
     return this.db
       .getPermissionTemplates()
-      .find((t) => t.templateId === templateId);
+      .find(t => t.templateId === templateId);
   }
 
   listTemplates(): PermissionTemplate[] {
@@ -380,14 +512,14 @@ export class RoleStore {
   getTemplateByRole(targetRole: string): PermissionTemplate | undefined {
     return this.db
       .getPermissionTemplates()
-      .find((t) => t.targetRole === targetRole);
+      .find(t => t.targetRole === targetRole);
   }
 
   // ── Builtin Templates ─────────────────────────────────────────────────
 
   initBuiltinTemplates(): void {
     const existing = this.db.getPermissionTemplates();
-    const existingIds = new Set(existing.map((t) => t.templateId));
+    const existingIds = new Set(existing.map(t => t.templateId));
     const now = new Date().toISOString();
     let changed = false;
 

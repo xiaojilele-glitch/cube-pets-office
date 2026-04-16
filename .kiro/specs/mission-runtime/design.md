@@ -16,9 +16,11 @@ Mission 整体状态：`queued | running | waiting | done | failed`
 ## 核心组件
 
 ### MissionStore (`server/tasks/mission-store.ts`)
+
 内存状态机 + 可选快照持久化。
 
 关键方法：
+
 - `create(input)` → 初始化六阶段，状态 queued
 - `markRunning(id, stageKey, detail, progress, source)` → 推进阶段
 - `updateStage(id, stageKey, patch, progress, source)` → 更新阶段详情
@@ -29,6 +31,7 @@ Mission 整体状态：`queued | running | waiting | done | failed`
 - `recoverInterrupted(options)` → 重启恢复
 
 ### MissionOrchestrator (`server/core/mission-orchestrator.ts`)
+
 编排器，协调 MissionStore、ExecutionPlanBuilder、ExecutorClient。
 
 ```
@@ -50,6 +53,7 @@ submitDecision(missionId, submission)
 ```
 
 ### ExecutionPlanBuilder (`server/core/execution-plan-builder.ts`)
+
 将 sourceText 转化为结构化执行计划。
 
 意图分类规则（`classifyExecutionIntent`）：
@@ -64,17 +68,19 @@ submitDecision(missionId, submission)
 | 无匹配 | custom | 0.45 | analyze→plan→custom |
 
 ### ExecutorClient (`server/core/executor-client.ts`)
+
 HTTP 客户端，负责与远端执行器通信。
 
 ```typescript
 class ExecutorClient {
-  assertReachable()     // GET /health，不可达时 fail fast
-  dispatchPlan(plan)    // POST /api/executor/jobs
-  buildJobRequest(plan) // 构建 ExecutorJobRequest（含 callback URL 和 HMAC 配置）
+  assertReachable(); // GET /health，不可达时 fail fast
+  dispatchPlan(plan); // POST /api/executor/jobs
+  buildJobRequest(plan); // 构建 ExecutorJobRequest（含 callback URL 和 HMAC 配置）
 }
 ```
 
 错误类型：
+
 - `unavailable` — 执行器不可达或超时
 - `protocol` — 响应格式不符合契约
 - `rejected` — 执行器主动拒绝
@@ -82,24 +88,25 @@ class ExecutorClient {
 ## 数据模型
 
 ### MissionRecord
+
 ```typescript
 interface MissionRecord {
-  id: string;              // m_<timestamp>_<random>
-  kind: string;            // chat | executor-smoke | restart-smoke
+  id: string; // m_<timestamp>_<random>
+  kind: string; // chat | executor-smoke | restart-smoke
   title: string;
   sourceText?: string;
-  topicId?: string;        // 飞书线程聚合
-  status: MissionStatus;   // queued | running | waiting | done | failed
-  progress: number;        // 0-100
+  topicId?: string; // 飞书线程聚合
+  status: MissionStatus; // queued | running | waiting | done | failed
+  progress: number; // 0-100
   currentStageKey?: string;
-  stages: MissionStage[];  // 六阶段数组
+  stages: MissionStage[]; // 六阶段数组
   summary?: string;
-  executor?: MissionExecutorContext;   // 执行器信息
-  instance?: MissionInstanceContext;   // 容器实例信息
-  artifacts?: MissionArtifact[];      // 工件列表
+  executor?: MissionExecutorContext; // 执行器信息
+  instance?: MissionInstanceContext; // 容器实例信息
+  artifacts?: MissionArtifact[]; // 工件列表
   waitingFor?: string;
-  decision?: MissionDecision;         // 决策选项
-  events: MissionEvent[];             // 事件流
+  decision?: MissionDecision; // 决策选项
+  events: MissionEvent[]; // 事件流
   createdAt: number;
   updatedAt: number;
   completedAt?: number;
@@ -107,6 +114,7 @@ interface MissionRecord {
 ```
 
 ### ExecutionPlan
+
 ```typescript
 interface ExecutionPlan {
   version: string;
@@ -135,14 +143,14 @@ Header: x-cube-executor-timestamp, x-cube-executor-signature
 
 ## REST API
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | /api/tasks | 创建 Mission |
-| GET | /api/tasks | 列表（limit 参数） |
-| GET | /api/tasks/:id | 详情 |
-| GET | /api/tasks/:id/events | 事件流（limit 参数） |
-| POST | /api/tasks/:id/decision | 提交决策 |
-| POST | /api/executor/events | 执行器回调 |
+| 方法 | 路径                    | 说明                 |
+| ---- | ----------------------- | -------------------- |
+| POST | /api/tasks              | 创建 Mission         |
+| GET  | /api/tasks              | 列表（limit 参数）   |
+| GET  | /api/tasks/:id          | 详情                 |
+| GET  | /api/tasks/:id/events   | 事件流（limit 参数） |
+| POST | /api/tasks/:id/decision | 提交决策             |
+| POST | /api/executor/events    | 执行器回调           |
 
 ## Socket 事件
 

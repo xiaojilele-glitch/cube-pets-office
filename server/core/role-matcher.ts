@@ -15,19 +15,23 @@
  * @see Requirements 3.1, 3.2, 3.3, 3.4, 3.5
  */
 
-import type { RoleTemplate, AgentRoleRecommendation, RolePerformanceRecord } from '../../shared/role-schema.js';
-import type { Agent } from './agent.js';
-import { roleRegistry } from './role-registry.js';
-import { rolePerformanceTracker } from './role-performance-tracker.js';
+import type {
+  RoleTemplate,
+  AgentRoleRecommendation,
+  RolePerformanceRecord,
+} from "../../shared/role-schema.js";
+import type { Agent } from "./agent.js";
+import { roleRegistry } from "./role-registry.js";
+import { rolePerformanceTracker } from "./role-performance-tracker.js";
 
 /** Keyword-to-role mapping for inference fallback */
 const KEYWORD_ROLE_MAP: Record<string, string[]> = {
-  coder: ['code', 'implement', 'develop', 'program'],
-  reviewer: ['review', 'check', 'audit'],
-  architect: ['design', 'architect', 'plan'],
-  qa: ['test', 'qa', 'quality'],
-  'tech-writer': ['write', 'document', 'doc'],
-  pm: ['manage', 'coordinate', 'lead'],
+  coder: ["code", "implement", "develop", "program"],
+  reviewer: ["review", "check", "audit"],
+  architect: ["design", "architect", "plan"],
+  qa: ["test", "qa", "quality"],
+  "tech-writer": ["write", "document", "doc"],
+  pm: ["manage", "coordinate", "lead"],
 };
 
 interface TaskContext {
@@ -53,7 +57,9 @@ class RoleMatcher {
     candidateAgents: Agent[]
   ): Promise<AgentRoleRecommendation[]> {
     if (candidateAgents.length === 0) {
-      console.log('[RoleMatcher] No candidate agents provided, returning empty list');
+      console.log(
+        "[RoleMatcher] No candidate agents provided, returning empty list"
+      );
       return [];
     }
 
@@ -64,16 +70,20 @@ class RoleMatcher {
       // Skip inference, use only the required role
       const template = roleRegistry.get(task.requiredRole);
       if (!template) {
-        console.log(`[RoleMatcher] Required role "${task.requiredRole}" not found in registry`);
+        console.log(
+          `[RoleMatcher] Required role "${task.requiredRole}" not found in registry`
+        );
         return [];
       }
-      candidateRoles = [{ roleId: task.requiredRole, reason: 'Explicitly required by task' }];
+      candidateRoles = [
+        { roleId: task.requiredRole, reason: "Explicitly required by task" },
+      ];
     } else {
       candidateRoles = await this.inferCandidateRoles(task.description);
     }
 
     if (candidateRoles.length === 0) {
-      console.log('[RoleMatcher] No candidate roles found');
+      console.log("[RoleMatcher] No candidate roles found");
       return [];
     }
 
@@ -98,15 +108,18 @@ class RoleMatcher {
     recommendations.sort((a, b) => b.roleMatchScore - a.roleMatchScore);
 
     // Log matching results for debug (Requirement 3.5)
-    console.log('[RoleMatcher] Match results:', JSON.stringify(
-      recommendations.map(r => ({
-        agentId: r.agentId,
-        roleId: r.recommendedRoleId,
-        score: r.roleMatchScore,
-      })),
-      null,
-      2
-    ));
+    console.log(
+      "[RoleMatcher] Match results:",
+      JSON.stringify(
+        recommendations.map(r => ({
+          agentId: r.agentId,
+          roleId: r.recommendedRoleId,
+          score: r.roleMatchScore,
+        })),
+        null,
+        2
+      )
+    );
 
     return recommendations;
   }
@@ -122,21 +135,23 @@ class RoleMatcher {
    *
    * @see Requirements 3.2, 4.4
    */
-  computeScore(
-    task: TaskContext,
-    agent: Agent,
-    role: RoleTemplate
-  ): number {
-    const skillMatchVal = this.skillMatch(task.requiredSkills, role.requiredSkillIds);
+  computeScore(task: TaskContext, agent: Agent, role: RoleTemplate): number {
+    const skillMatchVal = this.skillMatch(
+      task.requiredSkills,
+      role.requiredSkillIds
+    );
     const competencyVal = this.agentCompetency(agent, role);
-    const { score: perfVal, confidenceCoeff } = this.rolePerformance(agent, role.roleId);
+    const { score: perfVal, confidenceCoeff } = this.rolePerformance(
+      agent,
+      role.roleId
+    );
     const loadFactor = this.getLoadFactor(agent);
 
     return (
       skillMatchVal * 0.35 +
-      competencyVal * 0.30 +
+      competencyVal * 0.3 +
       perfVal * 0.25 * confidenceCoeff +
-      (1 - loadFactor) * 0.10
+      (1 - loadFactor) * 0.1
     );
   }
 
@@ -161,7 +176,7 @@ class RoleMatcher {
         if (roleRegistry.get(roleId)) {
           matchedRoles.push({
             roleId,
-            reason: `Keyword match: ${matchedKeywords.join(', ')}`,
+            reason: `Keyword match: ${matchedKeywords.join(", ")}`,
           });
         }
       }
@@ -175,7 +190,7 @@ class RoleMatcher {
     const allRoles = roleRegistry.list();
     return allRoles.map(t => ({
       roleId: t.roleId,
-      reason: 'No keyword match, returning all registered roles',
+      reason: "No keyword match, returning all registered roles",
     }));
   }
 
@@ -185,7 +200,10 @@ class RoleMatcher {
    * Jaccard similarity between task required skills and role required skills.
    * If task has no requiredSkills, default to 0.5.
    */
-  private skillMatch(taskSkills: string[] | undefined, roleSkills: string[]): number {
+  private skillMatch(
+    taskSkills: string[] | undefined,
+    roleSkills: string[]
+  ): number {
     if (!taskSkills || taskSkills.length === 0) {
       return 0.5;
     }
@@ -214,7 +232,9 @@ class RoleMatcher {
     }
 
     const agentSet = new Set(agentSkills);
-    const matchCount = role.requiredSkillIds.filter(s => agentSet.has(s)).length;
+    const matchCount = role.requiredSkillIds.filter(s =>
+      agentSet.has(s)
+    ).length;
     return matchCount / role.requiredSkillIds.length;
   }
 
@@ -226,7 +246,10 @@ class RoleMatcher {
     agent: Agent,
     roleId: string
   ): { score: number; confidenceCoeff: number } {
-    const perfData = rolePerformanceTracker.getPerformance(agent.config.id, roleId);
+    const perfData = rolePerformanceTracker.getPerformance(
+      agent.config.id,
+      roleId
+    );
 
     if (!perfData || !(perfData as RolePerformanceRecord).totalTasks) {
       return { score: 0.5, confidenceCoeff: 0.6 };

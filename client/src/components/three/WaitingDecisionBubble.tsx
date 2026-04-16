@@ -17,13 +17,13 @@ import { useTasksStore, type MissionTaskSummary } from "@/lib/tasks-store";
 const BUBBLE_POSITION: [number, number, number] = [0, 4.6, -2.5];
 
 function selectWaitingMission(
-  tasks: MissionTaskSummary[],
+  tasks: MissionTaskSummary[]
 ): MissionTaskSummary | null {
-  return tasks.find((t) => t.status === "waiting") ?? null;
+  return tasks.find(t => t.status === "waiting") ?? null;
 }
 
 export function WaitingDecisionBubble() {
-  const tasks = useTasksStore((s) => s.tasks);
+  const tasks = useTasksStore(s => s.tasks);
   const waitingMission = useMemo(() => selectWaitingMission(tasks), [tasks]);
   const [, setLocation] = useLocation();
   const scaleRef = useRef<HTMLDivElement>(null);

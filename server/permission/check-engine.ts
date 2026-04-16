@@ -48,9 +48,10 @@ const DEFAULT_CACHE_SIZE = 10_000;
 const DEFAULT_CACHE_TTL_MS = 60_000; // 60 seconds
 
 function getCacheSize(): number {
-  const envVal = typeof process !== "undefined"
-    ? process.env.PERMISSION_CACHE_SIZE
-    : undefined;
+  const envVal =
+    typeof process !== "undefined"
+      ? process.env.PERMISSION_CACHE_SIZE
+      : undefined;
   if (envVal) {
     const parsed = Number(envVal);
     if (!Number.isNaN(parsed) && parsed > 0) return parsed;
@@ -59,9 +60,10 @@ function getCacheSize(): number {
 }
 
 function getCacheTtlMs(): number {
-  const envVal = typeof process !== "undefined"
-    ? process.env.PERMISSION_CACHE_TTL_MS
-    : undefined;
+  const envVal =
+    typeof process !== "undefined"
+      ? process.env.PERMISSION_CACHE_TTL_MS
+      : undefined;
   if (envVal) {
     const parsed = Number(envVal);
     if (!Number.isNaN(parsed) && parsed > 0) return parsed;
@@ -149,7 +151,7 @@ export class PermissionCheckEngine {
   constructor(
     private tokenService: TokenService,
     private auditLogger?: AuditLogger,
-    private checkers: Map<ResourceType, ResourceChecker> = new Map(),
+    private checkers: Map<ResourceType, ResourceChecker> = new Map()
   ) {
     this.cache = new LRUCache();
   }
@@ -165,7 +167,7 @@ export class PermissionCheckEngine {
     resourceType: ResourceType,
     action: Action,
     resource: string,
-    token: string,
+    token: string
   ): PermissionCheckResult {
     // 1. Verify JWT token
     let matrix: PermissionMatrixEntry[];
@@ -178,7 +180,14 @@ export class PermissionCheckEngine {
           reason: "Token agentId mismatch",
           suggestion: "Use a token issued for this agent",
         };
-        this.audit(agentId, resourceType, action, resource, "denied", result.reason);
+        this.audit(
+          agentId,
+          resourceType,
+          action,
+          resource,
+          "denied",
+          result.reason
+        );
         return result;
       }
       matrix = payload.permissionMatrix;
@@ -193,7 +202,11 @@ export class PermissionCheckEngine {
         err instanceof TokenExpiredError
           ? "Refresh the token using tokenService.refreshToken()"
           : "Provide a valid capability token";
-      const result: PermissionCheckResult = { allowed: false, reason, suggestion };
+      const result: PermissionCheckResult = {
+        allowed: false,
+        reason,
+        suggestion,
+      };
       this.audit(agentId, resourceType, action, resource, "denied", reason);
       return result;
     }
@@ -205,7 +218,7 @@ export class PermissionCheckEngine {
 
     // 3. Deny-first matching — highest priority
     const denyEntries = matrix.filter(
-      (e) => e.effect === "deny" && e.resourceType === resourceType,
+      e => e.effect === "deny" && e.resourceType === resourceType
     );
     for (const deny of denyEntries) {
       if (deny.actions.includes(action)) {
@@ -220,16 +233,23 @@ export class PermissionCheckEngine {
           },
         };
         this.cache.set(cacheKey, result);
-        this.audit(agentId, resourceType, action, resource, "denied", result.reason);
+        this.audit(
+          agentId,
+          resourceType,
+          action,
+          resource,
+          "denied",
+          result.reason
+        );
         return result;
       }
     }
 
     // 4. Allow matching
     const allowEntries = matrix.filter(
-      (e) => e.effect === "allow" && e.resourceType === resourceType,
+      e => e.effect === "allow" && e.resourceType === resourceType
     );
-    const matchedAllow = allowEntries.find((e) => e.actions.includes(action));
+    const matchedAllow = allowEntries.find(e => e.actions.includes(action));
 
     if (!matchedAllow) {
       const result: PermissionCheckResult = {
@@ -238,14 +258,25 @@ export class PermissionCheckEngine {
         suggestion: `Request permission for ${resourceType}:${action}`,
       };
       this.cache.set(cacheKey, result);
-      this.audit(agentId, resourceType, action, resource, "denied", result.reason);
+      this.audit(
+        agentId,
+        resourceType,
+        action,
+        resource,
+        "denied",
+        result.reason
+      );
       return result;
     }
 
     // 5. Constraint checking via ResourceChecker
     const checker = this.checkers.get(resourceType);
     if (checker) {
-      const constraintsPassed = checker.checkConstraints(action, resource, matchedAllow.constraints);
+      const constraintsPassed = checker.checkConstraints(
+        action,
+        resource,
+        matchedAllow.constraints
+      );
       if (!constraintsPassed) {
         const result: PermissionCheckResult = {
           allowed: false,
@@ -259,7 +290,14 @@ export class PermissionCheckEngine {
           },
         };
         this.cache.set(cacheKey, result);
-        this.audit(agentId, resourceType, action, resource, "denied", result.reason);
+        this.audit(
+          agentId,
+          resourceType,
+          action,
+          resource,
+          "denied",
+          result.reason
+        );
         return result;
       }
     }
@@ -289,10 +327,16 @@ export class PermissionCheckEngine {
       action: Action;
       resource: string;
     }>,
-    token: string,
+    token: string
   ): PermissionCheckResult[] {
-    return checks.map((c) =>
-      this.checkPermission(c.agentId, c.resourceType, c.action, c.resource, token),
+    return checks.map(c =>
+      this.checkPermission(
+        c.agentId,
+        c.resourceType,
+        c.action,
+        c.resource,
+        token
+      )
     );
   }
 
@@ -316,7 +360,7 @@ export class PermissionCheckEngine {
     action: Action,
     resource: string,
     result: "allowed" | "denied" | "error",
-    reason?: string,
+    reason?: string
   ): void {
     if (!this.auditLogger) return;
     try {

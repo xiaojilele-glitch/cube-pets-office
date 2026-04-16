@@ -1,0 +1,86 @@
+.nh
+.TH "GH-ISSUE-CREATE" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-issue-create - Create a new issue
+
+
+.SH SYNOPSIS
+.PP
+\fBgh issue create [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Create an issue on GitHub.
+
+.PP
+Adding an issue to projects requires authorization with the \fBproject\fR scope.
+To authorize, run \fBgh auth refresh -s project\fR\&.
+
+
+.SH OPTIONS
+.TP
+\fB-a\fR, \fB--assignee\fR \fB<login>\fR
+Assign people by their login. Use "@me" to self-assign.
+
+.TP
+\fB-b\fR, \fB--body\fR \fB<string>\fR
+Supply a body. Will prompt for one otherwise.
+
+.TP
+\fB-F\fR, \fB--body-file\fR \fB<file>\fR
+Read body text from file (use "-" to read from standard input)
+
+.TP
+\fB-l\fR, \fB--label\fR \fB<name>\fR
+Add labels by name
+
+.TP
+\fB-m\fR, \fB--milestone\fR \fB<name>\fR
+Add the issue to a milestone by name
+
+.TP
+\fB-p\fR, \fB--project\fR \fB<name>\fR
+Add the issue to projects by name
+
+.TP
+\fB--recover\fR \fB<string>\fR
+Recover input from a failed run of create
+
+.TP
+\fB-T\fR, \fB--template\fR \fB<name>\fR
+Template name to use as starting body text
+
+.TP
+\fB-t\fR, \fB--title\fR \fB<string>\fR
+Supply a title. Will prompt for one otherwise.
+
+.TP
+\fB-w\fR, \fB--web\fR
+Open the browser to create an issue
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH EXAMPLE
+.EX
+$ gh issue create --title "I found a bug" --body "Nothing works"
+$ gh issue create --label "bug,help wanted"
+$ gh issue create --label bug --label "help wanted"
+$ gh issue create --assignee monalisa,hubot
+$ gh issue create --assignee "@me"
+$ gh issue create --project "Roadmap"
+
+
+.EE
+
+
+.SH SEE ALSO
+.PP
+\fBgh-issue(1)\fR

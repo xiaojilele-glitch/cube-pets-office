@@ -111,10 +111,12 @@ const COST_PER_1K_TOKENS: Record<string, { input: number; output: number }> = {
 export function estimateCost(
   model: string,
   tokensIn: number,
-  tokensOut: number,
+  tokensOut: number
 ): number {
   const pricing = COST_PER_1K_TOKENS[model] ?? COST_PER_1K_TOKENS.default;
-  return (tokensIn / 1000) * pricing.input + (tokensOut / 1000) * pricing.output;
+  return (
+    (tokensIn / 1000) * pricing.input + (tokensOut / 1000) * pricing.output
+  );
 }
 
 // ---------------------------------------------------------------------------

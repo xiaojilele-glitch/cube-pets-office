@@ -135,7 +135,12 @@ async function createSeededHarness(
   const dataRoot = join(tmpdir(), `lobster-executor-seeded-${randomUUID()}`);
   const request = createTestRequest(`seeded-${randomUUID()}`, "success");
   const receivedAt = new Date().toISOString();
-  const dataDirectory = join(dataRoot, "jobs", request.missionId, request.jobId);
+  const dataDirectory = join(
+    dataRoot,
+    "jobs",
+    request.missionId,
+    request.jobId
+  );
   const logFile = join(dataDirectory, "executor.log");
 
   rmSync(dataRoot, { recursive: true, force: true });
@@ -164,9 +169,10 @@ async function createSeededHarness(
 
   mkdirSync(dataDirectory, { recursive: true });
   writeFileSync(logFile, "", "utf-8");
-  (
-    seededService as unknown as { jobs: Map<string, StoredJobRecord> }
-  ).jobs.set(request.jobId, record);
+  (seededService as unknown as { jobs: Map<string, StoredJobRecord> }).jobs.set(
+    request.jobId,
+    record
+  );
 
   const app = createLobsterExecutorApp(seededService);
   const server = createServer(app);
@@ -291,8 +297,12 @@ describe("lobster executor app", () => {
       });
     }
 
-    expect(callbackEvents.some(event => event.type === "job.started")).toBe(true);
-    expect(callbackEvents.some(event => event.type === "job.completed")).toBe(true);
+    expect(callbackEvents.some(event => event.type === "job.started")).toBe(
+      true
+    );
+    expect(callbackEvents.some(event => event.type === "job.completed")).toBe(
+      true
+    );
   });
 
   it("accepts and finishes a mock failed job", async () => {

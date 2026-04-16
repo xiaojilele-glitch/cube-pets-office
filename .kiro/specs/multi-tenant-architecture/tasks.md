@@ -24,7 +24,7 @@
     - 实现 createTenant、getTenant、deleteTenant、listTenants、updateTenant 方法
     - 实现 TenantMembership 的 CRUD（addMember、removeMember、getMember、listMembers、updateMemberRole）
     - _Requirements: 1.1, 1.5_
-  - [ ]* 2.2 编写 TenantStore 属性测试
+  - [ ]\* 2.2 编写 TenantStore 属性测试
     - **Property 1: 租户创建返回有效结果**
     - **Validates: Requirements 1.1, 1.5**
 
@@ -43,10 +43,10 @@
     - 实现 requireQuota(resourceType, amount) 工厂函数
     - 超过配额返回 429 并附带升级提示
     - _Requirements: 6.1, 6.2, 6.3_
-  - [ ]* 3.4 编写租户上下文中间件属性测试
+  - [ ]\* 3.4 编写租户上下文中间件属性测试
     - **Property 9: 租户上下文提取与验证**
     - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
-  - [ ]* 3.5 编写 RBAC 权限守卫属性测试
+  - [ ]\* 3.5 编写 RBAC 权限守卫属性测试
     - **Property 8: RBAC 角色分配与权限执行**
     - **Validates: Requirements 7.2, 7.3, 7.4**
 
@@ -58,10 +58,10 @@
     - createTenant()：创建租户记录、初始化工作空间目录、设置默认配额
     - deleteTenant()：软删除租户、异步清理关联数据（Agent、知识库、工作流、审计日志）
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 4.5, 13.4_
-  - [ ]* 5.2 编写 TenantService 属性测试
+  - [ ]\* 5.2 编写 TenantService 属性测试
     - **Property 2: 租户初始化创建完整资源**
     - **Validates: Requirements 1.2, 1.3**
-  - [ ]* 5.3 编写租户删除清除属性测试
+  - [ ]\* 5.3 编写租户删除清除属性测试
     - **Property 7: 租户删除数据清除**
     - **Validates: Requirements 4.5, 13.4**
 
@@ -72,11 +72,11 @@
     - recalculateUsage()：重新计算实际使用量
     - getQuotaUsage()：获取当前使用量
     - _Requirements: 6.1, 6.4, 6.5_
-  - [ ]* 6.2 编写 QuotaService 属性测试
+  - [ ]\* 6.2 编写 QuotaService 属性测试
     - **Property 5: 配额使用一致性**
     - **Property 6: 配额限额执行**
     - **Validates: Requirements 3.5, 4.4, 5.5, 6.1, 6.3, 6.4**
-  - [ ]* 6.3 编写租户间配额独立性属性测试
+  - [ ]\* 6.3 编写租户间配额独立性属性测试
     - **Property 17: 租户间配额独立性**
     - **Validates: Requirements 13.3**
 
@@ -90,13 +90,13 @@
     - 工作流、执行记录、日志的租户隔离
     - 执行环境路径隔离
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
-  - [ ]* 7.3 编写租户作用域记录关联属性测试
+  - [ ]\* 7.3 编写租户作用域记录关联属性测试
     - **Property 3: 租户作用域记录自动关联**
     - **Validates: Requirements 3.1, 3.2, 4.1, 4.2, 5.1, 5.2**
-  - [ ]* 7.4 编写跨租户数据隔离属性测试
+  - [ ]\* 7.4 编写跨租户数据隔离属性测试
     - **Property 4: 跨租户数据隔离**
     - **Validates: Requirements 3.3, 3.4, 4.3, 5.3, 13.2**
-  - [ ]* 7.5 编写执行环境路径隔离属性测试
+  - [ ]\* 7.5 编写执行环境路径隔离属性测试
     - **Property 18: 执行环境路径隔离**
     - **Validates: Requirements 5.4**
 
@@ -119,10 +119,10 @@
     - 每个租户独立的审计日志文件（data/audit-logs/{tenantId}.json）
     - 审计日志不可修改、不可删除
     - _Requirements: 12.1, 12.2, 12.4, 12.5_
-  - [ ]* 10.2 编写审计日志属性测试
+  - [ ]\* 10.2 编写审计日志属性测试
     - **Property 15: 审计日志完整性与不可变性**
     - **Validates: Requirements 12.1, 12.2, 12.5**
-  - [ ]* 10.3 编写审计日志过滤属性测试
+  - [ ]\* 10.3 编写审计日志过滤属性测试
     - **Property 16: 审计日志过滤正确性**
     - **Validates: Requirements 12.4**
 
@@ -134,13 +134,13 @@
     - getUsageStats()：获取 Agent 使用统计
     - 基于 JSON 文件存储（data/marketplace.json）
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 9.1, 9.2, 9.3, 9.4, 9.5_
-  - [ ]* 11.2 编写 Marketplace 导入属性测试
+  - [ ]\* 11.2 编写 Marketplace 导入属性测试
     - **Property 10: Marketplace Agent 导入创建私有副本**
     - **Validates: Requirements 8.5**
-  - [ ]* 11.3 编写 Marketplace 发布属性测试
+  - [ ]\* 11.3 编写 Marketplace 发布属性测试
     - **Property 11: Agent 发布保留元数据**
     - **Validates: Requirements 9.2, 9.3**
-  - [ ]* 11.4 编写导入计数追踪属性测试
+  - [ ]\* 11.4 编写导入计数追踪属性测试
     - **Property 12: 导入计数追踪**
     - **Validates: Requirements 9.4**
 
@@ -150,7 +150,7 @@
     - getSubscription()：查询订阅信息
     - 记录订阅变更日志
     - _Requirements: 10.1, 10.2, 10.4, 10.5_
-  - [ ]* 12.2 编写订阅升级属性测试
+  - [ ]\* 12.2 编写订阅升级属性测试
     - **Property 13: 订阅升级更新配额**
     - **Validates: Requirements 10.2, 10.4**
 
@@ -161,7 +161,7 @@
     - 支持 JSON 和 CSV 格式
     - 导出任务状态管理（pending → processing → completed/failed）
     - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5_
-  - [ ]* 13.2 编写数据导出/导入往返属性测试
+  - [ ]\* 13.2 编写数据导出/导入往返属性测试
     - **Property 14: 数据导出/导入往返一致性**
     - **Validates: Requirements 11.3, 11.5**
 
@@ -205,7 +205,7 @@
     - 提供升级、续费、导出数据操作按钮
     - 显示团队成员列表和权限分配
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
-  - [ ]* 16.3 编写仪表盘配额百分比计算属性测试
+  - [ ]\* 16.3 编写仪表盘配额百分比计算属性测试
     - **Property 19: 仪表盘配额百分比计算**
     - **Validates: Requirements 14.3**
 

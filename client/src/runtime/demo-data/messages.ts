@@ -139,7 +139,9 @@ export const DEMO_MESSAGES: MessageRecord[] = [
     stage: "review",
     content:
       "策划方案整体优秀，社交裂变设计有亮点。建议补充：1）预算分配明细；2）不同渠道的 ROI 预估；3）风险预案（如薅羊毛防控）。评分：准确性 8，完整性 7，可执行性 8，格式 9。",
-    metadata: { scores: { accuracy: 8, completeness: 7, actionability: 8, format: 9 } },
+    metadata: {
+      scores: { accuracy: 8, completeness: 7, actionability: 8, format: 9 },
+    },
     created_at: "2025-01-01T00:00:12.000Z",
   },
   {
@@ -150,7 +152,9 @@ export const DEMO_MESSAGES: MessageRecord[] = [
     stage: "review",
     content:
       "技术方案架构清晰，A/B 测试设计合理。需补充：1）活动配置热更新机制；2）高并发场景下的降级策略；3）数据一致性保障方案。评分：准确性 9，完整性 7，可执行性 8，格式 8。",
-    metadata: { scores: { accuracy: 9, completeness: 7, actionability: 8, format: 8 } },
+    metadata: {
+      scores: { accuracy: 9, completeness: 7, actionability: 8, format: 8 },
+    },
     created_at: "2025-01-01T00:00:13.000Z",
   },
   {
@@ -161,7 +165,9 @@ export const DEMO_MESSAGES: MessageRecord[] = [
     stage: "review",
     content:
       "模型方案技术选型合理，延迟指标达标。建议增加：1）冷启动用户的处理策略；2）模型可解释性方案；3）A/B 测试上线计划。评分：准确性 9，完整性 8，可执行性 7，格式 8。",
-    metadata: { scores: { accuracy: 9, completeness: 8, actionability: 7, format: 8 } },
+    metadata: {
+      scores: { accuracy: 9, completeness: 8, actionability: 7, format: 8 },
+    },
     created_at: "2025-01-01T00:00:14.000Z",
   },
   {
@@ -172,7 +178,9 @@ export const DEMO_MESSAGES: MessageRecord[] = [
     stage: "review",
     content:
       "数据管道设计全面，埋点覆盖充分。需完善：1）数据质量监控告警；2）GDPR 合规的数据脱敏方案；3）历史数据回填策略。评分：准确性 8，完整性 8，可执行性 8，格式 9。",
-    metadata: { scores: { accuracy: 8, completeness: 8, actionability: 8, format: 9 } },
+    metadata: {
+      scores: { accuracy: 8, completeness: 8, actionability: 8, format: 9 },
+    },
     created_at: "2025-01-01T00:00:15.000Z",
   },
 

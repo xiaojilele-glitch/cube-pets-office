@@ -39,7 +39,10 @@ export interface AuditEventTypeDefinition {
   version: number;
 }
 
-export const DEFAULT_EVENT_TYPE_REGISTRY: Record<AuditEventType, AuditEventTypeDefinition> = {
+export const DEFAULT_EVENT_TYPE_REGISTRY: Record<
+  AuditEventType,
+  AuditEventTypeDefinition
+> = {
   [AuditEventType.DECISION_MADE]: {
     type: AuditEventType.DECISION_MADE,
     severity: "CRITICAL",
@@ -263,9 +266,24 @@ export interface RetentionPolicy {
 }
 
 export const DEFAULT_RETENTION_POLICIES: RetentionPolicy[] = [
-  { severity: "CRITICAL", retentionDays: 2555, archiveAfterDays: 365, deleteAfterDays: 2555 },
-  { severity: "WARNING", retentionDays: 1095, archiveAfterDays: 180, deleteAfterDays: 1095 },
-  { severity: "INFO", retentionDays: 365, archiveAfterDays: 90, deleteAfterDays: 365 },
+  {
+    severity: "CRITICAL",
+    retentionDays: 2555,
+    archiveAfterDays: 365,
+    deleteAfterDays: 2555,
+  },
+  {
+    severity: "WARNING",
+    retentionDays: 1095,
+    archiveAfterDays: 180,
+    deleteAfterDays: 1095,
+  },
+  {
+    severity: "INFO",
+    retentionDays: 365,
+    archiveAfterDays: 90,
+    deleteAfterDays: 365,
+  },
 ];
 
 // ─── 1.8 AnomalyAlert & AnomalyRule ────────────────────────────────────────
@@ -295,7 +313,12 @@ export interface AnomalyRule {
 
 // ─── 1.9 ComplianceFramework / ComplianceRequirement / ComplianceReport / ComplianceGap ─
 
-export type ComplianceFramework = "SOC2" | "GDPR" | "PCI-DSS" | "HIPAA" | "ISO27001";
+export type ComplianceFramework =
+  | "SOC2"
+  | "GDPR"
+  | "PCI-DSS"
+  | "HIPAA"
+  | "ISO27001";
 
 export interface ComplianceRequirement {
   requirementId: string;

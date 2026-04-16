@@ -24,10 +24,14 @@ interface EncryptedWebhookPayload {
   type?: string;
 }
 
-function readHeader(headers: Request["headers"], key: string): string | undefined {
+function readHeader(
+  headers: Request["headers"],
+  key: string
+): string | undefined {
   const raw = headers[key];
   if (typeof raw === "string") return raw.trim();
-  if (Array.isArray(raw)) return typeof raw[0] === "string" ? raw[0].trim() : undefined;
+  if (Array.isArray(raw))
+    return typeof raw[0] === "string" ? raw[0].trim() : undefined;
   return undefined;
 }
 
@@ -77,7 +81,10 @@ function extractVerificationToken(body: unknown): string | undefined {
     token?: unknown;
     header?: { token?: unknown };
   };
-  if (typeof candidate.header?.token === "string" && candidate.header.token.trim()) {
+  if (
+    typeof candidate.header?.token === "string" &&
+    candidate.header.token.trim()
+  ) {
     return candidate.header.token.trim();
   }
   if (typeof candidate.token === "string" && candidate.token.trim()) {
@@ -122,12 +129,22 @@ export function createFeishuWebhookSecurity(config: FeishuBridgeConfig) {
   const encryptKey = config.webhookEncryptKey?.trim();
   const maxSkewMs = Math.max(1, config.webhookMaxSkewSeconds ?? 300) * 1_000;
 
-  function verifySignature(request: Request, response: Response, rawBody: unknown): boolean {
+  function verifySignature(
+    request: Request,
+    response: Response,
+    rawBody: unknown
+  ): boolean {
     if (!encryptKey) return true;
 
-    const timestamp = readHeader(request.headers, FEISHU_WEBHOOK_TIMESTAMP_HEADER);
+    const timestamp = readHeader(
+      request.headers,
+      FEISHU_WEBHOOK_TIMESTAMP_HEADER
+    );
     const nonce = readHeader(request.headers, FEISHU_WEBHOOK_NONCE_HEADER);
-    const signature = readHeader(request.headers, FEISHU_WEBHOOK_SIGNATURE_HEADER);
+    const signature = readHeader(
+      request.headers,
+      FEISHU_WEBHOOK_SIGNATURE_HEADER
+    );
 
     if (!timestamp || !nonce || !signature) {
       response
@@ -137,10 +154,14 @@ export function createFeishuWebhookSecurity(config: FeishuBridgeConfig) {
     }
 
     const timestampMs = parseTimestamp(timestamp);
-    if (timestampMs === null || Math.abs(Date.now() - timestampMs) > maxSkewMs) {
-      response
-        .status(401)
-        .json({ ok: false, error: "Feishu webhook timestamp is invalid or expired" });
+    if (
+      timestampMs === null ||
+      Math.abs(Date.now() - timestampMs) > maxSkewMs
+    ) {
+      response.status(401).json({
+        ok: false,
+        error: "Feishu webhook timestamp is invalid or expired",
+      });
       return false;
     }
 
@@ -149,22 +170,32 @@ export function createFeishuWebhookSecurity(config: FeishuBridgeConfig) {
       "hex"
     );
     const actual = parseSignature(signature);
-    if (!actual || actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
-      response.status(401).json({ ok: false, error: "Feishu webhook signature mismatch" });
+    if (
+      !actual ||
+      actual.length !== expected.length ||
+      !timingSafeEqual(actual, expected)
+    ) {
+      response
+        .status(401)
+        .json({ ok: false, error: "Feishu webhook signature mismatch" });
       return false;
     }
 
     return true;
   }
 
-  function parseBody(response: Response, rawBody: unknown): unknown | undefined {
+  function parseBody(
+    response: Response,
+    rawBody: unknown
+  ): unknown | undefined {
     if (!rawBody || typeof rawBody !== "object") return rawBody;
     const payload = rawBody as EncryptedWebhookPayload;
     if (!payload.encrypt) return rawBody;
     if (!encryptKey) {
       response.status(400).json({
         ok: false,
-        error: "Encrypted Feishu webhook payload requires FEISHU_WEBHOOK_ENCRYPT_KEY",
+        error:
+          "Encrypted Feishu webhook payload requires FEISHU_WEBHOOK_ENCRYPT_KEY",
       });
       return undefined;
     }
@@ -184,15 +215,19 @@ export function createFeishuWebhookSecurity(config: FeishuBridgeConfig) {
     if (!verificationToken) return true;
     const actual = extractVerificationToken(body);
     if (actual !== verificationToken) {
-      response
-        .status(401)
-        .json({ ok: false, error: "Feishu webhook verification token mismatch" });
+      response.status(401).json({
+        ok: false,
+        error: "Feishu webhook verification token mismatch",
+      });
       return false;
     }
     return true;
   }
 
-  function resolveBody(request: Request, response: Response): unknown | undefined {
+  function resolveBody(
+    request: Request,
+    response: Response
+  ): unknown | undefined {
     if (!verifySignature(request, response, request.body)) return undefined;
     const body = parseBody(response, request.body);
     if (body === undefined) return undefined;

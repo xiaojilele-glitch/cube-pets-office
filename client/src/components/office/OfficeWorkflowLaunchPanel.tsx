@@ -289,7 +289,9 @@ export function OfficeWorkflowLaunchPanel({
                     key={attachment.id}
                     className="inline-flex max-w-full items-center gap-1 rounded-full border border-stone-200/80 bg-white/78 px-1 py-0.5 text-[7px] text-stone-600"
                   >
-                    <span className="truncate max-w-[140px]">{attachment.name}</span>
+                    <span className="truncate max-w-[140px]">
+                      {attachment.name}
+                    </span>
                     <button
                       type="button"
                       onClick={() =>
@@ -345,7 +347,9 @@ export function OfficeWorkflowLaunchPanel({
                 <Button
                   type="button"
                   className="rounded-[9px] h-7 px-2 text-[8px] font-semibold bg-[#d07a4f] text-white shadow-[0_6px_14px_rgba(184,111,69,0.14)] hover:bg-[#bf6c43]"
-                  disabled={!directive.trim() || isSubmitting || isPreparingFiles}
+                  disabled={
+                    !directive.trim() || isSubmitting || isPreparingFiles
+                  }
                   onClick={() => void handleSubmit()}
                 >
                   {isSubmitting ? (
@@ -402,7 +406,11 @@ export function OfficeWorkflowLaunchPanel({
             <div className="workspace-eyebrow">
               {isEmbedded
                 ? t(locale, "团队流发起", "Workflow launch")
-                : t(locale, "统一发起 / 高级通道", "Unified launch / workflow lane")}
+                : t(
+                    locale,
+                    "统一发起 / 高级通道",
+                    "Unified launch / workflow lane"
+                  )}
             </div>
             <h2
               className={cn(
@@ -416,7 +424,11 @@ export function OfficeWorkflowLaunchPanel({
             >
               {isEmbedded
                 ? t(locale, "带上下文的团队发起", "Team launch with context")
-                : t(locale, "带附件的团队流发起", "Workflow launch with attachments")}
+                : t(
+                    locale,
+                    "带附件的团队流发起",
+                    "Workflow launch with attachments"
+                  )}
             </h2>
             <p
               className={cn(

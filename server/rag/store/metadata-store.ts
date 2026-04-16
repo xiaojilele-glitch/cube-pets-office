@@ -8,18 +8,18 @@
  * Requirements: 3.5
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { SourceType } from '../../../shared/rag/contracts.js';
+import type { SourceType } from "../../../shared/rag/contracts.js";
 
 // ---------------------------------------------------------------------------
 // RagChunkMetadataRow — 元数据行结构（与设计文档一致）
 // ---------------------------------------------------------------------------
 
 export interface RagChunkMetadataRow {
-  chunk_id: string;                          // PK
+  chunk_id: string; // PK
   source_type: SourceType;
   source_id: string;
   project_id: string;
@@ -29,10 +29,10 @@ export interface RagChunkMetadataRow {
   code_language: string | null;
   function_signature: string | null;
   agent_id: string | null;
-  ingested_at: string;                       // ISO 8601
-  last_accessed_at: string;                  // ISO 8601
-  storage_tier: 'hot' | 'cold';
-  metadata_json: string;                     // 扩展元数据 JSON
+  ingested_at: string; // ISO 8601
+  last_accessed_at: string; // ISO 8601
+  storage_tier: "hot" | "cold";
+  metadata_json: string; // 扩展元数据 JSON
 }
 
 // ---------------------------------------------------------------------------
@@ -43,7 +43,7 @@ export interface MetadataQueryFilter {
   projectId?: string;
   sourceType?: SourceType;
   agentId?: string;
-  storageTier?: 'hot' | 'cold';
+  storageTier?: "hot" | "cold";
   sourceId?: string;
   /** 仅返回 ingested_at >= since 的记录 */
   since?: string;
@@ -66,7 +66,10 @@ interface MetadataStoreFile {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DEFAULT_FILE_PATH = resolve(__dirname, '../../../data/rag_chunk_metadata.json');
+const DEFAULT_FILE_PATH = resolve(
+  __dirname,
+  "../../../data/rag_chunk_metadata.json"
+);
 
 // ---------------------------------------------------------------------------
 // MetadataStore — 元数据 CRUD
@@ -109,14 +112,14 @@ export class MetadataStore {
   /** 按 source_id 查询所有关联的 chunk 元数据 */
   getBySourceId(sourceId: string): RagChunkMetadataRow[] {
     return Array.from(this.rows.values())
-      .filter((row) => row.source_id === sourceId)
+      .filter(row => row.source_id === sourceId)
       .sort((a, b) => a.chunk_index - b.chunk_index);
   }
 
   /** 按过滤条件查询 */
   query(filter: MetadataQueryFilter): RagChunkMetadataRow[] {
     return Array.from(this.rows.values())
-      .filter((row) => matchesFilter(row, filter))
+      .filter(row => matchesFilter(row, filter))
       .sort((a, b) => a.chunk_index - b.chunk_index);
   }
 
@@ -138,7 +141,10 @@ export class MetadataStore {
   }
 
   /** 更新 last_accessed_at 时间戳 */
-  updateAccessTime(chunkId: string, accessedAt: string = new Date().toISOString()): boolean {
+  updateAccessTime(
+    chunkId: string,
+    accessedAt: string = new Date().toISOString()
+  ): boolean {
     const row = this.rows.get(chunkId);
     if (!row) return false;
     row.last_accessed_at = accessedAt;
@@ -147,7 +153,7 @@ export class MetadataStore {
   }
 
   /** 更新 storage_tier */
-  updateStorageTier(chunkId: string, tier: 'hot' | 'cold'): boolean {
+  updateStorageTier(chunkId: string, tier: "hot" | "cold"): boolean {
     const row = this.rows.get(chunkId);
     if (!row) return false;
     row.storage_tier = tier;
@@ -177,11 +183,11 @@ export class MetadataStore {
   private load(): void {
     if (!existsSync(this.filePath)) return;
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as MetadataStoreFile;
       const rows = Array.isArray(parsed?.rows) ? parsed.rows : [];
       for (const row of rows) {
-        if (row && typeof row.chunk_id === 'string') {
+        if (row && typeof row.chunk_id === "string") {
           this.rows.set(row.chunk_id, row);
         }
       }
@@ -201,9 +207,9 @@ export class MetadataStore {
     };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[MetadataStore] Failed to save:', err);
+      console.error("[MetadataStore] Failed to save:", err);
     }
   }
 }
@@ -212,12 +218,19 @@ export class MetadataStore {
 // 过滤匹配辅助函数
 // ---------------------------------------------------------------------------
 
-function matchesFilter(row: RagChunkMetadataRow, filter: MetadataQueryFilter): boolean {
-  if (filter.projectId != null && row.project_id !== filter.projectId) return false;
-  if (filter.sourceType != null && row.source_type !== filter.sourceType) return false;
+function matchesFilter(
+  row: RagChunkMetadataRow,
+  filter: MetadataQueryFilter
+): boolean {
+  if (filter.projectId != null && row.project_id !== filter.projectId)
+    return false;
+  if (filter.sourceType != null && row.source_type !== filter.sourceType)
+    return false;
   if (filter.agentId != null && row.agent_id !== filter.agentId) return false;
-  if (filter.storageTier != null && row.storage_tier !== filter.storageTier) return false;
-  if (filter.sourceId != null && row.source_id !== filter.sourceId) return false;
+  if (filter.storageTier != null && row.storage_tier !== filter.storageTier)
+    return false;
+  if (filter.sourceId != null && row.source_id !== filter.sourceId)
+    return false;
   if (filter.since != null && row.ingested_at < filter.since) return false;
   if (filter.until != null && row.ingested_at > filter.until) return false;
   return true;

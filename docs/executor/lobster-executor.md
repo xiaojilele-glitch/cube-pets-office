@@ -103,27 +103,27 @@ The executor enforces a multi-layer security sandbox on every Docker container. 
 
 ### Security Levels
 
-| Feature | `strict` (default) | `balanced` | `permissive` |
-|---|---|---|---|
-| Linux capabilities | Drop ALL, add none | Drop ALL, add `NET_BIND_SERVICE` | Drop ALL, add `NET_BIND_SERVICE`, `SYS_PTRACE` |
-| Root filesystem | Read-only | Read-only | Read-write |
-| `no-new-privileges` | Yes | Yes | Yes |
-| Network | `none` (fully isolated) | Whitelist only | Default bridge |
-| Seccomp profile | Minimal allow-list | Minimal allow-list | Minimal allow-list |
-| tmpfs `/tmp` | 64 MB (configurable) | 64 MB (configurable) | Not mounted |
+| Feature             | `strict` (default)      | `balanced`                       | `permissive`                                   |
+| ------------------- | ----------------------- | -------------------------------- | ---------------------------------------------- |
+| Linux capabilities  | Drop ALL, add none      | Drop ALL, add `NET_BIND_SERVICE` | Drop ALL, add `NET_BIND_SERVICE`, `SYS_PTRACE` |
+| Root filesystem     | Read-only               | Read-only                        | Read-write                                     |
+| `no-new-privileges` | Yes                     | Yes                              | Yes                                            |
+| Network             | `none` (fully isolated) | Whitelist only                   | Default bridge                                 |
+| Seccomp profile     | Minimal allow-list      | Minimal allow-list               | Minimal allow-list                             |
+| tmpfs `/tmp`        | 64 MB (configurable)    | 64 MB (configurable)             | Not mounted                                    |
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|---|---|---|
-| `LOBSTER_SECURITY_LEVEL` | Security preset: `strict`, `balanced`, `permissive` | `strict` |
-| `LOBSTER_CONTAINER_USER` | UID the container process runs as | `65534` (nobody) |
-| `LOBSTER_MAX_MEMORY` | Container memory limit (e.g. `512m`, `1g`) | `512m` |
-| `LOBSTER_MAX_CPUS` | CPU quota in cores (e.g. `1.0`, `2.0`) | `1.0` |
-| `LOBSTER_MAX_PIDS` | Max processes inside the container | `256` |
-| `LOBSTER_TMPFS_SIZE` | Size of `/tmp` tmpfs in read-only mode | `64m` |
-| `LOBSTER_NETWORK_WHITELIST` | Comma-separated domains/IPs for balanced mode | (empty) |
-| `LOBSTER_SECCOMP_PROFILE` | Path to a custom seccomp JSON profile | Built-in `seccomp.json` |
+| Variable                    | Description                                         | Default                 |
+| --------------------------- | --------------------------------------------------- | ----------------------- |
+| `LOBSTER_SECURITY_LEVEL`    | Security preset: `strict`, `balanced`, `permissive` | `strict`                |
+| `LOBSTER_CONTAINER_USER`    | UID the container process runs as                   | `65534` (nobody)        |
+| `LOBSTER_MAX_MEMORY`        | Container memory limit (e.g. `512m`, `1g`)          | `512m`                  |
+| `LOBSTER_MAX_CPUS`          | CPU quota in cores (e.g. `1.0`, `2.0`)              | `1.0`                   |
+| `LOBSTER_MAX_PIDS`          | Max processes inside the container                  | `256`                   |
+| `LOBSTER_TMPFS_SIZE`        | Size of `/tmp` tmpfs in read-only mode              | `64m`                   |
+| `LOBSTER_NETWORK_WHITELIST` | Comma-separated domains/IPs for balanced mode       | (empty)                 |
+| `LOBSTER_SECCOMP_PROFILE`   | Path to a custom seccomp JSON profile               | Built-in `seccomp.json` |
 
 ### Seccomp Profile
 

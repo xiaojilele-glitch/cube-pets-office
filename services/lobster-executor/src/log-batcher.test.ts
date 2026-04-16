@@ -12,7 +12,7 @@ describe("LogBatcher", () => {
   it("flushes when size limit is exceeded", () => {
     const batches: string[][] = [];
     // 20 bytes max
-    const batcher = new LogBatcher((lines) => batches.push(lines), 500, 20);
+    const batcher = new LogBatcher(lines => batches.push(lines), 500, 20);
 
     // Each "line-X" = 6 bytes. Push 4 lines → 6+6=12, then 12+6=18, then 18+6=24 > 20 → flush
     batcher.push("line-0"); // 6 bytes, total 6
@@ -31,7 +31,7 @@ describe("LogBatcher", () => {
 
   it("auto-flushes after maxIntervalMs", () => {
     const batches: string[][] = [];
-    const batcher = new LogBatcher((lines) => batches.push(lines), 500, 4096);
+    const batcher = new LogBatcher(lines => batches.push(lines), 500, 4096);
 
     batcher.push("hello");
     expect(batches).toHaveLength(0);
@@ -45,7 +45,7 @@ describe("LogBatcher", () => {
 
   it("resets timer on each push", () => {
     const batches: string[][] = [];
-    const batcher = new LogBatcher((lines) => batches.push(lines), 500, 4096);
+    const batcher = new LogBatcher(lines => batches.push(lines), 500, 4096);
 
     batcher.push("a");
     vi.advanceTimersByTime(400);
@@ -73,7 +73,7 @@ describe("LogBatcher", () => {
 
   it("destroy() flushes remaining lines", () => {
     const batches: string[][] = [];
-    const batcher = new LogBatcher((lines) => batches.push(lines), 500, 4096);
+    const batcher = new LogBatcher(lines => batches.push(lines), 500, 4096);
 
     batcher.push("remaining");
     batcher.destroy();
@@ -98,7 +98,7 @@ describe("LogBatcher", () => {
   it("handles multi-byte UTF-8 characters correctly", () => {
     const batches: string[][] = [];
     // 16 bytes max
-    const batcher = new LogBatcher((lines) => batches.push(lines), 500, 16);
+    const batcher = new LogBatcher(lines => batches.push(lines), 500, 16);
 
     // "你好世界" = 12 bytes in UTF-8
     batcher.push("你好世界");
@@ -115,7 +115,7 @@ describe("LogBatcher", () => {
 
   it("a single line larger than maxSizeBytes still gets flushed", () => {
     const batches: string[][] = [];
-    const batcher = new LogBatcher((lines) => batches.push(lines), 500, 8);
+    const batcher = new LogBatcher(lines => batches.push(lines), 500, 8);
 
     // This line is > 8 bytes but it's the first in the batch, so it goes in
     batcher.push("this is a very long line");

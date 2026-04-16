@@ -8,9 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createFeishuRouter } from "../routes/feishu.js";
 import { createFeishuBridgeRuntime } from "../feishu/runtime.js";
 import type { FeishuOutboundMessage } from "../feishu/bridge.js";
-import {
-  buildFeishuRelayAuthHeaders,
-} from "../feishu/relay-auth.js";
+import { buildFeishuRelayAuthHeaders } from "../feishu/relay-auth.js";
 import {
   buildFeishuWebhookSignatureHeaders,
   encryptFeishuWebhookPayload,
@@ -77,7 +75,10 @@ describe("Feishu routes", () => {
       const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "url_verification", challenge: "hello-challenge" }),
+        body: JSON.stringify({
+          type: "url_verification",
+          challenge: "hello-challenge",
+        }),
       });
 
       expect(response.status).toBe(200);
@@ -141,7 +142,9 @@ describe("Feishu routes", () => {
           message_id: "om_dup_1",
           chat_id: "oc_dup_1",
           message_type: "text",
-          content: JSON.stringify({ text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap" }),
+          content: JSON.stringify({
+            text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
+          }),
         },
       },
     };
@@ -237,79 +240,92 @@ describe("Feishu routes", () => {
       webhookVerificationToken: "verification-token",
     };
 
-    await withServer(async baseUrl => {
-      const validPayload = {
-        schema: "2.0",
-        header: {
-          event_type: "im.message.receive_v1",
-          token: "verification-token",
-        },
-        event: {
-          message: {
-            message_id: "om_signed",
-            chat_id: "oc_signed",
-            message_type: "text",
-            content: JSON.stringify({ text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap" }),
+    await withServer(
+      async baseUrl => {
+        const validPayload = {
+          schema: "2.0",
+          header: {
+            event_type: "im.message.receive_v1",
+            token: "verification-token",
           },
-        },
-      };
+          event: {
+            message: {
+              message_id: "om_signed",
+              chat_id: "oc_signed",
+              message_type: "text",
+              content: JSON.stringify({
+                text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
+              }),
+            },
+          },
+        };
 
-      const accepted = await fetch(`${baseUrl}/api/feishu/webhook`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...buildFeishuWebhookSignatureHeaders({
-            encryptKey: config.webhookEncryptKey,
-            body: validPayload,
-          }),
-        },
-        body: JSON.stringify(validPayload),
-      });
-      expect(accepted.status).toBe(200);
-      expect((await accepted.json()).ok).toBe(true);
+        const accepted = await fetch(`${baseUrl}/api/feishu/webhook`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...buildFeishuWebhookSignatureHeaders({
+              encryptKey: config.webhookEncryptKey,
+              body: validPayload,
+            }),
+          },
+          body: JSON.stringify(validPayload),
+        });
+        expect(accepted.status).toBe(200);
+        expect((await accepted.json()).ok).toBe(true);
 
-      const rejected = await fetch(`${baseUrl}/api/feishu/webhook`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...buildFeishuWebhookSignatureHeaders({
-            encryptKey: config.webhookEncryptKey,
-            body: {
-              schema: "2.0",
-              header: { event_type: "im.message.receive_v1", token: "wrong-token" },
-              event: {
-                message: {
-                  message_id: "om_bad_token",
-                  chat_id: "oc_bad_token",
-                  message_type: "text",
-                  content: JSON.stringify({
-                    text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
-                  }),
+        const rejected = await fetch(`${baseUrl}/api/feishu/webhook`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...buildFeishuWebhookSignatureHeaders({
+              encryptKey: config.webhookEncryptKey,
+              body: {
+                schema: "2.0",
+                header: {
+                  event_type: "im.message.receive_v1",
+                  token: "wrong-token",
                 },
+                event: {
+                  message: {
+                    message_id: "om_bad_token",
+                    chat_id: "oc_bad_token",
+                    message_type: "text",
+                    content: JSON.stringify({
+                      text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
+                    }),
+                  },
+                },
+              },
+            }),
+          },
+          body: JSON.stringify({
+            schema: "2.0",
+            header: {
+              event_type: "im.message.receive_v1",
+              token: "wrong-token",
+            },
+            event: {
+              message: {
+                message_id: "om_bad_token",
+                chat_id: "oc_bad_token",
+                message_type: "text",
+                content: JSON.stringify({
+                  text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
+                }),
               },
             },
           }),
-        },
-        body: JSON.stringify({
-          schema: "2.0",
-          header: { event_type: "im.message.receive_v1", token: "wrong-token" },
-          event: {
-            message: {
-              message_id: "om_bad_token",
-              chat_id: "oc_bad_token",
-              message_type: "text",
-              content: JSON.stringify({ text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap" }),
-            },
-          },
-        }),
-      });
+        });
 
-      expect(rejected.status).toBe(401);
-      expect(await rejected.json()).toEqual({
-        ok: false,
-        error: "Feishu webhook verification token mismatch",
-      });
-    }, { config });
+        expect(rejected.status).toBe(401);
+        expect(await rejected.json()).toEqual({
+          ok: false,
+          error: "Feishu webhook verification token mismatch",
+        });
+      },
+      { config }
+    );
   });
 
   it("decrypts encrypted webhook payloads before processing", async () => {
@@ -318,41 +334,49 @@ describe("Feishu routes", () => {
       webhookVerificationToken: "verification-token",
     };
 
-    await withServer(async baseUrl => {
-      const decryptedPayload = {
-        schema: "2.0",
-        header: {
-          event_type: "im.message.receive_v1",
-          token: "verification-token",
-        },
-        event: {
-          message: {
-            message_id: "om_encrypted",
-            chat_id: "oc_encrypted",
-            message_type: "text",
-            content: JSON.stringify({ text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap" }),
+    await withServer(
+      async baseUrl => {
+        const decryptedPayload = {
+          schema: "2.0",
+          header: {
+            event_type: "im.message.receive_v1",
+            token: "verification-token",
           },
-        },
-      };
-      const rawPayload = {
-        encrypt: encryptFeishuWebhookPayload(config.webhookEncryptKey, decryptedPayload),
-      };
+          event: {
+            message: {
+              message_id: "om_encrypted",
+              chat_id: "oc_encrypted",
+              message_type: "text",
+              content: JSON.stringify({
+                text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
+              }),
+            },
+          },
+        };
+        const rawPayload = {
+          encrypt: encryptFeishuWebhookPayload(
+            config.webhookEncryptKey,
+            decryptedPayload
+          ),
+        };
 
-      const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...buildFeishuWebhookSignatureHeaders({
-            encryptKey: config.webhookEncryptKey,
-            body: rawPayload,
-          }),
-        },
-        body: JSON.stringify(rawPayload),
-      });
+        const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...buildFeishuWebhookSignatureHeaders({
+              encryptKey: config.webhookEncryptKey,
+              body: rawPayload,
+            }),
+          },
+          body: JSON.stringify(rawPayload),
+        });
 
-      expect(response.status).toBe(200);
-      expect((await response.json()).ok).toBe(true);
-    }, { config });
+        expect(response.status).toBe(200);
+        expect((await response.json()).ok).toBe(true);
+      },
+      { config }
+    );
   });
 
   it("persists webhook dedup state across runtime restarts", async () => {
@@ -361,43 +385,54 @@ describe("Feishu routes", () => {
 
     const payload = {
       schema: "2.0",
-      header: { event_type: "im.message.receive_v1", event_id: "evt_persist_1" },
+      header: {
+        event_type: "im.message.receive_v1",
+        event_id: "evt_persist_1",
+      },
       event: {
         message: {
           message_id: "om_persist_1",
           chat_id: "oc_persist_1",
           message_type: "text",
-          content: JSON.stringify({ text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap" }),
+          content: JSON.stringify({
+            text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
+          }),
         },
       },
     };
 
     try {
-      await withServer(async baseUrl => {
-        const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        expect(response.status).toBe(200);
-      }, {
-        webhookDedupStore: new FileFeishuWebhookDedupStore(storePath),
-      });
+      await withServer(
+        async baseUrl => {
+          const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          expect(response.status).toBe(200);
+        },
+        {
+          webhookDedupStore: new FileFeishuWebhookDedupStore(storePath),
+        }
+      );
 
-      await withServer(async baseUrl => {
-        const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        expect(response.status).toBe(200);
-        expect(await response.json()).toMatchObject({
-          ok: true,
-          ignored: true,
-        });
-      }, {
-        webhookDedupStore: new FileFeishuWebhookDedupStore(storePath),
-      });
+      await withServer(
+        async baseUrl => {
+          const response = await fetch(`${baseUrl}/api/feishu/webhook`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          expect(response.status).toBe(200);
+          expect(await response.json()).toMatchObject({
+            ok: true,
+            ignored: true,
+          });
+        },
+        {
+          webhookDedupStore: new FileFeishuWebhookDedupStore(storePath),
+        }
+      );
     } finally {
       rmSync(tempDir, { recursive: true, force: true });
     }
@@ -410,40 +445,43 @@ describe("Feishu routes", () => {
       text: "帮我分析 OpenCroc 的平台定位和下一步 roadmap",
     };
 
-    await withServer(async baseUrl => {
-      const headers = buildFeishuRelayAuthHeaders({
-        secret: "relay-secret",
-        method: "POST",
-        path: "/api/feishu/relay",
-        body: payload,
-        nonce: "fixed-nonce",
-      });
+    await withServer(
+      async baseUrl => {
+        const headers = buildFeishuRelayAuthHeaders({
+          secret: "relay-secret",
+          method: "POST",
+          path: "/api/feishu/relay",
+          body: payload,
+          nonce: "fixed-nonce",
+        });
 
-      const first = await fetch(`${baseUrl}/api/feishu/relay`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...headers,
-        },
-        body: JSON.stringify(payload),
-      });
-      const second = await fetch(`${baseUrl}/api/feishu/relay`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...headers,
-        },
-        body: JSON.stringify(payload),
-      });
+        const first = await fetch(`${baseUrl}/api/feishu/relay`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+          body: JSON.stringify(payload),
+        });
+        const second = await fetch(`${baseUrl}/api/feishu/relay`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+          body: JSON.stringify(payload),
+        });
 
-      expect(first.status).toBe(200);
-      expect(second.status).toBe(409);
-      expect(await second.json()).toEqual({
-        ok: false,
-        error: "Relay request replay detected",
-      });
-    }, {
-      config: { relaySecret: "relay-secret" },
-    });
+        expect(first.status).toBe(200);
+        expect(second.status).toBe(409);
+        expect(await second.json()).toEqual({
+          ok: false,
+          error: "Relay request replay detected",
+        });
+      },
+      {
+        config: { relaySecret: "relay-secret" },
+      }
+    );
   });
 });

@@ -38,13 +38,14 @@ export class RetryBuffer {
       maxRetries?: number;
       baseDelayMs?: number;
       sleep?: (ms: number) => Promise<void>;
-    },
+    }
   ) {
     this.sendFn = sendFn;
     this.maxBufferSize = options?.maxBufferSize ?? 65536;
     this.maxRetries = options?.maxRetries ?? 3;
     this.baseDelayMs = options?.baseDelayMs ?? 1000;
-    this.sleepFn = options?.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
+    this.sleepFn =
+      options?.sleep ?? (ms => new Promise(r => setTimeout(r, ms)));
   }
 
   /** Current total buffered bytes (sum of `data` field byte lengths). */

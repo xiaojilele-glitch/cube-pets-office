@@ -42,7 +42,7 @@ let _workflowRepo: WorkflowRepository | null = null;
  */
 export function initEnrichmentBridge(
   missionRuntime: MissionRuntime,
-  workflowRepo: WorkflowRepository,
+  workflowRepo: WorkflowRepository
 ): void {
   _missionRuntime = missionRuntime;
   _workflowRepo = workflowRepo;
@@ -52,7 +52,10 @@ export function initEnrichmentBridge(
  * Register a link between a workflowId and a missionId.
  * Call this when a workflow is started on behalf of a mission.
  */
-export function linkWorkflowToMission(workflowId: string, missionId: string): void {
+export function linkWorkflowToMission(
+  workflowId: string,
+  missionId: string
+): void {
   workflowMissionMap.set(workflowId, missionId);
 }
 
@@ -70,7 +73,7 @@ export function resolveWorkflowMission(workflowId: string): string | undefined {
  */
 export async function onWorkflowStageCompleted(
   workflowId: string,
-  completedStage: string,
+  completedStage: string
 ): Promise<void> {
   const missionId = workflowMissionMap.get(workflowId);
   if (!missionId || !_missionRuntime || !_workflowRepo) return;
@@ -79,10 +82,12 @@ export async function onWorkflowStageCompleted(
     const workflow = _workflowRepo.getWorkflow(workflowId);
     if (!workflow) return;
 
-    const enrichment: Partial<Pick<
-      MissionRecord,
-      "organization" | "workPackages" | "messageLog" | "agentCrew"
-    >> = {};
+    const enrichment: Partial<
+      Pick<
+        MissionRecord,
+        "organization" | "workPackages" | "messageLog" | "agentCrew"
+      >
+    > = {};
 
     // planning/direction 阶段完成后：填充 organization 和 agentCrew
     if (completedStage === "planning" || completedStage === "direction") {
@@ -91,13 +96,18 @@ export async function onWorkflowStageCompleted(
     }
 
     // execution/review/revision/verify 阶段完成后：填充 workPackages
-    if (["execution", "review", "revision", "verify"].includes(completedStage)) {
+    if (
+      ["execution", "review", "revision", "verify"].includes(completedStage)
+    ) {
       try {
-        enrichment.workPackages = extractWorkPackages(_workflowRepo, workflowId);
+        enrichment.workPackages = extractWorkPackages(
+          _workflowRepo,
+          workflowId
+        );
       } catch (err) {
         console.warn(
           `[EnrichmentBridge] extractWorkPackages failed for workflow ${workflowId}:`,
-          err instanceof Error ? err.message : err,
+          err instanceof Error ? err.message : err
         );
       }
     }
@@ -109,7 +119,7 @@ export async function onWorkflowStageCompleted(
   } catch (err) {
     console.warn(
       `[EnrichmentBridge] Failed to enrich mission after stage "${completedStage}":`,
-      err instanceof Error ? err.message : err,
+      err instanceof Error ? err.message : err
     );
   }
 }
@@ -121,7 +131,7 @@ export async function onWorkflowStageCompleted(
 
 function extractOrganization(
   repo: WorkflowRepository,
-  workflowId: string,
+  workflowId: string
 ): MissionOrganizationSnapshot | undefined {
   const workflow = repo.getWorkflow(workflowId);
   const orgSnapshot = workflow?.results?.organization as
@@ -131,9 +141,9 @@ function extractOrganization(
   if (!orgSnapshot?.departments?.length) return undefined;
 
   return {
-    departments: orgSnapshot.departments.map((dept) => {
+    departments: orgSnapshot.departments.map(dept => {
       const managerNode = orgSnapshot.nodes?.find(
-        (n) => n.id === dept.managerNodeId,
+        n => n.id === dept.managerNodeId
       );
       return {
         key: dept.id,
@@ -147,7 +157,7 @@ function extractOrganization(
 
 function extractAgentCrew(
   repo: WorkflowRepository,
-  workflowId: string,
+  workflowId: string
 ): MissionAgentCrewMember[] {
   const workflow = repo.getWorkflow(workflowId);
   const orgSnapshot = workflow?.results?.organization as
@@ -156,54 +166,65 @@ function extractAgentCrew(
 
   if (!orgSnapshot?.nodes?.length) return [];
 
-  return orgSnapshot.nodes.map((node): MissionAgentCrewMember => ({
-    id: node.agentId,
-    name: node.name,
-    role: node.role,
-    department: node.departmentLabel,
-    status: "idle",
-  }));
+  return orgSnapshot.nodes.map(
+    (node): MissionAgentCrewMember => ({
+      id: node.agentId,
+      name: node.name,
+      role: node.role,
+      department: node.departmentLabel,
+      status: "idle",
+    })
+  );
 }
 
 function extractWorkPackages(
   repo: WorkflowRepository,
-  workflowId: string,
+  workflowId: string
 ): MissionWorkPackage[] {
   const tasks: TaskRecord[] = repo.getTasksByWorkflow(workflowId);
 
-  return tasks.map((task): MissionWorkPackage => ({
-    id: String(task.id),
-    workerId: task.worker_id,
-    description: task.description,
-    deliverable: task.deliverable_v3 ?? task.deliverable_v2 ?? task.deliverable ?? undefined,
-    status: mapTaskStatus(task.status),
-    score: task.total_score ?? undefined,
-    feedback: task.manager_feedback ?? task.meta_audit_feedback ?? undefined,
-    stageKey: undefined as string | undefined,
-  }));
+  return tasks.map(
+    (task): MissionWorkPackage => ({
+      id: String(task.id),
+      workerId: task.worker_id,
+      description: task.description,
+      deliverable:
+        task.deliverable_v3 ??
+        task.deliverable_v2 ??
+        task.deliverable ??
+        undefined,
+      status: mapTaskStatus(task.status),
+      score: task.total_score ?? undefined,
+      feedback: task.manager_feedback ?? task.meta_audit_feedback ?? undefined,
+      stageKey: undefined as string | undefined,
+    })
+  );
 }
 
 function extractMessageLog(
   repo: WorkflowRepository,
   workflowId: string,
-  limit: number,
+  limit: number
 ): MissionMessageLogEntry[] {
   const messages: MessageRecord[] = repo.getMessagesByWorkflow(workflowId);
 
   if (!messages.length) return [];
 
   const sorted = [...messages].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
   const recent = sorted.slice(0, limit).reverse();
 
-  return recent.map((msg): MissionMessageLogEntry => ({
-    sender: msg.from_agent,
-    content:
-      msg.content.length > 500
-        ? msg.content.slice(0, 497) + "..."
-        : msg.content,
-    time: new Date(msg.created_at).getTime(),
-    stageKey: msg.stage || undefined,
-  }));
+  return recent.map(
+    (msg): MissionMessageLogEntry => ({
+      sender: msg.from_agent,
+      content:
+        msg.content.length > 500
+          ? msg.content.slice(0, 497) + "..."
+          : msg.content,
+      time: new Date(msg.created_at).getTime(),
+      stageKey: msg.stage || undefined,
+    })
+  );
 }

@@ -19,9 +19,12 @@ import type {
   ExecutionTimeline,
   ReplayEventType,
   ReplayFilters,
-} from '../../../../shared/replay/contracts';
-import { PLAYBACK_SPEEDS } from '../../../../shared/replay/contracts';
-import type { PlaybackSpeed, ReplayState } from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
+import { PLAYBACK_SPEEDS } from "../../../../shared/replay/contracts";
+import type {
+  PlaybackSpeed,
+  ReplayState,
+} from "../../../../shared/replay/contracts";
 
 // Re-export for convenience
 export { PLAYBACK_SPEEDS };
@@ -54,7 +57,7 @@ export class ReplayEngine {
   private readonly events: ExecutionEvent[];
 
   // ── Playback state ──
-  private _state: ReplayState = 'idle';
+  private _state: ReplayState = "idle";
   private _speed: PlaybackSpeed = 1;
   private _currentTime: number;
   private _currentEventIndex = -1;
@@ -84,32 +87,32 @@ export class ReplayEngine {
 
   /** idle → playing */
   play(): void {
-    if (this._state !== 'idle') return;
+    if (this._state !== "idle") return;
     this._currentTime = this.timeline.startTime;
     this._currentEventIndex = -1;
-    this.transitionTo('playing');
+    this.transitionTo("playing");
     this.startLoop();
   }
 
   /** playing → paused */
   pause(): void {
-    if (this._state !== 'playing') return;
+    if (this._state !== "playing") return;
     this.stopLoop();
-    this.transitionTo('paused');
+    this.transitionTo("paused");
   }
 
   /** paused → playing */
   resume(): void {
-    if (this._state !== 'paused') return;
-    this.transitionTo('playing');
+    if (this._state !== "paused") return;
+    this.transitionTo("playing");
     this.startLoop();
   }
 
   /** playing | paused → stopped */
   stop(): void {
-    if (this._state !== 'playing' && this._state !== 'paused') return;
+    if (this._state !== "playing" && this._state !== "paused") return;
     this.stopLoop();
-    this.transitionTo('stopped');
+    this.transitionTo("stopped");
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
@@ -137,11 +140,11 @@ export class ReplayEngine {
    * Sets currentEventIndex to the last event whose timestamp <= target.
    */
   seek(timestamp: number): void {
-    if (this._state === 'idle' || this._state === 'stopped') return;
+    if (this._state === "idle" || this._state === "stopped") return;
 
     const clamped = Math.max(
       this.timeline.startTime,
-      Math.min(timestamp, this.timeline.endTime),
+      Math.min(timestamp, this.timeline.endTime)
     );
     this._currentTime = clamped;
 
@@ -189,8 +192,12 @@ export class ReplayEngine {
       totalDuration: this.timeline.totalDuration,
       eventCount: this.timeline.eventCount,
       filters: {
-        eventTypes: this._filters.eventTypes ? [...this._filters.eventTypes] : undefined,
-        agentIds: this._filters.agentIds ? [...this._filters.agentIds] : undefined,
+        eventTypes: this._filters.eventTypes
+          ? [...this._filters.eventTypes]
+          : undefined,
+        agentIds: this._filters.agentIds
+          ? [...this._filters.agentIds]
+          : undefined,
         keyword: this._filters.keyword,
       },
       interactiveMode: this._interactiveMode,
@@ -198,7 +205,10 @@ export class ReplayEngine {
   }
 
   getCurrentEvent(): ExecutionEvent | null {
-    if (this._currentEventIndex < 0 || this._currentEventIndex >= this.events.length) {
+    if (
+      this._currentEventIndex < 0 ||
+      this._currentEventIndex >= this.events.length
+    ) {
       return null;
     }
     return this.events[this._currentEventIndex];
@@ -252,7 +262,7 @@ export class ReplayEngine {
    * timestamps fall within the advanced window.
    */
   private tick(now?: number): void {
-    if (this._state !== 'playing') return;
+    if (this._state !== "playing") return;
 
     const realNow = now ?? performance.now();
 
@@ -269,7 +279,7 @@ export class ReplayEngine {
     const prevTime = this._currentTime;
     this._currentTime = Math.min(
       this._currentTime + realDelta * this._speed,
-      this.timeline.endTime,
+      this.timeline.endTime
     );
 
     // Fire events in the (prevTime, currentTime] window
@@ -281,9 +291,9 @@ export class ReplayEngine {
         this.notifyEvent(event);
 
         // Interactive mode: auto-pause at DECISION_MADE events
-        if (this._interactiveMode && event.eventType === 'DECISION_MADE') {
+        if (this._interactiveMode && event.eventType === "DECISION_MADE") {
           this.stopLoop();
-          this.transitionTo('paused');
+          this.transitionTo("paused");
           return; // stop processing further events this tick
         }
       }
@@ -292,7 +302,7 @@ export class ReplayEngine {
     // Check if we've reached the end
     if (this._currentTime >= this.timeline.endTime) {
       this.stopLoop();
-      this.transitionTo('stopped');
+      this.transitionTo("stopped");
       return;
     }
 
@@ -303,16 +313,19 @@ export class ReplayEngine {
   /* ─── Frame scheduling (rAF with setTimeout fallback) ─── */
 
   private scheduleFrame(): void {
-    if (typeof requestAnimationFrame === 'function') {
-      this.animFrameId = requestAnimationFrame((t) => this.tick(t));
+    if (typeof requestAnimationFrame === "function") {
+      this.animFrameId = requestAnimationFrame(t => this.tick(t));
     } else {
       // Fallback for test environments without rAF
-      this.animFrameId = setTimeout(() => this.tick(performance.now()), 16) as unknown as number;
+      this.animFrameId = setTimeout(
+        () => this.tick(performance.now()),
+        16
+      ) as unknown as number;
     }
   }
 
   private cancelFrame(id: number): void {
-    if (typeof cancelAnimationFrame === 'function') {
+    if (typeof cancelAnimationFrame === "function") {
       cancelAnimationFrame(id);
     } else {
       clearTimeout(id);
@@ -330,19 +343,23 @@ export class ReplayEngine {
 
     if (eventTypes && eventTypes.length > 0) {
       const typeSet = new Set<ReplayEventType>(eventTypes);
-      result = result.filter((e) => typeSet.has(e.eventType));
+      result = result.filter(e => typeSet.has(e.eventType));
     }
 
     if (agentIds && agentIds.length > 0) {
       const agentSet = new Set<string>(agentIds);
       result = result.filter(
-        (e) => agentSet.has(e.sourceAgent) || (e.targetAgent && agentSet.has(e.targetAgent)),
+        e =>
+          agentSet.has(e.sourceAgent) ||
+          (e.targetAgent && agentSet.has(e.targetAgent))
       );
     }
 
     if (keyword && keyword.length > 0) {
       const kw = keyword.toLowerCase();
-      result = result.filter((e) => JSON.stringify(e.eventData).toLowerCase().includes(kw));
+      result = result.filter(e =>
+        JSON.stringify(e.eventData).toLowerCase().includes(kw)
+      );
     }
 
     return result;
@@ -358,7 +375,7 @@ export class ReplayEngine {
   }
 
   private notifyEvent(event: ExecutionEvent): void {
-    this.eventCallbacks.forEach((cb) => {
+    this.eventCallbacks.forEach(cb => {
       try {
         cb(event);
       } catch {
@@ -369,7 +386,7 @@ export class ReplayEngine {
 
   private notifyStateChange(): void {
     const snapshot = this.getState();
-    this.stateCallbacks.forEach((cb) => {
+    this.stateCallbacks.forEach(cb => {
       try {
         cb(snapshot);
       } catch {

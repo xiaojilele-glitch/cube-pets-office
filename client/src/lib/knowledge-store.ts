@@ -114,17 +114,16 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       throw new Error(
-        (data as { error?: string }).error ??
-          `Review failed (${res.status})`,
+        (data as { error?: string }).error ?? `Review failed (${res.status})`
       );
     }
 
     const { entity }: PostReviewResponse = await res.json();
 
     // Update the entity in nodes list if present
-    set((s) => ({
-      nodes: s.nodes.map((n) => (n.entityId === entity.entityId ? entity : n)),
-      reviewQueue: s.reviewQueue.filter((e) => e.entityId !== entityId),
+    set(s => ({
+      nodes: s.nodes.map(n => (n.entityId === entity.entityId ? entity : n)),
+      reviewQueue: s.reviewQueue.filter(e => e.entityId !== entityId),
       selectedEntity:
         s.selectedEntity?.entityId === entityId ? entity : s.selectedEntity,
     }));
@@ -133,20 +132,23 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
   subscribeToChanges: (socket: Socket) => {
     socket.on(
       "knowledge.entityChanged",
-      (payload: { entity: Entity; action: "created" | "updated" | "deleted" }) => {
+      (payload: {
+        entity: Entity;
+        action: "created" | "updated" | "deleted";
+      }) => {
         const { entity, action } = payload;
 
-        set((s) => {
+        set(s => {
           let nodes = s.nodes;
 
           if (action === "created") {
             nodes = [...nodes, entity];
           } else if (action === "updated") {
-            nodes = nodes.map((n) =>
-              n.entityId === entity.entityId ? entity : n,
+            nodes = nodes.map(n =>
+              n.entityId === entity.entityId ? entity : n
             );
           } else if (action === "deleted") {
-            nodes = nodes.filter((n) => n.entityId !== entity.entityId);
+            nodes = nodes.filter(n => n.entityId !== entity.entityId);
           }
 
           // Keep selectedEntity in sync
@@ -159,7 +161,7 @@ export const useKnowledgeStore = create<KnowledgeState>((set, get) => ({
 
           return { nodes, selectedEntity };
         });
-      },
+      }
     );
   },
 }));

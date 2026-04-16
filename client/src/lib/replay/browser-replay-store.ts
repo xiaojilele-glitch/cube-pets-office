@@ -18,18 +18,18 @@ import type {
   EventQuery,
   ExecutionTimeline,
   ReplayEventType,
-} from '../../../../shared/replay/contracts';
-import type { ReplayStoreInterface } from '../../../../shared/replay/store-interface';
+} from "../../../../shared/replay/contracts";
+import type { ReplayStoreInterface } from "../../../../shared/replay/store-interface";
 
 // ---------------------------------------------------------------------------
 // IndexedDB constants
 // ---------------------------------------------------------------------------
 
-const DB_NAME = 'replay-db';
+const DB_NAME = "replay-db";
 const DB_VERSION = 1;
-const STORE_EVENTS = 'replay-events';
-const STORE_TIMELINES = 'replay-timelines';
-const STORE_SNAPSHOTS = 'replay-snapshots';
+const STORE_EVENTS = "replay-events";
+const STORE_TIMELINES = "replay-timelines";
+const STORE_SNAPSHOTS = "replay-snapshots";
 
 // ---------------------------------------------------------------------------
 // IndexedDB promise helpers
@@ -57,8 +57,11 @@ function transactionToPromise(tx: IDBTransaction): Promise<void> {
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openReplayDatabase(): Promise<IDBDatabase> {
-  if (typeof window === 'undefined' || typeof window.indexedDB === 'undefined') {
-    return Promise.reject(new Error('IndexedDB is not available'));
+  if (
+    typeof window === "undefined" ||
+    typeof window.indexedDB === "undefined"
+  ) {
+    return Promise.reject(new Error("IndexedDB is not available"));
   }
 
   if (!dbPromise) {
@@ -69,18 +72,22 @@ function openReplayDatabase(): Promise<IDBDatabase> {
         const db = request.result;
 
         if (!db.objectStoreNames.contains(STORE_EVENTS)) {
-          const evStore = db.createObjectStore(STORE_EVENTS, { keyPath: 'eventId' });
-          evStore.createIndex('missionId', 'missionId', { unique: false });
-          evStore.createIndex('timestamp', 'timestamp', { unique: false });
+          const evStore = db.createObjectStore(STORE_EVENTS, {
+            keyPath: "eventId",
+          });
+          evStore.createIndex("missionId", "missionId", { unique: false });
+          evStore.createIndex("timestamp", "timestamp", { unique: false });
         }
 
         if (!db.objectStoreNames.contains(STORE_TIMELINES)) {
-          db.createObjectStore(STORE_TIMELINES, { keyPath: 'missionId' });
+          db.createObjectStore(STORE_TIMELINES, { keyPath: "missionId" });
         }
 
         if (!db.objectStoreNames.contains(STORE_SNAPSHOTS)) {
-          const snapStore = db.createObjectStore(STORE_SNAPSHOTS, { keyPath: 'snapshotId' });
-          snapStore.createIndex('missionId', 'missionId', { unique: false });
+          const snapStore = db.createObjectStore(STORE_SNAPSHOTS, {
+            keyPath: "snapshotId",
+          });
+          snapStore.createIndex("missionId", "missionId", { unique: false });
         }
       };
 
@@ -96,7 +103,7 @@ function openReplayDatabase(): Promise<IDBDatabase> {
 // Index helpers (same logic as ServerReplayStore)
 // ---------------------------------------------------------------------------
 
-function buildIndices(events: ExecutionEvent[]): ExecutionTimeline['indices'] {
+function buildIndices(events: ExecutionEvent[]): ExecutionTimeline["indices"] {
   const byTime = new Map<number, number[]>();
   const byAgent = new Map<string, number[]>();
   const byType = new Map<ReplayEventType, number[]>();
@@ -120,7 +127,7 @@ function buildIndices(events: ExecutionEvent[]): ExecutionTimeline['indices'] {
     byType.get(ev.eventType)!.push(i);
 
     const resourceId = (ev.eventData as Record<string, unknown>)?.resourceId;
-    if (typeof resourceId === 'string') {
+    if (typeof resourceId === "string") {
       if (!byResource.has(resourceId)) byResource.set(resourceId, []);
       byResource.get(resourceId)!.push(i);
     }
@@ -130,7 +137,7 @@ function buildIndices(events: ExecutionEvent[]): ExecutionTimeline['indices'] {
 }
 
 function csvEscape(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
     return `"${value.replace(/"/g, '""')}"`;
   }
   return value;
@@ -142,11 +149,14 @@ function csvEscape(value: string): string {
 
 export class BrowserReplayStore implements ReplayStoreInterface {
   /** Put events into the replay-events store. */
-  async appendEvents(missionId: string, events: ExecutionEvent[]): Promise<void> {
+  async appendEvents(
+    missionId: string,
+    events: ExecutionEvent[]
+  ): Promise<void> {
     if (events.length === 0) return;
 
     const db = await openReplayDatabase();
-    const tx = db.transaction([STORE_EVENTS, STORE_TIMELINES], 'readwrite');
+    const tx = db.transaction([STORE_EVENTS, STORE_TIMELINES], "readwrite");
     const evStore = tx.objectStore(STORE_EVENTS);
 
     for (const event of events) {
@@ -166,26 +176,28 @@ export class BrowserReplayStore implements ReplayStoreInterface {
 
     if (query.timeRange) {
       const { start, end } = query.timeRange;
-      events = events.filter((e) => e.timestamp >= start && e.timestamp <= end);
+      events = events.filter(e => e.timestamp >= start && e.timestamp <= end);
     }
 
     if (query.agentIds && query.agentIds.length > 0) {
       const agentSet = new Set(query.agentIds);
       events = events.filter(
-        (e) => agentSet.has(e.sourceAgent) || (e.targetAgent && agentSet.has(e.targetAgent)),
+        e =>
+          agentSet.has(e.sourceAgent) ||
+          (e.targetAgent && agentSet.has(e.targetAgent))
       );
     }
 
     if (query.eventTypes && query.eventTypes.length > 0) {
       const typeSet = new Set(query.eventTypes);
-      events = events.filter((e) => typeSet.has(e.eventType));
+      events = events.filter(e => typeSet.has(e.eventType));
     }
 
     if (query.resourceIds && query.resourceIds.length > 0) {
       const resSet = new Set(query.resourceIds);
-      events = events.filter((e) => {
+      events = events.filter(e => {
         const rid = (e.eventData as Record<string, unknown>)?.resourceId;
-        return typeof rid === 'string' && resSet.has(rid);
+        return typeof rid === "string" && resSet.has(rid);
       });
     }
 
@@ -199,7 +211,7 @@ export class BrowserReplayStore implements ReplayStoreInterface {
     const events = await this.getEventsByMission(missionId);
 
     const db = await openReplayDatabase();
-    const tx = db.transaction(STORE_TIMELINES, 'readonly');
+    const tx = db.transaction(STORE_TIMELINES, "readonly");
     const store = tx.objectStore(STORE_TIMELINES);
     const stored = await requestToPromise(store.get(missionId));
     await transactionToPromise(tx);
@@ -231,38 +243,48 @@ export class BrowserReplayStore implements ReplayStoreInterface {
       eventCount: events.length,
       indices: buildIndices(events),
       version: 0,
-      checksum: '',
+      checksum: "",
     };
   }
 
   /** Export events as JSON or CSV. */
-  async exportEvents(missionId: string, format: 'json' | 'csv'): Promise<string> {
+  async exportEvents(
+    missionId: string,
+    format: "json" | "csv"
+  ): Promise<string> {
     const events = await this.getEventsByMission(missionId);
 
-    if (format === 'json') {
+    if (format === "json") {
       return JSON.stringify(events, null, 2);
     }
 
-    const headers = ['eventId', 'missionId', 'timestamp', 'eventType', 'sourceAgent', 'targetAgent'];
-    const rows = events.map((e) =>
+    const headers = [
+      "eventId",
+      "missionId",
+      "timestamp",
+      "eventType",
+      "sourceAgent",
+      "targetAgent",
+    ];
+    const rows = events.map(e =>
       [
         e.eventId,
         e.missionId,
         String(e.timestamp),
         e.eventType,
         e.sourceAgent,
-        e.targetAgent ?? '',
+        e.targetAgent ?? "",
       ]
         .map(csvEscape)
-        .join(','),
+        .join(",")
     );
-    return [headers.join(','), ...rows].join('\n');
+    return [headers.join(","), ...rows].join("\n");
   }
 
   /** Verify eventCount matches actual stored events. */
   async verifyIntegrity(missionId: string): Promise<boolean> {
     const db = await openReplayDatabase();
-    const tx = db.transaction(STORE_TIMELINES, 'readonly');
+    const tx = db.transaction(STORE_TIMELINES, "readonly");
     const store = tx.objectStore(STORE_TIMELINES);
     const stored = await requestToPromise(store.get(missionId));
     await transactionToPromise(tx);
@@ -283,9 +305,9 @@ export class BrowserReplayStore implements ReplayStoreInterface {
     const thresholdMs = Date.now() - olderThanDays * 24 * 60 * 60 * 1000;
 
     const db = await openReplayDatabase();
-    const tx = db.transaction(STORE_EVENTS, 'readwrite');
+    const tx = db.transaction(STORE_EVENTS, "readwrite");
     const store = tx.objectStore(STORE_EVENTS);
-    const index = store.index('timestamp');
+    const index = store.index("timestamp");
 
     const range = IDBKeyRange.upperBound(thresholdMs);
     let cleaned = 0;
@@ -316,14 +338,16 @@ export class BrowserReplayStore implements ReplayStoreInterface {
   // -----------------------------------------------------------------------
 
   /** Fetch all events for a missionId via the index, sorted by timestamp. */
-  private async getEventsByMission(missionId: string): Promise<ExecutionEvent[]> {
+  private async getEventsByMission(
+    missionId: string
+  ): Promise<ExecutionEvent[]> {
     const db = await openReplayDatabase();
-    const tx = db.transaction(STORE_EVENTS, 'readonly');
+    const tx = db.transaction(STORE_EVENTS, "readonly");
     const store = tx.objectStore(STORE_EVENTS);
-    const index = store.index('missionId');
+    const index = store.index("missionId");
 
     const events = await requestToPromise(
-      index.getAll(IDBKeyRange.only(missionId)) as IDBRequest<ExecutionEvent[]>,
+      index.getAll(IDBKeyRange.only(missionId)) as IDBRequest<ExecutionEvent[]>
     );
     await transactionToPromise(tx);
 
@@ -332,9 +356,12 @@ export class BrowserReplayStore implements ReplayStoreInterface {
   }
 
   /** Persist timeline metadata to the timelines store. */
-  private async saveTimelineMeta(missionId: string, events: ExecutionEvent[]): Promise<void> {
+  private async saveTimelineMeta(
+    missionId: string,
+    events: ExecutionEvent[]
+  ): Promise<void> {
     const db = await openReplayDatabase();
-    const tx = db.transaction(STORE_TIMELINES, 'readwrite');
+    const tx = db.transaction(STORE_TIMELINES, "readwrite");
     const store = tx.objectStore(STORE_TIMELINES);
 
     const existing = await requestToPromise(store.get(missionId));
@@ -350,7 +377,7 @@ export class BrowserReplayStore implements ReplayStoreInterface {
       totalDuration: endTime - startTime,
       eventCount: events.length,
       version,
-      checksum: '',
+      checksum: "",
     });
 
     await transactionToPromise(tx);

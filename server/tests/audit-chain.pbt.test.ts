@@ -18,7 +18,10 @@ import {
   AuditEventType,
   DEFAULT_EVENT_TYPE_REGISTRY,
 } from "../../shared/audit/contracts.js";
-import type { AuditEvent, AuditLogEntry } from "../../shared/audit/contracts.js";
+import type {
+  AuditEvent,
+  AuditLogEntry,
+} from "../../shared/audit/contracts.js";
 
 // ─── 辅助：生成测试用 ECDSA-P256 密钥对 ────────────────────────────────────
 
@@ -35,28 +38,28 @@ function generateTestKeys() {
 // ─── Arbitrary：随机 AuditEvent 生成器 ──────────────────────────────────────
 
 const arbAuditEvent = fc.record({
-  eventId: fc.string({ minLength: 1, maxLength: 30 }).map(
-    (s) => `ae_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`,
-  ),
+  eventId: fc
+    .string({ minLength: 1, maxLength: 30 })
+    .map(s => `ae_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`),
   eventType: fc.constantFrom(...Object.values(AuditEventType)),
   timestamp: fc.nat({ max: 2000000000000 }),
   actor: fc.record({
     type: fc.constantFrom("user" as const, "agent" as const, "system" as const),
-    id: fc.string({ minLength: 1, maxLength: 20 }).map(
-      (s) => s.replace(/[^a-zA-Z0-9_-]/g, "x"),
-    ),
+    id: fc
+      .string({ minLength: 1, maxLength: 20 })
+      .map(s => s.replace(/[^a-zA-Z0-9_-]/g, "x")),
     name: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
       nil: undefined,
     }),
   }),
   action: fc.string({ minLength: 1, maxLength: 50 }),
   resource: fc.record({
-    type: fc.string({ minLength: 1, maxLength: 20 }).map(
-      (s) => s.replace(/[^a-zA-Z0-9_-]/g, "x"),
-    ),
-    id: fc.string({ minLength: 1, maxLength: 20 }).map(
-      (s) => s.replace(/[^a-zA-Z0-9_-]/g, "x"),
-    ),
+    type: fc
+      .string({ minLength: 1, maxLength: 20 })
+      .map(s => s.replace(/[^a-zA-Z0-9_-]/g, "x")),
+    id: fc
+      .string({ minLength: 1, maxLength: 20 })
+      .map(s => s.replace(/[^a-zA-Z0-9_-]/g, "x")),
     name: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
       nil: undefined,
     }),
@@ -65,15 +68,14 @@ const arbAuditEvent = fc.record({
     "success" as const,
     "failure" as const,
     "denied" as const,
-    "error" as const,
+    "error" as const
   ),
   context: fc.constant({}),
 }) as fc.Arbitrary<AuditEvent>;
 
-
 // CRITICAL event types from the registry
 const CRITICAL_EVENT_TYPES = Object.values(AuditEventType).filter(
-  (t) => DEFAULT_EVENT_TYPE_REGISTRY[t]?.severity === "CRITICAL",
+  t => DEFAULT_EVENT_TYPE_REGISTRY[t]?.severity === "CRITICAL"
 );
 
 const arbCriticalEventType = fc.constantFrom(...CRITICAL_EVENT_TYPES);
@@ -96,7 +98,7 @@ describe("P-1: 哈希链连续性", () => {
     fc.assert(
       fc.property(
         fc.array(arbAuditEvent, { minLength: 2, maxLength: 20 }),
-        (events) => {
+        events => {
           // Fresh chain per run
           const keys = generateTestKeys();
           const c = new AuditChain({
@@ -112,9 +114,9 @@ describe("P-1: 哈希链连续性", () => {
           for (let i = 1; i < entries.length; i++) {
             expect(entries[i].previousHash).toBe(entries[i - 1].currentHash);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -127,7 +129,7 @@ describe("P-2: 哈希不可伪造", () => {
     fc.assert(
       fc.property(
         fc.array(arbAuditEvent, { minLength: 1, maxLength: 15 }),
-        (events) => {
+        events => {
           const keys = generateTestKeys();
           const c = new AuditChain({
             privateKey: keys.privateKey,
@@ -149,14 +151,14 @@ describe("P-2: 哈希不可伪造", () => {
                   "|" +
                   entry.previousHash +
                   "|" +
-                  entry.nonce,
+                  entry.nonce
               )
               .digest("hex");
             expect(recomputed).toBe(entry.currentHash);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -186,7 +188,7 @@ describe("P-3: Append-Only 不变量", () => {
           expect(N).toBe(firstBatch.length);
 
           // Snapshot first batch entries
-          const snapshot = firstEntries.map((e) => JSON.stringify(e));
+          const snapshot = firstEntries.map(e => JSON.stringify(e));
 
           // Append second batch
           for (const ev of secondBatch) {
@@ -200,13 +202,12 @@ describe("P-3: Append-Only 不变量", () => {
           for (let i = 0; i < reread.length; i++) {
             expect(JSON.stringify(reread[i])).toBe(snapshot[i]);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 // ─── P-4: 时间戳单调递增 ───────────────────────────────────────────────────
 // **Validates: Requirements 4.4, 4.5**
@@ -216,7 +217,7 @@ describe("P-4: 时间戳单调递增", () => {
     fc.assert(
       fc.property(
         fc.array(arbAuditEvent, { minLength: 2, maxLength: 20 }),
-        (events) => {
+        events => {
           const keys = generateTestKeys();
           const c = new AuditChain({
             privateKey: keys.privateKey,
@@ -230,12 +231,12 @@ describe("P-4: 时间戳单调递增", () => {
 
           for (let i = 1; i < entries.length; i++) {
             expect(entries[i].timestamp.system).toBeGreaterThanOrEqual(
-              entries[i - 1].timestamp.system,
+              entries[i - 1].timestamp.system
             );
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -248,7 +249,7 @@ describe("P-5: 签名有效性", () => {
     fc.assert(
       fc.property(
         fc.array(arbAuditEvent, { minLength: 1, maxLength: 15 }),
-        (events) => {
+        events => {
           const keys = generateTestKeys();
           const c = new AuditChain({
             privateKey: keys.privateKey,
@@ -262,12 +263,12 @@ describe("P-5: 签名有效性", () => {
 
           for (const entry of entries) {
             expect(c.verifySignature(entry.currentHash, entry.signature)).toBe(
-              true,
+              true
             );
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -280,7 +281,7 @@ describe("P-6: 序号连续性", () => {
     fc.assert(
       fc.property(
         fc.array(arbAuditEvent, { minLength: 2, maxLength: 20 }),
-        (events) => {
+        events => {
           const keys = generateTestKeys();
           const c = new AuditChain({
             privateKey: keys.privateKey,
@@ -297,16 +298,15 @@ describe("P-6: 序号连续性", () => {
 
           for (let i = 1; i < entries.length; i++) {
             expect(entries[i].sequenceNumber).toBe(
-              entries[i - 1].sequenceNumber + 1,
+              entries[i - 1].sequenceNumber + 1
             );
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 // ─── P-7: 篡改检测 ─────────────────────────────────────────────────────────
 // **Validates: Requirements 5.1, 5.3**
@@ -317,7 +317,10 @@ describe("P-7: 篡改检测", () => {
     const tamperStrategies = [
       // Tamper with event.action
       (entry: AuditLogEntry) => {
-        entry.event = { ...entry.event, action: entry.event.action + "_TAMPERED" };
+        entry.event = {
+          ...entry.event,
+          action: entry.event.action + "_TAMPERED",
+        };
       },
       // Tamper with currentHash
       (entry: AuditLogEntry) => {
@@ -337,14 +340,17 @@ describe("P-7: 篡改检测", () => {
       },
       // Tamper with timestamp
       (entry: AuditLogEntry) => {
-        entry.timestamp = { ...entry.timestamp, system: entry.timestamp.system + 999999 };
+        entry.timestamp = {
+          ...entry.timestamp,
+          system: entry.timestamp.system + 999999,
+        };
       },
     ];
 
     fc.assert(
       fc.property(
         fc.array(arbAuditEvent, { minLength: 2, maxLength: 8 }),
-        fc.nat().map((n) => n % tamperStrategies.length),
+        fc.nat().map(n => n % tamperStrategies.length),
         (events, strategyIdx) => {
           const keys = generateTestKeys();
           const c = new AuditChain({
@@ -377,12 +383,12 @@ describe("P-7: 篡改检测", () => {
               appendEntry: () => {},
               readEntries: (start: number, end: number) =>
                 allEntries.filter(
-                  (e) => e.sequenceNumber >= start && e.sequenceNumber <= end,
+                  e => e.sequenceNumber >= start && e.sequenceNumber <= end
                 ),
               getEntryCount: () => allEntries.length,
               getLastEntry: () => allEntries[allEntries.length - 1],
               getEntryById: (id: string) =>
-                allEntries.find((e) => e.entryId === id) ?? null,
+                allEntries.find(e => e.entryId === id) ?? null,
             },
           });
 
@@ -390,9 +396,9 @@ describe("P-7: 篡改检测", () => {
           const afterResult = tamperedVerifier.verifyChain();
           expect(afterResult.valid).toBe(false);
           expect(afterResult.errors.length).toBeGreaterThan(0);
-        },
+        }
       ),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 });
@@ -405,9 +411,9 @@ describe("P-8: CRITICAL 事件必录", () => {
     fc.assert(
       fc.property(
         arbCriticalEventType,
-        fc.string({ minLength: 1, maxLength: 20 }).map(
-          (s) => s.replace(/[^a-zA-Z0-9_-]/g, "x"),
-        ),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .map(s => s.replace(/[^a-zA-Z0-9_-]/g, "x")),
         fc.string({ minLength: 1, maxLength: 30 }),
         (eventType, actorId, action) => {
           const keys = generateTestKeys();
@@ -438,9 +444,9 @@ describe("P-8: CRITICAL 事件必录", () => {
 
           // Cleanup
           collector.destroy();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

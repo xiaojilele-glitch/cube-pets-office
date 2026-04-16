@@ -18,9 +18,8 @@ describe("mission-client", () => {
       })
     );
 
-    const { MissionApiError, getMissionApiError, listMissions } = await import(
-      "./mission-client"
-    );
+    const { MissionApiError, getMissionApiError, listMissions } =
+      await import("./mission-client");
 
     let thrown: unknown;
     try {

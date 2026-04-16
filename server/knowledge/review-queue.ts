@@ -32,22 +32,24 @@ export class KnowledgeReviewQueue {
    *
    * Requirement 7.1
    */
-  getQueue(
-    filters?: { projectId?: string; entityType?: string; sortBy?: string },
-  ): Entity[] {
+  getQueue(filters?: {
+    projectId?: string;
+    entityType?: string;
+    sortBy?: string;
+  }): Entity[] {
     const allEntities = this.collectAllEntities();
 
     let queue = allEntities.filter(
-      (e) =>
+      e =>
         e.status !== "archived" &&
-        (e.confidence < 0.5 || e.needsReview === true),
+        (e.confidence < 0.5 || e.needsReview === true)
     );
 
     if (filters?.projectId) {
-      queue = queue.filter((e) => e.projectId === filters.projectId);
+      queue = queue.filter(e => e.projectId === filters.projectId);
     }
     if (filters?.entityType) {
-      queue = queue.filter((e) => e.entityType === filters.entityType);
+      queue = queue.filter(e => e.entityType === filters.entityType);
     }
 
     // Default sort: confidence ascending (lowest first)
@@ -86,7 +88,9 @@ export class KnowledgeReviewQueue {
         return this.applyEdit(entity, action);
 
       default:
-        throw new Error(`Unknown review action: ${(action as ReviewAction).action}`);
+        throw new Error(
+          `Unknown review action: ${(action as ReviewAction).action}`
+        );
     }
   }
 
@@ -102,12 +106,12 @@ export class KnowledgeReviewQueue {
    * Requirement 7.4
    */
   checkBacklogAlert(
-    threshold: number = DEFAULT_REVIEW_QUEUE_ALERT_THRESHOLD,
+    threshold: number = DEFAULT_REVIEW_QUEUE_ALERT_THRESHOLD
   ): boolean {
     const size = this.getQueueSize();
     if (size > threshold) {
       console.warn(
-        `[KNOWLEDGE_REVIEW_BACKLOG] Review queue size (${size}) exceeds threshold (${threshold})`,
+        `[KNOWLEDGE_REVIEW_BACKLOG] Review queue size (${size}) exceeds threshold (${threshold})`
       );
       return true;
     }

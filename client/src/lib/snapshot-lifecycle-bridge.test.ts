@@ -29,7 +29,8 @@ const appStoreListeners: Listener[] = [];
 
 vi.mock("./store", () => ({
   useAppStore: Object.assign(
-    (selector?: (s: any) => any) => selector ? selector(appStoreState) : appStoreState,
+    (selector?: (s: any) => any) =>
+      selector ? selector(appStoreState) : appStoreState,
     {
       getState: () => appStoreState,
       setState: (partial: Record<string, any>) => {
@@ -46,7 +47,7 @@ vi.mock("./store", () => ({
           if (idx >= 0) appStoreListeners.splice(idx, 1);
         };
       },
-    },
+    }
   ),
 }));
 
@@ -63,7 +64,8 @@ function setWorkflowStoreState(partial: Record<string, any>) {
 
 vi.mock("./workflow-store", () => ({
   useWorkflowStore: Object.assign(
-    (selector?: (s: any) => any) => selector ? selector(workflowStoreState) : workflowStoreState,
+    (selector?: (s: any) => any) =>
+      selector ? selector(workflowStoreState) : workflowStoreState,
     {
       getState: () => workflowStoreState,
       subscribe: (listener: Listener) => {
@@ -73,7 +75,7 @@ vi.mock("./workflow-store", () => ({
           if (idx >= 0) workflowStoreListeners.splice(idx, 1);
         };
       },
-    },
+    }
   ),
 }));
 
@@ -120,7 +122,8 @@ afterEach(() => {
 
 describe("initSnapshotLifecycleBridge", () => {
   it("should register __snapshotZustandAccessor on globalThis", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     const accessor = (globalThis as any).__snapshotZustandAccessor;
@@ -136,7 +139,8 @@ describe("initSnapshotLifecycleBridge", () => {
   });
 
   it("should register __snapshotRestoreZustand on globalThis", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     const restoreZustand = (globalThis as any).__snapshotRestoreZustand;
@@ -155,7 +159,8 @@ describe("initSnapshotLifecycleBridge", () => {
   });
 
   it("should register __snapshotRestoreScene on globalThis", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     const restoreScene = (globalThis as any).__snapshotRestoreScene;
@@ -171,7 +176,8 @@ describe("initSnapshotLifecycleBridge", () => {
   });
 
   it("should forward scene restore to __sceneRestoreLayout if registered", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     const mockSceneRestore = vi.fn();
@@ -188,7 +194,8 @@ describe("initSnapshotLifecycleBridge", () => {
   });
 
   it("should only initialise once (idempotent)", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
     initSnapshotLifecycleBridge();
     initSnapshotLifecycleBridge();
@@ -200,12 +207,17 @@ describe("initSnapshotLifecycleBridge", () => {
 
 describe("workflow-store subscription", () => {
   it("should call onMissionStageChange when a stage_change event appears in eventLog", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     setWorkflowStoreState({
       eventLog: [
-        { type: "stage_change", data: { workflowId: "w-1", stage: "planning" }, timestamp: "t1" },
+        {
+          type: "stage_change",
+          data: { workflowId: "w-1", stage: "planning" },
+          timestamp: "t1",
+        },
       ],
     });
 
@@ -213,80 +225,121 @@ describe("workflow-store subscription", () => {
   });
 
   it("should call onMissionStatusChange when currentWorkflow status changes", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     // First set a workflow
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "direction" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "direction",
+      },
     });
 
     expect(mockOnMissionStatusChange).toHaveBeenCalledWith("w-1", "running");
   });
 
   it("should call onMissionStatusChange with 'done' when workflow completes", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     // Set initial running state
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "direction" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "direction",
+      },
     });
     mockOnMissionStatusChange.mockClear();
 
     // Transition to completed
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "completed", current_stage: "evolution" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "completed",
+        current_stage: "evolution",
+      },
     });
 
     expect(mockOnMissionStatusChange).toHaveBeenCalledWith("w-1", "done");
   });
 
   it("should call onMissionStatusChange with 'failed' when workflow fails", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "execution" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "execution",
+      },
     });
     mockOnMissionStatusChange.mockClear();
 
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "failed", current_stage: "execution" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "failed",
+        current_stage: "execution",
+      },
     });
 
     expect(mockOnMissionStatusChange).toHaveBeenCalledWith("w-1", "failed");
   });
 
   it("should call onMissionStageChange when stage changes without status change", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "direction" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "direction",
+      },
     });
     mockOnMissionStageChange.mockClear();
 
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "planning" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "planning",
+      },
     });
 
     expect(mockOnMissionStageChange).toHaveBeenCalled();
   });
 
   it("should not fire hooks when nothing changes", async () => {
-    const { initSnapshotLifecycleBridge } = await import("./snapshot-lifecycle-bridge");
+    const { initSnapshotLifecycleBridge } =
+      await import("./snapshot-lifecycle-bridge");
     initSnapshotLifecycleBridge();
 
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "direction" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "direction",
+      },
     });
     mockOnMissionStatusChange.mockClear();
     mockOnMissionStageChange.mockClear();
 
     // Same state again
     setWorkflowStoreState({
-      currentWorkflow: { id: "w-1", status: "running", current_stage: "direction" },
+      currentWorkflow: {
+        id: "w-1",
+        status: "running",
+        current_stage: "direction",
+      },
     });
 
     expect(mockOnMissionStatusChange).not.toHaveBeenCalled();

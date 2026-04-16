@@ -15,14 +15,20 @@ import type {
   ChunkRecord,
   DeadLetterEntry,
   VectorRecord,
-} from '../../../shared/rag/contracts.js';
-import type { DedupChecker } from './dedup-checker.js';
-import type { DataCleaner } from './data-cleaner.js';
-import type { DeadLetterQueue } from './dead-letter-queue.js';
-import type { ChunkRouter } from '../chunking/chunk-router.js';
-import type { EmbeddingGenerator, EmbeddedChunk } from '../embedding/embedding-generator.js';
-import type { VectorStoreAdapter } from '../store/vector-store-adapter.js';
-import type { MetadataStore, RagChunkMetadataRow } from '../store/metadata-store.js';
+} from "../../../shared/rag/contracts.js";
+import type { DedupChecker } from "./dedup-checker.js";
+import type { DataCleaner } from "./data-cleaner.js";
+import type { DeadLetterQueue } from "./dead-letter-queue.js";
+import type { ChunkRouter } from "../chunking/chunk-router.js";
+import type {
+  EmbeddingGenerator,
+  EmbeddedChunk,
+} from "../embedding/embedding-generator.js";
+import type { VectorStoreAdapter } from "../store/vector-store-adapter.js";
+import type {
+  MetadataStore,
+  RagChunkMetadataRow,
+} from "../store/metadata-store.js";
 
 // ---------------------------------------------------------------------------
 // Result types
@@ -75,20 +81,45 @@ export class IngestionPipeline {
    *       → VectorStoreAdapter.upsert → MetadataStore.upsertBatch
    */
   async ingest(payload: IngestionPayload): Promise<IngestionResult> {
-    const { dedupChecker, dataCleaner, chunkRouter, embeddingGenerator, vectorStore, metadataStore, deadLetterQueue } = this.deps;
+    const {
+      dedupChecker,
+      dataCleaner,
+      chunkRouter,
+      embeddingGenerator,
+      vectorStore,
+      metadataStore,
+      deadLetterQueue,
+    } = this.deps;
 
     // --- Stage: clean ---
     let cleaned: IngestionPayload & { contentHash: string };
     try {
       cleaned = dataCleaner.clean(payload);
     } catch (err) {
-      deadLetterQueue.push(payload, errorMessage(err), 'clean');
-      return { success: false, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false, error: errorMessage(err) };
+      deadLetterQueue.push(payload, errorMessage(err), "clean");
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+        error: errorMessage(err),
+      };
     }
 
     // --- Stage: dedup ---
-    if (dedupChecker.isDuplicate(cleaned.sourceType, cleaned.sourceId, cleaned.contentHash)) {
-      return { success: true, chunkCount: 0, sourceId: payload.sourceId, deduplicated: true };
+    if (
+      dedupChecker.isDuplicate(
+        cleaned.sourceType,
+        cleaned.sourceId,
+        cleaned.contentHash
+      )
+    ) {
+      return {
+        success: true,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: true,
+      };
     }
 
     // --- Stage: chunk ---
@@ -111,14 +142,29 @@ export class IngestionPipeline {
         chunkIndex: idx,
       }));
     } catch (err) {
-      deadLetterQueue.push(payload, errorMessage(err), 'chunk');
-      return { success: false, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false, error: errorMessage(err) };
+      deadLetterQueue.push(payload, errorMessage(err), "chunk");
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+        error: errorMessage(err),
+      };
     }
 
     if (chunks.length === 0) {
       // Nothing to embed — mark as ingested and return
-      dedupChecker.markIngested(cleaned.sourceType, cleaned.sourceId, cleaned.contentHash);
-      return { success: true, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false };
+      dedupChecker.markIngested(
+        cleaned.sourceType,
+        cleaned.sourceId,
+        cleaned.contentHash
+      );
+      return {
+        success: true,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+      };
     }
 
     // --- Stage: embed ---
@@ -126,18 +172,30 @@ export class IngestionPipeline {
     try {
       embedded = await embeddingGenerator.generateBatch(chunks);
     } catch (err) {
-      deadLetterQueue.push(payload, errorMessage(err), 'embed');
-      return { success: false, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false, error: errorMessage(err) };
+      deadLetterQueue.push(payload, errorMessage(err), "embed");
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+        error: errorMessage(err),
+      };
     }
 
     if (embedded.length === 0) {
-      deadLetterQueue.push(payload, 'All chunks failed embedding', 'embed');
-      return { success: false, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false, error: 'All chunks failed embedding' };
+      deadLetterQueue.push(payload, "All chunks failed embedding", "embed");
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+        error: "All chunks failed embedding",
+      };
     }
 
     // --- Stage: store (vector) ---
     const collectionName = `rag_${cleaned.projectId}`;
-    const vectorRecords: VectorRecord[] = embedded.map((ec) => ({
+    const vectorRecords: VectorRecord[] = embedded.map(ec => ({
       id: ec.chunk.chunkId,
       vector: ec.vector,
       content: ec.chunk.content,
@@ -155,13 +213,19 @@ export class IngestionPipeline {
     try {
       await vectorStore.upsert(collectionName, vectorRecords);
     } catch (err) {
-      deadLetterQueue.push(payload, errorMessage(err), 'store');
-      return { success: false, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false, error: errorMessage(err) };
+      deadLetterQueue.push(payload, errorMessage(err), "store");
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+        error: errorMessage(err),
+      };
     }
 
     // --- Stage: metadata ---
     const now = new Date().toISOString();
-    const metadataRows: RagChunkMetadataRow[] = embedded.map((ec) => ({
+    const metadataRows: RagChunkMetadataRow[] = embedded.map(ec => ({
       chunk_id: ec.chunk.chunkId,
       source_type: ec.chunk.sourceType,
       source_id: ec.chunk.sourceId,
@@ -174,19 +238,29 @@ export class IngestionPipeline {
       agent_id: cleaned.agentId ?? null,
       ingested_at: now,
       last_accessed_at: now,
-      storage_tier: 'hot' as const,
+      storage_tier: "hot" as const,
       metadata_json: JSON.stringify(ec.chunk.metadata),
     }));
 
     try {
       metadataStore.upsertBatch(metadataRows);
     } catch (err) {
-      deadLetterQueue.push(payload, errorMessage(err), 'metadata');
-      return { success: false, chunkCount: 0, sourceId: payload.sourceId, deduplicated: false, error: errorMessage(err) };
+      deadLetterQueue.push(payload, errorMessage(err), "metadata");
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: payload.sourceId,
+        deduplicated: false,
+        error: errorMessage(err),
+      };
     }
 
     // --- Success: mark dedup ---
-    dedupChecker.markIngested(cleaned.sourceType, cleaned.sourceId, cleaned.contentHash);
+    dedupChecker.markIngested(
+      cleaned.sourceType,
+      cleaned.sourceId,
+      cleaned.contentHash
+    );
 
     return {
       success: true,
@@ -199,7 +273,9 @@ export class IngestionPipeline {
   /**
    * 批量摄入。逐条调用 ingest()，汇总结果。
    */
-  async ingestBatch(payloads: IngestionPayload[]): Promise<IngestionBatchResult> {
+  async ingestBatch(
+    payloads: IngestionPayload[]
+  ): Promise<IngestionBatchResult> {
     const results: IngestionResult[] = [];
     let succeeded = 0;
     let failed = 0;
@@ -220,7 +296,10 @@ export class IngestionPipeline {
   /**
    * 获取 Dead Letter Queue 中的失败记录。
    */
-  getDeadLetters(options?: { limit?: number; offset?: number }): Promise<DeadLetterEntry[]> {
+  getDeadLetters(options?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<DeadLetterEntry[]> {
     return Promise.resolve(this.deps.deadLetterQueue.list(options));
   }
 
@@ -231,7 +310,13 @@ export class IngestionPipeline {
     const { deadLetterQueue } = this.deps;
     const payload = deadLetterQueue.markRetry(entryId);
     if (!payload) {
-      return { success: false, chunkCount: 0, sourceId: '', deduplicated: false, error: `DLQ entry not found: ${entryId}` };
+      return {
+        success: false,
+        chunkCount: 0,
+        sourceId: "",
+        deduplicated: false,
+        error: `DLQ entry not found: ${entryId}`,
+      };
     }
     const result = await this.ingest(payload);
     if (result.success) {

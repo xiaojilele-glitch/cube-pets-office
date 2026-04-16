@@ -8,15 +8,19 @@
  * Requirements: 1.6
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // ---------------------------------------------------------------------------
 // 去重键格式：`${sourceType}:${sourceId}:${contentHash}`
 // ---------------------------------------------------------------------------
 
-export function buildDedupKey(sourceType: string, sourceId: string, contentHash: string): string {
+export function buildDedupKey(
+  sourceType: string,
+  sourceId: string,
+  contentHash: string
+): string {
   return `${sourceType}:${sourceId}:${contentHash}`;
 }
 
@@ -35,7 +39,7 @@ interface DedupStoreFile {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DEFAULT_FILE_PATH = resolve(__dirname, '../../../data/rag_dedup.json');
+const DEFAULT_FILE_PATH = resolve(__dirname, "../../../data/rag_dedup.json");
 
 // ---------------------------------------------------------------------------
 // DedupChecker
@@ -55,14 +59,22 @@ export class DedupChecker {
   /**
    * 检查是否已摄入过（重复）
    */
-  isDuplicate(sourceType: string, sourceId: string, contentHash: string): boolean {
+  isDuplicate(
+    sourceType: string,
+    sourceId: string,
+    contentHash: string
+  ): boolean {
     return this.keys.has(buildDedupKey(sourceType, sourceId, contentHash));
   }
 
   /**
    * 标记为已摄入
    */
-  markIngested(sourceType: string, sourceId: string, contentHash: string): void {
+  markIngested(
+    sourceType: string,
+    sourceId: string,
+    contentHash: string
+  ): void {
     const key = buildDedupKey(sourceType, sourceId, contentHash);
     if (!this.keys.has(key)) {
       this.keys.add(key);
@@ -87,11 +99,11 @@ export class DedupChecker {
   private load(): void {
     if (!existsSync(this.filePath)) return;
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as DedupStoreFile;
       const keys = Array.isArray(parsed?.keys) ? parsed.keys : [];
       for (const key of keys) {
-        if (typeof key === 'string') {
+        if (typeof key === "string") {
           this.keys.add(key);
         }
       }
@@ -111,9 +123,9 @@ export class DedupChecker {
     };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[DedupChecker] Failed to save:', err);
+      console.error("[DedupChecker] Failed to save:", err);
     }
   }
 }

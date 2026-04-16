@@ -141,16 +141,16 @@ interface MissionRecord {
 
 ### 2. 状作动作可用性矩阵
 
-| 当前状态 | operatorState | 可用动作 |
-|---|---|---|
-| queued | active | pause, mark-blocked, terminate |
-| running | active | pause, mark-blocked, terminate |
-| waiting | active | mark-blocked, terminate |
-| running | paused | resume, terminate |
-| queued | paused | resume, terminate |
-| any non-terminal | blocked | resume, terminate |
-| failed | active | retry |
-| cancelled | active | retry |
+| 当前状态         | operatorState | 可用动作                       |
+| ---------------- | ------------- | ------------------------------ |
+| queued           | active        | pause, mark-blocked, terminate |
+| running          | active        | pause, mark-blocked, terminate |
+| waiting          | active        | mark-blocked, terminate        |
+| running          | paused        | resume, terminate              |
+| queued           | paused        | resume, terminate              |
+| any non-terminal | blocked       | resume, terminate              |
+| failed           | active        | retry                          |
+| cancelled        | active        | retry                          |
 
 ### 3. 动作执行语义
 

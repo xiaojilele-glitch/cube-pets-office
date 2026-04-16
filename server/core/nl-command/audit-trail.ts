@@ -7,16 +7,19 @@
  * @see Requirements 16.1, 16.2, 16.3, 16.4
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { AuditEntry, AuditQueryFilter } from '../../../shared/nl-command/contracts.js';
+import type {
+  AuditEntry,
+  AuditQueryFilter,
+} from "../../../shared/nl-command/contracts.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DEFAULT_AUDIT_PATH = resolve(__dirname, '../../../data/nl-audit.json');
+const DEFAULT_AUDIT_PATH = resolve(__dirname, "../../../data/nl-audit.json");
 
 interface AuditFile {
   version: number;
@@ -50,19 +53,19 @@ export class AuditTrail {
     let result = this.entries.slice();
 
     if (filter.startTime !== undefined) {
-      result = result.filter((e) => e.timestamp >= filter.startTime!);
+      result = result.filter(e => e.timestamp >= filter.startTime!);
     }
     if (filter.endTime !== undefined) {
-      result = result.filter((e) => e.timestamp <= filter.endTime!);
+      result = result.filter(e => e.timestamp <= filter.endTime!);
     }
     if (filter.operator !== undefined) {
-      result = result.filter((e) => e.operator === filter.operator);
+      result = result.filter(e => e.operator === filter.operator);
     }
     if (filter.operationType !== undefined) {
-      result = result.filter((e) => e.operationType === filter.operationType);
+      result = result.filter(e => e.operationType === filter.operationType);
     }
     if (filter.entityId !== undefined) {
-      result = result.filter((e) => e.entityId === filter.entityId);
+      result = result.filter(e => e.entityId === filter.entityId);
     }
 
     // 按 timestamp 降序排列
@@ -80,7 +83,7 @@ export class AuditTrail {
    * 导出审计日志为 JSON 字符串。
    * @see Requirement 16.4
    */
-  async export(filter: AuditQueryFilter, format: 'json'): Promise<string> {
+  async export(filter: AuditQueryFilter, format: "json"): Promise<string> {
     const entries = await this.query(filter);
     return JSON.stringify(entries, null, 2);
   }
@@ -94,13 +97,15 @@ export class AuditTrail {
       return;
     }
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as AuditFile;
       if (Array.isArray(parsed.entries)) {
         this.entries = parsed.entries;
       }
     } catch {
-      console.warn(`[AuditTrail] 持久化文件损坏，以空日志启动: ${this.filePath}`);
+      console.warn(
+        `[AuditTrail] 持久化文件损坏，以空日志启动: ${this.filePath}`
+      );
     }
   }
 
@@ -111,9 +116,9 @@ export class AuditTrail {
     };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[AuditTrail] 持久化写入失败:', err);
+      console.error("[AuditTrail] 持久化写入失败:", err);
     }
   }
 }

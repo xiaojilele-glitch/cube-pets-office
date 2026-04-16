@@ -384,7 +384,11 @@ function handleRuntimeEvent(
           ...store.agentStatuses,
           [event.agentId]: event.action,
         },
-        agents: applyAgentStatusUpdate(store.agents, event.agentId, event.action),
+        agents: applyAgentStatusUpdate(
+          store.agents,
+          event.agentId,
+          event.action
+        ),
       }));
       break;
     }
@@ -521,6 +525,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
       const socket = io(window.location.origin, {
         transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
       });
 
       socket.on("connect", () => {
@@ -597,16 +605,19 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchAgents: async () => {
     try {
       if (isAdvancedMode()) {
-        const data = await fetchAdvancedJsonOrThrow<WorkflowAgentsResponse>(
-          "/api/agents"
-        );
+        const data =
+          await fetchAdvancedJsonOrThrow<WorkflowAgentsResponse>("/api/agents");
         const agents = (data.agents || []).map((agent: any) => ({
           ...agent,
           isActive: agent.isActive ?? true,
-          status: (get().agentStatuses[agent.id] || "idle") as AgentInfo["status"],
+          status: (get().agentStatuses[agent.id] ||
+            "idle") as AgentInfo["status"],
         }));
         void persistAgents(agents).catch(storageError => {
-          console.warn("[Store] Failed to persist agents snapshot:", storageError);
+          console.warn(
+            "[Store] Failed to persist agents snapshot:",
+            storageError
+          );
         });
         set({ agents, agentsError: null });
         return;
@@ -619,7 +630,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           agent.status) as AgentInfo["status"],
       }));
       void persistAgents(agents).catch(storageError => {
-        console.warn("[Store] Failed to persist agents snapshot:", storageError);
+        console.warn(
+          "[Store] Failed to persist agents snapshot:",
+          storageError
+        );
       });
       set({ agents, agentsError: null });
     } catch (err) {
@@ -649,9 +663,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchStages: async () => {
     try {
       if (isAdvancedMode()) {
-        const data = await fetchAdvancedJsonOrThrow<WorkflowStagesResponse>(
-          "/api/config/stages"
-        );
+        const data =
+          await fetchAdvancedJsonOrThrow<WorkflowStagesResponse>(
+            "/api/config/stages"
+          );
         set({ stages: data.stages || FALLBACK_STAGES });
         return;
       }
@@ -667,9 +682,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   fetchWorkflows: async () => {
     try {
       const data = isAdvancedMode()
-        ? await fetchAdvancedJsonOrThrow<WorkflowListResponse>(
-            "/api/workflows"
-          )
+        ? await fetchAdvancedJsonOrThrow<WorkflowListResponse>("/api/workflows")
         : await localRuntime.listWorkflows();
       void persistWorkflows(data.workflows || []).catch(storageError => {
         console.warn(
@@ -690,7 +703,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           set({ workflows, workflowsError });
         }
       } catch (storageError) {
-        console.warn("[Store] Failed to load workflow snapshots:", storageError);
+        console.warn(
+          "[Store] Failed to load workflow snapshots:",
+          storageError
+        );
       }
     }
   },
@@ -739,7 +755,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           });
         }
       } catch (storageError) {
-        console.warn("[Store] Failed to load workflow detail snapshot:", storageError);
+        console.warn(
+          "[Store] Failed to load workflow detail snapshot:",
+          storageError
+        );
       }
     }
   },
@@ -765,11 +784,16 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             );
           })()
         : await localRuntime.getAgentRecentMemory(agentId, workflowId, limit);
-      void persistRecentMemory(agentId, workflowId || null, data.entries || []).catch(
-        storageError => {
-          console.warn("[Store] Failed to persist recent memory snapshot:", storageError);
-        }
-      );
+      void persistRecentMemory(
+        agentId,
+        workflowId || null,
+        data.entries || []
+      ).catch(storageError => {
+        console.warn(
+          "[Store] Failed to persist recent memory snapshot:",
+          storageError
+        );
+      });
       set({
         agentMemoryRecent: data.entries || [],
         isMemoryLoading: false,
@@ -782,14 +806,20 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         set({ memoryError });
       }
       try {
-        const snapshot = await getRecentMemorySnapshot(agentId, workflowId || null);
+        const snapshot = await getRecentMemorySnapshot(
+          agentId,
+          workflowId || null
+        );
         set({
           agentMemoryRecent: snapshot?.entries || [],
           isMemoryLoading: false,
           memoryError,
         });
       } catch (storageError) {
-        console.warn("[Store] Failed to load recent memory snapshot:", storageError);
+        console.warn(
+          "[Store] Failed to load recent memory snapshot:",
+          storageError
+        );
         set({ agentMemoryRecent: [], isMemoryLoading: false, memoryError });
       }
     }
@@ -816,7 +846,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         : await localRuntime.searchAgentMemory(agentId, query, topK);
       void persistMemorySearch(agentId, query, data.memories || []).catch(
         storageError => {
-          console.warn("[Store] Failed to persist memory search snapshot:", storageError);
+          console.warn(
+            "[Store] Failed to persist memory search snapshot:",
+            storageError
+          );
         }
       );
       set({
@@ -838,7 +871,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           memoryError,
         });
       } catch (storageError) {
-        console.warn("[Store] Failed to load memory search snapshot:", storageError);
+        console.warn(
+          "[Store] Failed to load memory search snapshot:",
+          storageError
+        );
         set({
           agentMemorySearchResults: [],
           isMemoryLoading: false,
@@ -872,7 +908,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
         const statuses = await getHeartbeatStatusesSnapshot();
         set({ heartbeatStatuses: statuses || [], heartbeatError });
       } catch (storageError) {
-        console.warn("[Store] Failed to load heartbeat status snapshots:", storageError);
+        console.warn(
+          "[Store] Failed to load heartbeat status snapshots:",
+          storageError
+        );
       }
     }
   },
@@ -928,7 +967,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
           heartbeatError,
         });
       } catch (storageError) {
-        console.warn("[Store] Failed to load heartbeat report snapshots:", storageError);
+        console.warn(
+          "[Store] Failed to load heartbeat report snapshots:",
+          storageError
+        );
         set({
           heartbeatReports: [],
           isHeartbeatLoading: false,
@@ -1015,7 +1057,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
             workflowId: state.currentWorkflowId,
             missionId:
               state.currentWorkflow?.id === state.currentWorkflowId
-                ? state.currentWorkflow.missionId ?? null
+                ? (state.currentWorkflow.missionId ?? null)
                 : null,
             deduped: true,
           }
@@ -1085,7 +1127,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
       return;
     }
 
-    const payload = await localRuntime.downloadWorkflowReport(workflowId, format);
+    const payload = await localRuntime.downloadWorkflowReport(
+      workflowId,
+      format
+    );
     saveDownload(payload.filename, payload.mimeType, payload.content);
   },
 

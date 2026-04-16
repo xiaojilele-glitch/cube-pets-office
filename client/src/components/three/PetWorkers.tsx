@@ -297,11 +297,7 @@ function createDynamicSceneData(
   return { sceneAgents, markers };
 }
 
-function SpeechBubble(_: {
-  text: string;
-  visible: boolean;
-  accent: string;
-}) {
+function SpeechBubble(_: { text: string; visible: boolean; accent: string }) {
   return null;
 }
 

@@ -3,8 +3,7 @@ import { cn } from "@/lib/utils";
 
 export type GlowButtonVariant = "primary" | "danger" | "ghost";
 
-export interface GlowButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface GlowButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: GlowButtonVariant;
 }
 
@@ -15,23 +14,21 @@ export interface GlowButtonProps
  * - danger:  red → orange gradient, red glow
  * - ghost:   transparent bg, white border, subtle white glow
  */
-const variantStyles: Record<
-  GlowButtonVariant,
-  { base: string; glow: string }
-> = {
-  primary: {
-    base: "bg-gradient-to-r from-[#5E8B72] to-[#87AFC7]",
-    glow: "hover:shadow-[0_0_20px_rgba(94,139,114,0.35)]",
-  },
-  danger: {
-    base: "bg-gradient-to-r from-red-500 to-orange-500",
-    glow: "hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]",
-  },
-  ghost: {
-    base: "bg-transparent border border-white/60",
-    glow: "hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]",
-  },
-};
+const variantStyles: Record<GlowButtonVariant, { base: string; glow: string }> =
+  {
+    primary: {
+      base: "bg-gradient-to-r from-[#5E8B72] to-[#87AFC7]",
+      glow: "hover:shadow-[0_0_20px_rgba(94,139,114,0.35)]",
+    },
+    danger: {
+      base: "bg-gradient-to-r from-red-500 to-orange-500",
+      glow: "hover:shadow-[0_0_20px_rgba(239,68,68,0.5)]",
+    },
+    ghost: {
+      base: "bg-transparent border border-white/60",
+      glow: "hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]",
+    },
+  };
 
 /**
  * GlowButton — holographic CTA button with gradient background,
@@ -40,7 +37,10 @@ const variantStyles: Record<
  * @see AC-4.1 through AC-4.5
  */
 const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
-  ({ variant = "primary", className, disabled, children, onClick, ...props }, ref) => {
+  (
+    { variant = "primary", className, disabled, children, onClick, ...props },
+    ref
+  ) => {
     const [ripples, setRipples] = React.useState<
       { id: number; x: number; y: number }[]
     >([]);
@@ -56,11 +56,11 @@ const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
       const y = e.clientY - rect.top;
       const id = nextId.current++;
 
-      setRipples((prev) => [...prev, { id, x, y }]);
+      setRipples(prev => [...prev, { id, x, y }]);
 
       // Clean up ripple after animation completes (600ms)
       setTimeout(() => {
-        setRipples((prev) => prev.filter((r) => r.id !== id));
+        setRipples(prev => prev.filter(r => r.id !== id));
       }, 600);
 
       onClick?.(e);
@@ -84,15 +84,16 @@ const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
           // Hover glow (disabled state removes it via group below)
           !disabled && v.glow,
           // Disabled: desaturate + no pointer events
-          disabled && "saturate-[0.35] opacity-60 cursor-not-allowed shadow-none",
+          disabled &&
+            "saturate-[0.35] opacity-60 cursor-not-allowed shadow-none",
           // Focus ring
           "outline-none focus-visible:ring-2 focus-visible:ring-[#5E8B72]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
-          className,
+          className
         )}
         {...props}
       >
         {/* Ripple layer */}
-        {ripples.map((ripple) => (
+        {ripples.map(ripple => (
           <span
             key={ripple.id}
             className="pointer-events-none absolute rounded-full bg-white/30"
@@ -113,7 +114,7 @@ const GlowButton = React.forwardRef<HTMLButtonElement, GlowButtonProps>(
         </span>
       </button>
     );
-  },
+  }
 );
 
 GlowButton.displayName = "GlowButton";

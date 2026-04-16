@@ -94,8 +94,13 @@ describe("useDemoStore", () => {
 
   it("reset restores all state to initial values", () => {
     // Mutate everything
-    const { activate, setPlaybackState, appendMemoryEntry, setEvolutionLogs, setCurrentStage } =
-      useDemoStore.getState();
+    const {
+      activate,
+      setPlaybackState,
+      appendMemoryEntry,
+      setEvolutionLogs,
+      setCurrentStage,
+    } = useDemoStore.getState();
 
     activate();
     setPlaybackState("playing");
@@ -107,7 +112,14 @@ describe("useDemoStore", () => {
       timestampOffset: 0,
     });
     setEvolutionLogs([
-      { agentId: "a", dimension: "format", oldScore: 0.5, newScore: 0.9, patchContent: "", applied: true },
+      {
+        agentId: "a",
+        dimension: "format",
+        oldScore: 0.5,
+        newScore: 0.9,
+        patchContent: "",
+        applied: true,
+      },
     ]);
     setCurrentStage("evolution");
 

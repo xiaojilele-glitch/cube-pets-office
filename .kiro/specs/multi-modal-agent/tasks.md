@@ -32,7 +32,7 @@
 - [x] 2. 实现 Voice Provider 配置与服务端语音服务
   - [x] 2.1 新增 Voice Provider 配置模块
     - 新建 `server/core/voice-provider.ts`
-    - 实现 `getVoiceConfig()` 函数，从 TTS_* 和 STT_* 环境变量读取配置
+    - 实现 `getVoiceConfig()` 函数，从 TTS*\* 和 STT*\* 环境变量读取配置
     - 导出 `VoiceConfig` 接口
     - 当 TTS_API_URL + TTS_API_KEY 均存在时 tts.available = true，否则 false；STT 同理
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
@@ -153,7 +153,7 @@
     - **Validates: Requirements 6.3**
 
 - [x] 11. 环境变量与文档更新
-  - [x] 11.1 在 .env.example 中新增 TTS_* 和 STT_* 环境变量模板
+  - [x] 11.1 在 .env.example 中新增 TTS*\* 和 STT*\* 环境变量模板
     - 修改 `.env.example`
     - 新增 TTS_API_URL、TTS_API_KEY、TTS_MODEL、TTS_VOICE、STT_API_URL、STT_API_KEY、STT_MODEL
     - _Requirements: 7.1, 7.2_

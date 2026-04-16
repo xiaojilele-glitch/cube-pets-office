@@ -63,21 +63,17 @@ describe("Feature: multi-modal-agent, Property 1: Voice 配置解析与可用性
     const getVoiceConfig = await loadGetVoiceConfig();
 
     fc.assert(
-      fc.property(
-        optionalString,
-        optionalString,
-        (ttsApiUrl, ttsApiKey) => {
-          clearVoiceEnv();
-          if (ttsApiUrl) process.env.TTS_API_URL = ttsApiUrl;
-          if (ttsApiKey) process.env.TTS_API_KEY = ttsApiKey;
+      fc.property(optionalString, optionalString, (ttsApiUrl, ttsApiKey) => {
+        clearVoiceEnv();
+        if (ttsApiUrl) process.env.TTS_API_URL = ttsApiUrl;
+        if (ttsApiKey) process.env.TTS_API_KEY = ttsApiKey;
 
-          const cfg = getVoiceConfig();
-          const expected = Boolean(ttsApiUrl) && Boolean(ttsApiKey);
+        const cfg = getVoiceConfig();
+        const expected = Boolean(ttsApiUrl) && Boolean(ttsApiKey);
 
-          expect(cfg.tts.available).toBe(expected);
-        },
-      ),
-      { numRuns: 100 },
+        expect(cfg.tts.available).toBe(expected);
+      }),
+      { numRuns: 100 }
     );
   });
 
@@ -85,21 +81,17 @@ describe("Feature: multi-modal-agent, Property 1: Voice 配置解析与可用性
     const getVoiceConfig = await loadGetVoiceConfig();
 
     fc.assert(
-      fc.property(
-        optionalString,
-        optionalString,
-        (sttApiUrl, sttApiKey) => {
-          clearVoiceEnv();
-          if (sttApiUrl) process.env.STT_API_URL = sttApiUrl;
-          if (sttApiKey) process.env.STT_API_KEY = sttApiKey;
+      fc.property(optionalString, optionalString, (sttApiUrl, sttApiKey) => {
+        clearVoiceEnv();
+        if (sttApiUrl) process.env.STT_API_URL = sttApiUrl;
+        if (sttApiKey) process.env.STT_API_KEY = sttApiKey;
 
-          const cfg = getVoiceConfig();
-          const expected = Boolean(sttApiUrl) && Boolean(sttApiKey);
+        const cfg = getVoiceConfig();
+        const expected = Boolean(sttApiUrl) && Boolean(sttApiKey);
 
-          expect(cfg.stt.available).toBe(expected);
-        },
-      ),
-      { numRuns: 100 },
+        expect(cfg.stt.available).toBe(expected);
+      }),
+      { numRuns: 100 }
     );
   });
 
@@ -115,7 +107,15 @@ describe("Feature: multi-modal-agent, Property 1: Voice 配置解析与可用性
         optionalString,
         optionalString,
         optionalString,
-        (ttsApiUrl, ttsApiKey, ttsModel, ttsVoice, sttApiUrl, sttApiKey, sttModel) => {
+        (
+          ttsApiUrl,
+          ttsApiKey,
+          ttsModel,
+          ttsVoice,
+          sttApiUrl,
+          sttApiKey,
+          sttModel
+        ) => {
           clearVoiceEnv();
           if (ttsApiUrl) process.env.TTS_API_URL = ttsApiUrl;
           if (ttsApiKey) process.env.TTS_API_KEY = ttsApiKey;
@@ -139,11 +139,15 @@ describe("Feature: multi-modal-agent, Property 1: Voice 配置解析与可用性
           expect(cfg.stt.model).toBe(sttModel || "whisper-1");
 
           // Availability
-          expect(cfg.tts.available).toBe(Boolean(ttsApiUrl) && Boolean(ttsApiKey));
-          expect(cfg.stt.available).toBe(Boolean(sttApiUrl) && Boolean(sttApiKey));
-        },
+          expect(cfg.tts.available).toBe(
+            Boolean(ttsApiUrl) && Boolean(ttsApiKey)
+          );
+          expect(cfg.stt.available).toBe(
+            Boolean(sttApiUrl) && Boolean(sttApiKey)
+          );
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

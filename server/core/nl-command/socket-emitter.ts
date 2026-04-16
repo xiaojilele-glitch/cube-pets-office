@@ -9,7 +9,7 @@
  * @see Requirements 9.4
  */
 
-import { NL_COMMAND_SOCKET_EVENTS } from '../../../shared/nl-command/socket.js';
+import { NL_COMMAND_SOCKET_EVENTS } from "../../../shared/nl-command/socket.js";
 import type {
   NLCommandCreatedEvent,
   NLCommandAnalysisEvent,
@@ -21,7 +21,7 @@ import type {
   NLAlertEvent,
   NLProgressUpdateEvent,
   NLSuggestionEvent,
-} from '../../../shared/nl-command/socket.js';
+} from "../../../shared/nl-command/socket.js";
 import type {
   StrategicCommand,
   CommandAnalysis,
@@ -30,7 +30,7 @@ import type {
   NLExecutionPlan,
   PlanAdjustment,
   Alert,
-} from '../../../shared/nl-command/contracts.js';
+} from "../../../shared/nl-command/contracts.js";
 
 /** Generic emit function signature — maps to `io.emit(event, payload)`. */
 export type EmitFn = (event: string, payload: unknown) => void;
@@ -60,7 +60,10 @@ export class NLCommandSocketEmitter {
   }
 
   /** Emit when clarification questions are generated. */
-  emitClarificationQuestion(commandId: string, questions: ClarificationQuestion[]): void {
+  emitClarificationQuestion(
+    commandId: string,
+    questions: ClarificationQuestion[]
+  ): void {
     const payload: NLClarificationQuestionEvent = {
       type: NL_COMMAND_SOCKET_EVENTS.clarificationQuestion,
       issuedAt: Date.now(),
@@ -71,7 +74,10 @@ export class NLCommandSocketEmitter {
   }
 
   /** Emit when mission decomposition completes. */
-  emitDecompositionComplete(commandId: string, decomposition: MissionDecomposition): void {
+  emitDecompositionComplete(
+    commandId: string,
+    decomposition: MissionDecomposition
+  ): void {
     const payload: NLDecompositionCompleteEvent = {
       type: NL_COMMAND_SOCKET_EVENTS.decompositionComplete,
       issuedAt: Date.now(),
@@ -125,7 +131,9 @@ export class NLCommandSocketEmitter {
   }
 
   /** Emit a progress update. */
-  emitProgressUpdate(data: Omit<NLProgressUpdateEvent, 'type' | 'issuedAt'>): void {
+  emitProgressUpdate(
+    data: Omit<NLProgressUpdateEvent, "type" | "issuedAt">
+  ): void {
     const payload: NLProgressUpdateEvent = {
       type: NL_COMMAND_SOCKET_EVENTS.progressUpdate,
       issuedAt: Date.now(),
@@ -135,7 +143,7 @@ export class NLCommandSocketEmitter {
   }
 
   /** Emit a decision suggestion. */
-  emitSuggestion(data: Omit<NLSuggestionEvent, 'type' | 'issuedAt'>): void {
+  emitSuggestion(data: Omit<NLSuggestionEvent, "type" | "issuedAt">): void {
     const payload: NLSuggestionEvent = {
       type: NL_COMMAND_SOCKET_EVENTS.suggestion,
       issuedAt: Date.now(),

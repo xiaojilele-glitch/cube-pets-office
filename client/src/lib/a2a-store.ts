@@ -25,23 +25,23 @@ export interface A2AState {
   addA2AMessage: (event: A2AMessageEvent) => void;
 }
 
-export const useA2AStore = create<A2AState>((set) => ({
+export const useA2AStore = create<A2AState>(set => ({
   activeSessions: [],
   a2aMessages: [],
-  addSession: (session) =>
-    set((state) => ({ activeSessions: [...state.activeSessions, session] })),
+  addSession: session =>
+    set(state => ({ activeSessions: [...state.activeSessions, session] })),
   updateSession: (sessionId, update) =>
-    set((state) => ({
-      activeSessions: state.activeSessions.map((s) =>
-        s.sessionId === sessionId ? { ...s, ...update } : s,
+    set(state => ({
+      activeSessions: state.activeSessions.map(s =>
+        s.sessionId === sessionId ? { ...s, ...update } : s
       ),
     })),
-  removeSession: (sessionId) =>
-    set((state) => ({
+  removeSession: sessionId =>
+    set(state => ({
       activeSessions: state.activeSessions.filter(
-        (s) => s.sessionId !== sessionId,
+        s => s.sessionId !== sessionId
       ),
     })),
-  addA2AMessage: (event) =>
-    set((state) => ({ a2aMessages: [...state.a2aMessages, event] })),
+  addA2AMessage: event =>
+    set(state => ({ a2aMessages: [...state.a2aMessages, event] })),
 }));

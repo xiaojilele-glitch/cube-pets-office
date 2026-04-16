@@ -7,12 +7,12 @@
  * @see Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7
  */
 
-import { randomUUID } from 'node:crypto';
-import { createHash } from 'node:crypto';
+import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 
-import type { DowngradeRecord } from '../../../shared/cost-governance.js';
-import { DOWNGRADE_CHAIN } from '../../../shared/cost-governance.js';
-import { auditTrail } from './audit-trail.js';
+import type { DowngradeRecord } from "../../../shared/cost-governance.js";
+import { DOWNGRADE_CHAIN } from "../../../shared/cost-governance.js";
+import { auditTrail } from "./audit-trail.js";
 
 /** Internal record with grayPercent metadata for effective-model resolution */
 interface InternalDowngradeRecord extends DowngradeRecord {
@@ -32,7 +32,7 @@ export class ModelDowngradeManager {
   applyDowngrade(
     missionId: string,
     sourceModel: string,
-    grayPercent?: number,
+    grayPercent?: number
   ): DowngradeRecord {
     const targetModel = DOWNGRADE_CHAIN[sourceModel];
 
@@ -46,14 +46,14 @@ export class ModelDowngradeManager {
         : `No downgrade target for ${sourceModel} in chain`,
       expectedSaving: targetModel ? 0.3 : 0,
       timestamp: Date.now(),
-      status: targetModel ? 'APPLIED' : 'FAILED',
+      status: targetModel ? "APPLIED" : "FAILED",
       grayPercent: targetModel ? grayPercent : undefined,
     };
 
     this.records.push(record);
 
     auditTrail.record({
-      action: 'DOWNGRADE_APPLIED',
+      action: "DOWNGRADE_APPLIED",
       missionId,
       details: {
         recordId: record.id,
@@ -74,14 +74,14 @@ export class ModelDowngradeManager {
    * 将指定记录的 status 设为 'ROLLED_BACK'，并记录到 AuditTrail。
    */
   rollback(recordId: string, reason: string): void {
-    const record = this.records.find((r) => r.id === recordId);
+    const record = this.records.find(r => r.id === recordId);
     if (!record) return;
 
-    record.status = 'ROLLED_BACK';
+    record.status = "ROLLED_BACK";
     record.rollbackReason = reason;
 
     auditTrail.record({
-      action: 'DOWNGRADE_ROLLED_BACK',
+      action: "DOWNGRADE_ROLLED_BACK",
       missionId: record.missionId,
       details: {
         recordId,
@@ -102,7 +102,7 @@ export class ModelDowngradeManager {
   getEffectiveModel(
     missionId: string,
     originalModel: string,
-    agentId: string,
+    agentId: string
   ): string {
     // Find the most recent APPLIED downgrade for this mission + model
     const activeRecord = this.findActiveDowngrade(missionId, originalModel);
@@ -130,8 +130,8 @@ export class ModelDowngradeManager {
    */
   getRecords(missionId: string): DowngradeRecord[] {
     return this.records
-      .filter((r) => r.missionId === missionId)
-      .map((r) => this.toPublicRecord(r));
+      .filter(r => r.missionId === missionId)
+      .map(r => this.toPublicRecord(r));
   }
 
   // ---------------------------------------------------------------------------
@@ -140,7 +140,7 @@ export class ModelDowngradeManager {
 
   private findActiveDowngrade(
     missionId: string,
-    sourceModel: string,
+    sourceModel: string
   ): InternalDowngradeRecord | undefined {
     // Search from newest to oldest
     for (let i = this.records.length - 1; i >= 0; i--) {
@@ -148,7 +148,7 @@ export class ModelDowngradeManager {
       if (
         r.missionId === missionId &&
         r.sourceModel === sourceModel &&
-        r.status === 'APPLIED'
+        r.status === "APPLIED"
       ) {
         return r;
       }
@@ -161,7 +161,7 @@ export class ModelDowngradeManager {
    * Maps the hash to 0-99 and checks if it falls within grayPercent.
    */
   private isInGrayGroup(agentId: string, grayPercent: number): boolean {
-    const hash = createHash('sha256').update(agentId).digest();
+    const hash = createHash("sha256").update(agentId).digest();
     const bucket = hash.readUInt32BE(0) % 100;
     return bucket < grayPercent;
   }

@@ -66,7 +66,9 @@ function makeRunner(defaultImage = DEFAULT_IMAGE): DockerRunner {
     tmpfsSize: "64m",
     networkWhitelist: [],
   };
-  const mockCallbackSender = { send: async () => {} } as unknown as CallbackSender;
+  const mockCallbackSender = {
+    send: async () => {},
+  } as unknown as CallbackSender;
   const mockDocker = {} as Dockerode;
   return new DockerRunner(config, mockCallbackSender, mockDocker);
 }
@@ -134,60 +136,89 @@ function makeRecord(payload: Record<string, unknown>): StoredJobRecord {
 
 /** Optional docker image name: simple alphanumeric with optional tag */
 const arbImage = fc.option(
-  fc.tuple(
-    fc.array(fc.constantFrom(...("abcdefghijklmnopqrstuvwxyz0123456789-".split(""))), { minLength: 1, maxLength: 20 }).map((a) => a.join("")),
-    fc.option(
-      fc.array(fc.constantFrom(...("abcdefghijklmnopqrstuvwxyz0123456789.-".split(""))), { minLength: 1, maxLength: 10 }).map((a) => a.join("")),
-      { nil: undefined },
-    ),
-  ).map(([name, tag]) => (tag ? `${name}:${tag}` : name)),
-  { nil: undefined },
+  fc
+    .tuple(
+      fc
+        .array(
+          fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-".split("")),
+          { minLength: 1, maxLength: 20 }
+        )
+        .map(a => a.join("")),
+      fc.option(
+        fc
+          .array(
+            fc.constantFrom(
+              ..."abcdefghijklmnopqrstuvwxyz0123456789.-".split("")
+            ),
+            { minLength: 1, maxLength: 10 }
+          )
+          .map(a => a.join("")),
+        { nil: undefined }
+      )
+    )
+    .map(([name, tag]) => (tag ? `${name}:${tag}` : name)),
+  { nil: undefined }
 );
 
 /** Env key: non-empty alphanumeric + underscore (valid env var names) */
-const arbEnvKey = fc.array(
-  fc.constantFrom(...("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".split(""))),
-  { minLength: 1, maxLength: 15 },
-).map((a) => a.join(""));
+const arbEnvKey = fc
+  .array(
+    fc.constantFrom(..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".split("")),
+    { minLength: 1, maxLength: 15 }
+  )
+  .map(a => a.join(""));
 
 /** Env value: printable ASCII */
 const arbEnvValue = fc.string({ minLength: 0, maxLength: 30 });
 
 /** 0-10 env entries with unique keys */
-const arbEnvMap = fc.uniqueArray(
-  fc.tuple(arbEnvKey, arbEnvValue),
-  { minLength: 0, maxLength: 10, selector: ([k]: [string, string]) => k },
-).map((pairs) => Object.fromEntries(pairs));
+const arbEnvMap = fc
+  .uniqueArray(fc.tuple(arbEnvKey, arbEnvValue), {
+    minLength: 0,
+    maxLength: 10,
+    selector: ([k]: [string, string]) => k,
+  })
+  .map(pairs => Object.fromEntries(pairs));
 
 /** Command array: 0-5 non-empty strings */
-const arbCommand = fc.array(
-  fc.string({ minLength: 1, maxLength: 20 }),
-  { minLength: 0, maxLength: 5 },
-);
+const arbCommand = fc.array(fc.string({ minLength: 1, maxLength: 20 }), {
+  minLength: 0,
+  maxLength: 5,
+});
 
 /** Optional workspaceRoot path */
 const arbWorkspaceRoot = fc.option(
-  fc.array(fc.constantFrom(...("/abcdefghijklmnopqrstuvwxyz0123456789-_".split(""))), { minLength: 2, maxLength: 30 }).map((a) => a.join("")),
-  { nil: undefined },
+  fc
+    .array(
+      fc.constantFrom(..."/abcdefghijklmnopqrstuvwxyz0123456789-_".split("")),
+      { minLength: 2, maxLength: 30 }
+    )
+    .map(a => a.join("")),
+  { nil: undefined }
 );
 
 /** Random workspace dir (the host-side fallback) */
-const arbWorkspaceDir = fc.array(
-  fc.constantFrom(...("/abcdefghijklmnopqrstuvwxyz0123456789-_".split(""))),
-  { minLength: 2, maxLength: 30 },
-).map((a) => a.join(""));
+const arbWorkspaceDir = fc
+  .array(
+    fc.constantFrom(..."/abcdefghijklmnopqrstuvwxyz0123456789-_".split("")),
+    { minLength: 2, maxLength: 30 }
+  )
+  .map(a => a.join(""));
 
 /* ─── Tests ─── */
 
 describe("Property 1: 容器创建配置正确性", () => {
   it("Image equals payload.image when set, or config.defaultImage when not set", () => {
     fc.assert(
-      fc.property(arbImage, (image) => {
+      fc.property(arbImage, image => {
         const runner = makeRunner();
         const payload: Record<string, unknown> = {};
         if (image) payload.image = image;
 
-        const opts = runner.buildContainerOptions(makeRecord(payload), "/tmp/ws");
+        const opts = runner.buildContainerOptions(
+          makeRecord(payload),
+          "/tmp/ws"
+        );
 
         if (image) {
           expect(opts.Image).toBe(image);
@@ -195,15 +226,18 @@ describe("Property 1: 容器创建配置正确性", () => {
           expect(opts.Image).toBe(DEFAULT_IMAGE);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("Env contains all payload.env entries in KEY=VALUE format", () => {
     fc.assert(
-      fc.property(arbEnvMap, (envMap) => {
+      fc.property(arbEnvMap, envMap => {
         const runner = makeRunner();
-        const opts = runner.buildContainerOptions(makeRecord({ env: envMap }), "/tmp/ws");
+        const opts = runner.buildContainerOptions(
+          makeRecord({ env: envMap }),
+          "/tmp/ws"
+        );
 
         const entries = Object.entries(envMap);
         if (entries.length === 0) {
@@ -216,15 +250,18 @@ describe("Property 1: 容器创建配置正确性", () => {
           expect(opts.Env!.length).toBe(entries.length);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("Cmd equals payload.command when set, undefined when empty", () => {
     fc.assert(
-      fc.property(arbCommand, (command) => {
+      fc.property(arbCommand, command => {
         const runner = makeRunner();
-        const opts = runner.buildContainerOptions(makeRecord({ command }), "/tmp/ws");
+        const opts = runner.buildContainerOptions(
+          makeRecord({ command }),
+          "/tmp/ws"
+        );
 
         if (command.length > 0) {
           expect(opts.Cmd).toEqual(command);
@@ -232,29 +269,43 @@ describe("Property 1: 容器创建配置正确性", () => {
           expect(opts.Cmd).toBeUndefined();
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("HostConfig.Binds uses payload.workspaceRoot when provided, otherwise workspaceDir", () => {
     fc.assert(
-      fc.property(arbWorkspaceRoot, arbWorkspaceDir, (workspaceRoot, workspaceDir) => {
-        const runner = makeRunner();
-        const payload: Record<string, unknown> = {};
-        if (workspaceRoot) payload.workspaceRoot = workspaceRoot;
+      fc.property(
+        arbWorkspaceRoot,
+        arbWorkspaceDir,
+        (workspaceRoot, workspaceDir) => {
+          const runner = makeRunner();
+          const payload: Record<string, unknown> = {};
+          if (workspaceRoot) payload.workspaceRoot = workspaceRoot;
 
-        const opts = runner.buildContainerOptions(makeRecord(payload), workspaceDir);
+          const opts = runner.buildContainerOptions(
+            makeRecord(payload),
+            workspaceDir
+          );
 
-        const expectedHost = workspaceRoot || workspaceDir;
-        expect(opts.HostConfig?.Binds).toContain(`${expectedHost}:/workspace`);
-      }),
-      { numRuns: 100 },
+          const expectedHost = workspaceRoot || workspaceDir;
+          expect(opts.HostConfig?.Binds).toContain(
+            `${expectedHost}:/workspace`
+          );
+        }
+      ),
+      { numRuns: 100 }
     );
   });
 
   it("WorkingDir is always /workspace", () => {
     fc.assert(
-      fc.property(arbImage, arbEnvMap, arbCommand, arbWorkspaceRoot, arbWorkspaceDir,
+      fc.property(
+        arbImage,
+        arbEnvMap,
+        arbCommand,
+        arbWorkspaceRoot,
+        arbWorkspaceDir,
         (image, envMap, command, workspaceRoot, workspaceDir) => {
           const runner = makeRunner();
           const payload: Record<string, unknown> = {};
@@ -263,19 +314,26 @@ describe("Property 1: 容器创建配置正确性", () => {
           if (command.length > 0) payload.command = command;
           if (workspaceRoot) payload.workspaceRoot = workspaceRoot;
 
-          const opts = runner.buildContainerOptions(makeRecord(payload), workspaceDir);
+          const opts = runner.buildContainerOptions(
+            makeRecord(payload),
+            workspaceDir
+          );
 
           expect(opts.WorkingDir).toBe("/workspace");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("all fields combined: config reflects full payload correctly", () => {
     fc.assert(
       fc.property(
-        arbImage, arbEnvMap, arbCommand, arbWorkspaceRoot, arbWorkspaceDir,
+        arbImage,
+        arbEnvMap,
+        arbCommand,
+        arbWorkspaceRoot,
+        arbWorkspaceDir,
         (image, envMap, command, workspaceRoot, workspaceDir) => {
           const runner = makeRunner();
           const payload: Record<string, unknown> = {};
@@ -284,7 +342,10 @@ describe("Property 1: 容器创建配置正确性", () => {
           if (command.length > 0) payload.command = command;
           if (workspaceRoot) payload.workspaceRoot = workspaceRoot;
 
-          const opts = runner.buildContainerOptions(makeRecord(payload), workspaceDir);
+          const opts = runner.buildContainerOptions(
+            makeRecord(payload),
+            workspaceDir
+          );
 
           // Image
           expect(opts.Image).toBe(image || DEFAULT_IMAGE);
@@ -309,13 +370,15 @@ describe("Property 1: 容器创建配置正确性", () => {
 
           // Binds
           const expectedHost = workspaceRoot || workspaceDir;
-          expect(opts.HostConfig?.Binds).toEqual([`${expectedHost}:/workspace`]);
+          expect(opts.HostConfig?.Binds).toEqual([
+            `${expectedHost}:/workspace`,
+          ]);
 
           // WorkingDir
           expect(opts.WorkingDir).toBe("/workspace");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -336,18 +399,23 @@ describe("Property 1: 容器创建配置正确性", () => {
     record.dataDirectory = dataDir;
     record.logFile = logFile;
 
-    const collected = (runner as any).collectArtifacts(record, workspaceDir, resultFile);
+    const collected = (runner as any).collectArtifacts(
+      record,
+      workspaceDir,
+      resultFile
+    );
     const names = collected.map((artifact: { name: string }) => artifact.name);
 
     expect(names).toContain("executor.log");
     expect(names).toContain("result.json");
     expect(names).toContain("generated.txt");
 
-    const resultArtifact = collected.find((artifact: { name: string }) => artifact.name === "result.json");
+    const resultArtifact = collected.find(
+      (artifact: { name: string }) => artifact.name === "result.json"
+    );
     expect(resultArtifact?.kind).toBe("report");
   });
 });
-
 
 /* ─── Property 3: 退出码到状态映射 ─── */
 
@@ -369,18 +437,18 @@ describe("Property 3: 退出码到状态映射", () => {
   it("any non-zero exit code maps to 'failed'", () => {
     fc.assert(
       fc.property(
-        fc.integer().filter((n) => n !== 0),
-        (exitCode) => {
+        fc.integer().filter(n => n !== 0),
+        exitCode => {
           expect(DockerRunner.mapExitCodeToStatus(exitCode)).toBe("failed");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("for any integer exit code, result is 'completed' iff exitCode === 0", () => {
     fc.assert(
-      fc.property(fc.integer(), (exitCode) => {
+      fc.property(fc.integer(), exitCode => {
         const status = DockerRunner.mapExitCodeToStatus(exitCode);
         if (exitCode === 0) {
           expect(status).toBe("completed");
@@ -388,7 +456,7 @@ describe("Property 3: 退出码到状态映射", () => {
           expect(status).toBe("failed");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

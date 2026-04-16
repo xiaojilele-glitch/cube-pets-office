@@ -144,10 +144,7 @@ function MetricCard({
 }) {
   return (
     <div
-      className={cn(
-        DETAIL_INSET_CLASS,
-        "px-2.5 py-2 shadow-sm backdrop-blur"
-      )}
+      className={cn(DETAIL_INSET_CLASS, "px-2.5 py-2 shadow-sm backdrop-blur")}
     >
       <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-stone-500">
         {label}

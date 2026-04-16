@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import express from "express";
 import http from "node:http";
 
@@ -18,7 +26,7 @@ let baseUrl: string;
 function request(
   method: string,
   path: string,
-  body?: unknown,
+  body?: unknown
 ): Promise<{ status: number; body: unknown }> {
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
@@ -47,7 +55,7 @@ function request(
             resolve({ status: res.statusCode ?? 500, body: data });
           }
         });
-      },
+      }
     );
     req.on("error", reject);
     if (payload) req.write(payload);
@@ -109,18 +117,18 @@ describe("NL command clarification preview retry", () => {
 
     expect(res.status).toBe(200);
     expect(callLLMJson).toHaveBeenCalledTimes(2);
-    expect((res.body as { needsClarification: boolean }).needsClarification).toBe(
-      true,
-    );
     expect(
-      ((res.body as { questions?: unknown[] }).questions ?? []).length,
+      (res.body as { needsClarification: boolean }).needsClarification
+    ).toBe(true);
+    expect(
+      ((res.body as { questions?: unknown[] }).questions ?? []).length
     ).toBe(1);
     expect(
       (
         res.body as {
           questions: Array<{ type: string; options?: string[] }>;
         }
-      ).questions[0]?.type,
+      ).questions[0]?.type
     ).toBe("single_choice");
   });
 
@@ -281,9 +289,9 @@ describe("NL command clarification preview retry", () => {
 
     expect(res.status).toBe(200);
     expect(callLLMJson).toHaveBeenCalledTimes(2);
-    expect((res.body as { needsClarification: boolean }).needsClarification).toBe(
-      true,
-    );
+    expect(
+      (res.body as { needsClarification: boolean }).needsClarification
+    ).toBe(true);
     const questions =
       (
         res.body as {

@@ -26,10 +26,7 @@ export class SkillMonitor {
   }
 
   /** 查询 Skill 性能数据，支持 timeRange 过滤和维度聚合 */
-  getSkillMetrics(
-    skillId: string,
-    timeRange?: TimeRange
-  ): AggregatedMetrics {
+  getSkillMetrics(skillId: string, timeRange?: TimeRange): AggregatedMetrics {
     let records = this.db.getSkillMetrics(skillId);
 
     if (timeRange) {
@@ -56,21 +53,27 @@ export class SkillMonitor {
     const totalTokens = records.reduce((sum, r) => sum + r.tokenCount, 0);
 
     // Group by version
-    const byVersion: Record<string, { count: number; successRate: number }> = {};
-    const byAgentRole: Record<string, { count: number; successRate: number }> = {};
-    const byTaskType: Record<string, { count: number; successRate: number }> = {};
+    const byVersion: Record<string, { count: number; successRate: number }> =
+      {};
+    const byAgentRole: Record<string, { count: number; successRate: number }> =
+      {};
+    const byTaskType: Record<string, { count: number; successRate: number }> =
+      {};
 
     for (const r of records) {
       // version
-      if (!byVersion[r.version]) byVersion[r.version] = { count: 0, successRate: 0 };
+      if (!byVersion[r.version])
+        byVersion[r.version] = { count: 0, successRate: 0 };
       byVersion[r.version].count++;
 
       // agentRole
-      if (!byAgentRole[r.agentRole]) byAgentRole[r.agentRole] = { count: 0, successRate: 0 };
+      if (!byAgentRole[r.agentRole])
+        byAgentRole[r.agentRole] = { count: 0, successRate: 0 };
       byAgentRole[r.agentRole].count++;
 
       // taskType
-      if (!byTaskType[r.taskType]) byTaskType[r.taskType] = { count: 0, successRate: 0 };
+      if (!byTaskType[r.taskType])
+        byTaskType[r.taskType] = { count: 0, successRate: 0 };
       byTaskType[r.taskType].count++;
 
       if (r.success) {
@@ -82,19 +85,22 @@ export class SkillMonitor {
 
     // Convert success counts to rates
     for (const key of Object.keys(byVersion)) {
-      byVersion[key].successRate = byVersion[key].count > 0
-        ? byVersion[key].successRate / byVersion[key].count
-        : 0;
+      byVersion[key].successRate =
+        byVersion[key].count > 0
+          ? byVersion[key].successRate / byVersion[key].count
+          : 0;
     }
     for (const key of Object.keys(byAgentRole)) {
-      byAgentRole[key].successRate = byAgentRole[key].count > 0
-        ? byAgentRole[key].successRate / byAgentRole[key].count
-        : 0;
+      byAgentRole[key].successRate =
+        byAgentRole[key].count > 0
+          ? byAgentRole[key].successRate / byAgentRole[key].count
+          : 0;
     }
     for (const key of Object.keys(byTaskType)) {
-      byTaskType[key].successRate = byTaskType[key].count > 0
-        ? byTaskType[key].successRate / byTaskType[key].count
-        : 0;
+      byTaskType[key].successRate =
+        byTaskType[key].count > 0
+          ? byTaskType[key].successRate / byTaskType[key].count
+          : 0;
     }
 
     return {

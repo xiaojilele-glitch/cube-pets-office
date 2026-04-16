@@ -1,21 +1,22 @@
-import { describe, expect, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
 import {
   buildWorkflowDirectiveContext,
   type WorkflowInputAttachment,
   type WorkflowAttachmentExcerptStatus,
-} from '../../shared/workflow-input.js';
+} from "../../shared/workflow-input.js";
 
 /* ─── Arbitraries ─── */
 
-const arbExcerptStatus: fc.Arbitrary<WorkflowAttachmentExcerptStatus> = fc.constantFrom(
-  'parsed',
-  'truncated',
-  'metadata_only',
-  'vision_analyzed',
-  'vision_fallback',
-);
+const arbExcerptStatus: fc.Arbitrary<WorkflowAttachmentExcerptStatus> =
+  fc.constantFrom(
+    "parsed",
+    "truncated",
+    "metadata_only",
+    "vision_analyzed",
+    "vision_fallback"
+  );
 
 const arbAttachmentBase = fc.record({
   id: fc.string({ minLength: 1, maxLength: 30 }),
@@ -29,22 +30,21 @@ const arbAttachmentBase = fc.record({
 
 const arbVisualDescription = fc.string({ minLength: 1, maxLength: 300 });
 
-const arbAttachmentWithVision: fc.Arbitrary<WorkflowInputAttachment> = arbAttachmentBase.chain(
-  (base) =>
-    arbVisualDescription.map((desc) => ({
+const arbAttachmentWithVision: fc.Arbitrary<WorkflowInputAttachment> =
+  arbAttachmentBase.chain(base =>
+    arbVisualDescription.map(desc => ({
       ...base,
       visionReady: true,
       visualDescription: desc,
-    })),
-);
+    }))
+  );
 
-const arbAttachmentWithoutVision: fc.Arbitrary<WorkflowInputAttachment> = arbAttachmentBase.map(
-  (base) => ({ ...base }),
-);
+const arbAttachmentWithoutVision: fc.Arbitrary<WorkflowInputAttachment> =
+  arbAttachmentBase.map(base => ({ ...base }));
 
 const arbAttachment: fc.Arbitrary<WorkflowInputAttachment> = fc.oneof(
   arbAttachmentWithVision,
-  arbAttachmentWithoutVision,
+  arbAttachmentWithoutVision
 );
 
 const arbDirective = fc.string({ minLength: 1, maxLength: 200 });
@@ -52,7 +52,7 @@ const arbDirective = fc.string({ minLength: 1, maxLength: 200 });
 /* ─── Property 8: 指令上下文包含视觉分析 ─── */
 /* **Validates: Requirements 4.3** */
 
-describe('Feature: multi-modal-vision, Property 8: 指令上下文包含视觉分析', () => {
+describe("Feature: multi-modal-vision, Property 8: 指令上下文包含视觉分析", () => {
   it('output contains "[Vision Analysis] {name}" and visualDescription for each attachment with visualDescription', () => {
     fc.assert(
       fc.property(
@@ -67,9 +67,9 @@ describe('Feature: multi-modal-vision, Property 8: 指令上下文包含视觉�
               expect(result).toContain(att.visualDescription);
             }
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -84,9 +84,9 @@ describe('Feature: multi-modal-vision, Property 8: 指令上下文包含视觉�
           for (const att of attachments) {
             expect(result).not.toContain(`[Vision Analysis] ${att.name}`);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -99,11 +99,15 @@ describe('Feature: multi-modal-vision, Property 8: 指令上下文包含视觉�
         (directive, withVision, withoutVision) => {
           // Ensure non-vision attachment names are unique and don't collide
           // with vision attachment names (substring matches cause false positives)
-          const visionNames = new Set(withVision.map((a) => a.name.trim()));
+          const visionNames = new Set(withVision.map(a => a.name.trim()));
           const safeWithoutVision = withoutVision.map((att, i) => {
             let safeName = `novision_${i}_${att.name}`;
             // Ensure the safe name doesn't appear as a substring of any vision name
-            while ([...visionNames].some((vn) => vn.includes(safeName) || safeName.includes(vn))) {
+            while (
+              [...visionNames].some(
+                vn => vn.includes(safeName) || safeName.includes(vn)
+              )
+            ) {
               safeName = `__nv${i}__${Date.now()}`;
             }
             return { ...att, name: safeName };
@@ -120,9 +124,9 @@ describe('Feature: multi-modal-vision, Property 8: 指令上下文包含视觉�
           for (const att of safeWithoutVision) {
             expect(result).not.toContain(`[Vision Analysis] ${att.name}`);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

@@ -20,8 +20,9 @@ export class CallbackSender {
   private readonly fetchFn: FetchFn;
 
   constructor(
-    config: Partial<CallbackConfig> & Pick<CallbackConfig, "secret" | "executorId">,
-    fetchFn?: FetchFn,
+    config: Partial<CallbackConfig> &
+      Pick<CallbackConfig, "secret" | "executorId">,
+    fetchFn?: FetchFn
   ) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.fetchFn = fetchFn ?? globalThis.fetch;
@@ -37,7 +38,7 @@ export class CallbackSender {
       const headers = createCallbackHeaders(
         this.config.executorId,
         this.config.secret,
-        body,
+        body
       );
       headers["content-type"] = "application/json";
 
@@ -47,7 +48,7 @@ export class CallbackSender {
       // already swallows, but guard against unexpected errors in serialization etc.
       console.warn(
         `[CallbackSender] Unexpected error sending event ${event.type} to ${eventsUrl}:`,
-        err,
+        err
       );
     }
   }
@@ -55,7 +56,7 @@ export class CallbackSender {
   private async sendWithRetry(
     url: string,
     body: string,
-    headers: Record<string, string>,
+    headers: Record<string, string>
   ): Promise<void> {
     for (let attempt = 0; attempt <= this.config.maxRetries; attempt++) {
       try {
@@ -74,13 +75,13 @@ export class CallbackSender {
           const delayMs = this.config.baseDelayMs * 2 ** attempt;
           console.warn(
             `[CallbackSender] Attempt ${attempt + 1}/${this.config.maxRetries + 1} failed, retrying in ${delayMs}ms:`,
-            (err as Error).message,
+            (err as Error).message
           );
           await this.sleep(delayMs);
         } else {
           console.warn(
             `[CallbackSender] All ${this.config.maxRetries + 1} attempts exhausted for ${url}:`,
-            (err as Error).message,
+            (err as Error).message
           );
         }
       }
@@ -88,6 +89,6 @@ export class CallbackSender {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

@@ -46,14 +46,12 @@ export function getVisionConfig(): VisionProviderConfig {
 
   // --- wireApi ---
   const rawWireApi =
-    process.env.VISION_LLM_WIRE_API ||
-    process.env.FALLBACK_LLM_WIRE_API;
-  const wireApi: "responses" | "chat_completions" =
-    rawWireApi
-      ? rawWireApi.toLowerCase() === "responses"
-        ? "responses"
-        : "chat_completions"
-      : aiConfig.wireApi;
+    process.env.VISION_LLM_WIRE_API || process.env.FALLBACK_LLM_WIRE_API;
+  const wireApi: "responses" | "chat_completions" = rawWireApi
+    ? rawWireApi.toLowerCase() === "responses"
+      ? "responses"
+      : "chat_completions"
+    : aiConfig.wireApi;
 
   // --- maxTokens (vision-specific, default 1000) ---
   const rawMaxTokens = process.env.VISION_LLM_MAX_TOKENS;
@@ -107,12 +105,16 @@ export function parseVisionResponse(raw: string): VisionAnalysisResult {
   let elements: string[] = [];
   let textContent = "";
 
-  const descMatch = trimmed.match(/DESCRIPTION:\s*([\s\S]*?)(?=\nELEMENTS:|\nTEXT:|$)/i);
+  const descMatch = trimmed.match(
+    /DESCRIPTION:\s*([\s\S]*?)(?=\nELEMENTS:|\nTEXT:|$)/i
+  );
   if (descMatch) {
     description = descMatch[1].trim();
   }
 
-  const elemMatch = trimmed.match(/ELEMENTS:\s*([\s\S]*?)(?=\n\s*TEXT:|\n\s*$|$)/i);
+  const elemMatch = trimmed.match(
+    /ELEMENTS:\s*([\s\S]*?)(?=\n\s*TEXT:|\n\s*$|$)/i
+  );
   if (elemMatch) {
     elements = elemMatch[1]
       .split("\n")

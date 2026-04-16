@@ -43,14 +43,15 @@ describe("ArtifactPreviewDialog logic", () => {
   });
 
   it("fetches preview content and reads the truncation header", async () => {
-    const fetchMock = vi.fn(async () =>
-      new Response("preview body", {
-        status: 200,
-        headers: {
-          "content-type": "text/plain",
-          "x-truncated": "true",
-        },
-      })
+    const fetchMock = vi.fn(
+      async () =>
+        new Response("preview body", {
+          status: 200,
+          headers: {
+            "content-type": "text/plain",
+            "x-truncated": "true",
+          },
+        })
     );
     vi.stubGlobal("fetch", fetchMock);
 

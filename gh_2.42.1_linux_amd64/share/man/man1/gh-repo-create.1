@@ -1,0 +1,118 @@
+.nh
+.TH "GH-REPO-CREATE" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-repo-create - Create a new repository
+
+
+.SH SYNOPSIS
+.PP
+\fBgh repo create [<name>] [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Create a new GitHub repository.
+
+.PP
+To create a repository interactively, use \fBgh repo create\fR with no arguments.
+
+.PP
+To create a remote repository non-interactively, supply the repository name and one of \fB--public\fR, \fB--private\fR, or \fB--internal\fR\&.
+Pass \fB--clone\fR to clone the new repository locally.
+
+.PP
+To create a remote repository from an existing local repository, specify the source directory with \fB--source\fR\&.
+By default, the remote repository name will be the name of the source directory.
+Pass \fB--push\fR to push any local commits to the new repository.
+
+
+.SH OPTIONS
+.TP
+\fB--add-readme\fR
+Add a README file to the new repository
+
+.TP
+\fB-c\fR, \fB--clone\fR
+Clone the new repository to the current directory
+
+.TP
+\fB-d\fR, \fB--description\fR \fB<string>\fR
+Description of the repository
+
+.TP
+\fB--disable-issues\fR
+Disable issues in the new repository
+
+.TP
+\fB--disable-wiki\fR
+Disable wiki in the new repository
+
+.TP
+\fB-g\fR, \fB--gitignore\fR \fB<string>\fR
+Specify a gitignore template for the repository
+
+.TP
+\fB-h\fR, \fB--homepage\fR \fB<URL>\fR
+Repository home page URL
+
+.TP
+\fB--include-all-branches\fR
+Include all branches from template repository
+
+.TP
+\fB--internal\fR
+Make the new repository internal
+
+.TP
+\fB-l\fR, \fB--license\fR \fB<string>\fR
+Specify an Open Source License for the repository
+
+.TP
+\fB--private\fR
+Make the new repository private
+
+.TP
+\fB--public\fR
+Make the new repository public
+
+.TP
+\fB--push\fR
+Push local commits to the new repository
+
+.TP
+\fB-r\fR, \fB--remote\fR \fB<string>\fR
+Specify remote name for the new repository
+
+.TP
+\fB-s\fR, \fB--source\fR \fB<string>\fR
+Specify path to local repository to use as source
+
+.TP
+\fB-t\fR, \fB--team\fR \fB<name>\fR
+The name of the organization team to be granted access
+
+.TP
+\fB-p\fR, \fB--template\fR \fB<repository>\fR
+Make the new repository based on a template repository
+
+
+.SH EXAMPLE
+.EX
+# create a repository interactively
+gh repo create
+
+# create a new remote repository and clone it locally
+gh repo create my-project --public --clone
+
+# create a remote repository from the current directory
+gh repo create my-project --private --source=. --remote=upstream
+
+
+.EE
+
+
+.SH SEE ALSO
+.PP
+\fBgh-repo(1)\fR

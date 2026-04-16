@@ -56,16 +56,24 @@ function createSignature(
   timestamp: string,
   nonce: string
 ): string {
-  const payload = [method.toUpperCase(), path, timestamp, nonce, stableSerialize(body)].join(
-    "\n"
-  );
+  const payload = [
+    method.toUpperCase(),
+    path,
+    timestamp,
+    nonce,
+    stableSerialize(body),
+  ].join("\n");
   return createHmac("sha256", secret).update(payload).digest("hex");
 }
 
-function readHeader(headers: Request["headers"], key: string): string | undefined {
+function readHeader(
+  headers: Request["headers"],
+  key: string
+): string | undefined {
   const raw = headers[key];
   if (typeof raw === "string") return raw.trim();
-  if (Array.isArray(raw)) return typeof raw[0] === "string" ? raw[0].trim() : undefined;
+  if (Array.isArray(raw))
+    return typeof raw[0] === "string" ? raw[0].trim() : undefined;
   return undefined;
 }
 
@@ -78,7 +86,9 @@ function parseTimestamp(raw: string | undefined): number | null {
 
 function parseSignature(raw: string | undefined): Buffer | null {
   if (!raw) return null;
-  const normalized = raw.startsWith("sha256=") ? raw.slice("sha256=".length) : raw;
+  const normalized = raw.startsWith("sha256=")
+    ? raw.slice("sha256=".length)
+    : raw;
   if (!/^[a-f0-9]{64}$/i.test(normalized)) return null;
   return Buffer.from(normalized.toLowerCase(), "hex");
 }
@@ -109,7 +119,10 @@ export function createFeishuRelayAuth(config: FeishuBridgeConfig) {
   const maxSkewMs = Math.max(1, config.relayMaxSkewSeconds ?? 300) * 1_000;
   const nonceTtlMs = Math.max(
     maxSkewMs,
-    Math.max(1, config.relayNonceTtlSeconds ?? config.relayMaxSkewSeconds ?? 300) * 1_000
+    Math.max(
+      1,
+      config.relayNonceTtlSeconds ?? config.relayMaxSkewSeconds ?? 300
+    ) * 1_000
   );
   const seenNonces = new Map<string, number>();
 
@@ -121,48 +134,78 @@ export function createFeishuRelayAuth(config: FeishuBridgeConfig) {
     }
   }
 
-  function verifyRequest(request: Request, response: Response, path: string): boolean {
+  function verifyRequest(
+    request: Request,
+    response: Response,
+    path: string
+  ): boolean {
     if (!secret) return true;
 
     const now = Date.now();
     cleanup(now);
 
-    const timestampHeader = readHeader(request.headers, FEISHU_RELAY_TIMESTAMP_HEADER);
+    const timestampHeader = readHeader(
+      request.headers,
+      FEISHU_RELAY_TIMESTAMP_HEADER
+    );
     const nonceHeader = readHeader(request.headers, FEISHU_RELAY_NONCE_HEADER);
-    const signatureHeader = readHeader(request.headers, FEISHU_RELAY_SIGNATURE_HEADER);
+    const signatureHeader = readHeader(
+      request.headers,
+      FEISHU_RELAY_SIGNATURE_HEADER
+    );
 
     if (!timestampHeader || !nonceHeader || !signatureHeader) {
-      response.status(401).json({ ok: false, error: "Missing relay auth headers" });
+      response
+        .status(401)
+        .json({ ok: false, error: "Missing relay auth headers" });
       return false;
     }
 
     const timestampMs = parseTimestamp(timestampHeader);
     if (timestampMs === null || Math.abs(now - timestampMs) > maxSkewMs) {
-      response
-        .status(401)
-        .json({ ok: false, error: "Relay request timestamp is invalid or expired" });
+      response.status(401).json({
+        ok: false,
+        error: "Relay request timestamp is invalid or expired",
+      });
       return false;
     }
 
     const nonce = nonceHeader.trim();
     if (!nonce) {
-      response.status(401).json({ ok: false, error: "Relay request nonce is required" });
+      response
+        .status(401)
+        .json({ ok: false, error: "Relay request nonce is required" });
       return false;
     }
 
     const nonceKey = `${path}:${timestampHeader}:${nonce}`;
     if (seenNonces.has(nonceKey)) {
-      response.status(409).json({ ok: false, error: "Relay request replay detected" });
+      response
+        .status(409)
+        .json({ ok: false, error: "Relay request replay detected" });
       return false;
     }
 
     const expected = Buffer.from(
-      createSignature(secret, request.method, path, request.body, timestampHeader, nonce),
+      createSignature(
+        secret,
+        request.method,
+        path,
+        request.body,
+        timestampHeader,
+        nonce
+      ),
       "hex"
     );
     const actual = parseSignature(signatureHeader);
-    if (!actual || actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
-      response.status(401).json({ ok: false, error: "Relay request signature mismatch" });
+    if (
+      !actual ||
+      actual.length !== expected.length ||
+      !timingSafeEqual(actual, expected)
+    ) {
+      response
+        .status(401)
+        .json({ ok: false, error: "Relay request signature mismatch" });
       return false;
     }
 

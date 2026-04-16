@@ -141,7 +141,11 @@ export function evaluateLaunchRoute(
     };
   }
 
-  if (attachments.length > 0 || wantsAttachmentContext || wantsWorkflowOrTeamSetup) {
+  if (
+    attachments.length > 0 ||
+    wantsAttachmentContext ||
+    wantsWorkflowOrTeamSetup
+  ) {
     return {
       kind: "workflow",
       reasons,
@@ -159,4 +163,3 @@ export function evaluateLaunchRoute(
     canOverride: true,
   };
 }
-

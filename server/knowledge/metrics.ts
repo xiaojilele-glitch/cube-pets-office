@@ -71,7 +71,8 @@ export class KnowledgeMetrics {
   private reviewQueueSize = 0;
 
   /** histogram: confidence distribution */
-  private confidenceDistribution: HistogramData = createHistogram(CONFIDENCE_BUCKETS);
+  private confidenceDistribution: HistogramData =
+    createHistogram(CONFIDENCE_BUCKETS);
 
   // -------------------------------------------------------------------------
   // Setters / Incrementers
@@ -97,7 +98,10 @@ export class KnowledgeMetrics {
   }
 
   incrementExtractionTotal(source: string): void {
-    this.extractionTotal.set(source, (this.extractionTotal.get(source) ?? 0) + 1);
+    this.extractionTotal.set(
+      source,
+      (this.extractionTotal.get(source) ?? 0) + 1
+    );
   }
 
   setReviewQueueSize(size: number): void {
@@ -117,10 +121,14 @@ export class KnowledgeMetrics {
       knowledge_graph_entity_total: Object.fromEntries(this.entityTotal),
       knowledge_graph_relation_total: Object.fromEntries(this.relationTotal),
       knowledge_graph_query_total: Object.fromEntries(this.queryTotal),
-      knowledge_graph_query_duration_ms: this.histogramMapToJSON(this.queryDuration),
+      knowledge_graph_query_duration_ms: this.histogramMapToJSON(
+        this.queryDuration
+      ),
       knowledge_extraction_total: Object.fromEntries(this.extractionTotal),
       knowledge_review_queue_size: this.reviewQueueSize,
-      knowledge_confidence_distribution: this.histogramToJSON(this.confidenceDistribution),
+      knowledge_confidence_distribution: this.histogramToJSON(
+        this.confidenceDistribution
+      ),
     };
   }
 
@@ -132,37 +140,57 @@ export class KnowledgeMetrics {
     const lines: string[] = [];
 
     // entity total (gauge)
-    lines.push("# HELP knowledge_graph_entity_total Total entities by type and status");
+    lines.push(
+      "# HELP knowledge_graph_entity_total Total entities by type and status"
+    );
     lines.push("# TYPE knowledge_graph_entity_total gauge");
     for (const [key, value] of Array.from(this.entityTotal.entries())) {
       const [entityType, status] = key.split(":");
-      lines.push(`knowledge_graph_entity_total{entityType="${entityType}",status="${status}"} ${value}`);
+      lines.push(
+        `knowledge_graph_entity_total{entityType="${entityType}",status="${status}"} ${value}`
+      );
     }
 
     // relation total (gauge)
     lines.push("# HELP knowledge_graph_relation_total Total relations by type");
     lines.push("# TYPE knowledge_graph_relation_total gauge");
-    for (const [relationType, value] of Array.from(this.relationTotal.entries())) {
-      lines.push(`knowledge_graph_relation_total{relationType="${relationType}"} ${value}`);
+    for (const [relationType, value] of Array.from(
+      this.relationTotal.entries()
+    )) {
+      lines.push(
+        `knowledge_graph_relation_total{relationType="${relationType}"} ${value}`
+      );
     }
 
     // query total (counter)
     lines.push("# HELP knowledge_graph_query_total Total queries by type");
     lines.push("# TYPE knowledge_graph_query_total counter");
     for (const [queryType, value] of Array.from(this.queryTotal.entries())) {
-      lines.push(`knowledge_graph_query_total{queryType="${queryType}"} ${value}`);
+      lines.push(
+        `knowledge_graph_query_total{queryType="${queryType}"} ${value}`
+      );
     }
 
     // query duration (histogram)
-    lines.push("# HELP knowledge_graph_query_duration_ms Query duration in milliseconds");
+    lines.push(
+      "# HELP knowledge_graph_query_duration_ms Query duration in milliseconds"
+    );
     lines.push("# TYPE knowledge_graph_query_duration_ms histogram");
     for (const [queryType, h] of Array.from(this.queryDuration.entries())) {
       for (const [bound, count] of Array.from(h.buckets.entries())) {
-        lines.push(`knowledge_graph_query_duration_ms_bucket{queryType="${queryType}",le="${bound}"} ${count}`);
+        lines.push(
+          `knowledge_graph_query_duration_ms_bucket{queryType="${queryType}",le="${bound}"} ${count}`
+        );
       }
-      lines.push(`knowledge_graph_query_duration_ms_bucket{queryType="${queryType}",le="+Inf"} ${h.count}`);
-      lines.push(`knowledge_graph_query_duration_ms_sum{queryType="${queryType}"} ${h.sum}`);
-      lines.push(`knowledge_graph_query_duration_ms_count{queryType="${queryType}"} ${h.count}`);
+      lines.push(
+        `knowledge_graph_query_duration_ms_bucket{queryType="${queryType}",le="+Inf"} ${h.count}`
+      );
+      lines.push(
+        `knowledge_graph_query_duration_ms_sum{queryType="${queryType}"} ${h.sum}`
+      );
+      lines.push(
+        `knowledge_graph_query_duration_ms_count{queryType="${queryType}"} ${h.count}`
+      );
     }
 
     // extraction total (counter)
@@ -178,13 +206,19 @@ export class KnowledgeMetrics {
     lines.push(`knowledge_review_queue_size ${this.reviewQueueSize}`);
 
     // confidence distribution (histogram)
-    lines.push("# HELP knowledge_confidence_distribution Distribution of entity confidence scores");
+    lines.push(
+      "# HELP knowledge_confidence_distribution Distribution of entity confidence scores"
+    );
     lines.push("# TYPE knowledge_confidence_distribution histogram");
     const cd = this.confidenceDistribution;
     for (const [bound, count] of Array.from(cd.buckets.entries())) {
-      lines.push(`knowledge_confidence_distribution_bucket{le="${bound}"} ${count}`);
+      lines.push(
+        `knowledge_confidence_distribution_bucket{le="${bound}"} ${count}`
+      );
     }
-    lines.push(`knowledge_confidence_distribution_bucket{le="+Inf"} ${cd.count}`);
+    lines.push(
+      `knowledge_confidence_distribution_bucket{le="+Inf"} ${cd.count}`
+    );
     lines.push(`knowledge_confidence_distribution_sum ${cd.sum}`);
     lines.push(`knowledge_confidence_distribution_count ${cd.count}`);
 
@@ -217,7 +251,9 @@ export class KnowledgeMetrics {
     };
   }
 
-  private histogramMapToJSON(m: Map<string, HistogramData>): Record<string, unknown> {
+  private histogramMapToJSON(
+    m: Map<string, HistogramData>
+  ): Record<string, unknown> {
     const result: Record<string, unknown> = {};
     for (const [key, h] of Array.from(m.entries())) {
       result[key] = this.histogramToJSON(h);

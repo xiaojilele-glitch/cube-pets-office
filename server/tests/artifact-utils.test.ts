@@ -56,7 +56,11 @@ describe("artifact-utils", () => {
       )
     );
     expect(
-      resolveExecutorJobAbsolutePath("mission-1", "mission-1:analyze:1", "events.jsonl")
+      resolveExecutorJobAbsolutePath(
+        "mission-1",
+        "mission-1:analyze:1",
+        "events.jsonl"
+      )
     ).toBe(
       path.join(
         process.cwd(),

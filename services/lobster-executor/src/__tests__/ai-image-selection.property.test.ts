@@ -26,7 +26,7 @@ const TEST_API_KEY = "test-api-key-for-property-testing-12345";
 
 function makeRunner(
   defaultImage = DEFAULT_IMAGE,
-  aiImage = DEFAULT_AI_IMAGE,
+  aiImage = DEFAULT_AI_IMAGE
 ): DockerRunner {
   const config: LobsterExecutorConfig = {
     host: "localhost",
@@ -121,52 +121,46 @@ const arbImage = fc.option(
     .tuple(
       fc
         .array(
-          fc.constantFrom(
-            ...("abcdefghijklmnopqrstuvwxyz0123456789-".split("")),
-          ),
-          { minLength: 1, maxLength: 20 },
+          fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-".split("")),
+          { minLength: 1, maxLength: 20 }
         )
-        .map((a) => a.join("")),
+        .map(a => a.join("")),
       fc.option(
         fc
           .array(
             fc.constantFrom(
-              ...("abcdefghijklmnopqrstuvwxyz0123456789.-".split("")),
+              ..."abcdefghijklmnopqrstuvwxyz0123456789.-".split("")
             ),
-            { minLength: 1, maxLength: 10 },
+            { minLength: 1, maxLength: 10 }
           )
-          .map((a) => a.join("")),
-        { nil: undefined },
-      ),
+          .map(a => a.join("")),
+        { nil: undefined }
+      )
     )
     .map(([name, tag]) => (tag ? `${name}:${tag}` : name)),
-  { nil: undefined },
+  { nil: undefined }
 );
 
 /** Optional AI image name for config */
 const arbAiImage = fc.option(
   fc
     .array(
-      fc.constantFrom(
-        ...("abcdefghijklmnopqrstuvwxyz0123456789-:".split("")),
-      ),
-      { minLength: 3, maxLength: 30 },
+      fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-:".split("")),
+      { minLength: 3, maxLength: 30 }
     )
-    .map((a) => a.join("")),
-  { nil: undefined },
+    .map(a => a.join("")),
+  { nil: undefined }
 );
 
 /** Env key: valid env var names */
 const arbEnvKey = fc
   .array(
-    fc.constantFrom(
-      ...("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".split("")),
-    ),
-    { minLength: 1, maxLength: 15 },
+    fc.constantFrom(..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_".split("")),
+    { minLength: 1, maxLength: 15 }
   )
-  .map((a) => a.join(""))
+  .map(a => a.join(""))
   // Exclude AI_ prefixed keys to avoid collision in non-AI tests
-  .filter((k) => !k.startsWith("AI_"));
+  .filter(k => !k.startsWith("AI_"));
 
 /** Env value: printable ASCII */
 const arbEnvValue = fc.string({ minLength: 0, maxLength: 30 });
@@ -178,7 +172,7 @@ const arbEnvMap = fc
     maxLength: 5,
     selector: ([k]: [string, string]) => k,
   })
-  .map((pairs) => Object.fromEntries(pairs));
+  .map(pairs => Object.fromEntries(pairs));
 
 /* ─── Environment setup for AI tests ─── */
 
@@ -221,7 +215,7 @@ describe("Property 1: AI 镜像选择正确性", () => {
 
   it("aiEnabled=true without payload.image uses AI image from config", () => {
     fc.assert(
-      fc.property(arbAiImage, (configAiImage) => {
+      fc.property(arbAiImage, configAiImage => {
         const aiImage = configAiImage || DEFAULT_AI_IMAGE;
         const runner = makeRunner(DEFAULT_IMAGE, aiImage);
         const payload: Record<string, unknown> = {
@@ -229,39 +223,39 @@ describe("Property 1: AI 镜像选择正确性", () => {
           llmConfig: { apiKey: TEST_API_KEY },
         };
 
-        const opts = runner.buildContainerOptions(makeRecord(payload), "/tmp/ws");
+        const opts = runner.buildContainerOptions(
+          makeRecord(payload),
+          "/tmp/ws"
+        );
 
         expect(opts.Image).toBe(aiImage);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("aiEnabled=false or unset uses default image from config", () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(false, undefined),
-        (aiEnabled) => {
-          const runner = makeRunner();
-          const payload: Record<string, unknown> = {};
-          if (aiEnabled !== undefined) payload.aiEnabled = aiEnabled;
+      fc.property(fc.constantFrom(false, undefined), aiEnabled => {
+        const runner = makeRunner();
+        const payload: Record<string, unknown> = {};
+        if (aiEnabled !== undefined) payload.aiEnabled = aiEnabled;
 
-          const opts = runner.buildContainerOptions(
-            makeRecord(payload),
-            "/tmp/ws",
-          );
+        const opts = runner.buildContainerOptions(
+          makeRecord(payload),
+          "/tmp/ws"
+        );
 
-          expect(opts.Image).toBe(DEFAULT_IMAGE);
-        },
-      ),
-      { numRuns: 100 },
+        expect(opts.Image).toBe(DEFAULT_IMAGE);
+      }),
+      { numRuns: 100 }
     );
   });
 
   it("payload.image takes priority regardless of aiEnabled", () => {
     fc.assert(
       fc.property(
-        arbImage.filter((img) => img !== undefined),
+        arbImage.filter(img => img !== undefined),
         fc.constantFrom(true, false, undefined),
         (explicitImage, aiEnabled) => {
           const runner = makeRunner();
@@ -276,13 +270,13 @@ describe("Property 1: AI 镜像选择正确性", () => {
 
           const opts = runner.buildContainerOptions(
             makeRecord(payload),
-            "/tmp/ws",
+            "/tmp/ws"
           );
 
           expect(opts.Image).toBe(explicitImage);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -322,16 +316,15 @@ describe("Property 1: AI 镜像选择正确性", () => {
 
         const opts = runner.buildContainerOptions(
           makeRecord(payload),
-          "/tmp/ws",
+          "/tmp/ws"
         );
 
         expect(opts.Image).toBe("cube-ai-sandbox:latest");
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 8: 非 AI Job 行为不变 ─── */
 
@@ -355,40 +348,35 @@ describe("Property 8: 非 AI Job 行为不变", () => {
 
           const opts = runner.buildContainerOptions(
             makeRecord(payload),
-            "/tmp/ws",
+            "/tmp/ws"
           );
 
           const envArray = opts.Env ?? [];
-          const aiEnvVars = envArray.filter((e: string) =>
-            e.startsWith("AI_"),
-          );
+          const aiEnvVars = envArray.filter((e: string) => e.startsWith("AI_"));
           expect(aiEnvVars).toHaveLength(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("non-AI jobs never use AI image", () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(false, undefined),
-        (aiEnabled) => {
-          const runner = makeRunner(DEFAULT_IMAGE, "my-custom-ai:v2");
-          const payload: Record<string, unknown> = {};
-          if (aiEnabled !== undefined) payload.aiEnabled = aiEnabled;
+      fc.property(fc.constantFrom(false, undefined), aiEnabled => {
+        const runner = makeRunner(DEFAULT_IMAGE, "my-custom-ai:v2");
+        const payload: Record<string, unknown> = {};
+        if (aiEnabled !== undefined) payload.aiEnabled = aiEnabled;
 
-          const opts = runner.buildContainerOptions(
-            makeRecord(payload),
-            "/tmp/ws",
-          );
+        const opts = runner.buildContainerOptions(
+          makeRecord(payload),
+          "/tmp/ws"
+        );
 
-          // Should use default image, not AI image
-          expect(opts.Image).toBe(DEFAULT_IMAGE);
-          expect(opts.Image).not.toBe("my-custom-ai:v2");
-        },
-      ),
-      { numRuns: 100 },
+        // Should use default image, not AI image
+        expect(opts.Image).toBe(DEFAULT_IMAGE);
+        expect(opts.Image).not.toBe("my-custom-ai:v2");
+      }),
+      { numRuns: 100 }
     );
   });
 
@@ -404,7 +392,7 @@ describe("Property 8: 非 AI Job 行为不变", () => {
 
           const opts = runner.buildContainerOptions(
             makeRecord(payload),
-            "/tmp/ws",
+            "/tmp/ws"
           );
 
           const entries = Object.entries(envMap);
@@ -416,9 +404,9 @@ describe("Property 8: 非 AI Job 行为不变", () => {
               expect(opts.Env).toContain(`${k}=${v}`);
             }
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

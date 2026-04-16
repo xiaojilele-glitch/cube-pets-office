@@ -32,18 +32,18 @@ export type OntologySource = "core" | "custom";
 // ---------------------------------------------------------------------------
 
 export interface Entity {
-  entityId: string;                    // UUID v4
-  entityType: string;                  // 来自 OntologyRegistry
+  entityId: string; // UUID v4
+  entityType: string; // 来自 OntologyRegistry
   name: string;
   description: string;
-  createdAt: string;                   // ISO 8601
-  updatedAt: string;                   // ISO 8601
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
   source: EntitySource;
-  confidence: number;                  // 0.0 - 1.0
+  confidence: number; // 0.0 - 1.0
   projectId: string;
   status: EntityStatus;
   needsReview: boolean;
-  linkedMemoryIds: string[];           // 关联的向量记忆条目 ID
+  linkedMemoryIds: string[]; // 关联的向量记忆条目 ID
   deprecationReason?: string;
   extendedAttributes: Record<string, unknown>;
 }
@@ -53,15 +53,15 @@ export interface Entity {
 // ---------------------------------------------------------------------------
 
 export interface Relation {
-  relationId: string;                  // UUID v4
-  relationType: string;                // 来自 OntologyRegistry
+  relationId: string; // UUID v4
+  relationType: string; // 来自 OntologyRegistry
   sourceEntityId: string;
   targetEntityId: string;
-  weight: number;                      // 0.0 - 1.0
-  evidence: string;                    // 支撑证据
-  createdAt: string;                   // ISO 8601
+  weight: number; // 0.0 - 1.0
+  evidence: string; // 支撑证据
+  createdAt: string; // ISO 8601
   source: EntitySource;
-  confidence: number;                  // 0.0 - 1.0
+  confidence: number; // 0.0 - 1.0
   needsReview: boolean;
 }
 
@@ -74,8 +74,8 @@ export interface CodeModuleExtended {
   filePath: string;
   language: string;
   linesOfCode: number;
-  complexity: number;                  // 圈复杂度
-  exports: string[];                   // 导出的公共接口列表
+  complexity: number; // 圈复杂度
+  exports: string[]; // 导出的公共接口列表
 }
 
 /** API 扩展属性 */
@@ -93,7 +93,7 @@ export interface ArchitectureDecisionExtended {
   decision: string;
   alternatives: string[];
   consequences: string;
-  supersededBy?: string;               // 被替代时指向新决策的 entityId
+  supersededBy?: string; // 被替代时指向新决策的 entityId
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +103,7 @@ export interface ArchitectureDecisionExtended {
 export interface EntityFilters {
   entityType?: string;
   projectId: string;
-  name?: string;                       // 模糊匹配
+  name?: string; // 模糊匹配
   confidenceMin?: number;
   status?: EntityStatus;
 }
@@ -128,7 +128,7 @@ export interface QueryResult {
 
 export interface UnifiedKnowledgeResult {
   structuredResults: { entities: Entity[]; relations: Relation[] };
-  semanticResults: unknown[];          // VectorSearchHit[]，避免循环依赖
+  semanticResults: unknown[]; // VectorSearchHit[]，避免循环依赖
   mergedSummary: string;
 }
 
@@ -137,7 +137,9 @@ export interface UnifiedKnowledgeResult {
 // ---------------------------------------------------------------------------
 
 export interface ExtractionResult {
-  entities: Array<Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">>;
+  entities: Array<
+    Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
+  >;
   relations: Array<Omit<Relation, "relationId" | "createdAt">>;
   stats: ExtractionStats;
 }
@@ -160,7 +162,7 @@ export interface LifecycleLogEntry {
   reason: string;
   previousStatus?: EntityStatus;
   newStatus?: EntityStatus;
-  timestamp: string;                   // ISO 8601
+  timestamp: string; // ISO 8601
   triggeredBy: "auto_cleanup" | "manual" | "code_change" | "review";
 }
 
@@ -172,17 +174,17 @@ export interface EntityTypeDefinition {
   name: string;
   description: string;
   source: OntologySource;
-  extendedAttributes: string[];        // 该类型特有的扩展属性名
-  registeredAt: string;                // ISO 8601
+  extendedAttributes: string[]; // 该类型特有的扩展属性名
+  registeredAt: string; // ISO 8601
 }
 
 export interface RelationTypeDefinition {
   name: string;
   description: string;
   source: OntologySource;
-  sourceEntityTypes: string[];         // 允许的源实体类型（空数组表示不限）
-  targetEntityTypes: string[];         // 允许的目标实体类型
-  registeredAt: string;                // ISO 8601
+  sourceEntityTypes: string[]; // 允许的源实体类型（空数组表示不限）
+  targetEntityTypes: string[]; // 允许的目标实体类型
+  registeredAt: string; // ISO 8601
 }
 
 // ---------------------------------------------------------------------------
@@ -192,7 +194,7 @@ export interface RelationTypeDefinition {
 export interface GraphData {
   version: number;
   projectId?: string;
-  lastUpdated?: string;                // ISO 8601
+  lastUpdated?: string; // ISO 8601
   entities: Entity[];
   relations: Relation[];
   _counters: {
@@ -245,7 +247,7 @@ export interface SinkSummary {
 
 export interface ReviewAction {
   action: "approve" | "reject" | "edit";
-  reviewedBy: string;                  // agentId 或 userId
+  reviewedBy: string; // agentId 或 userId
   reviewerType: "agent" | "human";
   rejectionReason?: string;
   editedAttributes?: Record<string, unknown>;
@@ -256,9 +258,9 @@ export interface ReviewAction {
 // ---------------------------------------------------------------------------
 
 export interface GCConfig {
-  archiveAfterDays: number;            // 默认 90
-  lowConfidenceThreshold: number;      // 默认 0.3
-  lowConfidenceMaxAgeDays: number;     // 默认 30
+  archiveAfterDays: number; // 默认 90
+  lowConfidenceThreshold: number; // 默认 0.3
+  lowConfidenceMaxAgeDays: number; // 默认 30
   duplicateSimilarityThreshold: number; // 默认 0.9
 }
 

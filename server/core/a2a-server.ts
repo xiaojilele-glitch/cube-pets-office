@@ -17,7 +17,7 @@ export interface AgentExecutor {
   executeStream(
     agentId: string,
     task: string,
-    context: string,
+    context: string
   ): AsyncGenerator<string>;
 }
 
@@ -43,7 +43,7 @@ export class A2AServer {
   constructor(options: A2AServerOptions) {
     const envKeys = (process.env.A2A_API_KEYS ?? "")
       .split(",")
-      .map((k) => k.trim())
+      .map(k => k.trim())
       .filter(Boolean);
     this.apiKeys = new Set([...envKeys, ...(options.apiKeys ?? [])]);
     this.rateLimitPerMinute = options.rateLimitPerMinute ?? 60;
@@ -72,7 +72,7 @@ export class A2AServer {
 
     if (entry.count > this.rateLimitPerMinute) {
       const retryAfterSeconds = Math.ceil(
-        (entry.windowStart + windowMs - now) / 1000,
+        (entry.windowStart + windowMs - now) / 1000
       );
       return { allowed: false, retryAfterSeconds };
     }
@@ -82,7 +82,7 @@ export class A2AServer {
 
   async handleInvoke(
     envelope: A2AEnvelope,
-    apiKey: string,
+    apiKey: string
   ): Promise<A2AResponse> {
     if (!this.validateApiKey(apiKey)) {
       return {
@@ -109,7 +109,7 @@ export class A2AServer {
     }
 
     const agent = this.exposedAgents.find(
-      (a) => a.id === envelope.params.targetAgent,
+      a => a.id === envelope.params.targetAgent
     );
     if (!agent) {
       return {
@@ -126,7 +126,7 @@ export class A2AServer {
       const output = await this.agentExecutor.execute(
         agent.id,
         envelope.params.task,
-        envelope.params.context,
+        envelope.params.context
       );
       return {
         jsonrpc: "2.0",
@@ -145,7 +145,7 @@ export class A2AServer {
 
   async *handleStream(
     envelope: A2AEnvelope,
-    apiKey: string,
+    apiKey: string
   ): AsyncGenerator<A2AStreamChunk | A2AResponse> {
     if (!this.validateApiKey(apiKey)) {
       yield {
@@ -174,7 +174,7 @@ export class A2AServer {
     }
 
     const agent = this.exposedAgents.find(
-      (a) => a.id === envelope.params.targetAgent,
+      a => a.id === envelope.params.targetAgent
     );
     if (!agent) {
       yield {
@@ -192,7 +192,7 @@ export class A2AServer {
       const stream = this.agentExecutor.executeStream(
         agent.id,
         envelope.params.task,
-        envelope.params.context,
+        envelope.params.context
       );
       for await (const text of stream) {
         yield { jsonrpc: "2.0", id: envelope.id, chunk: text, done: false };
@@ -208,10 +208,7 @@ export class A2AServer {
     }
   }
 
-  async handleCancel(
-    sessionId: string,
-    apiKey: string,
-  ): Promise<A2AResponse> {
+  async handleCancel(sessionId: string, apiKey: string): Promise<A2AResponse> {
     if (!this.validateApiKey(apiKey)) {
       return {
         jsonrpc: "2.0",

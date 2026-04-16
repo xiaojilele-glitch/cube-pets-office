@@ -55,7 +55,7 @@ export function createBrowserTTSEngine(): TTSEngine {
 
   function notify(state: TTSState) {
     speaking = state === "speaking";
-    listeners.forEach((cb) => {
+    listeners.forEach(cb => {
       try {
         cb(state);
       } catch {
@@ -76,7 +76,7 @@ export function createBrowserTTSEngine(): TTSEngine {
     },
 
     speak(text: string, options?: TTSEngineOptions): Promise<void> {
-      return new Promise<void>((resolve) => {
+      return new Promise<void>(resolve => {
         if (!available) {
           console.error("[BrowserTTS] speechSynthesis not available");
           resolve();
@@ -91,7 +91,7 @@ export function createBrowserTTSEngine(): TTSEngine {
           if (options?.voice) {
             const voices = window.speechSynthesis.getVoices();
             const match = voices.find(
-              (v) => v.name === options.voice || v.voiceURI === options.voice,
+              v => v.name === options.voice || v.voiceURI === options.voice
             );
             if (match) utterance.voice = match;
           }
@@ -106,7 +106,7 @@ export function createBrowserTTSEngine(): TTSEngine {
             notify("idle");
             resolve();
           };
-          utterance.onerror = (e) => {
+          utterance.onerror = e => {
             console.error("[BrowserTTS] utterance error:", e.error);
             notify("idle");
             resolve(); // graceful degradation — never reject
@@ -198,7 +198,7 @@ export function createServerTTSEngine(apiUrl: string): TTSEngine {
 
   function notify(state: TTSState) {
     speaking = state === "speaking";
-    listeners.forEach((cb) => {
+    listeners.forEach(cb => {
       try {
         cb(state);
       } catch {
@@ -250,7 +250,7 @@ export function createServerTTSEngine(apiUrl: string): TTSEngine {
         source.connect(ctx.destination);
         currentSource = source;
 
-        return new Promise<void>((resolve) => {
+        return new Promise<void>(resolve => {
           source.onended = () => {
             currentSource = null;
             notify("idle");
@@ -271,13 +271,19 @@ export function createServerTTSEngine(apiUrl: string): TTSEngine {
       // AudioContext-based playback doesn't natively support pause/resume
       // on a BufferSourceNode. We suspend the context as a workaround.
       if (audioCtx && speaking) {
-        audioCtx.suspend().then(() => notify("paused")).catch(() => {});
+        audioCtx
+          .suspend()
+          .then(() => notify("paused"))
+          .catch(() => {});
       }
     },
 
     resume() {
       if (audioCtx && audioCtx.state === "suspended") {
-        audioCtx.resume().then(() => notify("speaking")).catch(() => {});
+        audioCtx
+          .resume()
+          .then(() => notify("speaking"))
+          .catch(() => {});
       }
     },
 
@@ -336,7 +342,7 @@ export function createTTSEngine(config: ClientVoiceConfig): TTSEngine {
  */
 function createFallbackTTSEngine(
   primary: TTSEngine,
-  fallback: TTSEngine,
+  fallback: TTSEngine
 ): TTSEngine {
   const listeners = new Set<(state: TTSState) => void>();
   let activeEngine: TTSEngine = primary;
@@ -344,9 +350,9 @@ function createFallbackTTSEngine(
 
   // Forward state changes from whichever engine is active
   function wireListeners(engine: TTSEngine) {
-    return engine.onStateChange((state) => {
+    return engine.onStateChange(state => {
       speaking = state === "speaking";
-      listeners.forEach((cb) => {
+      listeners.forEach(cb => {
         try {
           cb(state);
         } catch {

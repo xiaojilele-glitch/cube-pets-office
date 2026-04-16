@@ -130,12 +130,18 @@ function parseCardActionValue(raw: unknown): FeishuCardActionValue | undefined {
 
   return {
     kind: typeof record.kind === "string" ? record.kind.trim() : undefined,
-    taskId: typeof record.taskId === "string" ? record.taskId.trim() : undefined,
-    optionId: typeof record.optionId === "string" ? record.optionId.trim() : undefined,
+    taskId:
+      typeof record.taskId === "string" ? record.taskId.trim() : undefined,
+    optionId:
+      typeof record.optionId === "string" ? record.optionId.trim() : undefined,
     optionLabel:
-      typeof record.optionLabel === "string" ? record.optionLabel.trim() : undefined,
-    freeText: typeof record.freeText === "string" ? record.freeText.trim() : undefined,
-    detail: typeof record.detail === "string" ? record.detail.trim() : undefined,
+      typeof record.optionLabel === "string"
+        ? record.optionLabel.trim()
+        : undefined,
+    freeText:
+      typeof record.freeText === "string" ? record.freeText.trim() : undefined,
+    detail:
+      typeof record.detail === "string" ? record.detail.trim() : undefined,
     progress: Number.isFinite(progress) ? progress : undefined,
   };
 }
@@ -156,7 +162,8 @@ function resolveDecisionToastContent(
   taskTitle: string,
   decision: FeishuResolvedDecision
 ): string {
-  const choice = decision.optionLabel || decision.freeText || decision.optionId || "已确认";
+  const choice =
+    decision.optionLabel || decision.freeText || decision.optionId || "已确认";
   return `已确认：${choice}（${taskTitle}）`;
 }
 
@@ -164,7 +171,8 @@ export function registerFeishuIngressRoutes(
   router: Router,
   runtime: FeishuBridgeRuntime
 ): void {
-  const dedupTtlMs = Math.max(1, runtime.config.webhookDedupTtlSeconds ?? 600) * 1_000;
+  const dedupTtlMs =
+    Math.max(1, runtime.config.webhookDedupTtlSeconds ?? 600) * 1_000;
   const webhookSecurity = createFeishuWebhookSecurity(runtime.config);
 
   router.post("/webhook", async (request, response) => {
@@ -194,7 +202,9 @@ export function registerFeishuIngressRoutes(
         runtime.webhookDedupStore.remember(dedupKey, now + dedupTtlMs, now);
       }
 
-      const actionValue = parseCardActionValue((body as FeishuEventBody).event?.action?.value);
+      const actionValue = parseCardActionValue(
+        (body as FeishuEventBody).event?.action?.value
+      );
       if (!actionValue || actionValue.kind !== "task-decision") {
         const result: FeishuWebhookActionResult = {
           kind: "task-decision",

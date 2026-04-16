@@ -18,23 +18,33 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+  return new Date(ts).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function HistoryPanel({ commands, onClone }: HistoryPanelProps) {
   if (commands.length === 0) {
-    return <div className="py-4 text-center text-sm text-stone-400">No command history.</div>;
+    return (
+      <div className="py-4 text-center text-sm text-stone-400">
+        No command history.
+      </div>
+    );
   }
 
   return (
     <ul className="flex flex-col gap-1.5">
-      {commands.map((cmd) => (
+      {commands.map(cmd => (
         <li
           key={cmd.commandId}
           className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2"
         >
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm text-stone-800">{cmd.commandText}</div>
+            <div className="truncate text-sm text-stone-800">
+              {cmd.commandText}
+            </div>
             <div className="mt-0.5 flex items-center gap-2 text-[10px] text-stone-400">
               <span>{formatDate(cmd.timestamp)}</span>
               <span

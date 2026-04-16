@@ -27,7 +27,9 @@ describe("FilesystemChecker", () => {
 
     it("matches * wildcard (single segment)", () => {
       expect(matchGlob("/data/*/file.txt", "/data/user1/file.txt")).toBe(true);
-      expect(matchGlob("/data/*/file.txt", "/data/user1/sub/file.txt")).toBe(false);
+      expect(matchGlob("/data/*/file.txt", "/data/user1/sub/file.txt")).toBe(
+        false
+      );
     });
 
     it("matches ** wildcard (any depth)", () => {
@@ -37,9 +39,15 @@ describe("FilesystemChecker", () => {
     });
 
     it("matches sandbox agent paths", () => {
-      expect(matchGlob("/sandbox/agent_*/**", "/sandbox/agent_123/workspace/file.ts")).toBe(true);
-      expect(matchGlob("/sandbox/agent_*/**", "/sandbox/agent_456/output")).toBe(true);
-      expect(matchGlob("/sandbox/agent_123/**", "/sandbox/agent_456/file")).toBe(false);
+      expect(
+        matchGlob("/sandbox/agent_*/**", "/sandbox/agent_123/workspace/file.ts")
+      ).toBe(true);
+      expect(
+        matchGlob("/sandbox/agent_*/**", "/sandbox/agent_456/output")
+      ).toBe(true);
+      expect(
+        matchGlob("/sandbox/agent_123/**", "/sandbox/agent_456/file")
+      ).toBe(false);
     });
   });
 
@@ -76,37 +84,65 @@ describe("FilesystemChecker", () => {
       const constraints: PermissionConstraints = {
         pathPatterns: ["/sandbox/agent_1/**"],
       };
-      expect(checker.checkConstraints("read", "/sandbox/agent_1/file.txt", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints(
+          "read",
+          "/sandbox/agent_1/file.txt",
+          constraints
+        )
+      ).toBe(true);
     });
 
     it("denies access when path does not match any pattern", () => {
       const constraints: PermissionConstraints = {
         pathPatterns: ["/sandbox/agent_1/**"],
       };
-      expect(checker.checkConstraints("read", "/sandbox/agent_2/file.txt", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints(
+          "read",
+          "/sandbox/agent_2/file.txt",
+          constraints
+        )
+      ).toBe(false);
     });
 
     it("denies access to sensitive directories even with matching patterns", () => {
       const constraints: PermissionConstraints = {
         pathPatterns: ["/**"],
       };
-      expect(checker.checkConstraints("read", "/etc/passwd", constraints)).toBe(false);
-      expect(checker.checkConstraints("write", "/sys/kernel", constraints)).toBe(false);
-      expect(checker.checkConstraints("read", "/proc/1/status", constraints)).toBe(false);
-      expect(checker.checkConstraints("read", "~/.ssh/id_rsa", constraints)).toBe(false);
+      expect(checker.checkConstraints("read", "/etc/passwd", constraints)).toBe(
+        false
+      );
+      expect(
+        checker.checkConstraints("write", "/sys/kernel", constraints)
+      ).toBe(false);
+      expect(
+        checker.checkConstraints("read", "/proc/1/status", constraints)
+      ).toBe(false);
+      expect(
+        checker.checkConstraints("read", "~/.ssh/id_rsa", constraints)
+      ).toBe(false);
     });
 
     it("denies access when no path patterns are defined", () => {
-      expect(checker.checkConstraints("read", "/data/file.txt", {})).toBe(false);
-      expect(checker.checkConstraints("read", "/data/file.txt", { pathPatterns: [] })).toBe(false);
+      expect(checker.checkConstraints("read", "/data/file.txt", {})).toBe(
+        false
+      );
+      expect(
+        checker.checkConstraints("read", "/data/file.txt", { pathPatterns: [] })
+      ).toBe(false);
     });
 
     it("allows access when any pattern matches", () => {
       const constraints: PermissionConstraints = {
         pathPatterns: ["/data/**", "/tmp/**"],
       };
-      expect(checker.checkConstraints("read", "/tmp/output.log", constraints)).toBe(true);
-      expect(checker.checkConstraints("read", "/data/input.csv", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints("read", "/tmp/output.log", constraints)
+      ).toBe(true);
+      expect(
+        checker.checkConstraints("read", "/data/input.csv", constraints)
+      ).toBe(true);
     });
   });
 });
@@ -124,21 +160,23 @@ describe("FilesystemChecker Property Tests", () => {
    */
   describe("Property 5: Path pattern matching correctness", () => {
     // Generator for safe path segments (no special glob chars)
-    const safeSegment = fc.array(
-      fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789_-".split("")),
-      { minLength: 1, maxLength: 8 },
-    ).map((chars) => chars.join(""));
+    const safeSegment = fc
+      .array(
+        fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789_-".split("")),
+        { minLength: 1, maxLength: 8 }
+      )
+      .map(chars => chars.join(""));
 
-    const safePath = fc.array(safeSegment, { minLength: 1, maxLength: 4 }).map(
-      (segments) => "/" + segments.join("/"),
-    );
+    const safePath = fc
+      .array(safeSegment, { minLength: 1, maxLength: 4 })
+      .map(segments => "/" + segments.join("/"));
 
     it("exact path always matches itself", () => {
       fc.assert(
-        fc.property(safePath, (path) => {
+        fc.property(safePath, path => {
           expect(matchGlob(path, path)).toBe(true);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
 
@@ -149,7 +187,7 @@ describe("FilesystemChecker Property Tests", () => {
           const target = base + suffix;
           expect(matchGlob(pattern, target)).toBe(true);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
 
@@ -160,7 +198,7 @@ describe("FilesystemChecker Property Tests", () => {
           const singleChild = base + "/" + child;
           expect(matchGlob(pattern, singleChild)).toBe(true);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
   });
@@ -173,28 +211,53 @@ describe("FilesystemChecker Property Tests", () => {
    */
   describe("Property 6: Sensitive directories always denied", () => {
     const sensitiveDirArb = fc.constantFrom(...SENSITIVE_DIRS);
-    const subPathArb = fc.array(
-      fc.array(
-        fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789".split("")),
-        { minLength: 1, maxLength: 6 },
-      ).map((chars) => chars.join("")),
-      { minLength: 0, maxLength: 3 },
-    ).map((parts) => (parts.length > 0 ? "/" + parts.join("/") : ""));
+    const subPathArb = fc
+      .array(
+        fc
+          .array(
+            fc.constantFrom(
+              ..."abcdefghijklmnopqrstuvwxyz0123456789".split("")
+            ),
+            { minLength: 1, maxLength: 6 }
+          )
+          .map(chars => chars.join("")),
+        { minLength: 0, maxLength: 3 }
+      )
+      .map(parts => (parts.length > 0 ? "/" + parts.join("/") : ""));
 
     // Even the most permissive constraints should not allow sensitive dirs
     const permissiveConstraints: PermissionConstraints = {
-      pathPatterns: ["/**", "~/**", "/etc/**", "/sys/**", "/proc/**", "~/.ssh/**"],
+      pathPatterns: [
+        "/**",
+        "~/**",
+        "/etc/**",
+        "/sys/**",
+        "/proc/**",
+        "~/.ssh/**",
+      ],
     };
 
-    const actionArb = fc.constantFrom("read" as const, "write" as const, "execute" as const, "delete" as const);
+    const actionArb = fc.constantFrom(
+      "read" as const,
+      "write" as const,
+      "execute" as const,
+      "delete" as const
+    );
 
     it("sensitive paths are always denied regardless of constraints", () => {
       fc.assert(
-        fc.property(sensitiveDirArb, subPathArb, actionArb, (dir, sub, action) => {
-          const path = dir + sub;
-          expect(checker.checkConstraints(action, path, permissiveConstraints)).toBe(false);
-        }),
-        { numRuns: 100 },
+        fc.property(
+          sensitiveDirArb,
+          subPathArb,
+          actionArb,
+          (dir, sub, action) => {
+            const path = dir + sub;
+            expect(
+              checker.checkConstraints(action, path, permissiveConstraints)
+            ).toBe(false);
+          }
+        ),
+        { numRuns: 100 }
       );
     });
   });

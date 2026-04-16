@@ -9,7 +9,10 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { DataLineageNode, ChangeAlert } from "../../shared/lineage/contracts.js";
+import type {
+  DataLineageNode,
+  ChangeAlert,
+} from "../../shared/lineage/contracts.js";
 import type { LineageStorageAdapter } from "../lineage/lineage-store.js";
 
 // ─── Mock Store ────────────────────────────────────────────────────────────
@@ -28,7 +31,7 @@ function createMockStore(): LineageStorageAdapter & {
     },
     async batchInsertEdges() {},
     async getNode(id) {
-      return insertedNodes.find((n) => n.lineageId === id);
+      return insertedNodes.find(n => n.lineageId === id);
     },
     async queryNodes() {
       return [];
@@ -73,10 +76,13 @@ describe("10.1 server/lineage/index.ts exports", () => {
 
 describe("10.2 shared/lineage/socket.ts", () => {
   it("should export LINEAGE_SOCKET_EVENTS with correct event names", async () => {
-    const { LINEAGE_SOCKET_EVENTS } = await import("../../shared/lineage/socket.js");
+    const { LINEAGE_SOCKET_EVENTS } =
+      await import("../../shared/lineage/socket.js");
 
     expect(LINEAGE_SOCKET_EVENTS.nodeCreated).toBe("lineage:node_created");
-    expect(LINEAGE_SOCKET_EVENTS.alertTriggered).toBe("lineage:alert_triggered");
+    expect(LINEAGE_SOCKET_EVENTS.alertTriggered).toBe(
+      "lineage:alert_triggered"
+    );
   });
 
   it("should be re-exported from shared/lineage/index.ts", async () => {
@@ -101,11 +107,12 @@ describe("10.3 LineageCollector socket broadcast callbacks", () => {
   });
 
   it("should call onNodeCreated for each buffered node", async () => {
-    const { LineageCollector } = await import("../lineage/lineage-collector.js");
+    const { LineageCollector } =
+      await import("../lineage/lineage-collector.js");
     const createdNodes: DataLineageNode[] = [];
 
     const collector = new LineageCollector(store, {
-      onNodeCreated: (node) => createdNodes.push(node),
+      onNodeCreated: node => createdNodes.push(node),
     });
 
     collector.recordSource({ sourceId: "s1", sourceName: "S1" });
@@ -123,11 +130,12 @@ describe("10.3 LineageCollector socket broadcast callbacks", () => {
   });
 
   it("should call onAlertTriggered via emitAlert()", async () => {
-    const { LineageCollector } = await import("../lineage/lineage-collector.js");
+    const { LineageCollector } =
+      await import("../lineage/lineage-collector.js");
     const alerts: ChangeAlert[] = [];
 
     const collector = new LineageCollector(store, {
-      onAlertTriggered: (alert) => alerts.push(alert),
+      onAlertTriggered: alert => alerts.push(alert),
     });
 
     const alert: ChangeAlert = {
@@ -151,7 +159,8 @@ describe("10.3 LineageCollector socket broadcast callbacks", () => {
   });
 
   it("should not throw if onNodeCreated callback throws", async () => {
-    const { LineageCollector } = await import("../lineage/lineage-collector.js");
+    const { LineageCollector } =
+      await import("../lineage/lineage-collector.js");
 
     const collector = new LineageCollector(store, {
       onNodeCreated: () => {
@@ -167,7 +176,8 @@ describe("10.3 LineageCollector socket broadcast callbacks", () => {
   });
 
   it("should not throw if onAlertTriggered callback throws", async () => {
-    const { LineageCollector } = await import("../lineage/lineage-collector.js");
+    const { LineageCollector } =
+      await import("../lineage/lineage-collector.js");
 
     const collector = new LineageCollector(store, {
       onAlertTriggered: () => {
@@ -192,13 +202,17 @@ describe("10.3 LineageCollector socket broadcast callbacks", () => {
   });
 
   it("should still work with legacy logger argument (backward compat)", async () => {
-    const { LineageCollector } = await import("../lineage/lineage-collector.js");
+    const { LineageCollector } =
+      await import("../lineage/lineage-collector.js");
     const logger = { debug: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
     const collector = new LineageCollector(store, logger);
     collector.recordSource({ sourceId: "s1", sourceName: "S1" });
 
-    expect(logger.debug).toHaveBeenCalledWith("recordSource", expect.any(Object));
+    expect(logger.debug).toHaveBeenCalledWith(
+      "recordSource",
+      expect.any(Object)
+    );
 
     collector.destroy();
   });
@@ -262,7 +276,7 @@ describe("10.4 startRetentionCleanup", () => {
     await vi.advanceTimersByTimeAsync(500);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("[Lineage] Purged 5 expired nodes"),
+      expect.stringContaining("[Lineage] Purged 5 expired nodes")
     );
 
     consoleSpy.mockRestore();

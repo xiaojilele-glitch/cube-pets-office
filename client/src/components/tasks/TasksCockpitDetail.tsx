@@ -178,7 +178,9 @@ function ProgressiveItem({
     >
       <AccordionTrigger className="py-1.5 text-left hover:no-underline">
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold text-stone-900">{title}</div>
+          <div className="text-[11px] font-semibold text-stone-900">
+            {title}
+          </div>
           <div className="mt-0.5 text-[10px] leading-4 text-stone-500">
             {description}
             {meta ? ` / ${meta}` : ""}
@@ -320,8 +322,7 @@ export function TasksCockpitDetail({
         detail.lastSignal ||
         t(locale, "还没有新的执行信号", "No fresh runtime signal yet"),
       44
-    ) ||
-    t(locale, "还没有新的执行信号", "No fresh runtime signal yet");
+    ) || t(locale, "还没有新的执行信号", "No fresh runtime signal yet");
   const dashboardMetrics: Array<{
     key: string;
     label: string;
@@ -338,8 +339,7 @@ export function TasksCockpitDetail({
           detail.currentStageLabel ||
             t(locale, "等待下一条执行信号", "Waiting for next runtime signal"),
           46
-        ) ||
-        t(locale, "等待下一条执行信号", "Waiting for next runtime signal"),
+        ) || t(locale, "等待下一条执行信号", "Waiting for next runtime signal"),
       tone:
         detail.status === "failed"
           ? "danger"
@@ -400,7 +400,8 @@ export function TasksCockpitDetail({
                     items={detail.departmentLabels.map(label => ({
                       key: `department-${label}`,
                       label,
-                      className: "workspace-tone-neutral bg-white/65 font-medium",
+                      className:
+                        "workspace-tone-neutral bg-white/65 font-medium",
                     }))}
                     className="mt-0.5 gap-1"
                   />

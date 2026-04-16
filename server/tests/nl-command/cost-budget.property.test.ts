@@ -1,10 +1,13 @@
 // Feature: nl-command-center, Property 8: cost budget summation invariant
 // **Validates: Requirements 5.5, 15.5**
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
 
-import type { CostBudget, DecomposedMission } from '../../../shared/nl-command/contracts.js';
+import type {
+  CostBudget,
+  DecomposedMission,
+} from "../../../shared/nl-command/contracts.js";
 
 // --- Helpers ---
 
@@ -18,7 +21,7 @@ function distributeArb(total: number, n: number): fc.Arbitrary<number[]> {
       minLength: n - 1,
       maxLength: n - 1,
     })
-    .map((breakpoints) => {
+    .map(breakpoints => {
       const sorted = [0, ...breakpoints.sort((a, b) => a - b), total];
       return Array.from({ length: n }, (_, i) => sorted[i + 1] - sorted[i]);
     });
@@ -45,10 +48,13 @@ const costBudgetWithMissionsArb: fc.Arbitrary<{
     missionCount: fc.integer({ min: 1, max: 5 }),
     agentCount: fc.integer({ min: 1, max: 4 }),
     modelCount: fc.integer({ min: 1, max: 3 }),
-    currency: fc.constantFrom('USD', 'EUR', 'CNY'),
+    currency: fc.constantFrom("USD", "EUR", "CNY"),
   })
   .chain(({ totalBudget, missionCount, agentCount, modelCount, currency }) => {
-    const missionIds = Array.from({ length: missionCount }, (_, i) => `mission-${i}`);
+    const missionIds = Array.from(
+      { length: missionCount },
+      (_, i) => `mission-${i}`
+    );
 
     return fc
       .tuple(
@@ -59,7 +65,7 @@ const costBudgetWithMissionsArb: fc.Arbitrary<{
         fc.array(fc.integer({ min: 1, max: 4 }), {
           minLength: missionCount,
           maxLength: missionCount,
-        }),
+        })
       )
       .chain(([missionAmounts, agentAmounts, modelAmounts, taskCounts]) => {
         // Build missionCosts
@@ -82,10 +88,10 @@ const costBudgetWithMissionsArb: fc.Arbitrary<{
 
         // For each mission, distribute its cost across tasks
         const taskDistributions = missionIds.map((_, i) =>
-          distributeArb(missionAmounts[i], taskCounts[i]),
+          distributeArb(missionAmounts[i], taskCounts[i])
         );
 
-        return fc.tuple(...taskDistributions).map((distributions) => {
+        return fc.tuple(...taskDistributions).map(distributions => {
           const taskCostsMap: Record<string, number> = {};
           const missionTaskMap: Record<string, string[]> = {};
           const missions: DecomposedMission[] = [];
@@ -107,7 +113,7 @@ const costBudgetWithMissionsArb: fc.Arbitrary<{
               constraints: [],
               estimatedDuration: 60,
               estimatedCost: missionAmounts[i],
-              priority: 'medium',
+              priority: "medium",
             });
           });
 
@@ -127,59 +133,75 @@ const costBudgetWithMissionsArb: fc.Arbitrary<{
 
 // --- Tests ---
 
-describe('Property 8: cost budget summation invariant', () => {
-  it('sum of all missionCosts SHALL equal totalBudget', () => {
+describe("Property 8: cost budget summation invariant", () => {
+  it("sum of all missionCosts SHALL equal totalBudget", () => {
     fc.assert(
       fc.property(costBudgetWithMissionsArb, ({ budget }) => {
-        const missionSum = Object.values(budget.missionCosts).reduce((a, b) => a + b, 0);
+        const missionSum = Object.values(budget.missionCosts).reduce(
+          (a, b) => a + b,
+          0
+        );
         expect(missionSum).toBeCloseTo(budget.totalBudget, 5);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('sum of taskCosts for each mission SHALL equal that mission cost', () => {
+  it("sum of taskCosts for each mission SHALL equal that mission cost", () => {
     fc.assert(
       fc.property(costBudgetWithMissionsArb, ({ budget, missionTaskMap }) => {
         for (const [missionId, taskIds] of Object.entries(missionTaskMap)) {
-          const taskSum = taskIds.reduce((sum, tId) => sum + (budget.taskCosts[tId] ?? 0), 0);
+          const taskSum = taskIds.reduce(
+            (sum, tId) => sum + (budget.taskCosts[tId] ?? 0),
+            0
+          );
           expect(taskSum).toBeCloseTo(budget.missionCosts[missionId], 5);
         }
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('sum of agentCosts SHALL equal totalBudget', () => {
+  it("sum of agentCosts SHALL equal totalBudget", () => {
     fc.assert(
       fc.property(costBudgetWithMissionsArb, ({ budget }) => {
-        const agentSum = Object.values(budget.agentCosts).reduce((a, b) => a + b, 0);
+        const agentSum = Object.values(budget.agentCosts).reduce(
+          (a, b) => a + b,
+          0
+        );
         expect(agentSum).toBeCloseTo(budget.totalBudget, 5);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('sum of modelCosts SHALL equal totalBudget', () => {
+  it("sum of modelCosts SHALL equal totalBudget", () => {
     fc.assert(
       fc.property(costBudgetWithMissionsArb, ({ budget }) => {
-        const modelSum = Object.values(budget.modelCosts).reduce((a, b) => a + b, 0);
+        const modelSum = Object.values(budget.modelCosts).reduce(
+          (a, b) => a + b,
+          0
+        );
         expect(modelSum).toBeCloseTo(budget.totalBudget, 5);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 
-  it('all cost values SHALL be non-negative', () => {
+  it("all cost values SHALL be non-negative", () => {
     fc.assert(
       fc.property(costBudgetWithMissionsArb, ({ budget }) => {
         expect(budget.totalBudget).toBeGreaterThanOrEqual(0);
-        for (const v of Object.values(budget.missionCosts)) expect(v).toBeGreaterThanOrEqual(0);
-        for (const v of Object.values(budget.taskCosts)) expect(v).toBeGreaterThanOrEqual(0);
-        for (const v of Object.values(budget.agentCosts)) expect(v).toBeGreaterThanOrEqual(0);
-        for (const v of Object.values(budget.modelCosts)) expect(v).toBeGreaterThanOrEqual(0);
+        for (const v of Object.values(budget.missionCosts))
+          expect(v).toBeGreaterThanOrEqual(0);
+        for (const v of Object.values(budget.taskCosts))
+          expect(v).toBeGreaterThanOrEqual(0);
+        for (const v of Object.values(budget.agentCosts))
+          expect(v).toBeGreaterThanOrEqual(0);
+        for (const v of Object.values(budget.modelCosts))
+          expect(v).toBeGreaterThanOrEqual(0);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });

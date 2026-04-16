@@ -6,7 +6,10 @@
  * and invoking the logic through a mock self/postMessage setup.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { SnapshotPayload, MissionStatus } from "../../../shared/mission/contracts";
+import type {
+  SnapshotPayload,
+  MissionStatus,
+} from "../../../shared/mission/contracts";
 import { SNAPSHOT_VERSION } from "../../../shared/mission/contracts";
 import type { WorkerRequest, WorkerResponse } from "./snapshot-worker";
 
@@ -16,7 +19,11 @@ function makePayload(overrides?: Partial<SnapshotPayload>): SnapshotPayload {
   return {
     mission: { id: "m1", title: "Test Mission", status: "running" } as any,
     agentMemories: [],
-    sceneLayout: { cameraPosition: [0, 0, 5], cameraTarget: [0, 0, 0], selectedPet: null },
+    sceneLayout: {
+      cameraPosition: [0, 0, 5],
+      cameraTarget: [0, 0, 0],
+      selectedPet: null,
+    },
     decisionHistory: [],
     attachmentIndex: [],
     zustandSlice: {
@@ -33,7 +40,7 @@ async function computeSHA256Hex(data: string): Promise<string> {
   const buffer = encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 // ─── Worker simulation ───
@@ -179,7 +186,9 @@ describe("snapshot-worker", () => {
   });
 
   it("should produce consistent checksums for the same payload", async () => {
-    const payload = makePayload({ mission: { id: "stable", title: "Stable" } as any });
+    const payload = makePayload({
+      mission: { id: "stable", title: "Stable" } as any,
+    });
     const request: WorkerRequest = {
       type: "serialize",
       payload,

@@ -26,7 +26,7 @@ function createMockStore(): LineageStorageAdapter & {
     },
     async batchInsertEdges() {},
     async getNode(id) {
-      return insertedNodes.find((n) => n.lineageId === id);
+      return insertedNodes.find(n => n.lineageId === id);
     },
     async queryNodes() {
       return [];
@@ -128,7 +128,7 @@ describe("LineageCollector", () => {
           expect.objectContaining({ sourceId: "s1" }),
           expect.objectContaining({ sourceId: "s2" }),
           expect.objectContaining({ sourceId: "s3" }),
-        ]),
+        ])
       );
     });
 
@@ -213,7 +213,7 @@ describe("LineageCollector", () => {
           sourceId: "src-db",
           query: "SELECT 1",
           resultSize: 100,
-        }),
+        })
       );
     });
 
@@ -278,7 +278,13 @@ describe("LineageCollector", () => {
     });
 
     it("AC-2.3: should accept various operation types", async () => {
-      const ops = ["filter", "aggregate", "join", "ml_inference", "transform"] as const;
+      const ops = [
+        "filter",
+        "aggregate",
+        "join",
+        "ml_inference",
+        "transform",
+      ] as const;
       for (const op of ops) {
         collector.recordTransformation({
           agentId: "a1",
@@ -288,7 +294,7 @@ describe("LineageCollector", () => {
       }
       await collector.forceFlush();
       expect(store.insertedNodes).toHaveLength(ops.length);
-      expect(store.insertedNodes.map((n) => n.operation)).toEqual([...ops]);
+      expect(store.insertedNodes.map(n => n.operation)).toEqual([...ops]);
     });
 
     it("AC-2.4: should record parameters", async () => {
@@ -347,7 +353,7 @@ describe("LineageCollector", () => {
           operation: "filter",
           inputCount: 2,
           dataChanged: true,
-        }),
+        })
       );
     });
   });
@@ -460,7 +466,7 @@ describe("LineageCollector", () => {
           confidence: 0.9,
           modelVersion: "v1",
           result: "approve",
-        }),
+        })
       );
     });
   });
@@ -532,7 +538,9 @@ describe("LineageCollector", () => {
 
       expect(logger.error).toHaveBeenCalledWith(
         "flush failed",
-        expect.objectContaining({ error: expect.stringContaining("Storage failure") }),
+        expect.objectContaining({
+          error: expect.stringContaining("Storage failure"),
+        })
       );
       c.destroy();
     });

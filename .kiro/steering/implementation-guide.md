@@ -26,27 +26,27 @@ inclusion: auto
 
 ### 共享契约检查表
 
-| 检查项 | 条件 | 必须使用的契约 | 路径 |
-|--------|------|---------------|------|
-| 是否涉及演示数据？ | 模块需要预录数据 | `DemoDataBundle` schema | `shared/demo/contracts.ts` |
-| 是否涉及遥测/成本/恢复？ | 模块读写系统状态 | 事件总线格式 + IDB store key | `shared/telemetry/contracts.ts` |
-| 是否涉及记忆读写？ | 模块访问记忆系统 | `MemoryReader` / `MemoryWriter` / `MemoryIndex` | `shared/memory/contracts.ts` |
-| 是否涉及 Mission 丰富化？ | 模块扩展 MissionRecord | `MissionEnrichmentFields` | `shared/mission/enrichment.ts` |
-| 是否涉及跨框架导出？ | 模块输出其他框架格式 | `ExportRequest` / `ExportResult` | `shared/export/contracts.ts` |
+| 检查项                    | 条件                   | 必须使用的契约                                  | 路径                            |
+| ------------------------- | ---------------------- | ----------------------------------------------- | ------------------------------- |
+| 是否涉及演示数据？        | 模块需要预录数据       | `DemoDataBundle` schema                         | `shared/demo/contracts.ts`      |
+| 是否涉及遥测/成本/恢复？  | 模块读写系统状态       | 事件总线格式 + IDB store key                    | `shared/telemetry/contracts.ts` |
+| 是否涉及记忆读写？        | 模块访问记忆系统       | `MemoryReader` / `MemoryWriter` / `MemoryIndex` | `shared/memory/contracts.ts`    |
+| 是否涉及 Mission 丰富化？ | 模块扩展 MissionRecord | `MissionEnrichmentFields`                       | `shared/mission/enrichment.ts`  |
+| 是否涉及跨框架导出？      | 模块输出其他框架格式   | `ExportRequest` / `ExportResult`                | `shared/export/contracts.ts`    |
 
 ### 已有核心模块复用检查表
 
-| 检查项 | 条件 | 必须复用的模块 | 关键文件 |
-|--------|------|---------------|---------|
-| 是否需要工作流执行？ | 模块触发十阶段管道 | WorkflowEngine | `server/core/workflow-engine.ts` |
-| 是否需要动态组织？ | 模块生成智能体团队 | DynamicOrganization | `server/core/dynamic-organization.ts` |
-| 是否需要 Mission 状态机？ | 模块管理任务生命周期 | MissionStore | `server/tasks/mission-store.ts` |
-| 是否需要 LLM 调用？ | 模块调用大模型 | LLMClient | `server/core/llm-client.ts` |
-| 是否需要智能体调用？ | 模块通过智能体执行 | AgentDirectory | `server/core/registry.ts` |
-| 是否需要消息传递？ | 模块涉及智能体间通信 | MessageBus | `server/core/message-bus.ts` |
-| 是否需要工作空间访问？ | 模块读写智能体文件 | AccessGuard | `server/core/access-guard.ts` |
-| 是否需要浏览器端运行？ | 模块支持 Frontend Mode | BrowserRuntime | `client/src/runtime/browser-runtime.ts` |
-| 是否需要 Socket 推送？ | 模块实时通知前端 | Socket.IO | `server/core/socket.ts` |
+| 检查项                    | 条件                   | 必须复用的模块      | 关键文件                                |
+| ------------------------- | ---------------------- | ------------------- | --------------------------------------- |
+| 是否需要工作流执行？      | 模块触发十阶段管道     | WorkflowEngine      | `server/core/workflow-engine.ts`        |
+| 是否需要动态组织？        | 模块生成智能体团队     | DynamicOrganization | `server/core/dynamic-organization.ts`   |
+| 是否需要 Mission 状态机？ | 模块管理任务生命周期   | MissionStore        | `server/tasks/mission-store.ts`         |
+| 是否需要 LLM 调用？       | 模块调用大模型         | LLMClient           | `server/core/llm-client.ts`             |
+| 是否需要智能体调用？      | 模块通过智能体执行     | AgentDirectory      | `server/core/registry.ts`               |
+| 是否需要消息传递？        | 模块涉及智能体间通信   | MessageBus          | `server/core/message-bus.ts`            |
+| 是否需要工作空间访问？    | 模块读写智能体文件     | AccessGuard         | `server/core/access-guard.ts`           |
+| 是否需要浏览器端运行？    | 模块支持 Frontend Mode | BrowserRuntime      | `client/src/runtime/browser-runtime.ts` |
+| 是否需要 Socket 推送？    | 模块实时通知前端       | Socket.IO           | `server/core/socket.ts`                 |
 
 ## 二、Autopilot 批量执行策略
 
@@ -65,12 +65,14 @@ inclusion: auto
 cube-pets-office 中以下能力采用注册制，新模块只需注册独有配置：
 
 ### 工作流阶段注册
+
 ```typescript
 // 新增阶段只需在 WORKFLOW_STAGES 数组中追加
 // 并在 WorkflowEngine.runPipeline() 中添加对应的 run 方法
 ```
 
 ### Skill 注册（plugin-skill-system 实现后）
+
 ```typescript
 // 每个 Skill 只需声明：
 registerSkill({
@@ -83,6 +85,7 @@ registerSkill({
 ```
 
 ### 遥测事件注册
+
 ```typescript
 // 新模块的遥测事件必须使用 shared/telemetry/contracts.ts 中定义的前缀
 // telemetry: / cost: / recovery:
@@ -90,6 +93,7 @@ registerSkill({
 ```
 
 ### Memory Index 注册
+
 ```typescript
 // knowledge-graph 和 vector-db-rag-pipeline 各自实现 MemoryIndex 接口
 // 通过 MemoryIndexRegistry.register() 注册
@@ -99,6 +103,7 @@ registerSkill({
 ## 四、文件命名与目录约定
 
 ### 服务端新模块
+
 ```
 server/
 ├── core/           # 核心引擎（workflow-engine、dynamic-organization 等）
@@ -111,6 +116,7 @@ server/
 ```
 
 ### 前端新模块
+
 ```
 client/src/
 ├── components/     # UI 组件
@@ -125,6 +131,7 @@ client/src/
 ```
 
 ### 共享契约
+
 ```
 shared/
 ├── demo/           # 演示数据契约

@@ -8,37 +8,40 @@
  * 系统应检测到异常。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { AnomalyDetector } from '../core/reputation/anomaly-detector.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { ReputationChangeEvent, ReputationConfig } from '../../shared/reputation.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { AnomalyDetector } from "../core/reputation/anomaly-detector.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  ReputationChangeEvent,
+  ReputationConfig,
+} from "../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Arbitraries
 // ---------------------------------------------------------------------------
 
-const AGENT_ID = 'agent-anomaly-test';
+const AGENT_ID = "agent-anomaly-test";
 
 /** Generate a timestamp within the last 24 hours */
-const recentTimestampArb = fc.integer({ min: 1, max: 24 * 60 * 60 * 1000 - 1 }).map(
-  (msAgo) => new Date(Date.now() - msAgo).toISOString(),
-);
+const recentTimestampArb = fc
+  .integer({ min: 1, max: 24 * 60 * 60 * 1000 - 1 })
+  .map(msAgo => new Date(Date.now() - msAgo).toISOString());
 
 /** Generate a timestamp older than 24 hours */
-const oldTimestampArb = fc.integer({ min: 24 * 60 * 60 * 1000 + 1, max: 7 * 24 * 60 * 60 * 1000 }).map(
-  (msAgo) => new Date(Date.now() - msAgo).toISOString(),
-);
+const oldTimestampArb = fc
+  .integer({ min: 24 * 60 * 60 * 1000 + 1, max: 7 * 24 * 60 * 60 * 1000 })
+  .map(msAgo => new Date(Date.now() - msAgo).toISOString());
 
 /** Generate a single ReputationChangeEvent with configurable agentId and timestamp */
 function eventArb(
   agentId: string,
-  timestampArb: fc.Arbitrary<string>,
+  timestampArb: fc.Arbitrary<string>
 ): fc.Arbitrary<ReputationChangeEvent> {
   return fc.record({
     id: fc.integer({ min: 1, max: 100_000 }),
     agentId: fc.constant(agentId),
-    taskId: fc.constant('task-1'),
+    taskId: fc.constant("task-1"),
     dimensionDeltas: fc.record({
       qualityDelta: fc.integer({ min: -50, max: 50 }),
       speedDelta: fc.integer({ min: -50, max: 50 }),
@@ -48,13 +51,16 @@ function eventArb(
     }),
     oldOverallScore: fc.integer({ min: 0, max: 1000 }),
     newOverallScore: fc.integer({ min: 0, max: 1000 }),
-    reason: fc.constant('task_completed'),
+    reason: fc.constant("task_completed"),
     timestamp: timestampArb,
   });
 }
 
 /** Generate a list of recent events for the target agent */
-const recentEventsArb = fc.array(eventArb(AGENT_ID, recentTimestampArb), { minLength: 0, maxLength: 20 });
+const recentEventsArb = fc.array(eventArb(AGENT_ID, recentTimestampArb), {
+  minLength: 0,
+  maxLength: 20,
+});
 
 /** Configurable anomaly threshold */
 const thresholdArb = fc.integer({ min: 10, max: 500 });
@@ -63,13 +69,13 @@ const thresholdArb = fc.integer({ min: 10, max: 500 });
 // Property Tests
 // ---------------------------------------------------------------------------
 
-describe('Property 16: 异常波动检测', () => {
+describe("Property 16: 异常波动检测", () => {
   const config = DEFAULT_REPUTATION_CONFIG;
   const detector = new AnomalyDetector(config);
 
-  it('detects anomaly when cumulative absolute delta exceeds threshold', () => {
+  it("detects anomaly when cumulative absolute delta exceeds threshold", () => {
     fc.assert(
-      fc.property(recentEventsArb, (events) => {
+      fc.property(recentEventsArb, events => {
         const result = detector.checkAnomalyThreshold(AGENT_ID, events);
 
         // Manually compute expected totalDelta
@@ -86,11 +92,11 @@ describe('Property 16: 异常波动检测', () => {
         expect(result.totalDelta).toBe(expectedTotal);
         expect(result.isAnomaly).toBe(expectedTotal > config.anomaly.threshold);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('does not flag anomaly when total delta is at or below threshold', () => {
+  it("does not flag anomaly when total delta is at or below threshold", () => {
     // Generate events whose cumulative |delta| is exactly at the threshold
     fc.assert(
       fc.property(
@@ -118,7 +124,7 @@ describe('Property 16: 异常波动检测', () => {
               },
               oldOverallScore: oldScore,
               newOverallScore: oldScore + delta,
-              reason: 'task_completed',
+              reason: "task_completed",
               timestamp: new Date(Date.now() - (i + 1) * 60_000).toISOString(),
             });
           }
@@ -127,41 +133,47 @@ describe('Property 16: 异常波动检测', () => {
           // totalTarget <= threshold, so should NOT be anomaly
           expect(result.isAnomaly).toBe(false);
           expect(result.totalDelta).toBe(totalTarget);
-        },
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('ignores events from other agents', () => {
+  it("ignores events from other agents", () => {
     fc.assert(
       fc.property(
-        fc.array(eventArb('other-agent', recentTimestampArb), { minLength: 1, maxLength: 10 }),
-        (otherEvents) => {
+        fc.array(eventArb("other-agent", recentTimestampArb), {
+          minLength: 1,
+          maxLength: 10,
+        }),
+        otherEvents => {
           const result = detector.checkAnomalyThreshold(AGENT_ID, otherEvents);
           expect(result.totalDelta).toBe(0);
           expect(result.isAnomaly).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('ignores events older than 24 hours', () => {
+  it("ignores events older than 24 hours", () => {
     fc.assert(
       fc.property(
-        fc.array(eventArb(AGENT_ID, oldTimestampArb), { minLength: 1, maxLength: 10 }),
-        (oldEvents) => {
+        fc.array(eventArb(AGENT_ID, oldTimestampArb), {
+          minLength: 1,
+          maxLength: 10,
+        }),
+        oldEvents => {
           const result = detector.checkAnomalyThreshold(AGENT_ID, oldEvents);
           expect(result.totalDelta).toBe(0);
           expect(result.isAnomaly).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('works correctly with configurable threshold values', () => {
+  it("works correctly with configurable threshold values", () => {
     fc.assert(
       fc.property(thresholdArb, recentEventsArb, (threshold, events) => {
         const customConfig: ReputationConfig = {
@@ -185,7 +197,7 @@ describe('Property 16: 异常波动检测', () => {
         expect(result.totalDelta).toBe(expectedTotal);
         expect(result.isAnomaly).toBe(expectedTotal > threshold);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 });

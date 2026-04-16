@@ -6,11 +6,11 @@
  * Requirements: 5.6
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
-import type { RAGAugmentationLog } from '../../../shared/rag/contracts.js';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
+import type { RAGAugmentationLog } from "../../../shared/rag/contracts.js";
 
 interface LogFile {
   version: 1;
@@ -19,7 +19,10 @@ interface LogFile {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DEFAULT_FILE_PATH = resolve(__dirname, '../../../data/rag_augmentation_log.json');
+const DEFAULT_FILE_PATH = resolve(
+  __dirname,
+  "../../../data/rag_augmentation_log.json"
+);
 
 export class AugmentationLogger {
   private logs: RAGAugmentationLog[] = [];
@@ -29,7 +32,9 @@ export class AugmentationLogger {
     this.load();
   }
 
-  log(entry: Omit<RAGAugmentationLog, 'logId' | 'timestamp'>): RAGAugmentationLog {
+  log(
+    entry: Omit<RAGAugmentationLog, "logId" | "timestamp">
+  ): RAGAugmentationLog {
     const record: RAGAugmentationLog = {
       ...entry,
       logId: randomUUID(),
@@ -59,10 +64,12 @@ export class AugmentationLogger {
   private load(): void {
     if (!existsSync(this.filePath)) return;
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as LogFile;
       this.logs = Array.isArray(parsed?.logs) ? parsed.logs : [];
-    } catch { /* start empty */ }
+    } catch {
+      /* start empty */
+    }
   }
 
   private scheduleSave(): void {
@@ -73,9 +80,9 @@ export class AugmentationLogger {
     const data: LogFile = { version: 1, logs: this.logs };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[AugmentationLogger] Failed to save:', err);
+      console.error("[AugmentationLogger] Failed to save:", err);
     }
   }
 }

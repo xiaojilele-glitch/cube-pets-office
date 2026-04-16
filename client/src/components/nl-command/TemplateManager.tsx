@@ -13,17 +13,28 @@ export interface TemplateManagerProps {
 }
 
 function formatDate(ts: number): string {
-  return new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" });
+  return new Date(ts).toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
 }
 
-export function TemplateManager({ templates, onSave, onLoad }: TemplateManagerProps) {
+export function TemplateManager({
+  templates,
+  onSave,
+  onLoad,
+}: TemplateManagerProps) {
   if (templates.length === 0) {
-    return <div className="py-4 text-center text-sm text-stone-400">No templates saved.</div>;
+    return (
+      <div className="py-4 text-center text-sm text-stone-400">
+        No templates saved.
+      </div>
+    );
   }
 
   return (
     <ul className="flex flex-col gap-2">
-      {templates.map((t) => (
+      {templates.map(t => (
         <li
           key={t.templateId}
           className="rounded-lg border border-stone-200 bg-white px-3 py-2"
@@ -32,7 +43,9 @@ export function TemplateManager({ templates, onSave, onLoad }: TemplateManagerPr
             <span className="text-sm font-medium text-stone-800">{t.name}</span>
             <span className="text-[10px] text-stone-400">v{t.version}</span>
           </div>
-          <div className="mt-0.5 text-xs text-stone-500 line-clamp-1">{t.description}</div>
+          <div className="mt-0.5 text-xs text-stone-500 line-clamp-1">
+            {t.description}
+          </div>
           <div className="mt-1 flex items-center justify-between text-[10px] text-stone-400">
             <span>
               by {t.createdBy} · {formatDate(t.createdAt)}
@@ -40,10 +53,7 @@ export function TemplateManager({ templates, onSave, onLoad }: TemplateManagerPr
             </span>
             <div className="flex gap-1.5">
               {onLoad && (
-                <GlowButton
-                  onClick={() => onLoad(t)}
-                  className="rounded-md"
-                >
+                <GlowButton onClick={() => onLoad(t)} className="rounded-md">
                   Load
                 </GlowButton>
               )}

@@ -9,7 +9,11 @@
 
 import { getSocketIO } from "../core/socket.js";
 import { AUDIT_SOCKET_EVENTS } from "../../shared/audit/socket.js";
-import type { AuditLogEntry, AnomalyAlert, VerificationResult } from "../../shared/audit/contracts.js";
+import type {
+  AuditLogEntry,
+  AnomalyAlert,
+  VerificationResult,
+} from "../../shared/audit/contracts.js";
 import type { AuditVerifier } from "./audit-verifier.js";
 
 // ─── 13.3 audit_verification 广播（通过 verifier 回调） ────────────────────
@@ -20,7 +24,10 @@ export function setupAuditSocketBroadcast(deps: {
   deps.verifier.setOnVerificationComplete((result: VerificationResult) => {
     const io = getSocketIO();
     if (io) {
-      io.emit(AUDIT_SOCKET_EVENTS.auditVerification, { result, issuedAt: Date.now() });
+      io.emit(AUDIT_SOCKET_EVENTS.auditVerification, {
+        result,
+        issuedAt: Date.now(),
+      });
     }
   });
 }
@@ -30,7 +37,11 @@ export function setupAuditSocketBroadcast(deps: {
 export function broadcastAuditEvent(entry: AuditLogEntry): void {
   const io = getSocketIO();
   if (io) {
-    io.emit(AUDIT_SOCKET_EVENTS.auditEvent, { entry, event: entry.event, issuedAt: Date.now() });
+    io.emit(AUDIT_SOCKET_EVENTS.auditEvent, {
+      entry,
+      event: entry.event,
+      issuedAt: Date.now(),
+    });
   }
 }
 

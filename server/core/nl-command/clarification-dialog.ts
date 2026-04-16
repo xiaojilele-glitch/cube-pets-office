@@ -11,8 +11,8 @@ import type {
   ClarificationAnswer,
   ClarificationDialog,
   ClarificationQuestion,
-} from '../../../shared/nl-command/contracts.js';
-import { AuditTrail } from './audit-trail.js';
+} from "../../../shared/nl-command/contracts.js";
+import { AuditTrail } from "./audit-trail.js";
 
 export interface ClarificationDialogManagerOptions {
   auditTrail: AuditTrail;
@@ -32,7 +32,7 @@ export class ClarificationDialogManager {
    */
   async createDialog(
     commandId: string,
-    questions: ClarificationQuestion[],
+    questions: ClarificationQuestion[]
   ): Promise<ClarificationDialog> {
     const dialogId = `dialog-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -42,20 +42,20 @@ export class ClarificationDialogManager {
       questions,
       answers: [],
       clarificationRounds: 0,
-      status: 'active',
+      status: "active",
     };
 
     this.dialogs.set(dialogId, dialog);
 
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'clarification_question',
-      operator: 'system',
+      operationType: "clarification_question",
+      operator: "system",
       content: `Created clarification dialog with ${questions.length} questions`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: commandId,
-      entityType: 'command',
+      entityType: "command",
       metadata: { dialogId, questionCount: questions.length },
     });
 
@@ -69,7 +69,7 @@ export class ClarificationDialogManager {
    */
   async addAnswer(
     dialogId: string,
-    answer: ClarificationAnswer,
+    answer: ClarificationAnswer
   ): Promise<ClarificationDialog> {
     const dialog = this.dialogs.get(dialogId);
     if (!dialog) {
@@ -81,22 +81,22 @@ export class ClarificationDialogManager {
     // Check if all questions have been answered
     if (this.isComplete(dialog)) {
       dialog.clarificationRounds += 1;
-      dialog.status = 'completed';
+      dialog.status = "completed";
     }
 
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'clarification_answer',
-      operator: 'user',
-      content: `Answered question ${answer.questionId}${answer.selectedOptions?.length ? ' (selection)' : ' (free-text)'}`,
+      operationType: "clarification_answer",
+      operator: "user",
+      content: `Answered question ${answer.questionId}${answer.selectedOptions?.length ? " (selection)" : " (free-text)"}`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: dialog.commandId,
-      entityType: 'command',
+      entityType: "command",
       metadata: {
         dialogId,
         questionId: answer.questionId,
-        answerType: answer.selectedOptions?.length ? 'selection' : 'free_text',
+        answerType: answer.selectedOptions?.length ? "selection" : "free_text",
       },
     });
 
@@ -107,8 +107,8 @@ export class ClarificationDialogManager {
    * 检查对话是否已完成（所有问题都已回答）。
    */
   isComplete(dialog: ClarificationDialog): boolean {
-    const answeredIds = new Set(dialog.answers.map((a) => a.questionId));
-    return dialog.questions.every((q) => answeredIds.has(q.questionId));
+    const answeredIds = new Set(dialog.answers.map(a => a.questionId));
+    return dialog.questions.every(q => answeredIds.has(q.questionId));
   }
 
   /**

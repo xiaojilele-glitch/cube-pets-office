@@ -396,7 +396,10 @@ export function OperatorActionBar({
           <span className="font-semibold text-stone-700">
             {copy.tasks.operatorBar.latestAction}:{" "}
           </span>
-          {missionOperatorActionLabel(latestAction.action as ActionKind, locale)}
+          {missionOperatorActionLabel(
+            latestAction.action as ActionKind,
+            locale
+          )}
           {latestAction.reason || latestAction.detail
             ? ` / ${compactText(
                 latestAction.reason ||

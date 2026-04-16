@@ -40,7 +40,7 @@ export class CredentialScrubber {
 
   constructor(secrets: string[]) {
     // Only keep non-empty secrets for matching
-    this.secrets = secrets.filter((s) => s.length > 0);
+    this.secrets = secrets.filter(s => s.length > 0);
   }
 
   /** Scrub a single line of text, replacing credential matches with [REDACTED]. */
@@ -71,7 +71,7 @@ export class CredentialScrubber {
     const lines = content.split("\n");
     let replacements = 0;
 
-    const scrubbed = lines.map((line) => {
+    const scrubbed = lines.map(line => {
       const cleaned = this.scrubLine(line);
       if (cleaned !== line) {
         // Count each changed line as one replacement (conservative count)

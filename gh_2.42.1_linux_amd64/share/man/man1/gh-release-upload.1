@@ -1,0 +1,37 @@
+.nh
+.TH "GH-RELEASE-UPLOAD" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-release-upload - Upload assets to a release
+
+
+.SH SYNOPSIS
+.PP
+\fBgh release upload <tag> <files>... [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Upload asset files to a GitHub Release.
+
+.PP
+To define a display label for an asset, append text starting with %#% after the
+file name.
+
+
+.SH OPTIONS
+.TP
+\fB--clobber\fR
+Overwrite existing assets of the same name
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH SEE ALSO
+.PP
+\fBgh-release(1)\fR

@@ -7,16 +7,16 @@
  * @see Requirements 12.1, 12.2, 12.3, 12.4, 12.5
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 import type {
   AuditEntry,
   Comment,
   CommentVersion,
-} from '../../../shared/nl-command/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
-import type { PermissionGuard } from './permission-guard.js';
-import type { UserRole } from '../../../shared/nl-command/contracts.js';
+} from "../../../shared/nl-command/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
+import type { PermissionGuard } from "./permission-guard.js";
+import type { UserRole } from "../../../shared/nl-command/contracts.js";
 
 export interface CommentManagerOptions {
   auditTrail: AuditTrail;
@@ -41,21 +41,23 @@ export class CommentManager {
    */
   async addComment(
     entityId: string,
-    entityType: Comment['entityType'],
+    entityType: Comment["entityType"],
     authorId: string,
     content: string,
-    authorRole: UserRole = 'operator',
+    authorRole: UserRole = "operator"
   ): Promise<Comment> {
     // Permission check: need 'create' permission
     const allowed = this.permissionGuard.checkPermission(
       authorId,
       authorRole,
-      'create',
+      "create",
       entityType,
-      entityId,
+      entityId
     );
     if (!allowed) {
-      throw new Error(`User ${authorId} does not have permission to create comments on ${entityType}:${entityId}`);
+      throw new Error(
+        `User ${authorId} does not have permission to create comments on ${entityType}:${entityId}`
+      );
     }
 
     const now = Date.now();
@@ -78,13 +80,13 @@ export class CommentManager {
     // Audit
     await this.auditTrail.record({
       entryId: randomUUID(),
-      operationType: 'comment_created',
+      operationType: "comment_created",
       operator: authorId,
       content: `Comment added on ${entityType}:${entityId}`,
       timestamp: now,
-      result: 'success',
+      result: "success",
       entityId: comment.commentId,
-      entityType: 'comment',
+      entityType: "comment",
     } satisfies AuditEntry);
 
     return comment;
@@ -100,7 +102,7 @@ export class CommentManager {
     commentId: string,
     editorId: string,
     newContent: string,
-    editorRole: UserRole = 'operator',
+    editorRole: UserRole = "operator"
   ): Promise<Comment> {
     const comment = this.comments.get(commentId);
     if (!comment) {
@@ -111,12 +113,14 @@ export class CommentManager {
     const allowed = this.permissionGuard.checkPermission(
       editorId,
       editorRole,
-      'edit',
+      "edit",
       comment.entityType,
-      comment.entityId,
+      comment.entityId
     );
     if (!allowed) {
-      throw new Error(`User ${editorId} does not have permission to edit comments on ${comment.entityType}:${comment.entityId}`);
+      throw new Error(
+        `User ${editorId} does not have permission to edit comments on ${comment.entityType}:${comment.entityId}`
+      );
     }
 
     const now = Date.now();
@@ -137,13 +141,13 @@ export class CommentManager {
     // Audit
     await this.auditTrail.record({
       entryId: randomUUID(),
-      operationType: 'comment_edited',
+      operationType: "comment_edited",
       operator: editorId,
       content: `Comment ${commentId} edited`,
       timestamp: now,
-      result: 'success',
+      result: "success",
       entityId: commentId,
-      entityType: 'comment',
+      entityType: "comment",
     } satisfies AuditEntry);
 
     return comment;
@@ -155,7 +159,7 @@ export class CommentManager {
    *
    * @see Requirement 12.1, 12.4
    */
-  getComments(entityId: string, entityType?: Comment['entityType']): Comment[] {
+  getComments(entityId: string, entityType?: Comment["entityType"]): Comment[] {
     const results: Comment[] = [];
     for (const comment of this.comments.values()) {
       if (comment.entityId !== entityId) continue;

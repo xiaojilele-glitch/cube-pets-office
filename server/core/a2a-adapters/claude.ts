@@ -20,7 +20,7 @@ export class ClaudeAdapter implements FrameworkAdapter {
         model: "claude-sonnet-4-20250514",
         system: params.context || "You are a helpful assistant.",
         messages: [{ role: "user", content: params.task }],
-        tools: params.capabilities.map((c) => ({
+        tools: params.capabilities.map(c => ({
           name: c,
           description: c,
           input_schema: { type: "object", properties: {} },
@@ -41,7 +41,7 @@ export class ClaudeAdapter implements FrameworkAdapter {
           (block: unknown) =>
             block &&
             typeof block === "object" &&
-            (block as Record<string, unknown>).type === "text",
+            (block as Record<string, unknown>).type === "text"
         );
         if (
           textBlock &&

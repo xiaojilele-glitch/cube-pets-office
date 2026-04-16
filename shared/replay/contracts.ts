@@ -8,59 +8,59 @@
 /* ─── Event Type Enums ─── */
 
 export const REPLAY_EVENT_TYPES = [
-  'AGENT_STARTED',
-  'AGENT_STOPPED',
-  'MESSAGE_SENT',
-  'MESSAGE_RECEIVED',
-  'DECISION_MADE',
-  'CODE_EXECUTED',
-  'RESOURCE_ACCESSED',
-  'ERROR_OCCURRED',
-  'MILESTONE_REACHED',
+  "AGENT_STARTED",
+  "AGENT_STOPPED",
+  "MESSAGE_SENT",
+  "MESSAGE_RECEIVED",
+  "DECISION_MADE",
+  "CODE_EXECUTED",
+  "RESOURCE_ACCESSED",
+  "ERROR_OCCURRED",
+  "MILESTONE_REACHED",
 ] as const;
 export type ReplayEventType = (typeof REPLAY_EVENT_TYPES)[number];
 
 export const MESSAGE_TYPES = [
-  'INSTRUCTION',
-  'RESPONSE',
-  'QUERY',
-  'RESULT',
-  'ERROR',
-  'FEEDBACK',
+  "INSTRUCTION",
+  "RESPONSE",
+  "QUERY",
+  "RESULT",
+  "ERROR",
+  "FEEDBACK",
 ] as const;
 export type MessageType = (typeof MESSAGE_TYPES)[number];
 
 export const MESSAGE_STATUSES = [
-  'SENT',
-  'RECEIVED',
-  'PROCESSED',
-  'FAILED',
+  "SENT",
+  "RECEIVED",
+  "PROCESSED",
+  "FAILED",
 ] as const;
 export type MessageStatus = (typeof MESSAGE_STATUSES)[number];
 
 export const EXECUTION_STATUSES = [
-  'SUCCESS',
-  'FAILURE',
-  'TIMEOUT',
-  'EXCEPTION',
+  "SUCCESS",
+  "FAILURE",
+  "TIMEOUT",
+  "EXCEPTION",
 ] as const;
 export type ExecutionStatus = (typeof EXECUTION_STATUSES)[number];
 
 export const RESOURCE_TYPES = [
-  'FILE',
-  'DATABASE',
-  'API',
-  'NETWORK',
-  'MCP_TOOL',
+  "FILE",
+  "DATABASE",
+  "API",
+  "NETWORK",
+  "MCP_TOOL",
 ] as const;
 export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
 export const ACCESS_TYPES = [
-  'READ',
-  'WRITE',
-  'DELETE',
-  'EXECUTE',
-  'QUERY',
+  "READ",
+  "WRITE",
+  "DELETE",
+  "EXECUTE",
+  "QUERY",
 ] as const;
 export type AccessType = (typeof ACCESS_TYPES)[number];
 
@@ -176,7 +176,7 @@ export interface EventQuery {
 export const PLAYBACK_SPEEDS = [0.5, 1, 2, 4, 8] as const;
 export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
 
-export type ReplayState = 'idle' | 'playing' | 'paused' | 'stopped';
+export type ReplayState = "idle" | "playing" | "paused" | "stopped";
 
 export interface ReplayFilters {
   eventTypes?: ReplayEventType[];
@@ -216,7 +216,7 @@ export interface LineageNode {
 export interface LineageEdge {
   from: string;
   to: string;
-  transformType: 'pass-through' | 'transform' | 'aggregate' | 'split';
+  transformType: "pass-through" | "transform" | "aggregate" | "split";
 }
 
 export interface LineageGraph {
@@ -270,7 +270,7 @@ export interface AuditEntry {
   id: string;
   userId: string;
   missionId: string;
-  action: 'play' | 'pause' | 'seek' | 'export' | 'snapshot' | 'view';
+  action: "play" | "pause" | "seek" | "export" | "snapshot" | "view";
   timestamp: number;
   details?: Record<string, unknown>;
 }

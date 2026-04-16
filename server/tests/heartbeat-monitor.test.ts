@@ -43,7 +43,7 @@ describe("HeartbeatMonitor", () => {
     expect(runtime.failMission).toHaveBeenCalledWith(
       "m-1",
       "Executor heartbeat timeout",
-      "brain",
+      "brain"
     );
   });
 

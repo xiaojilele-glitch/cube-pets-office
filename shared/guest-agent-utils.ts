@@ -20,7 +20,7 @@ export function isGuestId(id: string): boolean {
  * Return a sanitized copy of GuestAgentConfig with apiKey replaced by "***".
  */
 export function sanitizeGuestConfig(
-  config: GuestAgentConfig,
+  config: GuestAgentConfig
 ): GuestAgentConfig {
   return {
     ...config,

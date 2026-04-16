@@ -5,31 +5,32 @@
  * Feature: collaboration-replay
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
 
 import type {
   ExecutionEvent,
   ExecutionTimeline,
   ReplayEventType,
   ResourceAccessEventData,
-} from '../../../../../shared/replay/contracts';
-import { REPLAY_EVENT_TYPES } from '../../../../../shared/replay/contracts';
-import { CostTracker } from '../cost-tracker';
-import { PerformanceAnalyzer } from '../performance-analyzer';
-import { DataLineageTracker } from '../data-lineage';
-import { PermissionAuditor } from '../permission-auditor';
-import { findRelatedEvents } from '../related-events';
+} from "../../../../../shared/replay/contracts";
+import { REPLAY_EVENT_TYPES } from "../../../../../shared/replay/contracts";
+import { CostTracker } from "../cost-tracker";
+import { PerformanceAnalyzer } from "../performance-analyzer";
+import { DataLineageTracker } from "../data-lineage";
+import { PermissionAuditor } from "../permission-auditor";
+import { findRelatedEvents } from "../related-events";
 
 /* ─── Helpers ─── */
 
 function makeEvent(overrides: Partial<ExecutionEvent> = {}): ExecutionEvent {
   return {
-    eventId: overrides.eventId ?? `evt-${Math.random().toString(36).slice(2, 10)}`,
-    missionId: overrides.missionId ?? 'test-mission',
+    eventId:
+      overrides.eventId ?? `evt-${Math.random().toString(36).slice(2, 10)}`,
+    missionId: overrides.missionId ?? "test-mission",
     timestamp: overrides.timestamp ?? Date.now(),
-    eventType: overrides.eventType ?? 'AGENT_STARTED',
-    sourceAgent: overrides.sourceAgent ?? 'agent-1',
+    eventType: overrides.eventType ?? "AGENT_STARTED",
+    sourceAgent: overrides.sourceAgent ?? "agent-1",
     eventData: overrides.eventData ?? {},
     ...(overrides.targetAgent ? { targetAgent: overrides.targetAgent } : {}),
     ...(overrides.metadata ? { metadata: overrides.metadata } : {}),
@@ -39,28 +40,38 @@ function makeEvent(overrides: Partial<ExecutionEvent> = {}): ExecutionEvent {
 function makeTimeline(events: ExecutionEvent[]): ExecutionTimeline {
   const sorted = [...events].sort((a, b) => a.timestamp - b.timestamp);
   return {
-    missionId: 'test-mission',
+    missionId: "test-mission",
     events: sorted,
     startTime: sorted[0]?.timestamp ?? 0,
     endTime: sorted[sorted.length - 1]?.timestamp ?? 0,
-    totalDuration: sorted.length > 0 ? sorted[sorted.length - 1].timestamp - sorted[0].timestamp : 0,
+    totalDuration:
+      sorted.length > 0
+        ? sorted[sorted.length - 1].timestamp - sorted[0].timestamp
+        : 0,
     eventCount: sorted.length,
-    indices: { byTime: new Map(), byAgent: new Map(), byType: new Map(), byResource: new Map() },
+    indices: {
+      byTime: new Map(),
+      byAgent: new Map(),
+      byType: new Map(),
+      byResource: new Map(),
+    },
     version: 1,
-    checksum: '',
+    checksum: "",
   };
 }
 
 /* ─── Arbitraries ─── */
 
-const agentIdArb = fc.constantFrom('agent-a', 'agent-b', 'agent-c');
-const stageKeyArb = fc.constantFrom('plan', 'execute', 'review', 'finalize');
+const agentIdArb = fc.constantFrom("agent-a", "agent-b", "agent-c");
+const stageKeyArb = fc.constantFrom("plan", "execute", "review", "finalize");
 
 const costEventArb: fc.Arbitrary<ExecutionEvent> = fc.record({
   eventId: fc.uuid(),
-  missionId: fc.constant('test-mission'),
+  missionId: fc.constant("test-mission"),
   timestamp: fc.integer({ min: 1000, max: 100000 }),
-  eventType: fc.constantFrom(...REPLAY_EVENT_TYPES) as fc.Arbitrary<ReplayEventType>,
+  eventType: fc.constantFrom(
+    ...REPLAY_EVENT_TYPES
+  ) as fc.Arbitrary<ReplayEventType>,
   sourceAgent: agentIdArb,
   eventData: fc.constant({} as Record<string, unknown>),
   metadata: fc.record({
@@ -69,17 +80,16 @@ const costEventArb: fc.Arbitrary<ExecutionEvent> = fc.record({
   }),
 });
 
-
 /* ═══════════════════════════════════════════════════════════════════════════
  * Task 8.2 — Property 21: Cost calculation invariant
  * Feature: collaboration-replay, Property 21: 成本计算不变量
  * Validates: Requirements 12.1, 12.2
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 21: Cost calculation invariant', () => {
+describe("Property 21: Cost calculation invariant", () => {
   const tracker = new CostTracker();
 
-  it('cumulative cost up to T equals sum of metadata.cost for events with timestamp <= T', () => {
+  it("cumulative cost up to T equals sum of metadata.cost for events with timestamp <= T", () => {
     // **Validates: Requirements 12.1**
     fc.assert(
       fc.property(
@@ -94,32 +104,40 @@ describe('Property 21: Cost calculation invariant', () => {
           const summary = tracker.calculateCumulativeCost(sorted, T);
 
           const expectedTotal = sorted
-            .filter((e) => e.timestamp <= T && e.metadata?.cost != null)
+            .filter(e => e.timestamp <= T && e.metadata?.cost != null)
             .reduce((sum, e) => sum + e.metadata!.cost!, 0);
 
-          expect(Math.abs(summary.totalCost - expectedTotal)).toBeLessThan(0.0001);
-        },
+          expect(Math.abs(summary.totalCost - expectedTotal)).toBeLessThan(
+            0.0001
+          );
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('cost distribution by agent/model/opType sums to total cost', () => {
+  it("cost distribution by agent/model/opType sums to total cost", () => {
     // **Validates: Requirements 12.2**
     fc.assert(
       fc.property(
         fc.array(costEventArb, { minLength: 1, maxLength: 30 }),
-        (events) => {
+        events => {
           const summary = tracker.calculateCumulativeCost(events, Infinity);
 
-          const agentSum = Object.values(summary.byAgent).reduce((s, v) => s + v, 0);
-          const opSum = Object.values(summary.byOperationType).reduce((s, v) => s + v, 0);
+          const agentSum = Object.values(summary.byAgent).reduce(
+            (s, v) => s + v,
+            0
+          );
+          const opSum = Object.values(summary.byOperationType).reduce(
+            (s, v) => s + v,
+            0
+          );
 
           expect(Math.abs(agentSum - summary.totalCost)).toBeLessThan(0.0001);
           expect(Math.abs(opSum - summary.totalCost)).toBeLessThan(0.0001);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -130,10 +148,10 @@ describe('Property 21: Cost calculation invariant', () => {
  * Validates: Requirements 12.3
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 22: Cost anomaly detection', () => {
+describe("Property 22: Cost anomaly detection", () => {
   const tracker = new CostTracker();
 
-  it('anomalies contain exactly events with cost > threshold', () => {
+  it("anomalies contain exactly events with cost > threshold", () => {
     // **Validates: Requirements 12.3**
     fc.assert(
       fc.property(
@@ -143,10 +161,12 @@ describe('Property 22: Cost anomaly detection', () => {
           const anomalies = tracker.detectCostAnomalies(events, threshold);
 
           const expectedIds = events
-            .filter((e) => e.metadata?.cost != null && e.metadata.cost > threshold)
-            .map((e) => e.eventId);
+            .filter(
+              e => e.metadata?.cost != null && e.metadata.cost > threshold
+            )
+            .map(e => e.eventId);
 
-          const anomalyIds = anomalies.map((a) => a.eventId);
+          const anomalyIds = anomalies.map(a => a.eventId);
 
           expect(anomalyIds.sort()).toEqual(expectedIds.sort());
 
@@ -154,9 +174,9 @@ describe('Property 22: Cost anomaly detection', () => {
             expect(a.cost).toBeGreaterThan(threshold);
             expect(a.threshold).toBe(threshold);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -167,25 +187,27 @@ describe('Property 22: Cost anomaly detection', () => {
  * Validates: Requirements 13.1
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 23: Performance metrics consistency', () => {
+describe("Property 23: Performance metrics consistency", () => {
   const analyzer = new PerformanceAnalyzer();
 
-  it('totalDuration equals timeline.totalDuration and LLM callCount equals DECISION_MADE count', () => {
+  it("totalDuration equals timeline.totalDuration and LLM callCount equals DECISION_MADE count", () => {
     // **Validates: Requirements 13.1**
     fc.assert(
       fc.property(
         fc.array(costEventArb, { minLength: 2, maxLength: 30 }),
-        (events) => {
+        events => {
           const tl = makeTimeline(events);
           const metrics = analyzer.calculateMetrics(tl);
 
           expect(metrics.totalDuration).toBe(tl.totalDuration);
 
-          const decisionCount = tl.events.filter((e) => e.eventType === 'DECISION_MADE').length;
+          const decisionCount = tl.events.filter(
+            e => e.eventType === "DECISION_MADE"
+          ).length;
           expect(metrics.llmMetrics.callCount).toBe(decisionCount);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -196,15 +218,15 @@ describe('Property 23: Performance metrics consistency', () => {
  * Validates: Requirements 13.2
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 24: Bottleneck detection correctness', () => {
+describe("Property 24: Bottleneck detection correctness", () => {
   const analyzer = new PerformanceAnalyzer();
 
-  it('bottleneck stages have duration > 2x average, non-bottlenecks do not', () => {
+  it("bottleneck stages have duration > 2x average, non-bottlenecks do not", () => {
     // **Validates: Requirements 13.2**
     fc.assert(
       fc.property(
         fc.array(costEventArb, { minLength: 3, maxLength: 40 }),
-        (events) => {
+        events => {
           const tl = makeTimeline(events);
           const metrics = analyzer.calculateMetrics(tl);
           const bottlenecks = analyzer.detectBottlenecks(tl);
@@ -212,11 +234,12 @@ describe('Property 24: Bottleneck detection correctness', () => {
           if (metrics.stageMetrics.length === 0) return;
 
           const avgDuration =
-            metrics.stageMetrics.reduce((s, m) => s + m.duration, 0) / metrics.stageMetrics.length;
+            metrics.stageMetrics.reduce((s, m) => s + m.duration, 0) /
+            metrics.stageMetrics.length;
 
           if (avgDuration === 0) return;
 
-          const bottleneckKeys = new Set(bottlenecks.map((b) => b.stageKey));
+          const bottleneckKeys = new Set(bottlenecks.map(b => b.stageKey));
 
           for (const stage of metrics.stageMetrics) {
             if (bottleneckKeys.has(stage.stageKey)) {
@@ -227,9 +250,9 @@ describe('Property 24: Bottleneck detection correctness', () => {
           for (const b of bottlenecks) {
             expect(b.duration).toBeGreaterThan(2 * avgDuration);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -240,15 +263,15 @@ describe('Property 24: Bottleneck detection correctness', () => {
  * Validates: Requirements 13.4
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 25: Concurrency analysis bounds', () => {
+describe("Property 25: Concurrency analysis bounds", () => {
   const analyzer = new PerformanceAnalyzer();
 
-  it('maxConcurrentAgents >= 1 when events exist, and timeline activeAgents >= 0', () => {
+  it("maxConcurrentAgents >= 1 when events exist, and timeline activeAgents >= 0", () => {
     // **Validates: Requirements 13.4**
     fc.assert(
       fc.property(
         fc.array(costEventArb, { minLength: 2, maxLength: 30 }),
-        (events) => {
+        events => {
           const tl = makeTimeline(events);
           const concurrency = analyzer.analyzeConcurrency(tl);
 
@@ -260,9 +283,9 @@ describe('Property 25: Concurrency analysis bounds', () => {
           for (const point of concurrency.timeline) {
             expect(point.activeAgents).toBeGreaterThanOrEqual(0);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -273,22 +296,52 @@ describe('Property 25: Concurrency analysis bounds', () => {
  * Validates: Requirements 10.2, 10.3
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 18: Lineage tracing connectivity', () => {
-  it('traceDataPoint returns a connected path from source to target', () => {
+describe("Property 18: Lineage tracing connectivity", () => {
+  it("traceDataPoint returns a connected path from source to target", () => {
     // **Validates: Requirements 10.2, 10.3**
     // Create a deterministic chain: resource → decision → code output
     const events: ExecutionEvent[] = [
       makeEvent({
-        eventId: 'e1', timestamp: 1000, eventType: 'RESOURCE_ACCESSED', sourceAgent: 'agent-a',
-        eventData: { agentId: 'agent-a', resourceType: 'FILE', resourceId: 'file-1', accessType: 'READ', accessResult: { success: true, duration: 10 } },
+        eventId: "e1",
+        timestamp: 1000,
+        eventType: "RESOURCE_ACCESSED",
+        sourceAgent: "agent-a",
+        eventData: {
+          agentId: "agent-a",
+          resourceType: "FILE",
+          resourceId: "file-1",
+          accessType: "READ",
+          accessResult: { success: true, duration: 10 },
+        },
       }),
       makeEvent({
-        eventId: 'e2', timestamp: 2000, eventType: 'DECISION_MADE', sourceAgent: 'agent-b',
-        eventData: { decisionId: 'd1', agentId: 'agent-b', decisionInput: { 'resource:file-1': 'data' }, decisionLogic: 'logic', decisionResult: 'ok', confidence: 0.9 },
+        eventId: "e2",
+        timestamp: 2000,
+        eventType: "DECISION_MADE",
+        sourceAgent: "agent-b",
+        eventData: {
+          decisionId: "d1",
+          agentId: "agent-b",
+          decisionInput: { "resource:file-1": "data" },
+          decisionLogic: "logic",
+          decisionResult: "ok",
+          confidence: 0.9,
+        },
       }),
       makeEvent({
-        eventId: 'e3', timestamp: 3000, eventType: 'CODE_EXECUTED', sourceAgent: 'agent-c',
-        eventData: { agentId: 'agent-c', codeSnippet: 'x', codeLanguage: 'js', executionInput: { 'decision:d1': 'ok' }, executionOutput: { stdout: '', stderr: '' }, executionStatus: 'SUCCESS', executionTime: 100 },
+        eventId: "e3",
+        timestamp: 3000,
+        eventType: "CODE_EXECUTED",
+        sourceAgent: "agent-c",
+        eventData: {
+          agentId: "agent-c",
+          codeSnippet: "x",
+          codeLanguage: "js",
+          executionInput: { "decision:d1": "ok" },
+          executionOutput: { stdout: "", stderr: "" },
+          executionStatus: "SUCCESS",
+          executionTime: 100,
+        },
       }),
     ];
 
@@ -304,7 +357,7 @@ describe('Property 18: Lineage tracing connectivity', () => {
       expect(chain.nodes.length).toBeGreaterThanOrEqual(1);
 
       // Verify path connectivity: each edge's from equals a node in the chain
-      const nodeIds = new Set(chain.nodes.map((n) => n.id));
+      const nodeIds = new Set(chain.nodes.map(n => n.id));
       for (const edge of chain.edges) {
         expect(nodeIds.has(edge.from)).toBe(true);
         expect(nodeIds.has(edge.to)).toBe(true);
@@ -312,25 +365,44 @@ describe('Property 18: Lineage tracing connectivity', () => {
     }
   });
 
-  it('traceDecisionInputs returns direct input data sources', () => {
+  it("traceDecisionInputs returns direct input data sources", () => {
     // **Validates: Requirements 10.3**
     const events: ExecutionEvent[] = [
       makeEvent({
-        eventId: 'src1', timestamp: 1000, eventType: 'RESOURCE_ACCESSED', sourceAgent: 'agent-a',
-        eventData: { agentId: 'agent-a', resourceType: 'API', resourceId: 'api-1', accessType: 'READ', accessResult: { success: true, duration: 5 } },
+        eventId: "src1",
+        timestamp: 1000,
+        eventType: "RESOURCE_ACCESSED",
+        sourceAgent: "agent-a",
+        eventData: {
+          agentId: "agent-a",
+          resourceType: "API",
+          resourceId: "api-1",
+          accessType: "READ",
+          accessResult: { success: true, duration: 5 },
+        },
       }),
       makeEvent({
-        eventId: 'dec1', timestamp: 2000, eventType: 'DECISION_MADE', sourceAgent: 'agent-b',
-        eventData: { decisionId: 'decision-1', agentId: 'agent-b', decisionInput: { 'resource:api-1': 'response' }, decisionLogic: 'analyze', decisionResult: 'proceed', confidence: 0.8 },
+        eventId: "dec1",
+        timestamp: 2000,
+        eventType: "DECISION_MADE",
+        sourceAgent: "agent-b",
+        eventData: {
+          decisionId: "decision-1",
+          agentId: "agent-b",
+          decisionInput: { "resource:api-1": "response" },
+          decisionLogic: "analyze",
+          decisionResult: "proceed",
+          confidence: 0.8,
+        },
       }),
     ];
 
     const tracker = new DataLineageTracker();
     tracker.buildLineageGraph(events);
-    const sources = tracker.traceDecisionInputs('dec1');
+    const sources = tracker.traceDecisionInputs("dec1");
 
     expect(sources.length).toBeGreaterThanOrEqual(1);
-    expect(sources.some((s) => s.inputKey.includes('api-1'))).toBe(true);
+    expect(sources.some(s => s.inputKey.includes("api-1"))).toBe(true);
   });
 });
 
@@ -340,35 +412,48 @@ describe('Property 18: Lineage tracing connectivity', () => {
  * Validates: Requirements 10.4
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 19: Lineage-timeline integration', () => {
-  it('every lineage node eventId corresponds to a valid event in the timeline', () => {
+describe("Property 19: Lineage-timeline integration", () => {
+  it("every lineage node eventId corresponds to a valid event in the timeline", () => {
     // **Validates: Requirements 10.4**
     fc.assert(
-      fc.property(
-        fc.integer({ min: 2, max: 10 }),
-        (numEvents) => {
-          const events: ExecutionEvent[] = Array.from({ length: numEvents }, (_, i) =>
+      fc.property(fc.integer({ min: 2, max: 10 }), numEvents => {
+        const events: ExecutionEvent[] = Array.from(
+          { length: numEvents },
+          (_, i) =>
             makeEvent({
               eventId: `evt-${i}`,
               timestamp: 1000 + i * 1000,
-              eventType: i % 2 === 0 ? 'RESOURCE_ACCESSED' : 'MESSAGE_SENT',
+              eventType: i % 2 === 0 ? "RESOURCE_ACCESSED" : "MESSAGE_SENT",
               sourceAgent: `agent-${i % 3}`,
-              eventData: i % 2 === 0
-                ? { agentId: `agent-${i % 3}`, resourceType: 'FILE', resourceId: `res-${i}`, accessType: 'READ', accessResult: { success: true, duration: 10 } }
-                : { senderId: `agent-${i % 3}`, receiverId: `agent-${(i + 1) % 3}`, messageId: `msg-${i}`, messageContent: 'hi', messageType: 'QUERY', status: 'SENT' },
-            }),
-          );
+              eventData:
+                i % 2 === 0
+                  ? {
+                      agentId: `agent-${i % 3}`,
+                      resourceType: "FILE",
+                      resourceId: `res-${i}`,
+                      accessType: "READ",
+                      accessResult: { success: true, duration: 10 },
+                    }
+                  : {
+                      senderId: `agent-${i % 3}`,
+                      receiverId: `agent-${(i + 1) % 3}`,
+                      messageId: `msg-${i}`,
+                      messageContent: "hi",
+                      messageType: "QUERY",
+                      status: "SENT",
+                    },
+            })
+        );
 
-          const eventIds = new Set(events.map((e) => e.eventId));
-          const tracker = new DataLineageTracker();
-          const graph = tracker.buildLineageGraph(events);
+        const eventIds = new Set(events.map(e => e.eventId));
+        const tracker = new DataLineageTracker();
+        const graph = tracker.buildLineageGraph(events);
 
-          for (const node of graph.nodes) {
-            expect(eventIds.has(node.eventId)).toBe(true);
-          }
-        },
-      ),
-      { numRuns: 100 },
+        for (const node of graph.nodes) {
+          expect(eventIds.has(node.eventId)).toBe(true);
+        }
+      }),
+      { numRuns: 100 }
     );
   });
 });
@@ -379,39 +464,39 @@ describe('Property 19: Lineage-timeline integration', () => {
  * Validates: Requirements 11.5
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 20: Permission violation stats correctness', () => {
+describe("Property 20: Permission violation stats correctness", () => {
   const auditor = new PermissionAuditor();
 
   const permEventArb: fc.Arbitrary<ExecutionEvent> = fc.record({
     eventId: fc.uuid(),
-    missionId: fc.constant('test-mission'),
+    missionId: fc.constant("test-mission"),
     timestamp: fc.integer({ min: 1000, max: 100000 }),
-    eventType: fc.constant('RESOURCE_ACCESSED' as ReplayEventType),
+    eventType: fc.constant("RESOURCE_ACCESSED" as ReplayEventType),
     sourceAgent: agentIdArb,
     eventData: fc.record({
       agentId: agentIdArb,
-      resourceType: fc.constantFrom('FILE', 'API', 'DATABASE'),
+      resourceType: fc.constantFrom("FILE", "API", "DATABASE"),
       resourceId: fc.string({ minLength: 1, maxLength: 10 }),
-      accessType: fc.constantFrom('READ', 'WRITE', 'DELETE'),
+      accessType: fc.constantFrom("READ", "WRITE", "DELETE"),
       accessResult: fc.record({ success: fc.boolean(), duration: fc.nat() }),
       permissionCheck: fc.record({
-        requested: fc.constantFrom('read', 'write', 'admin'),
-        actual: fc.constantFrom('read', 'write', 'none'),
-        rule: fc.constant('default-rule'),
+        requested: fc.constantFrom("read", "write", "admin"),
+        actual: fc.constantFrom("read", "write", "none"),
+        rule: fc.constant("default-rule"),
         passed: fc.boolean(),
       }),
     }) as fc.Arbitrary<Record<string, unknown>>,
   });
 
-  it('totalViolations equals count of events with permissionCheck.passed === false', () => {
+  it("totalViolations equals count of events with permissionCheck.passed === false", () => {
     // **Validates: Requirements 11.5**
     fc.assert(
       fc.property(
         fc.array(permEventArb, { minLength: 1, maxLength: 30 }),
-        (events) => {
+        events => {
           const stats = auditor.getViolationStats(events);
 
-          const expectedViolations = events.filter((e) => {
+          const expectedViolations = events.filter(e => {
             const data = e.eventData as Partial<ResourceAccessEventData>;
             return data.permissionCheck?.passed === false;
           }).length;
@@ -419,13 +504,19 @@ describe('Property 20: Permission violation stats correctness', () => {
           expect(stats.totalViolations).toBe(expectedViolations);
 
           // byType and byAgent sums equal totalViolations
-          const typeSum = Object.values(stats.byType).reduce((s, v) => s + v, 0);
-          const agentSum = Object.values(stats.byAgent).reduce((s, v) => s + v, 0);
+          const typeSum = Object.values(stats.byType).reduce(
+            (s, v) => s + v,
+            0
+          );
+          const agentSum = Object.values(stats.byAgent).reduce(
+            (s, v) => s + v,
+            0
+          );
           expect(typeSum).toBe(stats.totalViolations);
           expect(agentSum).toBe(stats.totalViolations);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -436,8 +527,8 @@ describe('Property 20: Permission violation stats correctness', () => {
  * Validates: Requirements 9.6
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe('Property 17: Related event query', () => {
-  it('returns events sharing messageId/decisionId/resourceId, excludes unrelated', () => {
+describe("Property 17: Related event query", () => {
+  it("returns events sharing messageId/decisionId/resourceId, excludes unrelated", () => {
     // **Validates: Requirements 9.6**
     fc.assert(
       fc.property(
@@ -446,7 +537,7 @@ describe('Property 17: Related event query', () => {
         fc.integer({ min: 1, max: 5 }),
         (sharedId, relatedCount, unrelatedCount) => {
           const target = makeEvent({
-            eventId: 'target',
+            eventId: "target",
             timestamp: 1000,
             eventData: { messageId: sharedId },
           });
@@ -456,15 +547,17 @@ describe('Property 17: Related event query', () => {
               eventId: `related-${i}`,
               timestamp: 2000 + i * 100,
               eventData: { messageId: sharedId },
-            }),
+            })
           );
 
-          const unrelatedEvents = Array.from({ length: unrelatedCount }, (_, i) =>
-            makeEvent({
-              eventId: `unrelated-${i}`,
-              timestamp: 3000 + i * 100,
-              eventData: { messageId: `other-${i}` },
-            }),
+          const unrelatedEvents = Array.from(
+            { length: unrelatedCount },
+            (_, i) =>
+              makeEvent({
+                eventId: `unrelated-${i}`,
+                timestamp: 3000 + i * 100,
+                eventData: { messageId: `other-${i}` },
+              })
           );
 
           const allEvents = [target, ...relatedEvents, ...unrelatedEvents];
@@ -474,22 +567,24 @@ describe('Property 17: Related event query', () => {
           expect(result.length).toBe(relatedCount);
 
           // Should not include the target itself
-          expect(result.find((e) => e.eventId === 'target')).toBeUndefined();
+          expect(result.find(e => e.eventId === "target")).toBeUndefined();
 
           // Should not include unrelated events
           for (const e of result) {
-            expect((e.eventData as Record<string, unknown>).messageId).toBe(sharedId);
+            expect((e.eventData as Record<string, unknown>).messageId).toBe(
+              sharedId
+            );
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('returns empty array when target has no relation IDs', () => {
-    const target = makeEvent({ eventId: 'no-ids', eventData: {} });
+  it("returns empty array when target has no relation IDs", () => {
+    const target = makeEvent({ eventId: "no-ids", eventData: {} });
     const others = [
-      makeEvent({ eventId: 'other-1', eventData: { messageId: 'msg-1' } }),
+      makeEvent({ eventId: "other-1", eventData: { messageId: "msg-1" } }),
     ];
     expect(findRelatedEvents(target, others)).toEqual([]);
   });

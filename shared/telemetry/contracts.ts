@@ -174,14 +174,20 @@ export interface TelemetryAggregate {
   /** 估算总费用 */
   estimatedCostUsd: number;
   /** 按模型分组统计 */
-  byModel: Record<string, {
-    callCount: number;
-    totalTokens: number;
-    estimatedCostUsd: number;
-  }>;
+  byModel: Record<
+    string,
+    {
+      callCount: number;
+      totalTokens: number;
+      estimatedCostUsd: number;
+    }
+  >;
   /** 按智能体分组统计 */
-  byAgent: Record<string, {
-    callCount: number;
-    totalTokens: number;
-  }>;
+  byAgent: Record<
+    string,
+    {
+      callCount: number;
+      totalTokens: number;
+    }
+  >;
 }

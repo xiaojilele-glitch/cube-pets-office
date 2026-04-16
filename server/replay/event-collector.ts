@@ -7,9 +7,9 @@
  * Requirements: 1.4, 1.5, 1.6
  */
 
-import { randomUUID } from 'node:crypto';
-import type { ExecutionEvent } from '../../shared/replay/contracts.js';
-import type { ReplayStoreInterface } from '../../shared/replay/store-interface.js';
+import { randomUUID } from "node:crypto";
+import type { ExecutionEvent } from "../../shared/replay/contracts.js";
+import type { ReplayStoreInterface } from "../../shared/replay/store-interface.js";
 
 export interface EventCollectorOptions {
   /** 内存缓冲区最大条数，默认 1000 */
@@ -52,7 +52,7 @@ export class EventCollector {
    * 同步入队事件到内存缓冲区。
    * 自动生成 eventId 和 timestamp，不 await 存储操作。
    */
-  emit(event: Omit<ExecutionEvent, 'eventId' | 'timestamp'>): void {
+  emit(event: Omit<ExecutionEvent, "eventId" | "timestamp">): void {
     const fullEvent: ExecutionEvent = {
       ...event,
       eventId: randomUUID(),
@@ -103,7 +103,7 @@ export class EventCollector {
             for (const event of events) {
               this.failedQueue.push({ event, retryCount: 0 });
             }
-          }),
+          })
         );
       }
       await Promise.all(promises);
@@ -148,7 +148,7 @@ export class EventCollector {
             }
             // 超过 maxRetries 的事件被静默丢弃
           }
-        }),
+        })
       );
     }
 

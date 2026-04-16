@@ -13,7 +13,11 @@ import {
   type RuntimeAgentDependencies,
   type LineageTrackOptions,
 } from "../../shared/runtime-agent.js";
-import type { RecordTransformationInput, RecordSourceInput, RecordDecisionInput } from "../../shared/lineage/contracts.js";
+import type {
+  RecordTransformationInput,
+  RecordSourceInput,
+  RecordDecisionInput,
+} from "../../shared/lineage/contracts.js";
 import {
   MissionRuntime,
   setMissionLineageCollector,
@@ -75,7 +79,9 @@ function createMockAgentDeps(): RuntimeAgentDependencies {
   };
 }
 
-function createMockConfig(overrides?: Partial<RuntimeAgentConfig>): RuntimeAgentConfig {
+function createMockConfig(
+  overrides?: Partial<RuntimeAgentConfig>
+): RuntimeAgentConfig {
   return {
     id: "agent-test-1",
     name: "Test Agent",
@@ -143,13 +149,15 @@ describe("RuntimeAgent.lineageTracked()", () => {
 
     await agent.lineageTracked(async () => {
       // Small delay to ensure measurable time
-      await new Promise((r) => setTimeout(r, 10));
+      await new Promise(r => setTimeout(r, 10));
       return "done";
     });
 
     // The second transformation records execution time
     const successRecord = collector.transformations.find(
-      (t) => t.metadata && (t.metadata as Record<string, unknown>).status === "success"
+      t =>
+        t.metadata &&
+        (t.metadata as Record<string, unknown>).status === "success"
     );
     expect(successRecord).toBeDefined();
     expect(successRecord!.executionTimeMs).toBeGreaterThanOrEqual(0);
@@ -166,10 +174,13 @@ describe("RuntimeAgent.lineageTracked()", () => {
     ).rejects.toThrow("test failure");
 
     const errorRecord = collector.transformations.find(
-      (t) => t.metadata && (t.metadata as Record<string, unknown>).status === "error"
+      t =>
+        t.metadata && (t.metadata as Record<string, unknown>).status === "error"
     );
     expect(errorRecord).toBeDefined();
-    expect((errorRecord!.metadata as Record<string, unknown>).error).toBe("test failure");
+    expect((errorRecord!.metadata as Record<string, unknown>).error).toBe(
+      "test failure"
+    );
   });
 
   it("should never throw due to collector failure (AC-9.4)", async () => {
@@ -304,11 +315,10 @@ describe("submitMissionDecision lineage hook (Task 9.5)", () => {
   it("should record decision lineage after successful submission", () => {
     const mockRuntime = createMockDecisionRuntime();
 
-    const result = submitMissionDecision(
-      mockRuntime,
-      "task-1",
-      { optionId: "opt-a", freeText: undefined },
-    );
+    const result = submitMissionDecision(mockRuntime, "task-1", {
+      optionId: "opt-a",
+      freeText: undefined,
+    });
 
     expect(result.ok).toBe(true);
     expect(collector.decisions.length).toBe(1);
@@ -319,11 +329,9 @@ describe("submitMissionDecision lineage hook (Task 9.5)", () => {
   it("should not record lineage on failed submission", () => {
     const mockRuntime = createMockDecisionRuntime();
 
-    const result = submitMissionDecision(
-      mockRuntime,
-      "nonexistent",
-      { optionId: "opt-a" },
-    );
+    const result = submitMissionDecision(mockRuntime, "nonexistent", {
+      optionId: "opt-a",
+    });
 
     expect(result.ok).toBe(false);
     expect(collector.decisions.length).toBe(0);
@@ -341,11 +349,9 @@ describe("submitMissionDecision lineage hook (Task 9.5)", () => {
 
     const mockRuntime = createMockDecisionRuntime();
 
-    const result = submitMissionDecision(
-      mockRuntime,
-      "task-1",
-      { optionId: "opt-a" },
-    );
+    const result = submitMissionDecision(mockRuntime, "task-1", {
+      optionId: "opt-a",
+    });
 
     expect(result.ok).toBe(true);
   });
@@ -384,13 +390,17 @@ function createMockDecisionRuntime() {
     getTask(id: string) {
       return tasks.get(id);
     },
-    resumeMissionFromDecision(id: string, submission: { detail: string; progress?: number }) {
+    resumeMissionFromDecision(
+      id: string,
+      submission: { detail: string; progress?: number }
+    ) {
       const task = tasks.get(id);
       if (!task) return undefined;
       task.status = "running";
       task.waitingFor = undefined;
       task.decision = undefined;
-      if (submission.progress !== undefined) task.progress = submission.progress;
+      if (submission.progress !== undefined)
+        task.progress = submission.progress;
       return task;
     },
   };

@@ -24,7 +24,12 @@ const DIMENSION_LABELS: Record<string, string> = {
   format: "格式规范",
 };
 
-const REQUIRED_DIMENSIONS = ["accuracy", "completeness", "actionability", "format"];
+const REQUIRED_DIMENSIONS = [
+  "accuracy",
+  "completeness",
+  "actionability",
+  "format",
+];
 
 // ---------------------------------------------------------------------------
 // Arbitrary generators
@@ -32,14 +37,14 @@ const REQUIRED_DIMENSIONS = ["accuracy", "completeness", "actionability", "forma
 
 const arbAgentId: fc.Arbitrary<string> = fc
   .string({ minLength: 1, maxLength: 16 })
-  .filter((s) => s.trim().length > 0);
+  .filter(s => s.trim().length > 0);
 
 const arbScore: fc.Arbitrary<number> = fc.integer({ min: 0, max: 100 });
 
 /** Generate a single DemoEvolutionLog for a given agent and dimension */
 function arbLogForAgentDimension(
   agentId: string,
-  dimension: string,
+  dimension: string
 ): fc.Arbitrary<DemoEvolutionLog> {
   return fc.record({
     agentId: fc.constant(agentId),
@@ -55,12 +60,14 @@ function arbLogForAgentDimension(
  * Generate a complete set of evolution logs for one agent covering all 4 dimensions.
  */
 function arbFullAgentLogs(agentId: string): fc.Arbitrary<DemoEvolutionLog[]> {
-  return fc.tuple(
-    arbLogForAgentDimension(agentId, "accuracy"),
-    arbLogForAgentDimension(agentId, "completeness"),
-    arbLogForAgentDimension(agentId, "actionability"),
-    arbLogForAgentDimension(agentId, "format"),
-  ).map(([a, b, c, d]) => [a, b, c, d]);
+  return fc
+    .tuple(
+      arbLogForAgentDimension(agentId, "accuracy"),
+      arbLogForAgentDimension(agentId, "completeness"),
+      arbLogForAgentDimension(agentId, "actionability"),
+      arbLogForAgentDimension(agentId, "format")
+    )
+    .map(([a, b, c, d]) => [a, b, c, d]);
 }
 
 /**
@@ -69,20 +76,22 @@ function arbFullAgentLogs(agentId: string): fc.Arbitrary<DemoEvolutionLog[]> {
  */
 const arbFullEvolutionLogs: fc.Arbitrary<DemoEvolutionLog[]> = fc
   .array(arbAgentId, { minLength: 1, maxLength: 4 })
-  .chain((agentIds) => {
+  .chain(agentIds => {
     // Deduplicate agent IDs
     const unique = [...new Set(agentIds)];
     if (unique.length === 0) return fc.constant([] as DemoEvolutionLog[]);
     return fc
-      .tuple(...unique.map((id) => arbFullAgentLogs(id)))
-      .map((arrays) => arrays.flat());
+      .tuple(...unique.map(id => arbFullAgentLogs(id)))
+      .map(arrays => arrays.flat());
   });
 
 // ---------------------------------------------------------------------------
 // Replicate the component's grouping logic
 // ---------------------------------------------------------------------------
 
-function groupByAgent(logs: DemoEvolutionLog[]): Map<string, DemoEvolutionLog[]> {
+function groupByAgent(
+  logs: DemoEvolutionLog[]
+): Map<string, DemoEvolutionLog[]> {
   const byAgent = new Map<string, DemoEvolutionLog[]>();
   for (const log of logs) {
     const arr = byAgent.get(log.agentId) ?? [];
@@ -107,7 +116,7 @@ describe("Property 6: 进化评分卡包含全维度数据", () => {
 
   it("for any complete evolution log set, grouping by agent yields all 4 dimensions per agent with valid scores", () => {
     fc.assert(
-      fc.property(arbFullEvolutionLogs, (logs) => {
+      fc.property(arbFullEvolutionLogs, logs => {
         const grouped = groupByAgent(logs);
 
         for (const [agentId, agentLogs] of grouped) {
@@ -115,7 +124,7 @@ describe("Property 6: 进化评分卡包含全维度数据", () => {
           expect(agentId.trim().length).toBeGreaterThan(0);
 
           // Must have all 4 required dimensions
-          const dimensions = agentLogs.map((l) => l.dimension);
+          const dimensions = agentLogs.map(l => l.dimension);
           for (const dim of REQUIRED_DIMENSIONS) {
             expect(dimensions).toContain(dim);
           }
@@ -135,7 +144,7 @@ describe("Property 6: 进化评分卡包含全维度数据", () => {
           }
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

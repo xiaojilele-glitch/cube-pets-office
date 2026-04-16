@@ -35,7 +35,7 @@ export function CrossFrameworkParticles({
   active?: boolean;
   showLabels?: boolean;
 }) {
-  const activeSessions = useA2AStore((s) => s.activeSessions);
+  const activeSessions = useA2AStore(s => s.activeSessions);
   const groupRef = useRef<THREE.Group>(null);
 
   if (!active) return null;

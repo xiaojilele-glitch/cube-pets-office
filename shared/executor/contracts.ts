@@ -3,11 +3,7 @@ import type { PhaseAssignment } from "../role-schema.js";
 
 export const EXECUTOR_CONTRACT_VERSION = "2026-03-28" as const;
 
-export const EXECUTION_RUN_MODES = [
-  "auto",
-  "reuse",
-  "managed",
-] as const;
+export const EXECUTION_RUN_MODES = ["auto", "reuse", "managed"] as const;
 
 export type ExecutionRunMode = (typeof EXECUTION_RUN_MODES)[number];
 
@@ -30,6 +26,7 @@ export const EXECUTOR_JOB_STATUSES = [
   "completed",
   "failed",
   "cancelled",
+  "timeout",
 ] as const;
 
 export type ExecutorJobStatus = (typeof EXECUTOR_JOB_STATUSES)[number];
@@ -42,6 +39,7 @@ export const EXECUTOR_EVENT_TYPES = [
   "job.completed",
   "job.failed",
   "job.cancelled",
+  "job.timeout",
   "job.log",
   "job.heartbeat",
   "job.log_stream",
@@ -169,32 +167,31 @@ export interface ExecutorEvent {
   imageHeight?: number;
 }
 
-
 // ─── Security Sandbox Types ─────────────────────────────────────────────────
 
 export const SECURITY_LEVELS = ["strict", "balanced", "permissive"] as const;
 export type SecurityLevel = (typeof SECURITY_LEVELS)[number];
 
 export interface SecurityResourceLimits {
-  memoryBytes: number;      // 默认 512MB = 536870912
-  nanoCpus: number;         // 默认 1.0 核 = 1_000_000_000
-  pidsLimit: number;        // 默认 256
-  tmpfsSizeBytes: number;   // 默认 64MB = 67108864
+  memoryBytes: number; // 默认 512MB = 536870912
+  nanoCpus: number; // 默认 1.0 核 = 1_000_000_000
+  pidsLimit: number; // 默认 256
+  tmpfsSizeBytes: number; // 默认 64MB = 67108864
 }
 
 export interface SecurityNetworkPolicy {
   mode: "none" | "whitelist" | "bridge";
-  whitelist?: string[];     // 域名/IP 列表
+  whitelist?: string[]; // 域名/IP 列表
 }
 
 export interface SecurityPolicy {
   level: SecurityLevel;
-  user: string;             // 容器运行用户，默认 "65534" (nobody)
+  user: string; // 容器运行用户，默认 "65534" (nobody)
   readonlyRootfs: boolean;
   noNewPrivileges: boolean;
-  capDrop: string[];        // 默认 ["ALL"]
-  capAdd: string[];         // 按等级添加
-  seccompProfile?: string;  // seccomp profile 路径
+  capDrop: string[]; // 默认 ["ALL"]
+  capAdd: string[]; // 按等级添加
+  seccompProfile?: string; // seccomp profile 路径
   resources: SecurityResourceLimits;
   network: SecurityNetworkPolicy;
 }
@@ -203,7 +200,14 @@ export interface SecurityAuditEntry {
   timestamp: string;
   jobId: string;
   missionId: string;
-  eventType: "container.created" | "container.started" | "container.oom" | "container.seccomp_violation" | "container.security_failure" | "container.destroyed" | "resource.exceeded";
+  eventType:
+    | "container.created"
+    | "container.started"
+    | "container.oom"
+    | "container.seccomp_violation"
+    | "container.security_failure"
+    | "container.destroyed"
+    | "resource.exceeded";
   securityLevel: SecurityLevel;
   detail: Record<string, unknown>;
 }

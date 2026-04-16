@@ -1,0 +1,44 @@
+.nh
+.TH "GH-RUN-WATCH" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-run-watch - Watch a run until it completes, showing its progress
+
+
+.SH SYNOPSIS
+.PP
+\fBgh run watch <run-id> [flags]\fR
+
+
+.SH OPTIONS
+.TP
+\fB--exit-status\fR
+Exit with non-zero status if run fails
+
+.TP
+\fB-i\fR, \fB--interval\fR \fB<int>\fR
+Refresh interval in seconds
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH EXAMPLE
+.EX
+# Watch a run until it's done
+gh run watch
+
+# Run some other command when the run is finished
+gh run watch && notify-send "run is done!"
+
+
+.EE
+
+
+.SH SEE ALSO
+.PP
+\fBgh-run(1)\fR

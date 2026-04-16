@@ -102,9 +102,9 @@ describe("useKnowledgeStore", () => {
   it("fetchGraph should set loading during fetch", async () => {
     let resolvePromise: Function;
     fetchMock.mockReturnValueOnce(
-      new Promise((resolve) => {
+      new Promise(resolve => {
         resolvePromise = resolve;
-      }),
+      })
     );
 
     const promise = useKnowledgeStore.getState().fetchGraph("proj-1");
@@ -137,7 +137,9 @@ describe("useKnowledgeStore", () => {
       json: async () => ({ ok: true, items: [entity] }),
     });
 
-    await useKnowledgeStore.getState().fetchReviewQueue({ projectId: "proj-1" });
+    await useKnowledgeStore
+      .getState()
+      .fetchReviewQueue({ projectId: "proj-1" });
 
     expect(useKnowledgeStore.getState().reviewQueue).toHaveLength(1);
   });
@@ -151,7 +153,7 @@ describe("useKnowledgeStore", () => {
     await useKnowledgeStore.getState().fetchReviewQueue();
 
     expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining("/api/knowledge/review-queue"),
+      expect.stringContaining("/api/knowledge/review-queue")
     );
   });
 
@@ -227,7 +229,7 @@ describe("useKnowledgeStore", () => {
     };
 
     await expect(
-      useKnowledgeStore.getState().reviewEntity("e-999", action),
+      useKnowledgeStore.getState().reviewEntity("e-999", action)
     ).rejects.toThrow("Entity not found");
   });
 
@@ -252,7 +254,10 @@ describe("useKnowledgeStore", () => {
     useKnowledgeStore.getState().subscribeToChanges(socket as any);
 
     const updated = { ...original, name: "UpdatedModule" };
-    socket.emit("knowledge.entityChanged", { entity: updated, action: "updated" });
+    socket.emit("knowledge.entityChanged", {
+      entity: updated,
+      action: "updated",
+    });
 
     expect(useKnowledgeStore.getState().nodes[0].name).toBe("UpdatedModule");
   });
@@ -278,7 +283,10 @@ describe("useKnowledgeStore", () => {
     useKnowledgeStore.getState().subscribeToChanges(socket as any);
 
     const updated = { ...entity, confidence: 0.95 };
-    socket.emit("knowledge.entityChanged", { entity: updated, action: "updated" });
+    socket.emit("knowledge.entityChanged", {
+      entity: updated,
+      action: "updated",
+    });
 
     expect(useKnowledgeStore.getState().selectedEntity?.confidence).toBe(0.95);
   });

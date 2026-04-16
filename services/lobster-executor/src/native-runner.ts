@@ -34,14 +34,14 @@ export class NativeRunner implements JobRunner {
       appendFileSync(
         record.logFile,
         `[${new Date().toISOString()}] [cancel] SIGTERM sent\n`,
-        "utf-8",
+        "utf-8"
       );
     }
   }
 
   async run(
     record: StoredJobRecord,
-    emitEvent: (event: ExecutorEvent) => void,
+    emitEvent: (event: ExecutorEvent) => void
   ): Promise<void> {
     const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
     const command = (payload.command ?? []) as string[];
@@ -75,10 +75,14 @@ export class NativeRunner implements JobRunner {
     }
 
     const workspaceRootRaw = payload.workspaceRoot as string | undefined;
-    const workspaceRoot = workspaceRootRaw ? resolve(workspaceRootRaw) : process.cwd();
+    const workspaceRoot = workspaceRootRaw
+      ? resolve(workspaceRootRaw)
+      : process.cwd();
 
     const envFromPayload = (payload.env ?? {}) as Record<string, string>;
-    const env: Record<string, string> = { ...(process.env as Record<string, string>) };
+    const env: Record<string, string> = {
+      ...(process.env as Record<string, string>),
+    };
     for (const [key, value] of Object.entries(envFromPayload)) {
       if (typeof value === "string") env[key] = value;
     }
@@ -94,7 +98,7 @@ export class NativeRunner implements JobRunner {
     }
 
     const logBatcher = new LogBatcher(
-      (lines) => {
+      lines => {
         if (lines.length === 0) return;
         const logEvent = this.createEvent(record, {
           type: "job.log",
@@ -105,7 +109,7 @@ export class NativeRunner implements JobRunner {
         void this.sendCallback(record, logEvent);
       },
       500,
-      4096,
+      4096
     );
 
     record.status = "running";
@@ -132,7 +136,7 @@ export class NativeRunner implements JobRunner {
     });
     this.child = proc;
 
-    proc.stdout?.on("data", (chunk) => {
+    proc.stdout?.on("data", chunk => {
       const text = chunk.toString("utf-8");
       appendFileSync(record.logFile, text, "utf-8");
       for (const line of text.split(/\r?\n/)) {
@@ -140,7 +144,7 @@ export class NativeRunner implements JobRunner {
       }
     });
 
-    proc.stderr?.on("data", (chunk) => {
+    proc.stderr?.on("data", chunk => {
       const text = chunk.toString("utf-8");
       appendFileSync(record.logFile, text, "utf-8");
       for (const line of text.split(/\r?\n/)) {
@@ -149,7 +153,7 @@ export class NativeRunner implements JobRunner {
     });
 
     let timedOut = false;
-    const exitCode = await new Promise<number>((resolveExit) => {
+    const exitCode = await new Promise<number>(resolveExit => {
       let resolved = false;
       const timer = setTimeout(() => {
         timedOut = true;
@@ -157,7 +161,7 @@ export class NativeRunner implements JobRunner {
         setTimeout(() => proc.kill("SIGKILL"), 1500);
       }, timeoutMs);
 
-      proc.on("exit", (code) => {
+      proc.on("exit", code => {
         if (resolved) return;
         resolved = true;
         clearTimeout(timer);
@@ -249,7 +253,7 @@ export class NativeRunner implements JobRunner {
   private async runAIJob(
     record: StoredJobRecord,
     payload: Record<string, unknown>,
-    emitEvent: (event: ExecutorEvent) => void,
+    emitEvent: (event: ExecutorEvent) => void
   ): Promise<void> {
     const artifactsDir = join(record.dataDirectory, "artifacts");
     const envFromPayload = (payload.env ?? {}) as Record<string, unknown>;
@@ -290,7 +294,9 @@ export class NativeRunner implements JobRunner {
     });
     const data = (await res.json()) as any;
     if (!res.ok) {
-      throw new Error(typeof data?.error === "string" ? data.error : `HTTP ${res.status}`);
+      throw new Error(
+        typeof data?.error === "string" ? data.error : `HTTP ${res.status}`
+      );
     }
 
     const finishedAt = new Date().toISOString();
@@ -305,7 +311,11 @@ export class NativeRunner implements JobRunner {
     };
 
     const aiResultFile = join(artifactsDir, "ai-result.json");
-    writeFileSync(aiResultFile, `${JSON.stringify(aiResult, null, 2)}\n`, "utf-8");
+    writeFileSync(
+      aiResultFile,
+      `${JSON.stringify(aiResult, null, 2)}\n`,
+      "utf-8"
+    );
 
     const result = {
       missionId: record.request.missionId,
@@ -363,7 +373,9 @@ export class NativeRunner implements JobRunner {
           tokenUsage: aiResult.usage,
           model: aiResult.model,
           contentPreview:
-            aiResult.content.length > 200 ? aiResult.content.slice(0, 200) : aiResult.content,
+            aiResult.content.length > 200
+              ? aiResult.content.slice(0, 200)
+              : aiResult.content,
         },
       },
     });
@@ -383,7 +395,7 @@ export class NativeRunner implements JobRunner {
       artifacts?: ExecutionPlanArtifact[];
       metrics?: ExecutorEvent["metrics"];
       payload?: Record<string, unknown>;
-    },
+    }
   ): ExecutorEvent {
     return {
       version: EXECUTOR_CONTRACT_VERSION,
@@ -406,11 +418,10 @@ export class NativeRunner implements JobRunner {
 
   private async sendCallback(
     record: StoredJobRecord,
-    event: ExecutorEvent,
+    event: ExecutorEvent
   ): Promise<void> {
     try {
       await this.callbackSender.send(record.request.callback.eventsUrl, event);
-    } catch {
-    }
+    } catch {}
   }
 }

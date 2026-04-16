@@ -36,7 +36,7 @@ export interface SnapshotSchedulerOptions {
 async function performSnapshotCycle(
   missionId: string,
   collectState: () => SnapshotPayload,
-  onError: (error: Error) => void,
+  onError: (error: Error) => void
 ): Promise<void> {
   try {
     const payload = collectState();
@@ -64,10 +64,11 @@ async function performSnapshotCycle(
 }
 
 export function createSnapshotScheduler(
-  options: SnapshotSchedulerOptions,
+  options: SnapshotSchedulerOptions
 ): SnapshotScheduler {
   const { intervalMs, collectState, onError } = options;
-  const handleError = onError ?? ((err: Error) => console.error("[SnapshotScheduler]", err));
+  const handleError =
+    onError ?? ((err: Error) => console.error("[SnapshotScheduler]", err));
 
   let timerId: ReturnType<typeof setInterval> | null = null;
   let currentMissionId: string | null = null;

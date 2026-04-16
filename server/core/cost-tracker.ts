@@ -7,10 +7,10 @@
  * @see Requirements 1.1, 1.2, 1.3, 3.1, 3.2, 3.3, 3.4, 3.5
  */
 
-import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type {
   CostRecord,
@@ -21,16 +21,16 @@ import type {
   DowngradeLevel,
   AgentCostSummary,
   MissionCostSummary,
-} from '../../shared/cost.js';
+} from "../../shared/cost.js";
 
-import {
-  DEFAULT_BUDGET,
-  DEFAULT_DOWNGRADE_POLICY,
-} from '../../shared/cost.js';
+import { DEFAULT_BUDGET, DEFAULT_DOWNGRADE_POLICY } from "../../shared/cost.js";
 
 const __ct_filename = fileURLToPath(import.meta.url);
 const __ct_dirname = dirname(__ct_filename);
-const DEFAULT_HISTORY_PATH = resolve(__ct_dirname, '../../data/cost-history.json');
+const DEFAULT_HISTORY_PATH = resolve(
+  __ct_dirname,
+  "../../data/cost-history.json"
+);
 
 /** Persistence file schema */
 interface CostHistoryFile {
@@ -52,7 +52,7 @@ class CostTracker {
   /** 降级策略 */
   private downgradePolicy: DowngradePolicy = { ...DEFAULT_DOWNGRADE_POLICY };
   /** 降级状态 */
-  private downgradeLevel: DowngradeLevel = 'none';
+  private downgradeLevel: DowngradeLevel = "none";
   /** 被暂停的 Agent ID 集合 */
   private pausedAgentIds: Set<string> = new Set();
   /** 当前 Mission ID */
@@ -82,11 +82,13 @@ class CostTracker {
 
     this.checkAlerts();
     // Broadcast cost update via Socket.IO (throttled 500ms)
-    import('./socket.js').then(({ emitCostUpdate }) => {
-      emitCostUpdate(this.getSnapshot());
-    }).catch(() => {
-      // socket module not available — skip
-    });
+    import("./socket.js")
+      .then(({ emitCostUpdate }) => {
+        emitCostUpdate(this.getSnapshot());
+      })
+      .catch(() => {
+        // socket module not available — skip
+      });
   }
 
   /**
@@ -178,7 +180,7 @@ class CostTracker {
     this.records = [];
     this.currentMissionId = null;
     this.alerts = [];
-    this.downgradeLevel = 'none';
+    this.downgradeLevel = "none";
     this.pausedAgentIds.clear();
 
     // TODO(Task 6.1): this.persistHistory();
@@ -192,7 +194,7 @@ class CostTracker {
   resetCurrentMission(missionId?: string): void {
     this.records = [];
     this.alerts = [];
-    this.downgradeLevel = 'none';
+    this.downgradeLevel = "none";
     this.pausedAgentIds.clear();
     this.currentMissionId = missionId ?? null;
   }
@@ -209,7 +211,7 @@ class CostTracker {
     const map = new Map<string, AgentCostSummary>();
 
     for (const r of this.records) {
-      const agentId = r.agentId ?? 'unknown';
+      const agentId = r.agentId ?? "unknown";
       let entry = map.get(agentId);
       if (!entry) {
         entry = {
@@ -235,11 +237,17 @@ class CostTracker {
    * 按 session_id 聚合成本。
    * 没有 sessionId 的记录归入 'unknown' Session。
    */
-  getSessionCosts(): Map<string, { tokensIn: number; tokensOut: number; cost: number }> {
-    const map = new Map<string, { tokensIn: number; tokensOut: number; cost: number }>();
+  getSessionCosts(): Map<
+    string,
+    { tokensIn: number; tokensOut: number; cost: number }
+  > {
+    const map = new Map<
+      string,
+      { tokensIn: number; tokensOut: number; cost: number }
+    >();
 
     for (const r of this.records) {
-      const sessionId = r.sessionId ?? 'unknown';
+      const sessionId = r.sessionId ?? "unknown";
       let entry = map.get(sessionId);
       if (!entry) {
         entry = { tokensIn: 0, tokensOut: 0, cost: 0 };
@@ -276,105 +284,106 @@ class CostTracker {
    * 每种预警类型只生成一次（不重复）。
    */
   /**
-     * 检查当前成本状态并生成预警。
-     * 每种预警类型只生成一次（不重复）。
-     * 新预警通过 Socket.IO 立即广播。
-     */
-    private checkAlerts(): void {
-      let totalCost = 0;
-      let totalTokens = 0;
+   * 检查当前成本状态并生成预警。
+   * 每种预警类型只生成一次（不重复）。
+   * 新预警通过 Socket.IO 立即广播。
+   */
+  private checkAlerts(): void {
+    let totalCost = 0;
+    let totalTokens = 0;
 
-      for (const r of this.records) {
-        totalCost += r.actualCost;
-        totalTokens += r.tokensIn + r.tokensOut;
-      }
+    for (const r of this.records) {
+      totalCost += r.actualCost;
+      totalTokens += r.tokensIn + r.tokensOut;
+    }
 
-      const { maxCost, maxTokens, warningThreshold } = this.budget;
-      const existingTypes = new Set(this.alerts.map((a) => a.type));
-      const newAlerts: CostAlert[] = [];
+    const { maxCost, maxTokens, warningThreshold } = this.budget;
+    const existingTypes = new Set(this.alerts.map(a => a.type));
+    const newAlerts: CostAlert[] = [];
 
-      // cost_warning: totalCost > maxCost * warningThreshold
-      if (
-        maxCost > 0 &&
-        totalCost > maxCost * warningThreshold &&
-        !existingTypes.has('cost_warning')
-      ) {
-        const alert: CostAlert = {
-          id: randomUUID(),
-          type: 'cost_warning',
-          message: `费用已超过预警阈值 (${(warningThreshold * 100).toFixed(0)}%): ${totalCost.toFixed(4)} / ${maxCost.toFixed(2)}`,
-          timestamp: Date.now(),
-          resolved: false,
-        };
-        this.alerts.push(alert);
-        newAlerts.push(alert);
-      }
+    // cost_warning: totalCost > maxCost * warningThreshold
+    if (
+      maxCost > 0 &&
+      totalCost > maxCost * warningThreshold &&
+      !existingTypes.has("cost_warning")
+    ) {
+      const alert: CostAlert = {
+        id: randomUUID(),
+        type: "cost_warning",
+        message: `费用已超过预警阈值 (${(warningThreshold * 100).toFixed(0)}%): ${totalCost.toFixed(4)} / ${maxCost.toFixed(2)}`,
+        timestamp: Date.now(),
+        resolved: false,
+      };
+      this.alerts.push(alert);
+      newAlerts.push(alert);
+    }
 
-      // token_warning: totalTokens > maxTokens * warningThreshold
-      if (
-        maxTokens > 0 &&
-        totalTokens > maxTokens * warningThreshold &&
-        !existingTypes.has('token_warning')
-      ) {
-        const alert: CostAlert = {
-          id: randomUUID(),
-          type: 'token_warning',
-          message: `Token 已超过预警阈值 (${(warningThreshold * 100).toFixed(0)}%): ${totalTokens} / ${maxTokens}`,
-          timestamp: Date.now(),
-          resolved: false,
-        };
-        this.alerts.push(alert);
-        newAlerts.push(alert);
-      }
+    // token_warning: totalTokens > maxTokens * warningThreshold
+    if (
+      maxTokens > 0 &&
+      totalTokens > maxTokens * warningThreshold &&
+      !existingTypes.has("token_warning")
+    ) {
+      const alert: CostAlert = {
+        id: randomUUID(),
+        type: "token_warning",
+        message: `Token 已超过预警阈值 (${(warningThreshold * 100).toFixed(0)}%): ${totalTokens} / ${maxTokens}`,
+        timestamp: Date.now(),
+        resolved: false,
+      };
+      this.alerts.push(alert);
+      newAlerts.push(alert);
+    }
 
-      // cost_exceeded: totalCost >= maxCost
-      if (
-        maxCost > 0 &&
-        totalCost >= maxCost &&
-        !existingTypes.has('cost_exceeded')
-      ) {
-        const alert: CostAlert = {
-          id: randomUUID(),
-          type: 'cost_exceeded',
-          message: `费用已达到上限: ${totalCost.toFixed(4)} / ${maxCost.toFixed(2)}`,
-          timestamp: Date.now(),
-          resolved: false,
-        };
-        this.alerts.push(alert);
-        newAlerts.push(alert);
-      }
+    // cost_exceeded: totalCost >= maxCost
+    if (
+      maxCost > 0 &&
+      totalCost >= maxCost &&
+      !existingTypes.has("cost_exceeded")
+    ) {
+      const alert: CostAlert = {
+        id: randomUUID(),
+        type: "cost_exceeded",
+        message: `费用已达到上限: ${totalCost.toFixed(4)} / ${maxCost.toFixed(2)}`,
+        timestamp: Date.now(),
+        resolved: false,
+      };
+      this.alerts.push(alert);
+      newAlerts.push(alert);
+    }
 
-      // token_exceeded: totalTokens >= maxTokens
-      if (
-        maxTokens > 0 &&
-        totalTokens >= maxTokens &&
-        !existingTypes.has('token_exceeded')
-      ) {
-        const alert: CostAlert = {
-          id: randomUUID(),
-          type: 'token_exceeded',
-          message: `Token 已达到上限: ${totalTokens} / ${maxTokens}`,
-          timestamp: Date.now(),
-          resolved: false,
-        };
-        this.alerts.push(alert);
-        newAlerts.push(alert);
-      }
+    // token_exceeded: totalTokens >= maxTokens
+    if (
+      maxTokens > 0 &&
+      totalTokens >= maxTokens &&
+      !existingTypes.has("token_exceeded")
+    ) {
+      const alert: CostAlert = {
+        id: randomUUID(),
+        type: "token_exceeded",
+        message: `Token 已达到上限: ${totalTokens} / ${maxTokens}`,
+        timestamp: Date.now(),
+        resolved: false,
+      };
+      this.alerts.push(alert);
+      newAlerts.push(alert);
+    }
 
-      // Broadcast new alerts via Socket.IO immediately (Req 7.4)
-      if (newAlerts.length > 0) {
-        import('./socket.js').then(({ emitCostAlert }) => {
+    // Broadcast new alerts via Socket.IO immediately (Req 7.4)
+    if (newAlerts.length > 0) {
+      import("./socket.js")
+        .then(({ emitCostAlert }) => {
           for (const alert of newAlerts) {
             emitCostAlert(alert);
           }
-        }).catch(() => {
+        })
+        .catch(() => {
           // socket module not available — skip
         });
-      }
-
-      this.applyDowngrade();
     }
 
+    this.applyDowngrade();
+  }
 
   /** 获取当前预警列表（供测试使用） */
   getAlerts(): readonly CostAlert[] {
@@ -390,11 +399,17 @@ class CostTracker {
   }
 
   getDowngradePolicy(): DowngradePolicy {
-    return { ...this.downgradePolicy, criticalAgentIds: [...this.downgradePolicy.criticalAgentIds] };
+    return {
+      ...this.downgradePolicy,
+      criticalAgentIds: [...this.downgradePolicy.criticalAgentIds],
+    };
   }
 
   setDowngradePolicy(policy: DowngradePolicy): void {
-    this.downgradePolicy = { ...policy, criticalAgentIds: [...policy.criticalAgentIds] };
+    this.downgradePolicy = {
+      ...policy,
+      criticalAgentIds: [...policy.criticalAgentIds],
+    };
     this.persistHistory();
   }
 
@@ -404,7 +419,10 @@ class CostTracker {
    * @see Requirement 5.2, 5.4
    */
   getEffectiveModel(originalModel: string): string {
-    if (this.downgradePolicy.enabled && (this.downgradeLevel === 'soft' || this.downgradeLevel === 'hard')) {
+    if (
+      this.downgradePolicy.enabled &&
+      (this.downgradeLevel === "soft" || this.downgradeLevel === "hard")
+    ) {
       return this.downgradePolicy.lowCostModel;
     }
     return originalModel;
@@ -424,7 +442,7 @@ class CostTracker {
    * @see Requirement 5.4
    */
   manualReleaseDegradation(): void {
-    this.downgradeLevel = 'none';
+    this.downgradeLevel = "none";
     this.pausedAgentIds.clear();
   }
 
@@ -444,19 +462,21 @@ class CostTracker {
       return;
     }
 
-    const alertTypes = new Set(this.alerts.map((a) => a.type));
+    const alertTypes = new Set(this.alerts.map(a => a.type));
 
-    const hasExceeded = alertTypes.has('cost_exceeded') || alertTypes.has('token_exceeded');
-    const hasWarning = alertTypes.has('cost_warning') || alertTypes.has('token_warning');
+    const hasExceeded =
+      alertTypes.has("cost_exceeded") || alertTypes.has("token_exceeded");
+    const hasWarning =
+      alertTypes.has("cost_warning") || alertTypes.has("token_warning");
 
     if (hasExceeded) {
-      this.downgradeLevel = 'hard';
+      this.downgradeLevel = "hard";
       // Pause all non-critical agents
       this.pauseNonCriticalAgents();
     } else if (hasWarning) {
       // Only escalate to soft if not already hard
-      if (this.downgradeLevel !== 'hard') {
-        this.downgradeLevel = 'soft';
+      if (this.downgradeLevel !== "hard") {
+        this.downgradeLevel = "soft";
       }
     }
   }
@@ -477,7 +497,7 @@ class CostTracker {
     }
 
     this.pausedAgentIds.clear();
-    Array.from(allAgentIds).forEach((agentId) => {
+    Array.from(allAgentIds).forEach(agentId => {
       if (!criticalSet.has(agentId)) {
         this.pausedAgentIds.add(agentId);
       }
@@ -495,12 +515,14 @@ class CostTracker {
    */
   loadHistory(): void {
     if (!existsSync(this.historyFilePath)) {
-      console.warn(`[CostTracker] 持久化文件不存在，以空历史启动: ${this.historyFilePath}`);
+      console.warn(
+        `[CostTracker] 持久化文件不存在，以空历史启动: ${this.historyFilePath}`
+      );
       return;
     }
 
     try {
-      const raw = readFileSync(this.historyFilePath, 'utf-8');
+      const raw = readFileSync(this.historyFilePath, "utf-8");
       const parsed = JSON.parse(raw) as CostHistoryFile;
 
       // Restore missions (keep last 10)
@@ -511,9 +533,9 @@ class CostTracker {
       // Restore budget if present
       if (
         parsed.budget &&
-        typeof parsed.budget.maxCost === 'number' &&
-        typeof parsed.budget.maxTokens === 'number' &&
-        typeof parsed.budget.warningThreshold === 'number'
+        typeof parsed.budget.maxCost === "number" &&
+        typeof parsed.budget.maxTokens === "number" &&
+        typeof parsed.budget.warningThreshold === "number"
       ) {
         this.budget = { ...parsed.budget };
       }
@@ -521,8 +543,8 @@ class CostTracker {
       // Restore downgrade policy if present
       if (
         parsed.downgradePolicy &&
-        typeof parsed.downgradePolicy.enabled === 'boolean' &&
-        typeof parsed.downgradePolicy.lowCostModel === 'string' &&
+        typeof parsed.downgradePolicy.enabled === "boolean" &&
+        typeof parsed.downgradePolicy.lowCostModel === "string" &&
         Array.isArray(parsed.downgradePolicy.criticalAgentIds)
       ) {
         this.downgradePolicy = {
@@ -531,7 +553,9 @@ class CostTracker {
         };
       }
     } catch {
-      console.warn(`[CostTracker] 持久化文件损坏，以空历史启动: ${this.historyFilePath}`);
+      console.warn(
+        `[CostTracker] 持久化文件损坏，以空历史启动: ${this.historyFilePath}`
+      );
     }
   }
 
@@ -553,9 +577,13 @@ class CostTracker {
 
     try {
       mkdirSync(dirname(this.historyFilePath), { recursive: true });
-      writeFileSync(this.historyFilePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(
+        this.historyFilePath,
+        JSON.stringify(data, null, 2),
+        "utf-8"
+      );
     } catch (err) {
-      console.error('[CostTracker] 持久化写入失败:', err);
+      console.error("[CostTracker] 持久化写入失败:", err);
     }
   }
 

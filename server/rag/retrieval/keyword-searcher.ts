@@ -7,8 +7,11 @@
  * Requirements: 4.4
  */
 
-import type { MetadataStore, RagChunkMetadataRow } from '../store/metadata-store.js';
-import type { SearchHit } from '../store/vector-store-adapter.js';
+import type {
+  MetadataStore,
+  RagChunkMetadataRow,
+} from "../store/metadata-store.js";
+import type { SearchHit } from "../store/vector-store-adapter.js";
 
 export interface KeywordSearchOptions {
   projectId: string;
@@ -43,19 +46,23 @@ export class KeywordSearcher {
 
     for (const row of candidates) {
       // 从 metadata_json 中提取 content（如果存在）
-      let content = '';
+      let content = "";
       try {
         const meta = JSON.parse(row.metadata_json);
-        content = meta.content ?? '';
-      } catch { /* ignore */ }
+        content = meta.content ?? "";
+      } catch {
+        /* ignore */
+      }
 
       // 也搜索 source_id 和 function_signature
       const searchText = [
         content,
         row.source_id,
-        row.function_signature ?? '',
-        row.code_language ?? '',
-      ].join(' ').toLowerCase();
+        row.function_signature ?? "",
+        row.code_language ?? "",
+      ]
+        .join(" ")
+        .toLowerCase();
 
       const score = computeMatchScore(queryTokens, searchText);
       if (score > 0) {
@@ -83,7 +90,10 @@ export class KeywordSearcher {
 // ---------------------------------------------------------------------------
 
 function tokenize(text: string): string[] {
-  return text.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(t => t.length > 1);
 }
 
 function computeMatchScore(queryTokens: string[], text: string): number {

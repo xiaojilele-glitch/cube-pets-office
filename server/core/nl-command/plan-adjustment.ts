@@ -7,15 +7,15 @@
  * @see Requirements 8.1, 8.2, 8.3, 8.5, 8.6
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 import type {
   AdjustmentChange,
   AdjustmentImpact,
   NLExecutionPlan,
   PlanAdjustment,
-} from '../../../shared/nl-command/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
+} from "../../../shared/nl-command/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
 
 export interface ActualProgress {
   /** entityId → progress ratio 0..1 */
@@ -50,7 +50,7 @@ export class PlanAdjustmentManager {
     reason: string,
     changes: AdjustmentChange[],
     impact: AdjustmentImpact,
-    approvalRequired = true,
+    approvalRequired = true
   ): Promise<PlanAdjustment> {
     const adjustment: PlanAdjustment = {
       adjustmentId: randomUUID(),
@@ -59,7 +59,7 @@ export class PlanAdjustmentManager {
       changes,
       impact,
       approvalRequired,
-      status: 'proposed',
+      status: "proposed",
       createdAt: Date.now(),
     };
 
@@ -67,13 +67,13 @@ export class PlanAdjustmentManager {
 
     await this.auditTrail.record({
       entryId: randomUUID(),
-      operationType: 'adjustment_proposed',
-      operator: 'system',
+      operationType: "adjustment_proposed",
+      operator: "system",
       content: `Proposed adjustment for plan ${planId}: ${reason}`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: planId,
-      entityType: 'plan',
+      entityType: "plan",
       metadata: {
         adjustmentId: adjustment.adjustmentId,
         changeCount: changes.length,
@@ -93,23 +93,25 @@ export class PlanAdjustmentManager {
    */
   async applyAdjustment(
     adjustmentId: string,
-    plan: NLExecutionPlan,
+    plan: NLExecutionPlan
   ): Promise<PlanAdjustment> {
     const adjustment = this.adjustments.get(adjustmentId);
     if (!adjustment) {
       throw new Error(`Adjustment not found: ${adjustmentId}`);
     }
 
-    if (adjustment.status === 'applied') {
+    if (adjustment.status === "applied") {
       throw new Error(`Adjustment already applied: ${adjustmentId}`);
     }
 
-    if (adjustment.status === 'rejected') {
+    if (adjustment.status === "rejected") {
       throw new Error(`Cannot apply rejected adjustment: ${adjustmentId}`);
     }
 
-    if (adjustment.approvalRequired && adjustment.status !== 'approved') {
-      throw new Error(`Adjustment requires approval before applying: ${adjustmentId}`);
+    if (adjustment.approvalRequired && adjustment.status !== "approved") {
+      throw new Error(
+        `Adjustment requires approval before applying: ${adjustmentId}`
+      );
     }
 
     // Apply each change to the plan
@@ -120,17 +122,17 @@ export class PlanAdjustmentManager {
     // Property 11: updatedAt must increase
     plan.updatedAt = Date.now();
 
-    adjustment.status = 'applied';
+    adjustment.status = "applied";
 
     await this.auditTrail.record({
       entryId: randomUUID(),
-      operationType: 'adjustment_applied',
-      operator: 'system',
+      operationType: "adjustment_applied",
+      operator: "system",
       content: `Applied adjustment ${adjustmentId} to plan ${adjustment.planId}: ${adjustment.reason}`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: adjustment.planId,
-      entityType: 'plan',
+      entityType: "plan",
       metadata: {
         adjustmentId,
         changeCount: adjustment.changes.length,
@@ -149,10 +151,12 @@ export class PlanAdjustmentManager {
     if (!adjustment) {
       throw new Error(`Adjustment not found: ${adjustmentId}`);
     }
-    if (adjustment.status !== 'proposed') {
-      throw new Error(`Can only approve proposed adjustments, current status: ${adjustment.status}`);
+    if (adjustment.status !== "proposed") {
+      throw new Error(
+        `Can only approve proposed adjustments, current status: ${adjustment.status}`
+      );
     }
-    adjustment.status = 'approved';
+    adjustment.status = "approved";
     return { ...adjustment, changes: [...adjustment.changes] };
   }
 
@@ -164,10 +168,12 @@ export class PlanAdjustmentManager {
     if (!adjustment) {
       throw new Error(`Adjustment not found: ${adjustmentId}`);
     }
-    if (adjustment.status !== 'proposed') {
-      throw new Error(`Can only reject proposed adjustments, current status: ${adjustment.status}`);
+    if (adjustment.status !== "proposed") {
+      throw new Error(
+        `Can only reject proposed adjustments, current status: ${adjustment.status}`
+      );
     }
-    adjustment.status = 'rejected';
+    adjustment.status = "rejected";
     return { ...adjustment, changes: [...adjustment.changes] };
   }
 
@@ -180,7 +186,10 @@ export class PlanAdjustmentManager {
    *
    * @see Requirement 8.2
    */
-  detectDeviation(plan: NLExecutionPlan, actualProgress: ActualProgress): DeviationResult {
+  detectDeviation(
+    plan: NLExecutionPlan,
+    actualProgress: ActualProgress
+  ): DeviationResult {
     const now = Date.now();
     const delayed: string[] = [];
     const costExceeded: string[] = [];
@@ -205,7 +214,10 @@ export class PlanAdjustmentManager {
     }
 
     // Check cost deviations against budget
-    const allCosts = { ...plan.costBudget.missionCosts, ...plan.costBudget.taskCosts };
+    const allCosts = {
+      ...plan.costBudget.missionCosts,
+      ...plan.costBudget.taskCosts,
+    };
     for (const [entityId, budgetedCost] of Object.entries(allCosts)) {
       const actualCost = actualProgress.costs[entityId] ?? 0;
       if (actualCost > budgetedCost) {
@@ -229,8 +241,8 @@ export class PlanAdjustmentManager {
    */
   listAdjustments(planId: string): PlanAdjustment[] {
     return Array.from(this.adjustments.values())
-      .filter((a) => a.planId === planId)
-      .map((a) => ({ ...a, changes: [...a.changes] }));
+      .filter(a => a.planId === planId)
+      .map(a => ({ ...a, changes: [...a.changes] }));
   }
 
   // ─── Private helpers ───
@@ -241,23 +253,25 @@ export class PlanAdjustmentManager {
   private applyChange(plan: NLExecutionPlan, change: AdjustmentChange): void {
     const { entityId, entityType, field, newValue } = change;
 
-    if (entityType === 'mission') {
-      const mission = plan.missions.find((m) => m.missionId === entityId);
+    if (entityType === "mission") {
+      const mission = plan.missions.find(m => m.missionId === entityId);
       if (mission && field in mission) {
         (mission as unknown as Record<string, unknown>)[field] = newValue;
       }
-    } else if (entityType === 'task') {
-      const task = plan.tasks.find((t) => t.taskId === entityId);
+    } else if (entityType === "task") {
+      const task = plan.tasks.find(t => t.taskId === entityId);
       if (task && field in task) {
         (task as unknown as Record<string, unknown>)[field] = newValue;
       }
-    } else if (entityType === 'timeline') {
-      const entry = plan.timeline.entries.find((e) => e.entityId === entityId);
+    } else if (entityType === "timeline") {
+      const entry = plan.timeline.entries.find(e => e.entityId === entityId);
       if (entry && field in entry) {
         (entry as unknown as Record<string, unknown>)[field] = newValue;
       }
-    } else if (entityType === 'resource') {
-      const resource = plan.resourceAllocation.entries.find((e) => e.taskId === entityId);
+    } else if (entityType === "resource") {
+      const resource = plan.resourceAllocation.entries.find(
+        e => e.taskId === entityId
+      );
       if (resource && field in resource) {
         (resource as unknown as Record<string, unknown>)[field] = newValue;
       }

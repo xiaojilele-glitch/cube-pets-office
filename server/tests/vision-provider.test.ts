@@ -30,8 +30,7 @@ describe("parseVisionResponse", () => {
   });
 
   it("handles TEXT: NONE as empty textContent", () => {
-    const raw =
-      "DESCRIPTION: A landscape\nELEMENTS:\n- mountain\nTEXT: NONE";
+    const raw = "DESCRIPTION: A landscape\nELEMENTS:\n- mountain\nTEXT: NONE";
 
     const result = parseVisionResponse(raw);
 
@@ -81,8 +80,7 @@ describe("analyzeImage", () => {
 
   it("sends a multimodal message with image_url and parses the response", async () => {
     mockCallLLM.mockResolvedValue({
-      content:
-        "DESCRIPTION: A dog\nELEMENTS:\n- dog\n- grass\nTEXT: NONE",
+      content: "DESCRIPTION: A dog\nELEMENTS:\n- dog\n- grass\nTEXT: NONE",
     });
 
     const result = await analyzeImage("data:image/png;base64,abc123");
@@ -113,7 +111,9 @@ describe("analyzeImage", () => {
   });
 
   it("uses custom prompt when provided", async () => {
-    mockCallLLM.mockResolvedValue({ content: "DESCRIPTION: test\nELEMENTS:\nTEXT: NONE" });
+    mockCallLLM.mockResolvedValue({
+      content: "DESCRIPTION: test\nELEMENTS:\nTEXT: NONE",
+    });
 
     await analyzeImage("data:image/png;base64,abc", "Describe this chart");
 
@@ -124,7 +124,9 @@ describe("analyzeImage", () => {
 
   it("uses detail from VISION_LLM_DETAIL config", async () => {
     process.env.VISION_LLM_DETAIL = "high";
-    mockCallLLM.mockResolvedValue({ content: "DESCRIPTION: test\nELEMENTS:\nTEXT: NONE" });
+    mockCallLLM.mockResolvedValue({
+      content: "DESCRIPTION: test\nELEMENTS:\nTEXT: NONE",
+    });
 
     await analyzeImage("data:image/png;base64,abc");
 
@@ -163,8 +165,12 @@ describe("analyzeImages", () => {
 
   it("processes multiple images in parallel and returns a Map", async () => {
     mockCallLLM
-      .mockResolvedValueOnce({ content: "DESCRIPTION: Cat\nELEMENTS:\n- cat\nTEXT: NONE" })
-      .mockResolvedValueOnce({ content: "DESCRIPTION: Dog\nELEMENTS:\n- dog\nTEXT: Woof" });
+      .mockResolvedValueOnce({
+        content: "DESCRIPTION: Cat\nELEMENTS:\n- cat\nTEXT: NONE",
+      })
+      .mockResolvedValueOnce({
+        content: "DESCRIPTION: Dog\nELEMENTS:\n- dog\nTEXT: Woof",
+      });
 
     const images = [
       { base64DataUrl: "data:image/png;base64,cat", name: "cat.png" },
@@ -182,7 +188,9 @@ describe("analyzeImages", () => {
 
   it("handles partial failures — failed images are excluded from the Map", async () => {
     mockCallLLM
-      .mockResolvedValueOnce({ content: "DESCRIPTION: Cat\nELEMENTS:\nTEXT: NONE" })
+      .mockResolvedValueOnce({
+        content: "DESCRIPTION: Cat\nELEMENTS:\nTEXT: NONE",
+      })
       .mockRejectedValueOnce(new Error("timeout"));
 
     const images = [

@@ -4,9 +4,9 @@
  * Extended with dynamic role loading/unloading capabilities.
  * @see Requirements 2.1, 2.2, 2.3, 2.4, 2.5
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { RuntimeAgentDependencies } from "../../shared/runtime-agent.js";
 import {
@@ -15,7 +15,10 @@ import {
   setLineageCollector as setSharedLineageCollector,
 } from "../../shared/runtime-agent.js";
 import type { LineageCollector } from "../lineage/lineage-collector.js";
-import type { RoleLoadPolicy, RoleOperationLog } from "../../shared/role-schema.js";
+import type {
+  RoleLoadPolicy,
+  RoleOperationLog,
+} from "../../shared/role-schema.js";
 import type { WorkflowNodeModelConfig } from "../../shared/organization-schema.js";
 import db from "../db/index.js";
 import { sessionStore } from "../memory/session-store.js";
@@ -24,7 +27,11 @@ import {
   ensureAgentWorkspace,
   type AgentWorkspaceScope,
 } from "../memory/workspace.js";
-import { readAgentWorkspaceFile, writeAgentWorkspaceFile, resolveAgentWorkspacePath } from "./access-guard.js";
+import {
+  readAgentWorkspaceFile,
+  writeAgentWorkspaceFile,
+  resolveAgentWorkspacePath,
+} from "./access-guard.js";
 import { callLLM, callLLMJson } from "./llm-client.js";
 import { messageBus } from "./message-bus.js";
 import { emitEvent } from "./socket.js";
@@ -66,7 +73,7 @@ export function getPermissionCheckEngine(): PermissionCheckEngine | undefined {
 
 const __agent_filename = fileURLToPath(import.meta.url);
 const __agent_dirname = dirname(__agent_filename);
-const DATA_ROOT = resolve(__agent_dirname, '../../data/agents');
+const DATA_ROOT = resolve(__agent_dirname, "../../data/agents");
 
 const MAX_OPERATION_LOG = 200;
 
@@ -115,7 +122,7 @@ function defaultRoleState(soulMd: string, model: string): AgentRoleState {
     currentRoleLoadedAt: null,
     baseSystemPrompt: soulMd,
     baseModelConfig: model,
-    roleLoadPolicy: 'merge',
+    roleLoadPolicy: "merge",
     lastRoleSwitchAt: null,
     roleSwitchCooldownMs: 60_000,
     operationLog: [],
@@ -127,33 +134,41 @@ function defaultRoleState(soulMd: string, model: string): AgentRoleState {
 }
 
 function getRoleStatePath(agentId: string): string {
-  return resolve(DATA_ROOT, agentId, 'role-state.json');
+  return resolve(DATA_ROOT, agentId, "role-state.json");
 }
 
-function loadRoleStateFromDisk(agentId: string, soulMd: string, model: string): AgentRoleState {
+function loadRoleStateFromDisk(
+  agentId: string,
+  soulMd: string,
+  model: string
+): AgentRoleState {
   const filePath = getRoleStatePath(agentId);
   if (!existsSync(filePath)) {
     return defaultRoleState(soulMd, model);
   }
   try {
-    const raw = readFileSync(filePath, 'utf-8');
+    const raw = readFileSync(filePath, "utf-8");
     const parsed = JSON.parse(raw) as AgentRoleStateStore;
     return {
       currentRoleId: parsed.currentRoleId ?? null,
       currentRoleLoadedAt: parsed.currentRoleLoadedAt ?? null,
       baseSystemPrompt: soulMd,
       baseModelConfig: model,
-      roleLoadPolicy: parsed.roleLoadPolicy ?? 'merge',
+      roleLoadPolicy: parsed.roleLoadPolicy ?? "merge",
       lastRoleSwitchAt: parsed.lastRoleSwitchAt ?? null,
       roleSwitchCooldownMs: parsed.roleSwitchCooldownMs ?? 60_000,
-      operationLog: Array.isArray(parsed.operationLog) ? parsed.operationLog : [],
+      operationLog: Array.isArray(parsed.operationLog)
+        ? parsed.operationLog
+        : [],
       loadedSkillIds: [],
       loadedMcpIds: [],
       effectiveModelConfig: null,
       baseFullModelConfig: null,
     };
   } catch {
-    console.warn(`[Agent] Role state file corrupted for ${agentId}, using defaults`);
+    console.warn(
+      `[Agent] Role state file corrupted for ${agentId}, using defaults`
+    );
     return defaultRoleState(soulMd, model);
   }
 }
@@ -170,7 +185,7 @@ function persistRoleState(agentId: string, state: AgentRoleState): void {
   };
   try {
     mkdirSync(dirname(filePath), { recursive: true });
-    writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
     console.error(`[Agent] Failed to persist role state for ${agentId}:`, err);
   }
@@ -258,7 +273,11 @@ export class Agent extends RuntimeAgent {
     super(config, agentDeps);
 
     // Initialize role state from disk or defaults
-    this.roleState = loadRoleStateFromDisk(config.id, config.soulMd, config.model);
+    this.roleState = loadRoleStateFromDisk(
+      config.id,
+      config.soulMd,
+      config.model
+    );
   }
 
   static fromDB(agentId: string): Agent | null {
@@ -288,17 +307,13 @@ export class Agent extends RuntimeAgent {
    */
   async loadRole(roleId: string, triggerSource: string): Promise<void> {
     // 1. Constraint validation
-    const constraintError = roleConstraintValidator.validate(
-      this,
-      roleId,
-      {
-        currentRoleId: this.roleState.currentRoleId,
-        hasIncompleteTasks: false, // caller should check this externally
-        triggerSource,
-        lastRoleSwitchAt: this.roleState.lastRoleSwitchAt,
-        roleSwitchCooldownMs: this.roleState.roleSwitchCooldownMs,
-      }
-    );
+    const constraintError = roleConstraintValidator.validate(this, roleId, {
+      currentRoleId: this.roleState.currentRoleId,
+      hasIncompleteTasks: false, // caller should check this externally
+      triggerSource,
+      lastRoleSwitchAt: this.roleState.lastRoleSwitchAt,
+      roleSwitchCooldownMs: this.roleState.roleSwitchCooldownMs,
+    });
     if (constraintError) {
       throw new Error(
         `[Agent] Role load denied (${constraintError.code}): ${constraintError.denialReason}`
@@ -315,7 +330,8 @@ export class Agent extends RuntimeAgent {
     }
 
     // 4. Inject responsibilityPrompt after base SOUL.md
-    this.config.soulMd = this.roleState.baseSystemPrompt + '\n\n' + template.responsibilityPrompt;
+    this.config.soulMd =
+      this.roleState.baseSystemPrompt + "\n\n" + template.responsibilityPrompt;
 
     // 5. Load role-associated skills (conceptual — store on state)
     this.roleState.loadedSkillIds = [...template.requiredSkillIds];
@@ -336,7 +352,7 @@ export class Agent extends RuntimeAgent {
     this.appendOperationLog({
       agentId: this.config.id,
       roleId,
-      action: 'load',
+      action: "load",
       timestamp: new Date().toISOString(),
       triggerSource,
     });
@@ -351,7 +367,9 @@ export class Agent extends RuntimeAgent {
       timestamp: new Date().toISOString(),
     });
 
-    console.log(`[Agent] ${this.config.id} loaded role ${roleId} (trigger: ${triggerSource})`);
+    console.log(
+      `[Agent] ${this.config.id} loaded role ${roleId} (trigger: ${triggerSource})`
+    );
   }
 
   /**
@@ -362,7 +380,9 @@ export class Agent extends RuntimeAgent {
   async unloadRole(triggerSource: string): Promise<void> {
     const previousRoleId = this.roleState.currentRoleId;
     if (previousRoleId === null) {
-      console.warn(`[Agent] ${this.config.id} has no role loaded, skipping unload`);
+      console.warn(
+        `[Agent] ${this.config.id} has no role loaded, skipping unload`
+      );
       return;
     }
 
@@ -385,7 +405,7 @@ export class Agent extends RuntimeAgent {
     this.appendOperationLog({
       agentId: this.config.id,
       roleId: previousRoleId,
-      action: 'unload',
+      action: "unload",
       timestamp: new Date().toISOString(),
       triggerSource,
     });
@@ -400,7 +420,9 @@ export class Agent extends RuntimeAgent {
       timestamp: new Date().toISOString(),
     });
 
-    console.log(`[Agent] ${this.config.id} unloaded role ${previousRoleId} (trigger: ${triggerSource})`);
+    console.log(
+      `[Agent] ${this.config.id} unloaded role ${previousRoleId} (trigger: ${triggerSource})`
+    );
   }
 
   /**
@@ -414,7 +436,10 @@ export class Agent extends RuntimeAgent {
     const snapshot = {
       soulMd: this.config.soulMd,
       model: this.config.model,
-      roleState: { ...this.roleState, operationLog: [...this.roleState.operationLog] },
+      roleState: {
+        ...this.roleState,
+        operationLog: [...this.roleState.operationLog],
+      },
     };
 
     try {
@@ -427,7 +452,10 @@ export class Agent extends RuntimeAgent {
       await this.loadRole(newRoleId, triggerSource);
     } catch (err) {
       // 4. Rollback on failure
-      console.error(`[Agent] ${this.config.id} switchRole failed, rolling back:`, err);
+      console.error(
+        `[Agent] ${this.config.id} switchRole failed, rolling back:`,
+        err
+      );
       this.config.soulMd = snapshot.soulMd;
       this.config.model = snapshot.model;
       this.roleState = snapshot.roleState;
@@ -470,11 +498,11 @@ export class Agent extends RuntimeAgent {
     const agentBaseConfig = this.roleState.baseFullModelConfig;
 
     switch (this.roleState.roleLoadPolicy) {
-      case 'override':
+      case "override":
         this.config.model = roleModelConfig.model;
         this.roleState.effectiveModelConfig = { ...roleModelConfig };
         break;
-      case 'prefer_agent':
+      case "prefer_agent":
         // Keep agent's own config — no change to config.model
         if (agentBaseConfig) {
           this.roleState.effectiveModelConfig = { ...agentBaseConfig };
@@ -482,13 +510,19 @@ export class Agent extends RuntimeAgent {
           this.roleState.effectiveModelConfig = null;
         }
         break;
-      case 'merge':
+      case "merge":
         this.config.model = roleModelConfig.model;
         if (agentBaseConfig) {
           this.roleState.effectiveModelConfig = {
             model: roleModelConfig.model,
-            temperature: Math.min(agentBaseConfig.temperature, roleModelConfig.temperature),
-            maxTokens: Math.max(agentBaseConfig.maxTokens, roleModelConfig.maxTokens),
+            temperature: Math.min(
+              agentBaseConfig.temperature,
+              roleModelConfig.temperature
+            ),
+            maxTokens: Math.max(
+              agentBaseConfig.maxTokens,
+              roleModelConfig.maxTokens
+            ),
           };
         } else {
           this.roleState.effectiveModelConfig = { ...roleModelConfig };
@@ -517,7 +551,13 @@ export class Agent extends RuntimeAgent {
     workflowId: string,
     stage: string
   ): Promise<void> {
-    await messageBus.send(this.config.id, toAgentId, content, workflowId, stage);
+    await messageBus.send(
+      this.config.id,
+      toAgentId,
+      content,
+      workflowId,
+      stage
+    );
   }
 
   async getHistory(workflowId?: string, limit?: number): Promise<any[]> {
@@ -539,9 +579,17 @@ export class Agent extends RuntimeAgent {
     if (this.permissionToken) {
       const engine = getPermissionCheckEngine();
       if (engine) {
-        const resolvedPath = resolveAgentWorkspacePath(this.config.id, filename, scope);
+        const resolvedPath = resolveAgentWorkspacePath(
+          this.config.id,
+          filename,
+          scope
+        );
         const result = engine.checkPermission(
-          this.config.id, "filesystem", "write", resolvedPath, this.permissionToken
+          this.config.id,
+          "filesystem",
+          "write",
+          resolvedPath,
+          this.permissionToken
         );
         if (!result.allowed) {
           throw new PermissionDeniedError(result.reason, result.suggestion);
@@ -560,9 +608,17 @@ export class Agent extends RuntimeAgent {
     if (this.permissionToken) {
       const engine = getPermissionCheckEngine();
       if (engine) {
-        const resolvedPath = resolveAgentWorkspacePath(this.config.id, filename, scope);
+        const resolvedPath = resolveAgentWorkspacePath(
+          this.config.id,
+          filename,
+          scope
+        );
         const result = engine.checkPermission(
-          this.config.id, "filesystem", "read", resolvedPath, this.permissionToken
+          this.config.id,
+          "filesystem",
+          "read",
+          resolvedPath,
+          this.permissionToken
         );
         if (!result.allowed) {
           throw new PermissionDeniedError(result.reason, result.suggestion);
@@ -582,7 +638,7 @@ export class Agent extends RuntimeAgent {
     options: AgentInvokeOptions & { projectId?: string; taskId?: string } = {}
   ): Promise<string> {
     const ragConfig = getRAGConfig();
-    if (!ragConfig.enabled || ragConfig.augmentation.mode === 'disabled') {
+    if (!ragConfig.enabled || ragConfig.augmentation.mode === "disabled") {
       return this.invoke(prompt, context, options);
     }
 
@@ -591,8 +647,8 @@ export class Agent extends RuntimeAgent {
       const deps = initRAG();
       const result = await deps.ragPipeline.augment(
         {
-          taskId: options.taskId ?? '',
-          projectId: options.projectId ?? '',
+          taskId: options.taskId ?? "",
+          projectId: options.projectId ?? "",
           directive: prompt,
         },
         {
@@ -602,10 +658,13 @@ export class Agent extends RuntimeAgent {
       );
 
       if (result.injectedChunks.length > 0) {
-        const ragContext = result.injectedChunks.map(c =>
-          `[${c.sourceType}:${c.sourceId}] ${c.content}`
-        ).join('\n---\n');
-        const augmentedContext = [...(context ?? []), `\n<RAG Context>\n${ragContext}\n</RAG Context>`];
+        const ragContext = result.injectedChunks
+          .map(c => `[${c.sourceType}:${c.sourceId}] ${c.content}`)
+          .join("\n---\n");
+        const augmentedContext = [
+          ...(context ?? []),
+          `\n<RAG Context>\n${ragContext}\n</RAG Context>`,
+        ];
         return this.invoke(prompt, augmentedContext, options);
       }
     } catch {

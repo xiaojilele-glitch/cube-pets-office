@@ -35,7 +35,7 @@ export class TimestampProvider {
     // 4.4 时间倒退检测
     if (this.lastSystemTime > 0 && system < this.lastSystemTime) {
       console.warn(
-        `[TimestampProvider] Time regression detected: current=${system}, last=${this.lastSystemTime}, delta=${this.lastSystemTime - system}ms`,
+        `[TimestampProvider] Time regression detected: current=${system}, last=${this.lastSystemTime}, delta=${this.lastSystemTime - system}ms`
       );
       if (this.onTimeRegression) {
         this.onTimeRegression(system, this.lastSystemTime);
@@ -78,7 +78,9 @@ export class TimestampProvider {
   /**
    * 设置时间倒退回调。当检测到系统时间倒退时触发。
    */
-  setTimeRegressionHandler(handler: (current: number, last: number) => void): void {
+  setTimeRegressionHandler(
+    handler: (current: number, last: number) => void
+  ): void {
     this.onTimeRegression = handler;
   }
 

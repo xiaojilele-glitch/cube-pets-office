@@ -49,14 +49,14 @@ sequenceDiagram
 
 新增文件：`server/core/execution-bridge.ts`
 
-```typescript
+````typescript
 interface ExecutionBridgeOptions {
   missionRuntime: MissionRuntime;
   executorBaseUrl: string;
   callbackUrl: string;
   executionMode: "mock" | "real";
   defaultImage: string;
-  retryCount: number;  // 默认 1
+  retryCount: number; // 默认 1
 }
 
 interface BridgeResult {
@@ -87,7 +87,7 @@ class ExecutionBridge {
     metadata?: Record<string, unknown>
   ): Promise<BridgeResult>;
 }
-```
+````
 
 ### 产物检测策略
 
@@ -116,6 +116,7 @@ await this.runReview(workflowId, organization);
 ```
 
 新增私有方法 `bridgeToExecutor`：
+
 - 收集当前 workflow 所有 task 的 deliverable
 - 调用 `ExecutionBridge.bridge()`
 - 如果触发了 Docker 执行，等待执行完成或超时
@@ -131,7 +132,7 @@ payload.runner = {
   outcome: "success",
   steps: 3,
   delayMs: 40,
-  summary: "Mock execution completed"
+  summary: "Mock execution completed",
 };
 
 // Real 模式
@@ -155,6 +156,7 @@ interface ExecutorStatusPanelProps {
 ```
 
 显示内容：
+
 - 执行器名称和 Job ID
 - 当前状态（queued/running/completed/failed）及对应颜色标识
 - 最后事件时间
@@ -180,7 +182,14 @@ interface ExecutorStatusPanelProps {
 ```typescript
 interface BridgeState {
   missionId: string;
-  status: "idle" | "detecting" | "building" | "dispatching" | "waiting" | "done" | "failed";
+  status:
+    | "idle"
+    | "detecting"
+    | "building"
+    | "dispatching"
+    | "waiting"
+    | "done"
+    | "failed";
   jobId?: string;
   startedAt?: number;
   completedAt?: number;
@@ -190,62 +199,61 @@ interface BridgeState {
 
 此状态仅在桥接过程中存在于内存，不持久化。Mission 的持久化状态通过 MissionRuntime 管理。
 
-
 ## 正确性属性
 
-*属性（Property）是一种在系统所有合法执行路径上都应成立的特征或行为——本质上是对系统应做什么的形式化陈述。属性是人类可读规格说明与机器可验证正确性保证之间的桥梁。*
+_属性（Property）是一种在系统所有合法执行路径上都应成立的特征或行为——本质上是对系统应做什么的形式化陈述。属性是人类可读规格说明与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 可执行内容检测
 
-*For any* 包含可执行语言代码块（如 ` ```python`、` ```bash`、` ```javascript` 等）的交付物字符串，`detectExecutable` 应返回 `{ executable: true }`。
+_For any_ 包含可执行语言代码块（如 ` ```python`、` ```bash`、` ```javascript` 等）的交付物字符串，`detectExecutable` 应返回 `{ executable: true }`。
 
 **Validates: Requirements 1.1**
 
 ### Property 2: 非可执行内容跳过
 
-*For any* 不包含任何可执行语言代码块且不包含脚本关键字的纯文本字符串，`detectExecutable` 应返回 `{ executable: false }`。
+_For any_ 不包含任何可执行语言代码块且不包含脚本关键字的纯文本字符串，`detectExecutable` 应返回 `{ executable: false }`。
 
 **Validates: Requirements 1.2**
 
 ### Property 3: Metadata 强制覆盖
 
-*For any* 交付物内容，当 `metadata.requiresExecution` 为布尔值时，`detectExecutable` 的返回值应等于该布尔值，无论交付物内容是否包含可执行模式。
+_For any_ 交付物内容，当 `metadata.requiresExecution` 为布尔值时，`detectExecutable` 的返回值应等于该布尔值，无论交付物内容是否包含可执行模式。
 
 **Validates: Requirements 1.3, 1.4**
 
 ### Property 4: ExecutionPlan 构建不变量
 
-*For any* 有效的可执行交付物和 missionId，通过 ExecutionPlanBuilder 构建的 ExecutionPlan 应满足：`plan.missionId === 输入的 missionId`、`plan.sourceText` 包含交付物内容、`plan.objective` 非空、且 `plan.mode` 等于指定的 mode（未指定时默认为 "auto"）。
+_For any_ 有效的可执行交付物和 missionId，通过 ExecutionPlanBuilder 构建的 ExecutionPlan 应满足：`plan.missionId === 输入的 missionId`、`plan.sourceText` 包含交付物内容、`plan.objective` 非空、且 `plan.mode` 等于指定的 mode（未指定时默认为 "auto"）。
 
 **Validates: Requirements 2.1, 2.2, 2.4**
 
 ### Property 5: 分发后 executor 上下文一致性
 
-*For any* 成功分发的 ExecutionPlan，分发完成后 MissionRecord 的 `executor` 字段应包含：`name` 非空、`jobId` 与分发响应的 jobId 一致、`requestId` 与分发请求的 requestId 一致、`status` 为 "queued"。
+_For any_ 成功分发的 ExecutionPlan，分发完成后 MissionRecord 的 `executor` 字段应包含：`name` 非空、`jobId` 与分发响应的 jobId 一致、`requestId` 与分发请求的 requestId 一致、`status` 为 "queued"。
 
 **Validates: Requirements 3.2**
 
 ### Property 6: Callback URL 构建正确性
 
-*For any* 服务器 base URL，ExecutionBridge 构建的 callback URL 应以 `/api/executor/events` 结尾，且为合法的 URL 格式。
+_For any_ 服务器 base URL，ExecutionBridge 构建的 callback URL 应以 `/api/executor/events` 结尾，且为合法的 URL 格式。
 
 **Validates: Requirements 3.5**
 
 ### Property 7: 事件到状态映射
 
-*For any* ExecutorEvent，当 event.type 为 `job.started` 时 Mission executor.status 应为 `running`；当 event.type 为 `job.completed` 时 Mission status 应为 `done`；当 event.type 为 `job.failed` 时 Mission status 应为 `failed`；当 event.type 为 `job.progress` 时 Mission progress 应更新为 event.progress 的值（clamp 到 0-100）。此映射对 mock 和 real 模式的事件一致适用。
+_For any_ ExecutorEvent，当 event.type 为 `job.started` 时 Mission executor.status 应为 `running`；当 event.type 为 `job.completed` 时 Mission status 应为 `done`；当 event.type 为 `job.failed` 时 Mission status 应为 `failed`；当 event.type 为 `job.progress` 时 Mission progress 应更新为 event.progress 的值（clamp 到 0-100）。此映射对 mock 和 real 模式的事件一致适用。
 
 **Validates: Requirements 4.1, 4.2, 4.3, 4.4, 7.4**
 
 ### Property 8: 模式特定 payload 注入
 
-*For any* 交付物内容，当 executionMode 为 "mock" 时，构建的 Job payload 应包含 `runner.kind === "mock"`；当 executionMode 为 "real" 时，payload 应包含 `image` 字符串字段和 `command` 数组字段。
+_For any_ 交付物内容，当 executionMode 为 "mock" 时，构建的 Job payload 应包含 `runner.kind === "mock"`；当 executionMode 为 "real" 时，payload 应包含 `image` 字符串字段和 `command` 数组字段。
 
 **Validates: Requirements 7.1, 7.2**
 
 ### Property 9: 异常安全性
 
-*For any* 在 `bridge()` 执行过程中抛出的异常，Mission 最终状态应为 `failed`，且 Mission events 中应包含错误信息。
+_For any_ 在 `bridge()` 执行过程中抛出的异常，Mission 最终状态应为 `failed`，且 Mission events 中应包含错误信息。
 
 **Validates: Requirements 6.4**
 
@@ -253,16 +261,16 @@ interface BridgeState {
 
 ### 分层错误处理策略
 
-| 错误场景 | 处理方式 | Mission 最终状态 |
-|---------|---------|----------------|
-| 产物检测异常 | 捕获异常，记录日志，跳过 Docker 执行 | 继续正常工作流 |
-| ExecutionPlan 构建失败 | 记录错误，标记 Mission 失败 | failed |
-| ExecutorClient 不可达 | 重试 1 次，仍失败则标记 Mission 失败 | failed |
-| ExecutorClient 分发被拒绝 | 记录拒绝原因，标记 Mission 失败 | failed |
-| ExecutorClient 分发超时 | 记录超时详情，标记 Mission 失败 | failed |
-| 容器执行超时 | 由 lobster-executor 发送 job.failed 事件 | failed |
-| 心跳超时（30 秒无事件） | HeartbeatMonitor 检测并标记 Mission 失败 | failed |
-| 未预期异常 | 顶层 try-catch 捕获，记录完整错误栈 | failed |
+| 错误场景                  | 处理方式                                 | Mission 最终状态 |
+| ------------------------- | ---------------------------------------- | ---------------- |
+| 产物检测异常              | 捕获异常，记录日志，跳过 Docker 执行     | 继续正常工作流   |
+| ExecutionPlan 构建失败    | 记录错误，标记 Mission 失败              | failed           |
+| ExecutorClient 不可达     | 重试 1 次，仍失败则标记 Mission 失败     | failed           |
+| ExecutorClient 分发被拒绝 | 记录拒绝原因，标记 Mission 失败          | failed           |
+| ExecutorClient 分发超时   | 记录超时详情，标记 Mission 失败          | failed           |
+| 容器执行超时              | 由 lobster-executor 发送 job.failed 事件 | failed           |
+| 心跳超时（30 秒无事件）   | HeartbeatMonitor 检测并标记 Mission 失败 | failed           |
+| 未预期异常                | 顶层 try-catch 捕获，记录完整错误栈      | failed           |
 
 ### 心跳超时机制
 
@@ -298,23 +306,23 @@ interface BridgeState {
 
 ### 单元测试覆盖
 
-| 测试目标 | 测试内容 |
-|---------|---------|
-| detectExecutable | 各种代码块格式、脚本关键字、纯文本、metadata 覆盖 |
-| bridge() 成功路径 | mock 模式完整桥接流程 |
-| bridge() 失败路径 | 构建失败、分发失败、超时 |
-| 心跳超时 | 30 秒无事件后 Mission 标记为 failed |
-| 事件回流 | 各类 ExecutorEvent 正确更新 Mission 状态 |
-| 前端组件 | ExecutorStatusPanel 渲染正确的状态信息 |
+| 测试目标          | 测试内容                                          |
+| ----------------- | ------------------------------------------------- |
+| detectExecutable  | 各种代码块格式、脚本关键字、纯文本、metadata 覆盖 |
+| bridge() 成功路径 | mock 模式完整桥接流程                             |
+| bridge() 失败路径 | 构建失败、分发失败、超时                          |
+| 心跳超时          | 30 秒无事件后 Mission 标记为 failed               |
+| 事件回流          | 各类 ExecutorEvent 正确更新 Mission 状态          |
+| 前端组件          | ExecutorStatusPanel 渲染正确的状态信息            |
 
 ### 属性测试覆盖
 
-| 属性 | 测试文件 |
-|-----|---------|
-| Property 1-3: 产物检测 | `server/core/__tests__/execution-bridge.property.test.ts` |
-| Property 4: Plan 构建不变量 | `server/core/__tests__/execution-bridge.property.test.ts` |
-| Property 5: executor 上下文一致性 | `server/core/__tests__/execution-bridge.property.test.ts` |
-| Property 6: Callback URL | `server/core/__tests__/execution-bridge.property.test.ts` |
-| Property 7: 事件到状态映射 | `server/core/__tests__/executor-event-mapping.property.test.ts` |
-| Property 8: 模式 payload | `server/core/__tests__/execution-bridge.property.test.ts` |
-| Property 9: 异常安全性 | `server/core/__tests__/execution-bridge.property.test.ts` |
+| 属性                              | 测试文件                                                        |
+| --------------------------------- | --------------------------------------------------------------- |
+| Property 1-3: 产物检测            | `server/core/__tests__/execution-bridge.property.test.ts`       |
+| Property 4: Plan 构建不变量       | `server/core/__tests__/execution-bridge.property.test.ts`       |
+| Property 5: executor 上下文一致性 | `server/core/__tests__/execution-bridge.property.test.ts`       |
+| Property 6: Callback URL          | `server/core/__tests__/execution-bridge.property.test.ts`       |
+| Property 7: 事件到状态映射        | `server/core/__tests__/executor-event-mapping.property.test.ts` |
+| Property 8: 模式 payload          | `server/core/__tests__/execution-bridge.property.test.ts`       |
+| Property 9: 异常安全性            | `server/core/__tests__/execution-bridge.property.test.ts`       |

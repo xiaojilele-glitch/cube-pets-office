@@ -5,6 +5,7 @@
 多区域灾难恢复系统为 Cube Pets Office 平台提供跨地理区域的高可用性和灾难恢复能力。系统在现有单区域架构之上引入 Region 抽象层，通过 Region Manager、Replication Strategy、Region Scheduler、Global Load Balancer 和 Region Health Monitor 五大核心组件，实现数据复制、区域感知调度、负载均衡、自动故障转移和实时监控。
 
 设计遵循以下原则：
+
 - **渐进式集成**：不破坏现有 WorkflowEngine、MissionRuntime 等模块，通过适配器模式接入
 - **最终一致性优先**：默认采用最终一致性模型，关键数据可选强一致性
 - **故障域隔离**：各区域资源完全独立，单区域故障不影响其他区域
@@ -77,13 +78,26 @@ flowchart TB
 ```typescript
 // shared/region/contracts.ts
 
-export type RegionTier = 'primary' | 'secondary' | 'tertiary';
-export type RegionStatus = 'healthy' | 'degraded' | 'unavailable';
-export type ReplicationMode = 'primary-secondary' | 'multi-master' | 'eventual-consistency';
-export type ReplicationDirection = 'one-way' | 'bidirectional';
-export type ConflictResolutionStrategy = 'primary-wins' | 'timestamp' | 'custom';
-export type SchedulingStrategy = 'nearest' | 'lowest-latency' | 'load-balanced' | 'affinity';
-export type LoadBalancerAlgorithm = 'round-robin' | 'least-connections' | 'weighted';
+export type RegionTier = "primary" | "secondary" | "tertiary";
+export type RegionStatus = "healthy" | "degraded" | "unavailable";
+export type ReplicationMode =
+  | "primary-secondary"
+  | "multi-master"
+  | "eventual-consistency";
+export type ReplicationDirection = "one-way" | "bidirectional";
+export type ConflictResolutionStrategy =
+  | "primary-wins"
+  | "timestamp"
+  | "custom";
+export type SchedulingStrategy =
+  | "nearest"
+  | "lowest-latency"
+  | "load-balanced"
+  | "affinity";
+export type LoadBalancerAlgorithm =
+  | "round-robin"
+  | "least-connections"
+  | "weighted";
 
 export interface RegionConfig {
   regionId: string;
@@ -155,10 +169,18 @@ export interface IRegionManager {
   getQuota(regionId: string, tenantId: string): RegionQuota;
 
   /** 更新区域配额 */
-  updateQuota(regionId: string, tenantId: string, quota: Partial<RegionQuota>): void;
+  updateQuota(
+    regionId: string,
+    tenantId: string,
+    quota: Partial<RegionQuota>
+  ): void;
 
   /** 检查配额是否允许操作 */
-  checkQuota(regionId: string, tenantId: string, resource: 'agents' | 'storage' | 'qps'): boolean;
+  checkQuota(
+    regionId: string,
+    tenantId: string,
+    resource: "agents" | "storage" | "qps"
+  ): boolean;
 }
 
 export interface InitResult {
@@ -179,8 +201,8 @@ export interface BinlogEntry {
   id: string;
   regionId: string;
   timestamp: number;
-  operation: 'create' | 'update' | 'delete';
-  collection: string;       // agents | workflows | missions | knowledge
+  operation: "create" | "update" | "delete";
+  collection: string; // agents | workflows | missions | knowledge
   documentId: string;
   version: number;
   data: unknown;
@@ -192,11 +214,21 @@ export interface ConflictRecord {
   timestamp: number;
   collection: string;
   documentId: string;
-  localVersion: { regionId: string; version: number; data: unknown; timestamp: number };
-  remoteVersion: { regionId: string; version: number; data: unknown; timestamp: number };
+  localVersion: {
+    regionId: string;
+    version: number;
+    data: unknown;
+    timestamp: number;
+  };
+  remoteVersion: {
+    regionId: string;
+    version: number;
+    data: unknown;
+    timestamp: number;
+  };
   resolution: ConflictResolutionStrategy;
   resolvedData: unknown;
-  resolvedBy: 'auto' | 'manual';
+  resolvedBy: "auto" | "manual";
 }
 
 export interface ReplicationStatus {
@@ -205,7 +237,7 @@ export interface ReplicationStatus {
   lagMs: number;
   lastSyncTimestamp: number;
   pendingEntries: number;
-  status: 'syncing' | 'idle' | 'error';
+  status: "syncing" | "idle" | "error";
 }
 ```
 
@@ -214,10 +246,13 @@ export interface ReplicationStatus {
 
 export interface IReplicationEngine {
   /** 记录写操作到 binlog */
-  recordChange(entry: Omit<BinlogEntry, 'id' | 'checksum'>): BinlogEntry;
+  recordChange(entry: Omit<BinlogEntry, "id" | "checksum">): BinlogEntry;
 
   /** 将 binlog 条目复制到目标区域 */
-  replicateTo(targetRegionId: string, entries: BinlogEntry[]): Promise<ReplicateResult>;
+  replicateTo(
+    targetRegionId: string,
+    entries: BinlogEntry[]
+  ): Promise<ReplicateResult>;
 
   /** 获取指定时间戳之后的增量 binlog */
   getIncrementalChanges(sinceTimestamp: number): BinlogEntry[];
@@ -226,7 +261,10 @@ export interface IReplicationEngine {
   resolveConflict(conflict: ConflictRecord): ConflictRecord;
 
   /** 手动解决冲突 */
-  manualResolveConflict(conflictId: string, chosenRegionId: string): ConflictRecord;
+  manualResolveConflict(
+    conflictId: string,
+    chosenRegionId: string
+  ): ConflictRecord;
 
   /** 获取复制状态 */
   getReplicationStatus(): ReplicationStatus[];
@@ -252,14 +290,14 @@ export interface ReplicateResult {
 
 export interface SchedulingConfig {
   strategy: SchedulingStrategy;
-  preferences: string[];           // 优先区域 ID 列表
+  preferences: string[]; // 优先区域 ID 列表
   constraints: SchedulingConstraint[];
   failoverPolicy: FailoverPolicy;
   costAware: boolean;
 }
 
 export interface SchedulingConstraint {
-  type: 'region-required' | 'region-excluded' | 'min-capacity' | 'max-latency';
+  type: "region-required" | "region-excluded" | "min-capacity" | "max-latency";
   value: string | number;
 }
 
@@ -284,10 +322,16 @@ export interface SchedulingDecision {
 
 export interface IRegionScheduler {
   /** 选择最优区域 */
-  selectRegion(config: SchedulingConfig, userLocation?: { lat: number; lng: number }): SchedulingDecision;
+  selectRegion(
+    config: SchedulingConfig,
+    userLocation?: { lat: number; lng: number }
+  ): SchedulingDecision;
 
   /** 计算到各区域的延迟 */
-  calculateLatencies(userLocation: { lat: number; lng: number }): Map<string, number>;
+  calculateLatencies(userLocation: {
+    lat: number;
+    lng: number;
+  }): Map<string, number>;
 
   /** 获取区域负载评分 */
   getRegionScores(): Map<string, number>;
@@ -308,7 +352,7 @@ export interface LoadBalancerConfig {
   algorithm: LoadBalancerAlgorithm;
   healthCheck: HealthCheckConfig;
   sessionAffinity: boolean;
-  weights: Record<string, number>;  // regionId -> weight
+  weights: Record<string, number>; // regionId -> weight
 }
 
 export interface HealthCheckConfig {
@@ -333,7 +377,10 @@ export interface RoutingDecision {
 
 export interface IGlobalLoadBalancer {
   /** 路由请求到目标区域 */
-  route(request: { sessionId?: string; userLocation?: { lat: number; lng: number } }): RoutingDecision;
+  route(request: {
+    sessionId?: string;
+    userLocation?: { lat: number; lng: number };
+  }): RoutingDecision;
 
   /** 更新区域权重 */
   updateWeights(weights: Record<string, number>): void;
@@ -345,7 +392,10 @@ export interface IGlobalLoadBalancer {
   markAvailable(regionId: string): void;
 
   /** 获取当前负载分布 */
-  getLoadDistribution(): Record<string, { weight: number; activeConnections: number; qps: number }>;
+  getLoadDistribution(): Record<
+    string,
+    { weight: number; activeConnections: number; qps: number }
+  >;
 }
 ```
 
@@ -360,10 +410,10 @@ export interface RegionMetrics {
   regionId: string;
   timestamp: number;
   health: RegionStatus;
-  cpu: number;           // 0-100
-  memory: number;        // 0-100
+  cpu: number; // 0-100
+  memory: number; // 0-100
   qps: number;
-  errorRate: number;     // 0-1
+  errorRate: number; // 0-1
   replicationLagMs: number;
   activeWorkflows: number;
   activeAgents: number;
@@ -372,13 +422,13 @@ export interface RegionMetrics {
 export interface AlertRule {
   id: string;
   name: string;
-  condition: string;     // e.g. "replicationLagMs > 5000"
-  severity: 'info' | 'warning' | 'critical';
+  condition: string; // e.g. "replicationLagMs > 5000"
+  severity: "info" | "warning" | "critical";
   actions: AlertAction[];
 }
 
 export interface AlertAction {
-  type: 'log' | 'socket' | 'webhook';
+  type: "log" | "socket" | "webhook";
   target: string;
 }
 
@@ -386,7 +436,7 @@ export interface Alert {
   id: string;
   ruleId: string;
   regionId: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
   message: string;
   impact: string;
   suggestedAction: string;
@@ -403,7 +453,7 @@ export interface ConsistencyCheckResult {
     regions: Array<{ regionId: string; version: number; checksum: string }>;
     autoRepaired: boolean;
   }>;
-  status: 'consistent' | 'repaired' | 'inconsistent';
+  status: "consistent" | "repaired" | "inconsistent";
 }
 ```
 
@@ -439,7 +489,10 @@ export interface IRegionHealthMonitor {
 export interface CostReport {
   timestamp: number;
   totalCost: number;
-  byRegion: Record<string, { compute: number; storage: number; network: number }>;
+  byRegion: Record<
+    string,
+    { compute: number; storage: number; network: number }
+  >;
   byTenant: Record<string, number>;
   optimizationSuggestions: string[];
 }
@@ -452,7 +505,10 @@ export interface CostReport {
 
 export interface IMigrationTool {
   /** 执行从单区域到多区域的迁移 */
-  migrate(sourceRegionId: string, targetRegions: RegionConfig[]): Promise<MigrationResult>;
+  migrate(
+    sourceRegionId: string,
+    targetRegions: RegionConfig[]
+  ): Promise<MigrationResult>;
 
   /** 验证迁移后的数据一致性 */
   verify(): Promise<ConsistencyCheckResult>;
@@ -482,7 +538,11 @@ export interface DrillResult {
   success: boolean;
   rtoActualMs: number;
   rpoActualMs: number;
-  steps: Array<{ name: string; status: 'passed' | 'failed'; durationMs: number }>;
+  steps: Array<{
+    name: string;
+    status: "passed" | "failed";
+    durationMs: number;
+  }>;
 }
 ```
 
@@ -518,19 +578,19 @@ export interface DrillResult {
 
 export const REGION_SOCKET_EVENTS = {
   /** 区域状态变化 */
-  REGION_STATUS_CHANGE: 'region_status_change',
+  REGION_STATUS_CHANGE: "region_status_change",
   /** 区域指标更新 */
-  REGION_METRICS_UPDATE: 'region_metrics_update',
+  REGION_METRICS_UPDATE: "region_metrics_update",
   /** 复制延迟更新 */
-  REPLICATION_LAG_UPDATE: 'replication_lag_update',
+  REPLICATION_LAG_UPDATE: "replication_lag_update",
   /** 告警触发 */
-  REGION_ALERT: 'region_alert',
+  REGION_ALERT: "region_alert",
   /** 故障转移事件 */
-  FAILOVER_EVENT: 'failover_event',
+  FAILOVER_EVENT: "failover_event",
   /** 一致性检查结果 */
-  CONSISTENCY_CHECK_RESULT: 'consistency_check_result',
+  CONSISTENCY_CHECK_RESULT: "consistency_check_result",
   /** 负载分布更新 */
-  LOAD_DISTRIBUTION_UPDATE: 'load_distribution_update',
+  LOAD_DISTRIBUTION_UPDATE: "load_distribution_update",
 } as const;
 ```
 
@@ -605,144 +665,175 @@ interface VersionedRecord {
 }
 ```
 
-
 ## 正确性属性（Correctness Properties）
 
-*正确性属性是系统在所有有效执行中都应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性作为人类可读规范和机器可验证正确性保证之间的桥梁。*
+_正确性属性是系统在所有有效执行中都应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性作为人类可读规范和机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 初始化正确性
+
 *对于任意*有效的区域配置列表和复制策略，调用 initializeMultiRegion() 后，返回结果应包含所有输入区域，且恰好有一个 primary 区域，每个区域都有独立的存储实例，全局配置中心可访问。
 **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
 
 ### Property 2: Binlog 记录完整性（Round-Trip）
+
 *对于任意*写操作（create/update/delete），recordChange() 应生成一条 BinlogEntry，且该条目的 collection、documentId 和 operation 与原始操作一致，通过 getIncrementalChanges() 可检索到该条目。
 **Validates: Requirements 2.4**
 
 ### Property 3: 增量复制正确性
+
 *对于任意*时间戳 T 和 T 之后发生的 N 次写操作，getIncrementalChanges(T) 应恰好返回这 N 条变更记录，不包含 T 之前的记录。
 **Validates: Requirements 2.3**
 
 ### Property 4: 复制完整性
+
 *对于任意*在主区域执行的写操作，replicateTo() 应将变更应用到目标区域，且目标区域的数据与源区域一致（包括 Agent 定义、知识库、工作流记录等所有数据类型）。
 **Validates: Requirements 2.1, 2.2**
 
 ### Property 5: 版本元数据不变量
-*对于任意*被创建或修改的数据记录，该记录必须包含有效的 _version（正整数）、_timestamp（正整数）、_regionId（非空字符串）和 _checksum（非空字符串）字段。
+
+*对于任意*被创建或修改的数据记录，该记录必须包含有效的 \_version（正整数）、\_timestamp（正整数）、\_regionId（非空字符串）和 \_checksum（非空字符串）字段。
 **Validates: Requirements 3.2**
 
 ### Property 6: 冲突解决正确性
+
 *对于任意*两个来自不同区域的并发修改（相同 documentId），当使用 primary-wins 策略时，主区域的版本应被保留；当使用 timestamp 策略时，时间戳较新的版本应被保留。每次冲突解决都应生成一条 ConflictRecord。
 **Validates: Requirements 3.3, 3.4**
 
 ### Property 7: 调度器区域偏好
+
 *对于任意*包含 regionPreferences 的调度请求，当偏好列表中存在健康且有容量的区域时，selectRegion() 应返回偏好列表中的某个区域。
 **Validates: Requirements 4.1**
 
 ### Property 8: 最近区域选择
+
 *对于任意*用户地理位置和一组健康区域，当调度策略为 nearest 时，selectRegion() 应返回地理距离最近的区域（基于 Haversine 公式计算）。
 **Validates: Requirements 4.2, 15.2**
 
 ### Property 9: 不可用区域排除
+
 *对于任意*区域集合，调度器和负载均衡器永远不应选择状态为 unavailable 的区域。当区域被标记为不可用后，所有后续的 selectRegion() 和 route() 调用都不应返回该区域。
 **Validates: Requirements 4.4, 7.2**
 
 ### Property 10: 负载均衡算法正确性
-*对于任意* N 个连续请求和 round-robin 算法，请求应在所有健康区域间均匀分配（每个区域的请求数差异不超过 1）。对于 weighted 算法，分配比例应与配置的权重成正比。
+
+_对于任意_ N 个连续请求和 round-robin 算法，请求应在所有健康区域间均匀分配（每个区域的请求数差异不超过 1）。对于 weighted 算法，分配比例应与配置的权重成正比。
 **Validates: Requirements 6.2**
 
 ### Property 11: 会话亲和性
+
 *对于任意*带有 sessionId 的请求序列，当会话亲和性启用时，所有具有相同 sessionId 的请求应路由到同一区域（前提是该区域保持健康）。
 **Validates: Requirements 6.4, 15.4**
 
 ### Property 12: 数据最终收敛
+
 *对于任意*一组写操作分布在多个区域，经过足够的复制周期后，所有区域的数据应收敛到相同状态（相同的 documentId 具有相同的最终版本和内容）。
 **Validates: Requirements 7.5, 8.1**
 
 ### Property 13: 一致性检查自动修复
+
 *对于任意*被检测到的数据不一致（同一 documentId 在不同区域有不同版本），runConsistencyCheck() 应根据冲突解决策略修复不一致，修复后所有区域的该文档应具有相同版本。
 **Validates: Requirements 8.3**
 
 ### Property 14: 强一致性保证
+
 *对于任意*标记为需要强一致性的写操作，写操作完成后，所有区域应立即可读到最新数据（无复制延迟）。
 **Validates: Requirements 8.5**
 
 ### Property 15: 区域故障隔离
+
 *对于任意*区域故障事件，其他区域的 API 调用应继续正常响应，不受故障区域影响。
 **Validates: Requirements 9.3**
 
 ### Property 16: 配额强制执行
+
 *对于任意*区域和租户，当资源使用量达到或超过配额限制时，checkQuota() 应返回 false，新的资源请求应被拒绝。
 **Validates: Requirements 9.4, 12.3**
 
 ### Property 17: 选择性同步
+
 *对于任意*选择性同步配置和文档集合，仅配置中指定的文档子集应被复制到目标区域，未指定的文档不应出现在目标区域。
 **Validates: Requirements 10.2**
 
 ### Property 18: Agent 池区域隔离
+
 *对于任意*区域，查询该区域的 Agent 池应仅返回属于该区域的 Agent，不包含其他区域的 Agent。Agent 定义可跨区域同步，但执行状态保持独立。
 **Validates: Requirements 11.1, 11.2**
 
 ### Property 19: 配额动态更新
+
 *对于任意*配额更新操作，更新后立即调用 checkQuota() 应使用新的配额值，无需重启服务。
 **Validates: Requirements 12.5**
 
 ### Property 20: 告警阈值触发
+
 *对于任意*指标值超过配置的告警阈值（复制延迟、成本预算等），Region_Health_Monitor 应生成对应的 Alert，且 Alert 包含 regionId、severity、message、impact 和 suggestedAction 字段。
 **Validates: Requirements 2.5, 10.5, 13.3, 13.4, 16.5**
 
 ### Property 21: 备份点选择
+
 *对于任意*一组备份（不同时间戳），灾难恢复时应自动选择时间戳最新的备份点进行恢复。
 **Validates: Requirements 14.4**
 
 ### Property 22: 手动区域选择
+
 *对于任意*用户手动指定的目标区域（且该区域健康），route() 应将请求路由到用户指定的区域。
 **Validates: Requirements 15.3**
 
 ### Property 23: 成本感知调度
+
 *对于任意*一组区域（具有不同成本和延迟），当成本感知调度启用时，selectRegion() 应在满足延迟约束的区域中选择成本最低的区域。
 **Validates: Requirements 16.1, 16.2**
 
 ### Property 24: 状态变化事件推送
+
 *对于任意*区域状态变化（healthy → degraded、degraded → unavailable 等），系统应通过 WebSocket 发射 region_status_change 事件。
 **Validates: Requirements 17.5**
 
 ### Property 25: 迁移数据一致性（Round-Trip）
+
 *对于任意*源区域数据集，执行迁移后，目标区域的数据应与源区域完全一致（通过一致性检查验证）。
 **Validates: Requirements 18.3**
 
 ### Property 26: 迁移回滚
+
 *对于任意*失败的迁移操作，执行 rollback() 后，系统应恢复到迁移前的单区域状态，数据完整无损。
 **Validates: Requirements 18.5**
 
 ### Property 27: 操作日志完整性
+
 *对于任意*状态变更操作（调度决策、负载均衡决策、故障转移、一致性检查、恢复过程），系统应记录包含操作类型、时间戳和详细信息的日志条目。
 **Validates: Requirements 4.5, 6.5, 7.4, 8.4, 14.5, 15.5**
 
 ## 错误处理
 
 ### 区域故障
+
 - 区域健康检查失败时，标记为 `degraded`；连续多次失败后标记为 `unavailable`
 - 不可用区域的流量自动转移到其他健康区域
 - 进行中的工作流通过 MissionStore 快照恢复到其他区域
 - 故障转移过程记录详细日志
 
 ### 复制错误
+
 - 复制失败时记录错误并重试（指数退避）
 - 超过最大重试次数后标记复制通道为 `error` 状态
 - 复制错误不阻塞主区域的写操作（异步复制）
 - 强一致性模式下复制失败会导致写操作失败
 
 ### 冲突处理
+
 - 自动冲突解决失败时记录到冲突日志
 - 提供手动解决 API
 - 未解决的冲突不阻塞系统运行，但会生成告警
 
 ### 配额超限
+
 - 超过 QPS 限制时返回 HTTP 429
 - 超过存储限制时返回 HTTP 507
 - 超过 Agent 数量限制时返回 HTTP 403
 
 ### 迁移错误
+
 - 迁移过程中的错误触发自动回滚
 - 回滚失败时记录详细日志并告警
 - 迁移状态通过 Socket 事件实时推送
@@ -750,17 +841,20 @@ interface VersionedRecord {
 ## 测试策略
 
 ### 测试框架
+
 - 单元测试：vitest
 - 属性测试：fast-check（每个属性测试至少 100 次迭代）
 - 集成测试：vitest + 内存模拟多区域环境
 
 ### 单元测试
+
 - 各组件的核心方法（RegionManager、ReplicationEngine、RegionScheduler、GlobalLoadBalancer、RegionHealthMonitor）
 - 边界条件：空区域列表、单区域配置、所有区域不可用
 - 错误条件：无效配置、网络超时、数据损坏
 - 冲突解决的各种策略
 
 ### 属性测试
+
 每个正确性属性对应一个 fast-check 属性测试，使用随机生成的区域配置、数据记录和操作序列验证属性。
 
 - 测试标签格式：`Feature: multi-region-disaster-recovery, Property N: {property_text}`
@@ -768,11 +862,13 @@ interface VersionedRecord {
 - 生成器覆盖：随机区域配置、随机地理坐标、随机数据记录、随机操作序列、随机冲突场景
 
 ### 集成测试
+
 - 多区域初始化 → 数据写入 → 复制 → 一致性检查 完整流程
 - 故障转移场景：模拟区域故障 → 流量切换 → 数据恢复
 - 迁移场景：单区域 → 多区域 → 验证 → 回滚
 
 ### 测试文件结构
+
 ```
 server/tests/
   region-manager.test.ts

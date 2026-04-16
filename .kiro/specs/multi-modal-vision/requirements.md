@@ -10,7 +10,7 @@
 - **Visual_Context**：由 Vision_LLM 生成的图片描述与视觉分析结果，作为结构化文本注入工作流上下文
 - **Multimodal_Message**：包含文本和图片内容的 LLM 消息格式，遵循 OpenAI 多模态消息规范（content 为数组，包含 text 和 image_url 类型条目）
 - **Attachment_Pipeline**：附件处理管道，负责将用户上传的文件解析为工作流可用的结构化内容
-- **Vision_Provider**：专用于视觉分析的 LLM 提供者配置，通过 VISION_LLM_* 环境变量独立配置
+- **Vision_Provider**：专用于视觉分析的 LLM 提供者配置，通过 VISION*LLM*\* 环境变量独立配置
 - **Base64_Data_URL**：将图片二进制数据编码为 base64 字符串并嵌入 data URI 的格式，用于向 Vision_LLM 传递图片内容
 - **Token_Budget**：单次 Vision_LLM 调用允许消耗的最大 Token 数量上限
 
@@ -34,7 +34,7 @@
 #### 验收标准
 
 1. THE Vision_Provider SHALL 通过 VISION_LLM_API_KEY、VISION_LLM_BASE_URL、VISION_LLM_MODEL 和 VISION_LLM_WIRE_API 环境变量进行独立配置
-2. WHEN VISION_LLM_* 环境变量未配置, THE Vision_Provider SHALL 回退到使用 FALLBACK_LLM_* 配置；WHEN FALLBACK_LLM_* 也未配置, THE Vision_Provider SHALL 回退到主 LLM 配置
+2. WHEN VISION*LLM*_ 环境变量未配置, THE Vision*Provider SHALL 回退到使用 FALLBACK_LLM*_ 配置；WHEN FALLBACK*LLM*\* 也未配置, THE Vision_Provider SHALL 回退到主 LLM 配置
 3. THE Vision_Provider SHALL 复用现有 llm-client.ts 中的重试、熔断和并发控制机制
 4. WHEN Vision_Provider 调用失败且所有 fallback 均不可用, THE Vision_Provider SHALL 返回描述性错误信息，并将图片附件降级为 OCR 文字提取结果
 

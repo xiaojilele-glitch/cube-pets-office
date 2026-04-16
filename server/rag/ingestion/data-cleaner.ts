@@ -6,8 +6,8 @@
  * Requirements: 1.5
  */
 
-import type { IngestionPayload } from '../../../shared/rag/contracts.js';
-import { createHash } from 'node:crypto';
+import type { IngestionPayload } from "../../../shared/rag/contracts.js";
+import { createHash } from "node:crypto";
 
 /** 默认最大内容长度（字符数） */
 const DEFAULT_MAX_CONTENT_LENGTH = 500_000;
@@ -20,7 +20,8 @@ export class DataCleaner {
   private readonly maxContentLength: number;
 
   constructor(options?: DataCleanerOptions) {
-    this.maxContentLength = options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
+    this.maxContentLength =
+      options?.maxContentLength ?? DEFAULT_MAX_CONTENT_LENGTH;
   }
 
   /**
@@ -29,19 +30,19 @@ export class DataCleaner {
    * @throws Error 如果 content 为空
    */
   clean(payload: IngestionPayload): IngestionPayload & { contentHash: string } {
-    let content = payload.content ?? '';
+    let content = payload.content ?? "";
 
     // 1. 去除首尾空白
     content = content.trim();
 
     // 2. 规范化换行符为 \n
-    content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    content = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 
     // 3. 合并连续空行为最多两个换行
-    content = content.replace(/\n{3,}/g, '\n\n');
+    content = content.replace(/\n{3,}/g, "\n\n");
 
     // 4. 去除行尾空白
-    content = content.replace(/[ \t]+$/gm, '');
+    content = content.replace(/[ \t]+$/gm, "");
 
     // 5. 截断超长内容
     if (content.length > this.maxContentLength) {
@@ -50,11 +51,14 @@ export class DataCleaner {
 
     // 6. 验证非空
     if (!content) {
-      throw new Error('Content is empty after cleaning');
+      throw new Error("Content is empty after cleaning");
     }
 
     // 7. 计算 contentHash
-    const contentHash = createHash('sha256').update(content, 'utf-8').digest('hex').substring(0, 16);
+    const contentHash = createHash("sha256")
+      .update(content, "utf-8")
+      .digest("hex")
+      .substring(0, 16);
 
     return {
       ...payload,

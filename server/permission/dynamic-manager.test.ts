@@ -33,13 +33,21 @@ function createInMemoryDb() {
   let escalations: PermissionEscalation[] = [];
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: AgentRole[]) => { roles = r; },
+    setPermissionRoles: (r: AgentRole[]) => {
+      roles = r;
+    },
     getPermissionPolicies: () => policies,
-    setPermissionPolicies: (p: AgentPermissionPolicy[]) => { policies = p; },
+    setPermissionPolicies: (p: AgentPermissionPolicy[]) => {
+      policies = p;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
     getPermissionEscalations: () => escalations,
-    setPermissionEscalations: (e: PermissionEscalation[]) => { escalations = e; },
+    setPermissionEscalations: (e: PermissionEscalation[]) => {
+      escalations = e;
+    },
   };
 }
 
@@ -50,7 +58,7 @@ const SECRET = "test-dynamic-manager-secret";
 function makePermission(
   resourceType: ResourceType = "filesystem",
   action: Action = "read",
-  effect: "allow" | "deny" = "allow",
+  effect: "allow" | "deny" = "allow"
 ): Permission {
   return { resourceType, action, constraints: {}, effect };
 }
@@ -64,7 +72,7 @@ function setup() {
   const manager = new DynamicPermissionManager(
     policyStore,
     tokenService,
-    db as DynamicManagerDb,
+    db as DynamicManagerDb
   );
   manager.setCheckEngine(engine);
   return { db, roleStore, policyStore, tokenService, engine, manager };
@@ -75,7 +83,7 @@ function seedAgent(
   roleStore: RoleStore,
   policyStore: PolicyStore,
   agentId: string,
-  permissions: Permission[] = [],
+  permissions: Permission[] = []
 ) {
   roleStore.createRole({
     roleId: `role-${agentId}`,
@@ -107,7 +115,7 @@ describe("DynamicPermissionManager", () => {
       // Permission should appear in effective permissions
       const effective = policyStore.resolveEffectivePermissions("agent-1");
       const found = effective.find(
-        (p) => p.resourceType === "filesystem" && p.action === "write",
+        p => p.resourceType === "filesystem" && p.action === "write"
       );
       expect(found).toBeDefined();
 
@@ -121,7 +129,7 @@ describe("DynamicPermissionManager", () => {
       const { manager } = setup();
       const perm = makePermission();
       expect(() =>
-        manager.grantTemporaryPermission("nonexistent", perm, 1000),
+        manager.grantTemporaryPermission("nonexistent", perm, 1000)
       ).toThrow("No policy found");
     });
 
@@ -135,7 +143,7 @@ describe("DynamicPermissionManager", () => {
 
       const policy = policyStore.getPolicy("agent-2")!;
       const matching = policy.customPermissions.filter(
-        (p) => p.resourceType === "network" && p.action === "connect",
+        p => p.resourceType === "network" && p.action === "connect"
       );
       expect(matching.length).toBe(1);
     });
@@ -153,20 +161,20 @@ describe("DynamicPermissionManager", () => {
       const policy = policyStore.getPolicy("agent-3")!;
       // Should not be in customPermissions
       const inCustom = policy.customPermissions.find(
-        (p) => p.resourceType === "filesystem" && p.action === "write",
+        p => p.resourceType === "filesystem" && p.action === "write"
       );
       expect(inCustom).toBeUndefined();
 
       // Should be in deniedPermissions
       const inDenied = policy.deniedPermissions.find(
-        (p) => p.resourceType === "filesystem" && p.action === "write",
+        p => p.resourceType === "filesystem" && p.action === "write"
       );
       expect(inDenied).toBeDefined();
 
       // Should not appear in effective permissions
       const effective = policyStore.resolveEffectivePermissions("agent-3");
       const found = effective.find(
-        (p) => p.resourceType === "filesystem" && p.action === "write",
+        p => p.resourceType === "filesystem" && p.action === "write"
       );
       expect(found).toBeUndefined();
     });
@@ -174,7 +182,7 @@ describe("DynamicPermissionManager", () => {
     it("throws if agent has no policy", () => {
       const { manager } = setup();
       expect(() =>
-        manager.revokePermission("nonexistent", makePermission()),
+        manager.revokePermission("nonexistent", makePermission())
       ).toThrow("No policy found");
     });
 
@@ -199,7 +207,7 @@ describe("DynamicPermissionManager", () => {
       const escalationId = manager.escalatePermission(
         "agent-5",
         "Need write access for deployment",
-        ["admin-1", "admin-2"],
+        ["admin-1", "admin-2"]
       );
 
       expect(escalationId).toBeTruthy();
@@ -236,7 +244,7 @@ describe("DynamicPermissionManager", () => {
 
       const effective = policyStore.resolveEffectivePermissions("agent-7");
       const found = effective.find(
-        (p) => p.resourceType === "filesystem" && p.action === "execute",
+        p => p.resourceType === "filesystem" && p.action === "execute"
       );
       expect(found).toBeUndefined();
     });
@@ -252,7 +260,7 @@ describe("DynamicPermissionManager", () => {
 
       const effective = policyStore.resolveEffectivePermissions("agent-8");
       const found = effective.find(
-        (p) => p.resourceType === "database" && p.action === "select",
+        p => p.resourceType === "database" && p.action === "select"
       );
       expect(found).toBeDefined();
     });
@@ -266,25 +274,25 @@ describe("DynamicPermissionManager", () => {
       manager.grantTemporaryPermission(
         "agent-9a",
         makePermission("filesystem", "write"),
-        0,
+        0
       );
       // agent-9b: not expired
       manager.grantTemporaryPermission(
         "agent-9b",
         makePermission("network", "connect"),
-        999_999_999,
+        999_999_999
       );
 
       manager.cleanupExpiredPermissions();
 
       const eff9a = policyStore.resolveEffectivePermissions("agent-9a");
       expect(
-        eff9a.find((p) => p.resourceType === "filesystem" && p.action === "write"),
+        eff9a.find(p => p.resourceType === "filesystem" && p.action === "write")
       ).toBeUndefined();
 
       const eff9b = policyStore.resolveEffectivePermissions("agent-9b");
       expect(
-        eff9b.find((p) => p.resourceType === "network" && p.action === "connect"),
+        eff9b.find(p => p.resourceType === "network" && p.action === "connect")
       ).toBeDefined();
     });
   });
@@ -298,7 +306,7 @@ describe("DynamicPermissionManager", () => {
       manager.grantTemporaryPermission(
         "agent-10",
         makePermission("filesystem", "read"),
-        60_000,
+        60_000
       );
       expect(refreshSpy).toHaveBeenCalledWith("agent-10");
     });
@@ -323,7 +331,7 @@ describe("DynamicPermissionManager", () => {
       manager.grantTemporaryPermission(
         "agent-12",
         makePermission("api", "call"),
-        60_000,
+        60_000
       );
       expect(cacheSpy).toHaveBeenCalledWith("agent-12");
     });
@@ -337,20 +345,20 @@ describe("DynamicPermissionManager", () => {
       const tokenService = new TokenService(policyStore, roleStore, SECRET);
       const auditLog: any[] = [];
       const auditLogger: AuditLogger = {
-        log: (entry) => auditLog.push(entry),
+        log: entry => auditLog.push(entry),
       };
       const manager = new DynamicPermissionManager(
         policyStore,
         tokenService,
         db as DynamicManagerDb,
-        auditLogger,
+        auditLogger
       );
 
       seedAgent(roleStore, policyStore, "agent-13");
       manager.grantTemporaryPermission(
         "agent-13",
         makePermission("filesystem", "write"),
-        60_000,
+        60_000
       );
 
       expect(auditLog.length).toBe(1);
@@ -359,7 +367,6 @@ describe("DynamicPermissionManager", () => {
     });
   });
 });
-
 
 // ─── Property-Based Tests ───────────────────────────────────────────────────
 
@@ -387,7 +394,7 @@ describe("Property 10: 临时权限自动过期", () => {
           const manager = new DynamicPermissionManager(
             policyStore,
             tokenService,
-            db as DynamicManagerDb,
+            db as DynamicManagerDb
           );
 
           const agentId = "pbt-agent";
@@ -412,9 +419,10 @@ describe("Property 10: 临时权限自动过期", () => {
           manager.grantTemporaryPermission(agentId, perm, durationMs);
 
           // Verify it's in effective permissions before expiry
-          const beforeCleanup = policyStore.resolveEffectivePermissions(agentId);
+          const beforeCleanup =
+            policyStore.resolveEffectivePermissions(agentId);
           const foundBefore = beforeCleanup.some(
-            (p) => p.resourceType === resourceType && p.action === action,
+            p => p.resourceType === resourceType && p.action === action
           );
           if (!foundBefore) return false; // Should be present before cleanup
 
@@ -432,13 +440,13 @@ describe("Property 10: 临时权限自动过期", () => {
           // After cleanup, the permission should NOT be in effective permissions
           const afterCleanup = policyStore.resolveEffectivePermissions(agentId);
           const foundAfter = afterCleanup.some(
-            (p) => p.resourceType === resourceType && p.action === action,
+            p => p.resourceType === resourceType && p.action === action
           );
 
           return !foundAfter;
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

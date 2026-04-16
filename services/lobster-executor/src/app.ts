@@ -56,33 +56,35 @@ export function createLobsterExecutorApp(
   const app = express();
   app.use(express.json({ limit: "1mb" }));
 
-  app.get("/health", async (_req, res: Response<LobsterExecutorHealthResponse>) => {
-    const config = readLobsterExecutorConfig();
-    const effectiveMode = service.getExecutionMode();
+  app.get(
+    "/health",
+    async (_req, res: Response<LobsterExecutorHealthResponse>) => {
+      const config = readLobsterExecutorConfig();
+      const effectiveMode = service.getExecutionMode();
 
-    let dockerStatus: "connected" | "disconnected" = "disconnected";
-    if (effectiveMode === "real") {
-      try {
-        const docker = new Dockerode(parseDockerHost(config.dockerHost));
-        await docker.ping();
-        dockerStatus = "connected";
-      } catch {
-        dockerStatus = "disconnected";
+      let dockerStatus: "connected" | "disconnected" = "disconnected";
+      if (effectiveMode === "real") {
+        try {
+          const docker = new Dockerode(parseDockerHost(config.dockerHost));
+          await docker.ping();
+          dockerStatus = "connected";
+        } catch {
+          dockerStatus = "disconnected";
+        }
       }
-    }
 
-    res.json({
-      ok: true,
-      status: "ok",
-      service: config.serviceName,
-      version: EXECUTOR_CONTRACT_VERSION,
-      timestamp: new Date().toISOString(),
-      dataRoot: service.getDataRoot(),
-      queue: service.getQueueStats(),
-      docker: {
-        status: dockerStatus,
-        host: config.dockerHost,
-      },
+      res.json({
+        ok: true,
+        status: "ok",
+        service: config.serviceName,
+        version: EXECUTOR_CONTRACT_VERSION,
+        timestamp: new Date().toISOString(),
+        dataRoot: service.getDataRoot(),
+        queue: service.getQueueStats(),
+        docker: {
+          status: dockerStatus,
+          host: config.dockerHost,
+        },
         features: {
           health: true,
           createJob: true,
@@ -91,13 +93,14 @@ export function createLobsterExecutorApp(
           dockerLifecycle: effectiveMode === "real",
           callbackSigning: config.callbackSecret !== "",
         },
-      aiCapability: {
-        enabled: !!process.env.LLM_API_KEY,
-        image: config.aiImage,
-        llmProvider: process.env.LLM_BASE_URL || "openai",
-      },
-    });
-  });
+        aiCapability: {
+          enabled: !!process.env.LLM_API_KEY,
+          image: config.aiImage,
+          llmProvider: process.env.LLM_BASE_URL || "openai",
+        },
+      });
+    }
+  );
 
   app.get(
     EXECUTOR_API_ROUTES.createJob,
@@ -185,7 +188,9 @@ export function createLobsterExecutorApp(
     "/api/executor/security-audit",
     (
       req: Request<unknown, unknown, unknown, { jobId?: string }>,
-      res: Response<{ ok: true; entries: SecurityAuditEntry[] } | ExecutorApiErrorResponse>,
+      res: Response<
+        { ok: true; entries: SecurityAuditEntry[] } | ExecutorApiErrorResponse
+      >
     ) => {
       try {
         const config = readLobsterExecutorConfig();
@@ -198,7 +203,7 @@ export function createLobsterExecutorApp(
       } catch (error) {
         sendError(res, error);
       }
-    },
+    }
   );
 
   app.use((_req, res: Response<ExecutorApiErrorResponse>) =>

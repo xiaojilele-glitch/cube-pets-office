@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
   SlidingWindowChunker,
   estimateTokenCount,
-} from '../rag/chunking/sliding-window-chunker.js';
-import type { ChunkMetadata } from '../../shared/rag/contracts.js';
+} from "../rag/chunking/sliding-window-chunker.js";
+import type { ChunkMetadata } from "../../shared/rag/contracts.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -13,34 +13,34 @@ function makeMetadata(): ChunkMetadata {
   return {
     ingestedAt: new Date().toISOString(),
     lastAccessedAt: new Date().toISOString(),
-    contentHash: 'test-hash',
+    contentHash: "test-hash",
   };
 }
 
 /** Generate a string with exactly `n` whitespace-separated tokens */
-function makeTokens(n: number, prefix = 'w'): string {
-  return Array.from({ length: n }, (_, i) => `${prefix}${i}`).join(' ');
+function makeTokens(n: number, prefix = "w"): string {
+  return Array.from({ length: n }, (_, i) => `${prefix}${i}`).join(" ");
 }
 
 // ---------------------------------------------------------------------------
 // estimateTokenCount
 // ---------------------------------------------------------------------------
 
-describe('estimateTokenCount', () => {
-  it('returns 0 for empty string', () => {
-    expect(estimateTokenCount('')).toBe(0);
+describe("estimateTokenCount", () => {
+  it("returns 0 for empty string", () => {
+    expect(estimateTokenCount("")).toBe(0);
   });
 
-  it('returns 0 for whitespace-only string', () => {
-    expect(estimateTokenCount('   \n\t  ')).toBe(0);
+  it("returns 0 for whitespace-only string", () => {
+    expect(estimateTokenCount("   \n\t  ")).toBe(0);
   });
 
-  it('counts whitespace-separated tokens', () => {
-    expect(estimateTokenCount('hello world foo')).toBe(3);
+  it("counts whitespace-separated tokens", () => {
+    expect(estimateTokenCount("hello world foo")).toBe(3);
   });
 
-  it('handles multiple spaces and newlines', () => {
-    expect(estimateTokenCount('a  b\n\nc   d')).toBe(4);
+  it("handles multiple spaces and newlines", () => {
+    expect(estimateTokenCount("a  b\n\nc   d")).toBe(4);
   });
 });
 
@@ -48,16 +48,16 @@ describe('estimateTokenCount', () => {
 // SlidingWindowChunker — basic behavior
 // ---------------------------------------------------------------------------
 
-describe('SlidingWindowChunker', () => {
+describe("SlidingWindowChunker", () => {
   const meta = makeMetadata();
 
-  it('returns empty array for empty content', () => {
+  it("returns empty array for empty content", () => {
     const chunker = new SlidingWindowChunker();
-    expect(chunker.chunk('', meta)).toEqual([]);
-    expect(chunker.chunk('   ', meta)).toEqual([]);
+    expect(chunker.chunk("", meta)).toEqual([]);
+    expect(chunker.chunk("   ", meta)).toEqual([]);
   });
 
-  it('returns single chunk when content fits within maxTokens', () => {
+  it("returns single chunk when content fits within maxTokens", () => {
     const chunker = new SlidingWindowChunker({ maxTokens: 100, minTokens: 1 });
     const content = makeTokens(50);
     const result = chunker.chunk(content, meta);
@@ -67,7 +67,7 @@ describe('SlidingWindowChunker', () => {
     expect(result[0].chunkIndex).toBe(0);
   });
 
-  it('returns single chunk for content under minTokens', () => {
+  it("returns single chunk for content under minTokens", () => {
     const chunker = new SlidingWindowChunker({ minTokens: 64 });
     const content = makeTokens(10);
     const result = chunker.chunk(content, meta);
@@ -80,7 +80,7 @@ describe('SlidingWindowChunker', () => {
   // Sliding window mechanics
   // -----------------------------------------------------------------------
 
-  it('slides with correct window and overlap', () => {
+  it("slides with correct window and overlap", () => {
     // 100 tokens, window=40, overlap=10 → step=30
     // chunks at: [0,40), [30,70), [60,100) → 3 chunks
     const chunker = new SlidingWindowChunker({
@@ -102,7 +102,7 @@ describe('SlidingWindowChunker', () => {
   // Merge small tail chunks
   // -----------------------------------------------------------------------
 
-  it('merges small tail chunk into previous', () => {
+  it("merges small tail chunk into previous", () => {
     // 50 tokens, window=40, overlap=0 → step=40
     // raw: [0,40)=40 tokens, [40,50)=10 tokens
     // 10 < minTokens=20 → merge into prev → single chunk of 50
@@ -123,7 +123,7 @@ describe('SlidingWindowChunker', () => {
   // Split large chunks
   // -----------------------------------------------------------------------
 
-  it('splits chunks that exceed maxTokens after merge', () => {
+  it("splits chunks that exceed maxTokens after merge", () => {
     // Create a scenario where merge produces a chunk > maxTokens
     // 130 tokens, window=100, overlap=0, minTokens=50, maxTokens=100
     // raw: [0,100)=100, [100,130)=30 → 30 < 50 → merge → 130 tokens
@@ -150,7 +150,7 @@ describe('SlidingWindowChunker', () => {
   // Token range invariant [minTokens, maxTokens]
   // -----------------------------------------------------------------------
 
-  it('ensures all chunks are within [minTokens, maxTokens] for large input', () => {
+  it("ensures all chunks are within [minTokens, maxTokens] for large input", () => {
     const chunker = new SlidingWindowChunker({
       windowSize: 512,
       overlap: 64,
@@ -172,8 +172,13 @@ describe('SlidingWindowChunker', () => {
   // ChunkRecord structure
   // -----------------------------------------------------------------------
 
-  it('produces valid ChunkRecord fields', () => {
-    const chunker = new SlidingWindowChunker({ windowSize: 10, overlap: 2, minTokens: 1, maxTokens: 100 });
+  it("produces valid ChunkRecord fields", () => {
+    const chunker = new SlidingWindowChunker({
+      windowSize: 10,
+      overlap: 2,
+      minTokens: 1,
+      maxTokens: 100,
+    });
     const content = makeTokens(25);
     const result = chunker.chunk(content, meta);
 
@@ -191,9 +196,9 @@ describe('SlidingWindowChunker', () => {
   // fromConfig factory
   // -----------------------------------------------------------------------
 
-  it('creates instance from ChunkingConfig via fromConfig', () => {
+  it("creates instance from ChunkingConfig via fromConfig", () => {
     const chunker = SlidingWindowChunker.fromConfig({
-      strategy: 'sliding_window',
+      strategy: "sliding_window",
       maxTokens: 200,
       minTokens: 10,
       windowSize: 100,
@@ -208,7 +213,7 @@ describe('SlidingWindowChunker', () => {
     }
   });
 
-  it('fromConfig uses defaults when config is undefined', () => {
+  it("fromConfig uses defaults when config is undefined", () => {
     const chunker = SlidingWindowChunker.fromConfig(undefined);
     const content = makeTokens(1000);
     const result = chunker.chunk(content, meta);
@@ -222,7 +227,7 @@ describe('SlidingWindowChunker', () => {
   // Default parameters (512 window, 64 overlap)
   // -----------------------------------------------------------------------
 
-  it('uses default windowSize=512 and overlap=64', () => {
+  it("uses default windowSize=512 and overlap=64", () => {
     const chunker = new SlidingWindowChunker();
     const content = makeTokens(1024);
     const result = chunker.chunk(content, meta);

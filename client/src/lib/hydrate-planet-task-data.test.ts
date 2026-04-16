@@ -12,7 +12,8 @@ import type {
 
 const mockListPlanets = vi.fn<() => Promise<ListMissionPlanetsResponse>>();
 const mockListMissions = vi.fn<() => Promise<ListMissionsResponse>>();
-const mockGetPlanetInterior = vi.fn<() => Promise<GetMissionPlanetInteriorResponse>>();
+const mockGetPlanetInterior =
+  vi.fn<() => Promise<GetMissionPlanetInteriorResponse>>();
 
 vi.mock("./mission-client", () => ({
   cancelMission: vi.fn(),
@@ -44,18 +45,18 @@ vi.mock("./sandbox-store", () => ({
 }));
 
 vi.mock("./store", () => ({
-  useAppStore: Object.assign(
-    () => ({}),
-    {
-      getState: () => ({ runtimeMode: "advanced" }),
-      subscribe: vi.fn(),
-    }
-  ),
+  useAppStore: Object.assign(() => ({}), {
+    getState: () => ({ runtimeMode: "advanced" }),
+    subscribe: vi.fn(),
+  }),
 }));
 
 const now = Date.now();
 
-function makeMission(id: string, overrides?: Partial<MissionRecord>): MissionRecord {
+function makeMission(
+  id: string,
+  overrides?: Partial<MissionRecord>
+): MissionRecord {
   return {
     id,
     title: `Mission ${id}`,
@@ -174,7 +175,11 @@ describe("tasks-store planet hydration via public store behavior", () => {
     const planet = makePlanet("m1");
     const mission = makeMission("m1");
 
-    mockListPlanets.mockResolvedValue({ ok: true, planets: [planet], edges: [] });
+    mockListPlanets.mockResolvedValue({
+      ok: true,
+      planets: [planet],
+      edges: [],
+    });
     mockListMissions.mockResolvedValue({ ok: true, tasks: [mission] });
     mockGetPlanetInterior.mockRejectedValue(new Error("not selected"));
 
@@ -196,7 +201,11 @@ describe("tasks-store planet hydration via public store behavior", () => {
     const mission = makeMission("m1");
 
     useTasksStore.setState({ selectedTaskId: "m1" });
-    mockListPlanets.mockResolvedValue({ ok: true, planets: [planet], edges: [] });
+    mockListPlanets.mockResolvedValue({
+      ok: true,
+      planets: [planet],
+      edges: [],
+    });
     mockListMissions.mockResolvedValue({ ok: true, tasks: [mission] });
     mockGetPlanetInterior.mockResolvedValue({
       ok: true,
@@ -218,7 +227,11 @@ describe("tasks-store planet hydration via public store behavior", () => {
     const mission = makeMission("m1");
 
     useTasksStore.setState({ selectedTaskId: "m1" });
-    mockListPlanets.mockResolvedValue({ ok: true, planets: [planet], edges: [] });
+    mockListPlanets.mockResolvedValue({
+      ok: true,
+      planets: [planet],
+      edges: [],
+    });
     mockListMissions.mockResolvedValue({ ok: true, tasks: [mission] });
     mockGetPlanetInterior.mockRejectedValue(new Error("Network error"));
 
@@ -255,7 +268,7 @@ describe("tasks-store planet hydration via public store behavior", () => {
 
     const state = useTasksStore.getState();
     expect(state.selectedTaskId).toBe("m2");
-    expect(state.tasks.map((task) => task.id)).toEqual(["m2", "m1"]);
+    expect(state.tasks.map(task => task.id)).toEqual(["m2", "m1"]);
     expect(mockGetPlanetInterior).toHaveBeenCalledTimes(1);
     expect(mockGetPlanetInterior).toHaveBeenCalledWith("m2");
   });

@@ -7,28 +7,31 @@
  * Requirements: 1.3
  */
 
-import type { IngestionPayload, SourceType } from '../../../shared/rag/contracts.js';
-import type { IngestionPipeline } from './ingestion-pipeline.js';
+import type {
+  IngestionPayload,
+  SourceType,
+} from "../../../shared/rag/contracts.js";
+import type { IngestionPipeline } from "./ingestion-pipeline.js";
 
 // ---------------------------------------------------------------------------
 // 支持的事件类型
 // ---------------------------------------------------------------------------
 
 export const RAG_EVENT_TYPES = [
-  'task.completed',
-  'mission.finished',
-  'code.committed',
-  'document.uploaded',
+  "task.completed",
+  "mission.finished",
+  "code.committed",
+  "document.uploaded",
 ] as const;
 
 export type RAGEventType = (typeof RAG_EVENT_TYPES)[number];
 
 /** 事件类型 → SourceType 映射 */
 const EVENT_SOURCE_MAP: Record<RAGEventType, SourceType> = {
-  'task.completed': 'task_result',
-  'mission.finished': 'mission_log',
-  'code.committed': 'code_snippet',
-  'document.uploaded': 'document',
+  "task.completed": "task_result",
+  "mission.finished": "mission_log",
+  "code.committed": "code_snippet",
+  "document.uploaded": "document",
 };
 
 // ---------------------------------------------------------------------------
@@ -107,9 +110,9 @@ export class RAGEventListener {
     const p = agentEvent.payload ?? {};
     return {
       type,
-      id: p.id ?? p.taskId ?? p.sourceId ?? '',
-      projectId: p.projectId ?? '',
-      content: p.content ?? p.result ?? p.summary ?? '',
+      id: p.id ?? p.taskId ?? p.sourceId ?? "",
+      projectId: p.projectId ?? "",
+      content: p.content ?? p.result ?? p.summary ?? "",
       metadata: p.metadata ?? {},
       agentId: p.agentId,
       timestamp: p.timestamp,

@@ -19,8 +19,8 @@ export function useDemoMode() {
   const engineRef = useRef<DemoPlaybackEngine | null>(null);
   const adapterRef = useRef<DemoStoreAdapter | null>(null);
 
-  const isActive = useDemoStore((s) => s.isActive);
-  const playbackState = useDemoStore((s) => s.playbackState);
+  const isActive = useDemoStore(s => s.isActive);
+  const playbackState = useDemoStore(s => s.playbackState);
 
   const startDemo = useCallback(async (bundle: DemoDataBundle) => {
     // Prevent double-start
@@ -40,17 +40,23 @@ export function useDemoMode() {
     const evolutionLogs = buildEvolutionLogs(bundle);
 
     const engine = new DemoPlaybackEngine(bundle, {
-      onEvent: (entry) => {
+      onEvent: entry => {
         adapter.handleEvent(entry);
 
         // Dispatch memory entries whose offset has been reached
         const elapsed = entry.offsetMs;
-        while (memoryEntries.length > 0 && memoryEntries[0].timestampOffset <= elapsed) {
+        while (
+          memoryEntries.length > 0 &&
+          memoryEntries[0].timestampOffset <= elapsed
+        ) {
           adapter.appendMemoryEntry(memoryEntries.shift()!);
         }
 
         // Dispatch evolution logs when entering evolution stage
-        if (entry.event.type === "stage_change" && entry.event.stage === "evolution") {
+        if (
+          entry.event.type === "stage_change" &&
+          entry.event.stage === "evolution"
+        ) {
           adapter.setEvolutionLogs(evolutionLogs);
         }
       },
@@ -92,9 +98,15 @@ export function useDemoMode() {
     };
   }, []);
 
-  return { isActive, playbackState, startDemo, pauseDemo, resumeDemo, stopDemo };
+  return {
+    isActive,
+    playbackState,
+    startDemo,
+    pauseDemo,
+    resumeDemo,
+    stopDemo,
+  };
 }
-
 
 // ---------------------------------------------------------------------------
 // Helpers: extract memory entries and evolution logs from the bundle
@@ -142,7 +154,7 @@ function buildMemoryEntries(bundle: DemoDataBundle): DemoMemoryEntry[] {
 }
 
 function buildEvolutionLogs(bundle: DemoDataBundle): DemoEvolutionLog[] {
-  return bundle.evolutionPatches.map((p) => ({
+  return bundle.evolutionPatches.map(p => ({
     agentId: p.agentId,
     dimension: p.dimension,
     oldScore: p.oldScore,

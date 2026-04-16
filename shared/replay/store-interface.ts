@@ -5,7 +5,11 @@
  * 服务端（ServerReplayStore）和前端（BrowserReplayStore）均实现此接口。
  */
 
-import type { ExecutionEvent, EventQuery, ExecutionTimeline } from './contracts';
+import type {
+  ExecutionEvent,
+  EventQuery,
+  ExecutionTimeline,
+} from "./contracts";
 
 export interface ReplayStoreInterface {
   /** 追加事件（增量写入） */
@@ -18,7 +22,7 @@ export interface ReplayStoreInterface {
   getTimeline(missionId: string): Promise<ExecutionTimeline>;
 
   /** 导出事件流 */
-  exportEvents(missionId: string, format: 'json' | 'csv'): Promise<string>;
+  exportEvents(missionId: string, format: "json" | "csv"): Promise<string>;
 
   /** 验证数据完整性 */
   verifyIntegrity(missionId: string): Promise<boolean>;

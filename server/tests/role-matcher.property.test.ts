@@ -11,11 +11,16 @@
  * **Validates: Requirements 3.1, 3.2, 4.4**
  */
 
-import { describe, expect, it, beforeEach, vi } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it, beforeEach, vi } from "vitest";
+import fc from "fast-check";
 
-import type { RoleTemplate, AuthorityLevel, RoleSource, RolePerformanceRecord } from '../../shared/role-schema.js';
-import type { WorkflowNodeModelConfig } from '../../shared/organization-schema.js';
+import type {
+  RoleTemplate,
+  AuthorityLevel,
+  RoleSource,
+  RolePerformanceRecord,
+} from "../../shared/role-schema.js";
+import type { WorkflowNodeModelConfig } from "../../shared/organization-schema.js";
 
 // ── vi.hoisted: shared state for mocked singletons ──────────────
 const { _perfState, perfTrackerProxy } = vi.hoisted(() => {
@@ -24,9 +29,9 @@ const { _perfState, perfTrackerProxy } = vi.hoisted(() => {
   const perfTrackerProxy = new Proxy({} as any, {
     get(_target, prop) {
       const t = _perfState.tracker;
-      if (!t) throw new Error('Test perf tracker not initialized');
+      if (!t) throw new Error("Test perf tracker not initialized");
       const val = (t as any)[prop];
-      return typeof val === 'function' ? val.bind(t) : val;
+      return typeof val === "function" ? val.bind(t) : val;
     },
   });
 
@@ -34,8 +39,11 @@ const { _perfState, perfTrackerProxy } = vi.hoisted(() => {
 });
 
 // ── Mock the rolePerformanceTracker singleton ───────────────────
-vi.mock('../core/role-performance-tracker.js', async (importOriginal) => {
-  const orig = await importOriginal<typeof import('../core/role-performance-tracker.js')>();
+vi.mock("../core/role-performance-tracker.js", async importOriginal => {
+  const orig =
+    await importOriginal<
+      typeof import("../core/role-performance-tracker.js")
+    >();
   return {
     ...orig,
     rolePerformanceTracker: perfTrackerProxy,
@@ -43,7 +51,7 @@ vi.mock('../core/role-performance-tracker.js', async (importOriginal) => {
 });
 
 // ── Mock roleRegistry (we call computeScore directly, but inferCandidateRoles uses it) ──
-vi.mock('../core/role-registry.js', () => ({
+vi.mock("../core/role-registry.js", () => ({
   roleRegistry: {
     get: vi.fn(() => undefined),
     list: vi.fn(() => []),
@@ -53,13 +61,20 @@ vi.mock('../core/role-registry.js', () => ({
 }));
 
 // ── Import after mocks ──────────────────────────────────────────
-import { RoleMatcher } from '../core/role-matcher.js';
-import { RolePerformanceTracker } from '../core/role-performance-tracker.js';
+import { RoleMatcher } from "../core/role-matcher.js";
+import { RolePerformanceTracker } from "../core/role-performance-tracker.js";
 
 // ── Arbitraries ─────────────────────────────────────────────────
 
-const arbAuthorityLevel: fc.Arbitrary<AuthorityLevel> = fc.constantFrom('high', 'medium', 'low');
-const arbRoleSource: fc.Arbitrary<RoleSource> = fc.constantFrom('predefined', 'generated');
+const arbAuthorityLevel: fc.Arbitrary<AuthorityLevel> = fc.constantFrom(
+  "high",
+  "medium",
+  "low"
+);
+const arbRoleSource: fc.Arbitrary<RoleSource> = fc.constantFrom(
+  "predefined",
+  "generated"
+);
 
 const arbModelConfig: fc.Arbitrary<WorkflowNodeModelConfig> = fc.record({
   model: fc.string({ minLength: 1, maxLength: 20 }),
@@ -69,19 +84,19 @@ const arbModelConfig: fc.Arbitrary<WorkflowNodeModelConfig> = fc.record({
 
 const arbISODate: fc.Arbitrary<string> = fc
   .integer({ min: 1577836800000, max: 1924905600000 })
-  .map((ts) => new Date(ts).toISOString());
+  .map(ts => new Date(ts).toISOString());
 
 const arbRoleId: fc.Arbitrary<string> = fc
   .stringMatching(/^[a-z][a-z0-9-]{0,19}$/)
-  .filter((s) => s.length >= 2);
+  .filter(s => s.length >= 2);
 
 const arbAgentId: fc.Arbitrary<string> = fc
   .stringMatching(/^[a-z][a-z0-9-]{0,19}$/)
-  .filter((s) => s.length >= 2);
+  .filter(s => s.length >= 2);
 
 const arbSkillList: fc.Arbitrary<string[]> = fc.uniqueArray(
-  fc.stringMatching(/^[a-z][a-z0-9]{0,9}$/).filter((s) => s.length >= 2),
-  { minLength: 0, maxLength: 8 },
+  fc.stringMatching(/^[a-z][a-z0-9]{0,9}$/).filter(s => s.length >= 2),
+  { minLength: 0, maxLength: 8 }
 );
 
 const arbRoleTemplate: fc.Arbitrary<RoleTemplate> = fc.record({
@@ -101,7 +116,11 @@ const arbRoleTemplate: fc.Arbitrary<RoleTemplate> = fc.record({
 const arbTotalTasks: fc.Arbitrary<number> = fc.integer({ min: 0, max: 100 });
 
 /** Generate avgQualityScore in [0, 100] */
-const arbQualityScore: fc.Arbitrary<number> = fc.double({ min: 0, max: 100, noNaN: true });
+const arbQualityScore: fc.Arbitrary<number> = fc.double({
+  min: 0,
+  max: 100,
+  noNaN: true,
+});
 
 // ── Helpers ─────────────────────────────────────────────────────
 
@@ -118,9 +137,9 @@ function createMockAgent(agentId: string, loadedSkillIds: string[]): any {
       loadedMcpIds: [],
       currentRoleId: null,
       currentRoleLoadedAt: null,
-      baseSystemPrompt: '',
-      baseModelConfig: '',
-      roleLoadPolicy: 'prefer_agent' as const,
+      baseSystemPrompt: "",
+      baseModelConfig: "",
+      roleLoadPolicy: "prefer_agent" as const,
       lastRoleSwitchAt: null,
       roleSwitchCooldownMs: 60000,
       operationLog: [],
@@ -133,11 +152,14 @@ function createMockAgent(agentId: string, loadedSkillIds: string[]): any {
 /**
  * Compute Jaccard similarity — mirrors the private skillMatch method.
  */
-function expectedSkillMatch(taskSkills: string[] | undefined, roleSkills: string[]): number {
+function expectedSkillMatch(
+  taskSkills: string[] | undefined,
+  roleSkills: string[]
+): number {
   if (!taskSkills || taskSkills.length === 0) return 0.5;
   const taskSet = new Set(taskSkills);
   const roleSet = new Set(roleSkills);
-  const intersection = Array.from(taskSet).filter((s) => roleSet.has(s)).length;
+  const intersection = Array.from(taskSet).filter(s => roleSet.has(s)).length;
   const union = new Set([...taskSet, ...roleSet]).size;
   if (union === 0) return 0.5;
   return intersection / union;
@@ -146,10 +168,13 @@ function expectedSkillMatch(taskSkills: string[] | undefined, roleSkills: string
 /**
  * Compute agent competency — mirrors the private agentCompetency method.
  */
-function expectedAgentCompetency(agentSkills: string[], roleRequiredSkills: string[]): number {
+function expectedAgentCompetency(
+  agentSkills: string[],
+  roleRequiredSkills: string[]
+): number {
   if (agentSkills.length === 0 || roleRequiredSkills.length === 0) return 0.5;
   const agentSet = new Set(agentSkills);
-  const matchCount = roleRequiredSkills.filter((s) => agentSet.has(s)).length;
+  const matchCount = roleRequiredSkills.filter(s => agentSet.has(s)).length;
   return matchCount / roleRequiredSkills.length;
 }
 
@@ -157,7 +182,7 @@ function expectedAgentCompetency(agentSkills: string[], roleRequiredSkills: stri
  * Compute expected rolePerformance score and confidenceCoeff.
  */
 function expectedRolePerformance(
-  perfRecord: RolePerformanceRecord | undefined,
+  perfRecord: RolePerformanceRecord | undefined
 ): { score: number; confidenceCoeff: number } {
   if (!perfRecord || perfRecord.totalTasks === 0) {
     return { score: 0.5, confidenceCoeff: 0.6 };
@@ -174,19 +199,21 @@ function expectedScore(
   taskSkills: string[] | undefined,
   roleRequiredSkills: string[],
   agentSkills: string[],
-  perfRecord: RolePerformanceRecord | undefined,
+  perfRecord: RolePerformanceRecord | undefined
 ): number {
   const sm = expectedSkillMatch(taskSkills, roleRequiredSkills);
   const ac = expectedAgentCompetency(agentSkills, roleRequiredSkills);
   const { score: rp, confidenceCoeff } = expectedRolePerformance(perfRecord);
   const loadFactor = 0; // getLoadFactor always returns 0
 
-  return sm * 0.35 + ac * 0.30 + rp * 0.25 * confidenceCoeff + (1 - loadFactor) * 0.10;
+  return (
+    sm * 0.35 + ac * 0.3 + rp * 0.25 * confidenceCoeff + (1 - loadFactor) * 0.1
+  );
 }
 
 // ── Tests ───────────────────────────────────────────────────────
 
-describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
+describe("RoleMatcher Property 9: roleMatchScore 加权计算正确性", () => {
   let matcher: RoleMatcher;
 
   beforeEach(() => {
@@ -195,7 +222,7 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
   });
 
   // **Validates: Requirements 3.1, 3.2**
-  it('computeScore matches the weighted formula for any task/agent/role combination (no perf data)', () => {
+  it("computeScore matches the weighted formula for any task/agent/role combination (no perf data)", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -207,20 +234,25 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
           _perfState.tracker = tracker;
 
           const agent = createMockAgent(agentId, agentSkills);
-          const task = { description: 'test task', requiredSkills: taskSkills };
+          const task = { description: "test task", requiredSkills: taskSkills };
 
           const actual = matcher.computeScore(task, agent, role);
-          const expected = expectedScore(taskSkills, role.requiredSkillIds, agentSkills, undefined);
+          const expected = expectedScore(
+            taskSkills,
+            role.requiredSkillIds,
+            agentSkills,
+            undefined
+          );
 
           expect(actual).toBeCloseTo(expected, 10);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.2, 4.4**
-  it('computeScore applies confidenceCoeff=0.6 when totalTasks < 10', () => {
+  it("computeScore applies confidenceCoeff=0.6 when totalTasks < 10", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -243,29 +275,37 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
             });
           }
 
-          const perfRecord = tracker.getPerformance(agentId, role.roleId) as RolePerformanceRecord;
+          const perfRecord = tracker.getPerformance(
+            agentId,
+            role.roleId
+          ) as RolePerformanceRecord;
           expect(perfRecord.totalTasks).toBe(totalTasks);
           expect(perfRecord.lowConfidence).toBe(true);
 
           const agent = createMockAgent(agentId, agentSkills);
-          const task = { description: 'test task', requiredSkills: taskSkills };
+          const task = { description: "test task", requiredSkills: taskSkills };
 
           const actual = matcher.computeScore(task, agent, role);
-          const expected = expectedScore(taskSkills, role.requiredSkillIds, agentSkills, perfRecord);
+          const expected = expectedScore(
+            taskSkills,
+            role.requiredSkillIds,
+            agentSkills,
+            perfRecord
+          );
 
           // Verify confidenceCoeff is 0.6
           const { confidenceCoeff } = expectedRolePerformance(perfRecord);
           expect(confidenceCoeff).toBe(0.6);
 
           expect(actual).toBeCloseTo(expected, 10);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.2, 4.4**
-  it('computeScore applies confidenceCoeff=1.0 when totalTasks >= 10', () => {
+  it("computeScore applies confidenceCoeff=1.0 when totalTasks >= 10", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -287,28 +327,36 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
             });
           }
 
-          const perfRecord = tracker.getPerformance(agentId, role.roleId) as RolePerformanceRecord;
+          const perfRecord = tracker.getPerformance(
+            agentId,
+            role.roleId
+          ) as RolePerformanceRecord;
           expect(perfRecord.totalTasks).toBe(totalTasks);
           expect(perfRecord.lowConfidence).toBe(false);
 
           const agent = createMockAgent(agentId, agentSkills);
-          const task = { description: 'test task', requiredSkills: taskSkills };
+          const task = { description: "test task", requiredSkills: taskSkills };
 
           const actual = matcher.computeScore(task, agent, role);
-          const expected = expectedScore(taskSkills, role.requiredSkillIds, agentSkills, perfRecord);
+          const expected = expectedScore(
+            taskSkills,
+            role.requiredSkillIds,
+            agentSkills,
+            perfRecord
+          );
 
           const { confidenceCoeff } = expectedRolePerformance(perfRecord);
           expect(confidenceCoeff).toBe(1.0);
 
           expect(actual).toBeCloseTo(expected, 10);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.1, 3.2**
-  it('computeScore is in [0, 1] range for any valid inputs', () => {
+  it("computeScore is in [0, 1] range for any valid inputs", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -331,20 +379,20 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
           }
 
           const agent = createMockAgent(agentId, agentSkills);
-          const task = { description: 'test task', requiredSkills: taskSkills };
+          const task = { description: "test task", requiredSkills: taskSkills };
 
           const score = matcher.computeScore(task, agent, role);
 
           expect(score).toBeGreaterThanOrEqual(0);
           expect(score).toBeLessThanOrEqual(1);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.1**
-  it('computeScore with no task requiredSkills uses 0.5 as skillMatch default', () => {
+  it("computeScore with no task requiredSkills uses 0.5 as skillMatch default", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -355,20 +403,25 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
           _perfState.tracker = tracker;
 
           const agent = createMockAgent(agentId, agentSkills);
-          const task = { description: 'test task' }; // no requiredSkills
+          const task = { description: "test task" }; // no requiredSkills
 
           const actual = matcher.computeScore(task, agent, role);
-          const expected = expectedScore(undefined, role.requiredSkillIds, agentSkills, undefined);
+          const expected = expectedScore(
+            undefined,
+            role.requiredSkillIds,
+            agentSkills,
+            undefined
+          );
 
           expect(actual).toBeCloseTo(expected, 10);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.1, 3.2**
-  it('AgentRoleRecommendation contains all required fields (agentId, recommendedRoleId, roleMatchScore, reason)', () => {
+  it("AgentRoleRecommendation contains all required fields (agentId, recommendedRoleId, roleMatchScore, reason)", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -380,7 +433,7 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
           _perfState.tracker = tracker;
 
           const agent = createMockAgent(agentId, agentSkills);
-          const task = { description: 'test task', requiredSkills: taskSkills };
+          const task = { description: "test task", requiredSkills: taskSkills };
 
           const score = matcher.computeScore(task, agent, role);
 
@@ -389,23 +442,26 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
             agentId: agent.config.id,
             recommendedRoleId: role.roleId,
             roleMatchScore: Math.round(score * 1000) / 1000,
-            reason: 'test',
+            reason: "test",
           };
 
-          expect(recommendation).toHaveProperty('agentId', agentId);
-          expect(recommendation).toHaveProperty('recommendedRoleId', role.roleId);
-          expect(typeof recommendation.roleMatchScore).toBe('number');
+          expect(recommendation).toHaveProperty("agentId", agentId);
+          expect(recommendation).toHaveProperty(
+            "recommendedRoleId",
+            role.roleId
+          );
+          expect(typeof recommendation.roleMatchScore).toBe("number");
           expect(recommendation.roleMatchScore).toBeGreaterThanOrEqual(0);
-          expect(recommendation).toHaveProperty('reason');
-          expect(typeof recommendation.reason).toBe('string');
-        },
+          expect(recommendation).toHaveProperty("reason");
+          expect(typeof recommendation.reason).toBe("string");
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.2, 4.4**
-  it('weight components sum correctly: 0.35 + 0.30 + 0.25*coeff + 0.10 for perfect scores', () => {
+  it("weight components sum correctly: 0.35 + 0.30 + 0.25*coeff + 0.10 for perfect scores", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -428,19 +484,23 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
           // Agent has exactly the role's required skills → competency = 1.0
           // Task has exactly the role's required skills → skillMatch = 1.0
           const agent = createMockAgent(agentId, [...role.requiredSkillIds]);
-          const task = { description: 'test', requiredSkills: [...role.requiredSkillIds] };
+          const task = {
+            description: "test",
+            requiredSkills: [...role.requiredSkillIds],
+          };
 
           // Only compute when role has skills (otherwise defaults kick in)
           if (role.requiredSkillIds.length > 0) {
             const score = matcher.computeScore(task, agent, role);
             const confidenceCoeff = isLowConfidence ? 0.6 : 1.0;
             // All sub-scores are 1.0, loadFactor is 0
-            const expectedVal = 1.0 * 0.35 + 1.0 * 0.30 + 1.0 * 0.25 * confidenceCoeff + 1.0 * 0.10;
+            const expectedVal =
+              1.0 * 0.35 + 1.0 * 0.3 + 1.0 * 0.25 * confidenceCoeff + 1.0 * 0.1;
             expect(score).toBeCloseTo(expectedVal, 10);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -455,9 +515,9 @@ describe('RoleMatcher Property 9: roleMatchScore 加权计算正确性', () => {
  * **Validates: Requirements 3.4**
  */
 
-import { roleRegistry } from '../core/role-registry.js';
+import { roleRegistry } from "../core/role-registry.js";
 
-describe('RoleMatcher Property 10: requiredRole 约束匹配范围', () => {
+describe("RoleMatcher Property 10: requiredRole 约束匹配范围", () => {
   let matcher: RoleMatcher;
 
   beforeEach(() => {
@@ -469,29 +529,33 @@ describe('RoleMatcher Property 10: requiredRole 约束匹配范围', () => {
   });
 
   // **Validates: Requirements 3.4**
-  it('all recommendations have recommendedRoleId equal to task.requiredRole', async () => {
+  it("all recommendations have recommendedRoleId equal to task.requiredRole", async () => {
     await fc.assert(
       fc.asyncProperty(
         arbRoleTemplate,
-        fc.array(
-          fc.record({ agentId: arbAgentId, skills: arbSkillList }),
-          { minLength: 1, maxLength: 5 },
-        ),
+        fc.array(fc.record({ agentId: arbAgentId, skills: arbSkillList }), {
+          minLength: 1,
+          maxLength: 5,
+        }),
         arbSkillList, // task required skills
         async (role, agentDefs, taskSkills) => {
           // Setup registry mock: get() returns the template, resolve() returns it for scoring
           vi.mocked(roleRegistry.get).mockImplementation((roleId: string) =>
-            roleId === role.roleId ? role : undefined,
+            roleId === role.roleId ? role : undefined
           );
-          vi.mocked(roleRegistry.resolve).mockImplementation((roleId: string) => {
-            if (roleId === role.roleId) return role;
-            throw new Error(`Role ${roleId} not found`);
-          });
+          vi.mocked(roleRegistry.resolve).mockImplementation(
+            (roleId: string) => {
+              if (roleId === role.roleId) return role;
+              throw new Error(`Role ${roleId} not found`);
+            }
+          );
 
-          const agents = agentDefs.map((d) => createMockAgent(d.agentId, d.skills));
+          const agents = agentDefs.map(d =>
+            createMockAgent(d.agentId, d.skills)
+          );
 
           const task = {
-            description: 'any task description',
+            description: "any task description",
             requiredSkills: taskSkills,
             requiredRole: role.roleId,
           };
@@ -505,14 +569,14 @@ describe('RoleMatcher Property 10: requiredRole 约束匹配范围', () => {
 
           // Should have exactly one recommendation per agent
           expect(results.length).toBe(agents.length);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.4**
-  it('requiredRole skips role inference — only the specified role appears even when other roles are registered', async () => {
+  it("requiredRole skips role inference — only the specified role appears even when other roles are registered", async () => {
     await fc.assert(
       fc.asyncProperty(
         arbRoleTemplate,
@@ -520,24 +584,32 @@ describe('RoleMatcher Property 10: requiredRole 约束匹配范围', () => {
         fc.record({ agentId: arbAgentId, skills: arbSkillList }),
         async (requiredRole, otherRole, agentDef) => {
           // Ensure distinct roleIds
-          const other = { ...otherRole, roleId: otherRole.roleId === requiredRole.roleId ? `${otherRole.roleId}-x` : otherRole.roleId };
+          const other = {
+            ...otherRole,
+            roleId:
+              otherRole.roleId === requiredRole.roleId
+                ? `${otherRole.roleId}-x`
+                : otherRole.roleId,
+          };
 
           vi.mocked(roleRegistry.get).mockImplementation((roleId: string) => {
             if (roleId === requiredRole.roleId) return requiredRole;
             if (roleId === other.roleId) return other;
             return undefined;
           });
-          vi.mocked(roleRegistry.resolve).mockImplementation((roleId: string) => {
-            if (roleId === requiredRole.roleId) return requiredRole;
-            if (roleId === other.roleId) return other;
-            throw new Error(`Role ${roleId} not found`);
-          });
+          vi.mocked(roleRegistry.resolve).mockImplementation(
+            (roleId: string) => {
+              if (roleId === requiredRole.roleId) return requiredRole;
+              if (roleId === other.roleId) return other;
+              throw new Error(`Role ${roleId} not found`);
+            }
+          );
           vi.mocked(roleRegistry.list).mockReturnValue([requiredRole, other]);
 
           const agent = createMockAgent(agentDef.agentId, agentDef.skills);
 
           const task = {
-            description: 'implement code review and test',
+            description: "implement code review and test",
             requiredRole: requiredRole.roleId,
           };
 
@@ -547,51 +619,55 @@ describe('RoleMatcher Property 10: requiredRole 约束匹配范围', () => {
           expect(results.length).toBe(1);
           expect(results[0].recommendedRoleId).toBe(requiredRole.roleId);
           expect(results[0].agentId).toBe(agentDef.agentId);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 3.4**
-  it('each recommendation contains all required fields with correct types', async () => {
+  it("each recommendation contains all required fields with correct types", async () => {
     await fc.assert(
       fc.asyncProperty(
         arbRoleTemplate,
-        fc.array(
-          fc.record({ agentId: arbAgentId, skills: arbSkillList }),
-          { minLength: 1, maxLength: 4 },
-        ),
+        fc.array(fc.record({ agentId: arbAgentId, skills: arbSkillList }), {
+          minLength: 1,
+          maxLength: 4,
+        }),
         async (role, agentDefs) => {
           vi.mocked(roleRegistry.get).mockImplementation((roleId: string) =>
-            roleId === role.roleId ? role : undefined,
+            roleId === role.roleId ? role : undefined
           );
-          vi.mocked(roleRegistry.resolve).mockImplementation((roleId: string) => {
-            if (roleId === role.roleId) return role;
-            throw new Error(`Role ${roleId} not found`);
-          });
+          vi.mocked(roleRegistry.resolve).mockImplementation(
+            (roleId: string) => {
+              if (roleId === role.roleId) return role;
+              throw new Error(`Role ${roleId} not found`);
+            }
+          );
 
-          const agents = agentDefs.map((d) => createMockAgent(d.agentId, d.skills));
+          const agents = agentDefs.map(d =>
+            createMockAgent(d.agentId, d.skills)
+          );
 
           const task = {
-            description: 'some task',
+            description: "some task",
             requiredRole: role.roleId,
           };
 
           const results = await matcher.match(task, agents);
 
           for (const rec of results) {
-            expect(rec).toHaveProperty('agentId');
-            expect(rec).toHaveProperty('recommendedRoleId', role.roleId);
-            expect(typeof rec.roleMatchScore).toBe('number');
+            expect(rec).toHaveProperty("agentId");
+            expect(rec).toHaveProperty("recommendedRoleId", role.roleId);
+            expect(typeof rec.roleMatchScore).toBe("number");
             expect(rec.roleMatchScore).toBeGreaterThanOrEqual(0);
             expect(rec.roleMatchScore).toBeLessThanOrEqual(1);
-            expect(rec).toHaveProperty('reason');
-            expect(typeof rec.reason).toBe('string');
+            expect(rec).toHaveProperty("reason");
+            expect(typeof rec.reason).toBe("string");
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

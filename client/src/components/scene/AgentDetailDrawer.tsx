@@ -149,7 +149,9 @@ export function AgentDetailDrawer({
   const agentStatuses = useWorkflowStore(state => state.agentStatuses);
   const heartbeatStatuses = useWorkflowStore(state => state.heartbeatStatuses);
   const heartbeatReports = useWorkflowStore(state => state.heartbeatReports);
-  const fetchWorkflowDetail = useWorkflowStore(state => state.fetchWorkflowDetail);
+  const fetchWorkflowDetail = useWorkflowStore(
+    state => state.fetchWorkflowDetail
+  );
   const fetchHeartbeatStatuses = useWorkflowStore(
     state => state.fetchHeartbeatStatuses
   );
@@ -532,14 +534,16 @@ export function AgentDetailDrawer({
                   </p>
                   {snapshot.latestReport.keywords.length > 0 ? (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {snapshot.latestReport.keywords.slice(0, 4).map(keyword => (
-                        <span
-                          key={keyword}
-                          className="rounded-full bg-[#F0F5FA] px-3 py-1 text-xs font-medium text-[#4F6C84]"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
+                      {snapshot.latestReport.keywords
+                        .slice(0, 4)
+                        .map(keyword => (
+                          <span
+                            key={keyword}
+                            className="rounded-full bg-[#F0F5FA] px-3 py-1 text-xs font-medium text-[#4F6C84]"
+                          >
+                            {keyword}
+                          </span>
+                        ))}
                     </div>
                   ) : null}
                 </div>

@@ -8,11 +8,14 @@
  * 当 lowConfidence 为 true 时使用 roleReputation * 0.4 + overallReputation * 0.6 的加权平均。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { AssignmentScorer } from '../core/reputation/assignment-scorer.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { ReputationProfile, RoleReputationRecord } from '../../shared/reputation.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { AssignmentScorer } from "../core/reputation/assignment-scorer.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  ReputationProfile,
+  RoleReputationRecord,
+} from "../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -22,7 +25,7 @@ import type { ReputationProfile, RoleReputationRecord } from '../../shared/reput
 function makeProfile(
   overallScore: number,
   roleReputation: Record<string, RoleReputationRecord> = {},
-  agentId = 'agent-test',
+  agentId = "agent-test"
 ): ReputationProfile {
   return {
     agentId,
@@ -34,8 +37,8 @@ function makeProfile(
       collaborationScore: 500,
       reliabilityScore: 500,
     },
-    grade: 'B' as const,
-    trustTier: 'standard' as const,
+    grade: "B" as const,
+    trustTier: "standard" as const,
     isExternal: false,
     totalTasks: 20,
     consecutiveHighQuality: 0,
@@ -51,7 +54,7 @@ function makeRoleRep(
   roleId: string,
   overallScore: number,
   lowConfidence: boolean,
-  totalTasksInRole?: number,
+  totalTasksInRole?: number
 ): RoleReputationRecord {
   return {
     roleId,
@@ -75,17 +78,23 @@ function makeRoleRep(
 const fitnessScoreArb = fc.double({ min: 0, max: 1, noNaN: true });
 const overallScoreArb = fc.integer({ min: 0, max: 1000 });
 const roleScoreArb = fc.integer({ min: 0, max: 1000 });
-const roleNameArb = fc.constantFrom('coder', 'reviewer', 'planner', 'tester', 'lead');
+const roleNameArb = fc.constantFrom(
+  "coder",
+  "reviewer",
+  "planner",
+  "tester",
+  "lead"
+);
 
 // ---------------------------------------------------------------------------
 // Property Tests
 // ---------------------------------------------------------------------------
 
-describe('Property 9: 角色信誉替代与低置信度回退', () => {
+describe("Property 9: 角色信誉替代与低置信度回退", () => {
   const scorer = new AssignmentScorer(DEFAULT_REPUTATION_CONFIG);
   const cfg = DEFAULT_REPUTATION_CONFIG;
 
-  it('uses roleReputation.overallScore when lowConfidence is false', () => {
+  it("uses roleReputation.overallScore when lowConfidence is false", () => {
     fc.assert(
       fc.property(
         fitnessScoreArb,
@@ -96,22 +105,29 @@ describe('Property 9: 角色信誉替代与低置信度回退', () => {
           const roleRep = makeRoleRep(roleName, roleScore, false);
           const profile = makeProfile(overallScore, { [roleName]: roleRep });
 
-          const result = scorer.computeAssignmentScore(fitnessScore, profile, roleName);
+          const result = scorer.computeAssignmentScore(
+            fitnessScore,
+            profile,
+            roleName
+          );
 
           const expectedReputationFactor = roleScore / 1000;
           const expectedAssignment =
             fitnessScore * cfg.scheduling.fitnessWeight +
             expectedReputationFactor * cfg.scheduling.reputationWeight;
 
-          expect(result.reputationFactor).toBeCloseTo(expectedReputationFactor, 10);
+          expect(result.reputationFactor).toBeCloseTo(
+            expectedReputationFactor,
+            10
+          );
           expect(result.assignmentScore).toBeCloseTo(expectedAssignment, 10);
-        },
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('uses weighted average of role and overall reputation when lowConfidence is true', () => {
+  it("uses weighted average of role and overall reputation when lowConfidence is true", () => {
     fc.assert(
       fc.property(
         fitnessScoreArb,
@@ -122,7 +138,11 @@ describe('Property 9: 角色信誉替代与低置信度回退', () => {
           const roleRep = makeRoleRep(roleName, roleScore, true);
           const profile = makeProfile(overallScore, { [roleName]: roleRep });
 
-          const result = scorer.computeAssignmentScore(fitnessScore, profile, roleName);
+          const result = scorer.computeAssignmentScore(
+            fitnessScore,
+            profile,
+            roleName
+          );
 
           const expectedReputationFactor =
             (roleScore * cfg.lowConfidence.roleWeight +
@@ -132,15 +152,18 @@ describe('Property 9: 角色信誉替代与低置信度回退', () => {
             fitnessScore * cfg.scheduling.fitnessWeight +
             expectedReputationFactor * cfg.scheduling.reputationWeight;
 
-          expect(result.reputationFactor).toBeCloseTo(expectedReputationFactor, 10);
+          expect(result.reputationFactor).toBeCloseTo(
+            expectedReputationFactor,
+            10
+          );
           expect(result.assignmentScore).toBeCloseTo(expectedAssignment, 10);
-        },
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('falls back to overall score when taskRole is provided but no role reputation exists', () => {
+  it("falls back to overall score when taskRole is provided but no role reputation exists", () => {
     fc.assert(
       fc.property(
         fitnessScoreArb,
@@ -150,17 +173,24 @@ describe('Property 9: 角色信誉替代与低置信度回退', () => {
           // Profile with empty roleReputation
           const profile = makeProfile(overallScore);
 
-          const result = scorer.computeAssignmentScore(fitnessScore, profile, roleName);
+          const result = scorer.computeAssignmentScore(
+            fitnessScore,
+            profile,
+            roleName
+          );
 
           const expectedReputationFactor = overallScore / 1000;
-          expect(result.reputationFactor).toBeCloseTo(expectedReputationFactor, 10);
-        },
+          expect(result.reputationFactor).toBeCloseTo(
+            expectedReputationFactor,
+            10
+          );
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('lowConfidence=false role score differs from overall score in assignment result', () => {
+  it("lowConfidence=false role score differs from overall score in assignment result", () => {
     fc.assert(
       fc.property(
         overallScoreArb,
@@ -173,20 +203,30 @@ describe('Property 9: 角色信誉替代与低置信度回退', () => {
           const roleRep = makeRoleRep(roleName, roleScore, false);
           const profile = makeProfile(overallScore, { [roleName]: roleRep });
 
-          const withRole = scorer.computeAssignmentScore(0.5, profile, roleName);
+          const withRole = scorer.computeAssignmentScore(
+            0.5,
+            profile,
+            roleName
+          );
           const withoutRole = scorer.computeAssignmentScore(0.5, profile);
 
           // With role should use roleScore, without should use overallScore
           expect(withRole.reputationFactor).toBeCloseTo(roleScore / 1000, 10);
-          expect(withoutRole.reputationFactor).toBeCloseTo(overallScore / 1000, 10);
-          expect(withRole.reputationFactor).not.toBeCloseTo(withoutRole.reputationFactor, 10);
-        },
+          expect(withoutRole.reputationFactor).toBeCloseTo(
+            overallScore / 1000,
+            10
+          );
+          expect(withRole.reputationFactor).not.toBeCloseTo(
+            withoutRole.reputationFactor,
+            10
+          );
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('lowConfidence weighted average is between role and overall scores', () => {
+  it("lowConfidence weighted average is between role and overall scores", () => {
     fc.assert(
       fc.property(
         overallScoreArb,
@@ -206,9 +246,9 @@ describe('Property 9: 角色信誉替代与低置信度回退', () => {
           // Weighted average must lie within [min, max] of the two inputs
           expect(result.reputationFactor).toBeGreaterThanOrEqual(lower - 1e-10);
           expect(result.reputationFactor).toBeLessThanOrEqual(upper + 1e-10);
-        },
+        }
       ),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 });

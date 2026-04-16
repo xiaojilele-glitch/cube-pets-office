@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 import {
   MISSION_EVENT_LEVELS,
@@ -20,25 +20,25 @@ import {
   type MissionOperatorState,
   type MissionRecord,
   type MissionStage,
-} from '../../shared/mission/contracts.js';
-import type { MissionSnapshotStore } from './mission-store.js';
+} from "../../shared/mission/contracts.js";
+import type { MissionSnapshotStore } from "./mission-store.js";
 
 interface SerializedMissionSnapshotFile {
   version: 1;
   tasks: MissionRecord[];
 }
 
-function isMissionStageStatus(value: unknown): value is MissionStage['status'] {
+function isMissionStageStatus(value: unknown): value is MissionStage["status"] {
   return (
-    typeof value === 'string' &&
-    MISSION_STAGE_STATUSES.includes(value as MissionStage['status'])
+    typeof value === "string" &&
+    MISSION_STAGE_STATUSES.includes(value as MissionStage["status"])
   );
 }
 
-function isMissionStatus(value: unknown): value is MissionRecord['status'] {
+function isMissionStatus(value: unknown): value is MissionRecord["status"] {
   return (
-    typeof value === 'string' &&
-    MISSION_STATUSES.includes(value as MissionRecord['status'])
+    typeof value === "string" &&
+    MISSION_STATUSES.includes(value as MissionRecord["status"])
   );
 }
 
@@ -46,9 +46,12 @@ function normalizeDecisionOptions(value: unknown): MissionDecisionOption[] {
   if (!Array.isArray(value)) return [];
 
   return value.flatMap(item => {
-    if (!item || typeof item !== 'object') return [];
+    if (!item || typeof item !== "object") return [];
     const candidate = item as Partial<MissionDecisionOption>;
-    if (typeof candidate.id !== 'string' || typeof candidate.label !== 'string') {
+    if (
+      typeof candidate.id !== "string" ||
+      typeof candidate.label !== "string"
+    ) {
       return [];
     }
 
@@ -57,7 +60,7 @@ function normalizeDecisionOptions(value: unknown): MissionDecisionOption[] {
         id: candidate.id,
         label: candidate.label,
         description:
-          typeof candidate.description === 'string'
+          typeof candidate.description === "string"
             ? candidate.description
             : undefined,
       },
@@ -66,10 +69,10 @@ function normalizeDecisionOptions(value: unknown): MissionDecisionOption[] {
 }
 
 function normalizeDecision(value: unknown): MissionDecision | undefined {
-  if (!value || typeof value !== 'object') return undefined;
+  if (!value || typeof value !== "object") return undefined;
 
   const candidate = value as Partial<MissionDecision>;
-  if (typeof candidate.prompt !== 'string') return undefined;
+  if (typeof candidate.prompt !== "string") return undefined;
 
   const options = normalizeDecisionOptions(candidate.options);
   if (options.length === 0) return undefined;
@@ -79,17 +82,20 @@ function normalizeDecision(value: unknown): MissionDecision | undefined {
     options,
     allowFreeText: candidate.allowFreeText === true,
     placeholder:
-      typeof candidate.placeholder === 'string'
+      typeof candidate.placeholder === "string"
         ? candidate.placeholder
         : undefined,
   };
 }
 
 function normalizeStage(value: unknown): MissionStage | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
 
   const candidate = value as Partial<MissionStage>;
-  if (typeof candidate.key !== 'string' || typeof candidate.label !== 'string') {
+  if (
+    typeof candidate.key !== "string" ||
+    typeof candidate.label !== "string"
+  ) {
     return null;
   }
 
@@ -98,56 +104,59 @@ function normalizeStage(value: unknown): MissionStage | null {
     label: candidate.label,
     status: isMissionStageStatus(candidate.status)
       ? candidate.status
-      : 'pending',
-    detail: typeof candidate.detail === 'string' ? candidate.detail : undefined,
+      : "pending",
+    detail: typeof candidate.detail === "string" ? candidate.detail : undefined,
     startedAt:
-      typeof candidate.startedAt === 'number' ? candidate.startedAt : undefined,
+      typeof candidate.startedAt === "number" ? candidate.startedAt : undefined,
     completedAt:
-      typeof candidate.completedAt === 'number'
+      typeof candidate.completedAt === "number"
         ? candidate.completedAt
         : undefined,
   };
 }
 
 function normalizeEvent(value: unknown): MissionEvent | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
 
   const candidate = value as Partial<MissionEvent>;
-  if (typeof candidate.message !== 'string' || typeof candidate.time !== 'number') {
+  if (
+    typeof candidate.message !== "string" ||
+    typeof candidate.time !== "number"
+  ) {
     return null;
   }
 
   if (
-    typeof candidate.type !== 'string' ||
-    !MISSION_EVENT_TYPES.includes(candidate.type as MissionEvent['type'])
+    typeof candidate.type !== "string" ||
+    !MISSION_EVENT_TYPES.includes(candidate.type as MissionEvent["type"])
   ) {
     return null;
   }
 
   const source =
-    candidate.source === 'mission-core' ||
-    candidate.source === 'executor' ||
-    candidate.source === 'feishu' ||
-    candidate.source === 'brain' ||
-    candidate.source === 'user'
+    candidate.source === "mission-core" ||
+    candidate.source === "executor" ||
+    candidate.source === "feishu" ||
+    candidate.source === "brain" ||
+    candidate.source === "user"
       ? candidate.source
       : undefined;
 
   const level =
-    typeof candidate.level === 'string' &&
+    typeof candidate.level === "string" &&
     MISSION_EVENT_LEVELS.includes(
       candidate.level as (typeof MISSION_EVENT_LEVELS)[number]
     )
-      ? (candidate.level as MissionEvent['level'])
+      ? (candidate.level as MissionEvent["level"])
       : undefined;
 
   return {
     type: candidate.type,
     message: candidate.message,
     progress:
-      typeof candidate.progress === 'number' ? candidate.progress : undefined,
+      typeof candidate.progress === "number" ? candidate.progress : undefined,
     stageKey:
-      typeof candidate.stageKey === 'string' ? candidate.stageKey : undefined,
+      typeof candidate.stageKey === "string" ? candidate.stageKey : undefined,
     level,
     time: candidate.time,
     source,
@@ -155,15 +164,15 @@ function normalizeEvent(value: unknown): MissionEvent | null {
 }
 
 function normalizeArtifact(value: unknown): MissionArtifact | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
 
   const candidate = value as Partial<MissionArtifact>;
   if (
-    (candidate.kind !== 'file' &&
-      candidate.kind !== 'report' &&
-      candidate.kind !== 'url' &&
-      candidate.kind !== 'log') ||
-    typeof candidate.name !== 'string'
+    (candidate.kind !== "file" &&
+      candidate.kind !== "report" &&
+      candidate.kind !== "url" &&
+      candidate.kind !== "log") ||
+    typeof candidate.name !== "string"
   ) {
     return null;
   }
@@ -171,73 +180,79 @@ function normalizeArtifact(value: unknown): MissionArtifact | null {
   return {
     kind: candidate.kind,
     name: candidate.name,
-    path: typeof candidate.path === 'string' ? candidate.path : undefined,
-    url: typeof candidate.url === 'string' ? candidate.url : undefined,
+    path: typeof candidate.path === "string" ? candidate.path : undefined,
+    url: typeof candidate.url === "string" ? candidate.url : undefined,
     description:
-      typeof candidate.description === 'string'
+      typeof candidate.description === "string"
         ? candidate.description
         : undefined,
   };
 }
 
-function normalizeExecutorContext(value: unknown): MissionExecutorContext | undefined {
-  if (!value || typeof value !== 'object') return undefined;
+function normalizeExecutorContext(
+  value: unknown
+): MissionExecutorContext | undefined {
+  if (!value || typeof value !== "object") return undefined;
 
   const candidate = value as Partial<MissionExecutorContext>;
-  if (typeof candidate.name !== 'string' || !candidate.name.trim()) {
+  if (typeof candidate.name !== "string" || !candidate.name.trim()) {
     return undefined;
   }
 
   return {
     name: candidate.name,
     requestId:
-      typeof candidate.requestId === 'string' ? candidate.requestId : undefined,
-    jobId: typeof candidate.jobId === 'string' ? candidate.jobId : undefined,
-    status: typeof candidate.status === 'string' ? candidate.status : undefined,
+      typeof candidate.requestId === "string" ? candidate.requestId : undefined,
+    jobId: typeof candidate.jobId === "string" ? candidate.jobId : undefined,
+    status: typeof candidate.status === "string" ? candidate.status : undefined,
     baseUrl:
-      typeof candidate.baseUrl === 'string' ? candidate.baseUrl : undefined,
+      typeof candidate.baseUrl === "string" ? candidate.baseUrl : undefined,
     lastEventType:
-      typeof candidate.lastEventType === 'string'
+      typeof candidate.lastEventType === "string"
         ? candidate.lastEventType
         : undefined,
     lastEventAt:
-      typeof candidate.lastEventAt === 'number'
+      typeof candidate.lastEventAt === "number"
         ? candidate.lastEventAt
         : undefined,
   };
 }
 
-function normalizeInstanceContext(value: unknown): MissionInstanceContext | undefined {
-  if (!value || typeof value !== 'object') return undefined;
+function normalizeInstanceContext(
+  value: unknown
+): MissionInstanceContext | undefined {
+  if (!value || typeof value !== "object") return undefined;
 
   const candidate = value as Partial<MissionInstanceContext>;
   return {
-    id: typeof candidate.id === 'string' ? candidate.id : undefined,
-    image: typeof candidate.image === 'string' ? candidate.image : undefined,
+    id: typeof candidate.id === "string" ? candidate.id : undefined,
+    image: typeof candidate.image === "string" ? candidate.image : undefined,
     command: Array.isArray(candidate.command)
       ? candidate.command.filter(
-          (entry): entry is string => typeof entry === 'string'
+          (entry): entry is string => typeof entry === "string"
         )
       : undefined,
     workspaceRoot:
-      typeof candidate.workspaceRoot === 'string'
+      typeof candidate.workspaceRoot === "string"
         ? candidate.workspaceRoot
         : undefined,
     startedAt:
-      typeof candidate.startedAt === 'number' ? candidate.startedAt : undefined,
+      typeof candidate.startedAt === "number" ? candidate.startedAt : undefined,
     completedAt:
-      typeof candidate.completedAt === 'number'
+      typeof candidate.completedAt === "number"
         ? candidate.completedAt
         : undefined,
     exitCode:
-      typeof candidate.exitCode === 'number' ? candidate.exitCode : undefined,
-    host: typeof candidate.host === 'string' ? candidate.host : undefined,
+      typeof candidate.exitCode === "number" ? candidate.exitCode : undefined,
+    host: typeof candidate.host === "string" ? candidate.host : undefined,
   };
 }
 
-function normalizeOperatorState(value: unknown): MissionOperatorState | undefined {
+function normalizeOperatorState(
+  value: unknown
+): MissionOperatorState | undefined {
   if (
-    typeof value === 'string' &&
+    typeof value === "string" &&
     MISSION_OPERATOR_STATES.includes(value as MissionOperatorState)
   ) {
     return value as MissionOperatorState;
@@ -247,13 +262,13 @@ function normalizeOperatorState(value: unknown): MissionOperatorState | undefine
 }
 
 function normalizeBlocker(value: unknown): MissionBlocker | undefined {
-  if (!value || typeof value !== 'object') return undefined;
+  if (!value || typeof value !== "object") return undefined;
 
   const candidate = value as Partial<MissionBlocker>;
   if (
-    typeof candidate.reason !== 'string' ||
+    typeof candidate.reason !== "string" ||
     !candidate.reason.trim() ||
-    typeof candidate.createdAt !== 'number'
+    typeof candidate.createdAt !== "number"
   ) {
     return undefined;
   }
@@ -262,54 +277,56 @@ function normalizeBlocker(value: unknown): MissionBlocker | undefined {
     reason: candidate.reason,
     createdAt: candidate.createdAt,
     createdBy:
-      typeof candidate.createdBy === 'string' ? candidate.createdBy : undefined,
+      typeof candidate.createdBy === "string" ? candidate.createdBy : undefined,
   };
 }
 
 function normalizeOperatorAction(
-  value: unknown,
+  value: unknown
 ): MissionOperatorActionRecord | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
 
   const candidate = value as Partial<MissionOperatorActionRecord>;
   if (
-    typeof candidate.id !== 'string' ||
-    typeof candidate.createdAt !== 'number' ||
-    typeof candidate.action !== 'string' ||
-    !MISSION_OPERATOR_ACTION_TYPES.includes(candidate.action as MissionOperatorActionRecord['action']) ||
-    typeof candidate.result !== 'string' ||
-    !MISSION_OPERATOR_ACTION_RESULTS.includes(candidate.result as MissionOperatorActionRecord['result'])
+    typeof candidate.id !== "string" ||
+    typeof candidate.createdAt !== "number" ||
+    typeof candidate.action !== "string" ||
+    !MISSION_OPERATOR_ACTION_TYPES.includes(
+      candidate.action as MissionOperatorActionRecord["action"]
+    ) ||
+    typeof candidate.result !== "string" ||
+    !MISSION_OPERATOR_ACTION_RESULTS.includes(
+      candidate.result as MissionOperatorActionRecord["result"]
+    )
   ) {
     return null;
   }
 
   return {
     id: candidate.id,
-    action: candidate.action as MissionOperatorActionRecord['action'],
+    action: candidate.action as MissionOperatorActionRecord["action"],
     createdAt: candidate.createdAt,
-    result: candidate.result as MissionOperatorActionRecord['result'],
+    result: candidate.result as MissionOperatorActionRecord["result"],
     requestedBy:
-      typeof candidate.requestedBy === 'string'
+      typeof candidate.requestedBy === "string"
         ? candidate.requestedBy
         : undefined,
-    reason:
-      typeof candidate.reason === 'string' ? candidate.reason : undefined,
-    detail:
-      typeof candidate.detail === 'string' ? candidate.detail : undefined,
+    reason: typeof candidate.reason === "string" ? candidate.reason : undefined,
+    detail: typeof candidate.detail === "string" ? candidate.detail : undefined,
   };
 }
 
 function normalizeTask(value: unknown): MissionRecord | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
 
   const candidate = value as Partial<MissionRecord>;
   if (
-    typeof candidate.id !== 'string' ||
-    typeof candidate.kind !== 'string' ||
-    typeof candidate.title !== 'string' ||
-    typeof candidate.progress !== 'number' ||
-    typeof candidate.createdAt !== 'number' ||
-    typeof candidate.updatedAt !== 'number'
+    typeof candidate.id !== "string" ||
+    typeof candidate.kind !== "string" ||
+    typeof candidate.title !== "string" ||
+    typeof candidate.progress !== "number" ||
+    typeof candidate.createdAt !== "number" ||
+    typeof candidate.updatedAt !== "number"
   ) {
     return null;
   }
@@ -330,16 +347,20 @@ function normalizeTask(value: unknown): MissionRecord | null {
     kind: candidate.kind,
     title: candidate.title,
     sourceText:
-      typeof candidate.sourceText === 'string' ? candidate.sourceText : undefined,
-    topicId: typeof candidate.topicId === 'string' ? candidate.topicId : undefined,
-    status: isMissionStatus(candidate.status) ? candidate.status : 'queued',
+      typeof candidate.sourceText === "string"
+        ? candidate.sourceText
+        : undefined,
+    topicId:
+      typeof candidate.topicId === "string" ? candidate.topicId : undefined,
+    status: isMissionStatus(candidate.status) ? candidate.status : "queued",
     progress: Math.max(0, Math.min(100, Math.round(candidate.progress))),
     currentStageKey:
-      typeof candidate.currentStageKey === 'string'
+      typeof candidate.currentStageKey === "string"
         ? candidate.currentStageKey
         : undefined,
     stages,
-    summary: typeof candidate.summary === 'string' ? candidate.summary : undefined,
+    summary:
+      typeof candidate.summary === "string" ? candidate.summary : undefined,
     executor: normalizeExecutorContext(candidate.executor),
     instance: normalizeInstanceContext(candidate.instance),
     artifacts: Array.isArray(candidate.artifacts)
@@ -348,35 +369,40 @@ function normalizeTask(value: unknown): MissionRecord | null {
           .filter((artifact): artifact is MissionArtifact => Boolean(artifact))
       : undefined,
     waitingFor:
-      typeof candidate.waitingFor === 'string' ? candidate.waitingFor : undefined,
+      typeof candidate.waitingFor === "string"
+        ? candidate.waitingFor
+        : undefined,
     decision: normalizeDecision(candidate.decision),
-    operatorState: normalizeOperatorState(candidate.operatorState) ?? 'active',
+    operatorState: normalizeOperatorState(candidate.operatorState) ?? "active",
     operatorActions: Array.isArray(candidate.operatorActions)
       ? candidate.operatorActions
           .map(action => normalizeOperatorAction(action))
-          .filter((action): action is MissionOperatorActionRecord => Boolean(action))
+          .filter((action): action is MissionOperatorActionRecord =>
+            Boolean(action)
+          )
       : [],
     blocker: normalizeBlocker(candidate.blocker),
     attempt:
-      typeof candidate.attempt === 'number' && Number.isFinite(candidate.attempt)
+      typeof candidate.attempt === "number" &&
+      Number.isFinite(candidate.attempt)
         ? Math.max(1, Math.trunc(candidate.attempt))
         : 1,
     createdAt: candidate.createdAt,
     updatedAt: candidate.updatedAt,
     completedAt:
-      typeof candidate.completedAt === 'number'
+      typeof candidate.completedAt === "number"
         ? candidate.completedAt
         : undefined,
     cancelledAt:
-      typeof candidate.cancelledAt === 'number'
+      typeof candidate.cancelledAt === "number"
         ? candidate.cancelledAt
         : undefined,
     cancelledBy:
-      typeof candidate.cancelledBy === 'string'
+      typeof candidate.cancelledBy === "string"
         ? candidate.cancelledBy
         : undefined,
     cancelReason:
-      typeof candidate.cancelReason === 'string'
+      typeof candidate.cancelReason === "string"
         ? candidate.cancelReason
         : undefined,
     events,
@@ -405,14 +431,14 @@ export class MissionFileSnapshotStore implements MissionSnapshotStore {
     };
 
     mkdirSync(dirname(this.filePath), { recursive: true });
-    writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+    writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
   }
 
   private readFile(): SerializedMissionSnapshotFile | null {
     if (!existsSync(this.filePath)) return null;
 
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as
         | SerializedMissionSnapshotFile
         | MissionRecord[];

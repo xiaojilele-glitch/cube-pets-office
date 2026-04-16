@@ -49,7 +49,10 @@ export const CORE_RELATION_TYPES = [
 // Status options
 // ---------------------------------------------------------------------------
 
-export const STATUS_OPTIONS: Array<{ value: EntityStatus | "all"; label: string }> = [
+export const STATUS_OPTIONS: Array<{
+  value: EntityStatus | "all";
+  label: string;
+}> = [
   { value: "all", label: "All" },
   { value: "active", label: "Active" },
   { value: "deprecated", label: "Deprecated" },
@@ -129,10 +132,15 @@ export default function KnowledgeFilters({
     <div className={`flex flex-col gap-4 text-sm ${className}`}>
       {/* Entity type checkboxes */}
       <fieldset>
-        <legend className="font-semibold text-gray-700 mb-1">Entity Types</legend>
+        <legend className="font-semibold text-gray-700 mb-1">
+          Entity Types
+        </legend>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
-          {CORE_ENTITY_TYPES.map((t) => (
-            <label key={t} className="flex items-center gap-1 cursor-pointer select-none">
+          {CORE_ENTITY_TYPES.map(t => (
+            <label
+              key={t}
+              className="flex items-center gap-1 cursor-pointer select-none"
+            >
               <input
                 type="checkbox"
                 checked={filters.entityTypes.has(t)}
@@ -160,7 +168,7 @@ export default function KnowledgeFilters({
           max={1}
           step={0.05}
           value={filters.confidenceMin}
-          onChange={(e) => setConfidenceMin(Number(e.target.value))}
+          onChange={e => setConfidenceMin(Number(e.target.value))}
           className="w-full accent-blue-600"
           aria-label="Minimum confidence threshold"
         />
@@ -176,11 +184,11 @@ export default function KnowledgeFilters({
         <legend className="font-semibold text-gray-700 mb-1">Status</legend>
         <select
           value={filters.status}
-          onChange={(e) => setStatus(e.target.value as EntityStatus | "all")}
+          onChange={e => setStatus(e.target.value as EntityStatus | "all")}
           className="border border-gray-300 rounded px-2 py-1 text-gray-700 bg-white"
           aria-label="Entity status filter"
         >
-          {STATUS_OPTIONS.map((opt) => (
+          {STATUS_OPTIONS.map(opt => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
@@ -190,10 +198,15 @@ export default function KnowledgeFilters({
 
       {/* Relation type checkboxes */}
       <fieldset>
-        <legend className="font-semibold text-gray-700 mb-1">Relation Types</legend>
+        <legend className="font-semibold text-gray-700 mb-1">
+          Relation Types
+        </legend>
         <div className="flex flex-wrap gap-x-3 gap-y-1">
-          {CORE_RELATION_TYPES.map((t) => (
-            <label key={t} className="flex items-center gap-1 cursor-pointer select-none">
+          {CORE_RELATION_TYPES.map(t => (
+            <label
+              key={t}
+              className="flex items-center gap-1 cursor-pointer select-none"
+            >
               <input
                 type="checkbox"
                 checked={filters.relationTypes.has(t)}

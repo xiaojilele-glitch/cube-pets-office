@@ -5,6 +5,7 @@
 A2A 协议在 Cube Pets Office 现有的 MessageBus、动态组织生成、Mission Runtime 和 Guest Agent 机制基础上，新增跨框架 Agent 互操作层。该层包含三个核心模块：A2A 协议类型定义（共享层）、A2A Client（发起对外调用）和 A2A Server（接收外部调用），以及针对 CrewAI / LangGraph / Claude 的框架适配器。
 
 核心设计原则：
+
 - **协议优先**：基于 JSON-RPC 2.0 定义统一信封格式，所有框架适配器基于同一协议工作
 - **复用 Guest Agent 基础设施**：ExternalAgentNode 继承 GuestAgentNode，复用注册、生命周期和 3D 渲染逻辑
 - **最小侵入**：通过 MessageBus 元数据标记和路由扩展集成，不修改现有消息流核心逻辑
@@ -146,7 +147,7 @@ export interface A2AEnvelope {
 export interface A2AInvokeParams {
   targetAgent: string;
   task: string;
-  context: string;          // 最大 2000 字符
+  context: string; // 最大 2000 字符
   capabilities: string[];
   streamMode: boolean;
 }
@@ -169,8 +170,8 @@ export interface A2AResult {
 /** 产物 */
 export interface A2AArtifact {
   name: string;
-  type: string;             // MIME type
-  content: string;          // base64 或文本
+  type: string; // MIME type
+  content: string; // base64 或文本
 }
 
 /** 错误信息 */
@@ -189,7 +190,12 @@ export interface A2AStreamChunk {
 }
 
 /** A2A 会话状态 */
-export type A2ASessionStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
+export type A2ASessionStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 /** A2A 会话 */
 export interface A2ASession {
@@ -272,10 +278,20 @@ export class A2AClient {
   constructor(options: A2AClientOptions);
 
   /** 同步调用外部 Agent */
-  async invoke(params: A2AInvokeParams, frameworkType: A2AFrameworkType, endpoint: string, auth?: string): Promise<A2AResponse>;
+  async invoke(
+    params: A2AInvokeParams,
+    frameworkType: A2AFrameworkType,
+    endpoint: string,
+    auth?: string
+  ): Promise<A2AResponse>;
 
   /** 流式调用外部 Agent */
-  async invokeStream(params: A2AInvokeParams, frameworkType: A2AFrameworkType, endpoint: string, auth?: string): AsyncGenerator<A2AStreamChunk>;
+  async invokeStream(
+    params: A2AInvokeParams,
+    frameworkType: A2AFrameworkType,
+    endpoint: string,
+    auth?: string
+  ): AsyncGenerator<A2AStreamChunk>;
 
   /** 取消正在进行的调用 */
   async cancel(sessionId: string): Promise<void>;
@@ -291,8 +307,8 @@ export class A2AClient {
 }
 
 interface A2AClientOptions {
-  maxConcurrentSessions: number;  // 默认 10
-  defaultTimeoutMs: number;       // 默认 60000
+  maxConcurrentSessions: number; // 默认 10
+  defaultTimeoutMs: number; // 默认 60000
   adapters: Map<A2AFrameworkType, FrameworkAdapter>;
 }
 ```
@@ -304,10 +320,16 @@ export class A2AServer {
   constructor(options: A2AServerOptions);
 
   /** 处理外部调用请求 */
-  async handleInvoke(envelope: A2AEnvelope, apiKey: string): Promise<A2AResponse>;
+  async handleInvoke(
+    envelope: A2AEnvelope,
+    apiKey: string
+  ): Promise<A2AResponse>;
 
   /** 处理流式调用请求 */
-  async handleStream(envelope: A2AEnvelope, apiKey: string): AsyncGenerator<A2AStreamChunk>;
+  async handleStream(
+    envelope: A2AEnvelope,
+    apiKey: string
+  ): AsyncGenerator<A2AStreamChunk>;
 
   /** 处理取消请求 */
   async handleCancel(sessionId: string, apiKey: string): Promise<void>;
@@ -324,7 +346,7 @@ export class A2AServer {
 
 interface A2AServerOptions {
   apiKeys: string[];
-  rateLimitPerMinute: number;     // 默认 60
+  rateLimitPerMinute: number; // 默认 60
   agentDirectory: AgentDirectory;
   messageBus: MessageBus;
 }
@@ -359,6 +381,7 @@ export interface FrameworkAdapter {
 ```
 
 三个适配器文件：
+
 - `server/core/a2a-adapters/crewai.ts` — CrewAI task execution 格式
 - `server/core/a2a-adapters/langgraph.ts` — LangGraph graph invoke 格式
 - `server/core/a2a-adapters/claude.ts` — Claude Messages API 格式
@@ -367,21 +390,33 @@ export interface FrameworkAdapter {
 // crewai.ts
 export class CrewAIAdapter implements FrameworkAdapter {
   frameworkType = "crewai" as const;
-  adaptRequest(params: A2AInvokeParams): { url: string; headers: Record<string, string>; body: unknown };
+  adaptRequest(params: A2AInvokeParams): {
+    url: string;
+    headers: Record<string, string>;
+    body: unknown;
+  };
   adaptResponse(raw: unknown): A2AResult;
 }
 
 // langgraph.ts
 export class LangGraphAdapter implements FrameworkAdapter {
   frameworkType = "langgraph" as const;
-  adaptRequest(params: A2AInvokeParams): { url: string; headers: Record<string, string>; body: unknown };
+  adaptRequest(params: A2AInvokeParams): {
+    url: string;
+    headers: Record<string, string>;
+    body: unknown;
+  };
   adaptResponse(raw: unknown): A2AResult;
 }
 
 // claude.ts
 export class ClaudeAdapter implements FrameworkAdapter {
   frameworkType = "claude" as const;
-  adaptRequest(params: A2AInvokeParams): { url: string; headers: Record<string, string>; body: unknown };
+  adaptRequest(params: A2AInvokeParams): {
+    url: string;
+    headers: Record<string, string>;
+    body: unknown;
+  };
   adaptResponse(raw: unknown): A2AResult;
 }
 ```
@@ -452,6 +487,7 @@ export function CrossFrameworkParticles(): JSX.Element;
 ```
 
 视觉规则：
+
 - 菱形粒子 + 渐变色轨迹（区别于跨 Pod 的圆形粒子）
 - CrewAI 调用：蓝色（#3B82F6）
 - LangGraph 调用：紫色（#8B5CF6）
@@ -525,138 +561,136 @@ A2A 消息在 MessageBus 中的元数据：
 ```typescript
 interface RateLimitEntry {
   apiKey: string;
-  windowStart: number;    // 当前窗口起始时间戳
-  count: number;          // 当前窗口内请求计数
+  windowStart: number; // 当前窗口起始时间戳
+  count: number; // 当前窗口内请求计数
 }
 
-Map<string, RateLimitEntry>  // key: apiKey
+Map<string, RateLimitEntry>; // key: apiKey
 ```
 
 ### 环境变量
 
-| 变量名 | 默认值 | 说明 |
-|--------|--------|------|
-| A2A_API_KEYS | "" | 允许的 API Key 列表（逗号分隔） |
-| A2A_RATE_LIMIT_PER_MINUTE | 60 | 每个 API Key 每分钟最大调用次数 |
-| A2A_DEFAULT_TIMEOUT_MS | 60000 | A2A 调用默认超时时间 |
-| A2A_MAX_CONCURRENT_SESSIONS | 10 | 最大并发 A2A 会话数 |
-| A2A_CONTEXT_MAX_LENGTH | 2000 | 上下文摘要最大字符数 |
-
-
+| 变量名                      | 默认值 | 说明                            |
+| --------------------------- | ------ | ------------------------------- |
+| A2A_API_KEYS                | ""     | 允许的 API Key 列表（逗号分隔） |
+| A2A_RATE_LIMIT_PER_MINUTE   | 60     | 每个 API Key 每分钟最大调用次数 |
+| A2A_DEFAULT_TIMEOUT_MS      | 60000  | A2A 调用默认超时时间            |
+| A2A_MAX_CONCURRENT_SESSIONS | 10     | 最大并发 A2A 会话数             |
+| A2A_CONTEXT_MAX_LENGTH      | 2000   | 上下文摘要最大字符数            |
 
 ## 正确性属性
 
-*正确性属性是系统在所有有效执行中都应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_正确性属性是系统在所有有效执行中都应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: A2AEnvelope 序列化往返一致性
 
-*For any* 合法的 A2AEnvelope 对象，调用 `serializeEnvelope` 后再调用 `deserializeEnvelope`，应产生与原始对象深度相等的结果。
+_For any_ 合法的 A2AEnvelope 对象，调用 `serializeEnvelope` 后再调用 `deserializeEnvelope`，应产生与原始对象深度相等的结果。
 
 **Validates: Requirements 1.6**
 
 ### Property 2: A2ASession 序列化往返一致性
 
-*For any* 合法的 A2ASession 对象，调用 `serializeSession` 后再调用 `deserializeSession`，应产生与原始对象深度相等的结果。
+_For any_ 合法的 A2ASession 对象，调用 `serializeSession` 后再调用 `deserializeSession`，应产生与原始对象深度相等的结果。
 
 **Validates: Requirements 9.5**
 
 ### Property 3: 上下文长度验证
 
-*For any* 字符串，`validateContext` 应在字符串长度不超过 2000 时返回 true，超过 2000 时返回 false。当 A2A_Client 构建调用请求时，提取的上下文摘要长度不应超过 2000 字符。
+_For any_ 字符串，`validateContext` 应在字符串长度不超过 2000 时返回 true，超过 2000 时返回 false。当 A2A_Client 构建调用请求时，提取的上下文摘要长度不应超过 2000 字符。
 
 **Validates: Requirements 1.2, 9.1**
 
 ### Property 4: 会话失败状态标记
 
-*For any* A2ASession，当调用超时或收到错误响应时，`terminateTimedOutSessions` 或错误处理逻辑应将该会话的 status 设为 "failed"。已超时的会话（startedAt + timeoutMs < currentTime）应被标记为 failed，未超时的会话不应被影响。
+_For any_ A2ASession，当调用超时或收到错误响应时，`terminateTimedOutSessions` 或错误处理逻辑应将该会话的 status 设为 "failed"。已超时的会话（startedAt + timeoutMs < currentTime）应被标记为 failed，未超时的会话不应被影响。
 
 **Validates: Requirements 2.5, 9.4**
 
 ### Property 5: 并发会话数量限制
 
-*For any* 正整数 N 作为 maxConcurrentSessions 配置值，A2A_Client 中活跃会话数不应超过 N。当活跃会话数已达 N 时，新的调用请求应被拒绝。
+_For any_ 正整数 N 作为 maxConcurrentSessions 配置值，A2A_Client 中活跃会话数不应超过 N。当活跃会话数已达 N 时，新的调用请求应被拒绝。
 
 **Validates: Requirements 2.6**
 
 ### Property 6: 无效认证令牌拒绝
 
-*For any* 不在已配置 API Key 列表中的字符串（包括空字符串），`validateApiKey` 应返回 false。对于列表中的有效 Key，应返回 true。
+_For any_ 不在已配置 API Key 列表中的字符串（包括空字符串），`validateApiKey` 应返回 false。对于列表中的有效 Key，应返回 true。
 
 **Validates: Requirements 3.6, 5.1**
 
 ### Property 7: 不存在的 Agent 返回错误
 
-*For any* 不在 AgentDirectory 中注册的 Agent ID，A2A_Server 的 `handleInvoke` 应返回包含 AGENT_NOT_FOUND 错误码的 A2AResponse。
+_For any_ 不在 AgentDirectory 中注册的 Agent ID，A2A_Server 的 `handleInvoke` 应返回包含 AGENT_NOT_FOUND 错误码的 A2AResponse。
 
 **Validates: Requirements 3.7**
 
 ### Property 8: 速率限制执行
 
-*For any* API Key 和正整数 R 作为 rateLimitPerMinute 配置值，在同一分钟窗口内第 R+1 次调用 `checkRateLimit` 应返回 `{ allowed: false, retryAfterSeconds: N }`（N > 0）。前 R 次调用应返回 `{ allowed: true }`。
+_For any_ API Key 和正整数 R 作为 rateLimitPerMinute 配置值，在同一分钟窗口内第 R+1 次调用 `checkRateLimit` 应返回 `{ allowed: false, retryAfterSeconds: N }`（N > 0）。前 R 次调用应返回 `{ allowed: true }`。
 
 **Validates: Requirements 5.4, 5.5**
 
 ### Property 9: 框架适配器请求格式正确性
 
-*For any* 合法的 A2AInvokeParams 和支持的框架类型（crewai / langgraph / claude），对应的 FrameworkAdapter.adaptRequest 应返回包含非空 url、headers 和 body 的对象。CrewAI 的 body 应包含 agent role 和 task description；LangGraph 的 body 应包含 input state；Claude 的 body 应包含 messages 数组。
+_For any_ 合法的 A2AInvokeParams 和支持的框架类型（crewai / langgraph / claude），对应的 FrameworkAdapter.adaptRequest 应返回包含非空 url、headers 和 body 的对象。CrewAI 的 body 应包含 agent role 和 task description；LangGraph 的 body 应包含 input state；Claude 的 body 应包含 messages 数组。
 
 **Validates: Requirements 4.1, 4.2, 4.3**
 
 ### Property 10: 框架适配器响应归一化
 
-*For any* 框架适配器和合法的框架特定响应对象，`adaptResponse` 应返回包含 output（string）和 artifacts（数组）字段的 A2AResult 对象。
+_For any_ 框架适配器和合法的框架特定响应对象，`adaptResponse` 应返回包含 output（string）和 artifacts（数组）字段的 A2AResult 对象。
 
 **Validates: Requirements 4.4**
 
 ### Property 11: 不支持的框架类型拒绝
 
-*For any* 不在 ["crewai", "langgraph", "claude", "custom"] 中的字符串作为 frameworkType，系统应返回错误并包含支持的框架列表。
+_For any_ 不在 ["crewai", "langgraph", "claude", "custom"] 中的字符串作为 frameworkType，系统应返回错误并包含支持的框架列表。
 
 **Validates: Requirements 4.5**
 
 ### Property 12: 出站信封包含认证令牌
 
-*For any* 配置了认证令牌的外部 Agent 调用，A2A_Client 构建的 A2AEnvelope 的 auth 字段应等于配置的令牌值。
+_For any_ 配置了认证令牌的外部 Agent 调用，A2A_Client 构建的 A2AEnvelope 的 auth 字段应等于配置的令牌值。
 
 **Validates: Requirements 5.3**
 
 ### Property 13: ExternalAgentNode 快照兼容性
 
-*For any* 合法的 ExternalAgentNode，将其加入 WorkflowOrganizationSnapshot 的 nodes 数组后，快照的序列化和反序列化应正常工作，且 nodes 数组中应包含该 ExternalAgentNode。
+_For any_ 合法的 ExternalAgentNode，将其加入 WorkflowOrganizationSnapshot 的 nodes 数组后，快照的序列化和反序列化应正常工作，且 nodes 数组中应包含该 ExternalAgentNode。
 
 **Validates: Requirements 6.3**
 
 ### Property 14: A2A 消息路由与元数据正确性
 
-*For any* 发送给 ExternalAgentNode 的消息，MessageBus 应将其路由到 A2A_Client，且消息元数据应包含 `a2a: true`、正确的 `frameworkType` 和 `sessionId`。
+_For any_ 发送给 ExternalAgentNode 的消息，MessageBus 应将其路由到 A2A_Client，且消息元数据应包含 `a2a: true`、正确的 `frameworkType` 和 `sessionId`。
 
 **Validates: Requirements 7.1, 7.3**
 
 ### Property 15: 可调用 Agent 列表完整性
 
-*For any* AgentDirectory 中标记为可外部调用的 Agent 集合，`listExposedAgents` 返回的列表应包含所有这些 Agent，且每个条目包含 id、name、capabilities 和 description 字段。
+_For any_ AgentDirectory 中标记为可外部调用的 Agent 集合，`listExposedAgents` 返回的列表应包含所有这些 Agent，且每个条目包含 id、name、capabilities 和 description 字段。
 
 **Validates: Requirements 3.5**
 
 ## 错误处理
 
-| 场景 | 错误码 | 处理方式 |
-|------|--------|----------|
-| A2A 请求 JSON 解析失败 | -32700 (PARSE_ERROR) | 返回 HTTP 400，JSON-RPC 错误响应 |
-| A2A 请求缺少必填字段 | -32600 (INVALID_REQUEST) | 返回 HTTP 400，JSON-RPC 错误响应 |
-| 不支持的 A2A method | -32601 (METHOD_NOT_FOUND) | 返回 HTTP 400，JSON-RPC 错误响应 |
-| 参数类型或值无效 | -32602 (INVALID_PARAMS) | 返回 HTTP 400，JSON-RPC 错误响应 |
-| 服务端内部错误 | -32603 (INTERNAL_ERROR) | 返回 HTTP 500，JSON-RPC 错误响应（不暴露堆栈） |
-| API Key 无效或缺失 | -32001 (AUTH_FAILED) | 返回 HTTP 401，JSON-RPC 错误响应 |
-| 目标 Agent 不存在 | -32002 (AGENT_NOT_FOUND) | 返回 HTTP 404，JSON-RPC 错误响应 |
-| 速率限制超出 | -32003 (RATE_LIMITED) | 返回 HTTP 429，包含 retryAfter 秒数 |
-| 调用超时 | -32004 (TIMEOUT) | 标记会话为 failed，通知调用方 |
-| 调用被取消 | -32005 (CANCELLED) | 标记会话为 cancelled，清理资源 |
-| 外部框架返回错误 | -32006 (FRAMEWORK_ERROR) | 包装为 A2AError 返回，保留原始错误信息 |
-| 并发会话数达上限 | -32602 (INVALID_PARAMS) | 返回错误，提示当前活跃会话数和上限 |
-| 不支持的框架类型 | -32602 (INVALID_PARAMS) | 返回错误，包含支持的框架列表 |
-| 外部 Agent LLM 调用失败 | -32006 (FRAMEWORK_ERROR) | 记录错误日志，通知上级 Manager |
-| 上下文摘要超长 | 自动截断 | 截断到 2000 字符，不返回错误 |
+| 场景                    | 错误码                    | 处理方式                                       |
+| ----------------------- | ------------------------- | ---------------------------------------------- |
+| A2A 请求 JSON 解析失败  | -32700 (PARSE_ERROR)      | 返回 HTTP 400，JSON-RPC 错误响应               |
+| A2A 请求缺少必填字段    | -32600 (INVALID_REQUEST)  | 返回 HTTP 400，JSON-RPC 错误响应               |
+| 不支持的 A2A method     | -32601 (METHOD_NOT_FOUND) | 返回 HTTP 400，JSON-RPC 错误响应               |
+| 参数类型或值无效        | -32602 (INVALID_PARAMS)   | 返回 HTTP 400，JSON-RPC 错误响应               |
+| 服务端内部错误          | -32603 (INTERNAL_ERROR)   | 返回 HTTP 500，JSON-RPC 错误响应（不暴露堆栈） |
+| API Key 无效或缺失      | -32001 (AUTH_FAILED)      | 返回 HTTP 401，JSON-RPC 错误响应               |
+| 目标 Agent 不存在       | -32002 (AGENT_NOT_FOUND)  | 返回 HTTP 404，JSON-RPC 错误响应               |
+| 速率限制超出            | -32003 (RATE_LIMITED)     | 返回 HTTP 429，包含 retryAfter 秒数            |
+| 调用超时                | -32004 (TIMEOUT)          | 标记会话为 failed，通知调用方                  |
+| 调用被取消              | -32005 (CANCELLED)        | 标记会话为 cancelled，清理资源                 |
+| 外部框架返回错误        | -32006 (FRAMEWORK_ERROR)  | 包装为 A2AError 返回，保留原始错误信息         |
+| 并发会话数达上限        | -32602 (INVALID_PARAMS)   | 返回错误，提示当前活跃会话数和上限             |
+| 不支持的框架类型        | -32602 (INVALID_PARAMS)   | 返回错误，包含支持的框架列表                   |
+| 外部 Agent LLM 调用失败 | -32006 (FRAMEWORK_ERROR)  | 记录错误日志，通知上级 Manager                 |
+| 上下文摘要超长          | 自动截断                  | 截断到 2000 字符，不返回错误                   |
 
 ## 测试策略
 
@@ -665,6 +699,7 @@ Map<string, RateLimitEntry>  // key: apiKey
 使用 `fast-check` 库进行属性测试，每个属性至少运行 100 次迭代。
 
 需要实现的生成器：
+
 - `arbitraryA2AInvokeParams`: 生成随机的 A2A 调用参数（随机 targetAgent、task、context、capabilities、streamMode）
 - `arbitraryA2AEnvelope`: 生成随机的 A2A 信封（基于 arbitraryA2AInvokeParams）
 - `arbitraryA2AResponse`: 生成随机的 A2A 响应（包含 result 或 error）
@@ -674,6 +709,7 @@ Map<string, RateLimitEntry>  // key: apiKey
 - `arbitraryFrameworkType`: 从支持的框架类型中随机选择
 
 属性测试覆盖：
+
 - **Feature: a2a-protocol, Property 1**: A2AEnvelope 序列化往返一致性
 - **Feature: a2a-protocol, Property 2**: A2ASession 序列化往返一致性
 - **Feature: a2a-protocol, Property 3**: 上下文长度验证
@@ -693,6 +729,7 @@ Map<string, RateLimitEntry>  // key: apiKey
 ### 单元测试
 
 单元测试聚焦于具体示例和边界情况：
+
 - 各框架适配器对最小参数的输出验证
 - API 路由的 400/401/404/429/500 错误响应
 - 流式响应的 SSE 格式正确性

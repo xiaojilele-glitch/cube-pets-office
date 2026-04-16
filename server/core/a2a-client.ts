@@ -27,7 +27,7 @@ export class A2AClient {
     params: A2AInvokeParams,
     frameworkType: A2AFrameworkType,
     endpoint: string,
-    auth?: string,
+    auth?: string
   ): Promise<A2AResponse> {
     // Check concurrent session limit
     const activeSessions = this.getActiveSessions();
@@ -77,7 +77,7 @@ export class A2AClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        this.defaultTimeoutMs,
+        this.defaultTimeoutMs
       );
 
       const res = await fetch(url, {
@@ -118,13 +118,13 @@ export class A2AClient {
     params: A2AInvokeParams,
     frameworkType: A2AFrameworkType,
     endpoint: string,
-    auth?: string,
+    auth?: string
   ): AsyncGenerator<A2AStreamChunk> {
     // Check concurrent session limit
     const activeSessions = this.getActiveSessions();
     if (activeSessions.length >= this.maxConcurrentSessions) {
       throw new Error(
-        `Concurrent session limit reached (${this.maxConcurrentSessions})`,
+        `Concurrent session limit reached (${this.maxConcurrentSessions})`
       );
     }
 
@@ -157,7 +157,7 @@ export class A2AClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(
         () => controller.abort(),
-        this.defaultTimeoutMs,
+        this.defaultTimeoutMs
       );
 
       const res = await fetch(url, {
@@ -218,7 +218,7 @@ export class A2AClient {
 
   getActiveSessions(): A2ASession[] {
     return Array.from(this.sessions.values()).filter(
-      (s) => s.status === "pending" || s.status === "running",
+      s => s.status === "pending" || s.status === "running"
     );
   }
 

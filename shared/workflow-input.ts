@@ -52,11 +52,7 @@ function simpleHash(value: string) {
   for (let index = 0; index < value.length; index += 1) {
     hash ^= value.charCodeAt(index);
     hash +=
-      (hash << 1) +
-      (hash << 4) +
-      (hash << 7) +
-      (hash << 8) +
-      (hash << 24);
+      (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
   return (hash >>> 0).toString(36);
 }
@@ -111,7 +107,10 @@ export function normalizeWorkflowAttachment(
   if (typeof candidate.base64DataUrl === "string" && candidate.base64DataUrl) {
     result.base64DataUrl = candidate.base64DataUrl;
   }
-  if (typeof candidate.visualDescription === "string" && candidate.visualDescription) {
+  if (
+    typeof candidate.visualDescription === "string" &&
+    candidate.visualDescription
+  ) {
     result.visualDescription = candidate.visualDescription;
   }
 

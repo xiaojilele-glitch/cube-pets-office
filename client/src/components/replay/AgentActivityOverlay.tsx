@@ -12,12 +12,12 @@
  * Requirements: 8.1, 8.4
  */
 
-import { useRef } from 'react';
+import { useRef } from "react";
 
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
-export type AgentActivity = 'idle' | 'working' | 'thinking' | 'done' | 'error';
+export type AgentActivity = "idle" | "working" | "thinking" | "done" | "error";
 
 export interface AgentActivityOverlayProps {
   position: [number, number, number];
@@ -27,16 +27,19 @@ export interface AgentActivityOverlayProps {
 /* ─── Color map ─── */
 
 const ACTIVITY_COLORS: Record<AgentActivity, string> = {
-  idle: '#9CA3AF',
-  working: '#3B82F6',
-  thinking: '#A855F7',
-  done: '#22C55E',
-  error: '#EF4444',
+  idle: "#9CA3AF",
+  working: "#3B82F6",
+  thinking: "#A855F7",
+  done: "#22C55E",
+  error: "#EF4444",
 };
 
 /* ─── Component ─── */
 
-export function AgentActivityOverlay({ position, activity }: AgentActivityOverlayProps) {
+export function AgentActivityOverlay({
+  position,
+  activity,
+}: AgentActivityOverlayProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const matRef = useRef<THREE.MeshStandardMaterial>(null);
 
@@ -48,18 +51,18 @@ export function AgentActivityOverlay({ position, activity }: AgentActivityOverla
     let scale = 1;
 
     switch (activity) {
-      case 'working':
+      case "working":
         opacity = 0.3 + Math.sin(t * 3) * 0.15;
         scale = 1 + Math.sin(t * 3) * 0.08;
         break;
-      case 'thinking':
+      case "thinking":
         opacity = 0.25 + Math.sin(t * 1.5) * 0.2;
         scale = 1 + Math.sin(t * 1.5) * 0.05;
         break;
-      case 'done':
+      case "done":
         opacity = Math.max(0, 0.5 - (t % 3) * 0.2);
         break;
-      case 'error':
+      case "error":
         opacity = 0.4 + Math.sin(t * 6) * 0.25;
         scale = 1 + Math.sin(t * 6) * 0.12;
         break;
@@ -72,10 +75,13 @@ export function AgentActivityOverlay({ position, activity }: AgentActivityOverla
     meshRef.current.scale.setScalar(scale);
   });
 
-  if (activity === 'idle') return null;
+  if (activity === "idle") return null;
 
   return (
-    <mesh ref={meshRef} position={[position[0], position[1] + 1.6, position[2]]}>
+    <mesh
+      ref={meshRef}
+      position={[position[0], position[1] + 1.6, position[2]]}
+    >
       <sphereGeometry args={[0.35, 16, 16]} />
       <meshStandardMaterial
         ref={matRef}

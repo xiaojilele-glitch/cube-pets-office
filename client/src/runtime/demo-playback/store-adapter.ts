@@ -105,7 +105,7 @@ export class DemoStoreAdapter {
 
       // Remove demo tasks from the task list
       const currentTasks = useTasksStore.getState().tasks;
-      const filtered = currentTasks.filter((t) => t.kind !== "demo");
+      const filtered = currentTasks.filter(t => t.kind !== "demo");
       if (filtered.length !== currentTasks.length) {
         useTasksStore.setState({ tasks: filtered });
       }

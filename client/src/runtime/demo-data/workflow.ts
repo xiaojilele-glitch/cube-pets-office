@@ -28,7 +28,8 @@ export const DEMO_WORKFLOW: WorkflowRecord = {
       "feedback",
       "evolution",
     ],
-    summary: "手游营销推广方案设计完成，覆盖策划、技术、AI 推荐和数据工程四个维度。",
+    summary:
+      "手游营销推广方案设计完成，覆盖策划、技术、AI 推荐和数据工程四个维度。",
   },
   created_at: "2025-01-01T00:00:00.000Z",
 };

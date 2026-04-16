@@ -6,11 +6,11 @@
  * Requirements: 8.4
  */
 
-import type { HealthResponse } from '../../../shared/rag/api.js';
-import type { VectorStoreAdapter } from '../store/vector-store-adapter.js';
-import type { EmbeddingProvider } from '../embedding/embedding-provider.js';
-import type { DeadLetterQueue } from '../ingestion/dead-letter-queue.js';
-import { getRAGConfig } from '../config.js';
+import type { HealthResponse } from "../../../shared/rag/api.js";
+import type { VectorStoreAdapter } from "../store/vector-store-adapter.js";
+import type { EmbeddingProvider } from "../embedding/embedding-provider.js";
+import type { DeadLetterQueue } from "../ingestion/dead-letter-queue.js";
+import { getRAGConfig } from "../config.js";
 
 export interface HealthCheckerDeps {
   vectorStore: VectorStoreAdapter;
@@ -33,17 +33,21 @@ export class HealthChecker {
       const health = await this.deps.vectorStore.healthCheck();
       vectorStoreConnected = health.connected;
       vectorStoreBackend = health.backend;
-    } catch { /* disconnected */ }
+    } catch {
+      /* disconnected */
+    }
 
     // 2. Embedding model availability
     let embeddingAvailable = false;
     try {
-      await this.deps.embeddingProvider.embed(['health check']);
+      await this.deps.embeddingProvider.embed(["health check"]);
       embeddingAvailable = true;
-    } catch { /* unavailable */ }
+    } catch {
+      /* unavailable */
+    }
 
     // 3. Collection status
-    const collections: HealthResponse['collections'] = [];
+    const collections: HealthResponse["collections"] = [];
     for (const name of this.deps.collectionNames ?? []) {
       try {
         const info = await this.deps.vectorStore.collectionInfo(name);
@@ -53,7 +57,7 @@ export class HealthChecker {
           status: info.status,
         });
       } catch {
-        collections.push({ name, vectorCount: 0, status: 'error' });
+        collections.push({ name, vectorCount: 0, status: "error" });
       }
     }
 
@@ -61,17 +65,23 @@ export class HealthChecker {
     const dlqCount = this.deps.deadLetterQueue.count();
 
     // Overall status
-    let status: HealthResponse['status'] = 'healthy';
+    let status: HealthResponse["status"] = "healthy";
     if (!vectorStoreConnected || !embeddingAvailable) {
-      status = 'unhealthy';
+      status = "unhealthy";
     } else if (dlqCount > 100) {
-      status = 'degraded';
+      status = "degraded";
     }
 
     return {
       status,
-      vectorStore: { connected: vectorStoreConnected, backend: vectorStoreBackend },
-      embeddingModel: { available: embeddingAvailable, model: this.deps.embeddingProvider.modelName },
+      vectorStore: {
+        connected: vectorStoreConnected,
+        backend: vectorStoreBackend,
+      },
+      embeddingModel: {
+        available: embeddingAvailable,
+        model: this.deps.embeddingProvider.modelName,
+      },
       collections,
       deadLetterQueue: { count: dlqCount },
     };

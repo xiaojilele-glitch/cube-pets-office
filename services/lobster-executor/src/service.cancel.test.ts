@@ -89,7 +89,12 @@ function createSeededService(status: StoredJobRecord["status"] = "queued") {
   ).callbackSender = { send: callbackSend };
   const request = createTestRequest(`job-${randomUUID()}`);
   const receivedAt = new Date().toISOString();
-  const dataDirectory = join(dataRoot, "jobs", request.missionId, request.jobId);
+  const dataDirectory = join(
+    dataRoot,
+    "jobs",
+    request.missionId,
+    request.jobId
+  );
   mkdirSync(dataDirectory, { recursive: true });
 
   const logFile = join(dataDirectory, "executor.log");
@@ -117,9 +122,9 @@ function createSeededService(status: StoredJobRecord["status"] = "queued") {
     executionMode: "mock",
   };
 
-  ((service as unknown as { jobs: Map<string, StoredJobRecord> }).jobs).set(
+  (service as unknown as { jobs: Map<string, StoredJobRecord> }).jobs.set(
     request.jobId,
-    record,
+    record
   );
 
   return { service, record };
@@ -132,7 +137,7 @@ describe("LobsterExecutorService.cancel", () => {
     const service = createLobsterExecutorService({ dataRoot });
 
     await expect(service.cancel("missing-job")).rejects.toThrow(
-      "Executor job missing-job was not found",
+      "Executor job missing-job was not found"
     );
   });
 
@@ -158,7 +163,7 @@ describe("LobsterExecutorService.cancel", () => {
       message: "Stop before execution",
     });
     expect(readFileSync(record.logFile, "utf-8")).toContain(
-      "[cancel] Stop before execution",
+      "[cancel] Stop before execution"
     );
   });
 
@@ -210,9 +215,10 @@ describe("LobsterExecutorService.cancel", () => {
   it("marks running jobs as cancel requested and delegates to the runner", async () => {
     const { service, record } = createSeededService("running");
     const runnerCancel = vi.fn().mockResolvedValue(undefined);
-    (service as unknown as { runner: { cancel: typeof runnerCancel } }).runner = {
-      cancel: runnerCancel,
-    };
+    (service as unknown as { runner: { cancel: typeof runnerCancel } }).runner =
+      {
+        cancel: runnerCancel,
+      };
 
     const response = await service.cancel(record.request.jobId, {
       reason: "Interrupt active container",

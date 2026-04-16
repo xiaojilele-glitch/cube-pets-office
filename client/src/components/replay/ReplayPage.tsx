@@ -7,24 +7,24 @@
  * Requirements: 18.1, 18.5
  */
 
-import { useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls } from "@react-three/drei";
+import { Maximize2, Minimize2 } from "lucide-react";
 
-import { Button } from '@/components/ui/button';
-import { useReplayStore } from '@/lib/replay/replay-store-ui';
+import { Button } from "@/components/ui/button";
+import { useReplayStore } from "@/lib/replay/replay-store-ui";
 
-import { ReplayScene3D } from './ReplayScene3D';
-import { TimelineBar } from './TimelineBar';
-import { ControlPanel } from './ControlPanel';
-import { EventDetailPanel } from './EventDetailPanel';
-import { SnapshotManager } from './SnapshotManager';
-import { CostTrackerPanel } from './CostTracker';
-import { PerformancePanel } from './PerformancePanel';
-import { DataLineageGraph } from './DataLineageGraph';
-import { ComparisonView } from './ComparisonView';
-import { TeachingOverlay } from './TeachingOverlay';
+import { ReplayScene3D } from "./ReplayScene3D";
+import { TimelineBar } from "./TimelineBar";
+import { ControlPanel } from "./ControlPanel";
+import { EventDetailPanel } from "./EventDetailPanel";
+import { SnapshotManager } from "./SnapshotManager";
+import { CostTrackerPanel } from "./CostTracker";
+import { PerformancePanel } from "./PerformancePanel";
+import { DataLineageGraph } from "./DataLineageGraph";
+import { ComparisonView } from "./ComparisonView";
+import { TeachingOverlay } from "./TeachingOverlay";
 
 export interface ReplayPageProps {
   missionId: string;
@@ -32,10 +32,18 @@ export interface ReplayPageProps {
 
 export function ReplayPage({ missionId }: ReplayPageProps) {
   const {
-    engine, timeline, isFullscreen, isDemoMode,
-    isComparisonMode, selectedEventId,
-    showCostTracker, showPerformance, showDataLineage,
-    loadReplay, toggleFullscreen, reset,
+    engine,
+    timeline,
+    isFullscreen,
+    isDemoMode,
+    isComparisonMode,
+    selectedEventId,
+    showCostTracker,
+    showPerformance,
+    showDataLineage,
+    loadReplay,
+    toggleFullscreen,
+    reset,
   } = useReplayStore();
 
   useEffect(() => {
@@ -52,14 +60,25 @@ export function ReplayPage({ missionId }: ReplayPageProps) {
   }
 
   return (
-    <div className={`flex h-screen flex-col bg-[#0f0f23] text-white ${isFullscreen ? 'fixed inset-0 z-[100]' : ''}`}>
+    <div
+      className={`flex h-screen flex-col bg-[#0f0f23] text-white ${isFullscreen ? "fixed inset-0 z-[100]" : ""}`}
+    >
       {/* Top: Controls */}
       <div className="flex items-center gap-2 border-b border-white/10 bg-[#16213e] px-4 py-2">
         <ControlPanel engine={engine} timeline={timeline} />
         <div className="ml-auto flex items-center gap-2">
           <SnapshotManager />
-          <Button variant="ghost" size="icon-sm" onClick={toggleFullscreen} className="text-white/70 hover:text-white">
-            {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggleFullscreen}
+            className="text-white/70 hover:text-white"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="size-4" />
+            ) : (
+              <Maximize2 className="size-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -78,13 +97,19 @@ export function ReplayPage({ missionId }: ReplayPageProps) {
 
           {/* Analysis overlays */}
           {showCostTracker && (
-            <div className="absolute bottom-2 left-2 w-72"><CostTrackerPanel events={timeline.events} /></div>
+            <div className="absolute bottom-2 left-2 w-72">
+              <CostTrackerPanel events={timeline.events} />
+            </div>
           )}
           {showPerformance && (
-            <div className="absolute bottom-2 right-2 w-72"><PerformancePanel timeline={timeline} /></div>
+            <div className="absolute bottom-2 right-2 w-72">
+              <PerformancePanel timeline={timeline} />
+            </div>
           )}
           {showDataLineage && (
-            <div className="absolute left-2 top-2 h-64 w-80"><DataLineageGraph events={timeline.events} /></div>
+            <div className="absolute left-2 top-2 h-64 w-80">
+              <DataLineageGraph events={timeline.events} />
+            </div>
           )}
         </div>
 
@@ -95,7 +120,13 @@ export function ReplayPage({ missionId }: ReplayPageProps) {
               <ComparisonView />
             ) : (
               <EventDetailPanel
-                event={selectedEventId ? timeline.events.find(e => e.eventId === selectedEventId) ?? null : null}
+                event={
+                  selectedEventId
+                    ? (timeline.events.find(
+                        e => e.eventId === selectedEventId
+                      ) ?? null)
+                    : null
+                }
                 allEvents={timeline.events}
               />
             )}

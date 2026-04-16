@@ -39,9 +39,9 @@ const arbEventTypes = fc.array(
     "job.progress" as const,
     "job.completed" as const,
     "job.failed" as const,
-    "job.log" as const,
+    "job.log" as const
   ),
-  { minLength: 1, maxLength: 20 },
+  { minLength: 1, maxLength: 20 }
 );
 
 /* ─── Tests ─── */
@@ -53,14 +53,19 @@ describe("Property 6: 回调投递覆盖所有事件", () => {
 
   it("N events → exactly N fetch calls, each body matches the corresponding event", async () => {
     await fc.assert(
-      fc.asyncProperty(arbEventTypes, async (eventTypes) => {
-        const mockFetch = vi.fn<typeof fetch>(async () =>
-          new Response(null, { status: 200 }),
+      fc.asyncProperty(arbEventTypes, async eventTypes => {
+        const mockFetch = vi.fn<typeof fetch>(
+          async () => new Response(null, { status: 200 })
         );
 
         const sender = new CallbackSender(
-          { secret: "test-secret", executorId: "exec-1", maxRetries: 0, baseDelayMs: 1 },
-          mockFetch,
+          {
+            secret: "test-secret",
+            executorId: "exec-1",
+            maxRetries: 0,
+            baseDelayMs: 1,
+          },
+          mockFetch
         );
 
         const events = eventTypes.map((t, i) => makeEvent(t, i));
@@ -80,13 +85,15 @@ describe("Property 6: 回调投递覆盖所有事件", () => {
           const [url, init] = call;
           expect(url).toBe(eventsUrl);
 
-          const body = JSON.parse(init!.body as string) as { event: ExecutorEvent };
+          const body = JSON.parse(init!.body as string) as {
+            event: ExecutorEvent;
+          };
           expect(body.event.type).toBe(events[i].type);
           expect(body.event.eventId).toBe(events[i].eventId);
           expect(body.event.message).toBe(events[i].message);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

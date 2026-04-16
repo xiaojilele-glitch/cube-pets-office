@@ -17,8 +17,8 @@ describe("DEMO_BUNDLE data integrity", () => {
   describe("workflow stage coverage", () => {
     it("events cover all 10 workflow stages via stage_change events", () => {
       const stageChangeEvents = DEMO_BUNDLE.events
-        .filter((e) => e.event.type === "stage_change")
-        .map((e) => (e.event as { type: "stage_change"; stage: string }).stage);
+        .filter(e => e.event.type === "stage_change")
+        .map(e => (e.event as { type: "stage_change"; stage: string }).stage);
 
       for (const stage of WORKFLOW_STAGES) {
         expect(stageChangeEvents).toContain(stage);
@@ -26,7 +26,8 @@ describe("DEMO_BUNDLE data integrity", () => {
     });
 
     it("workflow record completedStages covers all 10 stages", () => {
-      const completedStages = DEMO_BUNDLE.workflow.results?.completedStages as string[];
+      const completedStages = DEMO_BUNDLE.workflow.results
+        ?.completedStages as string[];
       expect(completedStages).toBeDefined();
       for (const stage of WORKFLOW_STAGES) {
         expect(completedStages).toContain(stage);
@@ -37,17 +38,21 @@ describe("DEMO_BUNDLE data integrity", () => {
   // ── Requirement 1.2: 组织快照角色数量 ──
   describe("organization snapshot roles", () => {
     it("contains exactly 1 CEO", () => {
-      const ceos = DEMO_BUNDLE.organization.nodes.filter((n) => n.role === "ceo");
+      const ceos = DEMO_BUNDLE.organization.nodes.filter(n => n.role === "ceo");
       expect(ceos).toHaveLength(1);
     });
 
     it("contains exactly 2 Managers", () => {
-      const managers = DEMO_BUNDLE.organization.nodes.filter((n) => n.role === "manager");
+      const managers = DEMO_BUNDLE.organization.nodes.filter(
+        n => n.role === "manager"
+      );
       expect(managers).toHaveLength(2);
     });
 
     it("contains exactly 4 Workers", () => {
-      const workers = DEMO_BUNDLE.organization.nodes.filter((n) => n.role === "worker");
+      const workers = DEMO_BUNDLE.organization.nodes.filter(
+        n => n.role === "worker"
+      );
       expect(workers).toHaveLength(4);
     });
   });
@@ -60,21 +65,23 @@ describe("DEMO_BUNDLE data integrity", () => {
 
     it("covers CEO → Manager flow path", () => {
       const ceoToManager = DEMO_BUNDLE.messages.filter(
-        (m) => m.from_agent === CEO_ID && MANAGER_IDS.includes(m.to_agent),
+        m => m.from_agent === CEO_ID && MANAGER_IDS.includes(m.to_agent)
       );
       expect(ceoToManager.length).toBeGreaterThan(0);
     });
 
     it("covers Manager → Worker flow path", () => {
       const managerToWorker = DEMO_BUNDLE.messages.filter(
-        (m) => MANAGER_IDS.includes(m.from_agent) && WORKER_IDS.includes(m.to_agent),
+        m =>
+          MANAGER_IDS.includes(m.from_agent) && WORKER_IDS.includes(m.to_agent)
       );
       expect(managerToWorker.length).toBeGreaterThan(0);
     });
 
     it("covers Worker → Manager flow path", () => {
       const workerToManager = DEMO_BUNDLE.messages.filter(
-        (m) => WORKER_IDS.includes(m.from_agent) && MANAGER_IDS.includes(m.to_agent),
+        m =>
+          WORKER_IDS.includes(m.from_agent) && MANAGER_IDS.includes(m.to_agent)
       );
       expect(workerToManager.length).toBeGreaterThan(0);
     });
@@ -99,17 +106,23 @@ describe("DEMO_BUNDLE data integrity", () => {
   // ── Requirement 1.6: 记忆条目覆盖三级记忆类型 ──
   describe("memory entries", () => {
     it("covers short_term memory type", () => {
-      const shortTerm = DEMO_BUNDLE.memoryEntries.filter((m) => m.kind === "short_term");
+      const shortTerm = DEMO_BUNDLE.memoryEntries.filter(
+        m => m.kind === "short_term"
+      );
       expect(shortTerm.length).toBeGreaterThan(0);
     });
 
     it("covers medium_term memory type", () => {
-      const mediumTerm = DEMO_BUNDLE.memoryEntries.filter((m) => m.kind === "medium_term");
+      const mediumTerm = DEMO_BUNDLE.memoryEntries.filter(
+        m => m.kind === "medium_term"
+      );
       expect(mediumTerm.length).toBeGreaterThan(0);
     });
 
     it("covers long_term memory type", () => {
-      const longTerm = DEMO_BUNDLE.memoryEntries.filter((m) => m.kind === "long_term");
+      const longTerm = DEMO_BUNDLE.memoryEntries.filter(
+        m => m.kind === "long_term"
+      );
       expect(longTerm.length).toBeGreaterThan(0);
     });
   });

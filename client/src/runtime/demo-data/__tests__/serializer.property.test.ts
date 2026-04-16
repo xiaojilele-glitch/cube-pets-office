@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 import * as fc from "fast-check";
 
 import { serializeDemoData, deserializeDemoData } from "../serializer";
-import type { DemoDataBundle, DemoMemoryEntry, DemoEvolutionLog, DemoTimedEvent } from "../schema";
+import type {
+  DemoDataBundle,
+  DemoMemoryEntry,
+  DemoEvolutionLog,
+  DemoTimedEvent,
+} from "../schema";
 import type {
   AgentRecord,
   WorkflowRecord,
@@ -27,15 +32,30 @@ import type {
 // ---------------------------------------------------------------------------
 
 /** Non-empty alphanumeric string that survives JSON round-trip */
-const arbId = fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.trim().length > 0);
-const arbStr = fc.string({ minLength: 1, maxLength: 50 }).filter((s) => s.trim().length > 0);
+const arbId = fc
+  .string({ minLength: 1, maxLength: 20 })
+  .filter(s => s.trim().length > 0);
+const arbStr = fc
+  .string({ minLength: 1, maxLength: 50 })
+  .filter(s => s.trim().length > 0);
 const arbIsoDate = fc
-  .integer({ min: new Date("2020-01-01").getTime(), max: new Date("2030-01-01").getTime() })
-  .map((ts) => new Date(ts).toISOString());
+  .integer({
+    min: new Date("2020-01-01").getTime(),
+    max: new Date("2030-01-01").getTime(),
+  })
+  .map(ts => new Date(ts).toISOString());
 
-const arbRole: fc.Arbitrary<AgentRole> = fc.constantFrom("ceo", "manager", "worker");
+const arbRole: fc.Arbitrary<AgentRole> = fc.constantFrom(
+  "ceo",
+  "manager",
+  "worker"
+);
 const arbWorkflowStatus: fc.Arbitrary<WorkflowStatus> = fc.constantFrom(
-  "pending", "running", "completed", "completed_with_errors", "failed",
+  "pending",
+  "running",
+  "completed",
+  "completed_with_errors",
+  "failed"
 );
 
 const arbSkillBinding: fc.Arbitrary<WorkflowSkillBinding> = fc.record({
@@ -59,9 +79,9 @@ const arbMcpBinding: fc.Arbitrary<WorkflowMcpBinding> = fc.record({
 
 /** Positive double that avoids -0 (which doesn't survive JSON round-trip) */
 const arbPositiveDouble = (max: number) =>
-  fc.double({ min: 0, max, noNaN: true, noDefaultInfinity: true }).map((v) =>
-    Object.is(v, -0) ? 0 : v,
-  );
+  fc
+    .double({ min: 0, max, noNaN: true, noDefaultInfinity: true })
+    .map(v => (Object.is(v, -0) ? 0 : v));
 
 const arbModelConfig: fc.Arbitrary<WorkflowNodeModelConfig> = fc.record({
   model: arbStr,
@@ -70,16 +90,26 @@ const arbModelConfig: fc.Arbitrary<WorkflowNodeModelConfig> = fc.record({
 });
 
 const arbExecutionMode = fc.constantFrom(
-  "orchestrate" as const, "plan" as const, "execute" as const,
-  "review" as const, "audit" as const, "summary" as const,
+  "orchestrate" as const,
+  "plan" as const,
+  "execute" as const,
+  "review" as const,
+  "audit" as const,
+  "summary" as const
 );
-const arbStrategy = fc.constantFrom("parallel" as const, "sequential" as const, "batched" as const);
+const arbStrategy = fc.constantFrom(
+  "parallel" as const,
+  "sequential" as const,
+  "batched" as const
+);
 
-const arbExecutionConfig: fc.Arbitrary<WorkflowNodeExecutionConfig> = fc.record({
-  mode: arbExecutionMode,
-  strategy: arbStrategy,
-  maxConcurrency: fc.integer({ min: 1, max: 10 }),
-});
+const arbExecutionConfig: fc.Arbitrary<WorkflowNodeExecutionConfig> = fc.record(
+  {
+    mode: arbExecutionMode,
+    strategy: arbStrategy,
+    maxConcurrency: fc.integer({ min: 1, max: 10 }),
+  }
+);
 
 const arbOrgNode: fc.Arbitrary<WorkflowOrganizationNode> = fc.record({
   id: arbId,
@@ -187,7 +217,11 @@ const arbTask: fc.Arbitrary<TaskRecord> = fc.record({
 
 const arbMemoryEntry: fc.Arbitrary<DemoMemoryEntry> = fc.record({
   agentId: arbId,
-  kind: fc.constantFrom("short_term" as const, "medium_term" as const, "long_term" as const),
+  kind: fc.constantFrom(
+    "short_term" as const,
+    "medium_term" as const,
+    "long_term" as const
+  ),
   stage: arbStr,
   content: arbStr,
   timestampOffset: fc.integer({ min: 0, max: 100000 }),
@@ -214,19 +248,21 @@ const arbAgentEvent: fc.Arbitrary<AgentEvent> = fc.oneof(
     workflowId: arbId,
     stage: arbStr,
   }),
-  fc.record({
-    type: fc.constant("agent_active" as const),
-    agentId: arbId,
-    action: arbStr,
-    workflowId: fc.option(arbId, { nil: undefined }),
-  }).map((e) => {
-    // Remove undefined workflowId so JSON round-trip is clean
-    if (e.workflowId === undefined) {
-      const { workflowId: _, ...rest } = e;
-      return rest as AgentEvent;
-    }
-    return e as AgentEvent;
-  }),
+  fc
+    .record({
+      type: fc.constant("agent_active" as const),
+      agentId: arbId,
+      action: arbStr,
+      workflowId: fc.option(arbId, { nil: undefined }),
+    })
+    .map(e => {
+      // Remove undefined workflowId so JSON round-trip is clean
+      if (e.workflowId === undefined) {
+        const { workflowId: _, ...rest } = e;
+        return rest as AgentEvent;
+      }
+      return e as AgentEvent;
+    }),
   fc.record({
     type: fc.constant("message_sent" as const),
     workflowId: arbId,
@@ -281,7 +317,7 @@ const arbAgentEvent: fc.Arbitrary<AgentEvent> = fc.oneof(
     fromRoleId: fc.option(arbId, { nil: null }),
     toRoleId: fc.option(arbId, { nil: null }),
     timestamp: arbIsoDate,
-  }),
+  })
 );
 
 const arbTimedEvent: fc.Arbitrary<DemoTimedEvent> = fc.record({
@@ -311,12 +347,12 @@ const arbDemoDataBundle: fc.Arbitrary<DemoDataBundle> = fc.record({
 describe("serializer property tests", () => {
   it("Property 1: serialize → deserialize round-trip produces deeply equal object", () => {
     fc.assert(
-      fc.property(arbDemoDataBundle, (bundle) => {
+      fc.property(arbDemoDataBundle, bundle => {
         const json = serializeDemoData(bundle);
         const restored = deserializeDemoData(json);
         expect(restored).toEqual(JSON.parse(JSON.stringify(bundle)));
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -327,30 +363,32 @@ describe("serializer property tests", () => {
 // ---------------------------------------------------------------------------
 
 /** Bundle with events sorted by timestampOffset (ascending) */
-const arbSortedEventsBundle: fc.Arbitrary<DemoDataBundle> = arbDemoDataBundle.map((bundle) => ({
-  ...bundle,
-  events: [...bundle.events].sort((a, b) => a.timestampOffset - b.timestampOffset),
-}));
+const arbSortedEventsBundle: fc.Arbitrary<DemoDataBundle> =
+  arbDemoDataBundle.map(bundle => ({
+    ...bundle,
+    events: [...bundle.events].sort(
+      (a, b) => a.timestampOffset - b.timestampOffset
+    ),
+  }));
 
 describe("event sequence timestamp property tests", () => {
   it("Property 2: events timestampOffset is monotonically non-decreasing after round-trip", () => {
     fc.assert(
-      fc.property(arbSortedEventsBundle, (bundle) => {
+      fc.property(arbSortedEventsBundle, bundle => {
         const json = serializeDemoData(bundle);
         const restored = deserializeDemoData(json);
 
         const events = restored.events;
         for (let i = 1; i < events.length; i++) {
           expect(events[i].timestampOffset).toBeGreaterThanOrEqual(
-            events[i - 1].timestampOffset,
+            events[i - 1].timestampOffset
           );
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // Property 3: 序列化输出为格式化 JSON
@@ -360,7 +398,7 @@ describe("event sequence timestamp property tests", () => {
 describe("serialized output format property tests", () => {
   it("Property 3: serializeDemoData output is formatted JSON with newlines and indentation", () => {
     fc.assert(
-      fc.property(arbDemoDataBundle, (bundle) => {
+      fc.property(arbDemoDataBundle, bundle => {
         const output = serializeDemoData(bundle);
 
         // 1. Output contains newline characters
@@ -368,17 +406,16 @@ describe("serialized output format property tests", () => {
 
         // 2. Output contains indentation (spaces at the start of lines)
         const lines = output.split("\n");
-        const indentedLines = lines.filter((line) => /^\s{2,}/.test(line));
+        const indentedLines = lines.filter(line => /^\s{2,}/.test(line));
         expect(indentedLines.length).toBeGreaterThan(0);
 
         // 3. JSON.parse does not throw
         expect(() => JSON.parse(output)).not.toThrow();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 // ---------------------------------------------------------------------------
 // Property 4: 反序列化无效输入产生描述性错误
@@ -409,10 +446,12 @@ describe("deserialization error handling property tests", () => {
           delete parsed[fieldToDelete];
           const corrupted = JSON.stringify(parsed);
 
-          expect(() => deserializeDemoData(corrupted)).toThrowError(/Invalid DemoDataBundle/);
-        },
+          expect(() => deserializeDemoData(corrupted)).toThrowError(
+            /Invalid DemoDataBundle/
+          );
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

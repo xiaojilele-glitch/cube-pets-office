@@ -1,0 +1,53 @@
+.nh
+.TH "GH-PR-CHECKS" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-pr-checks - Show CI status for a single pull request
+
+
+.SH SYNOPSIS
+.PP
+\fBgh pr checks [<number> | <url> | <branch>] [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Show CI status for a single pull request.
+
+.PP
+Without an argument, the pull request that belongs to the current branch
+is selected.
+
+
+.SH OPTIONS
+.TP
+\fB--fail-fast\fR
+Exit watch mode on first check failure
+
+.TP
+\fB-i\fR, \fB--interval\fR \fB<--watch>\fR
+Refresh interval in seconds when using --watch flag
+
+.TP
+\fB--required\fR
+Only show checks that are required
+
+.TP
+\fB--watch\fR
+Watch checks until they finish
+
+.TP
+\fB-w\fR, \fB--web\fR
+Open the web browser to show details about checks
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH SEE ALSO
+.PP
+\fBgh-pr(1)\fR
