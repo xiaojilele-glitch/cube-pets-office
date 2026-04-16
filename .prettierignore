@@ -3,15 +3,3 @@ node_modules
 .git
 *.min.js
 *.min.css
-.kiro/steering/project-overview.md
-.kiro/steering/spec-execution-roadmap.md
-client/src/components/ui/GlowButton.tsx
-client/src/lib/mission-client.test.ts
-client/src/lib/snapshot-lifecycle-bridge.test.ts
-client/src/lib/tasks-store.artifacts.test.ts
-client/src/lib/unified-launch-coordinator.test.ts
-server/feishu/webhook-dedup-store.ts
-server/index.ts
-server/tests/lineage-module-entry.test.ts
-server/tests/phase1-access-guard.test.ts
-server/tests/phase1-message-bus.test.ts

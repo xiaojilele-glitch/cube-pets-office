@@ -11,10 +11,7 @@ import {
 
 describe("navigation convergence config", () => {
   it("defines the two primary navigation items", () => {
-    expect(PRIMARY_NAV_ITEMS.map(item => item.id)).toEqual([
-      "office",
-      "more",
-    ]);
+    expect(PRIMARY_NAV_ITEMS.map(item => item.id)).toEqual(["office", "more"]);
   });
 
   it("maps routes into the converged primary paths", () => {
