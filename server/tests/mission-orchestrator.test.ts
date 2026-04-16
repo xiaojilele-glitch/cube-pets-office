@@ -128,6 +128,228 @@ describe('MissionOrchestrator', () => {
     expect(resumed.mission.waitingFor).toBeUndefined();
     expect(resumed.mission.decision).toBeUndefined();
   });
+  it('handles executor completion', async () => {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+    });
+
+    const started = await orchestrator.startMission({
+      title: 'Success mission',
+      sourceText: 'Should succeed.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+
+    const completed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_1',
+      missionId: started.mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.completed',
+      status: 'completed',
+      occurredAt: '2026-03-30T10:10:00.000Z',
+      progress: 100,
+      message: 'Done',
+      payload: {},
+    });
+
+    expect(completed.status).toBe('done');
+    expect(completed.currentStageKey).toBe('finalize');
+  });
+
+  it('handles executor timeout', async () => {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+    });
+
+    const started = await orchestrator.startMission({
+      title: 'Timeout mission',
+      sourceText: 'Should timeout.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+
+    const timedOut = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_2',
+      missionId: started.mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.timeout',
+      status: 'timeout',
+      occurredAt: '2026-03-30T10:10:00.000Z',
+      progress: 50,
+      message: 'Timeout occurred',
+      payload: {},
+    });
+
+    expect(timedOut.status).toBe('failed');
+    expect(timedOut.summary).toBe('Timeout occurred');
+  });
+
+  it('handles executor failure', async () => {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+    });
+
+    const started = await orchestrator.startMission({
+      title: 'Failure mission',
+      sourceText: 'Should fail.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+
+    const failed = await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_3',
+      missionId: started.mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.failed',
+      status: 'failed',
+      occurredAt: '2026-03-30T10:10:00.000Z',
+      progress: 10,
+      message: 'Execution failed',
+      payload: {},
+    });
+
+    expect(failed.status).toBe('failed');
+    expect(failed.summary).toBe('Execution failed');
+  });
+
+  it('handles decision approve', async () => {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+      hooks: {
+        onDecisionSubmitted: () => ({
+          resumed: true,
+          detail: 'Decision accepted.',
+        }),
+      },
+    });
+
+    const started = await orchestrator.startMission({
+      title: 'Wait for approval',
+      sourceText: 'Approve this.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+
+    await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_4',
+      missionId: started.mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.waiting',
+      status: 'waiting',
+      occurredAt: '2026-03-30T10:10:00.000Z',
+      stageKey: 'codegen',
+      progress: 72,
+      message: 'Awaiting approval',
+      waitingFor: 'approval',
+      decision: {
+        prompt: 'Approve?',
+        options: [{ id: 'approve', label: 'Approve' }],
+      },
+      payload: {},
+    });
+
+    const resumed = await orchestrator.submitDecision(started.mission.id, {
+      optionId: 'approve',
+    });
+
+    expect(resumed.resumed).toBe(true);
+    expect(resumed.mission.status).toBe('running');
+  });
+
+  it('handles decision reject', async () => {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+      hooks: {
+        onDecisionSubmitted: () => ({
+          resumed: true,
+          detail: 'Decision rejected.',
+        }),
+      },
+    });
+
+    const started = await orchestrator.startMission({
+      title: 'Wait for rejection',
+      sourceText: 'Reject this.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+
+    await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_5',
+      missionId: started.mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.waiting',
+      status: 'waiting',
+      occurredAt: '2026-03-30T10:10:00.000Z',
+      stageKey: 'codegen',
+      progress: 72,
+      message: 'Awaiting approval',
+      waitingFor: 'approval',
+      decision: {
+        prompt: 'Approve?',
+        options: [{ id: 'reject', label: 'Reject' }],
+      },
+      payload: {},
+    });
+
+    const resumed = await orchestrator.submitDecision(started.mission.id, {
+      optionId: 'reject',
+    });
+
+    expect(resumed.resumed).toBe(true);
+    expect(resumed.mission.status).toBe('running');
+  });
+
+  it('handles decision modify', async () => {
+    const orchestrator = new MissionOrchestrator({
+      executorClient: createExecutorClientStub(),
+      hooks: {
+        onDecisionSubmitted: () => ({
+          resumed: true,
+          detail: 'Decision modified.',
+        }),
+      },
+    });
+
+    const started = await orchestrator.startMission({
+      title: 'Wait for modification',
+      sourceText: 'Modify this.',
+      workspaceRoot: 'C:/workspace/demo',
+    });
+
+    await orchestrator.applyExecutorEvent({
+      version: '2026-03-28',
+      eventId: 'evt_6',
+      missionId: started.mission.id,
+      jobId: 'job_1',
+      executor: 'lobster',
+      type: 'job.waiting',
+      status: 'waiting',
+      occurredAt: '2026-03-30T10:10:00.000Z',
+      stageKey: 'codegen',
+      progress: 72,
+      message: 'Awaiting approval',
+      waitingFor: 'approval',
+      decision: {
+        prompt: 'Approve?',
+        options: [{ id: 'modify', label: 'Modify' }],
+      },
+      payload: {},
+    });
+
+    const resumed = await orchestrator.submitDecision(started.mission.id, {
+      optionId: 'modify',
+      input: 'Modified input',
+    });
+
+    expect(resumed.resumed).toBe(true);
+    expect(resumed.mission.status).toBe('running');
+  });
 });
 
 describe('MissionOrchestrator enrichment', () => {

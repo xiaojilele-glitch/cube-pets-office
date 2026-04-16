@@ -521,6 +521,10 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 
       const socket = io(window.location.origin, {
         transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
       });
 
       socket.on("connect", () => {

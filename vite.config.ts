@@ -159,6 +159,9 @@ export default defineConfig(() => {
     process.env.DEPLOY_TARGET === "github-pages";
 
   return {
+    test: {
+      css: false,
+    },
     base: isGitHubPagesBuild ? `/${repositoryName}/` : "/",
     define: {
       __GITHUB_PAGES__: JSON.stringify(isGitHubPagesBuild),

@@ -235,9 +235,11 @@ function resolveMissionStageKey(
     event.type === "job.completed" ||
     event.type === "job.failed" ||
     event.type === "job.cancelled" ||
+    event.type === "job.timeout" ||
     event.status === "completed" ||
     event.status === "failed" ||
-    event.status === "cancelled"
+    event.status === "cancelled" ||
+    event.status === "timeout"
   ) {
     return "finalize";
   }
@@ -842,7 +844,7 @@ export class MissionOrchestrator {
           detail: event.summary || event.message,
         }, time),
       });
-    } else if (event.status === "failed" || event.status === "cancelled" || event.type === "job.failed") {
+    } else if (event.status === "failed" || event.status === "cancelled" || event.status === "timeout" || event.type === "job.failed" || event.type === "job.timeout") {
       next = replaceMission(next, {
         status: "failed",
         summary: event.summary || event.message,
@@ -984,6 +986,7 @@ export class MissionOrchestrator {
         return "done";
       case "failed":
       case "cancelled":
+      case "timeout":
         return "failed";
       default:
         return "running";
@@ -1014,7 +1017,7 @@ export class MissionOrchestrator {
       });
     }
 
-    if (event.type === "job.failed" || event.status === "failed" || event.status === "cancelled") {
+    if (event.type === "job.failed" || event.type === "job.timeout" || event.status === "failed" || event.status === "cancelled" || event.status === "timeout") {
       return missionEvent("failed", event.summary || event.message, {
         source: "executor",
         stageKey,

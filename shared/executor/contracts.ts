@@ -30,6 +30,7 @@ export const EXECUTOR_JOB_STATUSES = [
   "completed",
   "failed",
   "cancelled",
+  "timeout",
 ] as const;
 
 export type ExecutorJobStatus = (typeof EXECUTOR_JOB_STATUSES)[number];
@@ -42,6 +43,7 @@ export const EXECUTOR_EVENT_TYPES = [
   "job.completed",
   "job.failed",
   "job.cancelled",
+  "job.timeout",
   "job.log",
   "job.heartbeat",
   "job.log_stream",

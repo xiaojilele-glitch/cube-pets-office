@@ -161,10 +161,10 @@ describe('WorkflowEngine reputation integration — task completed signal', () =
     const service = new ReputationService(calculator, evaluator, detector, config);
 
     // Initialize a profile first
-    service.initializeProfile('worker-1', false);
+    service.initializeProfile('worker-workflow-integration-1', false);
 
     const signal: ReputationSignal = {
-      agentId: 'worker-1',
+      agentId: 'worker-workflow-integration-1',
       taskId: 1,
       taskQualityScore: 80,
       actualDurationMs: 5000,
@@ -180,7 +180,7 @@ describe('WorkflowEngine reputation integration — task completed signal', () =
     expect(() => service.handleTaskCompleted(signal)).not.toThrow();
 
     // Verify the profile was updated
-    const profile = service.getReputation('worker-1');
+    const profile = service.getReputation('worker-workflow-integration-1');
     expect(profile).toBeDefined();
     expect(profile!.totalTasks).toBe(1);
     expect(profile!.lastActiveAt).not.toBeNull();
