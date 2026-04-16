@@ -1,4 +1,4 @@
-import {
+﻿import {
   startTransition,
   useDeferredValue,
   useEffect,
@@ -22,6 +22,7 @@ import { Splitter } from "antd";
 import { toast } from "sonner";
 
 import { UnifiedLaunchComposer } from "@/components/launch/UnifiedLaunchComposer";
+import { ClarificationPanel } from "@/components/nl-command/ClarificationPanel";
 import { CreateMissionDialog } from "@/components/tasks/CreateMissionDialog";
 import { TasksCockpitDetail } from "@/components/tasks/TasksCockpitDetail";
 import { TasksQueueRail } from "@/components/tasks/TasksQueueRail";
@@ -43,11 +44,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useI18n } from "@/i18n";
 import { CAN_USE_ADVANCED_RUNTIME } from "@/lib/deploy-target";
+import { useNLCommandStore } from "@/lib/nl-command-store";
 import type { TaskHubCommandSubmissionResult } from "@/lib/nl-command-store";
 import { useAppStore } from "@/lib/store";
 import { useTelemetryStore } from "@/lib/telemetry-store";
 import { useTasksStore } from "@/lib/tasks-store";
 import { cn } from "@/lib/utils";
+import { submitUnifiedClarification } from "@/lib/unified-launch-coordinator";
 import { useWorkflowStore } from "@/lib/workflow-store";
 import { resolveTaskHubLocationUpdate } from "@/pages/tasks/task-hub-location";
 
@@ -156,8 +159,16 @@ export function OfficeTaskCockpit({
   );
   const [pendingLaunch, setPendingLaunch] =
     useState<OfficeLaunchResolution | null>(null);
+  const [clarificationExpanded, setClarificationExpanded] = useState(true);
   const previousSelectedPetRef = useRef<string | null>(selectedPet);
   const deferredSearch = useDeferredValue(search.trim().toLowerCase());
+  const currentDialog = useNLCommandStore(state => state.currentDialog);
+  const currentCommand = useNLCommandStore(state => state.currentCommand);
+  const hasActiveClarification = currentDialog?.status === "active";
+
+  useEffect(() => {
+    setClarificationExpanded(true);
+  }, [hasActiveClarification, currentCommand?.commandId]);
 
   useEffect(() => {
     if (!highlightedTaskId || typeof window === "undefined") return;
@@ -381,6 +392,57 @@ export function OfficeTaskCockpit({
     }
   }
 
+  async function handleClarificationAnswer(
+    questionId: string,
+    text: string,
+    selectedOptions?: string[]
+  ) {
+    if (!currentCommand) {
+      return;
+    }
+
+    try {
+      const result = await submitUnifiedClarification({
+        commandId: currentCommand.commandId,
+        answer: {
+          questionId,
+          text,
+          selectedOptions,
+          timestamp: Date.now(),
+        },
+      });
+
+      if (
+        result?.route === "mission" &&
+        result.status === "created" &&
+        result.missionId
+      ) {
+        handleTaskHubResolved({
+          commandId: result.commandId,
+          commandText: currentCommand.commandText,
+          missionId: result.missionId,
+          relatedMissionIds: [result.missionId],
+          autoSelectedMissionId: result.missionId,
+          status: "created",
+          createdAt: Date.now(),
+        });
+        toast.success(
+          t(
+            locale,
+            "补充信息已完成，任务已经进入主队列。",
+            "Clarification is complete and the mission has entered the queue."
+          )
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t(locale, "补充信息提交失败。", "Failed to submit clarification.")
+      );
+    }
+  }
+
   function handleTaskHubResolved(result: TaskHubCommandSubmissionResult) {
     const locationUpdate = resolveTaskHubLocationUpdate({
       missionId: result.autoSelectedMissionId || result.missionId,
@@ -466,7 +528,7 @@ export function OfficeTaskCockpit({
           locale,
           "适合快速预览和前台验证",
           "Best for fast previews and front-end validation"
-      );
+        );
   const floatingGlassClass = resizeActive
     ? "border-stone-200/85 bg-[#fff9f2]/96 shadow-[0_10px_24px_rgba(98,73,48,0.06)]"
     : "border-white/30 bg-[linear-gradient(180deg,rgba(255,252,248,0.36),rgba(246,238,229,0.28))] shadow-[0_14px_34px_rgba(98,73,48,0.1)] backdrop-blur-md transition-all hover:bg-[linear-gradient(180deg,rgba(255,252,248,0.62),rgba(246,238,229,0.52))]";
@@ -501,6 +563,332 @@ export function OfficeTaskCockpit({
       );
     }
   }
+
+  const launcherDock = (
+    <div
+      className={cn(
+        "pointer-events-auto mx-auto flex w-full max-w-[700px] min-h-0 flex-col overflow-hidden rounded-[14px] border",
+        hasActiveClarification ? "shrink-0" : "max-h-[32%]",
+        floatingGlassClass
+      )}
+    >
+      <div className="shrink-0 border-b border-stone-200/50 px-1.5 py-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex rounded-[10px] border border-white/65 bg-white/78 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+              <span className="inline-flex items-center gap-1 rounded-[8px] bg-[#d07a4f] px-1.5 py-0.5 text-[8px] font-semibold text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]">
+                {t(locale, "统一智能发起", "Unified smart launch")}
+              </span>
+              <button
+                type="button"
+                onClick={toggleTelemetryDashboard}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
+                  telemetryDashboardOpen
+                    ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]"
+                    : "text-stone-600 hover:bg-white"
+                )}
+              >
+                <Activity className="size-3.5" />
+                {t(locale, "统计驾驶台", "Metrics dock")}
+              </button>
+            </div>
+
+            {pendingLaunch ? (
+              <span className="workspace-status workspace-tone-warning px-1 py-0.5 text-[8px] font-semibold">
+                {t(
+                  locale,
+                  "团队准备中，完成后会自动回到任务视角。",
+                  "Team preparing, then auto-return to the task view."
+                )}
+              </span>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              className="workspace-control h-5 rounded-full px-1.5 text-[8px]"
+              onClick={() => setCreateDialogOpen(true)}
+            >
+              <Plus className="size-3.5" />
+              {t(locale, "新建任务", "New task")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="workspace-control h-5 rounded-full px-1.5 text-[8px]"
+              onClick={refreshCurrent}
+              disabled={loading && ready}
+            >
+              <RefreshCw
+                className={cn("size-3.5", loading && ready && "animate-spin")}
+              />
+              {t(locale, "刷新", "Refresh")}
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="workspace-control h-5 rounded-full px-1.5 text-[8px]"
+                >
+                  {runtimeMode === "advanced" ? (
+                    <Server className="size-3.5" />
+                  ) : (
+                    <Monitor className="size-3.5" />
+                  )}
+                  {runtimeModeLabel}
+                  <ChevronDown className="size-3.5 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-[11px] leading-5 text-stone-500">
+                  {runtimeModeHint}
+                </div>
+                <DropdownMenuRadioGroup
+                  value={runtimeMode}
+                  onValueChange={value =>
+                    void setRuntimeMode(value as "frontend" | "advanced")
+                  }
+                >
+                  <DropdownMenuRadioItem value="frontend">
+                    {t(locale, "前端预览", "Frontend preview")}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem
+                    value="advanced"
+                    disabled={!CAN_USE_ADVANCED_RUNTIME}
+                  >
+                    {t(locale, "高级执行", "Advanced runtime")}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="workspace-control h-5 rounded-full px-1.5 text-[8px]"
+                >
+                  <Ellipsis className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onSelect={event => {
+                    event.preventDefault();
+                    void handleCopyFocusSummary();
+                  }}
+                >
+                  <Copy className="size-4" />
+                  {t(locale, "复制当前焦点", "Copy focus")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={event => {
+                    event.preventDefault();
+                    toggleConfig();
+                  }}
+                >
+                  <Settings2 className="size-4" />
+                  {t(locale, "运行时配置", "Runtime config")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={event => {
+                    event.preventDefault();
+                    toggleTelemetryDashboard();
+                  }}
+                >
+                  <Activity className="size-4" />
+                  {telemetryDashboardOpen
+                    ? t(locale, "收起统计驾驶台", "Hide metrics dock")
+                    : t(locale, "打开统计驾驶台", "Open metrics dock")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        <div className="mt-1 flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="shrink-0 rounded-full border border-stone-200/80 bg-white/72 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-stone-500">
+              {t(locale, "焦点", "Focus")}
+            </span>
+            <div className="min-w-0 flex-1 truncate text-[12px] font-semibold tracking-tight text-stone-900">
+              {focusTitle}
+            </div>
+            <div className="hidden max-w-[220px] shrink text-right text-[9px] leading-4 text-stone-600 xl:block">
+              {compactText(focusSignal, 56)}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-0.5">
+            <span
+              className={cn(
+                "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                `workspace-tone-${focusTone}`
+              )}
+            >
+              {focusStatusLabel}
+            </span>
+            <span
+              className={cn(
+                "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                selectedDetail
+                  ? missionOperatorStateTone(selectedDetail.operatorState)
+                  : "workspace-tone-neutral"
+              )}
+            >
+              {focusOperatorLabel}
+            </span>
+            <span className="workspace-status workspace-tone-info !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
+              {focusStage}
+            </span>
+            <span className="workspace-status workspace-tone-neutral !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
+              {t(
+                locale,
+                `进度 ${focusProgress}%`,
+                `Progress ${focusProgress}%`
+              )}
+            </span>
+            <span
+              className={cn(
+                "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                runningCount > 0
+                  ? "workspace-tone-warning"
+                  : "workspace-tone-neutral"
+              )}
+            >
+              {t(
+                locale,
+                `队列 ${queuedCount} / 运行 ${runningCount}`,
+                `Queue ${queuedCount} / running ${runningCount}`
+              )}
+            </span>
+            <span
+              className={cn(
+                "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                warningCount > 0
+                  ? "workspace-tone-warning"
+                  : "workspace-tone-info"
+              )}
+            >
+              {t(
+                locale,
+                `等待 ${waitingCount} / 关注 ${warningCount}`,
+                `Waiting ${waitingCount} / warnings ${warningCount}`
+              )}
+            </span>
+            <span
+              className={cn(
+                "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
+                agents.length > 0
+                  ? "workspace-tone-success"
+                  : "workspace-tone-neutral"
+              )}
+            >
+              {t(locale, `Agent ${agents.length}`, `Agents ${agents.length}`)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-hidden p-2">
+        <UnifiedLaunchComposer
+          createMission={createMission}
+          activeTaskTitle={selectedTaskSummary?.title}
+          activeTaskDetail={selectedDetail}
+          operatorActionLoading={
+            activeTaskId
+              ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
+              : {}
+          }
+          onSubmitOperatorAction={handleSubmitOperatorAction}
+          onTaskResolved={handleTaskHubResolved}
+          compact
+          bare
+          dense
+          hideHeader
+          hideInputLabel
+          hideClarificationPanel
+          className="h-full"
+          onWorkflowResolved={resolution => {
+            setPendingLaunch({
+              workflowId: resolution.workflowId,
+              directive: resolution.directive,
+              attachmentCount: resolution.attachmentCount,
+              requestedAt: resolution.requestedAt,
+              missionId: resolution.missionId,
+            });
+            setActiveTab("flow");
+          }}
+        />
+      </div>
+    </div>
+  );
+
+  const launchStage =
+    hasActiveClarification && currentDialog ? (
+      <div className="pointer-events-none flex w-full items-end justify-center">
+        <div className="pointer-events-none flex h-[clamp(360px,58vh,760px)] w-full max-w-[860px] min-h-0 flex-col items-center justify-end">
+          {clarificationExpanded ? (
+            <div className="pointer-events-auto mb-2 w-full min-h-0 max-h-[calc(100%-172px)] overflow-hidden rounded-[24px] border border-white/36 bg-[linear-gradient(180deg,rgba(255,252,248,0.72),rgba(246,238,229,0.62))] shadow-[0_18px_40px_rgba(98,73,48,0.14)] backdrop-blur-md">
+              <div className="shrink-0 border-b border-stone-200/55 px-3 py-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="workspace-status workspace-tone-warning !px-2 !py-1 !text-[10px] font-semibold">
+                    {t(locale, "需要补充信息", "Clarification needed")}
+                  </span>
+                  <span className="text-[11px] text-stone-600">
+                    {t(
+                      locale,
+                      "先补齐上下文，系统再继续创建任务。",
+                      "Fill in the missing context and the system will continue creating the task."
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              <div className="min-h-0 overflow-y-auto p-3">
+                <ClarificationPanel
+                  dialog={currentDialog}
+                  onAnswer={handleClarificationAnswer}
+                  className="border-amber-200/80 bg-amber-50/70 shadow-none"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="pointer-events-auto z-10 mb-2 flex w-full justify-center">
+            <button
+              type="button"
+              className="inline-flex h-7 w-12 items-center justify-center rounded-full border border-stone-200/80 bg-white/94 text-[#9c6b47] shadow-[0_10px_24px_rgba(88,61,39,0.14)] backdrop-blur-md transition hover:bg-[#fff8f1] hover:text-[#5e8b72]"
+              aria-label={
+                clarificationExpanded
+                  ? t(locale, "收起补充信息", "Collapse clarification")
+                  : t(locale, "展开补充信息", "Expand clarification")
+              }
+              onClick={() => setClarificationExpanded(current => !current)}
+            >
+              <ChevronDown
+                className={cn(
+                  "size-4 transition-transform",
+                  clarificationExpanded && "rotate-180"
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="pointer-events-none flex w-full shrink-0 justify-center">
+            {launcherDock}
+          </div>
+        </div>
+      </div>
+    ) : (
+      launcherDock
+    );
 
   return (
     <div
@@ -547,278 +935,7 @@ export function OfficeTaskCockpit({
           style={{ overflow: "visible" }}
         >
           <section className="pointer-events-none flex h-full min-h-0 flex-col justify-end px-2">
-            <div
-              className={cn(
-                "pointer-events-auto mx-auto flex w-full max-w-[700px] max-h-[32%] min-h-0 flex-col overflow-hidden rounded-[14px] border",
-                floatingGlassClass
-              )}
-            >
-              <div className="shrink-0 border-b border-stone-200/50 px-1.5 py-1">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <div className="flex rounded-[10px] border border-white/65 bg-white/78 p-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
-                      <span className="inline-flex items-center gap-1 rounded-[8px] bg-[#d07a4f] px-1.5 py-0.5 text-[8px] font-semibold text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]">
-                        {t(locale, "统一智能发起", "Unified smart launch")}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={toggleTelemetryDashboard}
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-[8px] px-1.5 py-0.5 text-[8px] font-semibold transition-colors",
-                          telemetryDashboardOpen
-                            ? "bg-[#d07a4f] text-white shadow-[0_10px_24px_rgba(184,111,69,0.18)]"
-                            : "text-stone-600 hover:bg-white"
-                        )}
-                      >
-                        <Activity className="size-3.5" />
-                        {t(locale, "统计驾驶台", "Metrics dock")}
-                      </button>
-                    </div>
-
-                    {pendingLaunch ? (
-                      <span className="workspace-status workspace-tone-warning px-1 py-0.5 text-[8px] font-semibold">
-                        {t(
-                          locale,
-                          "团队准备中，完成后会自动回到任务视角。",
-                          "Team preparing, then auto-return to the task view."
-                        )}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                      onClick={() => setCreateDialogOpen(true)}
-                    >
-                      <Plus className="size-3.5" />
-                      {t(locale, "新建任务", "New task")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                      onClick={refreshCurrent}
-                      disabled={loading && ready}
-                    >
-                      <RefreshCw
-                        className={cn(
-                          "size-3.5",
-                          loading && ready && "animate-spin"
-                        )}
-                      />
-                      {t(locale, "刷新", "Refresh")}
-                    </Button>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                        >
-                          {runtimeMode === "advanced" ? (
-                            <Server className="size-3.5" />
-                          ) : (
-                            <Monitor className="size-3.5" />
-                          )}
-                          {runtimeModeLabel}
-                          <ChevronDown className="size-3.5 opacity-60" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <div className="px-2 py-1.5 text-[11px] leading-5 text-stone-500">
-                          {runtimeModeHint}
-                        </div>
-                        <DropdownMenuRadioGroup
-                          value={runtimeMode}
-                          onValueChange={value =>
-                            void setRuntimeMode(
-                              value as "frontend" | "advanced"
-                            )
-                          }
-                        >
-                          <DropdownMenuRadioItem value="frontend">
-                            {t(locale, "前端预览", "Frontend preview")}
-                          </DropdownMenuRadioItem>
-                          <DropdownMenuRadioItem
-                            value="advanced"
-                            disabled={!CAN_USE_ADVANCED_RUNTIME}
-                          >
-                            {t(locale, "高级执行", "Advanced runtime")}
-                          </DropdownMenuRadioItem>
-                        </DropdownMenuRadioGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="workspace-control rounded-full px-1.5 h-5 text-[8px]"
-                        >
-                          <Ellipsis className="size-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem
-                          onSelect={event => {
-                            event.preventDefault();
-                            void handleCopyFocusSummary();
-                          }}
-                        >
-                          <Copy className="size-4" />
-                          {t(locale, "复制当前焦点", "Copy focus")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={event => {
-                            event.preventDefault();
-                            toggleConfig();
-                          }}
-                        >
-                          <Settings2 className="size-4" />
-                          {t(locale, "运行时配置", "Runtime config")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={event => {
-                            event.preventDefault();
-                            toggleTelemetryDashboard();
-                          }}
-                        >
-                          <Activity className="size-4" />
-                          {telemetryDashboardOpen
-                            ? t(locale, "收起统计驾驶台", "Hide metrics dock")
-                            : t(locale, "打开统计驾驶台", "Open metrics dock")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                <div className="mt-1 flex min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 rounded-full border border-stone-200/80 bg-white/72 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-stone-500">
-                      {t(locale, "焦点", "Focus")}
-                    </span>
-                    <div className="min-w-0 flex-1 truncate text-[12px] font-semibold tracking-tight text-stone-900">
-                      {focusTitle}
-                    </div>
-                    <div className="hidden max-w-[220px] shrink text-right text-[9px] leading-4 text-stone-600 xl:block">
-                      {compactText(focusSignal, 56)}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-0.5">
-                    <span
-                      className={cn(
-                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                        `workspace-tone-${focusTone}`
-                      )}
-                    >
-                      {focusStatusLabel}
-                    </span>
-                    <span
-                      className={cn(
-                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                        selectedDetail
-                          ? missionOperatorStateTone(
-                              selectedDetail.operatorState
-                            )
-                          : "workspace-tone-neutral"
-                      )}
-                    >
-                      {focusOperatorLabel}
-                    </span>
-                    <span className="workspace-status workspace-tone-info !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
-                      {focusStage}
-                    </span>
-                    <span className="workspace-status workspace-tone-neutral !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold">
-                      {t(
-                        locale,
-                        `进度 ${focusProgress}%`,
-                        `Progress ${focusProgress}%`
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                        runningCount > 0
-                          ? "workspace-tone-warning"
-                          : "workspace-tone-neutral"
-                      )}
-                    >
-                      {t(
-                        locale,
-                        `队列 ${queuedCount} / 运行 ${runningCount}`,
-                        `Queue ${queuedCount} / running ${runningCount}`
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                        warningCount > 0
-                          ? "workspace-tone-warning"
-                          : "workspace-tone-info"
-                      )}
-                    >
-                      {t(
-                        locale,
-                        `等待 ${waitingCount} / 关注 ${warningCount}`,
-                        `Waiting ${waitingCount} / warnings ${warningCount}`
-                      )}
-                    </span>
-                    <span
-                      className={cn(
-                        "workspace-status !gap-0.5 !px-1 !py-0.5 !text-[8px] font-semibold",
-                        agents.length > 0
-                          ? "workspace-tone-success"
-                          : "workspace-tone-neutral"
-                      )}
-                    >
-                      {t(
-                        locale,
-                        `Agent ${agents.length}`,
-                        `Agents ${agents.length}`
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-hidden p-2">
-                <UnifiedLaunchComposer
-                  createMission={createMission}
-                  activeTaskTitle={selectedTaskSummary?.title}
-                  activeTaskDetail={selectedDetail}
-                  operatorActionLoading={
-                    activeTaskId
-                      ? (operatorActionLoadingByMissionId[activeTaskId] ?? {})
-                      : {}
-                  }
-                  onSubmitOperatorAction={handleSubmitOperatorAction}
-                  onTaskResolved={handleTaskHubResolved}
-                  compact
-                  bare
-                  dense
-                  hideHeader
-                  hideInputLabel
-                  className="h-full"
-                  onWorkflowResolved={resolution => {
-                    setPendingLaunch({
-                      workflowId: resolution.workflowId,
-                      directive: resolution.directive,
-                      attachmentCount: resolution.attachmentCount,
-                      requestedAt: resolution.requestedAt,
-                      missionId: resolution.missionId,
-                    });
-                    setActiveTab("flow");
-                  }}
-                />
-              </div>
-            </div>
+            {launchStage}
           </section>
         </Splitter.Panel>
 

@@ -118,6 +118,7 @@ export function UnifiedLaunchComposer({
   dense = false,
   hideHeader = false,
   hideInputLabel = false,
+  hideClarificationPanel = false,
   className,
 }: {
   createMission: TaskHubCreateMission;
@@ -138,6 +139,7 @@ export function UnifiedLaunchComposer({
   dense?: boolean;
   hideHeader?: boolean;
   hideInputLabel?: boolean;
+  hideClarificationPanel?: boolean;
   className?: string;
 }) {
   const { locale } = useI18n();
@@ -528,7 +530,7 @@ export function UnifiedLaunchComposer({
           onChange={event => void handleFilesSelected(event)}
         />
 
-        {hasActiveClarification && currentDialog ? (
+        {hasActiveClarification && currentDialog && !hideClarificationPanel ? (
           <Splitter
             layout="vertical"
             lazy
