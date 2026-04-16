@@ -30,7 +30,7 @@ import { useLineageStore } from "@/lib/lineage-store";
 import { cn } from "@/lib/utils";
 import type { LineageNodeType } from "@shared/lineage/contracts.js";
 
-export default function LineagePage() {
+export function LineageContent({ embedded = false }: { embedded?: boolean }) {
   const { locale } = useI18n();
   const copy = getLineageCopy(locale);
   const tabs = getLineageTabs(locale);
@@ -167,14 +167,8 @@ export default function LineagePage() {
     </>
   );
 
-  return (
-    <WorkspacePageShell
-      eyebrow={copy.page.eyebrow}
-      title={copy.page.title}
-      description={copy.page.description}
-      actions={actions}
-      toolbar={toolbar}
-    >
+  const content = (
+    <>
       {error && graph ? (
         <WorkspacePanel className="p-3">
           <RetryInlineNotice
@@ -289,6 +283,36 @@ export default function LineagePage() {
           </WorkspacePanel>
         ) : null}
       </div>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col gap-4">
+        <WorkspacePanel className="p-4 md:p-5">
+          <div className="flex justify-between mb-4">
+            {actions}
+          </div>
+          {toolbar}
+        </WorkspacePanel>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <WorkspacePageShell
+      eyebrow={copy.page.eyebrow}
+      title={copy.page.title}
+      description={copy.page.description}
+      actions={actions}
+      toolbar={toolbar}
+    >
+      {content}
     </WorkspacePageShell>
   );
+}
+
+export default function LineagePage() {
+  return <LineageContent />;
 }

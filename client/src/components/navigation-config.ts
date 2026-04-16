@@ -11,12 +11,7 @@ import {
 } from "lucide-react";
 
 export type PrimaryNavigationId = "office" | "tasks" | "more";
-export type MoreNavigationId =
-  | "config"
-  | "permissions"
-  | "audit"
-  | "lineage"
-  | "help";
+export type MoreNavigationId = "help";
 
 export interface NavigationItem<TId extends string> {
   id: TId;
@@ -46,23 +41,6 @@ export const PRIMARY_NAV_ITEMS: Array<NavigationItem<PrimaryNavigationId>> = [
 
 export const MORE_NAV_ITEMS: Array<NavigationItem<MoreNavigationId>> = [
   {
-    id: "config",
-    icon: Settings2,
-  },
-  {
-    id: "permissions",
-    icon: Shield,
-  },
-  {
-    id: "audit",
-    icon: FileSearch,
-  },
-  {
-    id: "lineage",
-    icon: GitBranch,
-    href: "/lineage",
-  },
-  {
     id: "help",
     icon: HelpCircle,
   },
@@ -70,7 +48,7 @@ export const MORE_NAV_ITEMS: Array<NavigationItem<MoreNavigationId>> = [
 
 export function isLowFrequencyPath(path: string) {
   return (
-    path.startsWith("/lineage") || path.startsWith(LEGACY_COMMAND_CENTER_PATH)
+    path.startsWith("/debug") || path.startsWith(LEGACY_COMMAND_CENTER_PATH)
   );
 }
 

@@ -16,6 +16,7 @@ import { ReplayPage } from "./components/replay/ReplayPage";
 import CommandCenterPage from "@/pages/nl-command/CommandCenterPage";
 import LegacyCommandCenterPage from "@/pages/nl-command/LegacyCommandCenterPage";
 import LineagePage from "@/pages/lineage/LineagePage";
+import DebugPage from "@/pages/debug/DebugPage";
 
 const routerBase =
   import.meta.env.BASE_URL === "/"
@@ -39,6 +40,7 @@ function Router() {
       <Route path={"/command-center"}>
         {() => <LegacyCommandCenterPage />}
       </Route>
+      <Route path={"/debug"} component={DebugPage} />
       <Route path={"/lineage"} component={LineagePage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
