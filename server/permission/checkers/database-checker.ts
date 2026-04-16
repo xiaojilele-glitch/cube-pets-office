@@ -6,7 +6,10 @@
  * - 结果集大小限制（maxResultRows）
  */
 
-import type { Action, PermissionConstraints } from "../../../shared/permission/contracts.js";
+import type {
+  Action,
+  PermissionConstraints,
+} from "../../../shared/permission/contracts.js";
 import type { ResourceChecker } from "./filesystem-checker.js";
 
 /** Dangerous SQL operations — always denied */
@@ -15,12 +18,13 @@ export const DANGEROUS_OPERATIONS = ["DROP", "TRUNCATE", "ALTER"] as const;
 /** Check if a SQL string contains any dangerous operation keyword */
 export function containsDangerousOperation(sql: string): boolean {
   const upper = sql.toUpperCase();
-  return DANGEROUS_OPERATIONS.some((op) => {
+  return DANGEROUS_OPERATIONS.some(op => {
     // Match as whole word using word boundary logic
     const idx = upper.indexOf(op);
     if (idx === -1) return false;
     const before = idx === 0 ? " " : upper[idx - 1];
-    const after = idx + op.length >= upper.length ? " " : upper[idx + op.length];
+    const after =
+      idx + op.length >= upper.length ? " " : upper[idx + op.length];
     const isWordBoundary = (ch: string) => !/[A-Z0-9_]/.test(ch);
     return isWordBoundary(before) && isWordBoundary(after);
   });
@@ -30,7 +34,9 @@ export function containsDangerousOperation(sql: string): boolean {
 export function matchTablePattern(pattern: string, tableName: string): boolean {
   if (pattern === "*") return true;
   // Convert simple wildcard to regex
-  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+  const escaped = pattern
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*");
   return new RegExp("^" + escaped + "$", "i").test(tableName);
 }
 
@@ -39,9 +45,16 @@ export function matchTablePattern(pattern: string, tableName: string): boolean {
  * For dangerous operation checks, the full resource string is inspected.
  */
 export class DatabaseChecker implements ResourceChecker {
-  checkConstraints(action: Action, resource: string, constraints: PermissionConstraints): boolean {
+  checkConstraints(
+    action: Action,
+    resource: string,
+    constraints: PermissionConstraints
+  ): boolean {
     // 1. Dangerous operations — always denied
-    if (constraints.forbiddenOperations && constraints.forbiddenOperations.length > 0) {
+    if (
+      constraints.forbiddenOperations &&
+      constraints.forbiddenOperations.length > 0
+    ) {
       if (containsDangerousOperation(resource)) {
         return false;
       }
@@ -54,7 +67,9 @@ export class DatabaseChecker implements ResourceChecker {
     // 2. Table name matching
     const tableName = extractTableName(resource);
     if (tableName && constraints.tables && constraints.tables.length > 0) {
-      const tableAllowed = constraints.tables.some((pattern) => matchTablePattern(pattern, tableName));
+      const tableAllowed = constraints.tables.some(pattern =>
+        matchTablePattern(pattern, tableName)
+      );
       if (!tableAllowed) return false;
     }
 

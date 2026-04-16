@@ -9,7 +9,7 @@
  * Requirements: 3.1 — 支持运行时热切换模型
  */
 
-import { getRAGConfig } from '../config.js';
+import { getRAGConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // EmbeddingProvider 接口
@@ -53,7 +53,7 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
 
   constructor(options: OpenAIEmbeddingProviderOptions) {
     this.apiKey = options.apiKey;
-    this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.modelName = options.model;
     this.dimension = options.dimension;
     this.timeoutMs = options.timeoutMs ?? 30_000;
@@ -67,9 +67,9 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
 
     try {
       const response = await fetch(`${this.baseUrl}/embeddings`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
@@ -80,25 +80,28 @@ export class OpenAIEmbeddingProvider implements EmbeddingProvider {
       });
 
       if (!response.ok) {
-        const errText = await response.text().catch(() => '');
+        const errText = await response.text().catch(() => "");
         throw new Error(
-          `Embedding API error ${response.status}: ${errText.substring(0, 200)}`,
+          `Embedding API error ${response.status}: ${errText.substring(0, 200)}`
         );
       }
 
-      const data: OpenAIEmbeddingResponse = await response.json() as OpenAIEmbeddingResponse;
+      const data: OpenAIEmbeddingResponse =
+        (await response.json()) as OpenAIEmbeddingResponse;
 
       if (!data.data || !Array.isArray(data.data)) {
-        throw new Error('Embedding API returned malformed response: missing data array');
+        throw new Error(
+          "Embedding API returned malformed response: missing data array"
+        );
       }
 
       // 按 index 排序，确保与输入顺序一致
       const sorted = [...data.data].sort((a, b) => a.index - b.index);
       return sorted.map(item => item.embedding);
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         throw new Error(
-          `Embedding request timed out after ${this.timeoutMs}ms`,
+          `Embedding request timed out after ${this.timeoutMs}ms`
         );
       }
       throw error;
@@ -121,12 +124,12 @@ export function createEmbeddingProviderFromConfig(): EmbeddingProvider {
 
   if (!embedding.apiKey) {
     throw new Error(
-      'RAG embedding API key is not configured. Set RAG_EMBEDDING_API_KEY or OPENAI_API_KEY.',
+      "RAG embedding API key is not configured. Set RAG_EMBEDDING_API_KEY or OPENAI_API_KEY."
     );
   }
   if (!embedding.baseUrl) {
     throw new Error(
-      'RAG embedding base URL is not configured. Set RAG_EMBEDDING_BASE_URL or OPENAI_BASE_URL.',
+      "RAG embedding base URL is not configured. Set RAG_EMBEDDING_BASE_URL or OPENAI_BASE_URL."
     );
   }
 

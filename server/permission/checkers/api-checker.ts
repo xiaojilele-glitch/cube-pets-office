@@ -6,7 +6,10 @@
  * - 参数正则约束检查
  */
 
-import type { Action, PermissionConstraints } from "../../../shared/permission/contracts.js";
+import type {
+  Action,
+  PermissionConstraints,
+} from "../../../shared/permission/contracts.js";
 import type { ResourceChecker } from "./filesystem-checker.js";
 import { matchGlob } from "./filesystem-checker.js";
 import { SlidingWindowRateLimiter } from "../rate-limiter.js";
@@ -33,18 +36,26 @@ export class ApiChecker implements ResourceChecker {
     return this.rateLimiter;
   }
 
-  checkConstraints(action: Action, resource: string, constraints: PermissionConstraints): boolean {
+  checkConstraints(
+    action: Action,
+    resource: string,
+    constraints: PermissionConstraints
+  ): boolean {
     const { method, path } = parseApiResource(resource);
 
     // 1. HTTP method check
     if (method && constraints.methods && constraints.methods.length > 0) {
-      const allowed = constraints.methods.some((m) => m.toUpperCase() === method.toUpperCase());
+      const allowed = constraints.methods.some(
+        m => m.toUpperCase() === method.toUpperCase()
+      );
       if (!allowed) return false;
     }
 
     // 2. Endpoint path pattern matching
     if (constraints.endpoints && constraints.endpoints.length > 0) {
-      const pathAllowed = constraints.endpoints.some((pattern) => matchGlob(pattern, path));
+      const pathAllowed = constraints.endpoints.some(pattern =>
+        matchGlob(pattern, path)
+      );
       if (!pathAllowed) return false;
     }
 
@@ -52,7 +63,9 @@ export class ApiChecker implements ResourceChecker {
     if (constraints.parameterConstraints) {
       // Extract query parameters from path if present
       const params = extractQueryParams(path);
-      for (const [key, regexStr] of Object.entries(constraints.parameterConstraints)) {
+      for (const [key, regexStr] of Object.entries(
+        constraints.parameterConstraints
+      )) {
         const value = params.get(key);
         if (value !== undefined) {
           try {
@@ -69,7 +82,9 @@ export class ApiChecker implements ResourceChecker {
     // 4. Rate limiting
     if (constraints.rateLimit && constraints.rateLimit.maxPerMinute > 0) {
       const endpoint = path.split("?")[0]; // strip query params for key
-      const key = this.agentId ? `${this.agentId}:api:${endpoint}` : `unknown:api:${endpoint}`;
+      const key = this.agentId
+        ? `${this.agentId}:api:${endpoint}`
+        : `unknown:api:${endpoint}`;
       if (!this.rateLimiter.check(key, constraints.rateLimit.maxPerMinute)) {
         return false;
       }
@@ -80,8 +95,13 @@ export class ApiChecker implements ResourceChecker {
   }
 }
 
-function parseApiResource(resource: string): { method: string | null; path: string } {
-  const match = resource.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(.+)$/i);
+function parseApiResource(resource: string): {
+  method: string | null;
+  path: string;
+} {
+  const match = resource.match(
+    /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)\s+(.+)$/i
+  );
   if (match) {
     return { method: match[1], path: match[2] };
   }
@@ -95,7 +115,8 @@ function extractQueryParams(path: string): Map<string, string> {
   const query = path.slice(qIndex + 1);
   for (const pair of query.split("&")) {
     const [key, value] = pair.split("=");
-    if (key) params.set(decodeURIComponent(key), decodeURIComponent(value ?? ""));
+    if (key)
+      params.set(decodeURIComponent(key), decodeURIComponent(value ?? ""));
   }
   return params;
 }

@@ -8,24 +8,24 @@
  * 决策支持和动态调整的完整闭环。
  */
 
-export const NL_COMMAND_CONTRACT_VERSION = '2026-06-01' as const;
+export const NL_COMMAND_CONTRACT_VERSION = "2026-06-01" as const;
 
 // ─── 战略指令 ───
 
-export type CommandPriority = 'critical' | 'high' | 'medium' | 'low';
+export type CommandPriority = "critical" | "high" | "medium" | "low";
 
 export type CommandStatus =
-  | 'draft'
-  | 'analyzing'
-  | 'clarifying'
-  | 'finalized'
-  | 'decomposing'
-  | 'planning'
-  | 'approving'
-  | 'executing'
-  | 'completed'
-  | 'failed'
-  | 'cancelled';
+  | "draft"
+  | "analyzing"
+  | "clarifying"
+  | "finalized"
+  | "decomposing"
+  | "planning"
+  | "approving"
+  | "executing"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 export interface StrategicCommand {
   commandId: string;
@@ -41,7 +41,7 @@ export interface StrategicCommand {
 }
 
 export interface CommandConstraint {
-  type: 'budget' | 'time' | 'quality' | 'resource' | 'custom';
+  type: "budget" | "time" | "quality" | "resource" | "custom";
   description: string;
   value?: string;
   unit?: string;
@@ -69,7 +69,7 @@ export interface CommandAnalysis {
 
 export interface CommandEntity {
   name: string;
-  type: 'module' | 'service' | 'team' | 'technology' | 'concept' | 'custom';
+  type: "module" | "service" | "team" | "technology" | "concept" | "custom";
   description?: string;
 }
 
@@ -81,13 +81,13 @@ export interface ClarificationDialog {
   questions: ClarificationQuestion[];
   answers: ClarificationAnswer[];
   clarificationRounds: number;
-  status: 'active' | 'completed';
+  status: "active" | "completed";
 }
 
 export interface ClarificationQuestion {
   questionId: string;
   text: string;
-  type: 'free_text' | 'single_choice' | 'multi_choice';
+  type: "free_text" | "single_choice" | "multi_choice";
   options?: string[];
   context?: string;
 }
@@ -115,7 +115,7 @@ export interface MissionDecomposition {
   commandId: string;
   missions: DecomposedMission[];
   dependencies: MissionDependency[];
-  executionOrder: string[][];  // 二维数组，每层可并行
+  executionOrder: string[][]; // 二维数组，每层可并行
   totalEstimatedDuration: number;
   totalEstimatedCost: number;
 }
@@ -126,7 +126,7 @@ export interface DecomposedMission {
   description: string;
   objectives: string[];
   constraints: CommandConstraint[];
-  estimatedDuration: number;  // 分钟
+  estimatedDuration: number; // 分钟
   estimatedCost: number;
   priority: CommandPriority;
 }
@@ -134,7 +134,7 @@ export interface DecomposedMission {
 export interface MissionDependency {
   fromMissionId: string;
   toMissionId: string;
-  type: 'blocks' | 'depends_on' | 'related';
+  type: "blocks" | "depends_on" | "related";
   description?: string;
 }
 
@@ -163,7 +163,7 @@ export interface DecomposedTask {
 export interface TaskDependency {
   fromTaskId: string;
   toTaskId: string;
-  type: 'blocks' | 'depends_on';
+  type: "blocks" | "depends_on";
 }
 
 // ─── 执行计划 ───
@@ -171,7 +171,13 @@ export interface TaskDependency {
 export interface NLExecutionPlan {
   planId: string;
   commandId: string;
-  status: 'draft' | 'pending_approval' | 'approved' | 'executing' | 'completed' | 'failed';
+  status:
+    | "draft"
+    | "pending_approval"
+    | "approved"
+    | "executing"
+    | "completed"
+    | "failed";
   missions: DecomposedMission[];
   tasks: DecomposedTask[];
   timeline: PlanTimeline;
@@ -186,14 +192,14 @@ export interface NLExecutionPlan {
 export interface PlanTimeline {
   startDate: string;
   endDate: string;
-  criticalPath: string[];  // mission/task IDs on critical path
+  criticalPath: string[]; // mission/task IDs on critical path
   milestones: TimelineMilestone[];
   entries: TimelineEntry[];
 }
 
 export interface TimelineEntry {
   entityId: string;
-  entityType: 'mission' | 'task';
+  entityType: "mission" | "task";
   startTime: number;
   endTime: number;
   duration: number;
@@ -225,13 +231,13 @@ export interface ResourceEntry {
 
 export interface RiskAssessment {
   risks: IdentifiedRisk[];
-  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
+  overallRiskLevel: "low" | "medium" | "high" | "critical";
 }
 
 export interface IdentifiedRisk {
   id: string;
   description: string;
-  level: 'low' | 'medium' | 'high' | 'critical';
+  level: "low" | "medium" | "high" | "critical";
   probability: number;
   impact: number;
   mitigation: string;
@@ -264,7 +270,11 @@ export interface ContingencyAlternative {
 
 // ─── 审批 ───
 
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'revision_requested';
+export type ApprovalStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "revision_requested";
 
 export interface PlanApprovalRequest {
   requestId: string;
@@ -278,7 +288,7 @@ export interface PlanApprovalRequest {
 
 export interface ApprovalDecision {
   approverId: string;
-  decision: 'approved' | 'rejected' | 'revision_requested';
+  decision: "approved" | "rejected" | "revision_requested";
   comments?: string;
   timestamp: number;
 }
@@ -292,13 +302,13 @@ export interface PlanAdjustment {
   changes: AdjustmentChange[];
   impact: AdjustmentImpact;
   approvalRequired: boolean;
-  status: 'proposed' | 'approved' | 'applied' | 'rejected';
+  status: "proposed" | "approved" | "applied" | "rejected";
   createdAt: number;
 }
 
 export interface AdjustmentChange {
   entityId: string;
-  entityType: 'mission' | 'task' | 'resource' | 'timeline';
+  entityType: "mission" | "task" | "resource" | "timeline";
   field: string;
   oldValue: unknown;
   newValue: unknown;
@@ -312,8 +322,13 @@ export interface AdjustmentImpact {
 
 // ─── 告警 ───
 
-export type AlertType = 'TASK_DELAYED' | 'COST_EXCEEDED' | 'RISK_ESCALATED' | 'ERROR_OCCURRED' | 'APPROVAL_REQUIRED';
-export type AlertPriority = 'critical' | 'warning' | 'info';
+export type AlertType =
+  | "TASK_DELAYED"
+  | "COST_EXCEEDED"
+  | "RISK_ESCALATED"
+  | "ERROR_OCCURRED"
+  | "APPROVAL_REQUIRED";
+export type AlertPriority = "critical" | "warning" | "info";
 
 export interface Alert {
   alertId: string;
@@ -321,7 +336,7 @@ export interface Alert {
   priority: AlertPriority;
   message: string;
   entityId: string;
-  entityType: 'command' | 'mission' | 'task' | 'plan';
+  entityType: "command" | "mission" | "task" | "plan";
   triggeredAt: number;
   acknowledged: boolean;
   metadata?: Record<string, unknown>;
@@ -337,7 +352,7 @@ export interface AlertRule {
 
 export interface AlertCondition {
   metric: string;
-  operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
+  operator: "gt" | "lt" | "eq" | "gte" | "lte";
   threshold: number;
   unit?: string;
 }
@@ -347,7 +362,7 @@ export interface AlertCondition {
 export interface Comment {
   commentId: string;
   entityId: string;
-  entityType: 'command' | 'mission' | 'task' | 'plan';
+  entityType: "command" | "mission" | "task" | "plan";
   authorId: string;
   content: string;
   mentions: string[];
@@ -365,14 +380,24 @@ export interface CommentVersion {
 // ─── 审计 ───
 
 export type AuditOperationType =
-  | 'command_created' | 'command_analyzed' | 'command_finalized'
-  | 'clarification_question' | 'clarification_answer'
-  | 'decomposition_completed' | 'plan_generated'
-  | 'approval_submitted' | 'approval_completed'
-  | 'adjustment_proposed' | 'adjustment_applied'
-  | 'alert_triggered' | 'comment_created' | 'comment_edited'
-  | 'permission_changed' | 'report_generated'
-  | 'suggestion_applied' | 'template_saved';
+  | "command_created"
+  | "command_analyzed"
+  | "command_finalized"
+  | "clarification_question"
+  | "clarification_answer"
+  | "decomposition_completed"
+  | "plan_generated"
+  | "approval_submitted"
+  | "approval_completed"
+  | "adjustment_proposed"
+  | "adjustment_applied"
+  | "alert_triggered"
+  | "comment_created"
+  | "comment_edited"
+  | "permission_changed"
+  | "report_generated"
+  | "suggestion_applied"
+  | "template_saved";
 
 export interface AuditEntry {
   entryId: string;
@@ -380,7 +405,7 @@ export interface AuditEntry {
   operator: string;
   content: string;
   timestamp: number;
-  result: 'success' | 'failure';
+  result: "success" | "failure";
   entityId?: string;
   entityType?: string;
   metadata?: Record<string, unknown>;
@@ -434,7 +459,10 @@ export interface PlanTemplate {
   templateId: string;
   name: string;
   description: string;
-  plan: Omit<NLExecutionPlan, 'planId' | 'commandId' | 'status' | 'createdAt' | 'updatedAt'>;
+  plan: Omit<
+    NLExecutionPlan,
+    "planId" | "commandId" | "status" | "createdAt" | "updatedAt"
+  >;
   version: number;
   versions: TemplateVersion[];
   createdBy: string;
@@ -451,8 +479,14 @@ export interface TemplateVersion {
 
 // ─── 权限 ───
 
-export type Permission = 'view' | 'create' | 'edit' | 'approve' | 'execute' | 'cancel';
-export type UserRole = 'admin' | 'manager' | 'operator' | 'viewer';
+export type Permission =
+  | "view"
+  | "create"
+  | "edit"
+  | "approve"
+  | "execute"
+  | "cancel";
+export type UserRole = "admin" | "manager" | "operator" | "viewer";
 
 export interface PermissionConfig {
   role: UserRole;

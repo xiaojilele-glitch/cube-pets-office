@@ -72,7 +72,11 @@ export interface PhaseAssignment {
 }
 
 export interface RoleConstraintError {
-  code: "ROLE_SWITCH_DENIED" | "AGENT_BUSY" | "COOLDOWN_ACTIVE" | "AUTHORITY_APPROVAL_REQUIRED";
+  code:
+    | "ROLE_SWITCH_DENIED"
+    | "AGENT_BUSY"
+    | "COOLDOWN_ACTIVE"
+    | "AUTHORITY_APPROVAL_REQUIRED";
   agentId: string;
   requestedRoleId: string;
   denialReason: string;

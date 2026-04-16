@@ -22,7 +22,8 @@ describe("dynamic organization generation", () => {
 
     const growth = await generateWorkflowOrganization({
       workflowId: "wf-growth",
-      directive: "Create a growth campaign to improve activation and retention.",
+      directive:
+        "Create a growth campaign to improve activation and retention.",
       llmProvider,
       model: "gpt-4.1-mini",
     });
@@ -44,7 +45,9 @@ describe("dynamic organization generation", () => {
 
     expect(growth.organization.taskProfile).toBe("growth");
     expect(
-      growth.organization.departments.some(department => department.id === "growth")
+      growth.organization.departments.some(
+        department => department.id === "growth"
+      )
     ).toBe(true);
 
     expect(engineering.organization.rootAgentId).toBeTruthy();
@@ -110,9 +113,9 @@ describe("dynamic organization generation", () => {
       "delivery",
       "quality",
     ]);
-    expect(result.organization.nodes.some(node => node.role === "manager")).toBe(
-      true
-    );
+    expect(
+      result.organization.nodes.some(node => node.role === "manager")
+    ).toBe(true);
     expect(result.organization.nodes.some(node => node.role === "worker")).toBe(
       true
     );
@@ -138,7 +141,9 @@ describe("extractExternalAgentReferences", () => {
   });
 
   it("maps claude framework correctly", () => {
-    const refs = extractExternalAgentReferences("Delegate to @external-claude-analyst");
+    const refs = extractExternalAgentReferences(
+      "Delegate to @external-claude-analyst"
+    );
     expect(refs).toEqual([
       { name: "analyst", frameworkType: "claude", endpoint: "" },
     ]);
@@ -162,7 +167,11 @@ describe("createExternalAgentNode", () => {
     const node = createExternalAgentNode(
       "wf-123",
       "wf123",
-      { name: "researcher", frameworkType: "crewai", endpoint: "http://localhost:8000" },
+      {
+        name: "researcher",
+        frameworkType: "crewai",
+        endpoint: "http://localhost:8000",
+      },
       "root",
       "executive",
       "Executive Office"
@@ -189,7 +198,8 @@ describe("assembleOrganizationSnapshot with external agents", () => {
 
     const result = await generateWorkflowOrganization({
       workflowId: "wf-ext-test",
-      directive: "Research topic using @external-crewai-researcher and @external-claude-writer",
+      directive:
+        "Research topic using @external-crewai-researcher and @external-claude-writer",
       llmProvider,
       model: "gpt-4.1-mini",
     });
@@ -199,7 +209,9 @@ describe("assembleOrganizationSnapshot with external agents", () => {
     );
     expect(externalNodes).toHaveLength(2);
 
-    const researcher = externalNodes.find((n: any) => n.name === "researcher") as any;
+    const researcher = externalNodes.find(
+      (n: any) => n.name === "researcher"
+    ) as any;
     expect(researcher).toBeDefined();
     expect(researcher.frameworkType).toBe("crewai");
     expect(researcher.parentId).toBe("root");

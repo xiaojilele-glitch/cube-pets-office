@@ -28,8 +28,16 @@ describe("CORE_ENTITY_TYPES", () => {
 
   it("includes all expected types from the ontology", () => {
     const expected = [
-      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
-      "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+      "CodeModule",
+      "API",
+      "BusinessRule",
+      "ArchitectureDecision",
+      "TechStack",
+      "Agent",
+      "Role",
+      "Mission",
+      "Bug",
+      "Config",
     ];
     for (const t of expected) {
       expect(CORE_ENTITY_TYPES).toContain(t);
@@ -48,8 +56,16 @@ describe("CORE_RELATION_TYPES", () => {
 
   it("includes all expected types from the ontology", () => {
     const expected = [
-      "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
-      "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY",
+      "DEPENDS_ON",
+      "CALLS",
+      "IMPLEMENTS",
+      "DECIDED_BY",
+      "SUPERSEDES",
+      "USES",
+      "CAUSED_BY",
+      "RESOLVED_BY",
+      "BELONGS_TO",
+      "EXECUTED_BY",
       "KNOWS_ABOUT",
     ];
     for (const t of expected) {
@@ -64,7 +80,7 @@ describe("CORE_RELATION_TYPES", () => {
 
 describe("STATUS_OPTIONS", () => {
   it("contains all, active, deprecated, archived options", () => {
-    const values = STATUS_OPTIONS.map((o) => o.value);
+    const values = STATUS_OPTIONS.map(o => o.value);
     expect(values).toEqual(["all", "active", "deprecated", "archived"]);
   });
 });

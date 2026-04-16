@@ -1,11 +1,11 @@
 /**
  * Agent Registry — Manages all agent instances
  */
-import { Agent } from './agent.js';
-import type { GuestAgent } from './guest-agent.js';
-import db from '../db/index.js';
-import type { ReputationProfile } from '../../shared/reputation.js';
-import { reputationService } from './reputation/index.js';
+import { Agent } from "./agent.js";
+import type { GuestAgent } from "./guest-agent.js";
+import db from "../db/index.js";
+import type { ReputationProfile } from "../../shared/reputation.js";
+import { reputationService } from "./reputation/index.js";
 
 /** Maximum number of concurrent guest agents allowed. @see Requirements 2.6 */
 export const MAX_GUESTS = 5;
@@ -42,14 +42,16 @@ class AgentRegistry {
    * Get CEO agent
    */
   getCEO(): Agent | undefined {
-    return this.agents.get('ceo');
+    return this.agents.get("ceo");
   }
 
   /**
    * Get all managers
    */
   getManagers(): Agent[] {
-    return Array.from(this.agents.values()).filter((a) => a.config.role === 'manager');
+    return Array.from(this.agents.values()).filter(
+      a => a.config.role === "manager"
+    );
   }
 
   /**
@@ -57,7 +59,7 @@ class AgentRegistry {
    */
   getManagerByDepartment(dept: string): Agent | undefined {
     return Array.from(this.agents.values()).find(
-      (a) => a.config.role === 'manager' && a.config.department === dept
+      a => a.config.role === "manager" && a.config.department === dept
     );
   }
 
@@ -66,7 +68,7 @@ class AgentRegistry {
    */
   getWorkersByManager(managerId: string): Agent[] {
     return Array.from(this.agents.values()).filter(
-      (a) => a.config.role === 'worker' && a.config.managerId === managerId
+      a => a.config.role === "worker" && a.config.managerId === managerId
     );
   }
 
@@ -81,7 +83,9 @@ class AgentRegistry {
    * Get agents by department
    */
   getByDepartment(dept: string): Agent[] {
-    return Array.from(this.agents.values()).filter((a) => a.config.department === dept);
+    return Array.from(this.agents.values()).filter(
+      a => a.config.department === dept
+    );
   }
 
   /**
@@ -117,7 +121,7 @@ class AgentRegistry {
   registerGuest(id: string, agent: GuestAgent): void {
     if (this.guestAgents.size >= MAX_GUESTS) {
       throw new Error(
-        `Maximum guest agent limit reached (${MAX_GUESTS}). Remove an existing guest before adding a new one.`,
+        `Maximum guest agent limit reached (${MAX_GUESTS}). Remove an existing guest before adding a new one.`
       );
     }
     this.guestAgents.set(id, agent);

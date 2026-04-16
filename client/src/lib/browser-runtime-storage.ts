@@ -108,7 +108,9 @@ export interface BrowserRuntimeExportBundle {
 }
 
 function canUseIndexedDb(): boolean {
-  return typeof window !== "undefined" && typeof window.indexedDB !== "undefined";
+  return (
+    typeof window !== "undefined" && typeof window.indexedDB !== "undefined"
+  );
 }
 
 function createDefaultMetadata(
@@ -174,21 +176,33 @@ async function openDatabase(): Promise<IDBDatabase> {
           db.createObjectStore(STORE_NAMES.workflowDetails, { keyPath: "id" });
         }
         if (!db.objectStoreNames.contains(STORE_NAMES.agentRecentMemory)) {
-          db.createObjectStore(STORE_NAMES.agentRecentMemory, { keyPath: "id" });
+          db.createObjectStore(STORE_NAMES.agentRecentMemory, {
+            keyPath: "id",
+          });
         }
         if (!db.objectStoreNames.contains(STORE_NAMES.agentMemorySearch)) {
-          db.createObjectStore(STORE_NAMES.agentMemorySearch, { keyPath: "id" });
+          db.createObjectStore(STORE_NAMES.agentMemorySearch, {
+            keyPath: "id",
+          });
         }
         if (!db.objectStoreNames.contains(STORE_NAMES.heartbeatStatuses)) {
-          db.createObjectStore(STORE_NAMES.heartbeatStatuses, { keyPath: "agentId" });
+          db.createObjectStore(STORE_NAMES.heartbeatStatuses, {
+            keyPath: "agentId",
+          });
         }
         if (!db.objectStoreNames.contains(STORE_NAMES.heartbeatReports)) {
           db.createObjectStore(STORE_NAMES.heartbeatReports, { keyPath: "id" });
         }
         if (!db.objectStoreNames.contains(STORE_NAMES.snapshots)) {
-          const snapshotStore = db.createObjectStore(STORE_NAMES.snapshots, { keyPath: "id" });
-          snapshotStore.createIndex("missionId", "missionId", { unique: false });
-          snapshotStore.createIndex("createdAt", "createdAt", { unique: false });
+          const snapshotStore = db.createObjectStore(STORE_NAMES.snapshots, {
+            keyPath: "id",
+          });
+          snapshotStore.createIndex("missionId", "missionId", {
+            unique: false,
+          });
+          snapshotStore.createIndex("createdAt", "createdAt", {
+            unique: false,
+          });
         }
       };
 
@@ -209,11 +223,16 @@ async function readAll<T>(storeName: StoreName): Promise<T[]> {
   return result;
 }
 
-async function readOne<T>(storeName: StoreName, key: IDBValidKey): Promise<T | null> {
+async function readOne<T>(
+  storeName: StoreName,
+  key: IDBValidKey
+): Promise<T | null> {
   const db = await openDatabase();
   const transaction = db.transaction(storeName, "readonly");
   const store = transaction.objectStore(storeName);
-  const result = await requestToPromise(store.get(key) as IDBRequest<T | undefined>);
+  const result = await requestToPromise(
+    store.get(key) as IDBRequest<T | undefined>
+  );
   await transactionToPromise(transaction);
   return result ?? null;
 }
@@ -276,19 +295,27 @@ export async function getMetadata(): Promise<BrowserRuntimeMetadata | null> {
   return record?.value || null;
 }
 
-export async function markRuntimeSynced(at: string = new Date().toISOString()): Promise<void> {
+export async function markRuntimeSynced(
+  at: string = new Date().toISOString()
+): Promise<void> {
   await upsertMetadata({ lastSyncedAt: at }, "server-mirror");
 }
 
-export async function markRuntimeImported(at: string = new Date().toISOString()): Promise<void> {
+export async function markRuntimeImported(
+  at: string = new Date().toISOString()
+): Promise<void> {
   await upsertMetadata({ importedAt: at }, "import");
 }
 
-export async function markRuntimeExported(at: string = new Date().toISOString()): Promise<void> {
+export async function markRuntimeExported(
+  at: string = new Date().toISOString()
+): Promise<void> {
   await upsertMetadata({ exportedAt: at });
 }
 
-export async function persistAIConfig(config: Record<string, unknown>): Promise<void> {
+export async function persistAIConfig(
+  config: Record<string, unknown>
+): Promise<void> {
   await writeOne<AIConfigRecord>(STORE_NAMES.aiConfig, {
     key: "ai_config",
     value: config,
@@ -296,8 +323,14 @@ export async function persistAIConfig(config: Record<string, unknown>): Promise<
   });
 }
 
-export async function getAIConfigSnapshot(): Promise<Record<string, unknown> | null> {
-  const record = await readOne<AIConfigRecord>(STORE_NAMES.aiConfig, "ai_config");
+export async function getAIConfigSnapshot(): Promise<Record<
+  string,
+  unknown
+> | null> {
+  const record = await readOne<AIConfigRecord>(
+    STORE_NAMES.aiConfig,
+    "ai_config"
+  );
   return record?.value || null;
 }
 
@@ -305,7 +338,7 @@ export async function persistAgents(agents: any[]): Promise<void> {
   await clearStore(STORE_NAMES.agents);
   await writeMany(
     STORE_NAMES.agents,
-    agents.map((agent) => ({
+    agents.map(agent => ({
       ...agent,
       cachedAt: new Date().toISOString(),
     }))
@@ -316,14 +349,18 @@ export async function getAgentsSnapshot(): Promise<any[]> {
   return readAll<any>(STORE_NAMES.agents);
 }
 
-export async function persistSoul(snapshot: Omit<BrowserSoulSnapshot, "cachedAt">): Promise<void> {
+export async function persistSoul(
+  snapshot: Omit<BrowserSoulSnapshot, "cachedAt">
+): Promise<void> {
   await writeOne<BrowserSoulSnapshot>(STORE_NAMES.souls, {
     ...snapshot,
     cachedAt: new Date().toISOString(),
   });
 }
 
-export async function getSoulSnapshot(agentId: string): Promise<BrowserSoulSnapshot | null> {
+export async function getSoulSnapshot(
+  agentId: string
+): Promise<BrowserSoulSnapshot | null> {
   return readOne<BrowserSoulSnapshot>(STORE_NAMES.souls, agentId);
 }
 
@@ -346,7 +383,7 @@ export async function persistWorkflows(workflows: any[]): Promise<void> {
   await clearStore(STORE_NAMES.workflows);
   await writeMany(
     STORE_NAMES.workflows,
-    workflows.map((workflow) => ({
+    workflows.map(workflow => ({
       ...workflow,
       cachedAt: new Date().toISOString(),
     }))
@@ -369,7 +406,10 @@ export async function persistWorkflowDetail(
 export async function getWorkflowDetailSnapshot(
   workflowId: string
 ): Promise<BrowserWorkflowDetailSnapshot | null> {
-  return readOne<BrowserWorkflowDetailSnapshot>(STORE_NAMES.workflowDetails, workflowId);
+  return readOne<BrowserWorkflowDetailSnapshot>(
+    STORE_NAMES.workflowDetails,
+    workflowId
+  );
 }
 
 export async function persistRecentMemory(
@@ -424,7 +464,7 @@ export async function persistHeartbeatStatuses(statuses: any[]): Promise<void> {
   await clearStore(STORE_NAMES.heartbeatStatuses);
   await writeMany(
     STORE_NAMES.heartbeatStatuses,
-    statuses.map((status) => ({
+    statuses.map(status => ({
       ...status,
       cachedAt: new Date().toISOString(),
     }))
@@ -443,7 +483,7 @@ export async function persistHeartbeatReports(
     detail?: any | null;
   }>
 ): Promise<void> {
-  const rows = reports.map((report) => ({
+  const rows = reports.map(report => ({
     id: heartbeatReportKey(report.agentId, report.reportId),
     agentId: report.agentId,
     reportId: report.reportId,
@@ -452,14 +492,21 @@ export async function persistHeartbeatReports(
     cachedAt: new Date().toISOString(),
   }));
 
-  await writeMany<BrowserHeartbeatReportSnapshot>(STORE_NAMES.heartbeatReports, rows);
+  await writeMany<BrowserHeartbeatReportSnapshot>(
+    STORE_NAMES.heartbeatReports,
+    rows
+  );
 }
 
 export async function getHeartbeatReportsSnapshot(
   agentId?: string | null
 ): Promise<BrowserHeartbeatReportSnapshot[]> {
-  const reports = await readAll<BrowserHeartbeatReportSnapshot>(STORE_NAMES.heartbeatReports);
-  const filtered = agentId ? reports.filter((item) => item.agentId === agentId) : reports;
+  const reports = await readAll<BrowserHeartbeatReportSnapshot>(
+    STORE_NAMES.heartbeatReports
+  );
+  const filtered = agentId
+    ? reports.filter(item => item.agentId === agentId)
+    : reports;
   return filtered.sort(
     (left, right) =>
       new Date(right.summary?.generatedAt || 0).getTime() -
@@ -480,11 +527,19 @@ export async function exportBrowserRuntimeBundle(): Promise<BrowserRuntimeExport
     souls: await readAll<BrowserSoulSnapshot>(STORE_NAMES.souls),
     heartbeats: await readAll<BrowserHeartbeatSnapshot>(STORE_NAMES.heartbeats),
     workflows: await getWorkflowsSnapshot(),
-    workflowDetails: await readAll<BrowserWorkflowDetailSnapshot>(STORE_NAMES.workflowDetails),
-    agentRecentMemory: await readAll<BrowserRecentMemorySnapshot>(STORE_NAMES.agentRecentMemory),
-    agentMemorySearch: await readAll<BrowserMemorySearchSnapshot>(STORE_NAMES.agentMemorySearch),
+    workflowDetails: await readAll<BrowserWorkflowDetailSnapshot>(
+      STORE_NAMES.workflowDetails
+    ),
+    agentRecentMemory: await readAll<BrowserRecentMemorySnapshot>(
+      STORE_NAMES.agentRecentMemory
+    ),
+    agentMemorySearch: await readAll<BrowserMemorySearchSnapshot>(
+      STORE_NAMES.agentMemorySearch
+    ),
     heartbeatStatuses: await getHeartbeatStatusesSnapshot(),
-    heartbeatReports: await readAll<BrowserHeartbeatReportSnapshot>(STORE_NAMES.heartbeatReports),
+    heartbeatReports: await readAll<BrowserHeartbeatReportSnapshot>(
+      STORE_NAMES.heartbeatReports
+    ),
   };
 }
 
@@ -522,8 +577,14 @@ export async function importBrowserRuntimeBundle(
     await writeOne<AIConfigRecord>(STORE_NAMES.aiConfig, bundle.aiConfig);
   }
 
-  await writeMany(STORE_NAMES.agents, Array.isArray(bundle.agents) ? bundle.agents : []);
-  await writeMany(STORE_NAMES.souls, Array.isArray(bundle.souls) ? bundle.souls : []);
+  await writeMany(
+    STORE_NAMES.agents,
+    Array.isArray(bundle.agents) ? bundle.agents : []
+  );
+  await writeMany(
+    STORE_NAMES.souls,
+    Array.isArray(bundle.souls) ? bundle.souls : []
+  );
   await writeMany(
     STORE_NAMES.heartbeats,
     Array.isArray(bundle.heartbeats) ? bundle.heartbeats : []
@@ -554,7 +615,6 @@ export async function importBrowserRuntimeBundle(
   );
 }
 
-
 /* ─── Snapshot Store API ─── */
 
 export async function saveSnapshot(record: SnapshotRecord): Promise<void> {
@@ -565,7 +625,9 @@ export async function getSnapshot(id: string): Promise<SnapshotRecord | null> {
   return readOne<SnapshotRecord>(STORE_NAMES.snapshots, id);
 }
 
-export async function getLatestSnapshot(missionId?: string): Promise<SnapshotRecord | null> {
+export async function getLatestSnapshot(
+  missionId?: string
+): Promise<SnapshotRecord | null> {
   const db = await openDatabase();
   const transaction = db.transaction(STORE_NAMES.snapshots, "readonly");
   const store = transaction.objectStore(STORE_NAMES.snapshots);
@@ -573,14 +635,20 @@ export async function getLatestSnapshot(missionId?: string): Promise<SnapshotRec
   let records: SnapshotRecord[];
   if (missionId) {
     const index = store.index("missionId");
-    records = await requestToPromise(index.getAll(missionId) as IDBRequest<SnapshotRecord[]>);
+    records = await requestToPromise(
+      index.getAll(missionId) as IDBRequest<SnapshotRecord[]>
+    );
   } else {
-    records = await requestToPromise(store.getAll() as IDBRequest<SnapshotRecord[]>);
+    records = await requestToPromise(
+      store.getAll() as IDBRequest<SnapshotRecord[]>
+    );
   }
   await transactionToPromise(transaction);
 
   if (records.length === 0) return null;
-  return records.reduce((latest, r) => (r.createdAt > latest.createdAt ? r : latest));
+  return records.reduce((latest, r) =>
+    r.createdAt > latest.createdAt ? r : latest
+  );
 }
 
 export async function listSnapshots(): Promise<SnapshotRecord[]> {
@@ -589,7 +657,9 @@ export async function listSnapshots(): Promise<SnapshotRecord[]> {
   const store = transaction.objectStore(STORE_NAMES.snapshots);
   const index = store.index("createdAt");
 
-  const records = await requestToPromise(index.getAll() as IDBRequest<SnapshotRecord[]>);
+  const records = await requestToPromise(
+    index.getAll() as IDBRequest<SnapshotRecord[]>
+  );
   await transactionToPromise(transaction);
 
   // createdAt index returns ascending; reverse for descending

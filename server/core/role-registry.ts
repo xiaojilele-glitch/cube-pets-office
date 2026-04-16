@@ -6,15 +6,21 @@
  * @see Requirements 1.2, 1.3, 1.4, 1.5
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { RoleTemplate, RoleChangeLogEntry } from '../../shared/role-schema.js';
+import type {
+  RoleTemplate,
+  RoleChangeLogEntry,
+} from "../../shared/role-schema.js";
 
 const __rr_filename = fileURLToPath(import.meta.url);
 const __rr_dirname = dirname(__rr_filename);
-const DEFAULT_STORE_PATH = resolve(__rr_dirname, '../../data/role-templates.json');
+const DEFAULT_STORE_PATH = resolve(
+  __rr_dirname,
+  "../../data/role-templates.json"
+);
 
 /** Persistence file schema */
 interface RoleTemplateStore {
@@ -35,7 +41,7 @@ class RoleRegistry {
   /**
    * Register a role template. If the roleId already exists, treat as modification.
    */
-  register(template: RoleTemplate, changedBy = 'system'): void {
+  register(template: RoleTemplate, changedBy = "system"): void {
     const existing = this.templates.get(template.roleId);
 
     if (existing) {
@@ -46,7 +52,7 @@ class RoleRegistry {
         roleId: template.roleId,
         changedBy,
         changedAt: new Date().toISOString(),
-        action: 'modified',
+        action: "modified",
         diff,
       });
     } else {
@@ -56,7 +62,7 @@ class RoleRegistry {
         roleId: template.roleId,
         changedBy,
         changedAt: new Date().toISOString(),
-        action: 'created',
+        action: "created",
         diff: {},
       });
     }
@@ -81,7 +87,7 @@ class RoleRegistry {
   /**
    * Unregister (deprecate) a role template.
    */
-  unregister(roleId: string, changedBy = 'system'): void {
+  unregister(roleId: string, changedBy = "system"): void {
     const existing = this.templates.get(roleId);
     if (!existing) return;
 
@@ -90,7 +96,7 @@ class RoleRegistry {
       roleId,
       changedBy,
       changedAt: new Date().toISOString(),
-      action: 'deprecated',
+      action: "deprecated",
       diff: {},
     });
 
@@ -114,7 +120,7 @@ class RoleRegistry {
   private resolveRecursive(roleId: string, visited: Set<string>): RoleTemplate {
     if (visited.has(roleId)) {
       throw new Error(
-        `[RoleRegistry] Circular inheritance detected: ${[...Array.from(visited), roleId].join(' -> ')}`
+        `[RoleRegistry] Circular inheritance detected: ${[...Array.from(visited), roleId].join(" -> ")}`
       );
     }
 
@@ -132,8 +138,11 @@ class RoleRegistry {
 
     return {
       ...template,
-      responsibilityPrompt: parent.responsibilityPrompt + '\n\n' + template.responsibilityPrompt,
-      requiredSkillIds: Array.from(new Set([...parent.requiredSkillIds, ...template.requiredSkillIds])),
+      responsibilityPrompt:
+        parent.responsibilityPrompt + "\n\n" + template.responsibilityPrompt,
+      requiredSkillIds: Array.from(
+        new Set([...parent.requiredSkillIds, ...template.requiredSkillIds])
+      ),
       mcpIds: Array.from(new Set([...parent.mcpIds, ...template.mcpIds])),
     };
   }
@@ -143,7 +152,7 @@ class RoleRegistry {
    */
   getChangeLog(roleId?: string): RoleChangeLogEntry[] {
     if (roleId) {
-      return this.changeLog.filter((entry) => entry.roleId === roleId);
+      return this.changeLog.filter(entry => entry.roleId === roleId);
     }
     return [...this.changeLog];
   }
@@ -164,16 +173,16 @@ class RoleRegistry {
   ): Record<string, { old: unknown; new: unknown }> {
     const diff: Record<string, { old: unknown; new: unknown }> = {};
     const keys: (keyof RoleTemplate)[] = [
-      'roleName',
-      'responsibilityPrompt',
-      'requiredSkillIds',
-      'mcpIds',
-      'defaultModelConfig',
-      'authorityLevel',
-      'source',
-      'extends',
-      'compatibleRoles',
-      'incompatibleRoles',
+      "roleName",
+      "responsibilityPrompt",
+      "requiredSkillIds",
+      "mcpIds",
+      "defaultModelConfig",
+      "authorityLevel",
+      "source",
+      "extends",
+      "compatibleRoles",
+      "incompatibleRoles",
     ];
 
     for (const key of keys) {
@@ -191,12 +200,14 @@ class RoleRegistry {
 
   private load(): void {
     if (!existsSync(this.storePath)) {
-      console.log(`[RoleRegistry] No persistence file found, starting empty: ${this.storePath}`);
+      console.log(
+        `[RoleRegistry] No persistence file found, starting empty: ${this.storePath}`
+      );
       return;
     }
 
     try {
-      const raw = readFileSync(this.storePath, 'utf-8');
+      const raw = readFileSync(this.storePath, "utf-8");
       const parsed = JSON.parse(raw) as RoleTemplateStore;
 
       if (Array.isArray(parsed.templates)) {
@@ -213,7 +224,9 @@ class RoleRegistry {
         `[RoleRegistry] Loaded ${this.templates.size} templates, ${this.changeLog.length} log entries`
       );
     } catch {
-      console.warn(`[RoleRegistry] Persistence file corrupted, starting empty: ${this.storePath}`);
+      console.warn(
+        `[RoleRegistry] Persistence file corrupted, starting empty: ${this.storePath}`
+      );
     }
   }
 
@@ -225,9 +238,9 @@ class RoleRegistry {
 
     try {
       mkdirSync(dirname(this.storePath), { recursive: true });
-      writeFileSync(this.storePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.storePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[RoleRegistry] Persistence write failed:', err);
+      console.error("[RoleRegistry] Persistence write failed:", err);
     }
   }
 }

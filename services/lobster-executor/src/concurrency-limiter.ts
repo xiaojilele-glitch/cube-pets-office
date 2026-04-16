@@ -20,7 +20,7 @@ export class ConcurrencyLimiter {
       this.current++;
       return;
     }
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
       this.waiters.push(resolve);
     });
   }

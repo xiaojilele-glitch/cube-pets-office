@@ -9,7 +9,10 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import fc from "fast-check";
 import { LineageCollector } from "../lineage/lineage-collector.js";
 import type { LineageStorageAdapter } from "../lineage/lineage-store.js";
-import type { DataLineageNode, LineageOperation } from "../../shared/lineage/contracts.js";
+import type {
+  DataLineageNode,
+  LineageOperation,
+} from "../../shared/lineage/contracts.js";
 
 // ─── Mock Store helpers ────────────────────────────────────────────────────
 
@@ -17,15 +20,25 @@ function createMockStore(): LineageStorageAdapter {
   return {
     async batchInsertNodes() {},
     async batchInsertEdges() {},
-    async getNode() { return undefined; },
-    async queryNodes() { return []; },
-    async queryEdges() { return []; },
-    async purgeExpired() { return 0; },
+    async getNode() {
+      return undefined;
+    },
+    async queryNodes() {
+      return [];
+    },
+    async queryEdges() {
+      return [];
+    },
+    async purgeExpired() {
+      return 0;
+    },
     async getStats() {
       return {
-        totalNodes: 0, totalEdges: 0,
+        totalNodes: 0,
+        totalEdges: 0,
         nodesByType: { source: 0, transformation: 0, decision: 0 },
-        oldestTimestamp: 0, newestTimestamp: 0,
+        oldestTimestamp: 0,
+        newestTimestamp: 0,
       };
     },
   };
@@ -33,13 +46,27 @@ function createMockStore(): LineageStorageAdapter {
 
 function createFailingStore(): LineageStorageAdapter {
   return {
-    async batchInsertNodes() { throw new Error("Storage exploded"); },
-    async batchInsertEdges() { throw new Error("Storage exploded"); },
-    async getNode() { throw new Error("Storage exploded"); },
-    async queryNodes() { throw new Error("Storage exploded"); },
-    async queryEdges() { throw new Error("Storage exploded"); },
-    async purgeExpired() { throw new Error("Storage exploded"); },
-    async getStats() { throw new Error("Storage exploded"); },
+    async batchInsertNodes() {
+      throw new Error("Storage exploded");
+    },
+    async batchInsertEdges() {
+      throw new Error("Storage exploded");
+    },
+    async getNode() {
+      throw new Error("Storage exploded");
+    },
+    async queryNodes() {
+      throw new Error("Storage exploded");
+    },
+    async queryEdges() {
+      throw new Error("Storage exploded");
+    },
+    async purgeExpired() {
+      throw new Error("Storage exploded");
+    },
+    async getStats() {
+      throw new Error("Storage exploded");
+    },
   };
 }
 
@@ -52,37 +79,47 @@ const arbJsonValue: fc.Arbitrary<unknown> = fc.oneof(
   fc.double({ noNaN: true, noDefaultInfinity: true }),
   fc.boolean(),
   fc.constant(null),
-  fc.array(fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.constant(null)), { maxLength: 10 }),
+  fc.array(
+    fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.constant(null)),
+    { maxLength: 10 }
+  ),
   fc.dictionary(
     fc.string({ minLength: 1, maxLength: 10 }),
     fc.oneof(fc.string(), fc.integer(), fc.boolean(), fc.constant(null)),
-    { maxKeys: 10 },
-  ),
+    { maxKeys: 10 }
+  )
 );
 
-const arbSourceId = fc.string({ minLength: 1, maxLength: 30 }).map(
-  (s) => `src_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`,
-);
+const arbSourceId = fc
+  .string({ minLength: 1, maxLength: 30 })
+  .map(s => `src_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`);
 
 const arbSourceName = fc.string({ minLength: 1, maxLength: 50 });
 
-const arbAgentId = fc.string({ minLength: 1, maxLength: 20 }).map(
-  (s) => `agent_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`,
-);
+const arbAgentId = fc
+  .string({ minLength: 1, maxLength: 20 })
+  .map(s => `agent_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`);
 
 const arbOperation: fc.Arbitrary<LineageOperation> = fc.constantFrom(
-  "query", "filter", "aggregate", "join", "ml_inference",
-  "transform", "enrich", "validate", "llm_call",
+  "query",
+  "filter",
+  "aggregate",
+  "join",
+  "ml_inference",
+  "transform",
+  "enrich",
+  "validate",
+  "llm_call"
 );
 
 const arbLineageIds = fc.array(
-  fc.uuid().map((u) => `ln_${u}`),
-  { minLength: 0, maxLength: 5 },
+  fc.uuid().map(u => `ln_${u}`),
+  { minLength: 0, maxLength: 5 }
 );
 
-const arbDecisionId = fc.string({ minLength: 1, maxLength: 20 }).map(
-  (s) => `dec_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`,
-);
+const arbDecisionId = fc
+  .string({ minLength: 1, maxLength: 20 })
+  .map(s => `dec_${s.replace(/[^a-zA-Z0-9_]/g, "x")}`);
 
 const arbConfidence = fc.double({ min: 0, max: 1, noNaN: true });
 
@@ -92,22 +129,22 @@ const arbConfidence = fc.double({ min: 0, max: 1, noNaN: true });
 describe("P5: computeHash 确定性", () => {
   it("computeHash(data) 对相同输入始终返回相同结果", () => {
     fc.assert(
-      fc.property(arbJsonValue, (data) => {
+      fc.property(arbJsonValue, data => {
         const h1 = LineageCollector.computeHash(data);
         const h2 = LineageCollector.computeHash(data);
         expect(h1).toBe(h2);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("computeHash 始终返回 64 字符十六进制字符串", () => {
     fc.assert(
-      fc.property(arbJsonValue, (data) => {
+      fc.property(arbJsonValue, data => {
         const hash = LineageCollector.computeHash(data);
         expect(hash).toMatch(/^[a-f0-9]{64}$/);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
@@ -123,7 +160,7 @@ describe("P5: computeHash 确定性", () => {
         const hB = LineageCollector.computeHash(b);
         expect(hA).not.toBe(hB);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 });
@@ -149,7 +186,7 @@ describe("P6: 采集失败降级保证", () => {
           collector.destroy();
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -173,9 +210,9 @@ describe("P6: 采集失败降级保证", () => {
           } finally {
             collector.destroy();
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -199,26 +236,30 @@ describe("P6: 采集失败降级保证", () => {
           } finally {
             collector.destroy();
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("forceFlush 在存储失败时不抛出异常", async () => {
     vi.useFakeTimers();
     await fc.assert(
-      fc.asyncProperty(arbSourceId, arbSourceName, async (sourceId, sourceName) => {
-        const collector = new LineageCollector(createFailingStore());
-        try {
-          collector.recordSource({ sourceId, sourceName });
-          // forceFlush triggers the failing store — should not throw
-          await collector.forceFlush();
-        } finally {
-          collector.destroy();
+      fc.asyncProperty(
+        arbSourceId,
+        arbSourceName,
+        async (sourceId, sourceName) => {
+          const collector = new LineageCollector(createFailingStore());
+          try {
+            collector.recordSource({ sourceId, sourceName });
+            // forceFlush triggers the failing store — should not throw
+            await collector.forceFlush();
+          } finally {
+            collector.destroy();
+          }
         }
-      }),
-      { numRuns: 50 },
+      ),
+      { numRuns: 50 }
     );
   });
 });

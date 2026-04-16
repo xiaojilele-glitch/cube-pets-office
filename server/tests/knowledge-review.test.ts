@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { GraphStore } from "../knowledge/graph-store.js";
 import { KnowledgeReviewQueue } from "../knowledge/review-queue.js";
-import type { Entity, EntitySource, ReviewAction } from "../../shared/knowledge/types.js";
+import type {
+  Entity,
+  EntitySource,
+  ReviewAction,
+} from "../../shared/knowledge/types.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -17,7 +21,9 @@ function uniqueProjectId(prefix: string): string {
 
 function makeEntity(
   store: GraphStore,
-  overrides?: Partial<Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">>,
+  overrides?: Partial<
+    Omit<Entity, "entityId" | "createdAt" | "updatedAt" | "status">
+  >
 ): Entity {
   return store.createEntity({
     entityType: overrides?.entityType ?? "CodeModule",
@@ -59,7 +65,7 @@ describe("getQueue", () => {
     makeEntity(store, { confidence: 0.8, needsReview: false });
 
     const result = queue.getQueue();
-    const ids = result.map((e) => e.entityId);
+    const ids = result.map(e => e.entityId);
 
     expect(ids).toContain(low.entityId);
     expect(ids).toContain(flagged.entityId);
@@ -259,7 +265,7 @@ describe("review — errors", () => {
     };
 
     expect(() => queue.review("nonexistent-id", action)).toThrow(
-      "Entity not found",
+      "Entity not found"
     );
   });
 });
@@ -323,9 +329,16 @@ describe("Feature: knowledge-graph, Property 21: 审核操作置信度调整", (
    * for any review action "reject", the entity status SHALL become "archived".
    */
 
-  const confidenceArb = fc.double({ min: 0, max: 1, noNaN: true, noDefaultInfinity: true });
+  const confidenceArb = fc.double({
+    min: 0,
+    max: 1,
+    noNaN: true,
+    noDefaultInfinity: true,
+  });
 
-  const reviewerIdArb = fc.string({ minLength: 1, maxLength: 30 }).filter((s) => s.trim().length > 0);
+  const reviewerIdArb = fc
+    .string({ minLength: 1, maxLength: 30 })
+    .filter(s => s.trim().length > 0);
 
   it("human approve sets confidence to max(currentConfidence, 0.8)", () => {
     fc.assert(
@@ -343,7 +356,7 @@ describe("Feature: knowledge-graph, Property 21: 审核操作置信度调整", (
         expect(updated.confidence).toBeCloseTo(Math.max(confidence, 0.8), 10);
         expect(updated.needsReview).toBe(false);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -363,7 +376,7 @@ describe("Feature: knowledge-graph, Property 21: 审核操作置信度调整", (
         expect(updated.confidence).toBeCloseTo(Math.max(confidence, 0.7), 10);
         expect(updated.needsReview).toBe(false);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -373,7 +386,9 @@ describe("Feature: knowledge-graph, Property 21: 审核操作置信度调整", (
         confidenceArb,
         reviewerIdArb,
         fc.constantFrom("human" as const, "agent" as const),
-        fc.option(fc.string({ minLength: 1, maxLength: 100 }), { nil: undefined }),
+        fc.option(fc.string({ minLength: 1, maxLength: 100 }), {
+          nil: undefined,
+        }),
         (confidence, reviewerId, reviewerType, rejectionReason) => {
           const entity = makeEntity(store, { confidence, needsReview: true });
 
@@ -388,9 +403,9 @@ describe("Feature: knowledge-graph, Property 21: 审核操作置信度调整", (
 
           expect(updated.status).toBe("archived");
           expect(updated.needsReview).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

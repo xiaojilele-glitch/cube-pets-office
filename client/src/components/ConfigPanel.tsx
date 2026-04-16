@@ -16,33 +16,34 @@ import {
   Tag,
   Upload,
   X,
-} from 'lucide-react';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { toast } from 'sonner';
+} from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { toast } from "sonner";
 
 import {
   buildBrowserRuntimeExport,
   loadBrowserRuntimeMetadata,
   restoreBrowserRuntimeFromBundle,
   syncBrowserRuntimeFromServer,
-} from '@/lib/browser-runtime-sync';
-import { exportSession, importSession } from '@/lib/session-export';
+} from "@/lib/browser-runtime-sync";
+import { exportSession, importSession } from "@/lib/session-export";
 import type {
   BrowserRuntimeExportBundle,
   BrowserRuntimeMetadata,
-} from '@/lib/browser-runtime-storage';
-import { CAN_USE_ADVANCED_RUNTIME } from '@/lib/deploy-target';
-import { useAppStore, type AIConfig } from '@/lib/store';
-import { useWorkflowStore } from '@/lib/workflow-store';
-import { useI18n } from '@/i18n';
-import { useViewportTier } from '@/hooks/useViewportTier';
+} from "@/lib/browser-runtime-storage";
+import { CAN_USE_ADVANCED_RUNTIME } from "@/lib/deploy-target";
+import { useAppStore, type AIConfig } from "@/lib/store";
+import { useWorkflowStore } from "@/lib/workflow-store";
+import { useI18n } from "@/i18n";
+import { useViewportTier } from "@/hooks/useViewportTier";
 
 function getSourceLabel(
   isFrontendMode: boolean,
   isBrowserMode: boolean,
-  copy: ReturnType<typeof useI18n>['copy']
+  copy: ReturnType<typeof useI18n>["copy"]
 ) {
-  if (isFrontendMode && !isBrowserMode) return copy.config.sourceLabels.frontendPreview;
+  if (isFrontendMode && !isBrowserMode)
+    return copy.config.sourceLabels.frontendPreview;
   if (isBrowserMode) return copy.config.sourceLabels.browserStorage;
   return copy.config.sourceLabels.serverEnv;
 }
@@ -72,7 +73,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
   const { isMobile, isTablet } = useViewportTier();
 
   const [showKey, setShowKey] = useState(false);
-  const [runtimeMeta, setRuntimeMeta] = useState<BrowserRuntimeMetadata | null>(null);
+  const [runtimeMeta, setRuntimeMeta] = useState<BrowserRuntimeMetadata | null>(
+    null
+  );
   const [isRuntimeSyncing, setIsRuntimeSyncing] = useState(false);
   const [isRuntimeExporting, setIsRuntimeExporting] = useState(false);
   const [isRuntimeImporting, setIsRuntimeImporting] = useState(false);
@@ -81,41 +84,48 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
   const [isSessionImporting, setIsSessionImporting] = useState(false);
   const sessionImportRef = useRef<HTMLInputElement>(null);
 
-  const isFrontendMode = runtimeMode === 'frontend';
-  const isBrowserMode = aiConfig.mode === 'browser_direct';
+  const isFrontendMode = runtimeMode === "frontend";
+  const isBrowserMode = aiConfig.mode === "browser_direct";
 
   useEffect(() => {
     if (!isConfigOpen && !inline) return;
 
     hydrateAIConfig().catch(error => {
-      console.error('[ConfigPanel] Failed to refresh AI config:', error);
+      console.error("[ConfigPanel] Failed to refresh AI config:", error);
     });
 
     loadBrowserRuntimeMetadata()
       .then(setRuntimeMeta)
       .catch(error => {
-        console.error('[ConfigPanel] Failed to load browser runtime metadata:', error);
+        console.error(
+          "[ConfigPanel] Failed to load browser runtime metadata:",
+          error
+        );
       });
   }, [hydrateAIConfig, isConfigOpen, inline]);
 
   if (!isConfigOpen && !inline) return null;
 
   const inputClass =
-    'w-full rounded-xl studio-input px-3.5 py-2.5 text-sm transition-all disabled:opacity-70 font-medium';
-  const labelClass = 'mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#7D6856]';
+    "w-full rounded-xl studio-input px-3.5 py-2.5 text-sm transition-all disabled:opacity-70 font-medium";
+  const labelClass =
+    "mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#7D6856]";
   const shellClass = inline
-    ? 'h-full w-full'
+    ? "h-full w-full"
     : isMobile
-    ? 'inset-0 rounded-none fixed z-[72] animate-in slide-in-from-left duration-300'
-    : isTablet
-      ? 'inset-y-4 left-4 w-[min(52vw,420px)] rounded-[30px] fixed z-[72] animate-in slide-in-from-left duration-300'
-      : 'left-0 top-0 h-full w-[410px] rounded-none fixed z-[72] animate-in slide-in-from-left duration-300';
+      ? "inset-0 rounded-none fixed z-[72] animate-in slide-in-from-left duration-300"
+      : isTablet
+        ? "inset-y-4 left-4 w-[min(52vw,420px)] rounded-[30px] fixed z-[72] animate-in slide-in-from-left duration-300"
+        : "left-0 top-0 h-full w-[410px] rounded-none fixed z-[72] animate-in slide-in-from-left duration-300";
 
   const refreshRuntimeMeta = async () => {
     try {
       setRuntimeMeta(await loadBrowserRuntimeMetadata());
     } catch (error) {
-      console.error('[ConfigPanel] Failed to load browser runtime metadata:', error);
+      console.error(
+        "[ConfigPanel] Failed to load browser runtime metadata:",
+        error
+      );
     }
   };
 
@@ -141,31 +151,43 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
     updateBrowserAIConfig(patch);
   };
 
-  const handleRuntimeModeChange = async (mode: 'frontend' | 'advanced') => {
+  const handleRuntimeModeChange = async (mode: "frontend" | "advanced") => {
     await setRuntimeMode(mode);
     toast.success(
-      mode === 'frontend' ? copy.config.toasts.runtimeFrontend : copy.config.toasts.runtimeAdvanced,
+      mode === "frontend"
+        ? copy.config.toasts.runtimeFrontend
+        : copy.config.toasts.runtimeAdvanced,
       {
         description:
-          mode === 'frontend'
+          mode === "frontend"
             ? copy.config.toasts.runtimeFrontendDescription
             : copy.config.toasts.runtimeAdvancedDescription,
       }
     );
   };
 
-  const handleAISourceChange = (mode: AIConfig['mode']) => {
+  const handleAISourceChange = (mode: AIConfig["mode"]) => {
     setAIConfigMode(mode);
-    toast.success(mode === 'browser_direct' ? copy.config.toasts.aiBrowser : copy.config.toasts.aiServer, {
-      description:
-        mode === 'browser_direct'
-          ? copy.config.toasts.aiBrowserDescription
-          : copy.config.toasts.aiServerDescription,
-    });
+    toast.success(
+      mode === "browser_direct"
+        ? copy.config.toasts.aiBrowser
+        : copy.config.toasts.aiServer,
+      {
+        description:
+          mode === "browser_direct"
+            ? copy.config.toasts.aiBrowserDescription
+            : copy.config.toasts.aiServerDescription,
+      }
+    );
   };
 
   const formatRuntimeTime = (value: string | null | undefined) =>
-    value ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : copy.common.unavailable;
+    value
+      ? new Intl.DateTimeFormat(locale, {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }).format(new Date(value))
+      : copy.common.unavailable;
 
   const handleSyncRuntime = async () => {
     setIsRuntimeSyncing(true);
@@ -186,9 +208,11 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
     setIsRuntimeExporting(true);
     try {
       const { fileName, bundle } = await buildBrowserRuntimeExport();
-      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], {
+        type: "application/json",
+      });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = fileName;
       document.body.appendChild(link);
@@ -230,7 +254,7 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
         description: error?.message || copy.chat.errorHint,
       });
     } finally {
-      event.target.value = '';
+      event.target.value = "";
       setIsRuntimeImporting(false);
     }
   };
@@ -262,7 +286,7 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
         description: error?.message || copy.chat.errorHint,
       });
     } finally {
-      event.target.value = '';
+      event.target.value = "";
       setIsSessionImporting(false);
     }
   };
@@ -270,7 +294,7 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
   return (
     <div
       className={`flex flex-col studio-shell ${shellClass}`}
-      style={{ pointerEvents: 'auto' }}
+      style={{ pointerEvents: "auto" }}
     >
       <div className="flex items-center justify-between border-b border-[rgba(151,120,90,0.14)] px-4 py-3.5 sm:px-5">
         <div className="flex items-center gap-2.5">
@@ -278,9 +302,13 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
             <Settings className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-[#3A2A1A]">{copy.config.title}</h3>
+            <h3 className="text-sm font-bold text-[#3A2A1A]">
+              {copy.config.title}
+            </h3>
             <p className="text-[10px] text-[#8B7355]">
-              {isFrontendMode ? copy.config.subtitleFrontend : copy.config.subtitleAdvanced}
+              {isFrontendMode
+                ? copy.config.subtitleFrontend
+                : copy.config.subtitleAdvanced}
             </p>
           </div>
         </div>
@@ -300,20 +328,24 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
           <div className="rounded-2xl studio-surface p-3.5">
             <div className="flex flex-col gap-3">
               <div>
-                <p className="text-xs font-bold text-[#3A2A1A]">{copy.config.sections.runMode}</p>
+                <p className="text-xs font-bold text-[#3A2A1A]">
+                  {copy.config.sections.runMode}
+                </p>
                 <p className="mt-1 text-[10px] leading-relaxed text-[#7D6856]">
                   {CAN_USE_ADVANCED_RUNTIME
                     ? copy.config.runModeDescription
                     : copy.config.pagesModeDescription}
                 </p>
               </div>
-              <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              <div
+                className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-2"}`}
+              >
                 <button
-                  onClick={() => void handleRuntimeModeChange('frontend')}
+                  onClick={() => void handleRuntimeModeChange("frontend")}
                   className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
                     isFrontendMode
-                      ? 'bg-[#5E8B72] text-white'
-                      : 'studio-surface text-[#6B5A4A] hover:bg-white/65'
+                      ? "bg-[#5E8B72] text-white"
+                      : "studio-surface text-[#6B5A4A] hover:bg-white/65"
                   }`}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -321,11 +353,11 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
                 </button>
                 {CAN_USE_ADVANCED_RUNTIME ? (
                   <button
-                    onClick={() => void handleRuntimeModeChange('advanced')}
+                    onClick={() => void handleRuntimeModeChange("advanced")}
                     className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-colors ${
                       isFrontendMode
-                        ? 'studio-surface text-[#6B5A4A] hover:bg-white/65'
-                        : 'bg-[#C98257] text-white'
+                        ? "studio-surface text-[#6B5A4A] hover:bg-white/65"
+                        : "bg-[#C98257] text-white"
                     }`}
                   >
                     <Server className="h-3.5 w-3.5" />
@@ -338,18 +370,22 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
 
           <div className="grid grid-cols-2 gap-2 rounded-2xl studio-surface p-1.5">
             <button
-              onClick={() => handleAISourceChange('server_proxy')}
+              onClick={() => handleAISourceChange("server_proxy")}
               className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                !isBrowserMode ? 'bg-[#5E8B72] text-white shadow-sm' : 'text-[#7D6856] hover:bg-white/45'
+                !isBrowserMode
+                  ? "bg-[#5E8B72] text-white shadow-sm"
+                  : "text-[#7D6856] hover:bg-white/45"
               }`}
             >
               <Server className="h-3.5 w-3.5" />
               {copy.common.serverProxy}
             </button>
             <button
-              onClick={() => handleAISourceChange('browser_direct')}
+              onClick={() => handleAISourceChange("browser_direct")}
               className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                isBrowserMode ? 'bg-[#C98257] text-white shadow-sm' : 'text-[#7D6856] hover:bg-white/45'
+                isBrowserMode
+                  ? "bg-[#C98257] text-white shadow-sm"
+                  : "text-[#7D6856] hover:bg-white/45"
               }`}
             >
               <Globe className="h-3.5 w-3.5" />
@@ -364,7 +400,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               ) : (
                 <Server className="h-3.5 w-3.5 text-[#5E8B72]" />
               )}
-              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sections.currentSource}</span>
+              <span className="text-xs font-bold text-[#3A2A1A]">
+                {copy.config.sections.currentSource}
+              </span>
             </div>
             <p className="text-sm font-semibold text-[#5E8B72]">
               {getSourceLabel(isFrontendMode, isBrowserMode, copy)}
@@ -384,7 +422,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
             <div className="rounded-xl border border-[#C98257]/20 bg-[#C98257]/10 px-3.5 py-3">
               <div className="flex items-center gap-2 text-[#B86F45]">
                 <ShieldAlert className="h-4 w-4" />
-                <span className="text-xs font-bold">{copy.config.browserDirectNoticeTitle}</span>
+                <span className="text-xs font-bold">
+                  {copy.config.browserDirectNoticeTitle}
+                </span>
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-[#8B7355]">
                 {copy.config.browserDirectNotice}
@@ -395,17 +435,29 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
           <div className="rounded-xl studio-surface p-3.5">
             <div className="mb-1.5 flex items-center gap-2">
               <Database className="h-3.5 w-3.5 text-[#5E8B72]" />
-              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sections.browserRuntime}</span>
+              <span className="text-xs font-bold text-[#3A2A1A]">
+                {copy.config.sections.browserRuntime}
+              </span>
             </div>
-            <p className="text-[10px] text-[#7D6856]">{copy.config.browserRuntimeDescription}</p>
+            <p className="text-[10px] text-[#7D6856]">
+              {copy.config.browserRuntimeDescription}
+            </p>
             <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] text-[#7D6856]">
               <div className="rounded-lg studio-surface px-2.5 py-2">
-                <p className="font-semibold text-[#5E8B72]">{copy.config.lastSync}</p>
-                <p className="mt-0.5">{formatRuntimeTime(runtimeMeta?.lastSyncedAt)}</p>
+                <p className="font-semibold text-[#5E8B72]">
+                  {copy.config.lastSync}
+                </p>
+                <p className="mt-0.5">
+                  {formatRuntimeTime(runtimeMeta?.lastSyncedAt)}
+                </p>
               </div>
               <div className="rounded-lg studio-surface px-2.5 py-2">
-                <p className="font-semibold text-[#5E8B72]">{copy.config.lastImport}</p>
-                <p className="mt-0.5">{formatRuntimeTime(runtimeMeta?.importedAt)}</p>
+                <p className="font-semibold text-[#5E8B72]">
+                  {copy.config.lastImport}
+                </p>
+                <p className="mt-0.5">
+                  {formatRuntimeTime(runtimeMeta?.importedAt)}
+                </p>
               </div>
             </div>
             <div className="mt-3 grid grid-cols-1 gap-2">
@@ -415,8 +467,12 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
                   disabled={isRuntimeSyncing}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#5E8B72] to-[#87AFC7] px-3 py-2.5 text-xs font-bold text-white transition-all hover:shadow-[0_0_20px_rgba(94,139,114,0.25)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 ${isRuntimeSyncing ? 'animate-spin' : ''}`} />
-                  {isRuntimeSyncing ? copy.config.syncingRuntime : copy.config.syncRuntime}
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${isRuntimeSyncing ? "animate-spin" : ""}`}
+                  />
+                  {isRuntimeSyncing
+                    ? copy.config.syncingRuntime
+                    : copy.config.syncRuntime}
                 </button>
               ) : null}
               <div className="grid grid-cols-2 gap-2">
@@ -426,7 +482,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
                   className="flex items-center justify-center gap-2 rounded-xl studio-surface px-3 py-2.5 text-xs font-semibold text-[#6B5A4A] transition-colors hover:bg-white/65 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  {isRuntimeExporting ? copy.config.exportingJson : copy.config.exportJson}
+                  {isRuntimeExporting
+                    ? copy.config.exportingJson
+                    : copy.config.exportJson}
                 </button>
                 <button
                   onClick={() => importInputRef.current?.click()}
@@ -434,7 +492,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
                   className="flex items-center justify-center gap-2 rounded-xl studio-surface px-3 py-2.5 text-xs font-semibold text-[#6B5A4A] transition-colors hover:bg-white/65 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Upload className="h-3.5 w-3.5" />
-                  {isRuntimeImporting ? copy.config.importingJson : copy.config.importJson}
+                  {isRuntimeImporting
+                    ? copy.config.importingJson
+                    : copy.config.importJson}
                 </button>
               </div>
             </div>
@@ -450,9 +510,13 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
           <div className="rounded-xl studio-surface p-3.5">
             <div className="mb-1.5 flex items-center gap-2">
               <Database className="h-3.5 w-3.5 text-[#87AFC7]" />
-              <span className="text-xs font-bold text-[#3A2A1A]">{copy.config.sessionSnapshotTitle}</span>
+              <span className="text-xs font-bold text-[#3A2A1A]">
+                {copy.config.sessionSnapshotTitle}
+              </span>
             </div>
-            <p className="text-[10px] text-[#7D6856]">{copy.config.sessionSnapshotDescription}</p>
+            <p className="text-[10px] text-[#7D6856]">
+              {copy.config.sessionSnapshotDescription}
+            </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <button
                 onClick={() => void handleExportSession()}
@@ -460,7 +524,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
                 className="flex items-center justify-center gap-2 rounded-xl studio-surface px-3 py-2.5 text-xs font-semibold text-[#6B5A4A] transition-colors hover:bg-white/65 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Download className="h-3.5 w-3.5" />
-                {isSessionExporting ? copy.config.exportingSession : copy.config.exportSession}
+                {isSessionExporting
+                  ? copy.config.exportingSession
+                  : copy.config.exportSession}
               </button>
               <button
                 onClick={() => sessionImportRef.current?.click()}
@@ -468,7 +534,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
                 className="flex items-center justify-center gap-2 rounded-xl studio-surface px-3 py-2.5 text-xs font-semibold text-[#6B5A4A] transition-colors hover:bg-white/65 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Upload className="h-3.5 w-3.5" />
-                {isSessionImporting ? copy.config.importingSession : copy.config.importSession}
+                {isSessionImporting
+                  ? copy.config.importingSession
+                  : copy.config.importSession}
               </button>
             </div>
             <input
@@ -487,11 +555,11 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
             </label>
             <div className="relative">
               <input
-                type={showKey ? 'text' : 'password'}
+                type={showKey ? "text" : "password"}
                 value={aiConfig.apiKey}
                 readOnly={!isBrowserMode}
                 onChange={event => updateField({ apiKey: event.target.value })}
-                placeholder={isBrowserMode ? 'sk-...' : ''}
+                placeholder={isBrowserMode ? "sk-..." : ""}
                 className={`${inputClass} pr-10 font-mono text-xs`}
               />
               <button
@@ -518,7 +586,7 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               value={aiConfig.baseUrl}
               readOnly={!isBrowserMode}
               onChange={event => updateField({ baseUrl: event.target.value })}
-              placeholder={isBrowserMode ? 'https://api.openai.com/v1' : ''}
+              placeholder={isBrowserMode ? "https://api.openai.com/v1" : ""}
               className={`${inputClass} font-mono text-xs`}
             />
           </div>
@@ -532,11 +600,15 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               <input
                 type="text"
                 value={aiConfig.proxyUrl}
-                onChange={event => updateField({ proxyUrl: event.target.value })}
+                onChange={event =>
+                  updateField({ proxyUrl: event.target.value })
+                }
                 placeholder="http://localhost:8787/v1"
                 className={`${inputClass} font-mono text-xs`}
               />
-              <p className="mt-1 text-[10px] text-[#8B7355]">{copy.config.proxyHelp}</p>
+              <p className="mt-1 text-[10px] text-[#8B7355]">
+                {copy.config.proxyHelp}
+              </p>
             </div>
           ) : null}
 
@@ -562,7 +634,11 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
             <select
               value={aiConfig.wireApi}
               disabled={!isBrowserMode}
-              onChange={event => updateField({ wireApi: event.target.value as AIConfig['wireApi'] })}
+              onChange={event =>
+                updateField({
+                  wireApi: event.target.value as AIConfig["wireApi"],
+                })
+              }
               className={inputClass}
             >
               <option value="chat_completions">chat_completions</option>
@@ -579,7 +655,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               type="text"
               value={aiConfig.modelReasoningEffort}
               readOnly={!isBrowserMode}
-              onChange={event => updateField({ modelReasoningEffort: event.target.value })}
+              onChange={event =>
+                updateField({ modelReasoningEffort: event.target.value })
+              }
               className={inputClass}
             />
           </div>
@@ -593,7 +671,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               type="number"
               value={aiConfig.timeoutMs}
               readOnly={!isBrowserMode}
-              onChange={event => updateField({ timeoutMs: Number(event.target.value) || 600000 })}
+              onChange={event =>
+                updateField({ timeoutMs: Number(event.target.value) || 600000 })
+              }
               className={`${inputClass} font-mono`}
             />
           </div>
@@ -607,7 +687,11 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               type="number"
               value={aiConfig.maxContext}
               readOnly={!isBrowserMode}
-              onChange={event => updateField({ maxContext: Number(event.target.value) || 1000000 })}
+              onChange={event =>
+                updateField({
+                  maxContext: Number(event.target.value) || 1000000,
+                })
+              }
               className={`${inputClass} font-mono`}
             />
           </div>
@@ -617,7 +701,12 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               <Tag className="h-3.5 w-3.5 text-[#5E8B72]" />
               {copy.config.sections.providerName}
             </label>
-            <input type="text" value={aiConfig.providerName} readOnly className={inputClass} />
+            <input
+              type="text"
+              value={aiConfig.providerName}
+              readOnly
+              className={inputClass}
+            />
           </div>
 
           {!isBrowserMode ? (
@@ -625,7 +714,9 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
               <div className="flex items-center gap-2 text-[#B86F45]">
                 <AlertTriangle className="h-4 w-4" />
                 <span className="text-xs font-bold">
-                  {isFrontendMode ? copy.config.previewOnlyTitle : copy.config.serverOwnedTitle}
+                  {isFrontendMode
+                    ? copy.config.previewOnlyTitle
+                    : copy.config.serverOwnedTitle}
                 </span>
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-[#8B7355]">
@@ -638,28 +729,39 @@ export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
             <div className="rounded-xl border border-[#C98257]/20 bg-[#C98257]/10 px-3.5 py-3">
               <div className="flex items-center gap-2 text-[#B86F45]">
                 <AlertTriangle className="h-4 w-4" />
-                <span className="text-xs font-bold">{copy.config.browserScopeTitle}</span>
+                <span className="text-xs font-bold">
+                  {copy.config.browserScopeTitle}
+                </span>
               </div>
               <p className="mt-1 text-[11px] leading-relaxed text-[#8B7355]">
                 {copy.config.browserScopeDescription}
               </p>
               <p className="mt-2 text-[10px] text-[#7D6856]">
-                {copy.config.serverDefault}: {serverAIConfig.model} / {serverAIConfig.providerName}
+                {copy.config.serverDefault}: {serverAIConfig.model} /{" "}
+                {serverAIConfig.providerName}
               </p>
             </div>
           )}
         </div>
       </div>
 
-      <div className={`border-t border-[rgba(151,120,90,0.14)] px-4 py-4 sm:px-5 ${isMobile ? 'pb-[calc(env(safe-area-inset-bottom)+16px)]' : ''}`}>
-        <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-[1fr_auto]'}`}>
+      <div
+        className={`border-t border-[rgba(151,120,90,0.14)] px-4 py-4 sm:px-5 ${isMobile ? "pb-[calc(env(safe-area-inset-bottom)+16px)]" : ""}`}
+      >
+        <div
+          className={`grid gap-2 ${isMobile ? "grid-cols-1" : "grid-cols-[1fr_auto]"}`}
+        >
           <button
             onClick={() => void handleRefresh()}
             disabled={isAIConfigLoading}
             className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#5E8B72] to-[#87AFC7] px-4 py-3 text-sm font-bold text-white shadow-md transition-all duration-200 hover:shadow-[0_0_20px_rgba(94,139,114,0.25)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <RefreshCw className={`h-4 w-4 ${isAIConfigLoading ? 'animate-spin' : ''}`} />
-            {isAIConfigLoading ? copy.config.buttons.reloading : copy.config.buttons.reload}
+            <RefreshCw
+              className={`h-4 w-4 ${isAIConfigLoading ? "animate-spin" : ""}`}
+            />
+            {isAIConfigLoading
+              ? copy.config.buttons.reloading
+              : copy.config.buttons.reload}
           </button>
 
           {isBrowserMode ? (

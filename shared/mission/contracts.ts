@@ -28,8 +28,7 @@ export const MISSION_OPERATOR_STATES = [
   "terminating",
 ] as const;
 
-export type MissionOperatorState =
-  (typeof MISSION_OPERATOR_STATES)[number];
+export type MissionOperatorState = (typeof MISSION_OPERATOR_STATES)[number];
 
 export const MISSION_OPERATOR_ACTION_TYPES = [
   "pause",
@@ -71,12 +70,12 @@ export type MissionEventLevel = (typeof MISSION_EVENT_LEVELS)[number];
 /* ─── Decision Type System ─── */
 
 export const DECISION_TYPES = [
-  'approve',
-  'reject',
-  'request-info',
-  'escalate',
-  'custom-action',
-  'multi-choice',
+  "approve",
+  "reject",
+  "request-info",
+  "escalate",
+  "custom-action",
+  "multi-choice",
 ] as const;
 
 export type DecisionType = (typeof DECISION_TYPES)[number];
@@ -105,7 +104,7 @@ export interface MissionDecisionOption {
   label: string;
   description?: string;
   action?: DecisionType;
-  severity?: 'info' | 'warn' | 'danger';
+  severity?: "info" | "warn" | "danger";
   requiresComment?: boolean;
 }
 
@@ -209,7 +208,7 @@ export interface MissionWorkPackage {
   assignee?: string;
   description?: string;
   stageKey?: string;
-  status: 'pending' | 'running' | 'passed' | 'failed' | 'verified';
+  status: "pending" | "running" | "passed" | "failed" | "verified";
   score?: number;
   deliverable?: string;
   feedback?: string;
@@ -331,8 +330,7 @@ export const MISSION_PLANET_EDGE_TYPES = [
   "supersedes",
 ] as const;
 
-export type MissionPlanetEdgeType =
-  (typeof MISSION_PLANET_EDGE_TYPES)[number];
+export type MissionPlanetEdgeType = (typeof MISSION_PLANET_EDGE_TYPES)[number];
 
 export interface MissionPlanetEdge {
   fromPlanetId: string;

@@ -83,6 +83,7 @@ graph LR
 ```
 
 Nginx 配置要点：
+
 - `location /` → 静态文件，try_files $uri $uri/ /index.html（SPA fallback）
 - `location /api/` → proxy_pass http://backend:3001
 - `location /socket.io/` → proxy_pass http://backend:3001（WebSocket upgrade）
@@ -192,16 +193,17 @@ networks:
 
 ```typescript
 // 初始化 Prometheus 指标收集
-function initMetrics(app: Express): void
+function initMetrics(app: Express): void;
 
 // 中间件：记录 HTTP 请求指标
-function metricsMiddleware(): RequestHandler
+function metricsMiddleware(): RequestHandler;
 
 // GET /metrics 路由处理
-function metricsHandler(req: Request, res: Response): void
+function metricsHandler(req: Request, res: Response): void;
 ```
 
 指标定义：
+
 - `http_requests_total` — Counter，标签：method, path, status_code
 - `http_request_duration_seconds` — Histogram，标签：method, path
 - `socketio_connections_active` — Gauge
@@ -215,27 +217,27 @@ function metricsHandler(req: Request, res: Response): void
 
 ```typescript
 interface LogEntry {
-  timestamp: string;   // ISO 8601
-  level: 'info' | 'warn' | 'error';
+  timestamp: string; // ISO 8601
+  level: "info" | "warn" | "error";
   message: string;
   service: string;
-  method?: string;     // HTTP method
-  path?: string;       // HTTP path
+  method?: string; // HTTP method
+  path?: string; // HTTP path
   statusCode?: number; // HTTP status code
   durationMs?: number; // 请求耗时
 }
 
 // 创建日志记录器
-function createLogger(service: string): Logger
+function createLogger(service: string): Logger;
 
 interface Logger {
-  info(message: string, meta?: Record<string, unknown>): void
-  warn(message: string, meta?: Record<string, unknown>): void
-  error(message: string, meta?: Record<string, unknown>): void
+  info(message: string, meta?: Record<string, unknown>): void;
+  warn(message: string, meta?: Record<string, unknown>): void;
+  error(message: string, meta?: Record<string, unknown>): void;
 }
 
 // Express 请求日志中间件
-function requestLogMiddleware(logger: Logger): RequestHandler
+function requestLogMiddleware(logger: Logger): RequestHandler;
 ```
 
 实现策略：直接输出 JSON 到 stdout（`console.log(JSON.stringify(entry))`），不引入额外日志框架，保持轻量。
@@ -245,14 +247,15 @@ function requestLogMiddleware(logger: Logger): RequestHandler
 ```typescript
 interface GracefulShutdownOptions {
   server: HttpServer;
-  timeoutMs?: number;  // 默认 30000
-  onShutdown?: () => Promise<void>;  // 清理回调
+  timeoutMs?: number; // 默认 30000
+  onShutdown?: () => Promise<void>; // 清理回调
 }
 
-function setupGracefulShutdown(options: GracefulShutdownOptions): void
+function setupGracefulShutdown(options: GracefulShutdownOptions): void;
 ```
 
 行为：
+
 1. 监听 SIGTERM 和 SIGINT 信号
 2. 调用 `server.close()` 停止接受新连接
 3. 等待现有连接完成或超时
@@ -267,20 +270,21 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'cube-backend'
+  - job_name: "cube-backend"
     static_configs:
-      - targets: ['backend:3001']
+      - targets: ["backend:3001"]
     metrics_path: /metrics
 
-  - job_name: 'cube-lobster'
+  - job_name: "cube-lobster"
     static_configs:
-      - targets: ['lobster-executor:3031']
+      - targets: ["lobster-executor:3031"]
     metrics_path: /metrics
 ```
 
 ### 9. Grafana 预配置
 
 目录结构：
+
 ```
 deploy/grafana/
 ├── provisioning/
@@ -293,6 +297,7 @@ deploy/grafana/
 ```
 
 仪表盘面板：
+
 - HTTP 请求速率（rate of http_requests_total）
 - 请求延迟分位数（histogram_quantile p50/p95/p99）
 - 活跃 Socket.IO 连接数
@@ -371,26 +376,26 @@ server {
 
 ### Prometheus 指标模型
 
-| 指标名 | 类型 | 标签 | 说明 |
-|--------|------|------|------|
-| `http_requests_total` | Counter | method, path, status_code | HTTP 请求总数 |
-| `http_request_duration_seconds` | Histogram | method, path | 请求延迟分布 |
-| `socketio_connections_active` | Gauge | — | 当前活跃 WebSocket 连接数 |
-| `nodejs_memory_usage_bytes` | Gauge | type | Node.js 内存使用（rss/heapTotal/heapUsed/external） |
+| 指标名                          | 类型      | 标签                      | 说明                                                |
+| ------------------------------- | --------- | ------------------------- | --------------------------------------------------- |
+| `http_requests_total`           | Counter   | method, path, status_code | HTTP 请求总数                                       |
+| `http_request_duration_seconds` | Histogram | method, path              | 请求延迟分布                                        |
+| `socketio_connections_active`   | Gauge     | —                         | 当前活跃 WebSocket 连接数                           |
+| `nodejs_memory_usage_bytes`     | Gauge     | type                      | Node.js 内存使用（rss/heapTotal/heapUsed/external） |
 
 ### 日志条目模型
 
 ```typescript
 interface LogEntry {
-  timestamp: string;        // ISO 8601 格式
-  level: 'info' | 'warn' | 'error';
+  timestamp: string; // ISO 8601 格式
+  level: "info" | "warn" | "error";
   message: string;
-  service: string;          // 服务标识（backend / lobster-executor）
-  method?: string;          // HTTP 方法
-  path?: string;            // 请求路径
-  statusCode?: number;      // 响应状态码
-  durationMs?: number;      // 请求处理耗时（毫秒）
-  [key: string]: unknown;   // 扩展字段
+  service: string; // 服务标识（backend / lobster-executor）
+  method?: string; // HTTP 方法
+  path?: string; // 请求路径
+  statusCode?: number; // 响应状态码
+  durationMs?: number; // 请求处理耗时（毫秒）
+  [key: string]: unknown; // 扩展字段
 }
 ```
 
@@ -400,7 +405,7 @@ interface LogEntry {
 interface EnvironmentConfig {
   // 基础运行
   PORT: number;
-  NODE_ENV: 'development' | 'staging' | 'production';
+  NODE_ENV: "development" | "staging" | "production";
 
   // 主 LLM
   LLM_API_KEY: string;
@@ -420,7 +425,7 @@ interface EnvironmentConfig {
 
 ```typescript
 interface HealthResponse {
-  status: 'ok' | 'degraded' | 'error';
+  status: "ok" | "degraded" | "error";
   timestamp: string;
   version?: string;
   uptime?: number;
@@ -434,44 +439,43 @@ interface HealthResponse {
 }
 ```
 
-
 ## 正确性属性
 
-*属性（Property）是指在系统所有有效执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_属性（Property）是指在系统所有有效执行中都应成立的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 日志格式与级别正确性
 
-*For any* 日志级别（info / warn / error）和任意非空消息字符串，Logger 输出到 stdout 的内容应为有效 JSON，且包含 `timestamp`（ISO 8601 格式）、`level`（与调用级别一致）、`message`（与输入消息一致）、`service`（非空字符串）四个字段。
+_For any_ 日志级别（info / warn / error）和任意非空消息字符串，Logger 输出到 stdout 的内容应为有效 JSON，且包含 `timestamp`（ISO 8601 格式）、`level`（与调用级别一致）、`message`（与输入消息一致）、`service`（非空字符串）四个字段。
 
 **Validates: Requirements 5.1, 5.3**
 
 ### Property 2: HTTP 请求日志完整性
 
-*For any* HTTP 请求（任意 method、path、statusCode 组合）经过请求日志中间件处理后，输出的 JSON 日志应额外包含 `method`、`path`、`statusCode` 字段，且各字段值与实际请求/响应一致。
+_For any_ HTTP 请求（任意 method、path、statusCode 组合）经过请求日志中间件处理后，输出的 JSON 日志应额外包含 `method`、`path`、`statusCode` 字段，且各字段值与实际请求/响应一致。
 
 **Validates: Requirements 5.4**
 
 ### Property 3: 环境配置完整性
 
-*For any* 环境配置文件（.env.dev / .env.staging / .env.prod），文件中应包含所有必需环境变量键（PORT、NODE_ENV、LLM_API_KEY、LLM_BASE_URL、LLM_MODEL、EXECUTOR_CALLBACK_SECRET、LOBSTER_EXECUTOR_BASE_URL），且不存在遗漏。
+_For any_ 环境配置文件（.env.dev / .env.staging / .env.prod），文件中应包含所有必需环境变量键（PORT、NODE_ENV、LLM_API_KEY、LLM_BASE_URL、LLM_MODEL、EXECUTOR_CALLBACK_SECRET、LOBSTER_EXECUTOR_BASE_URL），且不存在遗漏。
 
 **Validates: Requirements 3.3**
 
 ### Property 4: 环境变量缺失检测
 
-*For any* 必需环境变量的非空真子集缺失，环境变量验证函数应返回包含所有缺失变量名的错误信息，且不会遗漏任何缺失项。
+_For any_ 必需环境变量的非空真子集缺失，环境变量验证函数应返回包含所有缺失变量名的错误信息，且不会遗漏任何缺失项。
 
 **Validates: Requirements 3.4**
 
 ### Property 5: 优雅关闭完成性
 
-*For any* 正在处理请求的 HTTP 服务器，当收到关闭信号后，服务器应停止接受新连接，并在超时时间内等待所有已接受的请求完成处理后再退出。
+_For any_ 正在处理请求的 HTTP 服务器，当收到关闭信号后，服务器应停止接受新连接，并在超时时间内等待所有已接受的请求完成处理后再退出。
 
 **Validates: Requirements 4.3**
 
 ### Property 6: Dockerfile 非 root 用户
 
-*For any* 项目中的 Dockerfile（frontend / backend / lobster），最终运行阶段应包含 USER 指令且指定的用户不是 root。
+_For any_ 项目中的 Dockerfile（frontend / backend / lobster），最终运行阶段应包含 USER 指令且指定的用户不是 root。
 
 **Validates: Requirements 1.4**
 
@@ -479,29 +483,29 @@ interface HealthResponse {
 
 ### 启动阶段
 
-| 错误场景 | 处理方式 |
-|---------|---------|
-| 必需环境变量缺失 | 输出缺失变量列表到 stderr，以退出码 1 终止 |
-| 端口被占用 | 输出端口冲突错误，以退出码 1 终止 |
-| Docker 网络创建失败 | Docker Compose 自动报错，用户需检查 Docker 守护进程状态 |
-| 镜像构建失败 | Docker Compose 输出构建错误，用户需检查 Dockerfile 和依赖 |
+| 错误场景            | 处理方式                                                  |
+| ------------------- | --------------------------------------------------------- |
+| 必需环境变量缺失    | 输出缺失变量列表到 stderr，以退出码 1 终止                |
+| 端口被占用          | 输出端口冲突错误，以退出码 1 终止                         |
+| Docker 网络创建失败 | Docker Compose 自动报错，用户需检查 Docker 守护进程状态   |
+| 镜像构建失败        | Docker Compose 输出构建错误，用户需检查 Dockerfile 和依赖 |
 
 ### 运行阶段
 
-| 错误场景 | 处理方式 |
-|---------|---------|
-| 后端服务崩溃 | Docker restart policy（unless-stopped）自动重启，Health_Check 检测恢复 |
-| Prometheus 抓取失败 | Prometheus 记录 scrape error，不影响应用服务运行 |
-| Grafana 数据源不可达 | Grafana 仪表盘显示 "No Data"，不影响应用服务运行 |
-| 磁盘空间不足 | 日志轮转（max-size: 10m, max-file: 3）限制日志占用，数据卷需运维监控 |
+| 错误场景             | 处理方式                                                               |
+| -------------------- | ---------------------------------------------------------------------- |
+| 后端服务崩溃         | Docker restart policy（unless-stopped）自动重启，Health_Check 检测恢复 |
+| Prometheus 抓取失败  | Prometheus 记录 scrape error，不影响应用服务运行                       |
+| Grafana 数据源不可达 | Grafana 仪表盘显示 "No Data"，不影响应用服务运行                       |
+| 磁盘空间不足         | 日志轮转（max-size: 10m, max-file: 3）限制日志占用，数据卷需运维监控   |
 
 ### 更新阶段
 
-| 错误场景 | 处理方式 |
-|---------|---------|
-| 新镜像构建失败 | deploy-prod.sh 脚本中止，旧服务继续运行不受影响 |
-| 新容器健康检查失败 | 脚本等待超时后报错，旧容器保持运行 |
-| 回滚需求 | 使用上一次构建的镜像 tag 重新部署 |
+| 错误场景           | 处理方式                                        |
+| ------------------ | ----------------------------------------------- |
+| 新镜像构建失败     | deploy-prod.sh 脚本中止，旧服务继续运行不受影响 |
+| 新容器健康检查失败 | 脚本等待超时后报错，旧容器保持运行              |
+| 回滚需求           | 使用上一次构建的镜像 tag 重新部署               |
 
 ## 测试策略
 
@@ -509,34 +513,36 @@ interface HealthResponse {
 
 使用 `fast-check` 库（TypeScript 属性测试标准库），每个属性测试运行至少 100 次迭代。
 
-| 属性 | 测试目标 | 验证需求 |
-|------|---------|---------|
-| Property 1: 日志格式与级别正确性 | Logger 模块 | 5.1, 5.3 |
-| Property 2: HTTP 请求日志完整性 | 请求日志中间件 | 5.4 |
-| Property 3: 环境配置完整性 | .env 文件解析 | 3.3 |
-| Property 4: 环境变量缺失检测 | 验证函数 | 3.4 |
-| Property 5: 优雅关闭完成性 | 关闭模块 | 4.3 |
-| Property 6: Dockerfile 非 root 用户 | Dockerfile 静态分析 | 1.4 |
+| 属性                                | 测试目标            | 验证需求 |
+| ----------------------------------- | ------------------- | -------- |
+| Property 1: 日志格式与级别正确性    | Logger 模块         | 5.1, 5.3 |
+| Property 2: HTTP 请求日志完整性     | 请求日志中间件      | 5.4      |
+| Property 3: 环境配置完整性          | .env 文件解析       | 3.3      |
+| Property 4: 环境变量缺失检测        | 验证函数            | 3.4      |
+| Property 5: 优雅关闭完成性          | 关闭模块            | 4.3      |
+| Property 6: Dockerfile 非 root 用户 | Dockerfile 静态分析 | 1.4      |
 
 每个属性测试必须标注注释：
+
 ```
 // Feature: production-deployment, Property N: <property_text>
 ```
 
 ### 单元测试
 
-| 测试目标 | 验证内容 |
-|---------|---------|
-| /api/health 端点 | 返回正确的 JSON 结构和状态码 |
-| /metrics 端点 | 返回 Prometheus 文本格式，包含必需指标 |
-| prometheus.yml 配置 | YAML 语法正确，包含所有抓取目标 |
-| Grafana 仪表盘 JSON | JSON 语法正确，包含必需面板 |
-| docker-compose.yml | 服务定义完整，卷和网络配置正确 |
-| .dockerignore | 包含所有必需排除项 |
+| 测试目标            | 验证内容                               |
+| ------------------- | -------------------------------------- |
+| /api/health 端点    | 返回正确的 JSON 结构和状态码           |
+| /metrics 端点       | 返回 Prometheus 文本格式，包含必需指标 |
+| prometheus.yml 配置 | YAML 语法正确，包含所有抓取目标        |
+| Grafana 仪表盘 JSON | JSON 语法正确，包含必需面板            |
+| docker-compose.yml  | 服务定义完整，卷和网络配置正确         |
+| .dockerignore       | 包含所有必需排除项                     |
 
 ### Smoke 测试
 
 部署完成后执行的端到端验证：
+
 1. `curl http://localhost/api/health` — 验证后端健康
 2. `curl http://localhost/` — 验证前端页面可访问
 3. `curl http://localhost/metrics` — 验证指标端点可用

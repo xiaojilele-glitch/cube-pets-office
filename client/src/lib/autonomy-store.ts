@@ -43,20 +43,20 @@ export const useAutonomyStore = create<AutonomyState>((set, get) => ({
   taskforces: [],
 
   addAssessment: (result: AssessmentResult) => {
-    set((s) => ({ assessments: [...s.assessments, result] }));
+    set(s => ({ assessments: [...s.assessments, result] }));
   },
 
   updateCompetition: (session: CompetitionSession) => {
-    set((s) => {
-      const existing = s.competitions.filter((c) => c.id !== session.id);
+    set(s => {
+      const existing = s.competitions.filter(c => c.id !== session.id);
       return { competitions: [...existing, session] };
     });
   },
 
   updateTaskforce: (session: TaskforceSession) => {
-    set((s) => {
+    set(s => {
       const existing = s.taskforces.filter(
-        (t) => t.taskforceId !== session.taskforceId
+        t => t.taskforceId !== session.taskforceId
       );
       return { taskforces: [...existing, session] };
     });

@@ -59,7 +59,9 @@ function hmacSign(data: string, secret: string): string {
     .replace(/\//g, "_");
 }
 
-const JWT_HEADER = base64urlEncode(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+const JWT_HEADER = base64urlEncode(
+  JSON.stringify({ alg: "HS256", typ: "JWT" })
+);
 
 function signJwt(payload: CapabilityTokenPayload, secret: string): string {
   const encodedPayload = base64urlEncode(JSON.stringify(payload));
@@ -92,7 +94,7 @@ function verifyJwt(token: string, secret: string): CapabilityTokenPayload {
   const nowSec = Math.floor(Date.now() / 1000);
   if (decoded.exp <= nowSec) {
     throw new TokenExpiredError(
-      `Token expired at ${new Date(decoded.exp * 1000).toISOString()}`,
+      `Token expired at ${new Date(decoded.exp * 1000).toISOString()}`
     );
   }
 
@@ -104,9 +106,10 @@ function verifyJwt(token: string, secret: string): CapabilityTokenPayload {
 const DEFAULT_TTL_MS = 7_200_000; // 2 hours
 
 function getDefaultTtlMs(): number {
-  const envVal = typeof process !== "undefined"
-    ? process.env.PERMISSION_TOKEN_DEFAULT_TTL_MS
-    : undefined;
+  const envVal =
+    typeof process !== "undefined"
+      ? process.env.PERMISSION_TOKEN_DEFAULT_TTL_MS
+      : undefined;
   if (envVal) {
     const parsed = Number(envVal);
     if (!Number.isNaN(parsed) && parsed > 0) return parsed;
@@ -116,9 +119,10 @@ function getDefaultTtlMs(): number {
 
 function getSecret(provided?: string): string {
   if (provided) return provided;
-  const envVal = typeof process !== "undefined"
-    ? process.env.PERMISSION_TOKEN_SECRET
-    : undefined;
+  const envVal =
+    typeof process !== "undefined"
+      ? process.env.PERMISSION_TOKEN_SECRET
+      : undefined;
   if (envVal) return envVal;
   // Dev fallback: random secret (not suitable for production)
   return randomBytes(32).toString("hex");
@@ -132,7 +136,7 @@ export class TokenService {
   constructor(
     private policyStore: PolicyStore,
     private roleStore: RoleStore,
-    secret?: string,
+    secret?: string
   ) {
     this.secret = getSecret(secret);
   }
@@ -200,7 +204,10 @@ export class TokenService {
           existing.actions.push(perm.action);
         }
         // Merge constraints (shallow merge — arrays are concatenated, scalars overwritten)
-        mergeConstraints(existing.constraints as Record<string, any>, perm.constraints as Record<string, any>);
+        mergeConstraints(
+          existing.constraints as Record<string, any>,
+          perm.constraints as Record<string, any>
+        );
       } else {
         groupMap.set(key, {
           resourceType: perm.resourceType,
@@ -219,7 +226,7 @@ export class TokenService {
 
 function mergeConstraints(
   target: Record<string, any>,
-  source: Record<string, any>,
+  source: Record<string, any>
 ): void {
   for (const [key, value] of Object.entries(source)) {
     if (value === undefined) continue;

@@ -9,7 +9,7 @@
  * @see Requirements: All
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 import type {
   AdjustmentChange,
@@ -28,24 +28,24 @@ import type {
   PlanApprovalRequest,
   StrategicCommand,
   TaskDecomposition,
-} from '../../../shared/nl-command/contracts.js';
-import type { DashboardResponse } from '../../../shared/nl-command/api.js';
+} from "../../../shared/nl-command/contracts.js";
+import type { DashboardResponse } from "../../../shared/nl-command/api.js";
 
-import type { CommandAnalyzer } from './command-analyzer.js';
-import type { ClarificationDialogManager } from './clarification-dialog.js';
-import type { MissionDecomposer } from './mission-decomposer.js';
-import type { TaskDecomposer } from './task-decomposer.js';
-import type { ExecutionPlanGenerator } from './execution-plan-generator.js';
-import type { PlanApproval } from './plan-approval.js';
-import type { PlanAdjustmentManager } from './plan-adjustment.js';
-import type { AlertEngine } from './alert-engine.js';
-import type { DecisionSupportEngine } from './decision-support.js';
-import type { CommentManager } from './comment-manager.js';
-import type { ReportGenerator } from './report-generator.js';
-import type { TemplateManager } from './template-manager.js';
-import type { AuditTrail } from './audit-trail.js';
-import type { PermissionGuard } from './permission-guard.js';
-import type { NLCommandSocketEmitter } from './socket-emitter.js';
+import type { CommandAnalyzer } from "./command-analyzer.js";
+import type { ClarificationDialogManager } from "./clarification-dialog.js";
+import type { MissionDecomposer } from "./mission-decomposer.js";
+import type { TaskDecomposer } from "./task-decomposer.js";
+import type { ExecutionPlanGenerator } from "./execution-plan-generator.js";
+import type { PlanApproval } from "./plan-approval.js";
+import type { PlanAdjustmentManager } from "./plan-adjustment.js";
+import type { AlertEngine } from "./alert-engine.js";
+import type { DecisionSupportEngine } from "./decision-support.js";
+import type { CommentManager } from "./comment-manager.js";
+import type { ReportGenerator } from "./report-generator.js";
+import type { TemplateManager } from "./template-manager.js";
+import type { AuditTrail } from "./audit-trail.js";
+import type { PermissionGuard } from "./permission-guard.js";
+import type { NLCommandSocketEmitter } from "./socket-emitter.js";
 
 // ─── Options ───
 
@@ -140,36 +140,40 @@ export class NLCommandOrchestrator {
     priority?: CommandPriority,
     constraints?: CommandConstraint[],
     objectives?: string[],
-    timeframe?: CommandTimeframe,
-  ): Promise<{ command: StrategicCommand; analysis: CommandAnalysis; needsClarification: boolean }> {
+    timeframe?: CommandTimeframe
+  ): Promise<{
+    command: StrategicCommand;
+    analysis: CommandAnalysis;
+    needsClarification: boolean;
+  }> {
     // Create command in draft state
     const command: StrategicCommand = {
       commandId: randomUUID(),
       commandText: text,
       userId,
       timestamp: Date.now(),
-      status: 'draft',
+      status: "draft",
       constraints: constraints ?? [],
       objectives: objectives ?? [],
-      priority: priority ?? 'medium',
+      priority: priority ?? "medium",
       timeframe,
     };
 
     this.commands.set(command.commandId, command);
 
     // Transition: draft → analyzing
-    this.transitionStatus(command, 'analyzing');
+    this.transitionStatus(command, "analyzing");
 
     // Record audit
     await this.auditTrail.record({
       entryId: randomUUID(),
-      operationType: 'command_created',
+      operationType: "command_created",
       operator: userId,
       content: `Strategic command submitted: "${text}"`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: command.commandId,
-      entityType: 'command',
+      entityType: "command",
     });
 
     this.socketEmitter?.emitCommandCreated(command);
@@ -183,20 +187,30 @@ export class NLCommandOrchestrator {
 
     if (analysis.needsClarification) {
       // Transition: analyzing → clarifying
-      this.transitionStatus(command, 'clarifying');
+      this.transitionStatus(command, "clarifying");
 
-      const questions = await this.commandAnalyzer.generateClarificationQuestions(command, analysis);
-      const dialog = await this.clarificationDialogManager.createDialog(command.commandId, questions);
+      const questions =
+        await this.commandAnalyzer.generateClarificationQuestions(
+          command,
+          analysis
+        );
+      const dialog = await this.clarificationDialogManager.createDialog(
+        command.commandId,
+        questions
+      );
       this.dialogs.set(command.commandId, dialog);
 
-      this.socketEmitter?.emitClarificationQuestion(command.commandId, questions);
+      this.socketEmitter?.emitClarificationQuestion(
+        command.commandId,
+        questions
+      );
 
       return { command, analysis, needsClarification: true };
     }
 
     // No clarification needed → finalize directly
     // Transition: analyzing → finalized
-    this.transitionStatus(command, 'finalized');
+    this.transitionStatus(command, "finalized");
 
     const finalizedCmd = await this.commandAnalyzer.finalize(command, analysis);
     this.finalized.set(command.commandId, finalizedCmd);
@@ -211,7 +225,7 @@ export class NLCommandOrchestrator {
    */
   async submitClarification(
     commandId: string,
-    answer: ClarificationAnswer,
+    answer: ClarificationAnswer
   ): Promise<{
     dialog: ClarificationDialog;
     updatedAnalysis: CommandAnalysis;
@@ -228,23 +242,38 @@ export class NLCommandOrchestrator {
     if (!analysis) throw new Error(`No analysis for command: ${commandId}`);
 
     // Add answer to dialog
-    const updatedDialog = await this.clarificationDialogManager.addAnswer(dialog.dialogId, answer);
+    const updatedDialog = await this.clarificationDialogManager.addAnswer(
+      dialog.dialogId,
+      answer
+    );
     this.dialogs.set(commandId, updatedDialog);
 
     // Update analysis with the answer
-    const updatedAnalysis = await this.commandAnalyzer.updateAnalysis(command, analysis, answer);
+    const updatedAnalysis = await this.commandAnalyzer.updateAnalysis(
+      command,
+      analysis,
+      answer
+    );
     this.analyses.set(commandId, updatedAnalysis);
 
-    const isComplete = updatedDialog.status === 'completed';
+    const isComplete = updatedDialog.status === "completed";
 
     if (isComplete) {
       // Transition: clarifying → finalized
-      this.transitionStatus(command, 'finalized');
+      this.transitionStatus(command, "finalized");
 
-      const finalizedCmd = await this.commandAnalyzer.finalize(command, updatedAnalysis);
+      const finalizedCmd = await this.commandAnalyzer.finalize(
+        command,
+        updatedAnalysis
+      );
       this.finalized.set(commandId, finalizedCmd);
 
-      return { dialog: updatedDialog, updatedAnalysis, isComplete: true, finalized: finalizedCmd };
+      return {
+        dialog: updatedDialog,
+        updatedAnalysis,
+        isComplete: true,
+        finalized: finalizedCmd,
+      };
     }
 
     return { dialog: updatedDialog, updatedAnalysis, isComplete: false };
@@ -281,13 +310,13 @@ export class NLCommandOrchestrator {
     let result = Array.from(this.commands.values());
 
     if (filter?.status) {
-      result = result.filter((c) => c.status === filter.status);
+      result = result.filter(c => c.status === filter.status);
     }
     if (filter?.priority) {
-      result = result.filter((c) => c.priority === filter.priority);
+      result = result.filter(c => c.priority === filter.priority);
     }
     if (filter?.userId) {
-      result = result.filter((c) => c.userId === filter.userId);
+      result = result.filter(c => c.userId === filter.userId);
     }
 
     // Sort by timestamp descending (newest first)
@@ -314,7 +343,7 @@ export class NLCommandOrchestrator {
     if (!finalizedCmd) throw new Error(`Command not finalized: ${commandId}`);
 
     // Transition: finalized → decomposing
-    this.transitionStatus(command, 'decomposing');
+    this.transitionStatus(command, "decomposing");
 
     // Mission decomposition
     const decomposition = await this.missionDecomposer.decompose(finalizedCmd);
@@ -323,7 +352,10 @@ export class NLCommandOrchestrator {
     // Task decomposition for each mission
     const taskDecomps: TaskDecomposition[] = [];
     for (const mission of decomposition.missions) {
-      const taskDecomp = await this.taskDecomposer.decompose(mission, decomposition);
+      const taskDecomp = await this.taskDecomposer.decompose(
+        mission,
+        decomposition
+      );
       taskDecomps.push(taskDecomp);
     }
     this.taskDecompositions.set(commandId, taskDecomps);
@@ -331,17 +363,21 @@ export class NLCommandOrchestrator {
     this.socketEmitter?.emitDecompositionComplete(commandId, decomposition);
 
     // Transition: decomposing → planning
-    this.transitionStatus(command, 'planning');
+    this.transitionStatus(command, "planning");
 
     // Generate execution plan
-    const plan = await this.executionPlanGenerator.generate(finalizedCmd, decomposition, taskDecomps);
+    const plan = await this.executionPlanGenerator.generate(
+      finalizedCmd,
+      decomposition,
+      taskDecomps
+    );
     this.plans.set(plan.planId, plan);
     this.commandPlanMap.set(commandId, plan.planId);
 
     this.socketEmitter?.emitPlanGenerated(commandId, plan);
 
     // Transition: planning → approving
-    this.transitionStatus(command, 'approving');
+    this.transitionStatus(command, "approving");
 
     return { decomposition, taskDecompositions: taskDecomps, plan };
   }
@@ -351,7 +387,10 @@ export class NLCommandOrchestrator {
   /**
    * Create an approval request for a plan.
    */
-  async createApproval(planId: string, approvers?: string[]): Promise<PlanApprovalRequest> {
+  async createApproval(
+    planId: string,
+    approvers?: string[]
+  ): Promise<PlanApprovalRequest> {
     const plan = this.plans.get(planId);
     if (!plan) throw new Error(`Plan not found: ${planId}`);
 
@@ -366,15 +405,20 @@ export class NLCommandOrchestrator {
   async submitApproval(
     requestId: string,
     approverId: string,
-    decision: 'approved' | 'rejected' | 'revision_requested',
-    comments?: string,
+    decision: "approved" | "rejected" | "revision_requested",
+    comments?: string
   ): Promise<PlanApprovalRequest> {
-    const request = await this.planApproval.submitApproval(requestId, approverId, decision, comments);
+    const request = await this.planApproval.submitApproval(
+      requestId,
+      approverId,
+      decision,
+      comments
+    );
 
-    if (request.status === 'approved') {
+    if (request.status === "approved") {
       const plan = this.plans.get(request.planId);
       if (plan) {
-        plan.status = 'approved';
+        plan.status = "approved";
 
         // Find the command for this plan and transition to executing
         const entries = Array.from(this.commandPlanMap.entries());
@@ -382,13 +426,16 @@ export class NLCommandOrchestrator {
           if (pId === request.planId) {
             const cmd = this.commands.get(cmdId);
             if (cmd) {
-              this.transitionStatus(cmd, 'executing');
+              this.transitionStatus(cmd, "executing");
             }
             break;
           }
         }
 
-        this.socketEmitter?.emitPlanApproved(request.planId, request.approvals.map((a) => a.approverId));
+        this.socketEmitter?.emitPlanApproved(
+          request.planId,
+          request.approvals.map(a => a.approverId)
+        );
       }
     }
 
@@ -410,15 +457,15 @@ export class NLCommandOrchestrator {
   async adjustPlan(
     planId: string,
     reason: string,
-    changes: AdjustmentChange[],
+    changes: AdjustmentChange[]
   ): Promise<{ adjustment: PlanAdjustment; updatedPlan: NLExecutionPlan }> {
     const plan = this.plans.get(planId);
     if (!plan) throw new Error(`Plan not found: ${planId}`);
 
     const impact: AdjustmentImpact = {
-      timelineImpact: 'To be assessed',
-      costImpact: 'To be assessed',
-      riskImpact: 'To be assessed',
+      timelineImpact: "To be assessed",
+      costImpact: "To be assessed",
+      riskImpact: "To be assessed",
     };
 
     // Propose adjustment (no approval required for orchestrator-driven adjustments)
@@ -427,11 +474,14 @@ export class NLCommandOrchestrator {
       reason,
       changes,
       impact,
-      false, // no approval required
+      false // no approval required
     );
 
     // Apply immediately
-    const applied = await this.planAdjustmentManager.applyAdjustment(adjustment.adjustmentId, plan);
+    const applied = await this.planAdjustmentManager.applyAdjustment(
+      adjustment.adjustmentId,
+      plan
+    );
 
     this.socketEmitter?.emitPlanAdjusted(planId, applied);
 
@@ -445,8 +495,17 @@ export class NLCommandOrchestrator {
    */
   getDashboard(): DashboardResponse {
     const allCommands = Array.from(this.commands.values());
-    const activeStatuses: CommandStatus[] = ['analyzing', 'clarifying', 'decomposing', 'planning', 'approving', 'executing'];
-    const activeCommands = allCommands.filter((c) => activeStatuses.includes(c.status));
+    const activeStatuses: CommandStatus[] = [
+      "analyzing",
+      "clarifying",
+      "decomposing",
+      "planning",
+      "approving",
+      "executing",
+    ];
+    const activeCommands = allCommands.filter(c =>
+      activeStatuses.includes(c.status)
+    );
 
     let totalMissions = 0;
     let completedMissions = 0;
@@ -454,10 +513,15 @@ export class NLCommandOrchestrator {
     let completedTasks = 0;
     let totalBudget = 0;
     let totalSpent = 0;
-    let highestRisk: DashboardResponse['overallRiskLevel'] = 'low';
+    let highestRisk: DashboardResponse["overallRiskLevel"] = "low";
 
-    const riskOrder: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
-    const recentAlerts: DashboardResponse['recentAlerts'] = [];
+    const riskOrder: Record<string, number> = {
+      low: 0,
+      medium: 1,
+      high: 2,
+      critical: 3,
+    };
+    const recentAlerts: DashboardResponse["recentAlerts"] = [];
 
     const allPlans = Array.from(this.plans.values());
     for (const plan of allPlans) {
@@ -466,18 +530,23 @@ export class NLCommandOrchestrator {
       totalBudget += plan.costBudget.totalBudget;
 
       // Estimate spent from task costs
-      const taskCostValues = Object.values(plan.costBudget.taskCosts) as number[];
-      const taskCostSum = taskCostValues.reduce((s: number, c: number) => s + c, 0);
+      const taskCostValues = Object.values(
+        plan.costBudget.taskCosts
+      ) as number[];
+      const taskCostSum = taskCostValues.reduce(
+        (s: number, c: number) => s + c,
+        0
+      );
       totalSpent += taskCostSum;
 
-      if (plan.status === 'completed') {
+      if (plan.status === "completed") {
         completedMissions += plan.missions.length;
         completedTasks += plan.tasks.length;
       }
 
       const planRisk = plan.riskAssessment.overallRiskLevel;
       if (riskOrder[planRisk] > riskOrder[highestRisk]) {
-        highestRisk = planRisk as DashboardResponse['overallRiskLevel'];
+        highestRisk = planRisk as DashboardResponse["overallRiskLevel"];
       }
     }
 
@@ -496,7 +565,7 @@ export class NLCommandOrchestrator {
       costSummary: {
         totalBudget,
         totalSpent,
-        currency: 'CNY',
+        currency: "CNY",
       },
     };
   }
@@ -506,16 +575,19 @@ export class NLCommandOrchestrator {
   /**
    * Transition a command's status, enforcing valid transitions.
    */
-  private transitionStatus(command: StrategicCommand, newStatus: CommandStatus): void {
+  private transitionStatus(
+    command: StrategicCommand,
+    newStatus: CommandStatus
+  ): void {
     const validTransitions: Record<CommandStatus, CommandStatus[]> = {
-      draft: ['analyzing'],
-      analyzing: ['clarifying', 'finalized'],
-      clarifying: ['finalized'],
-      finalized: ['decomposing'],
-      decomposing: ['planning'],
-      planning: ['approving'],
-      approving: ['executing'],
-      executing: ['completed', 'failed'],
+      draft: ["analyzing"],
+      analyzing: ["clarifying", "finalized"],
+      clarifying: ["finalized"],
+      finalized: ["decomposing"],
+      decomposing: ["planning"],
+      planning: ["approving"],
+      approving: ["executing"],
+      executing: ["completed", "failed"],
       completed: [],
       failed: [],
       cancelled: [],
@@ -524,7 +596,7 @@ export class NLCommandOrchestrator {
     const allowed = validTransitions[command.status];
     if (!allowed || !allowed.includes(newStatus)) {
       throw new Error(
-        `Invalid status transition: ${command.status} → ${newStatus} for command ${command.commandId}`,
+        `Invalid status transition: ${command.status} → ${newStatus} for command ${command.commandId}`
       );
     }
 

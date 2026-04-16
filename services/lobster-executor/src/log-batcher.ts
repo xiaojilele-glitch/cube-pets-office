@@ -44,7 +44,7 @@ export class LogBatcher {
   constructor(
     onFlush?: ((lines: string[]) => void) | null,
     maxIntervalMs = 500,
-    maxBatchSize = 4096,
+    maxBatchSize = 4096
   ) {
     this.onFlushCb = onFlush ?? null;
     this.maxIntervalMs = maxIntervalMs;
@@ -135,7 +135,10 @@ export class LogBatcher {
 
     const lineBytes = Buffer.byteLength(line, "utf8");
 
-    if (this.buffer.length > 0 && this.currentSizeBytes + lineBytes > this.maxBatchSize) {
+    if (
+      this.buffer.length > 0 &&
+      this.currentSizeBytes + lineBytes > this.maxBatchSize
+    ) {
       this.flushLegacyBuffer();
     }
 
@@ -166,7 +169,10 @@ export class LogBatcher {
    */
   private splitAndAppend(stream: "stdout" | "stderr", chunk: string): void {
     // Seal any existing pending data first
-    if (this.pendingStream !== null && (this.pendingStream !== stream || this.pendingBytes > 0)) {
+    if (
+      this.pendingStream !== null &&
+      (this.pendingStream !== stream || this.pendingBytes > 0)
+    ) {
       this.sealPending();
     }
 
@@ -202,7 +208,10 @@ export class LogBatcher {
   /** Seal the current pending stream data into a completed batch. */
   private sealPending(): void {
     if (this.pendingStream === null || this.pendingData.length === 0) return;
-    this.completedBatches.push({ stream: this.pendingStream, data: this.pendingData });
+    this.completedBatches.push({
+      stream: this.pendingStream,
+      data: this.pendingData,
+    });
     this.pendingStream = null;
     this.pendingData = "";
     this.pendingBytes = 0;

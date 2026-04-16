@@ -62,7 +62,7 @@ export class AgentKnowledgeSink {
   constructor(
     graphStore: GraphStore,
     ontologyRegistry: OntologyRegistry,
-    reviewQueue?: KnowledgeReviewQueueLike,
+    reviewQueue?: KnowledgeReviewQueueLike
   ) {
     this.graphStore = graphStore;
     this.ontologyRegistry = ontologyRegistry;
@@ -77,7 +77,7 @@ export class AgentKnowledgeSink {
     const missing = this.validateDecisionPayload(payload);
     if (missing.length > 0) {
       throw new Error(
-        `Missing required fields for ArchitectureDecision: ${missing.join(", ")}`,
+        `Missing required fields for ArchitectureDecision: ${missing.join(", ")}`
       );
     }
 
@@ -215,7 +215,7 @@ export class AgentKnowledgeSink {
   // -----------------------------------------------------------------------
 
   async extractFromTaskCompletion(
-    taskOutput: TaskCompletionOutput,
+    taskOutput: TaskCompletionOutput
   ): Promise<SinkSummary> {
     const emptySummary: SinkSummary = {
       entitiesCreated: 0,
@@ -225,7 +225,7 @@ export class AgentKnowledgeSink {
 
     if (!this.llmProvider) {
       console.warn(
-        "[AgentKnowledgeSink] No LLM provider configured — skipping passive extraction",
+        "[AgentKnowledgeSink] No LLM provider configured — skipping passive extraction"
       );
       return emptySummary;
     }
@@ -236,7 +236,10 @@ export class AgentKnowledgeSink {
 
     // 1. Build prompt with ontology context and send to LLM
     const ontologyContext = this.buildOntologyPromptContext();
-    const prompt = this.buildExtractionPrompt(taskOutput.output, ontologyContext);
+    const prompt = this.buildExtractionPrompt(
+      taskOutput.output,
+      ontologyContext
+    );
 
     let llmResponse: string;
     try {
@@ -244,7 +247,7 @@ export class AgentKnowledgeSink {
     } catch (e) {
       console.warn(
         "[AgentKnowledgeSink] LLM extraction failed:",
-        e instanceof Error ? e.message : String(e),
+        e instanceof Error ? e.message : String(e)
       );
       return emptySummary;
     }
@@ -252,9 +255,7 @@ export class AgentKnowledgeSink {
     // 2. Parse LLM response as JSON
     const parsed = this.parseLLMResponse(llmResponse);
     if (!parsed) {
-      console.warn(
-        "[AgentKnowledgeSink] Failed to parse LLM response as JSON",
-      );
+      console.warn("[AgentKnowledgeSink] Failed to parse LLM response as JSON");
       return emptySummary;
     }
 
@@ -274,8 +275,7 @@ export class AgentKnowledgeSink {
         entityType: rawEntity.entityType,
         name: rawEntity.name,
         description:
-          rawEntity.description ||
-          `${rawEntity.entityType}: ${rawEntity.name}`,
+          rawEntity.description || `${rawEntity.entityType}: ${rawEntity.name}`,
         source: "llm_inferred",
         confidence,
         projectId: taskOutput.projectId,
@@ -289,11 +289,7 @@ export class AgentKnowledgeSink {
       }
 
       // Auto-link relations (EXECUTED_BY, KNOWS_ABOUT)
-      this.autoLinkRelations(
-        entity,
-        taskOutput.missionId,
-        taskOutput.agentId,
-      );
+      this.autoLinkRelations(entity, taskOutput.missionId, taskOutput.agentId);
 
       entitiesCreated++;
     }
@@ -324,10 +320,10 @@ export class AgentKnowledgeSink {
       });
 
       const sourceEntity = sourceEntities.find(
-        (e) => e.name === rawRelation.sourceEntityName,
+        e => e.name === rawRelation.sourceEntityName
       );
       const targetEntity = targetEntities.find(
-        (e) => e.name === rawRelation.targetEntityName,
+        e => e.name === rawRelation.targetEntityName
       );
 
       if (sourceEntity && targetEntity) {
@@ -362,7 +358,7 @@ export class AgentKnowledgeSink {
       this.updateMissionSinkSummary(
         taskOutput.missionId,
         taskOutput.projectId,
-        summary,
+        summary
       );
     }
 
@@ -379,12 +375,12 @@ export class AgentKnowledgeSink {
 
     const entitySection = entityTypes
       .map(
-        (et) =>
-          `  - ${et.name}: ${et.description} (attributes: ${et.extendedAttributes.join(", ") || "none"})`,
+        et =>
+          `  - ${et.name}: ${et.description} (attributes: ${et.extendedAttributes.join(", ") || "none"})`
       )
       .join("\n");
     const relationSection = relationTypes
-      .map((rt) => `  - ${rt.name}: ${rt.description}`)
+      .map(rt => `  - ${rt.name}: ${rt.description}`)
       .join("\n");
 
     return `Entity Types:\n${entitySection}\n\nRelation Types:\n${relationSection}`;
@@ -394,7 +390,10 @@ export class AgentKnowledgeSink {
   // buildExtractionPrompt — Construct the LLM prompt for passive extraction
   // -----------------------------------------------------------------------
 
-  private buildExtractionPrompt(output: string, ontologyContext: string): string {
+  private buildExtractionPrompt(
+    output: string,
+    ontologyContext: string
+  ): string {
     return `You are a knowledge extraction assistant. Analyze the following Agent task output and extract structured knowledge entities and relations.
 
 ## Ontology Model
@@ -439,9 +438,7 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
   // parseLLMResponse — Parse LLM JSON response with tolerance
   // -----------------------------------------------------------------------
 
-  private parseLLMResponse(
-    response: string,
-  ): {
+  private parseLLMResponse(response: string): {
     entities: Array<{
       entityType: string;
       name: string;
@@ -462,7 +459,7 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
 
       // Strip markdown code fences if present
       const jsonBlockMatch = jsonStr.match(
-        /```(?:json)?\s*\n?([\s\S]*?)\n?```/,
+        /```(?:json)?\s*\n?([\s\S]*?)\n?```/
       );
       if (jsonBlockMatch) {
         jsonStr = jsonBlockMatch[1].trim();
@@ -471,9 +468,7 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
       const parsed = JSON.parse(jsonStr);
 
       const entities = Array.isArray(parsed.entities) ? parsed.entities : [];
-      const relations = Array.isArray(parsed.relations)
-        ? parsed.relations
-        : [];
+      const relations = Array.isArray(parsed.relations) ? parsed.relations : [];
 
       return { entities, relations };
     } catch {
@@ -488,12 +483,12 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
   private updateMissionSinkSummary(
     missionId: string,
     projectId: string,
-    summary: SinkSummary,
+    summary: SinkSummary
   ): void {
     const missionEntity = this.findOrCreateAnchorEntity(
       "Mission",
       missionId,
-      projectId,
+      projectId
     );
 
     // Accumulate with any existing summary
@@ -525,14 +520,14 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
     entity: Entity,
     missionId?: string,
     agentId?: string,
-    skipBelongsTo = false,
+    skipBelongsTo = false
   ): void {
     // 1. EXECUTED_BY: entity → Mission
     if (missionId) {
       const missionEntity = this.findOrCreateAnchorEntity(
         "Mission",
         missionId,
-        entity.projectId,
+        entity.projectId
       );
       this.graphStore.createRelation({
         relationType: "EXECUTED_BY",
@@ -551,7 +546,7 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
       const agentEntity = this.findOrCreateAnchorEntity(
         "Agent",
         agentId,
-        entity.projectId,
+        entity.projectId
       );
       this.graphStore.createRelation({
         relationType: "KNOWS_ABOUT",
@@ -577,7 +572,7 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
   private findOrCreateAnchorEntity(
     entityType: string,
     name: string,
-    projectId: string,
+    projectId: string
   ): Entity {
     const existing = this.graphStore.findEntities({
       projectId,
@@ -586,7 +581,7 @@ Focus on meaningful knowledge: architecture decisions, business rules, bug patte
     });
 
     // findEntities uses fuzzy (includes) matching, so exact-match filter
-    const exact = existing.find((e) => e.name === name);
+    const exact = existing.find(e => e.name === name);
     if (exact) return exact;
 
     return this.graphStore.createEntity({

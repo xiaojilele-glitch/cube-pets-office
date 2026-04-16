@@ -19,7 +19,9 @@ export function deserializeDemoData(json: string): DemoDataBundle {
 /**
  * 验证解析后的对象是否符合 DemoDataBundle 结构
  */
-export function validateDemoDataBundle(data: unknown): asserts data is DemoDataBundle {
+export function validateDemoDataBundle(
+  data: unknown
+): asserts data is DemoDataBundle {
   if (data === null || typeof data !== "object") {
     throw new Error("Invalid DemoDataBundle: expected an object");
   }
@@ -113,14 +115,12 @@ function requireField(
   obj: Record<string, unknown>,
   field: string,
   expected: ExpectedType,
-  parentPath?: string,
+  parentPath?: string
 ): void {
   const fieldPath = parentPath ? `${parentPath}.${field}` : field;
 
   if (!(field in obj) || obj[field] === undefined) {
-    throw new Error(
-      `Invalid DemoDataBundle: missing field '${fieldPath}'`
-    );
+    throw new Error(`Invalid DemoDataBundle: missing field '${fieldPath}'`);
   }
 
   const value = obj[field];

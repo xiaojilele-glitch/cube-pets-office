@@ -8,20 +8,27 @@
  * **Validates: Requirements 7.3**
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
-import fc from 'fast-check';
-import { existsSync, rmSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it } from "vitest";
+import fc from "fast-check";
+import { existsSync, rmSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { RoleTemplate, AuthorityLevel, RoleSource } from '../../shared/role-schema.js';
-import { RoleRegistry } from '../core/role-registry.js';
-import { RoleAnalyticsService } from '../core/role-analytics.ts';
+import type {
+  RoleTemplate,
+  AuthorityLevel,
+  RoleSource,
+} from "../../shared/role-schema.js";
+import { RoleRegistry } from "../core/role-registry.js";
+import { RoleAnalyticsService } from "../core/role-analytics.ts";
 
 const __test_dirname = dirname(fileURLToPath(import.meta.url));
-const TEST_DIR = resolve(__test_dirname, '../../data/__test_role_analytics_prop__');
-const TEST_REGISTRY_PATH = resolve(TEST_DIR, 'role-templates.json');
-const TEST_ANALYTICS_PATH = resolve(TEST_DIR, 'role-analytics.json');
+const TEST_DIR = resolve(
+  __test_dirname,
+  "../../data/__test_role_analytics_prop__"
+);
+const TEST_REGISTRY_PATH = resolve(TEST_DIR, "role-templates.json");
+const TEST_ANALYTICS_PATH = resolve(TEST_DIR, "role-analytics.json");
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -29,23 +36,35 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 const arbRoleId: fc.Arbitrary<string> = fc
   .stringMatching(/^[a-z][a-z0-9-]{0,29}$/)
-  .filter((s) => s.length >= 2);
+  .filter(s => s.length >= 2);
 
-const arbRoleName: fc.Arbitrary<string> = fc.string({ minLength: 1, maxLength: 20 });
+const arbRoleName: fc.Arbitrary<string> = fc.string({
+  minLength: 1,
+  maxLength: 20,
+});
 
-const arbAuthorityLevel: fc.Arbitrary<AuthorityLevel> = fc.constantFrom('high', 'medium', 'low');
-const arbRoleSource: fc.Arbitrary<RoleSource> = fc.constantFrom('predefined', 'generated');
+const arbAuthorityLevel: fc.Arbitrary<AuthorityLevel> = fc.constantFrom(
+  "high",
+  "medium",
+  "low"
+);
+const arbRoleSource: fc.Arbitrary<RoleSource> = fc.constantFrom(
+  "predefined",
+  "generated"
+);
 
-function makeTemplate(overrides: Partial<RoleTemplate> & { roleId: string }): RoleTemplate {
+function makeTemplate(
+  overrides: Partial<RoleTemplate> & { roleId: string }
+): RoleTemplate {
   const now = new Date().toISOString();
   return {
     roleName: overrides.roleName ?? overrides.roleId,
-    responsibilityPrompt: 'test prompt',
+    responsibilityPrompt: "test prompt",
     requiredSkillIds: [],
     mcpIds: [],
-    defaultModelConfig: { model: 'gpt-4o', temperature: 0.7, maxTokens: 4096 },
-    authorityLevel: 'medium',
-    source: 'predefined',
+    defaultModelConfig: { model: "gpt-4o", temperature: 0.7, maxTokens: 4096 },
+    authorityLevel: "medium",
+    source: "predefined",
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -61,13 +80,13 @@ function cleanup(): void {
 
 // ── Property Tests ───────────────────────────────────────────────
 
-describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
+describe("RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发", () => {
   afterEach(cleanup);
 
   // **Validates: Requirements 7.3**
   // For any role registered > 7 days ago that has never been loaded,
   // checkAlerts() should include a ROLE_UNUSED alert for that role.
-  it('triggers ROLE_UNUSED alert for roles never loaded and created > 7 days ago', () => {
+  it("triggers ROLE_UNUSED alert for roles never loaded and created > 7 days ago", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -82,11 +101,13 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
 
           // "now" is a fixed point in time
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           // Role was created more than 7 days ago
-          const createdAt = new Date(nowMs - SEVEN_DAYS_MS - extraDays * 24 * 60 * 60 * 1000);
+          const createdAt = new Date(
+            nowMs - SEVEN_DAYS_MS - extraDays * 24 * 60 * 60 * 1000
+          );
 
           const template = makeTemplate({
             roleId,
@@ -103,27 +124,27 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => now,
-            registry,
+            registry
           );
 
           const alerts = service.checkAlerts();
           const unusedAlerts = alerts.filter(
-            (a) => a.type === 'ROLE_UNUSED' && a.detail.includes(roleId),
+            a => a.type === "ROLE_UNUSED" && a.detail.includes(roleId)
           );
 
           expect(unusedAlerts.length).toBeGreaterThanOrEqual(1);
-          expect(unusedAlerts[0].type).toBe('ROLE_UNUSED');
+          expect(unusedAlerts[0].type).toBe("ROLE_UNUSED");
           expect(unusedAlerts[0].detail).toContain(roleId);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.3**
   // For any role whose last load was > 7 days ago, checkAlerts() should
   // include a ROLE_UNUSED alert for that role.
-  it('triggers ROLE_UNUSED alert for roles with last load > 7 days ago', () => {
+  it("triggers ROLE_UNUSED alert for roles with last load > 7 days ago", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -135,7 +156,7 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
 
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           // Role was created 30 days ago
@@ -149,13 +170,15 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
           registry.register(template);
 
           // Simulate a load that happened more than 7 days ago
-          const lastLoadTime = new Date(nowMs - SEVEN_DAYS_MS - extraDays * 24 * 60 * 60 * 1000);
+          const lastLoadTime = new Date(
+            nowMs - SEVEN_DAYS_MS - extraDays * 24 * 60 * 60 * 1000
+          );
           let currentTime = lastLoadTime;
 
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => currentTime,
-            registry,
+            registry
           );
 
           // Record a load at the past time
@@ -166,22 +189,22 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
 
           const alerts = service.checkAlerts();
           const unusedAlerts = alerts.filter(
-            (a) => a.type === 'ROLE_UNUSED' && a.detail.includes(roleId),
+            a => a.type === "ROLE_UNUSED" && a.detail.includes(roleId)
           );
 
           expect(unusedAlerts.length).toBeGreaterThanOrEqual(1);
-          expect(unusedAlerts[0].type).toBe('ROLE_UNUSED');
+          expect(unusedAlerts[0].type).toBe("ROLE_UNUSED");
           expect(unusedAlerts[0].detail).toContain(roleId);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.3**
   // For any role loaded within the last 7 days, checkAlerts() should NOT
   // include a ROLE_UNUSED alert for that role.
-  it('does NOT trigger ROLE_UNUSED alert for roles loaded within the last 7 days', () => {
+  it("does NOT trigger ROLE_UNUSED alert for roles loaded within the last 7 days", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -193,7 +216,7 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
 
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           const createdAt = new Date(nowMs - 30 * 24 * 60 * 60 * 1000);
@@ -206,13 +229,15 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
           registry.register(template);
 
           // Load happened within the last 7 days
-          const lastLoadTime = new Date(nowMs - hoursSinceLoad * 60 * 60 * 1000);
+          const lastLoadTime = new Date(
+            nowMs - hoursSinceLoad * 60 * 60 * 1000
+          );
           let currentTime = lastLoadTime;
 
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => currentTime,
-            registry,
+            registry
           );
 
           service.recordRoleLoad(roleId);
@@ -222,20 +247,20 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
 
           const alerts = service.checkAlerts();
           const unusedAlerts = alerts.filter(
-            (a) => a.type === 'ROLE_UNUSED' && a.detail.includes(roleId),
+            a => a.type === "ROLE_UNUSED" && a.detail.includes(roleId)
           );
 
           expect(unusedAlerts.length).toBe(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.3**
   // For any role created within the last 7 days that has never been loaded,
   // checkAlerts() should NOT trigger ROLE_UNUSED (not enough time has passed).
-  it('does NOT trigger ROLE_UNUSED alert for roles created within the last 7 days with no loads', () => {
+  it("does NOT trigger ROLE_UNUSED alert for roles created within the last 7 days with no loads", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -247,10 +272,12 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
 
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
-          const createdAt = new Date(nowMs - hoursSinceCreation * 60 * 60 * 1000);
+          const createdAt = new Date(
+            nowMs - hoursSinceCreation * 60 * 60 * 1000
+          );
           const template = makeTemplate({
             roleId,
             roleName,
@@ -263,75 +290,70 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => now,
-            registry,
+            registry
           );
 
           const alerts = service.checkAlerts();
           const unusedAlerts = alerts.filter(
-            (a) => a.type === 'ROLE_UNUSED' && a.detail.includes(roleId),
+            a => a.type === "ROLE_UNUSED" && a.detail.includes(roleId)
           );
 
           expect(unusedAlerts.length).toBe(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.3**
   // Boundary test: exactly at the 7-day mark (not exceeding), no alert should fire.
   // The implementation uses strict > comparison (now - lastLoad > SEVEN_DAYS_MS).
-  it('does NOT trigger ROLE_UNUSED alert at exactly the 7-day boundary', () => {
+  it("does NOT trigger ROLE_UNUSED alert at exactly the 7-day boundary", () => {
     fc.assert(
-      fc.property(
-        arbRoleId,
-        arbRoleName,
-        (roleId, roleName) => {
-          cleanup();
+      fc.property(arbRoleId, arbRoleName, (roleId, roleName) => {
+        cleanup();
 
-          const registry = new RoleRegistry(TEST_REGISTRY_PATH);
+        const registry = new RoleRegistry(TEST_REGISTRY_PATH);
 
-          const now = new Date('2025-06-15T12:00:00.000Z');
-          const nowMs = now.getTime();
+        const now = new Date("2025-06-15T12:00:00.000Z");
+        const nowMs = now.getTime();
 
-          const createdAt = new Date(nowMs - 30 * 24 * 60 * 60 * 1000);
-          const template = makeTemplate({
-            roleId,
-            roleName,
-            createdAt: createdAt.toISOString(),
-            updatedAt: createdAt.toISOString(),
-          });
-          registry.register(template);
+        const createdAt = new Date(nowMs - 30 * 24 * 60 * 60 * 1000);
+        const template = makeTemplate({
+          roleId,
+          roleName,
+          createdAt: createdAt.toISOString(),
+          updatedAt: createdAt.toISOString(),
+        });
+        registry.register(template);
 
-          // Load happened exactly 7 days ago
-          const exactlySevenDaysAgo = new Date(nowMs - SEVEN_DAYS_MS);
-          let currentTime = exactlySevenDaysAgo;
+        // Load happened exactly 7 days ago
+        const exactlySevenDaysAgo = new Date(nowMs - SEVEN_DAYS_MS);
+        let currentTime = exactlySevenDaysAgo;
 
-          const service = new RoleAnalyticsService(
-            TEST_ANALYTICS_PATH,
-            () => currentTime,
-            registry,
-          );
+        const service = new RoleAnalyticsService(
+          TEST_ANALYTICS_PATH,
+          () => currentTime,
+          registry
+        );
 
-          service.recordRoleLoad(roleId);
+        service.recordRoleLoad(roleId);
 
-          // Advance to "now"
-          currentTime = now;
+        // Advance to "now"
+        currentTime = now;
 
-          const alerts = service.checkAlerts();
-          const unusedAlerts = alerts.filter(
-            (a) => a.type === 'ROLE_UNUSED' && a.detail.includes(roleId),
-          );
+        const alerts = service.checkAlerts();
+        const unusedAlerts = alerts.filter(
+          a => a.type === "ROLE_UNUSED" && a.detail.includes(roleId)
+        );
 
-          // Exactly 7 days → not > 7 days, so no alert
-          expect(unusedAlerts.length).toBe(0);
-        },
-      ),
-      { numRuns: 100 },
+        // Exactly 7 days → not > 7 days, so no alert
+        expect(unusedAlerts.length).toBe(0);
+      }),
+      { numRuns: 100 }
     );
   });
 });
-
 
 // Feature: dynamic-role-system, Property 17: AGENT_ROLE_THRASHING 告警触发
 /**
@@ -343,19 +365,19 @@ describe('RoleAnalyticsService Property 16: ROLE_UNUSED 告警触发', () => {
  * **Validates: Requirements 7.4**
  */
 
-describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', () => {
+describe("RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发", () => {
   afterEach(cleanup);
 
   const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
   const arbAgentId: fc.Arbitrary<string> = fc
     .stringMatching(/^[a-z][a-z0-9-]{0,19}$/)
-    .filter((s) => s.length >= 2);
+    .filter(s => s.length >= 2);
 
   // **Validates: Requirements 7.4**
   // For any Agent with more than 20 role switches within 24 hours,
   // checkAlerts() should include an AGENT_ROLE_THRASHING alert.
-  it('triggers AGENT_ROLE_THRASHING alert when switch count exceeds 20 in 24 hours', () => {
+  it("triggers AGENT_ROLE_THRASHING alert when switch count exceeds 20 in 24 hours", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -365,7 +387,7 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           cleanup();
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           // Distribute switches randomly within the last 24 hours
@@ -373,13 +395,17 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => currentTime,
-            registry,
+            registry
           );
 
           for (let i = 0; i < switchCount; i++) {
             // Each switch happens within the last 24 hours
-            const offsetMs = Math.floor((i / switchCount) * (TWENTY_FOUR_HOURS_MS - 1000));
-            currentTime = new Date(nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs);
+            const offsetMs = Math.floor(
+              (i / switchCount) * (TWENTY_FOUR_HOURS_MS - 1000)
+            );
+            currentTime = new Date(
+              nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs
+            );
             service.recordRoleSwitch(agentId);
           }
 
@@ -387,22 +413,22 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           currentTime = now;
           const alerts = service.checkAlerts();
           const thrashingAlerts = alerts.filter(
-            (a) => a.type === 'AGENT_ROLE_THRASHING' && a.detail.includes(agentId),
+            a => a.type === "AGENT_ROLE_THRASHING" && a.detail.includes(agentId)
           );
 
           expect(thrashingAlerts.length).toBe(1);
-          expect(thrashingAlerts[0].type).toBe('AGENT_ROLE_THRASHING');
+          expect(thrashingAlerts[0].type).toBe("AGENT_ROLE_THRASHING");
           expect(thrashingAlerts[0].detail).toContain(agentId);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.4**
   // For any Agent with 20 or fewer switches within 24 hours,
   // checkAlerts() should NOT include an AGENT_ROLE_THRASHING alert.
-  it('does NOT trigger AGENT_ROLE_THRASHING alert when switch count is 20 or fewer', () => {
+  it("does NOT trigger AGENT_ROLE_THRASHING alert when switch count is 20 or fewer", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -412,20 +438,24 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           cleanup();
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           let currentTime = now;
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => currentTime,
-            registry,
+            registry
           );
 
           for (let i = 0; i < switchCount; i++) {
             // Each switch happens within the last 24 hours
-            const offsetMs = Math.floor((i / switchCount) * (TWENTY_FOUR_HOURS_MS - 1000));
-            currentTime = new Date(nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs);
+            const offsetMs = Math.floor(
+              (i / switchCount) * (TWENTY_FOUR_HOURS_MS - 1000)
+            );
+            currentTime = new Date(
+              nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs
+            );
             service.recordRoleSwitch(agentId);
           }
 
@@ -433,19 +463,19 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           currentTime = now;
           const alerts = service.checkAlerts();
           const thrashingAlerts = alerts.filter(
-            (a) => a.type === 'AGENT_ROLE_THRASHING' && a.detail.includes(agentId),
+            a => a.type === "AGENT_ROLE_THRASHING" && a.detail.includes(agentId)
           );
 
           expect(thrashingAlerts.length).toBe(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.4**
   // Switches older than 24 hours should not count toward the thrashing threshold.
-  it('does NOT count switches older than 24 hours toward thrashing threshold', () => {
+  it("does NOT count switches older than 24 hours toward thrashing threshold", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -455,14 +485,14 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           cleanup();
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           let currentTime = now;
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => currentTime,
-            registry,
+            registry
           );
 
           // All switches happened more than 24 hours ago
@@ -476,61 +506,60 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           currentTime = now;
           const alerts = service.checkAlerts();
           const thrashingAlerts = alerts.filter(
-            (a) => a.type === 'AGENT_ROLE_THRASHING' && a.detail.includes(agentId),
+            a => a.type === "AGENT_ROLE_THRASHING" && a.detail.includes(agentId)
           );
 
           expect(thrashingAlerts.length).toBe(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.4**
   // Boundary: exactly 20 switches within 24 hours should NOT trigger the alert
   // (threshold is strictly > 20).
-  it('does NOT trigger AGENT_ROLE_THRASHING at exactly 20 switches (boundary)', () => {
+  it("does NOT trigger AGENT_ROLE_THRASHING at exactly 20 switches (boundary)", () => {
     fc.assert(
-      fc.property(
-        arbAgentId,
-        (agentId) => {
-          cleanup();
+      fc.property(arbAgentId, agentId => {
+        cleanup();
 
-          const registry = new RoleRegistry(TEST_REGISTRY_PATH);
-          const now = new Date('2025-06-15T12:00:00.000Z');
-          const nowMs = now.getTime();
+        const registry = new RoleRegistry(TEST_REGISTRY_PATH);
+        const now = new Date("2025-06-15T12:00:00.000Z");
+        const nowMs = now.getTime();
 
-          let currentTime = now;
-          const service = new RoleAnalyticsService(
-            TEST_ANALYTICS_PATH,
-            () => currentTime,
-            registry,
+        let currentTime = now;
+        const service = new RoleAnalyticsService(
+          TEST_ANALYTICS_PATH,
+          () => currentTime,
+          registry
+        );
+
+        // Exactly 20 switches within the last 24 hours
+        for (let i = 0; i < 20; i++) {
+          const offsetMs = Math.floor((i / 20) * (TWENTY_FOUR_HOURS_MS - 1000));
+          currentTime = new Date(
+            nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs
           );
+          service.recordRoleSwitch(agentId);
+        }
 
-          // Exactly 20 switches within the last 24 hours
-          for (let i = 0; i < 20; i++) {
-            const offsetMs = Math.floor((i / 20) * (TWENTY_FOUR_HOURS_MS - 1000));
-            currentTime = new Date(nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs);
-            service.recordRoleSwitch(agentId);
-          }
+        // Check alerts at "now"
+        currentTime = now;
+        const alerts = service.checkAlerts();
+        const thrashingAlerts = alerts.filter(
+          a => a.type === "AGENT_ROLE_THRASHING" && a.detail.includes(agentId)
+        );
 
-          // Check alerts at "now"
-          currentTime = now;
-          const alerts = service.checkAlerts();
-          const thrashingAlerts = alerts.filter(
-            (a) => a.type === 'AGENT_ROLE_THRASHING' && a.detail.includes(agentId),
-          );
-
-          expect(thrashingAlerts.length).toBe(0);
-        },
-      ),
-      { numRuns: 100 },
+        expect(thrashingAlerts.length).toBe(0);
+      }),
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 7.4**
   // Mixed scenario: some switches within 24h, some outside. Only recent ones count.
-  it('only counts switches within the 24-hour window for thrashing detection', () => {
+  it("only counts switches within the 24-hour window for thrashing detection", () => {
     fc.assert(
       fc.property(
         arbAgentId,
@@ -542,26 +571,32 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           cleanup();
 
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
-          const now = new Date('2025-06-15T12:00:00.000Z');
+          const now = new Date("2025-06-15T12:00:00.000Z");
           const nowMs = now.getTime();
 
           let currentTime = now;
           const service = new RoleAnalyticsService(
             TEST_ANALYTICS_PATH,
             () => currentTime,
-            registry,
+            registry
           );
 
           // Record old switches (outside 24h window)
           for (let i = 0; i < oldCount; i++) {
-            currentTime = new Date(nowMs - TWENTY_FOUR_HOURS_MS - (i + 1) * 60 * 1000);
+            currentTime = new Date(
+              nowMs - TWENTY_FOUR_HOURS_MS - (i + 1) * 60 * 1000
+            );
             service.recordRoleSwitch(agentId);
           }
 
           // Record recent switches (within 24h window)
           for (let i = 0; i < recentCount; i++) {
-            const offsetMs = Math.floor((i / recentCount) * (TWENTY_FOUR_HOURS_MS - 1000));
-            currentTime = new Date(nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs);
+            const offsetMs = Math.floor(
+              (i / recentCount) * (TWENTY_FOUR_HOURS_MS - 1000)
+            );
+            currentTime = new Date(
+              nowMs - TWENTY_FOUR_HOURS_MS + 1000 + offsetMs
+            );
             service.recordRoleSwitch(agentId);
           }
 
@@ -569,15 +604,15 @@ describe('RoleAnalyticsService Property 17: AGENT_ROLE_THRASHING 告警触发', 
           currentTime = now;
           const alerts = service.checkAlerts();
           const thrashingAlerts = alerts.filter(
-            (a) => a.type === 'AGENT_ROLE_THRASHING' && a.detail.includes(agentId),
+            a => a.type === "AGENT_ROLE_THRASHING" && a.detail.includes(agentId)
           );
 
           // Should trigger because recentCount > 20
           expect(thrashingAlerts.length).toBe(1);
           expect(thrashingAlerts[0].detail).toContain(agentId);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

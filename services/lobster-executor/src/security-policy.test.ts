@@ -51,20 +51,20 @@ describe("readSecurityConfig", () => {
   });
 
   it("throws on invalid LOBSTER_SECURITY_LEVEL", () => {
-    expect(() => readSecurityConfig({ LOBSTER_SECURITY_LEVEL: "ultra" })).toThrow(
-      /Invalid LOBSTER_SECURITY_LEVEL/,
-    );
+    expect(() =>
+      readSecurityConfig({ LOBSTER_SECURITY_LEVEL: "ultra" })
+    ).toThrow(/Invalid LOBSTER_SECURITY_LEVEL/);
   });
 
   it("throws on invalid LOBSTER_MAX_PIDS", () => {
     expect(() => readSecurityConfig({ LOBSTER_MAX_PIDS: "abc" })).toThrow(
-      /Invalid LOBSTER_MAX_PIDS/,
+      /Invalid LOBSTER_MAX_PIDS/
     );
     expect(() => readSecurityConfig({ LOBSTER_MAX_PIDS: "0" })).toThrow(
-      /Invalid LOBSTER_MAX_PIDS/,
+      /Invalid LOBSTER_MAX_PIDS/
     );
     expect(() => readSecurityConfig({ LOBSTER_MAX_PIDS: "-5" })).toThrow(
-      /Invalid LOBSTER_MAX_PIDS/,
+      /Invalid LOBSTER_MAX_PIDS/
     );
   });
 });
@@ -397,14 +397,14 @@ describe("validateWorkspacePath", () => {
 
   it("path with ../ that escapes dataRoot throws", () => {
     expect(() => validateWorkspacePath("../../etc/passwd", dataRoot)).toThrow(
-      /Path traversal detected/,
+      /Path traversal detected/
     );
   });
 
   it("absolute path outside dataRoot throws", () => {
     const outsidePath = resolve(dataRoot, "..", "outside");
     expect(() => validateWorkspacePath(outsidePath, dataRoot)).toThrow(
-      /Path traversal detected/,
+      /Path traversal detected/
     );
   });
 

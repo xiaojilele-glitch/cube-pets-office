@@ -251,7 +251,7 @@
 - [x] 17. 实现 Socket.IO 事件集成
   - [x] 17.1 创建 `server/core/nl-command/socket-emitter.ts`
     - 实现 NLCommandSocketEmitter 类
-    - 封装所有 nl_command_* 事件的发送
+    - 封装所有 nl*command*\* 事件的发送
     - 集成到各服务组件中
     - _Requirements: 9.4_
   - [x] 17.2 在 `server/core/socket.ts` 中注册 nl-command 命名空间事件
@@ -275,7 +275,7 @@
     - 实现 NLCommandStore（Zustand）
     - 管理指令列表、当前指令、执行计划、告警、评论等状态
     - 封装 REST API 调用
-    - 监听 Socket.IO nl_command_* 事件实时更新
+    - 监听 Socket.IO nl*command*\* 事件实时更新
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
   - [x] 20.2 创建 `client/src/lib/nl-command-client.ts`
     - 封装所有 NL Command REST API 调用

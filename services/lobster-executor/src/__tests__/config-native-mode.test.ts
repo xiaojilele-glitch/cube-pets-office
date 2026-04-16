@@ -10,10 +10,9 @@ describe("readLobsterExecutorConfig executionMode", () => {
         LOBSTER_EXECUTOR_PORT: "3031",
         LOBSTER_EXECUTOR_HOST: "0.0.0.0",
       },
-      "linux",
+      "linux"
     );
 
     expect(config.executionMode).toBe("native");
   });
 });
-

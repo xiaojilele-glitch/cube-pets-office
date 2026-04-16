@@ -3,8 +3,8 @@ import type {
   ExecutionEvent,
   ReplayEventType,
   PerformanceMetrics,
-} from '../../../../shared/replay/contracts';
-import { PerformanceAnalyzer } from './performance-analyzer';
+} from "../../../../shared/replay/contracts";
+import { PerformanceAnalyzer } from "./performance-analyzer";
 
 /* ─── Comparison Types ─── */
 
@@ -71,7 +71,7 @@ export class ReplayComparison {
   /** Get the currently loaded pair, or throw if none loaded. */
   getPair(): ComparisonPair {
     if (!this.pair) {
-      throw new Error('No comparison loaded. Call loadComparison() first.');
+      throw new Error("No comparison loaded. Call loadComparison() first.");
     }
     return this.pair;
   }
@@ -84,7 +84,10 @@ export class ReplayComparison {
    * - 每种类型的数量差异
    * Requirement 16.2, 16.4
    */
-  diffEventStreams(a: ExecutionTimeline, b: ExecutionTimeline): EventStreamDiff {
+  diffEventStreams(
+    a: ExecutionTimeline,
+    b: ExecutionTimeline
+  ): EventStreamDiff {
     const countsA = countByType(a.events);
     const countsB = countByType(b.events);
 
@@ -124,7 +127,7 @@ export class ReplayComparison {
    */
   compareMetrics(
     a: ExecutionTimeline,
-    b: ExecutionTimeline,
+    b: ExecutionTimeline
   ): MetricsComparison {
     const metricsA = this.analyzer.calculateMetrics(a);
     const metricsB = this.analyzer.calculateMetrics(b);
@@ -147,10 +150,7 @@ export class ReplayComparison {
    * 导出对比结果为 JSON 字符串。
    * Requirement 16.5
    */
-  exportComparison(
-    a: ExecutionTimeline,
-    b: ExecutionTimeline,
-  ): string {
+  exportComparison(a: ExecutionTimeline, b: ExecutionTimeline): string {
     const diff = this.diffEventStreams(a, b);
     const metrics = this.compareMetrics(a, b);
 

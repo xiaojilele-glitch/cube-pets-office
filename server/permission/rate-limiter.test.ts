@@ -124,7 +124,6 @@ describe("SlidingWindowRateLimiter", () => {
   });
 });
 
-
 // ─── NetworkChecker rate limit integration ──────────────────────────────────
 
 describe("NetworkChecker rate limit integration", () => {
@@ -141,10 +140,14 @@ describe("NetworkChecker rate limit integration", () => {
 
     // 3 allowed
     for (let i = 0; i < 3; i++) {
-      expect(checker.checkConstraints("connect", "example.com:443", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints("connect", "example.com:443", constraints)
+      ).toBe(true);
     }
     // 4th denied
-    expect(checker.checkConstraints("connect", "example.com:443", constraints)).toBe(false);
+    expect(
+      checker.checkConstraints("connect", "example.com:443", constraints)
+    ).toBe(false);
   });
 
   it("allows again after window expires", () => {
@@ -160,11 +163,15 @@ describe("NetworkChecker rate limit integration", () => {
 
     checker.checkConstraints("connect", "example.com:443", constraints);
     checker.checkConstraints("connect", "example.com:443", constraints);
-    expect(checker.checkConstraints("connect", "example.com:443", constraints)).toBe(false);
+    expect(
+      checker.checkConstraints("connect", "example.com:443", constraints)
+    ).toBe(false);
 
     // Advance past window
     time = 1000 + 60_001;
-    expect(checker.checkConstraints("connect", "example.com:443", constraints)).toBe(true);
+    expect(
+      checker.checkConstraints("connect", "example.com:443", constraints)
+    ).toBe(true);
   });
 
   it("does not enforce rate limit when rateLimit is not set", () => {
@@ -178,7 +185,9 @@ describe("NetworkChecker rate limit integration", () => {
 
     // Should always pass (no rate limit)
     for (let i = 0; i < 100; i++) {
-      expect(checker.checkConstraints("connect", "example.com:443", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints("connect", "example.com:443", constraints)
+      ).toBe(true);
     }
   });
 });
@@ -197,9 +206,15 @@ describe("ApiChecker rate limit integration", () => {
       rateLimit: { maxPerMinute: 2 },
     };
 
-    expect(checker.checkConstraints("call", "GET /api/v1/users", constraints)).toBe(true);
-    expect(checker.checkConstraints("call", "GET /api/v1/users", constraints)).toBe(true);
-    expect(checker.checkConstraints("call", "GET /api/v1/users", constraints)).toBe(false);
+    expect(
+      checker.checkConstraints("call", "GET /api/v1/users", constraints)
+    ).toBe(true);
+    expect(
+      checker.checkConstraints("call", "GET /api/v1/users", constraints)
+    ).toBe(true);
+    expect(
+      checker.checkConstraints("call", "GET /api/v1/users", constraints)
+    ).toBe(false);
   });
 
   it("tracks different endpoints separately", () => {
@@ -213,11 +228,17 @@ describe("ApiChecker rate limit integration", () => {
       rateLimit: { maxPerMinute: 1 },
     };
 
-    expect(checker.checkConstraints("call", "GET /api/v1/users", constraints)).toBe(true);
+    expect(
+      checker.checkConstraints("call", "GET /api/v1/users", constraints)
+    ).toBe(true);
     // Same endpoint — denied
-    expect(checker.checkConstraints("call", "GET /api/v1/users", constraints)).toBe(false);
+    expect(
+      checker.checkConstraints("call", "GET /api/v1/users", constraints)
+    ).toBe(false);
     // Different endpoint — allowed
-    expect(checker.checkConstraints("call", "GET /api/v1/posts", constraints)).toBe(true);
+    expect(
+      checker.checkConstraints("call", "GET /api/v1/posts", constraints)
+    ).toBe(true);
   });
 
   it("does not enforce rate limit when rateLimit is not set", () => {
@@ -230,11 +251,12 @@ describe("ApiChecker rate limit integration", () => {
     };
 
     for (let i = 0; i < 100; i++) {
-      expect(checker.checkConstraints("call", "GET /api/v1/users", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints("call", "GET /api/v1/users", constraints)
+      ).toBe(true);
     }
   });
 });
-
 
 // ─── Property Tests ─────────────────────────────────────────────────────────
 
@@ -253,7 +275,7 @@ describe("Rate Limiter Property Tests", () => {
 
     it("after exactly maxPerMinute requests, the next check is denied", () => {
       fc.assert(
-        fc.property(maxPerMinuteArb, (maxPerMinute) => {
+        fc.property(maxPerMinuteArb, maxPerMinute => {
           let time = 0;
           const limiter = new SlidingWindowRateLimiter(() => time);
           const key = "test-agent:network";
@@ -267,13 +289,13 @@ describe("Rate Limiter Property Tests", () => {
           // The (maxPerMinute + 1)th check should be denied
           expect(limiter.check(key, maxPerMinute)).toBe(false);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
 
     it("requests are allowed again after the window expires", () => {
       fc.assert(
-        fc.property(maxPerMinuteArb, (maxPerMinute) => {
+        fc.property(maxPerMinuteArb, maxPerMinute => {
           let time = 0;
           const limiter = new SlidingWindowRateLimiter(() => time);
           const key = "test-agent:network";
@@ -288,7 +310,7 @@ describe("Rate Limiter Property Tests", () => {
           time = 60_001;
           expect(limiter.check(key, maxPerMinute)).toBe(true);
         }),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
 
@@ -312,9 +334,9 @@ describe("Rate Limiter Property Tests", () => {
 
             // Within a single window, accepted should never exceed maxPerMinute
             expect(accepted).toBeLessThanOrEqual(maxPerMinute);
-          },
+          }
         ),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
   });

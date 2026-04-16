@@ -6,8 +6,11 @@
  * Requirements: 4.5
  */
 
-import type { MetadataStore, RagChunkMetadataRow } from '../store/metadata-store.js';
-import type { RetrievalResult } from '../../../shared/rag/contracts.js';
+import type {
+  MetadataStore,
+  RagChunkMetadataRow,
+} from "../store/metadata-store.js";
+import type { RetrievalResult } from "../../../shared/rag/contracts.js";
 
 export class ContextExpander {
   constructor(private readonly metadataStore: MetadataStore) {}
@@ -18,7 +21,7 @@ export class ContextExpander {
    */
   expand(
     results: RetrievalResult[],
-    windowSize: number = 1,
+    windowSize: number = 1
   ): RetrievalResult[] {
     if (windowSize <= 0 || results.length === 0) return results;
 
@@ -46,7 +49,13 @@ export class ContextExpander {
         const adjacent = siblings.find(s => s.chunk_index === adjacentIndex);
         if (adjacent && !seen.has(adjacent.chunk_id)) {
           seen.add(adjacent.chunk_id);
-          expanded.push(this.rowToResult(adjacent, result.score * 0.8, result.totalCandidates));
+          expanded.push(
+            this.rowToResult(
+              adjacent,
+              result.score * 0.8,
+              result.totalCandidates
+            )
+          );
         }
       }
     }
@@ -54,7 +63,10 @@ export class ContextExpander {
     return expanded;
   }
 
-  private findChunkIndex(chunkId: string, siblings: RagChunkMetadataRow[]): number {
+  private findChunkIndex(
+    chunkId: string,
+    siblings: RagChunkMetadataRow[]
+  ): number {
     const row = siblings.find(s => s.chunk_id === chunkId);
     return row?.chunk_index ?? -1;
   }
@@ -62,13 +74,15 @@ export class ContextExpander {
   private rowToResult(
     row: RagChunkMetadataRow,
     score: number,
-    totalCandidates: number,
+    totalCandidates: number
   ): RetrievalResult {
-    let content = '';
+    let content = "";
     try {
       const meta = JSON.parse(row.metadata_json);
-      content = meta.content ?? '';
-    } catch { /* ignore */ }
+      content = meta.content ?? "";
+    } catch {
+      /* ignore */
+    }
 
     return {
       chunkId: row.chunk_id,

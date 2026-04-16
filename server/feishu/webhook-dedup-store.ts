@@ -76,7 +76,11 @@ export class FileFeishuWebhookDedupStore extends InMemoryFeishuWebhookDedupStore
       const entries = Array.isArray(parsed?.entries) ? parsed.entries : [];
       const now = Date.now();
       for (const entry of entries) {
-        if (!entry || typeof entry.key !== "string" || typeof entry.expiresAt !== "number") {
+        if (
+          !entry ||
+          typeof entry.key !== "string" ||
+          typeof entry.expiresAt !== "number"
+        ) {
           continue;
         }
         if (entry.expiresAt > now) {

@@ -83,7 +83,11 @@ export function MoreDrawer({
               {(["office", "tasks"] as const).map(id => {
                 const labels = copy.toolbar.primaryNav[id];
                 const href = id === "office" ? "/" : "/tasks";
-                const Icon = id === "office" ? PRIMARY_NAV_ITEMS.find(nav => nav.id === "office")?.icon || FolderKanban : FolderKanban;
+                const Icon =
+                  id === "office"
+                    ? PRIMARY_NAV_ITEMS.find(nav => nav.id === "office")
+                        ?.icon || FolderKanban
+                    : FolderKanban;
 
                 return (
                   <button

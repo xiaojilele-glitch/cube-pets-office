@@ -203,7 +203,10 @@ export function CommandPlanSummary({
           <div className="mt-2 text-sm leading-6 text-stone-600">
             {isZh
               ? `${plan.missions.length} 个任务主线 / ${plan.tasks.length} 个执行阶段`
-              : text.executionShapeValue(plan.missions.length, plan.tasks.length)}
+              : text.executionShapeValue(
+                  plan.missions.length,
+                  plan.tasks.length
+                )}
           </div>
         </div>
 

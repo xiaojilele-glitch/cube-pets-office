@@ -8,8 +8,8 @@
  * Requirements: 1.3, 2.1, 2.3, 2.6, 3.2, 3.3, 4.2, 4.3, 5.1
  */
 
-import type { Request, Response, NextFunction } from 'express';
-import type { EventCollector } from './event-collector.js';
+import type { Request, Response, NextFunction } from "express";
+import type { EventCollector } from "./event-collector.js";
 
 /* ─── installMissionInterceptor ─── */
 
@@ -25,7 +25,7 @@ import type { EventCollector } from './event-collector.js';
  */
 export function installMissionInterceptor(
   orchestrator: any,
-  collector: EventCollector,
+  collector: EventCollector
 ): void {
   try {
     // Preserve any existing hook so we don't break other consumers
@@ -36,7 +36,9 @@ export function installMissionInterceptor(
       orchestrator.hooks = {};
     }
 
-    orchestrator.hooks.onMissionUpdated = async (mission: any): Promise<void> => {
+    orchestrator.hooks.onMissionUpdated = async (
+      mission: any
+    ): Promise<void> => {
       // Always call the previous hook first
       try {
         await previousHook?.(mission);
@@ -45,103 +47,104 @@ export function installMissionInterceptor(
       }
 
       try {
-        const missionId: string = mission?.id ?? 'unknown';
-        const status: string = mission?.status ?? '';
-        const stageKey: string = mission?.currentStageKey ?? '';
+        const missionId: string = mission?.id ?? "unknown";
+        const status: string = mission?.status ?? "";
+        const stageKey: string = mission?.currentStageKey ?? "";
         const events: any[] = mission?.events ?? [];
-        const latestEvent = events.length > 0 ? events[events.length - 1] : undefined;
-        const source: string = latestEvent?.source ?? 'mission-core';
+        const latestEvent =
+          events.length > 0 ? events[events.length - 1] : undefined;
+        const source: string = latestEvent?.source ?? "mission-core";
 
-        if (status === 'queued' || (latestEvent?.kind === 'created')) {
+        if (status === "queued" || latestEvent?.kind === "created") {
           // Mission created
           collector.emit({
             missionId,
-            eventType: 'AGENT_STARTED',
+            eventType: "AGENT_STARTED",
             sourceAgent: source,
             eventData: {
-              action: 'mission_created',
-              title: mission?.title ?? '',
-              kind: mission?.kind ?? '',
+              action: "mission_created",
+              title: mission?.title ?? "",
+              kind: mission?.kind ?? "",
               stageKey,
             },
             metadata: {
-              phase: 'create',
+              phase: "create",
               stageKey,
             },
           });
-        } else if (status === 'done') {
+        } else if (status === "done") {
           // Mission completed
           collector.emit({
             missionId,
-            eventType: 'MILESTONE_REACHED',
+            eventType: "MILESTONE_REACHED",
             sourceAgent: source,
             eventData: {
-              action: 'mission_completed',
-              summary: mission?.summary ?? '',
+              action: "mission_completed",
+              summary: mission?.summary ?? "",
               stageKey,
               progress: mission?.progress ?? 100,
             },
             metadata: {
-              phase: 'complete',
+              phase: "complete",
               stageKey,
             },
           });
           collector.emit({
             missionId,
-            eventType: 'AGENT_STOPPED',
+            eventType: "AGENT_STOPPED",
             sourceAgent: source,
             eventData: {
-              action: 'mission_completed',
-              summary: mission?.summary ?? '',
+              action: "mission_completed",
+              summary: mission?.summary ?? "",
             },
             metadata: {
-              phase: 'complete',
+              phase: "complete",
               stageKey,
             },
           });
-        } else if (status === 'failed') {
+        } else if (status === "failed") {
           // Mission failed
           collector.emit({
             missionId,
-            eventType: 'ERROR_OCCURRED',
+            eventType: "ERROR_OCCURRED",
             sourceAgent: source,
             eventData: {
-              action: 'mission_failed',
-              summary: mission?.summary ?? '',
+              action: "mission_failed",
+              summary: mission?.summary ?? "",
               stageKey,
             },
             metadata: {
-              phase: 'fail',
+              phase: "fail",
               stageKey,
             },
           });
           collector.emit({
             missionId,
-            eventType: 'AGENT_STOPPED',
+            eventType: "AGENT_STOPPED",
             sourceAgent: source,
             eventData: {
-              action: 'mission_failed',
-              summary: mission?.summary ?? '',
+              action: "mission_failed",
+              summary: mission?.summary ?? "",
             },
             metadata: {
-              phase: 'fail',
+              phase: "fail",
               stageKey,
             },
           });
-        } else if (status === 'running') {
+        } else if (status === "running") {
           // Stage transition
           collector.emit({
             missionId,
-            eventType: 'MILESTONE_REACHED',
+            eventType: "MILESTONE_REACHED",
             sourceAgent: source,
             eventData: {
-              action: 'stage_transition',
+              action: "stage_transition",
               stageKey,
-              detail: latestEvent?.detail ?? '',
+              detail: latestEvent?.detail ?? "",
               progress: mission?.progress ?? 0,
             },
             metadata: {
-              phase: 'stageTransition',
+              phase: "stageTransition",
               stageKey,
             },
           });
@@ -165,7 +168,7 @@ export function installMissionInterceptor(
  */
 export function installMessageBusInterceptor(
   messageBus: any,
-  collector: EventCollector,
+  collector: EventCollector
 ): void {
   try {
     const originalSend = messageBus.send.bind(messageBus);
@@ -176,19 +179,26 @@ export function installMessageBusInterceptor(
       content: string,
       workflowId: string,
       stage: string,
-      metadata?: any,
+      metadata?: any
     ): Promise<any> {
       // Always call the original first — business logic must not be affected
-      const result = await originalSend(fromId, toId, content, workflowId, stage, metadata);
+      const result = await originalSend(
+        fromId,
+        toId,
+        content,
+        workflowId,
+        stage,
+        metadata
+      );
 
       try {
         const messageId: string = result?.id?.toString() ?? `msg_${Date.now()}`;
-        const missionId: string = workflowId ?? 'unknown';
+        const missionId: string = workflowId ?? "unknown";
 
         // MESSAGE_SENT from sender's perspective
         collector.emit({
           missionId,
-          eventType: 'MESSAGE_SENT',
+          eventType: "MESSAGE_SENT",
           sourceAgent: fromId,
           targetAgent: toId,
           eventData: {
@@ -196,8 +206,8 @@ export function installMessageBusInterceptor(
             receiverId: toId,
             messageId,
             messageContent: content,
-            messageType: 'INSTRUCTION' as const,
-            status: 'SENT' as const,
+            messageType: "INSTRUCTION" as const,
+            status: "SENT" as const,
           },
           metadata: {
             phase: stage,
@@ -208,7 +218,7 @@ export function installMessageBusInterceptor(
         // MESSAGE_RECEIVED from receiver's perspective
         collector.emit({
           missionId,
-          eventType: 'MESSAGE_RECEIVED',
+          eventType: "MESSAGE_RECEIVED",
           sourceAgent: toId,
           targetAgent: fromId,
           eventData: {
@@ -216,8 +226,8 @@ export function installMessageBusInterceptor(
             receiverId: toId,
             messageId,
             messageContent: content,
-            messageType: 'INSTRUCTION' as const,
-            status: 'RECEIVED' as const,
+            messageType: "INSTRUCTION" as const,
+            status: "RECEIVED" as const,
           },
           metadata: {
             phase: stage,
@@ -245,7 +255,7 @@ export function installMessageBusInterceptor(
  * so it can inspect the request body without consuming it.
  */
 export function installExecutorInterceptor(
-  collector: EventCollector,
+  collector: EventCollector
 ): (req: Request, res: Response, next: NextFunction) => void {
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
@@ -255,33 +265,33 @@ export function installExecutorInterceptor(
       }
 
       const missionId: string = event.missionId.trim();
-      const executorName: string = event.executor?.trim() ?? 'executor';
-      const stageKey: string = event.stageKey?.trim() ?? 'execute';
-      const eventType: string = event.type?.trim() ?? '';
-      const status: string = event.status?.trim() ?? '';
+      const executorName: string = event.executor?.trim() ?? "executor";
+      const stageKey: string = event.stageKey?.trim() ?? "execute";
+      const eventType: string = event.type?.trim() ?? "";
+      const status: string = event.status?.trim() ?? "";
 
       // Emit CODE_EXECUTED for execution-related events
       if (
-        eventType === 'job.progress' ||
-        eventType === 'job.completed' ||
-        stageKey === 'execute' ||
-        stageKey === 'codegen'
+        eventType === "job.progress" ||
+        eventType === "job.completed" ||
+        stageKey === "execute" ||
+        stageKey === "codegen"
       ) {
         collector.emit({
           missionId,
-          eventType: 'CODE_EXECUTED',
+          eventType: "CODE_EXECUTED",
           sourceAgent: executorName,
           eventData: {
             agentId: executorName,
-            codeSnippet: event.detail ?? event.message ?? '',
-            codeLanguage: 'unknown',
+            codeSnippet: event.detail ?? event.message ?? "",
+            codeLanguage: "unknown",
             executionInput: {
-              jobId: event.jobId ?? '',
+              jobId: event.jobId ?? "",
               stageKey,
             },
             executionOutput: {
-              stdout: event.message ?? '',
-              stderr: '',
+              stdout: event.message ?? "",
+              stderr: "",
               returnValue: event.summary ?? undefined,
             },
             executionStatus: mapExecutorStatus(status),
@@ -301,15 +311,15 @@ export function installExecutorInterceptor(
           if (!artifact?.name) continue;
           collector.emit({
             missionId,
-            eventType: 'RESOURCE_ACCESSED',
+            eventType: "RESOURCE_ACCESSED",
             sourceAgent: executorName,
             eventData: {
               agentId: executorName,
               resourceType: mapArtifactKindToResourceType(artifact.kind),
               resourceId: artifact.path ?? artifact.url ?? artifact.name,
-              accessType: 'WRITE' as const,
+              accessType: "WRITE" as const,
               accessResult: {
-                success: status !== 'failed' && status !== 'cancelled',
+                success: status !== "failed" && status !== "cancelled",
                 dataSummary: artifact.description ?? artifact.name,
                 duration: 0,
               },
@@ -327,16 +337,16 @@ export function installExecutorInterceptor(
       if (instance?.id) {
         collector.emit({
           missionId,
-          eventType: 'RESOURCE_ACCESSED',
+          eventType: "RESOURCE_ACCESSED",
           sourceAgent: executorName,
           eventData: {
             agentId: executorName,
-            resourceType: 'API' as const,
+            resourceType: "API" as const,
             resourceId: instance.id,
-            accessType: 'EXECUTE' as const,
+            accessType: "EXECUTE" as const,
             accessResult: {
-              success: status !== 'failed' && status !== 'cancelled',
-              dataSummary: `Container ${instance.image ?? 'unknown'}`,
+              success: status !== "failed" && status !== "cancelled",
+              dataSummary: `Container ${instance.image ?? "unknown"}`,
               duration: 0,
             },
           },
@@ -358,26 +368,26 @@ export function installExecutorInterceptor(
 
 function mapExecutorStatus(status: string): string {
   switch (status) {
-    case 'completed':
-      return 'SUCCESS';
-    case 'failed':
-    case 'cancelled':
-      return 'FAILURE';
+    case "completed":
+      return "SUCCESS";
+    case "failed":
+    case "cancelled":
+      return "FAILURE";
     default:
-      return 'SUCCESS';
+      return "SUCCESS";
   }
 }
 
 function mapArtifactKindToResourceType(kind: string | undefined): string {
   switch (kind) {
-    case 'file':
-      return 'FILE';
-    case 'url':
-      return 'API';
-    case 'report':
-    case 'log':
-      return 'FILE';
+    case "file":
+      return "FILE";
+    case "url":
+      return "API";
+    case "report":
+    case "log":
+      return "FILE";
     default:
-      return 'FILE';
+      return "FILE";
   }
 }

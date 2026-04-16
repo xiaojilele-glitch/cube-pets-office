@@ -28,6 +28,7 @@
 ## 核心组件
 
 ### SessionStore (`server/memory/session-store.ts`)
+
 - `buildPromptContext(agentId, query, workflowId)`: 构建 LLM 调用的上下文数组
 - `appendLLMExchange(agentId, options)`: 记录每次 LLM 调用的 prompt/response
 - `appendMessageLog(agentId, options)`: 记录智能体间消息（inbound/outbound）
@@ -49,6 +50,7 @@
 - 索引文件格式：`VectorIndexFile { version: 1, dimension: 96, records: VectorRecord[] }`
 
 ### SoulStore (`server/memory/soul-store.ts`)
+
 - `ensureSoulFile(agentId)`: 确保 SOUL.md 文件存在，文件优先于数据库
 - `ensureAllSoulFiles()`: 服务启动时为所有智能体初始化
 - `getSoulText(agentId)`: 读取当前人设文本
@@ -70,6 +72,7 @@ resolveAgentWorkspacePath(agentId, relativePath, scope)
 Scope 类型：`root` | `sessions` | `memory` | `reports`
 
 拦截规则：
+
 - 绝对路径 → 拒绝
 - `..` 路径遍历 → 拒绝
 - 解析后路径不在 baseDir 内 → 拒绝

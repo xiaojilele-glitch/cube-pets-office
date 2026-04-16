@@ -12,7 +12,7 @@
     - _Requirements: 1.1, 6.1, 7.1, 9.1_
   - [x] 1.2 扩展 `server/db/index.ts`，新增 skills、skill_metrics、skill_audit_log 表和对应的 CRUD 方法
     - 新增 `DatabaseSchema` 中的 skills、skill_metrics、skill_audit_log 数组
-    - 新增 _counters 中的 skill_metrics、skill_audit_log 计数器
+    - 新增 \_counters 中的 skill_metrics、skill_audit_log 计数器
     - 实现 getSkills、getSkill、upsertSkill、getSkillMetrics、createSkillMetric、getSkillAuditLogs、createSkillAuditLog 等方法
     - _Requirements: 1.2, 7.1, 5.4_
 

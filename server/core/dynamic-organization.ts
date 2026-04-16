@@ -1,9 +1,6 @@
 import path from "path";
 
-import type {
-  LLMMessage,
-  LLMProvider,
-} from "../../shared/workflow-runtime.js";
+import type { LLMMessage, LLMProvider } from "../../shared/workflow-runtime.js";
 import type {
   ExternalAgentNode,
   GuestAgentNode,
@@ -55,7 +52,7 @@ interface RoleTemplate {
   summaryFocus: string[];
   skillIds: string[];
   mcpIds: string[];
-  capabilities?: string[];  // e.g. ["vision", "tts", "stt"] (Req 6.3)
+  capabilities?: string[]; // e.g. ["vision", "tts", "stt"] (Req 6.3)
   execution: {
     mode: ExecutionMode;
     strategy: ExecutionStrategy;
@@ -83,28 +80,32 @@ const SKILL_LIBRARY: Record<string, WorkflowSkillBinding> = {
   "directive-decomposition": {
     id: "directive-decomposition",
     name: "Directive Decomposition",
-    summary: "Break vague requests into concrete deliverables, risks, and ownership.",
+    summary:
+      "Break vague requests into concrete deliverables, risks, and ownership.",
     prompt:
       "Translate the incoming request into explicit goals, constraints, assumptions, and review checkpoints before acting.",
   },
   "plan-synthesis": {
     id: "plan-synthesis",
     name: "Plan Synthesis",
-    summary: "Convert a direction into execution-ready sub-tasks with clear handoffs.",
+    summary:
+      "Convert a direction into execution-ready sub-tasks with clear handoffs.",
     prompt:
       "Write plans as scoped work packets with owners, expected output, and dependency notes.",
   },
   "system-design": {
     id: "system-design",
     name: "System Design",
-    summary: "Design service, API, data, and integration changes with tradeoffs.",
+    summary:
+      "Design service, API, data, and integration changes with tradeoffs.",
     prompt:
       "Favor durable architecture, call out constraints, and explain why each technical path is chosen.",
   },
   "execution-playbook": {
     id: "execution-playbook",
     name: "Execution Playbook",
-    summary: "Produce implementation steps that another engineer can follow directly.",
+    summary:
+      "Produce implementation steps that another engineer can follow directly.",
     prompt:
       "Return implementation guidance as ordered steps, acceptance signals, and edge cases to watch.",
   },
@@ -118,21 +119,24 @@ const SKILL_LIBRARY: Record<string, WorkflowSkillBinding> = {
   "quality-audit": {
     id: "quality-audit",
     name: "Quality Audit",
-    summary: "Check depth, correctness, coverage, and actionability across outputs.",
+    summary:
+      "Check depth, correctness, coverage, and actionability across outputs.",
     prompt:
       "Audit for weak logic, missing detail, untested assumptions, and unclear next actions.",
   },
   "user-outcome-thinking": {
     id: "user-outcome-thinking",
     name: "User Outcome Thinking",
-    summary: "Evaluate work through user value, clarity, and operational impact.",
+    summary:
+      "Evaluate work through user value, clarity, and operational impact.",
     prompt:
       "Explain how each recommendation changes outcomes for users, operators, or maintainers.",
   },
   "tooling-integration": {
     id: "tooling-integration",
     name: "Tooling Integration",
-    summary: "Reason about skills, tools, MCP connectors, and interface boundaries.",
+    summary:
+      "Reason about skills, tools, MCP connectors, and interface boundaries.",
     prompt:
       "When tools are involved, specify the connector purpose, required inputs, and fallback path when a tool is unavailable.",
   },
@@ -143,7 +147,8 @@ export const MCP_LIBRARY: Record<string, McpTemplate> = {
     id: "workspace-files",
     name: "Workspace Files",
     server: "internal.workspace",
-    description: "Read and write workflow artifacts in the agent-scoped workspace.",
+    description:
+      "Read and write workflow artifacts in the agent-scoped workspace.",
     connection: {
       transport: "internal",
       endpoint: "workspace://{agentId}",
@@ -167,7 +172,8 @@ export const MCP_LIBRARY: Record<string, McpTemplate> = {
     id: "report-center",
     name: "Report Center",
     server: "internal.reports",
-    description: "Access department and workflow report outputs for summary or audit.",
+    description:
+      "Access department and workflow report outputs for summary or audit.",
     connection: {
       transport: "internal",
       endpoint: "reports://{workflowId}",
@@ -178,7 +184,8 @@ export const MCP_LIBRARY: Record<string, McpTemplate> = {
     id: "tool-registry",
     name: "Tool Registry",
     server: "internal.registry",
-    description: "Review the node's declared skills, MCP tools, and model settings.",
+    description:
+      "Review the node's declared skills, MCP tools, and model settings.",
     connection: {
       transport: "internal",
       endpoint: "registry://organization/{workflowId}",
@@ -194,7 +201,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Dynamic Orchestrator",
     role: "ceo",
     defaultDepartmentLabel: "Executive Office",
-    responsibility: "Shape the dynamic organization and keep the overall answer coherent.",
+    responsibility:
+      "Shape the dynamic organization and keep the overall answer coherent.",
     responsibilities: [
       "Clarify the mission and success criteria.",
       "Delegate only the capabilities the task actually needs.",
@@ -219,7 +227,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Implementation Manager",
     role: "manager",
     defaultDepartmentLabel: "Delivery",
-    responsibility: "Turn the mission into buildable work and coordinate implementation.",
+    responsibility:
+      "Turn the mission into buildable work and coordinate implementation.",
     responsibilities: [
       "Translate the directive into executable technical tasks.",
       "Keep scope, sequencing, and dependencies explicit.",
@@ -244,7 +253,11 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
       "Synthesize findings into decision-ready guidance.",
     ],
     goals: ["Improve decision quality", "Make assumptions inspectable"],
-    summaryFocus: ["Key findings", "Evidence strength", "Recommended decisions"],
+    summaryFocus: [
+      "Key findings",
+      "Evidence strength",
+      "Recommended decisions",
+    ],
     skillIds: ["directive-decomposition", "plan-synthesis", "evidence-review"],
     mcpIds: ["workflow-memory", "report-center", "tool-registry"],
     execution: { mode: "plan", strategy: "batched", maxConcurrency: 2 },
@@ -255,13 +268,17 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Outcome Manager",
     role: "manager",
     defaultDepartmentLabel: "Growth",
-    responsibility: "Coordinate content, UX, and measurement work around user impact.",
+    responsibility:
+      "Coordinate content, UX, and measurement work around user impact.",
     responsibilities: [
       "Define the audience, user value, and success metrics.",
       "Coordinate strategy, content, and measurement outputs.",
       "Review work for clarity and behavioral impact.",
     ],
-    goals: ["Keep the answer useful to users", "Tie recommendations to measurable outcomes"],
+    goals: [
+      "Keep the answer useful to users",
+      "Tie recommendations to measurable outcomes",
+    ],
     summaryFocus: ["Audience impact", "Messaging clarity", "Measurement plan"],
     skillIds: ["plan-synthesis", "user-outcome-thinking", "evidence-review"],
     mcpIds: ["workflow-memory", "report-center", "tool-registry"],
@@ -273,7 +290,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Enablement Manager",
     role: "manager",
     defaultDepartmentLabel: "Operations",
-    responsibility: "Coordinate rollout, workflow enablement, and operational readiness.",
+    responsibility:
+      "Coordinate rollout, workflow enablement, and operational readiness.",
     responsibilities: [
       "Plan adoption, rollout, and maintenance paths.",
       "Surface operational dependencies and ownership gaps.",
@@ -291,7 +309,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Assurance Manager",
     role: "manager",
     defaultDepartmentLabel: "Quality",
-    responsibility: "Audit depth, risks, and unresolved gaps across the organization.",
+    responsibility:
+      "Audit depth, risks, and unresolved gaps across the organization.",
     responsibilities: [
       "Run cross-team quality and risk review.",
       "Call out missing evidence, shallow reasoning, and weak execution paths.",
@@ -309,7 +328,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Architecture Worker",
     role: "worker",
     defaultDepartmentLabel: "Delivery",
-    responsibility: "Design implementation structure, dependencies, and tradeoffs.",
+    responsibility:
+      "Design implementation structure, dependencies, and tradeoffs.",
     responsibilities: [
       "Outline architecture and module boundaries.",
       "Call out critical assumptions and risks.",
@@ -326,7 +346,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Execution Worker",
     role: "worker",
     defaultDepartmentLabel: "Delivery",
-    responsibility: "Turn scoped tasks into concrete implementation guidance or code changes.",
+    responsibility:
+      "Turn scoped tasks into concrete implementation guidance or code changes.",
     responsibilities: [
       "Produce executable implementation detail.",
       "Spell out acceptance criteria and edge cases.",
@@ -360,7 +381,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Experience Worker",
     role: "worker",
     defaultDepartmentLabel: "Growth",
-    responsibility: "Represent clarity, usability, and user-facing flow quality.",
+    responsibility:
+      "Represent clarity, usability, and user-facing flow quality.",
     responsibilities: [
       "Describe user-facing flow and friction points.",
       "Tie changes to user comprehension and behavior.",
@@ -377,7 +399,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Communication Worker",
     role: "worker",
     defaultDepartmentLabel: "Growth",
-    responsibility: "Produce messaging, framing, and audience-facing artifacts.",
+    responsibility:
+      "Produce messaging, framing, and audience-facing artifacts.",
     responsibilities: [
       "Shape content around audience intent.",
       "Keep the output concrete, structured, and reusable.",
@@ -394,7 +417,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Rollout Worker",
     role: "worker",
     defaultDepartmentLabel: "Operations",
-    responsibility: "Translate plans into rollout, support, and enablement steps.",
+    responsibility:
+      "Translate plans into rollout, support, and enablement steps.",
     responsibilities: [
       "Define rollout sequencing and owner handoffs.",
       "Call out runbook or support requirements.",
@@ -411,7 +435,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Prompt Worker",
     role: "worker",
     defaultDepartmentLabel: "Research",
-    responsibility: "Design prompt, skill, and role instructions for LLM workflows.",
+    responsibility:
+      "Design prompt, skill, and role instructions for LLM workflows.",
     responsibilities: [
       "Shape role instructions and prompt scaffolding.",
       "Keep prompt design aligned with the execution chain.",
@@ -428,7 +453,8 @@ const ROLE_LIBRARY: Record<string, RoleTemplate> = {
     title: "Connector Worker",
     role: "worker",
     defaultDepartmentLabel: "Operations",
-    responsibility: "Specify tool connectors, MCP servers, and integration contracts.",
+    responsibility:
+      "Specify tool connectors, MCP servers, and integration contracts.",
     responsibilities: [
       "Map each task to the minimum required tool surface.",
       "Describe connection endpoints, required inputs, and fallback behavior.",
@@ -501,7 +527,10 @@ function sanitizeId(value: string): string {
 }
 
 function shortWorkflowId(workflowId: string): string {
-  return workflowId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toLowerCase();
+  return workflowId
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 10)
+    .toLowerCase();
 }
 
 function unique<T>(items: T[]): T[] {
@@ -512,20 +541,35 @@ function inferTaskProfile(directive: string): string {
   const text = directive.toLowerCase();
 
   // Multimodal keyword detection (Req 6.1)
-  const multimodalKeywords = /语音|朗读|图片|截图|看一下|voice|speak|read\s*aloud|image|screenshot|look\s*at/i;
+  const multimodalKeywords =
+    /语音|朗读|图片|截图|看一下|voice|speak|read\s*aloud|image|screenshot|look\s*at/i;
   const hasMultimodal = multimodalKeywords.test(text);
 
   let profile: string;
 
-  if (/(mcp|skill|prompt|agent|workflow|orchestrat|connector|tool)/i.test(text)) {
+  if (
+    /(mcp|skill|prompt|agent|workflow|orchestrat|connector|tool)/i.test(text)
+  ) {
     profile = "orchestration";
-  } else if (/(code|api|server|frontend|backend|typescript|bug|test|deploy|refactor)/i.test(text)) {
+  } else if (
+    /(code|api|server|frontend|backend|typescript|bug|test|deploy|refactor)/i.test(
+      text
+    )
+  ) {
     profile = "engineering";
-  } else if (/(research|compare|analysis|analyze|benchmark|study|investigate)/i.test(text)) {
+  } else if (
+    /(research|compare|analysis|analyze|benchmark|study|investigate)/i.test(
+      text
+    )
+  ) {
     profile = "research";
-  } else if (/(growth|marketing|content|community|campaign|copy|engagement)/i.test(text)) {
+  } else if (
+    /(growth|marketing|content|community|campaign|copy|engagement)/i.test(text)
+  ) {
     profile = "growth";
-  } else if (/(ops|operation|rollout|launch|runbook|support|process)/i.test(text)) {
+  } else if (
+    /(ops|operation|rollout|launch|runbook|support|process)/i.test(text)
+  ) {
     profile = "operations";
   } else {
     profile = "general";
@@ -541,7 +585,10 @@ function buildFallbackPlan(directive: string): PlannerOutput {
   if (profile === "engineering" || profile === "orchestration") {
     departments.push({
       id: "delivery",
-      label: profile === "orchestration" ? "Workflow Delivery" : "Technical Delivery",
+      label:
+        profile === "orchestration"
+          ? "Workflow Delivery"
+          : "Technical Delivery",
       managerTemplateId: "delivery_lead",
       direction:
         "Own the implementation path, keep interfaces explicit, and return an execution-ready result.",
@@ -566,7 +613,11 @@ function buildFallbackPlan(directive: string): PlannerOutput {
       managerTemplateId: "research_lead",
       direction:
         "Clarify the problem, compare options, and make the recommendation evidence-oriented.",
-      workerTemplateIds: ["market_researcher", "data_analyst", "prompt_strategist"],
+      workerTemplateIds: [
+        "market_researcher",
+        "data_analyst",
+        "prompt_strategist",
+      ],
       strategy: "batched",
       maxConcurrency: 2,
     });
@@ -579,7 +630,11 @@ function buildFallbackPlan(directive: string): PlannerOutput {
       managerTemplateId: "growth_lead",
       direction:
         "Optimize the answer for user understanding, adoption, and measurable impact.",
-      workerTemplateIds: ["content_strategist", "user_experience_designer", "data_analyst"],
+      workerTemplateIds: [
+        "content_strategist",
+        "user_experience_designer",
+        "data_analyst",
+      ],
       strategy: "parallel",
       maxConcurrency: 2,
     });
@@ -592,7 +647,10 @@ function buildFallbackPlan(directive: string): PlannerOutput {
       managerTemplateId: "operations_lead",
       direction:
         "Own rollout, tooling, and maintenance planning so the result can be executed repeatedly.",
-      workerTemplateIds: ["operations_specialist", "mcp_integration_specialist"],
+      workerTemplateIds: [
+        "operations_specialist",
+        "mcp_integration_specialist",
+      ],
       strategy: "sequential",
       maxConcurrency: 1,
     });
@@ -605,7 +663,10 @@ function buildFallbackPlan(directive: string): PlannerOutput {
       managerTemplateId: "delivery_lead",
       direction:
         "Translate the request into clear execution steps and practical implementation guidance.",
-      workerTemplateIds: ["implementation_engineer", "user_experience_designer"],
+      workerTemplateIds: [
+        "implementation_engineer",
+        "user_experience_designer",
+      ],
       strategy: "parallel",
       maxConcurrency: 2,
     });
@@ -633,14 +694,12 @@ function buildFallbackPlan(directive: string): PlannerOutput {
 function plannerCatalogSummary(): string {
   return Object.values(ROLE_LIBRARY)
     .filter(template => template.role !== "ceo")
-    .map(
-      template => {
-        const capTag = template.capabilities?.length
-          ? ` [${template.capabilities.join(", ")}]`
-          : "";
-        return `- ${template.id} (${template.role}): ${template.title}. ${template.responsibility}${capTag}`;
-      }
-    )
+    .map(template => {
+      const capTag = template.capabilities?.length
+        ? ` [${template.capabilities.join(", ")}]`
+        : "";
+      return `- ${template.id} (${template.role}): ${template.title}. ${template.responsibility}${capTag}`;
+    })
     .join("\n");
 }
 
@@ -702,8 +761,11 @@ function normalizePlan(input: unknown): PlannerOutput {
   }
 
   const value = input as Record<string, unknown>;
-  const departmentsRaw = Array.isArray(value.departments) ? value.departments : [];
-  const departments = departmentsRaw.reduce<PlannerDepartment[]>((items, item) => {
+  const departmentsRaw = Array.isArray(value.departments)
+    ? value.departments
+    : [];
+  const departments = departmentsRaw.reduce<PlannerDepartment[]>(
+    (items, item) => {
       if (!item || typeof item !== "object") return items;
       const row = item as Record<string, unknown>;
       const managerTemplateId =
@@ -744,7 +806,8 @@ function normalizePlan(input: unknown): PlannerOutput {
             ? row.strategy
             : managerTemplate.execution.strategy,
         maxConcurrency:
-          typeof row.maxConcurrency === "number" && Number.isFinite(row.maxConcurrency)
+          typeof row.maxConcurrency === "number" &&
+          Number.isFinite(row.maxConcurrency)
             ? Math.max(1, Math.min(4, Math.floor(row.maxConcurrency)))
             : managerTemplate.execution.maxConcurrency,
       });
@@ -752,13 +815,19 @@ function normalizePlan(input: unknown): PlannerOutput {
       return items;
 
       return items;
-    }, []);
+    },
+    []
+  );
 
   if (departments.length === 0) {
     throw new Error("Planner output did not include any valid departments.");
   }
 
-  if (!departments.some(department => department.managerTemplateId === "quality_lead")) {
+  if (
+    !departments.some(
+      department => department.managerTemplateId === "quality_lead"
+    )
+  ) {
     departments.push(buildFallbackPlan("").departments.slice(-1)[0]);
   }
 
@@ -824,7 +893,9 @@ function createNode(
   departmentLabel: string,
   templateId: string,
   model: string,
-  overrides: Partial<Pick<WorkflowOrganizationNode, "goals" | "summaryFocus">> = {}
+  overrides: Partial<
+    Pick<WorkflowOrganizationNode, "goals" | "summaryFocus">
+  > = {}
 ): WorkflowOrganizationNode {
   const template = ROLE_LIBRARY[templateId];
   const agentId = `wf-${workflowKey}-${sanitizeId(nodeId)}`;
@@ -864,7 +935,11 @@ const KNOWN_FRAMEWORKS: Record<string, A2AFrameworkType> = {
 export function extractExternalAgentReferences(
   directive: string
 ): { name: string; frameworkType: A2AFrameworkType; endpoint: string }[] {
-  const refs: { name: string; frameworkType: A2AFrameworkType; endpoint: string }[] = [];
+  const refs: {
+    name: string;
+    frameworkType: A2AFrameworkType;
+    endpoint: string;
+  }[] = [];
   const seen = new Set<string>();
   let match: RegExpExecArray | null;
 
@@ -946,7 +1021,7 @@ function createGuestInvitationNode(
   invitation: ParsedInvitation,
   parentId: string,
   departmentId: string,
-  departmentLabel: string,
+  departmentLabel: string
 ): GuestAgentNode {
   const guestId = generateGuestId();
   const nodeId = `guest-${sanitizeId(invitation.guestName)}`;
@@ -962,7 +1037,8 @@ function createGuestInvitationNode(
     title: "Guest Agent",
     role: "worker",
     responsibility: `Guest agent invited via natural language: ${invitation.context.slice(0, 100)}`,
-    responsibilities: invitation.skills.length > 0 ? invitation.skills : ["Assist with tasks"],
+    responsibilities:
+      invitation.skills.length > 0 ? invitation.skills : ["Assist with tasks"],
     goals: [],
     summaryFocus: [],
     skills: [],
@@ -975,7 +1051,7 @@ function createGuestInvitationNode(
     guestConfig: {
       model: "gpt-4",
       baseUrl: "",
-      skills: invitation.skills.map((s) => ({ name: s, description: s })),
+      skills: invitation.skills.map(s => ({ name: s, description: s })),
       mcp: [],
       avatarHint: "cat",
     },
@@ -1018,7 +1094,7 @@ export async function processGuestInvitations(options: {
       invitation,
       options.directive,
       options.llmProvider,
-      options.model,
+      options.model
     );
 
     if (isApproved) {
@@ -1029,7 +1105,7 @@ export async function processGuestInvitations(options: {
       const guestConfig = {
         model: options.model,
         baseUrl: "",
-        skills: invitation.skills.map((s) => ({ name: s, description: s })),
+        skills: invitation.skills.map(s => ({ name: s, description: s })),
         mcp: [] as WorkflowMcpBinding[],
         avatarHint: "cat",
       };
@@ -1044,13 +1120,18 @@ export async function processGuestInvitations(options: {
         title: "Guest Agent",
         role: "worker",
         responsibility: `Guest agent invited via natural language`,
-        responsibilities: invitation.skills.length > 0 ? invitation.skills : ["Assist"],
+        responsibilities:
+          invitation.skills.length > 0 ? invitation.skills : ["Assist"],
         goals: [],
         summaryFocus: [],
         skills: [],
         mcp: [],
         model: { model: options.model, temperature: 0.7, maxTokens: 3000 },
-        execution: { mode: "execute", strategy: "sequential", maxConcurrency: 1 },
+        execution: {
+          mode: "execute",
+          strategy: "sequential",
+          maxConcurrency: 1,
+        },
         invitedBy: "ceo",
         source: "natural_language",
         expiresAt: Date.now() + 3600_000,
@@ -1067,7 +1148,10 @@ export async function processGuestInvitations(options: {
           io.emit("guest_join", { guestId, name: invitation.guestName });
         }
       } catch (err) {
-        console.warn(`[DynOrg] Failed to register guest ${invitation.guestName}:`, err);
+        console.warn(
+          `[DynOrg] Failed to register guest ${invitation.guestName}:`,
+          err
+        );
         rejected.push(invitation);
         approved.pop(); // Remove from approved since registration failed
       }
@@ -1079,7 +1163,8 @@ export async function processGuestInvitations(options: {
       if (io) {
         io.emit("guest_invitation_rejected", {
           guestName: invitation.guestName,
-          reason: "CEO determined the invitation is not relevant to the current task.",
+          reason:
+            "CEO determined the invitation is not relevant to the current task.",
         });
       }
     }
@@ -1098,7 +1183,7 @@ async function ceoApproveInvitation(
   invitation: ParsedInvitation,
   directive: string,
   llmProvider: LLMProvider,
-  model: string,
+  model: string
 ): Promise<boolean> {
   try {
     const messages: LLMMessage[] = [
@@ -1106,7 +1191,7 @@ async function ceoApproveInvitation(
         role: "system",
         content:
           "You are the CEO agent. Decide whether to approve a guest agent invitation. " +
-          "Reply with JSON: { \"approved\": true/false, \"reason\": \"...\" }. " +
+          'Reply with JSON: { "approved": true/false, "reason": "..." }. ' +
           "Approve if the guest's skills are relevant to the task.",
       },
       {
@@ -1131,7 +1216,9 @@ async function ceoApproveInvitation(
     return parsed.approved === true;
   } catch {
     // On LLM failure, default to approve (fail-open for usability)
-    console.warn("[DynOrg] CEO approval LLM call failed, defaulting to approve");
+    console.warn(
+      "[DynOrg] CEO approval LLM call failed, defaulting to approve"
+    );
     return true;
   }
 }
@@ -1143,7 +1230,8 @@ function buildNodeSoul(
   const parent =
     node.parentId === null
       ? null
-      : snapshot.nodes.find(candidate => candidate.id === node.parentId) || null;
+      : snapshot.nodes.find(candidate => candidate.id === node.parentId) ||
+        null;
   const childNames = snapshot.nodes
     .filter(candidate => candidate.parentId === node.id)
     .map(candidate => `${candidate.name} (${candidate.title})`);
@@ -1185,11 +1273,15 @@ ${childNames.length > 0 ? childNames.map(name => `- ${name}`).join("\n") : "- No
 `;
 }
 
-function ensureDepartmentIds(departments: PlannerDepartment[]): PlannerDepartment[] {
+function ensureDepartmentIds(
+  departments: PlannerDepartment[]
+): PlannerDepartment[] {
   const counts = new Map<string, number>();
 
   return departments.map((department, index) => {
-    const baseId = sanitizeId(department.id || department.label || `department-${index + 1}`);
+    const baseId = sanitizeId(
+      department.id || department.label || `department-${index + 1}`
+    );
     const current = (counts.get(baseId) || 0) + 1;
     counts.set(baseId, current);
 
@@ -1236,7 +1328,10 @@ function assembleOrganizationSnapshot(
       model,
       {
         goals: unique([department.direction, ...managerTemplate.goals]),
-        summaryFocus: unique([...managerTemplate.summaryFocus, department.direction]),
+        summaryFocus: unique([
+          ...managerTemplate.summaryFocus,
+          department.direction,
+        ]),
       }
     );
 
@@ -1258,7 +1353,10 @@ function assembleOrganizationSnapshot(
           workerTemplateId,
           model,
           {
-            goals: unique([department.direction, ...ROLE_LIBRARY[workerTemplateId].goals]),
+            goals: unique([
+              department.direction,
+              ...ROLE_LIBRARY[workerTemplateId].goals,
+            ]),
           }
         )
       );
@@ -1300,7 +1398,7 @@ function assembleOrganizationSnapshot(
         invitation,
         rootNodeId,
         "executive",
-        "Executive Office",
+        "Executive Office"
       )
     );
   }
@@ -1403,7 +1501,9 @@ export function materializeWorkflowOrganization(
     const parent =
       node.parentId === null
         ? null
-        : organization.nodes.find(candidate => candidate.id === node.parentId) || null;
+        : organization.nodes.find(
+            candidate => candidate.id === node.parentId
+          ) || null;
 
     db.upsertAgent({
       id: node.agentId,
@@ -1440,7 +1540,7 @@ export function materializeWorkflowOrganization(
 export function assignOrganizationPermissions(
   organization: WorkflowOrganizationSnapshot,
   roleStoreOverride?: RoleStore,
-  policyStoreOverride?: PolicyStore,
+  policyStoreOverride?: PolicyStore
 ): void {
   const roleStore = roleStoreOverride ?? new RoleStore(db);
   const policyStore = policyStoreOverride ?? new PolicyStore(db, roleStore);
@@ -1451,7 +1551,9 @@ export function assignOrganizationPermissions(
 
     // Look up permission template by agent role
     const template = roleStore.getTemplateByRole(node.role);
-    const assignedRoles: string[] = template ? [template.templateId] : ["reader"];
+    const assignedRoles: string[] = template
+      ? [template.templateId]
+      : ["reader"];
 
     // Apply permission inheritance: CEO > Manager > Worker
     if (node.role === "ceo") {
@@ -1480,13 +1582,12 @@ export function assignOrganizationPermissions(
  */
 export function deleteOrganizationPermissions(
   organizationId: string,
-  policyStoreOverride?: PolicyStore,
+  policyStoreOverride?: PolicyStore
 ): void {
   const roleStore = new RoleStore(db);
   const policyStore = policyStoreOverride ?? new PolicyStore(db, roleStore);
   policyStore.deletePoliciesByOrganization(organizationId);
 }
-
 
 export function persistOrganizationDebugLog(
   organization: WorkflowOrganizationSnapshot,

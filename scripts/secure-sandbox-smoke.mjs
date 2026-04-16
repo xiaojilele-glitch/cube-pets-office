@@ -127,7 +127,7 @@ async function submitJob(url, request) {
   if (!response.ok) {
     const body = await response.text();
     throw new Error(
-      `Failed to submit job ${request.jobId}: ${response.status} ${body}`,
+      `Failed to submit job ${request.jobId}: ${response.status} ${body}`
     );
   }
   return response.json();
@@ -151,7 +151,7 @@ async function waitForFinalJob(url, jobId, timeoutMs = 30_000) {
 
 async function fetchSecurityAudit(url, jobId) {
   const response = await fetch(
-    `${url}/api/executor/security-audit?jobId=${jobId}`,
+    `${url}/api/executor/security-audit?jobId=${jobId}`
   );
   if (!response.ok) return [];
   const body = await response.json();
@@ -277,12 +277,7 @@ try {
     const isWindows = process.platform === "win32";
     const command = isWindows ? "cmd.exe" : "npx";
     const args = isWindows
-      ? [
-          "/d",
-          "/s",
-          "/c",
-          "npx tsx services/lobster-executor/src/index.ts",
-        ]
+      ? ["/d", "/s", "/c", "npx tsx services/lobster-executor/src/index.ts"]
       : ["tsx", "services/lobster-executor/src/index.ts"];
 
     child = spawn(command, args, {
@@ -307,12 +302,16 @@ try {
 
   // ── Summary ──
   console.log(`\n${TAG} ── Summary ──`);
-  const passed = results.filter((r) => r.ok).length;
-  const failed = results.filter((r) => !r.ok).length;
-  console.log(`${TAG} ${passed} passed, ${failed} failed out of ${results.length} tests`);
+  const passed = results.filter(r => r.ok).length;
+  const failed = results.filter(r => !r.ok).length;
+  console.log(
+    `${TAG} ${passed} passed, ${failed} failed out of ${results.length} tests`
+  );
 
   if (failed > 0) {
-    console.log(`${TAG} Some tests failed. This may be expected if Docker is not available.`);
+    console.log(
+      `${TAG} Some tests failed. This may be expected if Docker is not available.`
+    );
     process.exitCode = 1;
   } else {
     console.log(`${TAG} All sandbox smoke tests passed!`);

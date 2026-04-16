@@ -2,7 +2,7 @@ import {
   agentWorkspaceFileExists,
   readAgentWorkspaceFile,
   writeAgentWorkspaceFile,
-} from '../core/access-guard.js';
+} from "../core/access-guard.js";
 
 export interface VectorizedMemorySummary {
   workflowId: string;
@@ -38,9 +38,9 @@ export interface VectorSearchHit {
 const VECTOR_DIMENSION = 96;
 
 function tokenize(text: string): string[] {
-  return (text.toLowerCase().match(/[\u4e00-\u9fff]{1,8}|[a-z0-9_]+/g) || []).filter(
-    (token) => token.length >= 2
-  );
+  return (
+    text.toLowerCase().match(/[\u4e00-\u9fff]{1,8}|[a-z0-9_]+/g) || []
+  ).filter(token => token.length >= 2);
 }
 
 function hashToken(token: string): number {
@@ -53,12 +53,17 @@ function hashToken(token: string): number {
 }
 
 function normalizeVector(vector: number[]): number[] {
-  const magnitude = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0));
+  const magnitude = Math.sqrt(
+    vector.reduce((sum, value) => sum + value * value, 0)
+  );
   if (magnitude === 0) return vector;
-  return vector.map((value) => value / magnitude);
+  return vector.map(value => value / magnitude);
 }
 
-function embedText(text: string, dimension: number = VECTOR_DIMENSION): number[] {
+function embedText(
+  text: string,
+  dimension: number = VECTOR_DIMENSION
+): number[] {
   const vector = new Array<number>(dimension).fill(0);
   const counts = new Map<string, number>();
   for (const token of tokenize(text)) {
@@ -94,25 +99,31 @@ function buildVectorText(summary: VectorizedMemorySummary): string {
     summary.summary,
     summary.role,
     summary.status,
-    summary.stage || '',
-    summary.keywords.join(' '),
+    summary.stage || "",
+    summary.keywords.join(" "),
   ]
     .filter(Boolean)
-    .join('\n');
+    .join("\n");
 }
 
 export class VectorStore {
   private getIndexFile(agentId: string): string {
-    return 'vectors.json';
+    return "vectors.json";
   }
 
   private readIndex(agentId: string): VectorIndexFile {
-    if (!agentWorkspaceFileExists(agentId, this.getIndexFile(agentId), 'memory')) {
+    if (
+      !agentWorkspaceFileExists(agentId, this.getIndexFile(agentId), "memory")
+    ) {
       return { version: 1, dimension: VECTOR_DIMENSION, records: [] };
     }
 
     try {
-      const content = readAgentWorkspaceFile(agentId, this.getIndexFile(agentId), 'memory');
+      const content = readAgentWorkspaceFile(
+        agentId,
+        this.getIndexFile(agentId),
+        "memory"
+      );
       if (!content) {
         return { version: 1, dimension: VECTOR_DIMENSION, records: [] };
       }
@@ -129,7 +140,12 @@ export class VectorStore {
   }
 
   private writeIndex(agentId: string, index: VectorIndexFile): void {
-    writeAgentWorkspaceFile(agentId, this.getIndexFile(agentId), JSON.stringify(index, null, 2), 'memory');
+    writeAgentWorkspaceFile(
+      agentId,
+      this.getIndexFile(agentId),
+      JSON.stringify(index, null, 2),
+      "memory"
+    );
   }
 
   upsertMemorySummary(agentId: string, summary: VectorizedMemorySummary): void {
@@ -144,30 +160,40 @@ export class VectorStore {
       summary,
     };
 
-    const records = index.records.filter((item) => item.id !== record.id);
+    const records = index.records.filter(item => item.id !== record.id);
     records.push(record);
-    records.sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    records.sort((left, right) =>
+      left.createdAt.localeCompare(right.createdAt)
+    );
     this.writeIndex(agentId, { ...index, records });
   }
 
-  searchMemorySummaries(agentId: string, query: string, topK: number = 5): VectorSearchHit[] {
+  searchMemorySummaries(
+    agentId: string,
+    query: string,
+    topK: number = 5
+  ): VectorSearchHit[] {
     const normalizedQuery = query.trim();
     const index = this.readIndex(agentId);
     if (!normalizedQuery) {
       return index.records
         .slice(-topK)
         .reverse()
-        .map((record) => ({ summary: record.summary, score: 0 }));
+        .map(record => ({ summary: record.summary, score: 0 }));
     }
 
     const queryVector = embedText(normalizedQuery, index.dimension);
     return index.records
-      .map((record) => ({
+      .map(record => ({
         summary: record.summary,
         score: cosineSimilarity(queryVector, record.vector),
       }))
-      .filter((item) => item.score > 0)
-      .sort((left, right) => right.score - left.score || right.summary.createdAt.localeCompare(left.summary.createdAt))
+      .filter(item => item.score > 0)
+      .sort(
+        (left, right) =>
+          right.score - left.score ||
+          right.summary.createdAt.localeCompare(left.summary.createdAt)
+      )
       .slice(0, topK);
   }
 }

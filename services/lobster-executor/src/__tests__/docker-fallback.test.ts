@@ -11,4 +11,3 @@ describe("lobster-executor docker fallback", () => {
     expect(resolveEffectiveExecutionMode("real", true)).toBe("real");
   });
 });
-

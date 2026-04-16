@@ -89,10 +89,7 @@ export const DEMO_ORGANIZATION: WorkflowOrganizationSnapshot = {
         "分配任务给 Nova 和 Blaze",
         "评审团队交付物并给出反馈",
       ],
-      goals: [
-        "产出可落地的营销活动策划方案",
-        "确保技术实现方案可行且成本可控",
-      ],
+      goals: ["产出可落地的营销活动策划方案", "确保技术实现方案可行且成本可控"],
       summaryFocus: ["活动策划质量", "技术方案可行性"],
       skills: [],
       mcp: [],
@@ -179,10 +176,7 @@ export const DEMO_ORGANIZATION: WorkflowOrganizationSnapshot = {
         "分配任务给 Flux 和 Tensor",
         "评审团队交付物并给出反馈",
       ],
-      goals: [
-        "产出智能推荐模型的训练方案",
-        "确保用户数据工程方案可落地",
-      ],
+      goals: ["产出智能推荐模型的训练方案", "确保用户数据工程方案可落地"],
       summaryFocus: ["模型方案质量", "数据工程可行性"],
       skills: [],
       mcp: [],

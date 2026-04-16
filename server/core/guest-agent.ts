@@ -13,7 +13,12 @@ import type {
   GuestAgentNode,
   GuestSkillDescriptor,
 } from "../../shared/organization-schema.js";
-import type { LLMProvider, LLMMessage, LLMCallOptions, LLMResponse } from "../../shared/workflow-runtime.js";
+import type {
+  LLMProvider,
+  LLMMessage,
+  LLMCallOptions,
+  LLMResponse,
+} from "../../shared/workflow-runtime.js";
 import { sessionStore } from "../memory/session-store.js";
 import { emitEvent } from "./socket.js";
 import { telemetryStore } from "./telemetry-store.js";
@@ -47,20 +52,24 @@ You are a temporary participant. Focus on your assigned tasks and collaborate wi
  *
  * @see Requirements 5.3, 5.4
  */
-export function buildGuestPromptContext(agentId: string, workflowId?: string): string[] {
+export function buildGuestPromptContext(
+  agentId: string,
+  workflowId?: string
+): string[] {
   if (!workflowId) return [];
 
   const entries = sessionStore.getWorkflowEntries(agentId, workflowId);
   if (entries.length === 0) return [];
 
-  const relevant = entries.filter((e) => e.type !== "llm_prompt");
+  const relevant = entries.filter(e => e.type !== "llm_prompt");
   const recent = relevant.slice(-12);
   const lines = recent
-    .map((e) => {
+    .map(e => {
       const stage = e.stage || "general";
       const dir = e.direction ? ` ${e.direction}` : "";
       const rel = e.otherAgentId ? ` ${e.otherAgentId}` : "";
-      const content = e.content.length > 320 ? `${e.content.slice(0, 320)}...` : e.content;
+      const content =
+        e.content.length > 320 ? `${e.content.slice(0, 320)}...` : e.content;
       return `[${e.timestamp}] [${stage}] [${e.type}${dir}${rel}] ${content}`;
     })
     .join("\n\n");
@@ -80,12 +89,12 @@ export function createGuestLLMProvider(config: GuestAgentConfig): LLMProvider {
 
   async function callGuestLLM(
     messages: LLMMessage[],
-    options?: LLMCallOptions,
+    options?: LLMCallOptions
   ): Promise<LLMResponse> {
     const resolvedModel = options?.model ?? model;
     const body = {
       model: resolvedModel,
-      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
       temperature: options?.temperature ?? 0.7,
       max_tokens: options?.maxTokens ?? 3000,
     };
@@ -107,7 +116,7 @@ export function createGuestLLMProvider(config: GuestAgentConfig): LLMProvider {
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(
-        `Guest LLM call failed (${res.status}): ${text.slice(0, 200)}`,
+        `Guest LLM call failed (${res.status}): ${text.slice(0, 200)}`
       );
     }
 
@@ -129,7 +138,7 @@ export function createGuestLLMProvider(config: GuestAgentConfig): LLMProvider {
     call: callGuestLLM,
     callJson: async <T = unknown>(
       messages: LLMMessage[],
-      options?: LLMCallOptions,
+      options?: LLMCallOptions
     ): Promise<T> => {
       const response = await callGuestLLM(messages, options);
       return JSON.parse(response.content) as T;
@@ -190,7 +199,7 @@ export class GuestAgent extends RuntimeAgent {
           sessionStore.appendLLMExchange(agentId, options),
         appendMessageLog: (agentId, opts) =>
           sessionStore.appendMessageLog(agentId, opts),
-        materializeWorkflowMemories: (_workflowId) => {
+        materializeWorkflowMemories: _workflowId => {
           /* Guest agents are ephemeral — no cross-workflow memory materialization */
         },
         getSoulText: (_agentId, fallback) => fallback ?? "",
@@ -198,7 +207,7 @@ export class GuestAgent extends RuntimeAgent {
       },
       llmProvider: instrumentedProvider,
       eventEmitter: {
-        emit: (event) => emitEvent(event),
+        emit: event => emitEvent(event),
       },
     };
 
@@ -213,7 +222,7 @@ export class GuestAgent extends RuntimeAgent {
         soulMd: buildGuestSoulMd(orgNode),
         isGuest: true,
       },
-      deps,
+      deps
     );
 
     this.guestConfig = config;

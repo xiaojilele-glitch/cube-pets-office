@@ -1,7 +1,7 @@
 import type {
   ExecutionEvent,
   ResourceAccessEventData,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
 /* ─── Local Types ─── */
 
@@ -57,7 +57,7 @@ export class PermissionAuditor {
         eventId: event.eventId,
         agentId: data.agentId ?? event.sourceAgent,
         timestamp: event.timestamp,
-        resourceId: data.resourceId ?? '',
+        resourceId: data.resourceId ?? "",
         requested: pc.requested,
         actual: pc.actual,
         rule: pc.rule,
@@ -74,7 +74,7 @@ export class PermissionAuditor {
    */
   getViolationStats(events: ExecutionEvent[]): ViolationStats {
     const permEvents = this.getPermissionEvents(events);
-    const violations = permEvents.filter((pe) => !pe.passed);
+    const violations = permEvents.filter(pe => !pe.passed);
 
     const byType: Record<string, number> = {};
     const byAgent: Record<string, number> = {};

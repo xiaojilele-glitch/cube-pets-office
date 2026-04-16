@@ -56,7 +56,13 @@ function TerminalPreviewInner({
   const wallVariant = variant === "wall";
   const compactFrame = embedded && !fullscreen;
   const headerHidden = headerMode === "hidden" && !fullscreen;
-  const headerHeight = headerHidden ? 0 : compactFrame ? 28 : wallVariant ? 28 : 28;
+  const headerHeight = headerHidden
+    ? 0
+    : compactFrame
+      ? 28
+      : wallVariant
+        ? 28
+        : 28;
   const showCenteredIdleState =
     !isStreaming && wallVariant && headerHidden && !fullscreen;
   const framelessWallPane = wallVariant && headerHidden && !fullscreen;
@@ -151,7 +157,13 @@ function TerminalPreviewInner({
             : compactFrame
               ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
               : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-        borderRadius: framelessWallPane ? 12 : compactFrame ? 12 : wallVariant ? 14 : 12,
+        borderRadius: framelessWallPane
+          ? 12
+          : compactFrame
+            ? 12
+            : wallVariant
+              ? 14
+              : 12,
         overflow: "hidden",
         border: framelessWallPane
           ? "none"
@@ -221,7 +233,11 @@ function TerminalPreviewInner({
             justifyContent: "space-between",
             gap: 8,
             height: headerHeight,
-            padding: compactFrame ? "0 10px" : wallVariant ? "0 10px" : "0 12px",
+            padding: compactFrame
+              ? "0 10px"
+              : wallVariant
+                ? "0 10px"
+                : "0 12px",
             borderBottom: wallVariant
               ? "1px solid rgba(71,85,105,0.2)"
               : compactFrame
@@ -235,112 +251,130 @@ function TerminalPreviewInner({
                 : "rgba(15,23,42,0.78)",
           }}
         >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          {wallVariant ? (
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: 999,
-                background: wallStatusColor,
-                boxShadow: `0 0 12px ${wallStatusColor}`,
-                flexShrink: 0,
-              }}
-            />
-          ) : (
-            <>
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: "#fb7185",
-                }}
-              />
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: "#f59e0b",
-                }}
-              />
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: "#34d399",
-                }}
-              />
-            </>
-          )}
-          <span
+          <div
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
-              fontWeight: 700,
-              letterSpacing: wallVariant
-                ? "0.1em"
-                : compactFrame
-                  ? "0.08em"
-                  : "0.12em",
-              textTransform: locale === "zh-CN" ? "none" : "uppercase",
-              color: wallVariant ? "#dbe6f3" : "#94a3b8",
             }}
           >
-            {previewTitle}
-          </span>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
-          {statusLabel ? (
+            {wallVariant ? (
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 999,
+                  background: wallStatusColor,
+                  boxShadow: `0 0 12px ${wallStatusColor}`,
+                  flexShrink: 0,
+                }}
+              />
+            ) : (
+              <>
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#fb7185",
+                  }}
+                />
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#f59e0b",
+                  }}
+                />
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 999,
+                    background: "#34d399",
+                  }}
+                />
+              </>
+            )}
             <span
               style={{
-                fontSize: compactFrame ? 8 : wallVariant ? 8 : 9,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
                 fontWeight: 700,
-                letterSpacing: wallVariant ? "0.06em" : "0.08em",
-                textTransform: locale === "zh-CN" ? "none" : "uppercase",
-                color: wallVariant
-                  ? wallStatusColor
-                  : isStreaming
-                    ? "#86efac"
-                    : "#fbbf24",
-              }}
-            >
-              {statusLabel}
-            </span>
-          ) : null}
-          {showControl ? (
-            <button
-              data-testid="terminal-fullscreen-btn"
-              onClick={event => {
-                event.stopPropagation();
-                onToggleFullscreen();
-              }}
-              style={{
-                background: wallVariant
-                  ? "rgba(30,41,59,0.64)"
+                letterSpacing: wallVariant
+                  ? "0.1em"
                   : compactFrame
-                    ? "rgba(30,41,59,0.56)"
-                    : "rgba(51,65,85,0.55)",
-                border: "1px solid rgba(148, 163, 184, 0.16)",
-                color: "#e2e8f0",
-                cursor: "pointer",
-                padding: compactFrame ? "2px 8px" : wallVariant ? "2px 7px" : "3px 9px",
-                borderRadius: 999,
-                fontSize: compactFrame ? 10 : wallVariant ? 10 : 12,
-                lineHeight: 1.2,
+                    ? "0.08em"
+                    : "0.12em",
+                textTransform: locale === "zh-CN" ? "none" : "uppercase",
+                color: wallVariant ? "#dbe6f3" : "#94a3b8",
               }}
-              aria-label={fullscreenLabel}
             >
-              {fullscreen ? "x" : "[ ]"}
-            </button>
-          ) : null}
-        </div>
+              {previewTitle}
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              flexShrink: 0,
+            }}
+          >
+            {statusLabel ? (
+              <span
+                style={{
+                  fontSize: compactFrame ? 8 : wallVariant ? 8 : 9,
+                  fontWeight: 700,
+                  letterSpacing: wallVariant ? "0.06em" : "0.08em",
+                  textTransform: locale === "zh-CN" ? "none" : "uppercase",
+                  color: wallVariant
+                    ? wallStatusColor
+                    : isStreaming
+                      ? "#86efac"
+                      : "#fbbf24",
+                }}
+              >
+                {statusLabel}
+              </span>
+            ) : null}
+            {showControl ? (
+              <button
+                data-testid="terminal-fullscreen-btn"
+                onClick={event => {
+                  event.stopPropagation();
+                  onToggleFullscreen();
+                }}
+                style={{
+                  background: wallVariant
+                    ? "rgba(30,41,59,0.64)"
+                    : compactFrame
+                      ? "rgba(30,41,59,0.56)"
+                      : "rgba(51,65,85,0.55)",
+                  border: "1px solid rgba(148, 163, 184, 0.16)",
+                  color: "#e2e8f0",
+                  cursor: "pointer",
+                  padding: compactFrame
+                    ? "2px 8px"
+                    : wallVariant
+                      ? "2px 7px"
+                      : "3px 9px",
+                  borderRadius: 999,
+                  fontSize: compactFrame ? 10 : wallVariant ? 10 : 12,
+                  lineHeight: 1.2,
+                }}
+                aria-label={fullscreenLabel}
+              >
+                {fullscreen ? "x" : "[ ]"}
+              </button>
+            ) : null}
+          </div>
         </div>
       )}
 

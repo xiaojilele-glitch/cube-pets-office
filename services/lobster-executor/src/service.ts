@@ -17,10 +17,7 @@ import type {
   ResumeExecutorJobResponse,
 } from "../../../shared/executor/api.js";
 import { ConflictError, NotFoundError } from "./errors.js";
-import {
-  getPlanJobById,
-  parseExecutorJobRequest,
-} from "./request-schema.js";
+import { getPlanJobById, parseExecutorJobRequest } from "./request-schema.js";
 import type {
   JobQueueStats,
   LobsterExecutorConfig,
@@ -151,7 +148,7 @@ export class LobsterExecutorService {
 
   async cancel(
     jobId: string,
-    request: CancelExecutorJobRequest = {},
+    request: CancelExecutorJobRequest = {}
   ): Promise<CancelExecutorJobResponse> {
     const record = this.jobs.get(jobId);
     if (!record) {
@@ -199,7 +196,8 @@ export class LobsterExecutorService {
       const finishedAt = this.now().toISOString();
       record.status = "cancelled";
       record.finishedAt = finishedAt;
-      record.summary = reason || "Executor job cancelled before execution completed";
+      record.summary =
+        reason || "Executor job cancelled before execution completed";
       record.message = record.summary;
       record.pausedAt = undefined;
       record.pauseRequested = undefined;
@@ -271,7 +269,7 @@ export class LobsterExecutorService {
 
   async pause(
     jobId: string,
-    request: PauseExecutorJobRequest = {},
+    request: PauseExecutorJobRequest = {}
   ): Promise<PauseExecutorJobResponse> {
     const record = this.jobs.get(jobId);
     if (!record) {
@@ -304,7 +302,7 @@ export class LobsterExecutorService {
 
     if (record.status !== "queued" && record.status !== "running") {
       throw new ConflictError(
-        `Executor job ${jobId} cannot be paused from status ${record.status}`,
+        `Executor job ${jobId} cannot be paused from status ${record.status}`
       );
     }
 
@@ -338,7 +336,10 @@ export class LobsterExecutorService {
     record.message = message;
     this.appendLog(record, `[pause] ${message}`);
 
-    if (record.status === "running" && typeof this.runner.pause === "function") {
+    if (
+      record.status === "running" &&
+      typeof this.runner.pause === "function"
+    ) {
       await this.runner.pause(record);
     }
 
@@ -355,7 +356,7 @@ export class LobsterExecutorService {
 
   async resume(
     jobId: string,
-    request: ResumeExecutorJobRequest = {},
+    request: ResumeExecutorJobRequest = {}
   ): Promise<ResumeExecutorJobResponse> {
     const record = this.jobs.get(jobId);
     if (!record) {
@@ -388,7 +389,7 @@ export class LobsterExecutorService {
 
     if (record.status !== "queued" && record.status !== "running") {
       throw new ConflictError(
-        `Executor job ${jobId} cannot be resumed from status ${record.status}`,
+        `Executor job ${jobId} cannot be resumed from status ${record.status}`
       );
     }
 
@@ -410,7 +411,10 @@ export class LobsterExecutorService {
     record.resumeWaiter?.resolve();
     record.resumeWaiter = undefined;
 
-    if (record.status === "running" && typeof this.runner.resume === "function") {
+    if (
+      record.status === "running" &&
+      typeof this.runner.resume === "function"
+    ) {
       await this.runner.resume(record);
     }
 
@@ -534,7 +538,7 @@ export class LobsterExecutorService {
 
   private async sendCallback(
     record: StoredJobRecord,
-    event: ExecutorEvent,
+    event: ExecutorEvent
   ): Promise<void> {
     if (!this.callbackSender) {
       return;
@@ -604,7 +608,7 @@ export class LobsterExecutorService {
     appendFileSync(
       record.logFile,
       `[${this.now().toISOString()}] ${message}\n`,
-      "utf-8",
+      "utf-8"
     );
   }
 

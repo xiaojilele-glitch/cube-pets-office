@@ -2,15 +2,18 @@
  * Global state management with Zustand
  * Manages: PDF viewer, AI config, pet interactions, UI panels
  */
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { getAIConfigSnapshot, persistAIConfig } from './browser-runtime-storage';
+import {
+  getAIConfigSnapshot,
+  persistAIConfig,
+} from "./browser-runtime-storage";
 import {
   DEFAULT_LOCALE,
   isLocale,
   LOCALE_STORAGE_KEY,
   type AppLocale,
-} from './locale';
+} from "./locale";
 import {
   createBrowserAIConfig,
   createDefaultAIConfig,
@@ -19,15 +22,15 @@ import {
   savePersistedAISettings,
   type AIConfig,
   type AIConfigMode,
-} from './ai-config';
-import { CAN_USE_ADVANCED_RUNTIME } from './deploy-target';
+} from "./ai-config";
+import { CAN_USE_ADVANCED_RUNTIME } from "./deploy-target";
 
-export type { AIConfig, AIConfigMode } from './ai-config';
+export type { AIConfig, AIConfigMode } from "./ai-config";
 
-export type RuntimeMode = 'frontend' | 'advanced';
+export type RuntimeMode = "frontend" | "advanced";
 
 export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
+  role: "user" | "assistant" | "system";
   content: string;
   petName?: string;
   timestamp: number;
@@ -85,10 +88,10 @@ interface AppState {
 }
 
 const DEFAULT_AI_CONFIG = createDefaultAIConfig();
-const RUNTIME_MODE_STORAGE_KEY = 'cube-pets-office-runtime-mode';
+const RUNTIME_MODE_STORAGE_KEY = "cube-pets-office-runtime-mode";
 
 function getSafeLocalStorage(): Storage | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
 
   try {
     return window.localStorage ?? null;
@@ -120,7 +123,7 @@ function writeStorageValue(key: string, value: string): void {
 }
 
 function getInitialLocale(): AppLocale {
-  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+  if (typeof window === "undefined") return DEFAULT_LOCALE;
 
   const stored = readStorageValue(LOCALE_STORAGE_KEY);
   return isLocale(stored) ? stored : DEFAULT_LOCALE;
@@ -132,11 +135,11 @@ function persistLocale(locale: AppLocale) {
 
 function createPreviewAIConfig(): AIConfig {
   return createServerAIConfig({
-    baseUrl: 'browser-preview',
-    model: 'Local demo responses',
-    modelReasoningEffort: 'instant',
+    baseUrl: "browser-preview",
+    model: "Local demo responses",
+    modelReasoningEffort: "instant",
     maxContext: 32000,
-    providerName: 'Built-in browser preview',
+    providerName: "Built-in browser preview",
     timeoutMs: 2000,
     stream: false,
   });
@@ -147,11 +150,11 @@ function persistAIConfigSnapshot(config: AIConfig) {
 }
 
 function getInitialRuntimeMode(): RuntimeMode {
-  if (!CAN_USE_ADVANCED_RUNTIME) return 'frontend';
-  if (typeof window === 'undefined') return 'frontend';
+  if (!CAN_USE_ADVANCED_RUNTIME) return "frontend";
+  if (typeof window === "undefined") return "frontend";
 
   const stored = readStorageValue(RUNTIME_MODE_STORAGE_KEY);
-  return stored === 'advanced' ? 'advanced' : 'frontend';
+  return stored === "advanced" ? "advanced" : "frontend";
 }
 
 function persistRuntimeMode(mode: RuntimeMode) {
@@ -160,7 +163,7 @@ function persistRuntimeMode(mode: RuntimeMode) {
 
 function getFrontendAIConfig(serverConfig: AIConfig): AIConfig {
   const persisted = loadPersistedAISettings(serverConfig);
-  return persisted.mode === 'browser_direct'
+  return persisted.mode === "browser_direct"
     ? persisted.browserConfig
     : createPreviewAIConfig();
 }
@@ -174,7 +177,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ locale });
   },
   toggleLocale: () => {
-    const nextLocale: AppLocale = get().locale === 'zh-CN' ? 'en-US' : 'zh-CN';
+    const nextLocale: AppLocale = get().locale === "zh-CN" ? "en-US" : "zh-CN";
     persistLocale(nextLocale);
     set({ locale: nextLocale });
   },
@@ -189,15 +192,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   runtimeMode: initialRuntimeMode,
   setRuntimeMode: async mode => {
-    if (mode === 'advanced' && !CAN_USE_ADVANCED_RUNTIME) {
-      persistRuntimeMode('frontend');
+    if (mode === "advanced" && !CAN_USE_ADVANCED_RUNTIME) {
+      persistRuntimeMode("frontend");
       const state = get();
-      const nextAIConfig = getFrontendAIConfig(state.serverAIConfig || DEFAULT_AI_CONFIG);
+      const nextAIConfig = getFrontendAIConfig(
+        state.serverAIConfig || DEFAULT_AI_CONFIG
+      );
       void persistAIConfigSnapshot(nextAIConfig).catch(storageError => {
-        console.warn('[Runtime Mode] Failed to persist browser snapshot:', storageError);
+        console.warn(
+          "[Runtime Mode] Failed to persist browser snapshot:",
+          storageError
+        );
       });
       set({
-        runtimeMode: 'frontend',
+        runtimeMode: "frontend",
         aiConfig: nextAIConfig,
         isAIConfigLoading: false,
       });
@@ -206,11 +214,16 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     persistRuntimeMode(mode);
 
-    if (mode === 'frontend') {
+    if (mode === "frontend") {
       const state = get();
-      const nextAIConfig = getFrontendAIConfig(state.serverAIConfig || DEFAULT_AI_CONFIG);
+      const nextAIConfig = getFrontendAIConfig(
+        state.serverAIConfig || DEFAULT_AI_CONFIG
+      );
       void persistAIConfigSnapshot(nextAIConfig).catch(storageError => {
-        console.warn('[Runtime Mode] Failed to persist browser snapshot:', storageError);
+        console.warn(
+          "[Runtime Mode] Failed to persist browser snapshot:",
+          storageError
+        );
       });
       set({
         runtimeMode: mode,
@@ -224,21 +237,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await get().hydrateAIConfig();
     } catch (error) {
-      console.error('[Runtime Mode] Failed to hydrate advanced config:', error);
+      console.error("[Runtime Mode] Failed to hydrate advanced config:", error);
     }
   },
 
   serverAIConfig: DEFAULT_AI_CONFIG,
   aiConfig:
-    initialRuntimeMode === 'frontend'
+    initialRuntimeMode === "frontend"
       ? getFrontendAIConfig(DEFAULT_AI_CONFIG)
       : DEFAULT_AI_CONFIG,
   isAIConfigLoading: false,
   hydrateAIConfig: async () => {
-    if (get().runtimeMode === 'frontend') {
-      const nextAIConfig = getFrontendAIConfig(get().serverAIConfig || DEFAULT_AI_CONFIG);
+    if (get().runtimeMode === "frontend") {
+      const nextAIConfig = getFrontendAIConfig(
+        get().serverAIConfig || DEFAULT_AI_CONFIG
+      );
       void persistAIConfigSnapshot(nextAIConfig).catch(storageError => {
-        console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+        console.warn(
+          "[AI Config] Failed to persist browser snapshot:",
+          storageError
+        );
       });
       set({
         aiConfig: nextAIConfig,
@@ -250,7 +268,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isAIConfigLoading: true });
 
     try {
-      const response = await fetch('/api/config/ai');
+      const response = await fetch("/api/config/ai");
       if (!response.ok) {
         throw new Error(`API ${response.status}`);
       }
@@ -259,12 +277,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       const serverAIConfig = createServerAIConfig(data.config || {});
       const persisted = loadPersistedAISettings(serverAIConfig);
       const aiConfig =
-        persisted.mode === 'browser_direct'
+        persisted.mode === "browser_direct"
           ? persisted.browserConfig
           : serverAIConfig;
 
       void persistAIConfigSnapshot(aiConfig).catch(storageError => {
-        console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+        console.warn(
+          "[AI Config] Failed to persist browser snapshot:",
+          storageError
+        );
       });
 
       set({
@@ -273,18 +294,23 @@ export const useAppStore = create<AppState>((set, get) => ({
         isAIConfigLoading: false,
       });
     } catch (error) {
-      console.error('[AI Config] Failed to hydrate config:', error);
+      console.error("[AI Config] Failed to hydrate config:", error);
       try {
         const cachedConfig = await getAIConfigSnapshot();
         if (cachedConfig) {
-          const fallbackServerAIConfig = get().serverAIConfig || DEFAULT_AI_CONFIG;
+          const fallbackServerAIConfig =
+            get().serverAIConfig || DEFAULT_AI_CONFIG;
           const cachedMode =
-            cachedConfig.mode === 'browser_direct' ? 'browser_direct' : 'server_proxy';
+            cachedConfig.mode === "browser_direct"
+              ? "browser_direct"
+              : "server_proxy";
           const cachedServerAIConfig = createServerAIConfig(
-            cachedMode === 'server_proxy' ? cachedConfig : fallbackServerAIConfig
+            cachedMode === "server_proxy"
+              ? cachedConfig
+              : fallbackServerAIConfig
           );
           const aiConfig =
-            cachedMode === 'browser_direct'
+            cachedMode === "browser_direct"
               ? createBrowserAIConfig(cachedConfig, cachedServerAIConfig)
               : cachedServerAIConfig;
 
@@ -296,13 +322,16 @@ export const useAppStore = create<AppState>((set, get) => ({
           return;
         }
       } catch (storageError) {
-        console.warn('[AI Config] Failed to load browser snapshot:', storageError);
+        console.warn(
+          "[AI Config] Failed to load browser snapshot:",
+          storageError
+        );
       }
 
       const fallbackServerAIConfig = get().serverAIConfig || DEFAULT_AI_CONFIG;
       const persisted = loadPersistedAISettings(fallbackServerAIConfig);
       const aiConfig =
-        persisted.mode === 'browser_direct'
+        persisted.mode === "browser_direct"
           ? persisted.browserConfig
           : fallbackServerAIConfig;
 
@@ -324,39 +353,56 @@ export const useAppStore = create<AppState>((set, get) => ({
       state.serverAIConfig
     );
 
-    savePersistedAISettings('browser_direct', nextConfig);
+    savePersistedAISettings("browser_direct", nextConfig);
     void persistAIConfigSnapshot(nextConfig).catch(storageError => {
-      console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+      console.warn(
+        "[AI Config] Failed to persist browser snapshot:",
+        storageError
+      );
     });
     set({ aiConfig: nextConfig });
   },
   setAIConfigMode: mode => {
     const state = get();
 
-    if (mode === 'browser_direct') {
-      const nextConfig = createBrowserAIConfig(state.aiConfig, state.serverAIConfig);
-      savePersistedAISettings('browser_direct', nextConfig);
+    if (mode === "browser_direct") {
+      const nextConfig = createBrowserAIConfig(
+        state.aiConfig,
+        state.serverAIConfig
+      );
+      savePersistedAISettings("browser_direct", nextConfig);
       void persistAIConfigSnapshot(nextConfig).catch(storageError => {
-        console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+        console.warn(
+          "[AI Config] Failed to persist browser snapshot:",
+          storageError
+        );
       });
       set({ aiConfig: nextConfig });
       return;
     }
 
-    savePersistedAISettings('server_proxy', state.aiConfig);
+    savePersistedAISettings("server_proxy", state.aiConfig);
     const nextConfig =
-      state.runtimeMode === 'frontend' ? createPreviewAIConfig() : state.serverAIConfig;
+      state.runtimeMode === "frontend"
+        ? createPreviewAIConfig()
+        : state.serverAIConfig;
     void persistAIConfigSnapshot(nextConfig).catch(storageError => {
-      console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+      console.warn(
+        "[AI Config] Failed to persist browser snapshot:",
+        storageError
+      );
     });
     set({ aiConfig: nextConfig });
   },
   resetBrowserAIConfig: () => {
     const state = get();
     const nextConfig = createBrowserAIConfig({}, state.serverAIConfig);
-    savePersistedAISettings('browser_direct', nextConfig);
+    savePersistedAISettings("browser_direct", nextConfig);
     void persistAIConfigSnapshot(nextConfig).catch(storageError => {
-      console.warn('[AI Config] Failed to persist browser snapshot:', storageError);
+      console.warn(
+        "[AI Config] Failed to persist browser snapshot:",
+        storageError
+      );
     });
     set({ aiConfig: nextConfig });
   },
@@ -366,7 +412,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   chatMessages: [],
   isChatOpen: false,
   isLoading: false,
-  addMessage: msg => set(state => ({ chatMessages: [...state.chatMessages, msg] })),
+  addMessage: msg =>
+    set(state => ({ chatMessages: [...state.chatMessages, msg] })),
   clearChat: () => set({ chatMessages: [] }),
   toggleChat: () => set(state => ({ isChatOpen: !state.isChatOpen })),
   setLoading: loading => set({ isLoading: loading }),

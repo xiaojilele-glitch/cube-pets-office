@@ -96,7 +96,7 @@
 - [x] 7. 实现 RoleMatcher 角色匹配器
   - [x] 7.1 创建 `server/core/role-matcher.ts`，实现 RoleMatcher 类
     - 实现 match(task, candidateAgents) 方法
-    - 实现 computeScore：skillMatch * 0.35 + agentCompetency * 0.30 + rolePerformance * 0.25 * confidenceCoeff + (1 - loadFactor) * 0.10
+    - 实现 computeScore：skillMatch _ 0.35 + agentCompetency _ 0.30 + rolePerformance _ 0.25 _ confidenceCoeff + (1 - loadFactor) \* 0.10
     - 实现 inferCandidateRoles(taskDescription)：通过 LLM 推断候选角色，失败时回退到关键词匹配
     - 当 task.requiredRole 存在时跳过推断，仅在该角色范围内匹配
     - 记录匹配结果到 ExecutionPlan 调试日志

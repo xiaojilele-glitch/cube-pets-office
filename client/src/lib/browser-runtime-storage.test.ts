@@ -6,7 +6,11 @@
  */
 import "fake-indexeddb/auto";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import type { SnapshotRecord, SnapshotPayload, MissionStatus } from "../../../shared/mission/contracts";
+import type {
+  SnapshotRecord,
+  SnapshotPayload,
+  MissionStatus,
+} from "../../../shared/mission/contracts";
 import { SNAPSHOT_VERSION } from "../../../shared/mission/contracts";
 
 // We dynamically import the module under test so we can reset IndexedDB + module cache per test
@@ -21,7 +25,11 @@ function makePayload(overrides?: Partial<SnapshotPayload>): SnapshotPayload {
   return {
     mission: { id: "m1", title: "Test Mission" } as any,
     agentMemories: [],
-    sceneLayout: { cameraPosition: [0, 0, 5], cameraTarget: [0, 0, 0], selectedPet: null },
+    sceneLayout: {
+      cameraPosition: [0, 0, 5],
+      cameraTarget: [0, 0, 0],
+      selectedPet: null,
+    },
     decisionHistory: [],
     attachmentIndex: [],
     zustandSlice: {
@@ -109,7 +117,7 @@ describe("SnapshotStore", () => {
       await saveSnapshot(s3);
 
       const result = await listSnapshots();
-      expect(result.map((r) => r.id)).toEqual(["s2", "s3", "s1"]);
+      expect(result.map(r => r.id)).toEqual(["s2", "s3", "s1"]);
     });
   });
 
@@ -120,18 +128,30 @@ describe("SnapshotStore", () => {
     });
 
     it("should return the most recent snapshot across all missions", async () => {
-      await saveSnapshot(makeSnapshot({ id: "s1", createdAt: 1000, missionId: "m1" }));
-      await saveSnapshot(makeSnapshot({ id: "s2", createdAt: 3000, missionId: "m2" }));
-      await saveSnapshot(makeSnapshot({ id: "s3", createdAt: 2000, missionId: "m1" }));
+      await saveSnapshot(
+        makeSnapshot({ id: "s1", createdAt: 1000, missionId: "m1" })
+      );
+      await saveSnapshot(
+        makeSnapshot({ id: "s2", createdAt: 3000, missionId: "m2" })
+      );
+      await saveSnapshot(
+        makeSnapshot({ id: "s3", createdAt: 2000, missionId: "m1" })
+      );
 
       const result = await getLatestSnapshot();
       expect(result?.id).toBe("s2");
     });
 
     it("should filter by missionId when provided", async () => {
-      await saveSnapshot(makeSnapshot({ id: "s1", createdAt: 1000, missionId: "m1" }));
-      await saveSnapshot(makeSnapshot({ id: "s2", createdAt: 3000, missionId: "m2" }));
-      await saveSnapshot(makeSnapshot({ id: "s3", createdAt: 2000, missionId: "m1" }));
+      await saveSnapshot(
+        makeSnapshot({ id: "s1", createdAt: 1000, missionId: "m1" })
+      );
+      await saveSnapshot(
+        makeSnapshot({ id: "s2", createdAt: 3000, missionId: "m2" })
+      );
+      await saveSnapshot(
+        makeSnapshot({ id: "s3", createdAt: 2000, missionId: "m1" })
+      );
 
       const result = await getLatestSnapshot("m1");
       expect(result?.id).toBe("s3");
@@ -162,14 +182,16 @@ describe("SnapshotStore", () => {
   describe("pruneSnapshots", () => {
     it("should keep only the most recent keepCount snapshots", async () => {
       for (let i = 0; i < 7; i++) {
-        await saveSnapshot(makeSnapshot({ id: `s${i}`, createdAt: 1000 * (i + 1) }));
+        await saveSnapshot(
+          makeSnapshot({ id: `s${i}`, createdAt: 1000 * (i + 1) })
+        );
       }
 
       await pruneSnapshots(3);
       const remaining = await listSnapshots();
       expect(remaining).toHaveLength(3);
       // Should keep s6, s5, s4 (most recent by createdAt)
-      expect(remaining.map((r) => r.id)).toEqual(["s6", "s5", "s4"]);
+      expect(remaining.map(r => r.id)).toEqual(["s6", "s5", "s4"]);
     });
 
     it("should do nothing when count is within keepCount", async () => {

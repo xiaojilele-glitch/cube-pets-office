@@ -12,7 +12,7 @@ import type {
   ReputationGrade,
   ReputationProfile,
   TrustTier,
-} from '../../../shared/reputation.js';
+} from "../../../shared/reputation.js";
 
 /** Grade ordering from highest to lowest for comparison */
 const GRADE_ORDER: Record<ReputationGrade, number> = {
@@ -32,11 +32,11 @@ export class TrustTierEvaluator {
    */
   computeGrade(overallScore: number): ReputationGrade {
     const { grades } = this.config;
-    if (overallScore >= grades.S.min) return 'S';
-    if (overallScore >= grades.A.min) return 'A';
-    if (overallScore >= grades.B.min) return 'B';
-    if (overallScore >= grades.C.min) return 'C';
-    return 'D';
+    if (overallScore >= grades.S.min) return "S";
+    if (overallScore >= grades.A.min) return "A";
+    if (overallScore >= grades.B.min) return "B";
+    if (overallScore >= grades.C.min) return "C";
+    return "D";
   }
 
   /**
@@ -45,14 +45,14 @@ export class TrustTierEvaluator {
    */
   computeTrustTier(grade: ReputationGrade): TrustTier {
     switch (grade) {
-      case 'S':
-      case 'A':
-        return 'trusted';
-      case 'B':
-        return 'standard';
-      case 'C':
-      case 'D':
-        return 'probation';
+      case "S":
+      case "A":
+        return "trusted";
+      case "B":
+        return "standard";
+      case "C":
+      case "D":
+        return "probation";
     }
   }
 
@@ -68,15 +68,15 @@ export class TrustTierEvaluator {
       profile.totalTasks >= externalUpgrade.trustedTaskCount &&
       profile.overallScore >= externalUpgrade.trustedMinScore
     ) {
-      return 'trusted';
+      return "trusted";
     }
     if (
       profile.totalTasks >= externalUpgrade.standardTaskCount &&
       profile.overallScore >= externalUpgrade.standardMinScore
     ) {
-      return 'standard';
+      return "standard";
     }
-    return 'probation';
+    return "probation";
   }
 
   /**
@@ -89,19 +89,19 @@ export class TrustTierEvaluator {
     oldGrade: ReputationGrade,
     newGrade: ReputationGrade,
     agentId: string,
-    taskId: string | number,
+    taskId: string | number
   ): Array<{ type: string; detail: string }> {
     const events: Array<{ type: string; detail: string }> = [];
 
     if (GRADE_ORDER[newGrade] < GRADE_ORDER[oldGrade]) {
       events.push({
-        type: 'REPUTATION_DOWNGRADE',
+        type: "REPUTATION_DOWNGRADE",
         detail: `Agent ${agentId} downgraded from ${oldGrade} to ${newGrade} after task ${taskId}`,
       });
 
-      if (newGrade === 'D') {
+      if (newGrade === "D") {
         events.push({
-          type: 'AGENT_REPUTATION_CRITICAL',
+          type: "AGENT_REPUTATION_CRITICAL",
           detail: `Agent ${agentId} reached critical grade D after task ${taskId}`,
         });
       }

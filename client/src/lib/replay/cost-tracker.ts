@@ -3,7 +3,7 @@ import type {
   CostSummary,
   CostAnomaly,
   CostDistribution,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
 /**
  * CostTracker — 成本追踪分析
@@ -18,10 +18,10 @@ export class CostTracker {
    */
   calculateCumulativeCost(
     events: ExecutionEvent[],
-    upToTime: number,
+    upToTime: number
   ): CostSummary {
     const relevant = events.filter(
-      (e) => e.timestamp <= upToTime && e.metadata?.cost != null,
+      e => e.timestamp <= upToTime && e.metadata?.cost != null
     );
 
     let totalCost = 0;
@@ -37,12 +37,11 @@ export class CostTracker {
       byAgent[e.sourceAgent] = (byAgent[e.sourceAgent] ?? 0) + cost;
 
       // 按模型分组：从 tokenUsage 推断模型标识，回退到 'unknown'
-      const model = e.metadata?.tokenUsage ? 'llm' : 'unknown';
+      const model = e.metadata?.tokenUsage ? "llm" : "unknown";
       byModel[model] = (byModel[model] ?? 0) + cost;
 
       // 按操作类型（eventType）分组
-      byOperationType[e.eventType] =
-        (byOperationType[e.eventType] ?? 0) + cost;
+      byOperationType[e.eventType] = (byOperationType[e.eventType] ?? 0) + cost;
     }
 
     return {
@@ -70,7 +69,7 @@ export class CostTracker {
       dist[agentKey] = (dist[agentKey] ?? 0) + cost;
 
       // model 维度
-      const model = e.metadata?.tokenUsage ? 'llm' : 'unknown';
+      const model = e.metadata?.tokenUsage ? "llm" : "unknown";
       const modelKey = `model:${model}`;
       dist[modelKey] = (dist[modelKey] ?? 0) + cost;
 
@@ -88,7 +87,7 @@ export class CostTracker {
    */
   detectCostAnomalies(
     events: ExecutionEvent[],
-    threshold: number,
+    threshold: number
   ): CostAnomaly[] {
     const anomalies: CostAnomaly[] = [];
 
@@ -119,46 +118,47 @@ export class CostTracker {
     const opEntries: [string, number][] = [];
 
     for (const [key, value] of Object.entries(distribution)) {
-      if (key.startsWith('agent:')) agentEntries.push([key, value]);
-      else if (key.startsWith('model:')) modelEntries.push([key, value]);
-      else if (key.startsWith('op:')) opEntries.push([key, value]);
+      if (key.startsWith("agent:")) agentEntries.push([key, value]);
+      else if (key.startsWith("model:")) modelEntries.push([key, value]);
+      else if (key.startsWith("op:")) opEntries.push([key, value]);
     }
 
     // 建议 1：识别成本最高的 Agent
     if (agentEntries.length > 1) {
       const sorted = [...agentEntries].sort((a, b) => b[1] - a[1]);
-      const topAgent = sorted[0][0].replace('agent:', '');
+      const topAgent = sorted[0][0].replace("agent:", "");
       const totalAgentCost = agentEntries.reduce((s, [, v]) => s + v, 0);
-      const pct = totalAgentCost > 0
-        ? ((sorted[0][1] / totalAgentCost) * 100).toFixed(0)
-        : '0';
+      const pct =
+        totalAgentCost > 0
+          ? ((sorted[0][1] / totalAgentCost) * 100).toFixed(0)
+          : "0";
       suggestions.push(
-        `Agent "${topAgent}" accounts for ${pct}% of total cost. Consider optimizing its operations.`,
+        `Agent "${topAgent}" accounts for ${pct}% of total cost. Consider optimizing its operations.`
       );
     }
 
     // 建议 2：LLM 成本占比高时建议缓存
-    const llmCost = distribution['model:llm'] ?? 0;
+    const llmCost = distribution["model:llm"] ?? 0;
     const totalModelCost = modelEntries.reduce((s, [, v]) => s + v, 0);
     if (totalModelCost > 0 && llmCost / totalModelCost > 0.7) {
       suggestions.push(
-        'LLM calls dominate cost. Consider caching repeated prompts or reducing token usage.',
+        "LLM calls dominate cost. Consider caching repeated prompts or reducing token usage."
       );
     }
 
     // 建议 3：识别成本最高的操作类型
     if (opEntries.length > 1) {
       const sorted = [...opEntries].sort((a, b) => b[1] - a[1]);
-      const topOp = sorted[0][0].replace('op:', '');
+      const topOp = sorted[0][0].replace("op:", "");
       suggestions.push(
-        `Operation type "${topOp}" is the most expensive. Review if all invocations are necessary.`,
+        `Operation type "${topOp}" is the most expensive. Review if all invocations are necessary.`
       );
     }
 
     // 如果分布为空，给出通用建议
     if (suggestions.length === 0) {
       suggestions.push(
-        'No significant cost patterns detected. Continue monitoring.',
+        "No significant cost patterns detected. Continue monitoring."
       );
     }
 

@@ -12,18 +12,18 @@ import type {
   ExecutionTimeline,
   ReplayEventType,
   ReplaySnapshot,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
 /* ─── Helpers ─── */
 
 function withQuery(
   path: string,
-  query?: Record<string, string | number | null | undefined>,
+  query?: Record<string, string | number | null | undefined>
 ): string {
   if (!query) return path;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
-    if (value === null || value === undefined || value === '') continue;
+    if (value === null || value === undefined || value === "") continue;
     params.set(key, String(value));
   }
   const qs = params.toString();
@@ -34,7 +34,9 @@ async function parseJson<T>(response: Response): Promise<T> {
   const data = await response.json();
   if (!response.ok) {
     const error =
-      typeof data?.error === 'string' ? data.error : `Replay API ${response.status}`;
+      typeof data?.error === "string"
+        ? data.error
+        : `Replay API ${response.status}`;
     throw new Error(error);
   }
   return data as T;
@@ -43,8 +45,8 @@ async function parseJson<T>(response: Response): Promise<T> {
 /* ─── Timeline metadata (without events array) ─── */
 
 export async function fetchReplayTimeline(
-  missionId: string,
-): Promise<Omit<ExecutionTimeline, 'events' | 'indices'>> {
+  missionId: string
+): Promise<Omit<ExecutionTimeline, "events" | "indices">> {
   const response = await fetch(`/api/replay/${encodeURIComponent(missionId)}`);
   return parseJson(response);
 }
@@ -62,11 +64,11 @@ export interface ReplayEventsQuery {
 
 export async function fetchReplayEvents(
   missionId: string,
-  query?: ReplayEventsQuery,
+  query?: ReplayEventsQuery
 ): Promise<ExecutionEvent[]> {
   const url = withQuery(
     `/api/replay/${encodeURIComponent(missionId)}/events`,
-    query as Record<string, string | number | null | undefined>,
+    query as Record<string, string | number | null | undefined>
   );
   const response = await fetch(url);
   return parseJson<ExecutionEvent[]>(response);
@@ -76,12 +78,11 @@ export async function fetchReplayEvents(
 
 export async function fetchReplayExport(
   missionId: string,
-  format: 'json' | 'csv' = 'json',
+  format: "json" | "csv" = "json"
 ): Promise<string> {
-  const url = withQuery(
-    `/api/replay/${encodeURIComponent(missionId)}/export`,
-    { format },
-  );
+  const url = withQuery(`/api/replay/${encodeURIComponent(missionId)}/export`, {
+    format,
+  });
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Replay export failed: ${response.status}`);
@@ -92,11 +93,11 @@ export async function fetchReplayExport(
 /* ─── Verify data integrity ─── */
 
 export async function verifyReplayIntegrity(
-  missionId: string,
+  missionId: string
 ): Promise<{ valid: boolean }> {
   const response = await fetch(
     `/api/replay/${encodeURIComponent(missionId)}/verify`,
-    { method: 'POST' },
+    { method: "POST" }
   );
   return parseJson(response);
 }
@@ -104,25 +105,25 @@ export async function verifyReplayIntegrity(
 /* ─── Snapshots ─── */
 
 export async function fetchReplaySnapshots(
-  missionId: string,
+  missionId: string
 ): Promise<ReplaySnapshot[]> {
   const response = await fetch(
-    `/api/replay/${encodeURIComponent(missionId)}/snapshots`,
+    `/api/replay/${encodeURIComponent(missionId)}/snapshots`
   );
   return parseJson<ReplaySnapshot[]>(response);
 }
 
 export async function createReplaySnapshot(
   missionId: string,
-  snapshot: Partial<ReplaySnapshot>,
+  snapshot: Partial<ReplaySnapshot>
 ): Promise<ReplaySnapshot> {
   const response = await fetch(
     `/api/replay/${encodeURIComponent(missionId)}/snapshots`,
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(snapshot),
-    },
+    }
   );
   return parseJson<ReplaySnapshot>(response);
 }
@@ -137,11 +138,11 @@ export interface AuditLogQuery {
 
 export async function fetchReplayAuditLog(
   missionId: string,
-  query?: AuditLogQuery,
+  query?: AuditLogQuery
 ): Promise<unknown[]> {
   const url = withQuery(
     `/api/replay/${encodeURIComponent(missionId)}/audit`,
-    query as Record<string, string | number | null | undefined>,
+    query as Record<string, string | number | null | undefined>
   );
   const response = await fetch(url);
   return parseJson<unknown[]>(response);

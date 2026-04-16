@@ -79,7 +79,7 @@ describe("createBrowserTTSEngine", () => {
   it("should transition to speaking then idle on successful speak", async () => {
     const engine = createBrowserTTSEngine();
     const states: TTSState[] = [];
-    engine.onStateChange((s) => states.push(s));
+    engine.onStateChange(s => states.push(s));
 
     const promise = engine.speak("hello");
 
@@ -98,7 +98,7 @@ describe("createBrowserTTSEngine", () => {
   it("should gracefully handle utterance error without rejecting", async () => {
     const engine = createBrowserTTSEngine();
     const states: TTSState[] = [];
-    engine.onStateChange((s) => states.push(s));
+    engine.onStateChange(s => states.push(s));
 
     const promise = engine.speak("fail");
     const utterance = mockSynth._current!;
@@ -139,7 +139,7 @@ describe("createBrowserTTSEngine", () => {
   it("stop() should cancel synthesis and transition to idle", () => {
     const engine = createBrowserTTSEngine();
     const states: TTSState[] = [];
-    engine.onStateChange((s) => states.push(s));
+    engine.onStateChange(s => states.push(s));
 
     engine.stop();
 
@@ -162,7 +162,7 @@ describe("createBrowserTTSEngine", () => {
   it("onStateChange unsubscribe should stop notifications", async () => {
     const engine = createBrowserTTSEngine();
     const states: TTSState[] = [];
-    const unsub = engine.onStateChange((s) => states.push(s));
+    const unsub = engine.onStateChange(s => states.push(s));
 
     unsub();
 
@@ -194,7 +194,7 @@ describe("createServerTTSEngine", () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ tts: { available: true } }), {
         status: 200,
-      }),
+      })
     );
     const engine = createServerTTSEngine("/api/voice");
     expect(engine.isSpeaking).toBe(false);
@@ -205,7 +205,7 @@ describe("createServerTTSEngine", () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ tts: { available: true } }), {
         status: 200,
-      }),
+      })
     );
 
     // Create a minimal AudioContext mock
@@ -228,7 +228,7 @@ describe("createServerTTSEngine", () => {
 
     const engine = createServerTTSEngine("/api/voice");
     const states: TTSState[] = [];
-    engine.onStateChange((s) => states.push(s));
+    engine.onStateChange(s => states.push(s));
 
     // Mock the TTS POST response
     const audioData = new ArrayBuffer(100);
@@ -236,7 +236,7 @@ describe("createServerTTSEngine", () => {
       new Response(audioData, {
         status: 200,
         headers: { "Content-Type": "audio/mpeg" },
-      }),
+      })
     );
 
     const promise = engine.speak("hello");
@@ -257,12 +257,12 @@ describe("createServerTTSEngine", () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ tts: { available: true } }), {
         status: 200,
-      }),
+      })
     );
 
     const engine = createServerTTSEngine("/api/voice");
     const states: TTSState[] = [];
-    engine.onStateChange((s) => states.push(s));
+    engine.onStateChange(s => states.push(s));
 
     // Mock TTS POST failure
     vi.mocked(fetch).mockRejectedValueOnce(new Error("network error"));
@@ -275,13 +275,13 @@ describe("createServerTTSEngine", () => {
     vi.mocked(fetch).mockResolvedValueOnce(
       new Response(JSON.stringify({ tts: { available: true } }), {
         status: 200,
-      }),
+      })
     );
 
     const engine = createServerTTSEngine("/api/voice");
 
     vi.mocked(fetch).mockResolvedValueOnce(
-      new Response("service unavailable", { status: 503 }),
+      new Response("service unavailable", { status: 503 })
     );
 
     await engine.speak("fail"); // should resolve gracefully
@@ -321,7 +321,7 @@ describe("createTTSEngine", () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ tts: { available: true } }), {
         status: 200,
-      }),
+      })
     );
 
     const config: ClientVoiceConfig = {

@@ -1,0 +1,40 @@
+.nh
+.TH "GH-PR-CHECKOUT" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-pr-checkout - Check out a pull request in git
+
+
+.SH SYNOPSIS
+.PP
+\fBgh pr checkout {<number> | <url> | <branch>} [flags]\fR
+
+
+.SH OPTIONS
+.TP
+\fB-b\fR, \fB--branch\fR \fB<string>\fR
+Local branch name to use (default: the name of the head branch)
+
+.TP
+\fB--detach\fR
+Checkout PR with a detached HEAD
+
+.TP
+\fB-f\fR, \fB--force\fR
+Reset the existing local branch to the latest state of the pull request
+
+.TP
+\fB--recurse-submodules\fR
+Update all submodules after checkout
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH SEE ALSO
+.PP
+\fBgh-pr(1)\fR

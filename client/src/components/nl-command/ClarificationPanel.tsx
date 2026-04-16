@@ -15,7 +15,7 @@ export interface ClarificationPanelProps {
   onAnswer: (
     questionId: string,
     text: string,
-    selectedOptions?: string[],
+    selectedOptions?: string[]
   ) => void | Promise<void>;
   title?: string;
   answerPlaceholder?: string;
@@ -37,9 +37,10 @@ export function ClarificationPanel({
   const isZh = locale === "zh-CN";
   const answeredIds = new Set(dialog.answers.map(answer => answer.questionId));
   const unanswered = dialog.questions.filter(
-    question => !answeredIds.has(question.questionId),
+    question => !answeredIds.has(question.questionId)
   );
-  const resolvedTitle = title ?? (isZh ? "需要补充信息" : "Clarification Needed");
+  const resolvedTitle =
+    title ?? (isZh ? "需要补充信息" : "Clarification Needed");
   const resolvedAnswerPlaceholder =
     answerPlaceholder ?? (isZh ? "请输入你的回答..." : "Type your answer...");
   const resolvedAnswerLabel = answerLabel ?? (isZh ? "提交回答" : "Answer");
@@ -52,7 +53,7 @@ export function ClarificationPanel({
     <div
       className={cn(
         "flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-amber-200 bg-amber-50/60 p-3",
-        className,
+        className
       )}
     >
       <div className="mb-3 flex shrink-0 items-center gap-2 text-sm font-medium text-amber-800">
@@ -93,7 +94,7 @@ function QuestionCard({
   onAnswer: (
     questionId: string,
     text: string,
-    selectedOptions?: string[],
+    selectedOptions?: string[]
   ) => void | Promise<void>;
   answerPlaceholder: string;
   answerLabel: string;
@@ -105,7 +106,7 @@ function QuestionCard({
   const [submitting, setSubmitting] = useState(false);
   const resolvedQuestion = localizeTaskHubQuestion(
     question,
-    locale === "zh-CN" ? "zh-CN" : "en-US",
+    locale === "zh-CN" ? "zh-CN" : "en-US"
   );
 
   const isSingleChoice = resolvedQuestion.type === "single_choice";
@@ -131,7 +132,7 @@ function QuestionCard({
         return next;
       });
     },
-    [isSingleChoice],
+    [isSingleChoice]
   );
 
   const handleSubmit = useCallback(async () => {
@@ -174,7 +175,7 @@ function QuestionCard({
                   "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
                   selected.has(option)
                     ? "border-indigo-300 bg-indigo-50 text-indigo-700"
-                    : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300",
+                    : "border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300"
                 )}
                 onClick={() => toggleOption(option)}
               >

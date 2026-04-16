@@ -37,7 +37,7 @@ let lastCreateMissionKind: string | undefined;
 
 function resetMockTasksState(
   initialSelectedTaskId: string | null,
-  initialTasks: MissionTaskSummary[],
+  initialTasks: MissionTaskSummary[]
 ) {
   lastCreateMissionKind = undefined;
   mockTasksState = {
@@ -46,7 +46,7 @@ function resetMockTasksState(
     selectTask: (id: string | null) => {
       mockTasksState.selectedTaskId = id;
     },
-    createMission: async (input) => {
+    createMission: async input => {
       lastCreateMissionKind = input.kind;
       const newId = "demo-task-001";
       const newTask: MissionTaskSummary = {
@@ -111,7 +111,7 @@ import { useDemoStore } from "@/lib/demo-store";
 // ---------------------------------------------------------------------------
 
 function makeSummary(
-  overrides: Partial<MissionTaskSummary> = {},
+  overrides: Partial<MissionTaskSummary> = {}
 ): MissionTaskSummary {
   return {
     id: overrides.id ?? "existing-task-1",
@@ -230,16 +230,16 @@ describe("DemoStoreAdapter — cleanup", () => {
     await adapter.initializeDemoMission();
 
     // A demo task should now exist in the list
-    expect(mockTasksState.tasks.some((t) => t.kind === "demo")).toBe(true);
+    expect(mockTasksState.tasks.some(t => t.kind === "demo")).toBe(true);
 
     adapter.cleanup();
 
     // No demo tasks should remain
-    const demoTasks = mockTasksState.tasks.filter((t) => t.kind === "demo");
+    const demoTasks = mockTasksState.tasks.filter(t => t.kind === "demo");
     expect(demoTasks).toHaveLength(0);
 
     // The original non-demo task should still be present
-    expect(mockTasksState.tasks.some((t) => t.id === "real-task-1")).toBe(true);
+    expect(mockTasksState.tasks.some(t => t.id === "real-task-1")).toBe(true);
   });
 
   it("resets the demo store (isActive becomes false)", async () => {

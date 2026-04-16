@@ -10,18 +10,24 @@
  * 且结果被 clamp 到 [0, 1000]。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { ReputationCalculator } from '../core/reputation/reputation-calculator.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { DimensionScores, ReputationConfig } from '../../shared/reputation.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { ReputationCalculator } from "../core/reputation/reputation-calculator.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  DimensionScores,
+  ReputationConfig,
+} from "../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** Reference implementation of the weighted overall score formula */
-function referenceOverallScore(dims: DimensionScores, w: ReputationConfig['weights']): number {
+function referenceOverallScore(
+  dims: DimensionScores,
+  w: ReputationConfig["weights"]
+): number {
   const raw =
     dims.qualityScore * w.quality +
     dims.speedScore * w.speed +
@@ -51,13 +57,13 @@ const dimensionScoresArb: fc.Arbitrary<DimensionScores> = fc.record({
  * Arbitrary for a set of positive weights that sum to 1.0.
  * Generates 5 random positive floats and normalizes them.
  */
-const weightsArb: fc.Arbitrary<ReputationConfig['weights']> = fc
+const weightsArb: fc.Arbitrary<ReputationConfig["weights"]> = fc
   .tuple(
     fc.float({ min: Math.fround(0.01), max: Math.fround(1), noNaN: true }),
     fc.float({ min: Math.fround(0.01), max: Math.fround(1), noNaN: true }),
     fc.float({ min: Math.fround(0.01), max: Math.fround(1), noNaN: true }),
     fc.float({ min: Math.fround(0.01), max: Math.fround(1), noNaN: true }),
-    fc.float({ min: Math.fround(0.01), max: Math.fround(1), noNaN: true }),
+    fc.float({ min: Math.fround(0.01), max: Math.fround(1), noNaN: true })
   )
   .map(([q, sp, e, c, r]) => {
     const sum = q + sp + e + c + r;
@@ -74,32 +80,35 @@ const weightsArb: fc.Arbitrary<ReputationConfig['weights']> = fc
 // Property Tests
 // ---------------------------------------------------------------------------
 
-describe('Property 2: 加权综合分公式', () => {
+describe("Property 2: 加权综合分公式", () => {
   const calc = new ReputationCalculator(DEFAULT_REPUTATION_CONFIG);
 
-  it('computeOverallScore matches the weighted formula with default weights for any dimensions', () => {
+  it("computeOverallScore matches the weighted formula with default weights for any dimensions", () => {
     fc.assert(
-      fc.property(dimensionScoresArb, (dims) => {
+      fc.property(dimensionScoresArb, dims => {
         const actual = calc.computeOverallScore(dims);
-        const expected = referenceOverallScore(dims, DEFAULT_REPUTATION_CONFIG.weights);
+        const expected = referenceOverallScore(
+          dims,
+          DEFAULT_REPUTATION_CONFIG.weights
+        );
         expect(actual).toBe(expected);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('computeOverallScore matches the weighted formula with arbitrary weights for any dimensions', () => {
+  it("computeOverallScore matches the weighted formula with arbitrary weights for any dimensions", () => {
     fc.assert(
       fc.property(dimensionScoresArb, weightsArb, (dims, weights) => {
         const actual = calc.computeOverallScore(dims, weights);
         const expected = referenceOverallScore(dims, weights);
         expect(actual).toBe(expected);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('result is always clamped to [0, 1000]', () => {
+  it("result is always clamped to [0, 1000]", () => {
     fc.assert(
       fc.property(dimensionScoresArb, weightsArb, (dims, weights) => {
         const result = calc.computeOverallScore(dims, weights);
@@ -107,13 +116,13 @@ describe('Property 2: 加权综合分公式', () => {
         expect(result).toBeLessThanOrEqual(1000);
         expect(Number.isInteger(result)).toBe(true);
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
-  it('all dimensions at 0 yields overallScore 0 regardless of weights', () => {
+  it("all dimensions at 0 yields overallScore 0 regardless of weights", () => {
     fc.assert(
-      fc.property(weightsArb, (weights) => {
+      fc.property(weightsArb, weights => {
         const zeroDims: DimensionScores = {
           qualityScore: 0,
           speedScore: 0,
@@ -123,13 +132,13 @@ describe('Property 2: 加权综合分公式', () => {
         };
         expect(calc.computeOverallScore(zeroDims, weights)).toBe(0);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
-  it('all dimensions at 1000 yields overallScore 1000 when weights sum to 1', () => {
+  it("all dimensions at 1000 yields overallScore 1000 when weights sum to 1", () => {
     fc.assert(
-      fc.property(weightsArb, (weights) => {
+      fc.property(weightsArb, weights => {
         const maxDims: DimensionScores = {
           qualityScore: 1000,
           speedScore: 1000,
@@ -139,7 +148,7 @@ describe('Property 2: 加权综合分公式', () => {
         };
         expect(calc.computeOverallScore(maxDims, weights)).toBe(1000);
       }),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 });

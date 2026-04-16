@@ -45,7 +45,9 @@ router.post("/tts", async (req: Request, res: Response) => {
 
   const { text, voice } = req.body as { text?: string; voice?: string };
   if (!text || typeof text !== "string") {
-    return res.status(400).json({ error: "'text' is required and must be a non-empty string." });
+    return res
+      .status(400)
+      .json({ error: "'text' is required and must be a non-empty string." });
   }
 
   try {

@@ -1,4 +1,4 @@
-import type { ExecutionEvent } from '../../../../shared/replay/contracts';
+import type { ExecutionEvent } from "../../../../shared/replay/contracts";
 
 /**
  * 关联事件查询
@@ -16,9 +16,11 @@ function extractRelationIds(event: ExecutionEvent): {
 } {
   const data = event.eventData as Record<string, unknown>;
   return {
-    messageId: typeof data.messageId === 'string' ? data.messageId : undefined,
-    decisionId: typeof data.decisionId === 'string' ? data.decisionId : undefined,
-    resourceId: typeof data.resourceId === 'string' ? data.resourceId : undefined,
+    messageId: typeof data.messageId === "string" ? data.messageId : undefined,
+    decisionId:
+      typeof data.decisionId === "string" ? data.decisionId : undefined,
+    resourceId:
+      typeof data.resourceId === "string" ? data.resourceId : undefined,
   };
 }
 
@@ -29,7 +31,7 @@ function extractRelationIds(event: ExecutionEvent): {
  */
 export function findRelatedEvents(
   targetEvent: ExecutionEvent,
-  allEvents: ExecutionEvent[],
+  allEvents: ExecutionEvent[]
 ): ExecutionEvent[] {
   const targetIds = extractRelationIds(targetEvent);
 

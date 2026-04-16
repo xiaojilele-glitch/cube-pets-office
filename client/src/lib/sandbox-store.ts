@@ -83,10 +83,7 @@ interface SandboxStoreState {
   updateScreenshot: (frame: ScreenshotFrame) => void;
   setActiveMission: (missionId: string | null) => void;
   requestLogHistory: (missionId?: string | null) => void;
-  setFullscreen: (
-    value: boolean,
-    pane?: SandboxFocusedPane
-  ) => void;
+  setFullscreen: (value: boolean, pane?: SandboxFocusedPane) => void;
   setFocusedPane: (pane: SandboxFocusedPane | null) => void;
   reset: () => void;
   initSocket: (socket: Socket) => void;

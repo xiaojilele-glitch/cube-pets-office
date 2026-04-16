@@ -63,7 +63,7 @@ export class LifecycleLog {
         return [];
       }
       const raw = fs.readFileSync(this.logFilePath, "utf-8");
-      lines = raw.split("\n").filter((l) => l.trim().length > 0);
+      lines = raw.split("\n").filter(l => l.trim().length > 0);
     } catch (e) {
       console.error("[LifecycleLog] Failed to read log file:", e);
       return [];
@@ -81,10 +81,11 @@ export class LifecycleLog {
 
     if (!filters) return entries;
 
-    return entries.filter((entry) => {
+    return entries.filter(entry => {
       if (filters.entityId && entry.entityId !== filters.entityId) return false;
       if (filters.action && entry.action !== filters.action) return false;
-      if (filters.triggeredBy && entry.triggeredBy !== filters.triggeredBy) return false;
+      if (filters.triggeredBy && entry.triggeredBy !== filters.triggeredBy)
+        return false;
       if (filters.since && entry.timestamp < filters.since) return false;
       return true;
     });

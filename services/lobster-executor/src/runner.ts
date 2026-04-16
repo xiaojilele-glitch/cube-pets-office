@@ -12,7 +12,7 @@ import { NativeRunner } from "./native-runner.js";
 export interface JobRunner {
   run(
     record: StoredJobRecord,
-    emitEvent: (event: ExecutorEvent) => void,
+    emitEvent: (event: ExecutorEvent) => void
   ): Promise<void>;
   cancel?(record: StoredJobRecord): Promise<void>;
   pause?(record: StoredJobRecord): Promise<void>;
@@ -28,7 +28,7 @@ export interface JobRunner {
 export function createJobRunner(
   config: LobsterExecutorConfig,
   callbackSender?: CallbackSender,
-  mockRunnerOptions?: MockRunnerOptions,
+  mockRunnerOptions?: MockRunnerOptions
 ): JobRunner {
   if (config.executionMode === "mock") {
     return new MockRunner(mockRunnerOptions);
@@ -37,16 +37,14 @@ export function createJobRunner(
   if (config.executionMode === "native") {
     if (!callbackSender) {
       throw new Error(
-        'CallbackSender is required when executionMode is "native"',
+        'CallbackSender is required when executionMode is "native"'
       );
     }
     return new NativeRunner(callbackSender);
   }
 
   if (!callbackSender) {
-    throw new Error(
-      'CallbackSender is required when executionMode is "real"',
-    );
+    throw new Error('CallbackSender is required when executionMode is "real"');
   }
   return new DockerRunner(config, callbackSender);
 }

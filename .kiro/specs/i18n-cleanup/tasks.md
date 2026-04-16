@@ -75,20 +75,20 @@ Systematically migrate 14 files from hardcoded Chinese/English text to the exist
   - Verify no TypeScript errors across all 14 migrated files and messages.ts.
 
 - [ ] 7. Write property and unit tests
-  - [ ]* 7.1 Write property test for message dictionary structural symmetry
+  - [ ]\* 7.1 Write property test for message dictionary structural symmetry
     - **Property 1: Message dictionary structural symmetry**
     - Use `fast-check` to generate random key paths by walking the dictionary tree
     - Assert both locales have matching structure and all leaves are non-empty strings or functions
     - Minimum 100 iterations
     - **Validates: Requirements 1.1–3.6, 4.1, 4.2**
-  - [ ]* 7.2 Write property test for locale round-trip consistency
+  - [ ]\* 7.2 Write property test for locale round-trip consistency
     - **Property 2: Locale round-trip consistency**
     - For each locale, verify `getMessages(locale)` returns the exact corresponding dictionary entry
     - **Validates: Requirements 5.1, 7.1**
-  - [ ]* 7.3 Write unit test for existing key preservation
+  - [ ]\* 7.3 Write unit test for existing key preservation
     - Snapshot existing message keys before migration, verify they still exist unchanged
     - **Validates: Requirements 4.3, 7.1**
-  - [ ]* 7.4 Write unit test for no hardcoded text in migrated files
+  - [ ]\* 7.4 Write unit test for no hardcoded text in migrated files
     - Static analysis: grep migrated files for Chinese character ranges outside comments
     - **Validates: Requirements 5.2, 6.1**
 

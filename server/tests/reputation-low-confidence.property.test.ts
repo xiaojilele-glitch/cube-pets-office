@@ -8,14 +8,17 @@
  * 当 totalTasksInRole >= 10 时 lowConfidence 为 false。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { ReputationService } from '../core/reputation/reputation-service.js';
-import { ReputationCalculator } from '../core/reputation/reputation-calculator.js';
-import { TrustTierEvaluator } from '../core/reputation/trust-tier-evaluator.js';
-import { AnomalyDetector } from '../core/reputation/anomaly-detector.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { ReputationSignal, ReputationConfig } from '../../shared/reputation.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { ReputationService } from "../core/reputation/reputation-service.js";
+import { ReputationCalculator } from "../core/reputation/reputation-calculator.js";
+import { TrustTierEvaluator } from "../core/reputation/trust-tier-evaluator.js";
+import { AnomalyDetector } from "../core/reputation/anomaly-detector.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  ReputationSignal,
+  ReputationConfig,
+} from "../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -26,16 +29,22 @@ function uniqueAgentId(): string {
   return `pbt7-agent-${++counter}-${Date.now()}`;
 }
 
-function createService(config: ReputationConfig = DEFAULT_REPUTATION_CONFIG): ReputationService {
+function createService(
+  config: ReputationConfig = DEFAULT_REPUTATION_CONFIG
+): ReputationService {
   return new ReputationService(
     new ReputationCalculator(config),
     new TrustTierEvaluator(config),
     new AnomalyDetector(config),
-    config,
+    config
   );
 }
 
-function makeSignal(agentId: string, roleId: string, taskIndex: number): ReputationSignal {
+function makeSignal(
+  agentId: string,
+  roleId: string,
+  taskIndex: number
+): ReputationSignal {
   return {
     agentId,
     taskId: `task-${taskIndex}`,
@@ -47,7 +56,7 @@ function makeSignal(agentId: string, roleId: string, taskIndex: number): Reputat
     tokenBudget: 1000,
     wasRolledBack: false,
     downstreamFailures: 0,
-    taskComplexity: 'medium',
+    taskComplexity: "medium",
     timestamp: new Date().toISOString(),
   };
 }
@@ -58,11 +67,11 @@ function makeSignal(agentId: string, roleId: string, taskIndex: number): Reputat
 
 const THRESHOLD = DEFAULT_REPUTATION_CONFIG.lowConfidence.taskThreshold; // 10
 
-describe('Property 7: 低置信度标记', () => {
-  it('lowConfidence is true when totalTasksInRole < threshold, false when >= threshold', () => {
+describe("Property 7: 低置信度标记", () => {
+  it("lowConfidence is true when totalTasksInRole < threshold, false when >= threshold", () => {
     fc.assert(
       fc.property(
-        fc.constantFrom('coder', 'reviewer', 'lead', 'tester', 'architect'),
+        fc.constantFrom("coder", "reviewer", "lead", "tester", "architect"),
         fc.integer({ min: 1, max: 20 }),
         (roleId, totalSignals) => {
           const service = createService();
@@ -82,17 +91,17 @@ describe('Property 7: 低置信度标记', () => {
               expect(roleRep!.lowConfidence).toBe(false);
             }
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('lowConfidence transitions from true to false exactly at the threshold boundary', () => {
+  it("lowConfidence transitions from true to false exactly at the threshold boundary", () => {
     fc.assert(
       fc.property(
-        fc.constantFrom('coder', 'reviewer', 'lead', 'tester', 'architect'),
-        (roleId) => {
+        fc.constantFrom("coder", "reviewer", "lead", "tester", "architect"),
+        roleId => {
           const service = createService();
           const agentId = uniqueAgentId();
           service.initializeProfile(agentId, false);
@@ -107,21 +116,23 @@ describe('Property 7: 低置信度标记', () => {
           expect(beforeThreshold.lowConfidence).toBe(true);
 
           // Send one more signal to reach threshold: lowConfidence should flip to false
-          service.handleTaskCompleted(makeSignal(agentId, roleId, THRESHOLD - 1));
+          service.handleTaskCompleted(
+            makeSignal(agentId, roleId, THRESHOLD - 1)
+          );
 
           const atThreshold = service.getReputationByRole(agentId, roleId)!;
           expect(atThreshold.totalTasksInRole).toBe(THRESHOLD);
           expect(atThreshold.lowConfidence).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('lowConfidence remains false once totalTasksInRole exceeds threshold', () => {
+  it("lowConfidence remains false once totalTasksInRole exceeds threshold", () => {
     fc.assert(
       fc.property(
-        fc.constantFrom('coder', 'reviewer', 'lead', 'tester', 'architect'),
+        fc.constantFrom("coder", "reviewer", "lead", "tester", "architect"),
         fc.integer({ min: THRESHOLD, max: 25 }),
         (roleId, totalSignals) => {
           const service = createService();
@@ -135,9 +146,9 @@ describe('Property 7: 低置信度标记', () => {
           const roleRep = service.getReputationByRole(agentId, roleId)!;
           expect(roleRep.totalTasksInRole).toBe(totalSignals);
           expect(roleRep.lowConfidence).toBe(false);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

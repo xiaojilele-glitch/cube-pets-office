@@ -7,7 +7,10 @@
 import { Router } from "express";
 import type { Request, Response } from "express";
 
-import { analyzeImages, type VisionAnalysisResult } from "../core/vision-provider.js";
+import {
+  analyzeImages,
+  type VisionAnalysisResult,
+} from "../core/vision-provider.js";
 
 interface VisionAnalyzeRequestBody {
   images: Array<{ base64DataUrl: string; name: string }>;
@@ -61,15 +64,17 @@ router.post("/analyze", async (req: Request, res: Response) => {
   try {
     const resultMap = await analyzeImages(body.images, body.prompt);
 
-    const results: VisionAnalyzeResponseBody["results"] = body.images.map(img => ({
-      name: img.name,
-      analysis: resultMap.get(img.name) ?? {
-        description: "",
-        elements: [],
-        textContent: "",
-        rawResponse: "",
-      },
-    }));
+    const results: VisionAnalyzeResponseBody["results"] = body.images.map(
+      img => ({
+        name: img.name,
+        analysis: resultMap.get(img.name) ?? {
+          description: "",
+          elements: [],
+          textContent: "",
+          rawResponse: "",
+        },
+      })
+    );
 
     return res.json({ results } satisfies VisionAnalyzeResponseBody);
   } catch (error) {

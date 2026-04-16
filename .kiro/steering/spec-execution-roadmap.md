@@ -31,22 +31,22 @@ inclusion: manual
 
 ### 后续新增 / 补充 Spec（14 个）
 
-| Spec                         | 状态         | 简述                                       |
-| ---------------------------- | ------------ | ------------------------------------------ |
-| ai-enabled-sandbox           | 已完成       | Docker 容器 AI 能力注入                    |
-| executor-integration         | 已完成       | WorkflowEngine ↔ Docker 执行桥接           |
-| holographic-ui               | 已完成       | 全息 UI 收口                               |
-| workflow-artifacts-display   | 待最终检查点 | 工作流产物展示与下载（功能开发已完成）     |
-| mission-cancel-control       | 已完成       | 任务取消端到端闭环                         |
-| mission-operator-actions     | 已完成       | 任务状态操作栏与动作模型                   |
-| task-detail-operations-first | 已完成       | 任务详情页首屏重排                         |
-| execution-language-refresh   | 未开始       | 文案从方案叙事收敛到执行协作               |
-| mission-ui-polish            | 未开始       | 任务控制台 UI 收尾打磨                     |
-| office-task-cockpit          | 开发中       | 办公室成为默认执行壳，桌面端内嵌任务驾驶舱 |
-| office-cockpit-first-screen-refresh | 规划中 | 办公室驾驶舱首屏风格重构，收敛主次关系与信息密度 |
-| office-wall-display-redesign | 规划中 | 后墙三分区监控屏改造，统一终端 / 任务 / 浏览器墙面显示 |
-| i18n-cleanup                 | 未开始       | 前端国际化与文案清理                       |
-| frontend-demo-mode           | 待补任务     | spec 目录已存在，但尚未形成 `tasks.md`     |
+| Spec                                | 状态         | 简述                                                   |
+| ----------------------------------- | ------------ | ------------------------------------------------------ |
+| ai-enabled-sandbox                  | 已完成       | Docker 容器 AI 能力注入                                |
+| executor-integration                | 已完成       | WorkflowEngine ↔ Docker 执行桥接                       |
+| holographic-ui                      | 已完成       | 全息 UI 收口                                           |
+| workflow-artifacts-display          | 待最终检查点 | 工作流产物展示与下载（功能开发已完成）                 |
+| mission-cancel-control              | 已完成       | 任务取消端到端闭环                                     |
+| mission-operator-actions            | 已完成       | 任务状态操作栏与动作模型                               |
+| task-detail-operations-first        | 已完成       | 任务详情页首屏重排                                     |
+| execution-language-refresh          | 未开始       | 文案从方案叙事收敛到执行协作                           |
+| mission-ui-polish                   | 未开始       | 任务控制台 UI 收尾打磨                                 |
+| office-task-cockpit                 | 开发中       | 办公室成为默认执行壳，桌面端内嵌任务驾驶舱             |
+| office-cockpit-first-screen-refresh | 规划中       | 办公室驾驶舱首屏风格重构，收敛主次关系与信息密度       |
+| office-wall-display-redesign        | 规划中       | 后墙三分区监控屏改造，统一终端 / 任务 / 浏览器墙面显示 |
+| i18n-cleanup                        | 未开始       | 前端国际化与文案清理                                   |
+| frontend-demo-mode                  | 待补任务     | spec 目录已存在，但尚未形成 `tasks.md`                 |
 
 ### 维护说明
 

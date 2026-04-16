@@ -47,7 +47,9 @@ function StageFlowSegment({
       if (!mesh) return;
       const t = (clock.elapsedTime * 0.12 + phase + index * 0.26) % 1;
       mesh.position.copy(curve.getPointAt(t));
-      mesh.scale.setScalar(0.7 + Math.sin(clock.elapsedTime * 5 + index) * 0.08);
+      mesh.scale.setScalar(
+        0.7 + Math.sin(clock.elapsedTime * 5 + index) * 0.08
+      );
     });
   });
 
@@ -95,7 +97,9 @@ function StageZonePulse({
   return (
     <group position={position}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.045, 0]}>
-        <ringGeometry args={[emphasized ? 0.42 : 0.28, emphasized ? 0.62 : 0.4, 40]} />
+        <ringGeometry
+          args={[emphasized ? 0.42 : 0.28, emphasized ? 0.62 : 0.4, 40]}
+        />
         <meshStandardMaterial
           color={color}
           emissive={color}
@@ -113,7 +117,12 @@ function StageZonePulse({
         decay={2}
       />
       {emphasized ? (
-        <Html position={[0, 0.75, 0]} center distanceFactor={10} style={{ pointerEvents: "none" }}>
+        <Html
+          position={[0, 0.75, 0]}
+          center
+          distanceFactor={10}
+          style={{ pointerEvents: "none" }}
+        >
           <div className="rounded-full border border-white/70 bg-white/92 px-3 py-1 text-[10px] font-semibold text-[#4C3A2A] shadow-[0_8px_22px_rgba(76,58,42,0.16)]">
             {label}
           </div>

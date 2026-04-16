@@ -4,10 +4,10 @@
  * Requirements: 12.1, 12.2, 12.3
  */
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import type { ExecutionEvent } from '../../../../shared/replay/contracts';
-import { CostTracker } from '@/lib/replay/cost-tracker';
+import type { ExecutionEvent } from "../../../../shared/replay/contracts";
+import { CostTracker } from "@/lib/replay/cost-tracker";
 
 export interface CostTrackerPanelProps {
   events: ExecutionEvent[];
@@ -17,24 +17,29 @@ export interface CostTrackerPanelProps {
 export function CostTrackerPanel({ events, upToTime }: CostTrackerPanelProps) {
   const tracker = useMemo(() => new CostTracker(), []);
 
-  const maxTime = upToTime ?? (events.length > 0 ? events[events.length - 1].timestamp : 0);
+  const maxTime =
+    upToTime ?? (events.length > 0 ? events[events.length - 1].timestamp : 0);
 
   const summary = useMemo(
     () => tracker.calculateCumulativeCost(events, maxTime),
-    [tracker, events, maxTime],
+    [tracker, events, maxTime]
   );
 
   const anomalies = useMemo(
     () => tracker.detectCostAnomalies(events, summary.totalCost * 0.3 || 0.01),
-    [tracker, events, summary.totalCost],
+    [tracker, events, summary.totalCost]
   );
 
-  const agentEntries = Object.entries(summary.byAgent).sort((a, b) => b[1] - a[1]);
+  const agentEntries = Object.entries(summary.byAgent).sort(
+    (a, b) => b[1] - a[1]
+  );
   const maxAgentCost = agentEntries[0]?.[1] ?? 1;
 
   return (
     <div className="rounded-lg border border-white/10 bg-[#1a1a2e]/95 p-3 text-xs backdrop-blur">
-      <p className="mb-2 text-[11px] font-semibold text-white/80">Cost Tracker</p>
+      <p className="mb-2 text-[11px] font-semibold text-white/80">
+        Cost Tracker
+      </p>
 
       {/* Total */}
       <div className="mb-3 text-lg font-bold text-emerald-400">
@@ -66,7 +71,7 @@ export function CostTrackerPanel({ events, upToTime }: CostTrackerPanelProps) {
           <p className="mb-1 text-[10px] font-semibold text-red-400">
             Anomalies ({anomalies.length})
           </p>
-          {anomalies.slice(0, 3).map((a) => (
+          {anomalies.slice(0, 3).map(a => (
             <p key={a.eventId} className="truncate text-[10px] text-red-300/70">
               {a.eventId.slice(0, 8)}… ${a.cost.toFixed(4)}
             </p>

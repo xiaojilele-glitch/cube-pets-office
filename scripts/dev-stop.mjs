@@ -42,9 +42,13 @@ async function stopWindowsProjectProcesses() {
     `}`,
   ].join("\n");
 
-  const { stdout } = await execFileAsync("powershell.exe", ["-NoProfile", "-Command", command], {
-    cwd: projectRoot,
-  });
+  const { stdout } = await execFileAsync(
+    "powershell.exe",
+    ["-NoProfile", "-Command", command],
+    {
+      cwd: projectRoot,
+    }
+  );
 
   process.stdout.write(stdout);
 }
@@ -56,14 +60,20 @@ async function stopUnixProjectProcesses() {
 
   const targets = stdout
     .split("\n")
-    .map((line) => line.trim())
+    .map(line => line.trim())
     .filter(Boolean)
-    .map((line) => {
+    .map(line => {
       const match = line.match(/^(\d+)\s+(.*)$/);
       if (!match) return null;
       return { pid: Number(match[1]), command: match[2] };
     })
-    .filter((entry) => entry && entry.pid !== process.pid && entry.command.includes(projectRoot) && entry.command.includes("node"));
+    .filter(
+      entry =>
+        entry &&
+        entry.pid !== process.pid &&
+        entry.command.includes(projectRoot) &&
+        entry.command.includes("node")
+    );
 
   if (!targets.length) {
     console.log("No project dev processes found.");

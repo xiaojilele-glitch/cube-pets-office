@@ -12,14 +12,14 @@ import { getAgentEmoji } from "@/lib/agent-config";
  * Returns null for an empty list.
  */
 export function selectDisplayMission(
-  tasks: MissionTaskSummary[],
+  tasks: MissionTaskSummary[]
 ): MissionTaskSummary | null {
   if (tasks.length === 0) return null;
 
-  const running = tasks.find((t) => t.status === "running");
+  const running = tasks.find(t => t.status === "running");
   if (running) return running;
 
-  const waiting = tasks.find((t) => t.status === "waiting");
+  const waiting = tasks.find(t => t.status === "waiting");
   if (waiting) return waiting;
 
   const sorted = [...tasks].sort((a, b) => b.createdAt - a.createdAt);
@@ -40,12 +40,12 @@ export function truncateTitle(title: string, maxLength: number = 40): string {
  */
 export function extractActiveAgents(
   detail: MissionTaskDetail,
-  maxCount: number = 3,
+  maxCount: number = 3
 ): Array<{ id: string; emoji: string }> {
   return detail.agents
-    .filter((a) => a.status === "working" || a.status === "thinking")
+    .filter(a => a.status === "working" || a.status === "thinking")
     .slice(0, maxCount)
-    .map((a) => ({ id: a.id, emoji: getAgentEmoji(a.id) }));
+    .map(a => ({ id: a.id, emoji: getAgentEmoji(a.id) }));
 }
 
 /**
@@ -66,7 +66,7 @@ export function getIslandScale(tier: ViewportTier): number {
  * Return the most recent 10 timeline events sorted by time descending.
  */
 export function sliceRecentEvents(
-  events: TaskTimelineEvent[],
+  events: TaskTimelineEvent[]
 ): TaskTimelineEvent[] {
   return [...events].sort((a, b) => b.time - a.time).slice(0, 10);
 }

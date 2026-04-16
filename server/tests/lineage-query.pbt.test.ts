@@ -13,7 +13,10 @@ import os from "node:os";
 import fc from "fast-check";
 import { JsonLineageStorage } from "../lineage/lineage-store.js";
 import { LineageQueryService } from "../lineage/lineage-query.js";
-import type { DataLineageNode, LineageEdge } from "../../shared/lineage/contracts.js";
+import type {
+  DataLineageNode,
+  LineageEdge,
+} from "../../shared/lineage/contracts.js";
 
 // ─── 辅助 ──────────────────────────────────────────────────────────────────
 
@@ -44,10 +47,10 @@ const arbDAG = fc
       nodeCount: fc.constant(nodeCount),
       edgeDensity: fc.constant(edgeDensity),
       // Random confidence for decision nodes
-      confidences: fc.array(
-        fc.double({ min: 0.1, max: 0.99, noNaN: true }),
-        { minLength: nodeCount, maxLength: nodeCount },
-      ),
+      confidences: fc.array(fc.double({ min: 0.1, max: 0.99, noNaN: true }), {
+        minLength: nodeCount,
+        maxLength: nodeCount,
+      }),
     });
   })
   .map(({ nodeCount, edgeDensity, confidences }) => {
@@ -120,7 +123,7 @@ function arbTargetIndex(maxExclusive: number) {
 /** Compute all ancestors of targetId using BFS on parent adjacency */
 function computeAllUpstream(
   targetId: string,
-  parents: Map<string, string[]>,
+  parents: Map<string, string[]>
 ): Set<string> {
   const visited = new Set<string>();
   const queue = [targetId];
@@ -141,7 +144,7 @@ function computeAllUpstream(
 /** Compute all descendants of targetId using BFS on children adjacency */
 function computeAllDownstream(
   targetId: string,
-  children: Map<string, string[]>,
+  children: Map<string, string[]>
 ): Set<string> {
   const visited = new Set<string>();
   const queue = [targetId];
@@ -165,54 +168,51 @@ function computeAllDownstream(
 describe("P2: getUpstream 返回的所有节点都是目标的直接或间接上游", () => {
   it("getUpstream(id) 返回的每个节点都在 ground-truth 上游集合中", async () => {
     await fc.assert(
-      fc.asyncProperty(
-        arbDAG,
-        async (dag) => {
-          const tmpDir = makeTmpDir();
-          try {
-            const store = new JsonLineageStorage(tmpDir);
-            store.init();
-            await store.batchInsertNodes(dag.nodes);
-            await store.batchInsertEdges(dag.edges);
+      fc.asyncProperty(arbDAG, async dag => {
+        const tmpDir = makeTmpDir();
+        try {
+          const store = new JsonLineageStorage(tmpDir);
+          store.init();
+          await store.batchInsertNodes(dag.nodes);
+          await store.batchInsertEdges(dag.edges);
 
-            const query = new LineageQueryService(store);
+          const query = new LineageQueryService(store);
 
-            // Test for each node in the DAG
-            for (const targetId of dag.nodeIds) {
-              const result = await query.getUpstream(targetId);
-              const resultIds = result.nodes.map((n) => n.lineageId);
+          // Test for each node in the DAG
+          for (const targetId of dag.nodeIds) {
+            const result = await query.getUpstream(targetId);
+            const resultIds = result.nodes.map(n => n.lineageId);
 
-              // Ground truth: BFS on parent adjacency
-              const expected = computeAllUpstream(targetId, dag.parents);
+            // Ground truth: BFS on parent adjacency
+            const expected = computeAllUpstream(targetId, dag.parents);
 
-              // Every returned node must be in the expected set
-              for (const rid of resultIds) {
-                expect(expected.has(rid)).toBe(true);
-              }
-
-              // Every expected node must be in the result
-              expected.forEach((eid) => {
-                expect(resultIds.indexOf(eid) !== -1).toBe(true);
-              });
+            // Every returned node must be in the expected set
+            for (const rid of resultIds) {
+              expect(expected.has(rid)).toBe(true);
             }
-          } finally {
-            cleanDir(tmpDir);
+
+            // Every expected node must be in the result
+            expected.forEach(eid => {
+              expect(resultIds.indexOf(eid) !== -1).toBe(true);
+            });
           }
-        },
-      ),
-      { numRuns: 30 },
+        } finally {
+          cleanDir(tmpDir);
+        }
+      }),
+      { numRuns: 30 }
     );
   });
 
   it("getUpstream(id, depth) 返回的节点不超过 depth 层", async () => {
     await fc.assert(
       fc.asyncProperty(
-        arbDAG.chain((dag) =>
+        arbDAG.chain(dag =>
           fc.record({
             dag: fc.constant(dag),
             targetIdx: arbTargetIndex(dag.nodeIds.length),
             depth: fc.integer({ min: 0, max: 5 }),
-          }),
+          })
         ),
         async ({ dag, targetIdx, depth }) => {
           const tmpDir = makeTmpDir();
@@ -225,12 +225,14 @@ describe("P2: getUpstream 返回的所有节点都是目标的直接或间接上
             const query = new LineageQueryService(store);
             const targetId = dag.nodeIds[targetIdx];
             const result = await query.getUpstream(targetId, depth);
-            const resultIds = result.nodes.map((n) => n.lineageId);
+            const resultIds = result.nodes.map(n => n.lineageId);
 
             // All returned nodes must be reachable within `depth` hops
             // Compute BFS with depth limit
             const visited = new Set<string>();
-            const queue: Array<{ id: string; d: number }> = [{ id: targetId, d: 0 }];
+            const queue: Array<{ id: string; d: number }> = [
+              { id: targetId, d: 0 },
+            ];
             visited.add(targetId);
             while (queue.length > 0) {
               const { id, d } = queue.shift()!;
@@ -250,9 +252,9 @@ describe("P2: getUpstream 返回的所有节点都是目标的直接或间接上
           } finally {
             cleanDir(tmpDir);
           }
-        },
+        }
       ),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 });
@@ -263,53 +265,50 @@ describe("P2: getUpstream 返回的所有节点都是目标的直接或间接上
 describe("P3: getDownstream 返回的所有节点都是目标的直接或间接下游", () => {
   it("getDownstream(id) 返回的每个节点都在 ground-truth 下游集合中", async () => {
     await fc.assert(
-      fc.asyncProperty(
-        arbDAG,
-        async (dag) => {
-          const tmpDir = makeTmpDir();
-          try {
-            const store = new JsonLineageStorage(tmpDir);
-            store.init();
-            await store.batchInsertNodes(dag.nodes);
-            await store.batchInsertEdges(dag.edges);
+      fc.asyncProperty(arbDAG, async dag => {
+        const tmpDir = makeTmpDir();
+        try {
+          const store = new JsonLineageStorage(tmpDir);
+          store.init();
+          await store.batchInsertNodes(dag.nodes);
+          await store.batchInsertEdges(dag.edges);
 
-            const query = new LineageQueryService(store);
+          const query = new LineageQueryService(store);
 
-            for (const targetId of dag.nodeIds) {
-              const result = await query.getDownstream(targetId);
-              const resultIds = result.nodes.map((n) => n.lineageId);
+          for (const targetId of dag.nodeIds) {
+            const result = await query.getDownstream(targetId);
+            const resultIds = result.nodes.map(n => n.lineageId);
 
-              // Ground truth: BFS on children adjacency
-              const expected = computeAllDownstream(targetId, dag.children);
+            // Ground truth: BFS on children adjacency
+            const expected = computeAllDownstream(targetId, dag.children);
 
-              // Every returned node must be in the expected set
-              for (const rid of resultIds) {
-                expect(expected.has(rid)).toBe(true);
-              }
-
-              // Every expected node must be in the result
-              expected.forEach((eid) => {
-                expect(resultIds.indexOf(eid) !== -1).toBe(true);
-              });
+            // Every returned node must be in the expected set
+            for (const rid of resultIds) {
+              expect(expected.has(rid)).toBe(true);
             }
-          } finally {
-            cleanDir(tmpDir);
+
+            // Every expected node must be in the result
+            expected.forEach(eid => {
+              expect(resultIds.indexOf(eid) !== -1).toBe(true);
+            });
           }
-        },
-      ),
-      { numRuns: 30 },
+        } finally {
+          cleanDir(tmpDir);
+        }
+      }),
+      { numRuns: 30 }
     );
   });
 
   it("getDownstream(id, depth) 返回的节点不超过 depth 层", async () => {
     await fc.assert(
       fc.asyncProperty(
-        arbDAG.chain((dag) =>
+        arbDAG.chain(dag =>
           fc.record({
             dag: fc.constant(dag),
             targetIdx: arbTargetIndex(dag.nodeIds.length),
             depth: fc.integer({ min: 0, max: 5 }),
-          }),
+          })
         ),
         async ({ dag, targetIdx, depth }) => {
           const tmpDir = makeTmpDir();
@@ -322,11 +321,13 @@ describe("P3: getDownstream 返回的所有节点都是目标的直接或间接�
             const query = new LineageQueryService(store);
             const targetId = dag.nodeIds[targetIdx];
             const result = await query.getDownstream(targetId, depth);
-            const resultIds = result.nodes.map((n) => n.lineageId);
+            const resultIds = result.nodes.map(n => n.lineageId);
 
             // Compute BFS with depth limit on children
             const visited = new Set<string>();
-            const queue: Array<{ id: string; d: number }> = [{ id: targetId, d: 0 }];
+            const queue: Array<{ id: string; d: number }> = [
+              { id: targetId, d: 0 },
+            ];
             visited.add(targetId);
             while (queue.length > 0) {
               const { id, d } = queue.shift()!;
@@ -346,9 +347,9 @@ describe("P3: getDownstream 返回的所有节点都是目标的直接或间接�
           } finally {
             cleanDir(tmpDir);
           }
-        },
+        }
       ),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 });
@@ -360,13 +361,13 @@ describe("P4: getFullPath 返回的路径中每条边的 fromId 节点在 toId �
   it("getFullPath(sourceId, decisionId) 的边满足拓扑序", async () => {
     await fc.assert(
       fc.asyncProperty(
-        arbDAG.filter((dag) => {
+        arbDAG.filter(dag => {
           // Ensure there's at least a path from node_0 to the last node
           const lastId = dag.nodeIds[dag.nodeIds.length - 1];
           const reachable = computeAllDownstream(dag.nodeIds[0], dag.children);
           return reachable.has(lastId);
         }),
-        async (dag) => {
+        async dag => {
           const tmpDir = makeTmpDir();
           try {
             const store = new JsonLineageStorage(tmpDir);
@@ -383,7 +384,7 @@ describe("P4: getFullPath 返回的路径中每条边的 fromId 节点在 toId �
             if (result.nodes.length === 0) return; // no path found is acceptable if filtered wrong
 
             // Build position map from the returned nodes
-            const nodeIds = result.nodes.map((n) => n.lineageId);
+            const nodeIds = result.nodes.map(n => n.lineageId);
 
             // Verify: all nodes in the path are on a valid path from source to decision
             expect(nodeIds.indexOf(sourceId) !== -1).toBe(true);
@@ -400,9 +401,9 @@ describe("P4: getFullPath 返回的路径中每条边的 fromId 节点在 toId �
           } finally {
             cleanDir(tmpDir);
           }
-        },
+        }
       ),
-      { numRuns: 30 },
+      { numRuns: 30 }
     );
   });
 });

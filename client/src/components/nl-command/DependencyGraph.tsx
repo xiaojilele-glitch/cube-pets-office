@@ -20,7 +20,8 @@ const PAD = 20;
 export function DependencyGraph({ plan }: DependencyGraphProps) {
   const { nodes, edges, width, height } = useMemo(() => {
     const entries = plan.timeline?.entries ?? [];
-    if (entries.length === 0) return { nodes: [], edges: [], width: 0, height: 0 };
+    if (entries.length === 0)
+      return { nodes: [], edges: [], width: 0, height: 0 };
 
     // Build label map
     const labelMap = new Map<string, string>();
@@ -38,7 +39,13 @@ export function DependencyGraph({ plan }: DependencyGraphProps) {
 
     // Position nodes
     const posMap = new Map<string, { x: number; y: number }>();
-    const nodeList: { id: string; label: string; x: number; y: number; critical: boolean }[] = [];
+    const nodeList: {
+      id: string;
+      label: string;
+      x: number;
+      y: number;
+      critical: boolean;
+    }[] = [];
     let maxX = 0;
     let maxY = 0;
     for (let li = 0; li < sortedLayers.length; li++) {
@@ -47,8 +54,14 @@ export function DependencyGraph({ plan }: DependencyGraphProps) {
         const x = PAD + li * GAP_X;
         const y = PAD + ni * GAP_Y;
         posMap.set(ids[ni], { x, y });
-        const entry = entries.find((e) => e.entityId === ids[ni]);
-        nodeList.push({ id: ids[ni], label: labelMap.get(ids[ni]) ?? ids[ni], x, y, critical: entry?.isCriticalPath ?? false });
+        const entry = entries.find(e => e.entityId === ids[ni]);
+        nodeList.push({
+          id: ids[ni],
+          label: labelMap.get(ids[ni]) ?? ids[ni],
+          x,
+          y,
+          critical: entry?.isCriticalPath ?? false,
+        });
         maxX = Math.max(maxX, x + NODE_W);
         maxY = Math.max(maxY, y + NODE_H);
       }
@@ -63,33 +76,82 @@ export function DependencyGraph({ plan }: DependencyGraphProps) {
         const to = posMap.get(cid)!;
         for (const pid of prevIds) {
           const from = posMap.get(pid)!;
-          edgeList.push({ x1: from.x + NODE_W, y1: from.y + NODE_H / 2, x2: to.x, y2: to.y + NODE_H / 2 });
+          edgeList.push({
+            x1: from.x + NODE_W,
+            y1: from.y + NODE_H / 2,
+            x2: to.x,
+            y2: to.y + NODE_H / 2,
+          });
         }
       }
     }
 
-    return { nodes: nodeList, edges: edgeList, width: maxX + PAD, height: maxY + PAD };
+    return {
+      nodes: nodeList,
+      edges: edgeList,
+      width: maxX + PAD,
+      height: maxY + PAD,
+    };
   }, [plan]);
 
   if (nodes.length === 0) {
-    return <div className="p-4 text-sm text-stone-400">No dependency data available.</div>;
+    return (
+      <div className="p-4 text-sm text-stone-400">
+        No dependency data available.
+      </div>
+    );
   }
 
   return (
-    <div className="overflow-auto rounded border border-stone-200" style={{ maxHeight: 360 }}>
+    <div
+      className="overflow-auto rounded border border-stone-200"
+      style={{ maxHeight: 360 }}
+    >
       <svg width={width} height={height} className="block">
         <defs>
-          <marker id="dep-arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <marker
+            id="dep-arrow"
+            markerWidth="8"
+            markerHeight="6"
+            refX="8"
+            refY="3"
+            orient="auto"
+          >
             <path d="M0,0 L8,3 L0,6 Z" fill="#94a3b8" />
           </marker>
         </defs>
         {edges.map((e, i) => (
-          <line key={i} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} stroke="#94a3b8" strokeWidth={1.5} markerEnd="url(#dep-arrow)" />
+          <line
+            key={i}
+            x1={e.x1}
+            y1={e.y1}
+            x2={e.x2}
+            y2={e.y2}
+            stroke="#94a3b8"
+            strokeWidth={1.5}
+            markerEnd="url(#dep-arrow)"
+          />
         ))}
-        {nodes.map((n) => (
+        {nodes.map(n => (
           <g key={n.id}>
-            <rect x={n.x} y={n.y} width={NODE_W} height={NODE_H} rx={6} fill={n.critical ? "#fecdd3" : "#e0e7ff"} stroke={n.critical ? "#e11d48" : "#6366f1"} strokeWidth={1.5} />
-            <text x={n.x + NODE_W / 2} y={n.y + NODE_H / 2 + 4} textAnchor="middle" fontSize={10} fill="#1e293b" className="select-none">
+            <rect
+              x={n.x}
+              y={n.y}
+              width={NODE_W}
+              height={NODE_H}
+              rx={6}
+              fill={n.critical ? "#fecdd3" : "#e0e7ff"}
+              stroke={n.critical ? "#e11d48" : "#6366f1"}
+              strokeWidth={1.5}
+            />
+            <text
+              x={n.x + NODE_W / 2}
+              y={n.y + NODE_H / 2 + 4}
+              textAnchor="middle"
+              fontSize={10}
+              fill="#1e293b"
+              className="select-none"
+            >
               {n.label.length > 14 ? n.label.slice(0, 13) + "…" : n.label}
             </text>
           </g>

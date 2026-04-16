@@ -17,7 +17,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { AuditEvent, AuditLogEntry } from "../../shared/audit/contracts.js";
+import type {
+  AuditEvent,
+  AuditLogEntry,
+} from "../../shared/audit/contracts.js";
 import { DEFAULT_EVENT_TYPE_REGISTRY } from "../../shared/audit/contracts.js";
 import type { AuditChain } from "./audit-chain.js";
 import { auditChain } from "./audit-chain.js";
@@ -57,7 +60,7 @@ export class AuditCollector {
   constructor(
     chain: AuditChain,
     tsProvider: TimestampProvider,
-    fallbackPath?: string,
+    fallbackPath?: string
   ) {
     this.chain = chain;
     this.timestampProvider = tsProvider;
@@ -161,11 +164,14 @@ export class AuditCollector {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      const lines = events.map((e) => JSON.stringify(e)).join("\n") + "\n";
+      const lines = events.map(e => JSON.stringify(e)).join("\n") + "\n";
       fs.appendFileSync(this.fallbackPath, lines, "utf-8");
     } catch {
       // Last resort: log to console
-      console.error("[AuditCollector] Failed to write fallback file:", this.fallbackPath);
+      console.error(
+        "[AuditCollector] Failed to write fallback file:",
+        this.fallbackPath
+      );
     }
   }
 
@@ -215,7 +221,8 @@ export class AuditCollector {
         fs.unlinkSync(this.fallbackPath);
         this.stopRetryTimer();
       } else {
-        const remaining = stillFailed.map((e) => JSON.stringify(e)).join("\n") + "\n";
+        const remaining =
+          stillFailed.map(e => JSON.stringify(e)).join("\n") + "\n";
         fs.writeFileSync(this.fallbackPath, remaining, "utf-8");
       }
     } catch {

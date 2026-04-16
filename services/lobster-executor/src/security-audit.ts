@@ -33,7 +33,7 @@ export class SecurityAuditLogger {
    * Return all audit entries for a given jobId.
    */
   getByJobId(jobId: string): SecurityAuditEntry[] {
-    return this.readAll().filter((e) => e.jobId === jobId);
+    return this.readAll().filter(e => e.jobId === jobId);
   }
 
   /**
@@ -54,7 +54,7 @@ export class SecurityAuditLogger {
     const content = readFileSync(this.filePath, "utf-8");
     return content
       .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .map((line) => JSON.parse(line) as SecurityAuditEntry);
+      .filter(line => line.trim().length > 0)
+      .map(line => JSON.parse(line) as SecurityAuditEntry);
   }
 }

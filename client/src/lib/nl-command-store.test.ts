@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { selectTaskHubLaunchSession, type TaskHubCommandSubmissionResult } from "./nl-command-store";
+import {
+  selectTaskHubLaunchSession,
+  type TaskHubCommandSubmissionResult,
+} from "./nl-command-store";
 
 describe("nl-command-store task hub launch session selector", () => {
   it("collects launch-session fields into a single unified entry slice", () => {

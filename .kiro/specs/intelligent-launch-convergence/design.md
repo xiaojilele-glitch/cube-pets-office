@@ -149,11 +149,7 @@ interface UnifiedLaunchInput {
 ### 2. 路由结果模型
 
 ```ts
-type LaunchRouteKind =
-  | "clarify"
-  | "mission"
-  | "workflow"
-  | "upgrade-required";
+type LaunchRouteKind = "clarify" | "mission" | "workflow" | "upgrade-required";
 
 interface LaunchRouteDecision {
   kind: LaunchRouteKind;
@@ -322,7 +318,7 @@ interface WorkflowCreateResponse {
 把 `submitDirective()` 从：
 
 ```ts
-Promise<string | null>
+Promise<string | null>;
 ```
 
 升级为：

@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
 import type {
   MissionRecord,
@@ -7,15 +7,22 @@ import type {
   MissionStageStatus,
   MissionWorkPackage,
   MissionAgentStatus,
-} from '../../shared/mission/contracts.js';
-import { MISSION_STAGE_STATUSES } from '../../shared/mission/contracts.js';
-import { buildPlanetInteriorStages, buildPlanetInteriorAgents } from '../routes/planets.js';
+} from "../../shared/mission/contracts.js";
+import { MISSION_STAGE_STATUSES } from "../../shared/mission/contracts.js";
+import {
+  buildPlanetInteriorStages,
+  buildPlanetInteriorAgents,
+} from "../routes/planets.js";
 
 /* ─── Arbitraries ─── */
 
-const arbStageStatus: fc.Arbitrary<MissionStageStatus> = fc.constantFrom(...MISSION_STAGE_STATUSES);
+const arbStageStatus: fc.Arbitrary<MissionStageStatus> = fc.constantFrom(
+  ...MISSION_STAGE_STATUSES
+);
 
-const arbStageKey = fc.string({ minLength: 1, maxLength: 16 }).map(s => s.replace(/\s/g, '_') || 'stg');
+const arbStageKey = fc
+  .string({ minLength: 1, maxLength: 16 })
+  .map(s => s.replace(/\s/g, "_") || "stg");
 
 const arbStage: fc.Arbitrary<MissionStage> = fc.record({
   key: arbStageKey,
@@ -27,17 +34,24 @@ const arbStage: fc.Arbitrary<MissionStage> = fc.record({
 });
 
 const arbWpStatus = fc.constantFrom(
-  'pending' as const, 'running' as const, 'passed' as const, 'failed' as const, 'verified' as const,
+  "pending" as const,
+  "running" as const,
+  "passed" as const,
+  "failed" as const,
+  "verified" as const
 );
 
 function arbWorkPackage(stageKeys: string[]): fc.Arbitrary<MissionWorkPackage> {
   return fc.record({
     id: fc.string({ minLength: 1, maxLength: 12 }).map(s => `wp_${s}`),
     title: fc.string({ minLength: 1, maxLength: 30 }),
-    assignee: fc.option(fc.string({ minLength: 1, maxLength: 16 }), { nil: undefined }),
-    stageKey: stageKeys.length > 0
-      ? fc.constantFrom(...stageKeys)
-      : fc.constant('execute'),
+    assignee: fc.option(fc.string({ minLength: 1, maxLength: 16 }), {
+      nil: undefined,
+    }),
+    stageKey:
+      stageKeys.length > 0
+        ? fc.constantFrom(...stageKeys)
+        : fc.constant("execute"),
     status: arbWpStatus,
     score: fc.option(fc.integer({ min: 0, max: 100 }), { nil: undefined }),
     deliverable: fc.option(fc.string({ maxLength: 40 }), { nil: undefined }),
@@ -47,14 +61,17 @@ function arbWorkPackage(stageKeys: string[]): fc.Arbitrary<MissionWorkPackage> {
 
 function makeMission(
   stages: MissionStage[],
-  workPackages?: MissionWorkPackage[],
+  workPackages?: MissionWorkPackage[]
 ): MissionRecord {
-  const currentStageKey = stages.find(s => s.status === 'running')?.key ?? stages[0]?.key ?? 'receive';
+  const currentStageKey =
+    stages.find(s => s.status === "running")?.key ??
+    stages[0]?.key ??
+    "receive";
   return {
-    id: 'mission_pbt',
-    kind: 'chat',
-    title: 'PBT Agent Test',
-    status: 'running',
+    id: "mission_pbt",
+    kind: "chat",
+    title: "PBT Agent Test",
+    status: "running",
     progress: 50,
     currentStageKey,
     stages,
@@ -66,34 +83,38 @@ function makeMission(
 }
 
 const VALID_AGENT_STATUSES: ReadonlySet<string> = new Set<MissionAgentStatus>([
-  'idle', 'working', 'thinking', 'done', 'error',
+  "idle",
+  "working",
+  "thinking",
+  "done",
+  "error",
 ]);
 
 /* ─── Property 4: Agent 可视化有效性 ─── */
 /* **Validates: Requirements 2.6** */
 
-describe('Feature: mission-native-projection, Property 4: Agent 可视化有效性', () => {
+describe("Feature: mission-native-projection, Property 4: Agent 可视化有效性", () => {
   it('always contains at least one agent with id "mission-core"', () => {
     fc.assert(
       fc.property(
         fc.array(arbStage, { minLength: 1, maxLength: 10 }),
-        (stages) => {
+        stages => {
           // Ensure unique keys
           const uniqueStages = dedupeStageKeys(stages);
           const mission = makeMission(uniqueStages);
           const interiorStages = buildPlanetInteriorStages(uniqueStages);
           const agents = buildPlanetInteriorAgents(mission, interiorStages);
 
-          const core = agents.find(a => a.id === 'mission-core');
+          const core = agents.find(a => a.id === "mission-core");
           expect(core).toBeDefined();
-          expect(core!.role).toBe('orchestrator');
-        },
+          expect(core!.role).toBe("orchestrator");
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('every agent status is one of idle|working|thinking|done|error', () => {
+  it("every agent status is one of idle|working|thinking|done|error", () => {
     fc.assert(
       fc.property(
         fc.array(arbStage, { minLength: 1, maxLength: 8 }).chain(stages => {
@@ -101,7 +122,10 @@ describe('Feature: mission-native-projection, Property 4: Agent 可视化有效�
           const keys = unique.map(s => s.key);
           return fc.tuple(
             fc.constant(unique),
-            fc.option(fc.array(arbWorkPackage(keys), { minLength: 0, maxLength: 6 }), { nil: undefined }),
+            fc.option(
+              fc.array(arbWorkPackage(keys), { minLength: 0, maxLength: 6 }),
+              { nil: undefined }
+            )
           );
         }),
         ([stages, workPackages]) => {
@@ -112,13 +136,13 @@ describe('Feature: mission-native-projection, Property 4: Agent 可视化有效�
           for (const agent of agents) {
             expect(VALID_AGENT_STATUSES.has(agent.status)).toBe(true);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('every agent angle is in [0, 360)', () => {
+  it("every agent angle is in [0, 360)", () => {
     fc.assert(
       fc.property(
         fc.array(arbStage, { minLength: 1, maxLength: 8 }).chain(stages => {
@@ -126,7 +150,10 @@ describe('Feature: mission-native-projection, Property 4: Agent 可视化有效�
           const keys = unique.map(s => s.key);
           return fc.tuple(
             fc.constant(unique),
-            fc.option(fc.array(arbWorkPackage(keys), { minLength: 1, maxLength: 8 }), { nil: undefined }),
+            fc.option(
+              fc.array(arbWorkPackage(keys), { minLength: 1, maxLength: 8 }),
+              { nil: undefined }
+            )
           );
         }),
         ([stages, workPackages]) => {
@@ -138,13 +165,13 @@ describe('Feature: mission-native-projection, Property 4: Agent 可视化有效�
             expect(agent.angle).toBeGreaterThanOrEqual(0);
             expect(agent.angle).toBeLessThan(360);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('every agent.stageKey exists in the stages array', () => {
+  it("every agent.stageKey exists in the stages array", () => {
     fc.assert(
       fc.property(
         fc.array(arbStage, { minLength: 1, maxLength: 8 }).chain(stages => {
@@ -152,7 +179,10 @@ describe('Feature: mission-native-projection, Property 4: Agent 可视化有效�
           const keys = unique.map(s => s.key);
           return fc.tuple(
             fc.constant(unique),
-            fc.option(fc.array(arbWorkPackage(keys), { minLength: 0, maxLength: 6 }), { nil: undefined }),
+            fc.option(
+              fc.array(arbWorkPackage(keys), { minLength: 0, maxLength: 6 }),
+              { nil: undefined }
+            )
           );
         }),
         ([stages, workPackages]) => {
@@ -164,12 +194,12 @@ describe('Feature: mission-native-projection, Property 4: Agent 可视化有效�
           for (const agent of agents) {
             // Agent stageKey should either be in stages or be a fallback like 'receive'/'execute'
             // The implementation uses fallback keys when stage not found
-            expect(typeof agent.stageKey).toBe('string');
+            expect(typeof agent.stageKey).toBe("string");
             expect(agent.stageKey.length).toBeGreaterThan(0);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

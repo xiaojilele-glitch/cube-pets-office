@@ -1,10 +1,11 @@
 <!--
  * @Author: wangchunji
  * @Date: 2026-03-31 15:37:16
- * @Description: 
+ * @Description:
  * @LastEditTime: 2026-03-31 16:35:11
  * @LastEditors: wangchunji
 -->
+
 # 动态组织生成 任务清单
 
 - [x] 1. 设计动态组织 schema

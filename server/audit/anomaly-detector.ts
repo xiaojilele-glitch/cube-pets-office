@@ -51,7 +51,10 @@ const BUILTIN_RULES: AnomalyRule[] = [
     severity: "critical",
     threshold: 1,
     timeWindowMs: 300_000,
-    eventTypes: [AuditEventType.ESCALATION_APPROVED, AuditEventType.DATA_ACCESSED],
+    eventTypes: [
+      AuditEventType.ESCALATION_APPROVED,
+      AuditEventType.DATA_ACCESSED,
+    ],
     enabled: true,
   },
   {
@@ -117,9 +120,9 @@ export class AnomalyDetector {
     // Get all entries from chain within the time window
     const allEntries = this.chain.getEntries(0, entryCount - 1);
     const windowEntries = allEntries.filter(
-      (e) =>
+      e =>
         e.event.timestamp >= timeWindow.start &&
-        e.event.timestamp <= timeWindow.end,
+        e.event.timestamp <= timeWindow.end
     );
 
     const newAlerts: AnomalyAlert[] = [];
@@ -128,13 +131,17 @@ export class AnomalyDetector {
     for (const rule of ruleList) {
       if (!rule.enabled) continue;
 
-      const relevantEntries = windowEntries.filter((e) =>
-        rule.eventTypes.includes(e.event.eventType),
+      const relevantEntries = windowEntries.filter(e =>
+        rule.eventTypes.includes(e.event.eventType)
       );
 
       const triggered = this.evaluateRule(rule, relevantEntries, windowEntries);
       if (triggered) {
-        const alert = this.createAlert(rule, triggered.affectedEvents, triggered.description);
+        const alert = this.createAlert(
+          rule,
+          triggered.affectedEvents,
+          triggered.description
+        );
         newAlerts.push(alert);
         this.alerts.set(alert.alertId, alert);
 
@@ -152,7 +159,7 @@ export class AnomalyDetector {
     const all = Array.from(this.alerts.values());
     if (!timeRange) return all;
     return all.filter(
-      (a) => a.detectedAt >= timeRange.start && a.detectedAt <= timeRange.end,
+      a => a.detectedAt >= timeRange.start && a.detectedAt <= timeRange.end
     );
   }
 
@@ -162,7 +169,7 @@ export class AnomalyDetector {
 
   updateAlertStatus(
     alertId: string,
-    status: AnomalyAlert["status"],
+    status: AnomalyAlert["status"]
   ): AnomalyAlert | null {
     const alert = this.alerts.get(alertId);
     if (!alert) return null;
@@ -175,7 +182,7 @@ export class AnomalyDetector {
   private evaluateRule(
     rule: AnomalyRule,
     relevantEntries: AuditLogEntry[],
-    allEntries: AuditLogEntry[],
+    allEntries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
     switch (rule.ruleId) {
       case "high_frequency_access":
@@ -199,11 +206,11 @@ export class AnomalyDetector {
   /** 异常访问频率：> threshold events in timeWindowMs */
   private evalHighFrequency(
     rule: AnomalyRule,
-    entries: AuditLogEntry[],
+    entries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
     if (entries.length > rule.threshold) {
       return {
-        affectedEvents: entries.map((e) => e.event.eventId),
+        affectedEvents: entries.map(e => e.event.eventId),
         description: `High frequency access detected: ${entries.length} events (threshold: ${rule.threshold})`,
       };
     }
@@ -213,15 +220,15 @@ export class AnomalyDetector {
   /** 异常时间访问：events during 22:00-06:00 */
   private evalOffHours(
     rule: AnomalyRule,
-    entries: AuditLogEntry[],
+    entries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
-    const offHourEntries = entries.filter((e) => {
+    const offHourEntries = entries.filter(e => {
       const hour = new Date(e.event.timestamp).getHours();
       return hour >= 22 || hour < 6;
     });
     if (offHourEntries.length >= rule.threshold) {
       return {
-        affectedEvents: offHourEntries.map((e) => e.event.eventId),
+        affectedEvents: offHourEntries.map(e => e.event.eventId),
         description: `Off-hours access detected: ${offHourEntries.length} events during 22:00-06:00`,
       };
     }
@@ -231,13 +238,13 @@ export class AnomalyDetector {
   /** 权限提升滥用：ESCALATION_APPROVED followed by DATA_ACCESSED within timeWindowMs */
   private evalPrivilegeEscalation(
     rule: AnomalyRule,
-    allEntries: AuditLogEntry[],
+    allEntries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
     const escalations = allEntries.filter(
-      (e) => e.event.eventType === AuditEventType.ESCALATION_APPROVED,
+      e => e.event.eventType === AuditEventType.ESCALATION_APPROVED
     );
     const dataAccesses = allEntries.filter(
-      (e) => e.event.eventType === AuditEventType.DATA_ACCESSED,
+      e => e.event.eventType === AuditEventType.DATA_ACCESSED
     );
 
     const affected: string[] = [];
@@ -262,11 +269,11 @@ export class AnomalyDetector {
   /** 暴力破解模式：> threshold failures followed by a success */
   private evalBruteForce(
     rule: AnomalyRule,
-    entries: AuditLogEntry[],
+    entries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
     // Sort by timestamp
     const sorted = [...entries].sort(
-      (a, b) => a.event.timestamp - b.event.timestamp,
+      (a, b) => a.event.timestamp - b.event.timestamp
     );
 
     let consecutiveFailures = 0;
@@ -276,7 +283,10 @@ export class AnomalyDetector {
       if (entry.event.result === "failure") {
         consecutiveFailures++;
         failureEvents.push(entry.event.eventId);
-      } else if (entry.event.result === "success" && consecutiveFailures > rule.threshold) {
+      } else if (
+        entry.event.result === "success" &&
+        consecutiveFailures > rule.threshold
+      ) {
         // Brute force detected: many failures then success
         failureEvents.push(entry.event.eventId);
         return {
@@ -295,7 +305,7 @@ export class AnomalyDetector {
   /** 批量数据导出：> threshold records exported */
   private evalBulkExport(
     rule: AnomalyRule,
-    entries: AuditLogEntry[],
+    entries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
     let totalRecords = 0;
     const affected: string[] = [];
@@ -321,11 +331,11 @@ export class AnomalyDetector {
   /** Generic count-based threshold for custom rules */
   private evalGenericThreshold(
     rule: AnomalyRule,
-    entries: AuditLogEntry[],
+    entries: AuditLogEntry[]
   ): { affectedEvents: string[]; description: string } | null {
     if (entries.length > rule.threshold) {
       return {
-        affectedEvents: entries.map((e) => e.event.eventId),
+        affectedEvents: entries.map(e => e.event.eventId),
         description: `Rule "${rule.name}" triggered: ${entries.length} events (threshold: ${rule.threshold})`,
       };
     }
@@ -337,7 +347,7 @@ export class AnomalyDetector {
   private createAlert(
     rule: AnomalyRule,
     affectedEvents: string[],
-    description: string,
+    description: string
   ): AnomalyAlert {
     return {
       alertId: `aa_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`,
@@ -355,15 +365,35 @@ export class AnomalyDetector {
   private getSuggestedActions(ruleId: string): string[] {
     switch (ruleId) {
       case "high_frequency_access":
-        return ["Review access patterns", "Consider rate limiting", "Check for automated scripts"];
+        return [
+          "Review access patterns",
+          "Consider rate limiting",
+          "Check for automated scripts",
+        ];
       case "off_hours_access":
-        return ["Verify user identity", "Check if access is authorized", "Review access policy"];
+        return [
+          "Verify user identity",
+          "Check if access is authorized",
+          "Review access policy",
+        ];
       case "privilege_escalation_abuse":
-        return ["Revoke escalated privileges", "Review escalation approval", "Investigate data access"];
+        return [
+          "Revoke escalated privileges",
+          "Review escalation approval",
+          "Investigate data access",
+        ];
       case "brute_force_pattern":
-        return ["Lock account temporarily", "Require MFA", "Review login attempts"];
+        return [
+          "Lock account temporarily",
+          "Require MFA",
+          "Review login attempts",
+        ];
       case "bulk_data_export":
-        return ["Review export authorization", "Check data classification", "Audit export contents"];
+        return [
+          "Review export authorization",
+          "Check data classification",
+          "Audit export contents",
+        ];
       default:
         return ["Review affected events", "Investigate anomaly"];
     }

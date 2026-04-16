@@ -4,14 +4,16 @@ import type {
   MissionDecisionResolved,
   MissionDecisionSubmission,
   MissionRecord,
-} from '../../shared/mission/contracts.js';
-import type { LineageCollectorLike } from '../../shared/runtime-agent.js';
+} from "../../shared/mission/contracts.js";
+import type { LineageCollectorLike } from "../../shared/runtime-agent.js";
 
 // ─── Lineage Collector Integration (module-level, opt-in) ──────────────────
 
 let _decisionLineageCollector: LineageCollectorLike | null = null;
 
-export function setDecisionLineageCollector(collector: LineageCollectorLike | null): void {
+export function setDecisionLineageCollector(
+  collector: LineageCollectorLike | null
+): void {
   _decisionLineageCollector = collector;
 }
 
@@ -60,27 +62,28 @@ export function formatMissionDecisionDetail(
   }
   if (optionLabel) return `Decision received: ${optionLabel}`;
   if (freeText) return `Decision received: ${freeText}`;
-  return 'Decision received';
+  return "Decision received";
 }
 
 export function describeMissionDecisionAlreadyProcessed(
   task: MissionRecord,
   decision: MissionDecisionResolved
 ): string {
-  const selected = decision.optionLabel || decision.freeText || decision.optionId;
-  if (task.status === 'done') {
+  const selected =
+    decision.optionLabel || decision.freeText || decision.optionId;
+  if (task.status === "done") {
     return selected
       ? `Decision already processed (${selected}); mission is complete`
-      : 'Decision already processed; mission is complete';
+      : "Decision already processed; mission is complete";
   }
-  if (task.status === 'failed') {
+  if (task.status === "failed") {
     return selected
       ? `Decision already processed (${selected}); mission has ended`
-      : 'Decision already processed; mission has ended';
+      : "Decision already processed; mission has ended";
   }
   return selected
     ? `Decision already processed (${selected}); mission has resumed`
-    : 'Decision already processed; mission has resumed';
+    : "Decision already processed; mission has resumed";
 }
 
 export function submitMissionDecision(
@@ -94,7 +97,7 @@ export function submitMissionDecision(
     return {
       ok: false,
       statusCode: 404,
-      error: 'Task not found',
+      error: "Task not found",
     };
   }
 
@@ -105,12 +108,12 @@ export function submitMissionDecision(
     freeText,
   };
 
-  if (task.status !== 'waiting') {
+  if (task.status !== "waiting") {
     if (!options.idempotentIfNotWaiting) {
       return {
         ok: false,
         statusCode: 409,
-        error: 'Task is not waiting for a decision',
+        error: "Task is not waiting for a decision",
       };
     }
 
@@ -132,7 +135,7 @@ export function submitMissionDecision(
     return {
       ok: false,
       statusCode: 400,
-      error: 'Invalid decision option',
+      error: "Invalid decision option",
     };
   }
 
@@ -140,7 +143,7 @@ export function submitMissionDecision(
     return {
       ok: false,
       statusCode: 400,
-      error: 'This option requires a comment',
+      error: "This option requires a comment",
     };
   }
 
@@ -148,7 +151,7 @@ export function submitMissionDecision(
     return {
       ok: false,
       statusCode: 400,
-      error: 'optionId or freeText is required',
+      error: "optionId or freeText is required",
     };
   }
 
@@ -156,15 +159,21 @@ export function submitMissionDecision(
     return {
       ok: false,
       statusCode: 400,
-      error: 'This decision does not allow free text only submissions',
+      error: "This decision does not allow free text only submissions",
     };
   }
 
-  if (freeText && prompt && prompt.allowFreeText !== true && optionId && !selectedOption?.requiresComment) {
+  if (
+    freeText &&
+    prompt &&
+    prompt.allowFreeText !== true &&
+    optionId &&
+    !selectedOption?.requiresComment
+  ) {
     return {
       ok: false,
       statusCode: 400,
-      error: 'This decision does not allow free text notes',
+      error: "This decision does not allow free text notes",
     };
   }
 
@@ -180,7 +189,7 @@ export function submitMissionDecision(
     return {
       ok: false,
       statusCode: 409,
-      error: 'Task decision could not be applied',
+      error: "Task decision could not be applied",
     };
   }
 
@@ -193,8 +202,8 @@ export function submitMissionDecision(
   // Build DecisionHistoryEntry and append to decisionHistory
   const historyEntry: DecisionHistoryEntry = {
     decisionId: prompt?.decisionId || generateDecisionId(),
-    type: (prompt?.type ?? 'custom-action') as DecisionType,
-    prompt: prompt?.prompt ?? '',
+    type: (prompt?.type ?? "custom-action") as DecisionType,
+    prompt: prompt?.prompt ?? "",
     options: prompt?.options ?? [],
     templateId: prompt?.templateId,
     payload: prompt?.payload,
@@ -217,7 +226,7 @@ export function submitMissionDecision(
         decisionId: historyEntry.decisionId,
         agentId: undefined,
         inputLineageIds: [],
-        result: optionId ?? freeText ?? 'unknown',
+        result: optionId ?? freeText ?? "unknown",
         context: { missionId: taskId },
         metadata: {
           optionId,

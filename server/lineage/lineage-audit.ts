@@ -21,16 +21,28 @@ import type { LineageQueryService } from "./lineage-query.js";
 // ─── PII 正则模式 ──────────────────────────────────────────────────────────
 
 const PII_PATTERNS: Array<{ pattern: RegExp; tag: string }> = [
-  { pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/, tag: "PII" },
+  {
+    pattern: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+    tag: "PII",
+  },
   { pattern: /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/, tag: "PII" },
   { pattern: /\b\d{3}-\d{2}-\d{4}\b/, tag: "PII" },
-  { pattern: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\b/, tag: "PCI" },
+  {
+    pattern: /\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\b/,
+    tag: "PCI",
+  },
 ];
 
 /** GDPR-sensitive keywords found in metadata / queryText */
 const GDPR_KEYWORDS = [
-  "personal_data", "gdpr", "name", "address", "date_of_birth",
-  "national_id", "passport", "biometric",
+  "personal_data",
+  "gdpr",
+  "name",
+  "address",
+  "date_of_birth",
+  "national_id",
+  "passport",
+  "biometric",
 ];
 
 // ─── LineageAuditService ───────────────────────────────────────────────────
@@ -38,21 +50,24 @@ const GDPR_KEYWORDS = [
 export class LineageAuditService {
   constructor(
     private store: LineageStorageAdapter,
-    private queryService: LineageQueryService,
+    private queryService: LineageQueryService
   ) {}
 
   // ─── AC-6.1 ~ AC-6.2: 审计追踪 ────────────────────────────────────────
 
-  async getAuditTrail(userId: string, timeRange: TimeRange): Promise<AuditLogEntry[]> {
+  async getAuditTrail(
+    userId: string,
+    timeRange: TimeRange
+  ): Promise<AuditLogEntry[]> {
     const nodes = await this.store.queryNodes({
       fromTimestamp: timeRange.start,
       toTimestamp: timeRange.end,
     });
 
     // Filter nodes whose context.userId matches
-    const userNodes = nodes.filter((n) => n.context.userId === userId);
+    const userNodes = nodes.filter(n => n.context.userId === userId);
 
-    return userNodes.map((node) => this.nodeToAuditEntry(node));
+    return userNodes.map(node => this.nodeToAuditEntry(node));
   }
 
   // ─── AC-6.3: 决策血缘报告导出 ──────────────────────────────────────────
@@ -66,7 +81,9 @@ export class LineageAuditService {
     }
 
     // Get full upstream graph
-    const upstreamGraph = await this.queryService.getUpstream(decision.lineageId);
+    const upstreamGraph = await this.queryService.getUpstream(
+      decision.lineageId
+    );
 
     // Build audit trail from the decision's context
     const auditTrail: AuditLogEntry[] = [];
@@ -74,7 +91,7 @@ export class LineageAuditService {
       // Get audit entries for the user around the decision time window
       const trail = await this.getAuditTrail(decision.context.userId, {
         start: decision.timestamp - 3600_000, // 1 hour before
-        end: decision.timestamp + 3600_000,   // 1 hour after
+        end: decision.timestamp + 3600_000, // 1 hour after
       });
       auditTrail.push(...trail);
     }
@@ -99,7 +116,7 @@ export class LineageAuditService {
     });
 
     // 1) Hash mismatch detection: source nodes with same sourceId but different resultHash
-    const sourceNodes = nodes.filter((n) => n.type === "source" && n.sourceId);
+    const sourceNodes = nodes.filter(n => n.type === "source" && n.sourceId);
     const sourceGroups = new Map<string, DataLineageNode[]>();
     for (const node of sourceNodes) {
       const group = sourceGroups.get(node.sourceId!) ?? [];
@@ -110,7 +127,9 @@ export class LineageAuditService {
     sourceGroups.forEach((group, sourceId) => {
       if (group.length < 2) return;
       // Sort by timestamp to compare consecutive records
-      group.sort((a: DataLineageNode, b: DataLineageNode) => a.timestamp - b.timestamp);
+      group.sort(
+        (a: DataLineageNode, b: DataLineageNode) => a.timestamp - b.timestamp
+      );
       for (let i = 1; i < group.length; i++) {
         const prev = group[i - 1];
         const curr = group[i];
@@ -136,7 +155,9 @@ export class LineageAuditService {
     });
 
     // 2) Abnormal access detection: transformation nodes with unexpected agentId
-    const transformNodes = nodes.filter((n) => n.type === "transformation" && n.agentId);
+    const transformNodes = nodes.filter(
+      n => n.type === "transformation" && n.agentId
+    );
     // Build expected agent set from all agents seen in the full store
     const allNodes = await this.store.queryNodes({});
     const knownAgents = new Set<string>();
@@ -145,7 +166,7 @@ export class LineageAuditService {
     }
     // Agents seen only in the time range but not before are "new/unexpected"
     const agentsBefore = new Set<string>();
-    const nodesBefore = allNodes.filter((n) => n.timestamp < timeRange.start);
+    const nodesBefore = allNodes.filter(n => n.timestamp < timeRange.start);
     for (const n of nodesBefore) {
       if (n.agentId) agentsBefore.add(n.agentId);
     }
@@ -168,7 +189,7 @@ export class LineageAuditService {
 
     // 3) Permission violation: nodes with complianceTags accessed without proper authorization
     const taggedNodes = nodes.filter(
-      (n) => n.complianceTags && n.complianceTags.length > 0,
+      n => n.complianceTags && n.complianceTags.length > 0
     );
     for (const node of taggedNodes) {
       // If a tagged node has no userId in context, it's a potential violation
@@ -203,7 +224,7 @@ export class LineageAuditService {
     if (node.metadata) {
       for (const [key, value] of Object.entries(node.metadata)) {
         // Check key names for GDPR keywords
-        if (GDPR_KEYWORDS.some((kw) => key.toLowerCase().includes(kw))) {
+        if (GDPR_KEYWORDS.some(kw => key.toLowerCase().includes(kw))) {
           tags.add("GDPR");
         }
         if (typeof value === "string") {

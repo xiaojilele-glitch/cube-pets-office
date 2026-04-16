@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { missionOperatorActionLabel, missionOperatorStateLabel } from "@/components/tasks/task-helpers";
+import {
+  missionOperatorActionLabel,
+  missionOperatorStateLabel,
+} from "@/components/tasks/task-helpers";
 import type { MissionTaskDetail } from "@/lib/tasks-store";
 import { useAppStore } from "@/lib/store";
 import type { MissionOperatorActionRecord } from "@shared/mission/contracts";

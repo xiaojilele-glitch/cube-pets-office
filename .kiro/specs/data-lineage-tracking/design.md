@@ -39,12 +39,23 @@
 ```typescript
 // shared/lineage/contracts.ts
 
-export const LINEAGE_NODE_TYPES = ["source", "transformation", "decision"] as const;
+export const LINEAGE_NODE_TYPES = [
+  "source",
+  "transformation",
+  "decision",
+] as const;
 export type LineageNodeType = (typeof LINEAGE_NODE_TYPES)[number];
 
 export const LINEAGE_OPERATIONS = [
-  "query", "filter", "aggregate", "join", "ml_inference",
-  "transform", "enrich", "validate", "llm_call"
+  "query",
+  "filter",
+  "aggregate",
+  "join",
+  "ml_inference",
+  "transform",
+  "enrich",
+  "validate",
+  "llm_call",
 ] as const;
 export type LineageOperation = (typeof LINEAGE_OPERATIONS)[number] | string;
 
@@ -58,22 +69,22 @@ export interface LineageContext {
 }
 
 export interface DataLineageNode {
-  lineageId: string;           // UUID v4
+  lineageId: string; // UUID v4
   type: LineageNodeType;
-  timestamp: number;           // epoch ms
+  timestamp: number; // epoch ms
   context: LineageContext;
 
   // 源头节点字段 (type === "source")
   sourceId?: string;
   sourceName?: string;
   queryText?: string;
-  resultHash?: string;         // SHA256
+  resultHash?: string; // SHA256
   resultSize?: number;
 
   // 变换节点字段 (type === "transformation")
   agentId?: string;
   operation?: LineageOperation;
-  codeLocation?: string;       // "filename:line"
+  codeLocation?: string; // "filename:line"
   parameters?: Record<string, unknown>;
   inputLineageIds?: string[];
   outputLineageId?: string;
@@ -89,9 +100,9 @@ export interface DataLineageNode {
 
   // 通用
   metadata?: Record<string, unknown>;
-  complianceTags?: string[];   // GDPR, PCI 等
-  upstream?: string[];         // 上游 lineageId 列表
-  downstream?: string[];       // 下游 lineageId 列表（运行时填充）
+  complianceTags?: string[]; // GDPR, PCI 等
+  upstream?: string[]; // 上游 lineageId 列表
+  downstream?: string[]; // 下游 lineageId 列表（运行时填充）
 }
 ```
 
@@ -99,15 +110,18 @@ export interface DataLineageNode {
 
 ```typescript
 export const LINEAGE_EDGE_TYPES = [
-  "derived-from", "input-to", "decided-by", "produced-by"
+  "derived-from",
+  "input-to",
+  "decided-by",
+  "produced-by",
 ] as const;
 export type LineageEdgeType = (typeof LINEAGE_EDGE_TYPES)[number];
 
 export interface LineageEdge {
-  fromId: string;              // 上游 lineageId
-  toId: string;                // 下游 lineageId
+  fromId: string; // 上游 lineageId
+  toId: string; // 下游 lineageId
   type: LineageEdgeType;
-  weight?: number;             // 依赖权重 0-1
+  weight?: number; // 依赖权重 0-1
   timestamp: number;
 }
 ```
@@ -132,7 +146,10 @@ export interface AuditLogEntry {
 
 ```typescript
 export const CHANGE_ALERT_TYPES = [
-  "schema_change", "data_volume_anomaly", "quality_degradation", "hash_mismatch"
+  "schema_change",
+  "data_volume_anomaly",
+  "quality_degradation",
+  "hash_mismatch",
 ] as const;
 export type ChangeAlertType = (typeof CHANGE_ALERT_TYPES)[number];
 
@@ -154,9 +171,9 @@ export interface ChangeAlert {
 
 export interface DataQualityMetrics {
   dataId: string;
-  freshness: number;           // 0-1，数据新鲜度
-  completeness: number;        // 0-1，字段完整度
-  accuracy: number;            // 0-1，准确度估计
+  freshness: number; // 0-1，数据新鲜度
+  completeness: number; // 0-1，字段完整度
+  accuracy: number; // 0-1，准确度估计
   measuredAt: number;
 }
 ```
@@ -220,6 +237,7 @@ export class LineageCollector {
 ```
 
 采集流程：
+
 1. 调用方调用 `recordSource/recordTransformation/recordDecision`
 2. 生成 `DataLineageNode`，写入内存缓冲区，立即返回 `lineageId`
 3. 缓冲区满或定时器触发时，批量写入存储
@@ -260,6 +278,7 @@ export interface LineageQueryFilter {
 ```
 
 默认实现 `JsonLineageStorage`：
+
 - 节点存储在 `data/lineage/nodes.jsonl`（JSONL 格式，追加写入）
 - 边存储在 `data/lineage/edges.jsonl`
 - 启动时加载到内存 Map，建立索引
@@ -280,7 +299,10 @@ export class LineageQueryService {
   async getDownstream(dataId: string, depth?: number): Promise<LineageGraph>;
 
   /** AC-5.3: 完整链路（双向 BFS） */
-  async getFullPath(sourceId: string, decisionId: string): Promise<LineageGraph>;
+  async getFullPath(
+    sourceId: string,
+    decisionId: string
+  ): Promise<LineageGraph>;
 
   /** AC-5.4: 影响分析 */
   async getImpactAnalysis(dataId: string): Promise<ImpactAnalysisResult>;
@@ -300,6 +322,7 @@ export interface ImpactAnalysisResult {
 ```
 
 图遍历算法：
+
 - `getUpstream`：从目标节点出发，沿 `upstream` 方向 BFS，`depth` 控制最大层数（默认无限）
 - `getDownstream`：从目标节点出发，沿 `downstream` 方向 BFS
 - `getFullPath`：从 `sourceId` 做 BFS 到 `decisionId`，返回路径上所有节点和边
@@ -312,7 +335,10 @@ export interface ImpactAnalysisResult {
 
 export class LineageAuditService {
   /** AC-6.1: 审计追踪 */
-  async getAuditTrail(userId: string, timeRange: TimeRange): Promise<AuditLogEntry[]>;
+  async getAuditTrail(
+    userId: string,
+    timeRange: TimeRange
+  ): Promise<AuditLogEntry[]>;
 
   /** AC-6.3: 导出决策血缘报告（JSON 格式） */
   async exportLineageReport(decisionId: string): Promise<LineageReport>;
@@ -335,7 +361,10 @@ export class ChangeDetectionService {
   async analyzeChangeImpact(alert: ChangeAlert): Promise<ImpactAnalysisResult>;
 
   /** AC-8.4: 时间点回溯 */
-  async getStateAtTime(decisionId: string, timestamp: number): Promise<LineageGraph>;
+  async getStateAtTime(
+    decisionId: string,
+    timestamp: number
+  ): Promise<LineageGraph>;
 
   /** AC-8.5: 数据质量指标 */
   async measureQuality(dataId: string): Promise<DataQualityMetrics>;
@@ -349,13 +378,23 @@ export class ChangeDetectionService {
 
 export class LineageExportService {
   /** AC-10.1: 导出 */
-  async exportLineage(startTime: number, endTime: number, format: "json" | "csv"): Promise<Buffer>;
+  async exportLineage(
+    startTime: number,
+    endTime: number,
+    format: "json" | "csv"
+  ): Promise<Buffer>;
 
   /** AC-10.3: 导入 */
-  async importLineage(data: Buffer, format: "json" | "csv"): Promise<ImportResult>;
+  async importLineage(
+    data: Buffer,
+    format: "json" | "csv"
+  ): Promise<ImportResult>;
 
   /** AC-10.5: 增量导出 */
-  async exportIncremental(sinceTimestamp: number, format: "json" | "csv"): Promise<Buffer>;
+  async exportIncremental(
+    sinceTimestamp: number,
+    format: "json" | "csv"
+  ): Promise<Buffer>;
 }
 ```
 
@@ -366,28 +405,28 @@ export class LineageExportService {
 
 export const LINEAGE_API = {
   // 查询
-  getUpstream:       "GET    /api/lineage/:id/upstream",
-  getDownstream:     "GET    /api/lineage/:id/downstream",
-  getFullPath:       "GET    /api/lineage/path",
+  getUpstream: "GET    /api/lineage/:id/upstream",
+  getDownstream: "GET    /api/lineage/:id/downstream",
+  getFullPath: "GET    /api/lineage/path",
   getImpactAnalysis: "GET    /api/lineage/:id/impact",
-  getNode:           "GET    /api/lineage/:id",
-  queryNodes:        "GET    /api/lineage",
+  getNode: "GET    /api/lineage/:id",
+  queryNodes: "GET    /api/lineage",
 
   // 审计
-  getAuditTrail:     "GET    /api/lineage/audit/trail",
-  exportReport:      "GET    /api/lineage/audit/report/:decisionId",
-  detectAnomalies:   "GET    /api/lineage/audit/anomalies",
+  getAuditTrail: "GET    /api/lineage/audit/trail",
+  exportReport: "GET    /api/lineage/audit/report/:decisionId",
+  detectAnomalies: "GET    /api/lineage/audit/anomalies",
 
   // 导入导出
-  exportLineage:     "GET    /api/lineage/export",
-  importLineage:     "POST   /api/lineage/import",
+  exportLineage: "GET    /api/lineage/export",
+  importLineage: "POST   /api/lineage/import",
 
   // 变更检测
-  detectChanges:     "POST   /api/lineage/changes/detect",
+  detectChanges: "POST   /api/lineage/changes/detect",
   getQualityMetrics: "GET    /api/lineage/quality/:dataId",
 
   // 统计
-  getStats:          "GET    /api/lineage/stats",
+  getStats: "GET    /api/lineage/stats",
 } as const;
 ```
 
@@ -416,6 +455,7 @@ export class RuntimeAgent {
 ```
 
 使用方式：
+
 ```typescript
 const result = await agent.lineageTracked(
   () => agent.invoke(prompt, context, opts),
@@ -426,6 +466,7 @@ const result = await agent.lineageTracked(
 ### 5.2 MissionStore 钩子
 
 在 `MissionStore` 的关键状态变更点注入血缘采集：
+
 - `create()` → `recordSource()`
 - `markDone()` → `recordDecision()`
 - `resolveWaiting()` → `recordDecision()`
@@ -475,6 +516,7 @@ interface LineageState {
 ### 6.3 DAG 可视化
 
 使用 Canvas 2D 自绘 DAG（避免引入重量级依赖）：
+
 - 节点按 type 着色：source=蓝色、transformation=绿色、decision=橙色
 - 边用箭头表示方向
 - 点击节点高亮完整链路
@@ -501,13 +543,13 @@ export const LINEAGE_SOCKET_EVENTS = {
 
 ## 9. 性能约束
 
-| 指标 | 目标 |
-|------|------|
-| 采集延迟 | < 10ms（异步缓冲） |
-| 单条查询 | < 50ms |
-| 完整链路查询 | < 500ms |
-| 单条记录大小 | < 500 bytes |
-| 内存占用（10 万节点） | < 100MB |
+| 指标                  | 目标               |
+| --------------------- | ------------------ |
+| 采集延迟              | < 10ms（异步缓冲） |
+| 单条查询              | < 50ms             |
+| 完整链路查询          | < 500ms            |
+| 单条记录大小          | < 500 bytes        |
+| 内存占用（10 万节点） | < 100MB            |
 
 ## 10. 测试策略
 

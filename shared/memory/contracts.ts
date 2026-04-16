@@ -69,7 +69,11 @@ export interface MemoryReader {
   /** 按 ID 精确查询 */
   get(agentId: string, entryId: string): Promise<MemoryEntry | null>;
   /** 按来源列出最近条目 */
-  listRecent(agentId: string, source?: MemorySource, limit?: number): Promise<MemoryEntry[]>;
+  listRecent(
+    agentId: string,
+    source?: MemorySource,
+    limit?: number
+  ): Promise<MemoryEntry[]>;
   /** 获取智能体的记忆统计 */
   getStats(agentId: string): Promise<MemoryStats>;
 }
@@ -99,7 +103,11 @@ export interface MemoryWriter {
   /** 批量写入 */
   writeBatch(inputs: MemoryWriteInput[]): Promise<MemoryEntry[]>;
   /** 更新已有条目的 metadata */
-  updateMetadata(agentId: string, entryId: string, metadata: Partial<MemoryMetadata>): Promise<void>;
+  updateMetadata(
+    agentId: string,
+    entryId: string,
+    metadata: Partial<MemoryMetadata>
+  ): Promise<void>;
   /** 删除条目（仅管理用途） */
   delete(agentId: string, entryId: string): Promise<void>;
   /** 物化工作流记忆（工作流完成后调用） */

@@ -33,7 +33,7 @@ function openTelemetryDB(): Promise<IDBDatabase> {
 
 /** 将遥测快照持久化到 IndexedDB */
 export async function saveTelemetrySnapshot(
-  snapshot: TelemetrySnapshot,
+  snapshot: TelemetrySnapshot
 ): Promise<void> {
   try {
     const db = await openTelemetryDB();
@@ -58,7 +58,7 @@ export async function loadTelemetrySnapshot(): Promise<TelemetrySnapshot | null>
       (resolve, reject) => {
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
-      },
+      }
     );
     return result ?? null;
   } catch (err) {

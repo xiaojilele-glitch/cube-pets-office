@@ -28,7 +28,10 @@ export class MissionApiError extends Error {
   }
 }
 
-function withQuery(path: string, query?: Record<string, string | number | null | undefined>) {
+function withQuery(
+  path: string,
+  query?: Record<string, string | number | null | undefined>
+) {
   if (!query) return path;
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
@@ -45,9 +48,7 @@ function routeFor(path: string, params: Record<string, string>) {
   }, path);
 }
 
-export function getMissionApiError(
-  error: unknown
-): ApiRequestError | null {
+export function getMissionApiError(error: unknown): ApiRequestError | null {
   return error instanceof MissionApiError ? error.requestError : null;
 }
 
@@ -144,7 +145,9 @@ export async function submitMissionDecision(
   );
 }
 
-export async function listPlanets(limit = 200): Promise<ListMissionPlanetsResponse> {
+export async function listPlanets(
+  limit = 200
+): Promise<ListMissionPlanetsResponse> {
   return requestJson<ListMissionPlanetsResponse>(
     withQuery(MISSION_API_ROUTES.listPlanets, { limit })
   );
@@ -156,7 +159,9 @@ export async function getPlanet(id: string): Promise<GetMissionPlanetResponse> {
   );
 }
 
-export async function getPlanetInterior(id: string): Promise<GetMissionPlanetInteriorResponse> {
+export async function getPlanetInterior(
+  id: string
+): Promise<GetMissionPlanetInteriorResponse> {
   return requestJson<GetMissionPlanetInteriorResponse>(
     routeFor(MISSION_API_ROUTES.getPlanetInterior, { id })
   );

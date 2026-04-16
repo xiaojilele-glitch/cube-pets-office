@@ -30,13 +30,19 @@ describe("DatabaseChecker", () => {
     });
 
     it("detects ALTER", () => {
-      expect(containsDangerousOperation("ALTER TABLE users ADD COLUMN age INT")).toBe(true);
+      expect(
+        containsDangerousOperation("ALTER TABLE users ADD COLUMN age INT")
+      ).toBe(true);
     });
 
     it("does not flag safe operations", () => {
       expect(containsDangerousOperation("SELECT * FROM users")).toBe(false);
-      expect(containsDangerousOperation("INSERT INTO users VALUES (1)")).toBe(false);
-      expect(containsDangerousOperation("UPDATE users SET name='test'")).toBe(false);
+      expect(containsDangerousOperation("INSERT INTO users VALUES (1)")).toBe(
+        false
+      );
+      expect(containsDangerousOperation("UPDATE users SET name='test'")).toBe(
+        false
+      );
     });
 
     it("does not flag substrings (e.g. 'BACKDROP')", () => {
@@ -71,23 +77,37 @@ describe("DatabaseChecker", () => {
       const constraints: PermissionConstraints = {
         tables: ["*"],
       };
-      expect(checker.checkConstraints("select", "DROP TABLE users", constraints)).toBe(false);
-      expect(checker.checkConstraints("select", "TRUNCATE TABLE logs", constraints)).toBe(false);
-      expect(checker.checkConstraints("select", "ALTER TABLE users ADD col INT", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints("select", "DROP TABLE users", constraints)
+      ).toBe(false);
+      expect(
+        checker.checkConstraints("select", "TRUNCATE TABLE logs", constraints)
+      ).toBe(false);
+      expect(
+        checker.checkConstraints(
+          "select",
+          "ALTER TABLE users ADD col INT",
+          constraints
+        )
+      ).toBe(false);
     });
 
     it("allows safe table access with matching pattern", () => {
       const constraints: PermissionConstraints = {
         tables: ["public_*"],
       };
-      expect(checker.checkConstraints("select", "public_users", constraints)).toBe(true);
+      expect(
+        checker.checkConstraints("select", "public_users", constraints)
+      ).toBe(true);
     });
 
     it("denies table access not matching pattern", () => {
       const constraints: PermissionConstraints = {
         tables: ["public_*"],
       };
-      expect(checker.checkConstraints("select", "private_secrets", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints("select", "private_secrets", constraints)
+      ).toBe(false);
     });
 
     it("allows when no table constraints", () => {
@@ -98,8 +118,12 @@ describe("DatabaseChecker", () => {
       const constraints: PermissionConstraints = {
         tables: ["users"],
       };
-      expect(checker.checkConstraints("select", "mydb.users", constraints)).toBe(true);
-      expect(checker.checkConstraints("select", "mydb.orders", constraints)).toBe(false);
+      expect(
+        checker.checkConstraints("select", "mydb.users", constraints)
+      ).toBe(true);
+      expect(
+        checker.checkConstraints("select", "mydb.orders", constraints)
+      ).toBe(false);
     });
   });
 });
@@ -118,14 +142,22 @@ describe("DatabaseChecker Property Tests", () => {
 
     // Generate a SQL-like string that contains a dangerous keyword as a whole word
     const safePrefixArb = fc.constantFrom(
-      "", "SELECT * FROM t; ", "INSERT INTO x; ", "-- comment\n",
+      "",
+      "SELECT * FROM t; ",
+      "INSERT INTO x; ",
+      "-- comment\n"
     );
-    const safeTableArb = fc.array(
-      fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz_".split("")),
-      { minLength: 1, maxLength: 10 },
-    ).map((chars) => chars.join(""));
+    const safeTableArb = fc
+      .array(fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz_".split("")), {
+        minLength: 1,
+        maxLength: 10,
+      })
+      .map(chars => chars.join(""));
     const safeSuffixArb = fc.constantFrom(
-      "", " TABLE foo", " TABLE bar CASCADE", " INDEX idx",
+      "",
+      " TABLE foo",
+      " TABLE bar CASCADE",
+      " INDEX idx"
     );
 
     // Most permissive constraints
@@ -135,7 +167,10 @@ describe("DatabaseChecker Property Tests", () => {
     };
 
     const actionArb = fc.constantFrom(
-      "select" as const, "insert" as const, "update" as const, "delete" as const,
+      "select" as const,
+      "insert" as const,
+      "update" as const,
+      "delete" as const
     );
 
     it("any SQL containing dangerous keyword as whole word is denied", () => {
@@ -147,10 +182,12 @@ describe("DatabaseChecker Property Tests", () => {
           actionArb,
           (prefix, op, suffix, action) => {
             const sql = `${prefix}${op}${suffix}`;
-            expect(checker.checkConstraints(action, sql, permissiveConstraints)).toBe(false);
-          },
+            expect(
+              checker.checkConstraints(action, sql, permissiveConstraints)
+            ).toBe(false);
+          }
         ),
-        { numRuns: 100 },
+        { numRuns: 100 }
       );
     });
   });

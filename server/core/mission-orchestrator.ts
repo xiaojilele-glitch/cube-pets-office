@@ -12,7 +12,10 @@ import type {
 } from "../../shared/mission/contracts.js";
 import type { AutonomyData } from "../../shared/autonomy-types.js";
 import { MISSION_CORE_STAGE_BLUEPRINT } from "../../shared/mission/contracts.js";
-import type { ExecutorEvent, ExecutionPlan } from "../../shared/executor/contracts.js";
+import type {
+  ExecutorEvent,
+  ExecutionPlan,
+} from "../../shared/executor/contracts.js";
 import type { RoleSwitchTrace } from "../../shared/role-schema.js";
 import type { CollaborationSession } from "../../shared/swarm.js";
 import type {
@@ -35,7 +38,9 @@ import {
 
 export interface MissionRepository {
   create(record: MissionRecord): Promise<MissionRecord> | MissionRecord;
-  get(id: string): Promise<MissionRecord | undefined> | MissionRecord | undefined;
+  get(
+    id: string
+  ): Promise<MissionRecord | undefined> | MissionRecord | undefined;
   save(record: MissionRecord): Promise<MissionRecord> | MissionRecord;
 }
 
@@ -51,9 +56,13 @@ export interface MissionOrchestratorHooks {
   onDecisionSubmitted?(
     mission: MissionRecord,
     submission: MissionDecisionSubmission,
-    resolved: MissionDecisionResolved,
+    resolved: MissionDecisionResolved
   ):
-    | Promise<{ resumed?: boolean; detail?: string; nextDecision?: MissionDecision } | void>
+    | Promise<{
+        resumed?: boolean;
+        detail?: string;
+        nextDecision?: MissionDecision;
+      } | void>
     | { resumed?: boolean; detail?: string; nextDecision?: MissionDecision }
     | void;
 }
@@ -92,11 +101,14 @@ interface MissionRuntimeState {
 }
 
 const MISSION_STAGE_LABELS = Object.fromEntries(
-  MISSION_CORE_STAGE_BLUEPRINT.map(stage => [stage.key, stage.label]),
+  MISSION_CORE_STAGE_BLUEPRINT.map(stage => [stage.key, stage.label])
 ) as Record<string, string>;
 
 function createMissionId(): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+  if (
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+  ) {
     return crypto.randomUUID();
   }
 
@@ -143,7 +155,7 @@ function baseStages(): MissionStage[] {
 function ensureStage(
   stages: MissionStage[],
   key: string,
-  label = toTitleCase(key),
+  label = toTitleCase(key)
 ): MissionStage {
   const existing = stages.find(stage => stage.key === key);
   if (existing) return existing;
@@ -162,21 +174,27 @@ function touchStage(
   key: string,
   label: string,
   update: Partial<MissionStage>,
-  now = Date.now(),
+  now = Date.now()
 ): MissionStage[] {
   const next = cloneStages(stages);
   const stage = ensureStage(next, key, label);
   if (update.status === "running" && !stage.startedAt) {
     stage.startedAt = now;
   }
-  if ((update.status === "done" || update.status === "failed") && !stage.completedAt) {
+  if (
+    (update.status === "done" || update.status === "failed") &&
+    !stage.completedAt
+  ) {
     stage.completedAt = now;
   }
   Object.assign(stage, update);
   return next;
 }
 
-function replaceMission(record: MissionRecord, patch: Partial<MissionRecord>): MissionRecord {
+function replaceMission(
+  record: MissionRecord,
+  patch: Partial<MissionRecord>
+): MissionRecord {
   return {
     ...record,
     ...patch,
@@ -184,7 +202,10 @@ function replaceMission(record: MissionRecord, patch: Partial<MissionRecord>): M
   };
 }
 
-function appendEvent(record: MissionRecord, event: MissionEvent): MissionRecord {
+function appendEvent(
+  record: MissionRecord,
+  event: MissionEvent
+): MissionRecord {
   const next = cloneMission(record);
   next.events.push(event);
   next.updatedAt = event.time;
@@ -194,7 +215,7 @@ function appendEvent(record: MissionRecord, event: MissionEvent): MissionRecord 
 function missionEvent(
   type: MissionEvent["type"],
   message: string,
-  options: Partial<MissionEvent> = {},
+  options: Partial<MissionEvent> = {}
 ): MissionEvent {
   return {
     type,
@@ -213,15 +234,20 @@ function missionStageLabel(stageKey: string): string {
 
 function resolveMissionStageKey(
   event: ExecutorEvent,
-  fallback: string | undefined,
+  fallback: string | undefined
 ): string {
   const rawStageKey = event.stageKey?.trim();
   if (rawStageKey) {
     if (MISSION_STAGE_LABELS[rawStageKey]) return rawStageKey;
-    if (rawStageKey === "scan" || rawStageKey === "analyze") return "understand";
+    if (rawStageKey === "scan" || rawStageKey === "analyze")
+      return "understand";
     if (rawStageKey === "build-plan") return "plan";
     if (rawStageKey === "dispatch") return "provision";
-    if (rawStageKey === "codegen" || rawStageKey === "execute" || rawStageKey === "custom") {
+    if (
+      rawStageKey === "codegen" ||
+      rawStageKey === "execute" ||
+      rawStageKey === "custom"
+    ) {
       return "execute";
     }
     if (rawStageKey === "report") return "finalize";
@@ -248,7 +274,7 @@ function resolveMissionStageKey(
 }
 
 function normalizeExecutorArtifacts(
-  artifacts: ExecutorEvent["artifacts"],
+  artifacts: ExecutorEvent["artifacts"]
 ): MissionRecord["artifacts"] | undefined {
   if (!Array.isArray(artifacts)) return undefined;
 
@@ -279,25 +305,41 @@ function normalizeExecutorArtifacts(
 }
 
 function normalizeExecutorInstance(
-  payload: ExecutorEvent["payload"],
+  payload: ExecutorEvent["payload"]
 ): MissionRecord["instance"] | undefined {
   const instance = payload?.instance as Record<string, unknown> | undefined;
   if (!instance || typeof instance !== "object") return undefined;
 
   return {
-    id: typeof instance.id === "string" ? instance.id.trim() || undefined : undefined,
-    image: typeof instance.image === "string" ? instance.image.trim() || undefined : undefined,
+    id:
+      typeof instance.id === "string"
+        ? instance.id.trim() || undefined
+        : undefined,
+    image:
+      typeof instance.image === "string"
+        ? instance.image.trim() || undefined
+        : undefined,
     command: Array.isArray(instance.command)
-      ? instance.command.filter((entry: unknown): entry is string => typeof entry === "string")
+      ? instance.command.filter(
+          (entry: unknown): entry is string => typeof entry === "string"
+        )
       : undefined,
     workspaceRoot:
       typeof instance.workspaceRoot === "string"
         ? instance.workspaceRoot.trim() || undefined
         : undefined,
-    startedAt: typeof instance.startedAt === "number" ? instance.startedAt : undefined,
-    completedAt: typeof instance.completedAt === "number" ? instance.completedAt : undefined,
-    exitCode: typeof instance.exitCode === "number" ? instance.exitCode : undefined,
-    host: typeof instance.host === "string" ? instance.host.trim() || undefined : undefined,
+    startedAt:
+      typeof instance.startedAt === "number" ? instance.startedAt : undefined,
+    completedAt:
+      typeof instance.completedAt === "number"
+        ? instance.completedAt
+        : undefined,
+    exitCode:
+      typeof instance.exitCode === "number" ? instance.exitCode : undefined,
+    host:
+      typeof instance.host === "string"
+        ? instance.host.trim() || undefined
+        : undefined,
   };
 }
 
@@ -314,7 +356,7 @@ const VALID_WORK_PACKAGE_STATUSES = new Set([
 ]);
 
 function extractOrganization(
-  event: ExecutorEvent,
+  event: ExecutorEvent
 ): MissionOrganizationSnapshot | undefined {
   const raw = (event.payload as Record<string, unknown> | undefined)
     ?.organization as Record<string, unknown> | undefined;
@@ -352,7 +394,7 @@ function extractOrganization(
 }
 
 function extractWorkPackages(
-  event: ExecutorEvent,
+  event: ExecutorEvent
 ): MissionWorkPackage[] | undefined {
   const raw = (event.payload as Record<string, unknown> | undefined)
     ?.workPackages;
@@ -394,7 +436,7 @@ function extractWorkPackages(
 }
 
 function extractMessageLog(
-  event: ExecutorEvent,
+  event: ExecutorEvent
 ): MissionMessageLogEntry[] | undefined {
   const raw = (event.payload as Record<string, unknown> | undefined)
     ?.messageLog;
@@ -475,7 +517,10 @@ export class MissionOrchestrator {
    * Handle a workflow stage completion event.
    * Looks up the missionId from the workflowMissionMap and calls enrichMissionFromWorkflow.
    */
-  async handleStageCompleted(workflowId: string, completedStage: string): Promise<void> {
+  async handleStageCompleted(
+    workflowId: string,
+    completedStage: string
+  ): Promise<void> {
     const missionId = this.workflowMissionMap.get(workflowId);
     if (!missionId) return;
     await this.enrichMissionFromWorkflow(missionId, workflowId, completedStage);
@@ -486,21 +531,26 @@ export class MissionOrchestrator {
    * Uses the "role_switch" MissionEvent type.
    * @see Requirements 5.5
    */
-  async recordRoleSwitchTrace(missionId: string, trace: RoleSwitchTrace): Promise<void> {
+  async recordRoleSwitchTrace(
+    missionId: string,
+    trace: RoleSwitchTrace
+  ): Promise<void> {
     const record = await this.repository.get(missionId);
     if (!record) {
-      console.warn(`[MissionOrchestrator] Cannot record role switch trace: mission ${missionId} not found`);
+      console.warn(
+        `[MissionOrchestrator] Cannot record role switch trace: mission ${missionId} not found`
+      );
       return;
     }
 
     const event = missionEvent(
       "role_switch",
-      `Agent ${trace.agentId} switched from ${trace.fromRoleId ?? 'none'} to ${trace.toRoleId ?? 'none'}`,
+      `Agent ${trace.agentId} switched from ${trace.fromRoleId ?? "none"} to ${trace.toRoleId ?? "none"}`,
       {
         stageKey: trace.phaseId,
         source: "brain",
         time: new Date(trace.timestamp).getTime(),
-      },
+      }
     );
 
     const updated = appendEvent(record, event);
@@ -508,7 +558,7 @@ export class MissionOrchestrator {
 
     console.log(
       `[MissionOrchestrator] Role switch trace recorded: mission=${missionId} ` +
-      `agent=${trace.agentId} from=${trace.fromRoleId} to=${trace.toRoleId} phase=${trace.phaseId}`,
+        `agent=${trace.agentId} from=${trace.fromRoleId} to=${trace.toRoleId} phase=${trace.phaseId}`
     );
   }
 
@@ -519,7 +569,9 @@ export class MissionOrchestrator {
   async setAutonomyData(missionId: string, data: AutonomyData): Promise<void> {
     const record = await this.repository.get(missionId);
     if (!record) {
-      console.warn(`[MissionOrchestrator] Cannot set autonomy data: mission ${missionId} not found`);
+      console.warn(
+        `[MissionOrchestrator] Cannot set autonomy data: mission ${missionId} not found`
+      );
       return;
     }
 
@@ -528,7 +580,7 @@ export class MissionOrchestrator {
 
     console.log(
       `[MissionOrchestrator] Autonomy data stored: mission=${missionId} ` +
-      `assessments=${data.assessments.length} competitions=${data.competitions.length} taskforces=${data.taskforces.length}`,
+        `assessments=${data.assessments.length} competitions=${data.competitions.length} taskforces=${data.taskforces.length}`
     );
   }
 
@@ -539,7 +591,7 @@ export class MissionOrchestrator {
    */
   async appendCollaborationResult(
     missionId: string,
-    session: CollaborationSession,
+    session: CollaborationSession
   ): Promise<MissionRecord> {
     const record = await this.repository.get(missionId);
     if (!record) {
@@ -560,7 +612,7 @@ export class MissionOrchestrator {
       {
         source: "brain",
         time: session.completedAt ?? Date.now(),
-      },
+      }
     );
 
     const updated = appendEvent(record, event);
@@ -593,7 +645,7 @@ export class MissionOrchestrator {
             time: now,
           }),
         ],
-      }),
+      })
     );
 
     mission = await this.persist(
@@ -603,21 +655,29 @@ export class MissionOrchestrator {
           progress: 8,
           currentStageKey: "understand",
           stages: touchStage(
-            touchStage(mission.stages, "receive", missionStageLabel("receive"), {
-              status: "done",
-              detail: "Mission intake accepted by brain dispatch.",
-            }),
+            touchStage(
+              mission.stages,
+              "receive",
+              missionStageLabel("receive"),
+              {
+                status: "done",
+                detail: "Mission intake accepted by brain dispatch.",
+              }
+            ),
             "understand",
             missionStageLabel("understand"),
-            { status: "running", detail: "Reading mission objective and constraints." },
+            {
+              status: "running",
+              detail: "Reading mission objective and constraints.",
+            }
           ),
         }),
         missionEvent("progress", "Understanding mission objective.", {
           source: "brain",
           stageKey: "understand",
           progress: 8,
-        }),
-      ),
+        })
+      )
     );
 
     const planResult = await this.buildPlan({
@@ -641,19 +701,19 @@ export class MissionOrchestrator {
               mission.stages,
               "understand",
               missionStageLabel("understand"),
-              { status: "done", detail: planResult.understanding.summary },
+              { status: "done", detail: planResult.understanding.summary }
             ),
             "plan",
             missionStageLabel("plan"),
-            { status: "done", detail: planResult.plan.summary },
+            { status: "done", detail: planResult.plan.summary }
           ),
         }),
         missionEvent("progress", "Structured ExecutionPlan created.", {
           source: "brain",
           stageKey: "plan",
           progress: 32,
-        }),
-      ),
+        })
+      )
     );
 
     this.runtime.set(missionId, {
@@ -672,20 +732,23 @@ export class MissionOrchestrator {
             {
               status: "running",
               detail: `Dispatching ${planResult.plan.jobs.length} executor job(s).`,
-            },
+            }
           ),
         }),
         missionEvent("progress", "Dispatching plan to executor.", {
           source: "brain",
           stageKey: "provision",
           progress: 45,
-        }),
-      ),
+        })
+      )
     );
 
     let dispatched: DispatchExecutionPlanResult;
     try {
-      dispatched = await this.executorClient.dispatchPlan(planResult.plan, input.dispatch);
+      dispatched = await this.executorClient.dispatchPlan(
+        planResult.plan,
+        input.dispatch
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       mission = await this.persist(
@@ -700,11 +763,14 @@ export class MissionOrchestrator {
                 mission.stages,
                 "provision",
                 missionStageLabel("provision"),
-                { status: "failed", detail: message },
+                { status: "failed", detail: message }
               ),
               "finalize",
               missionStageLabel("finalize"),
-              { status: "failed", detail: "Mission failed before executor acceptance." },
+              {
+                status: "failed",
+                detail: "Mission failed before executor acceptance.",
+              }
             ),
           }),
           missionEvent("failed", message, {
@@ -712,8 +778,8 @@ export class MissionOrchestrator {
             stageKey: "finalize",
             progress: 45,
             level: "error",
-          }),
-        ),
+          })
+        )
       );
       throw error;
     }
@@ -751,22 +817,23 @@ export class MissionOrchestrator {
               {
                 status: "done",
                 detail: `Executor accepted job ${dispatched.response.jobId}.`,
-              },
+              }
             ),
             "execute",
             missionStageLabel("execute"),
             {
               status: "running",
-              detail: "Executor accepted the mission and execution is now in progress.",
-            },
+              detail:
+                "Executor accepted the mission and execution is now in progress.",
+            }
           ),
         }),
         missionEvent("progress", "Executor accepted mission dispatch.", {
           source: "brain",
           stageKey: "execute",
           progress: 60,
-        }),
-      ),
+        })
+      )
     );
 
     return {
@@ -779,7 +846,9 @@ export class MissionOrchestrator {
   async applyExecutorEvent(event: ExecutorEvent): Promise<MissionRecord> {
     const mission = await Promise.resolve(this.repository.get(event.missionId));
     if (!mission) {
-      throw new Error(`Mission not found for executor event: ${event.missionId}`);
+      throw new Error(
+        `Mission not found for executor event: ${event.missionId}`
+      );
     }
 
     const runtimeState = this.runtime.get(event.missionId) || {};
@@ -787,7 +856,10 @@ export class MissionOrchestrator {
     this.runtime.set(event.missionId, runtimeState);
 
     const stageKey = resolveMissionStageKey(event, mission.currentStageKey);
-    const stageLabel = this.stageLabelForExecutorEvent(event, runtimeState.plan);
+    const stageLabel = this.stageLabelForExecutorEvent(
+      event,
+      runtimeState.plan
+    );
     const progress = clampProgress(event.progress, mission.progress);
     const time = eventTimeFromIso(event.occurredAt);
     const sourceEvent = this.mapExecutorEvent(event, progress, time, stageKey);
@@ -817,10 +889,10 @@ export class MissionOrchestrator {
             status: this.mapExecutorStatus(event.status),
             detail: event.detail || event.message,
           },
-          time,
+          time
         ),
       }),
-      sourceEvent,
+      sourceEvent
     );
 
     if (event.status === "waiting" || event.type === "job.waiting") {
@@ -839,22 +911,40 @@ export class MissionOrchestrator {
         decision: undefined,
         completedAt: time,
         currentStageKey: "finalize",
-        stages: touchStage(next.stages, "finalize", missionStageLabel("finalize"), {
-          status: "done",
-          detail: event.summary || event.message,
-        }, time),
+        stages: touchStage(
+          next.stages,
+          "finalize",
+          missionStageLabel("finalize"),
+          {
+            status: "done",
+            detail: event.summary || event.message,
+          },
+          time
+        ),
       });
-    } else if (event.status === "failed" || event.status === "cancelled" || event.status === "timeout" || event.type === "job.failed" || event.type === "job.timeout") {
+    } else if (
+      event.status === "failed" ||
+      event.status === "cancelled" ||
+      event.status === "timeout" ||
+      event.type === "job.failed" ||
+      event.type === "job.timeout"
+    ) {
       next = replaceMission(next, {
         status: "failed",
         summary: event.summary || event.message,
         waitingFor: undefined,
         decision: undefined,
         currentStageKey: "finalize",
-        stages: touchStage(next.stages, "finalize", missionStageLabel("finalize"), {
-          status: "failed",
-          detail: event.summary || event.message,
-        }, time),
+        stages: touchStage(
+          next.stages,
+          "finalize",
+          missionStageLabel("finalize"),
+          {
+            status: "failed",
+            detail: event.summary || event.message,
+          },
+          time
+        ),
       });
     } else {
       next = replaceMission(next, {
@@ -863,7 +953,10 @@ export class MissionOrchestrator {
     }
 
     // Enrich MissionRecord when stage completes or mission completes
-    if (event.status === "completed" || this.mapExecutorStatus(event.status) === "done") {
+    if (
+      event.status === "completed" ||
+      this.mapExecutorStatus(event.status) === "done"
+    ) {
       const organization = extractOrganization(event);
       const workPackages = extractWorkPackages(event);
       const messageLog = extractMessageLog(event);
@@ -882,7 +975,7 @@ export class MissionOrchestrator {
 
   async submitDecision(
     missionId: string,
-    submission: MissionDecisionSubmission,
+    submission: MissionDecisionSubmission
   ): Promise<MissionDecisionSubmissionResult> {
     const mission = await Promise.resolve(this.repository.get(missionId));
     if (!mission) {
@@ -898,7 +991,11 @@ export class MissionOrchestrator {
     runtimeState.submittedDecision = resolved;
     this.runtime.set(missionId, runtimeState);
 
-    const hookResult = await this.hooks.onDecisionSubmitted?.(mission, submission, resolved);
+    const hookResult = await this.hooks.onDecisionSubmitted?.(
+      mission,
+      submission,
+      resolved
+    );
     const nextDecision = hookResult?.nextDecision;
     const resumed = !!hookResult?.resumed;
     const detail =
@@ -916,7 +1013,7 @@ export class MissionOrchestrator {
         stageKey: mission.currentStageKey,
         level: "info",
         progress: mission.progress,
-      }),
+      })
     );
 
     if (nextDecision) {
@@ -928,15 +1025,22 @@ export class MissionOrchestrator {
       });
       next = appendEvent(
         next,
-        missionEvent("waiting", `Waiting for next decision: ${nextDecision.prompt}`, {
-          source: "mission-core",
-          stageKey: mission.currentStageKey,
-          progress: mission.progress,
-        }),
+        missionEvent(
+          "waiting",
+          `Waiting for next decision: ${nextDecision.prompt}`,
+          {
+            source: "mission-core",
+            stageKey: mission.currentStageKey,
+            progress: mission.progress,
+          }
+        )
       );
     } else if (resumed) {
       const resumedStageKey = runtimeState.lastExecutorEvent
-        ? resolveMissionStageKey(runtimeState.lastExecutorEvent, mission.currentStageKey)
+        ? resolveMissionStageKey(
+            runtimeState.lastExecutorEvent,
+            mission.currentStageKey
+          )
         : mission.currentStageKey || "execute";
       next = replaceMission(next, {
         status: "running",
@@ -965,7 +1069,9 @@ export class MissionOrchestrator {
     return state ? { ...state } : undefined;
   }
 
-  private async buildPlan(input: ExecutionPlanBuildInput): Promise<ExecutionPlanBuildResult> {
+  private async buildPlan(
+    input: ExecutionPlanBuildInput
+  ): Promise<ExecutionPlanBuildResult> {
     return this.planBuilder.build(input);
   }
 
@@ -975,12 +1081,20 @@ export class MissionOrchestrator {
     return saved;
   }
 
-  private stageLabelForExecutorEvent(event: ExecutorEvent, plan: ExecutionPlan | undefined): string {
-    const missionStageKey = resolveMissionStageKey(event, plan?.steps.at(-1)?.key);
+  private stageLabelForExecutorEvent(
+    event: ExecutorEvent,
+    plan: ExecutionPlan | undefined
+  ): string {
+    const missionStageKey = resolveMissionStageKey(
+      event,
+      plan?.steps.at(-1)?.key
+    );
     return missionStageLabel(missionStageKey);
   }
 
-  private mapExecutorStatus(status: ExecutorEvent["status"]): MissionStage["status"] {
+  private mapExecutorStatus(
+    status: ExecutorEvent["status"]
+  ): MissionStage["status"] {
     switch (status) {
       case "completed":
         return "done";
@@ -997,7 +1111,7 @@ export class MissionOrchestrator {
     event: ExecutorEvent,
     progress: number,
     time: number,
-    stageKey: string,
+    stageKey: string
   ): MissionEvent {
     if (event.type === "job.waiting" || event.status === "waiting") {
       return missionEvent("waiting", event.message, {
@@ -1017,7 +1131,13 @@ export class MissionOrchestrator {
       });
     }
 
-    if (event.type === "job.failed" || event.type === "job.timeout" || event.status === "failed" || event.status === "cancelled" || event.status === "timeout") {
+    if (
+      event.type === "job.failed" ||
+      event.type === "job.timeout" ||
+      event.status === "failed" ||
+      event.status === "cancelled" ||
+      event.status === "timeout"
+    ) {
       return missionEvent("failed", event.summary || event.message, {
         source: "executor",
         stageKey,
@@ -1047,13 +1167,15 @@ export class MissionOrchestrator {
 
   private resolveDecision(
     decision: MissionDecision,
-    submission: MissionDecisionSubmission,
+    submission: MissionDecisionSubmission
   ): MissionDecisionResolved {
     if (!submission.optionId && !submission.freeText?.trim()) {
       throw new Error("Decision submission must include optionId or freeText.");
     }
 
-    const selected = decision.options.find(option => option.id === submission.optionId);
+    const selected = decision.options.find(
+      option => option.id === submission.optionId
+    );
     if (submission.optionId && !selected) {
       throw new Error(`Unknown decision option: ${submission.optionId}`);
     }
@@ -1074,7 +1196,7 @@ export class MissionOrchestrator {
   async enrichMissionFromWorkflow(
     missionId: string,
     workflowId: string,
-    completedStage: string,
+    completedStage: string
   ): Promise<void> {
     if (!this.workflowRuntime) return;
 
@@ -1090,13 +1212,15 @@ export class MissionOrchestrator {
     }
 
     // execution/review/revision/verify 阶段完成后：填充 workPackages
-    if (["execution", "review", "revision", "verify"].includes(completedStage)) {
+    if (
+      ["execution", "review", "revision", "verify"].includes(completedStage)
+    ) {
       try {
         updates.workPackages = this.extractWorkPackages(workflowId);
       } catch (err) {
         console.warn(
           `[MissionOrchestrator] extractWorkPackages failed for workflow ${workflowId}:`,
-          err instanceof Error ? err.message : err,
+          err instanceof Error ? err.message : err
         );
         // workPackages 保持上一次值 — 不写入 updates
       }
@@ -1112,7 +1236,7 @@ export class MissionOrchestrator {
   }
 
   private extractOrganization(
-    workflowId: string,
+    workflowId: string
   ): MissionOrganizationSnapshot | undefined {
     const workflow = this.workflowRuntime!.workflowRepo.getWorkflow(workflowId);
     const orgSnapshot = workflow?.results?.organization as
@@ -1122,9 +1246,9 @@ export class MissionOrchestrator {
     if (!orgSnapshot?.departments?.length) return undefined;
 
     return {
-      departments: orgSnapshot.departments.map((dept) => {
+      departments: orgSnapshot.departments.map(dept => {
         const managerNode = orgSnapshot.nodes?.find(
-          (n) => n.id === dept.managerNodeId,
+          n => n.id === dept.managerNodeId
         );
         return {
           key: dept.id,
@@ -1144,34 +1268,43 @@ export class MissionOrchestrator {
 
     if (!orgSnapshot?.nodes?.length) return [];
 
-    return orgSnapshot.nodes.map((node): MissionAgentCrewMember => ({
-      id: node.agentId,
-      name: node.name,
-      role: node.role,
-      department: node.departmentLabel,
-      status: "idle",
-    }));
+    return orgSnapshot.nodes.map(
+      (node): MissionAgentCrewMember => ({
+        id: node.agentId,
+        name: node.name,
+        role: node.role,
+        department: node.departmentLabel,
+        status: "idle",
+      })
+    );
   }
 
   private extractWorkPackages(workflowId: string): MissionWorkPackage[] {
     const tasks: TaskRecord[] =
       this.workflowRuntime!.workflowRepo.getTasksByWorkflow(workflowId);
 
-    return tasks.map((task): MissionWorkPackage => ({
-      id: String(task.id),
-      workerId: task.worker_id,
-      description: task.description,
-      deliverable: task.deliverable_v3 ?? task.deliverable_v2 ?? task.deliverable ?? undefined,
-      status: mapTaskStatus(task.status),
-      score: task.total_score ?? undefined,
-      feedback: task.manager_feedback ?? task.meta_audit_feedback ?? undefined,
-      stageKey: undefined as string | undefined,
-    }));
+    return tasks.map(
+      (task): MissionWorkPackage => ({
+        id: String(task.id),
+        workerId: task.worker_id,
+        description: task.description,
+        deliverable:
+          task.deliverable_v3 ??
+          task.deliverable_v2 ??
+          task.deliverable ??
+          undefined,
+        status: mapTaskStatus(task.status),
+        score: task.total_score ?? undefined,
+        feedback:
+          task.manager_feedback ?? task.meta_audit_feedback ?? undefined,
+        stageKey: undefined as string | undefined,
+      })
+    );
   }
 
   private extractMessageLog(
     workflowId: string,
-    limit: number,
+    limit: number
   ): MissionMessageLogEntry[] {
     const messages: MessageRecord[] =
       this.workflowRuntime!.workflowRepo.getMessagesByWorkflow(workflowId);
@@ -1180,26 +1313,27 @@ export class MissionOrchestrator {
 
     // Sort by created_at descending, take the most recent `limit`, then reverse to chronological
     const sorted = [...messages].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
     const recent = sorted.slice(0, limit).reverse();
 
-    return recent.map((msg): MissionMessageLogEntry => ({
-      sender: msg.from_agent,
-      content:
-        msg.content.length > 500
-          ? msg.content.slice(0, 497) + "..."
-          : msg.content,
-      time: new Date(msg.created_at).getTime(),
-      stageKey: msg.stage || undefined,
-    }));
+    return recent.map(
+      (msg): MissionMessageLogEntry => ({
+        sender: msg.from_agent,
+        content:
+          msg.content.length > 500
+            ? msg.content.slice(0, 497) + "..."
+            : msg.content,
+        time: new Date(msg.created_at).getTime(),
+        stageKey: msg.stage || undefined,
+      })
+    );
   }
 }
 
 /** Map workflow TaskRecord.status string to MissionWorkPackage status union. */
-export function mapTaskStatus(
-  status: string,
-): MissionWorkPackage["status"] {
+export function mapTaskStatus(status: string): MissionWorkPackage["status"] {
   switch (status) {
     case "passed":
       return "passed";

@@ -52,9 +52,11 @@ export function createFeishuBridgeRuntime(
   const taskStore = options.taskStore ?? new InMemoryFeishuTaskStore();
   const delivery = options.delivery ?? new FeishuApiDelivery(config);
   const bridge = new FeishuProgressBridge(delivery, config);
-  const workflowTracker = options.workflowTracker ?? new FeishuWorkflowTracker(taskStore);
+  const workflowTracker =
+    options.workflowTracker ?? new FeishuWorkflowTracker(taskStore);
   const dispatcher = options.dispatcher ?? new WorkflowFeishuTaskDispatcher();
-  const webhookDedupStore = options.webhookDedupStore ?? createDedupStore(config);
+  const webhookDedupStore =
+    options.webhookDedupStore ?? createDedupStore(config);
 
   taskStore.subscribe(task => bridge.handleTaskUpdate(task));
 

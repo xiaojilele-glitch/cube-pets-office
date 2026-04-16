@@ -6,7 +6,7 @@
  * Requirements: 6.3
  */
 
-import type { FeedbackCollector } from './feedback-collector.js';
+import type { FeedbackCollector } from "./feedback-collector.js";
 
 export interface WeightTunerOptions {
   /** utilizationRate 低于此值视为"低利用率"，默认 0.3 */
@@ -18,7 +18,7 @@ export interface WeightTunerOptions {
 export type AlertHandler = (alert: RetrievalGapAlert) => void;
 
 export interface RetrievalGapAlert {
-  type: 'RETRIEVAL_GAP_DETECTED';
+  type: "RETRIEVAL_GAP_DETECTED";
   consecutiveCount: number;
   avgUtilizationRate: number;
   timestamp: string;
@@ -45,7 +45,9 @@ export class WeightTuner {
    * 返回是否触发了告警。
    */
   check(feedbackCollector: FeedbackCollector): boolean {
-    const rates = feedbackCollector.recentUtilizationRates(this.consecutiveThreshold);
+    const rates = feedbackCollector.recentUtilizationRates(
+      this.consecutiveThreshold
+    );
 
     if (rates.length < this.consecutiveThreshold) return false;
 
@@ -54,14 +56,18 @@ export class WeightTuner {
 
     const avg = rates.reduce((s, r) => s + r, 0) / rates.length;
     const alert: RetrievalGapAlert = {
-      type: 'RETRIEVAL_GAP_DETECTED',
+      type: "RETRIEVAL_GAP_DETECTED",
       consecutiveCount: rates.length,
       avgUtilizationRate: avg,
       timestamp: new Date().toISOString(),
     };
 
     for (const handler of this.alertHandlers) {
-      try { handler(alert); } catch { /* ignore handler errors */ }
+      try {
+        handler(alert);
+      } catch {
+        /* ignore handler errors */
+      }
     }
 
     return true;

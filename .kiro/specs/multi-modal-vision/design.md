@@ -79,20 +79,21 @@ export interface WorkflowInputAttachment {
   excerptStatus: WorkflowAttachmentExcerptStatus;
 
   // 新增 Vision 字段
-  visionReady?: boolean;           // 是否为可视觉分析的图片
-  base64DataUrl?: string;          // Base64 编码的 data URL
-  visualDescription?: string;      // Vision LLM 生成的视觉描述
+  visionReady?: boolean; // 是否为可视觉分析的图片
+  base64DataUrl?: string; // Base64 编码的 data URL
+  visualDescription?: string; // Vision LLM 生成的视觉描述
 }
 ```
 
 `excerptStatus` 类型扩展：
+
 ```typescript
 export type WorkflowAttachmentExcerptStatus =
   | "parsed"
   | "truncated"
   | "metadata_only"
-  | "vision_analyzed"    // Vision 分析完成
-  | "vision_fallback";   // Vision 失败，回退到 OCR
+  | "vision_analyzed" // Vision 分析完成
+  | "vision_fallback"; // Vision 失败，回退到 OCR
 ```
 
 ### 2. LLMMessage 多模态扩展（shared/workflow-runtime.ts）
@@ -100,7 +101,10 @@ export type WorkflowAttachmentExcerptStatus =
 ```typescript
 export type LLMMessageContentPart =
   | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string; detail?: "low" | "high" | "auto" } };
+  | {
+      type: "image_url";
+      image_url: { url: string; detail?: "low" | "high" | "auto" };
+    };
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
@@ -116,10 +120,10 @@ export interface LLMMessage {
 
 ```typescript
 export interface VisionAnalysisResult {
-  description: string;      // 图片整体描述
-  elements: string[];       // 关键视觉元素列表
-  textContent: string;      // 图片中识别到的文字
-  rawResponse: string;      // LLM 原始响应
+  description: string; // 图片整体描述
+  elements: string[]; // 关键视觉元素列表
+  textContent: string; // 图片中识别到的文字
+  rawResponse: string; // LLM 原始响应
 }
 
 export interface VisionProviderConfig {
@@ -256,127 +260,126 @@ case 'examining':
 
 ### WorkflowInputAttachment（扩展后）
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| id | string | ✅ | 附件唯一标识 |
-| name | string | ✅ | 文件名 |
-| mimeType | string | ✅ | MIME 类型 |
-| size | number | ✅ | 文件大小（字节） |
-| content | string | ✅ | 解析后的文本内容 |
-| excerpt | string | ✅ | 摘要文本 |
-| excerptStatus | string | ✅ | 解析状态 |
-| visionReady | boolean | ❌ | 是否可进行视觉分析 |
-| base64DataUrl | string | ❌ | Base64 编码的图片 data URL |
-| visualDescription | string | ❌ | Vision LLM 生成的视觉描述 |
+| 字段              | 类型    | 必填 | 说明                       |
+| ----------------- | ------- | ---- | -------------------------- |
+| id                | string  | ✅   | 附件唯一标识               |
+| name              | string  | ✅   | 文件名                     |
+| mimeType          | string  | ✅   | MIME 类型                  |
+| size              | number  | ✅   | 文件大小（字节）           |
+| content           | string  | ✅   | 解析后的文本内容           |
+| excerpt           | string  | ✅   | 摘要文本                   |
+| excerptStatus     | string  | ✅   | 解析状态                   |
+| visionReady       | boolean | ❌   | 是否可进行视觉分析         |
+| base64DataUrl     | string  | ❌   | Base64 编码的图片 data URL |
+| visualDescription | string  | ❌   | Vision LLM 生成的视觉描述  |
 
 ### VisionAnalysisResult
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| description | string | ✅ | 图片整体描述 |
-| elements | string[] | ✅ | 关键视觉元素列表 |
-| textContent | string | ✅ | 图片中识别到的文字 |
-| rawResponse | string | ✅ | LLM 原始响应文本 |
+| 字段        | 类型     | 必填 | 说明               |
+| ----------- | -------- | ---- | ------------------ |
+| description | string   | ✅   | 图片整体描述       |
+| elements    | string[] | ✅   | 关键视觉元素列表   |
+| textContent | string   | ✅   | 图片中识别到的文字 |
+| rawResponse | string   | ✅   | LLM 原始响应文本   |
 
 ### VisionProviderConfig
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| apiKey | string | ✅ | Vision LLM API Key |
-| baseUrl | string | ✅ | Vision LLM Base URL |
-| model | string | ✅ | Vision LLM 模型名称 |
-| wireApi | "responses" \| "chat_completions" | ✅ | API 协议类型 |
-| maxTokens | number | ✅ | 最大输出 Token 数 |
-| detail | "low" \| "high" \| "auto" | ✅ | 图片分析精度 |
-| timeoutMs | number | ✅ | 超时时间（毫秒） |
+| 字段      | 类型                              | 必填 | 说明                |
+| --------- | --------------------------------- | ---- | ------------------- |
+| apiKey    | string                            | ✅   | Vision LLM API Key  |
+| baseUrl   | string                            | ✅   | Vision LLM Base URL |
+| model     | string                            | ✅   | Vision LLM 模型名称 |
+| wireApi   | "responses" \| "chat_completions" | ✅   | API 协议类型        |
+| maxTokens | number                            | ✅   | 最大输出 Token 数   |
+| detail    | "low" \| "high" \| "auto"         | ✅   | 图片分析精度        |
+| timeoutMs | number                            | ✅   | 超时时间（毫秒）    |
 
 ### LLMMessageContentPart
 
-| 变体 | 字段 | 说明 |
-|------|------|------|
-| text | { type: "text", text: string } | 文本内容 |
+| 变体      | 字段                                                               | 说明                             |
+| --------- | ------------------------------------------------------------------ | -------------------------------- |
+| text      | { type: "text", text: string }                                     | 文本内容                         |
 | image_url | { type: "image_url", image_url: { url: string, detail?: string } } | 图片 URL（支持 base64 data URL） |
 
 ### 环境变量配置
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| VISION_LLM_API_KEY | (空，回退到 FALLBACK/主 LLM) | Vision LLM API Key |
-| VISION_LLM_BASE_URL | (空，回退到 FALLBACK/主 LLM) | Vision LLM Base URL |
-| VISION_LLM_MODEL | (空，回退到 FALLBACK/主 LLM) | Vision LLM 模型名称 |
-| VISION_LLM_WIRE_API | chat_completions | API 协议类型 |
-| VISION_LLM_MAX_TOKENS | 1000 | 单次分析最大输出 Token |
-| VISION_LLM_DETAIL | low | 图片分析精度（low/high/auto） |
-| VISION_LLM_TIMEOUT_MS | 30000 | 单次分析超时时间 |
-
+| 变量                  | 默认值                       | 说明                          |
+| --------------------- | ---------------------------- | ----------------------------- |
+| VISION_LLM_API_KEY    | (空，回退到 FALLBACK/主 LLM) | Vision LLM API Key            |
+| VISION_LLM_BASE_URL   | (空，回退到 FALLBACK/主 LLM) | Vision LLM Base URL           |
+| VISION_LLM_MODEL      | (空，回退到 FALLBACK/主 LLM) | Vision LLM 模型名称           |
+| VISION_LLM_WIRE_API   | chat_completions             | API 协议类型                  |
+| VISION_LLM_MAX_TOKENS | 1000                         | 单次分析最大输出 Token        |
+| VISION_LLM_DETAIL     | low                          | 图片分析精度（low/high/auto） |
+| VISION_LLM_TIMEOUT_MS | 30000                        | 单次分析超时时间              |
 
 ## 正确性属性（Correctness Properties）
 
-*属性（Property）是指在系统所有合法执行路径中都应成立的特征或行为——本质上是对系统应做之事的形式化陈述。属性是人类可读规格说明与机器可验证正确性保证之间的桥梁。*
+_属性（Property）是指在系统所有合法执行路径中都应成立的特征或行为——本质上是对系统应做之事的形式化陈述。属性是人类可读规格说明与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 图片类型检测准确性
 
-*For any* 文件，当其扩展名为 jpg、jpeg、png 或 webp，或其 MIME 类型以 "image/" 开头且属于支持的格式时，经过 Attachment_Pipeline 处理后的 WorkflowInputAttachment 的 visionReady 字段应为 true；对于非图片文件，visionReady 应为 false 或 undefined。
+_For any_ 文件，当其扩展名为 jpg、jpeg、png 或 webp，或其 MIME 类型以 "image/" 开头且属于支持的格式时，经过 Attachment_Pipeline 处理后的 WorkflowInputAttachment 的 visionReady 字段应为 true；对于非图片文件，visionReady 应为 false 或 undefined。
 
 **Validates: Requirements 1.1**
 
 ### Property 2: Base64 编码 round-trip
 
-*For any* 有效的图片二进制数据，将其编码为 Base64_Data_URL 后再解码，应得到与原始数据完全相同的二进制内容。
+_For any_ 有效的图片二进制数据，将其编码为 Base64_Data_URL 后再解码，应得到与原始数据完全相同的二进制内容。
 
 **Validates: Requirements 1.2**
 
 ### Property 3: 大图压缩后尺寸约束
 
-*For any* 大小超过阈值（默认 4MB）的图片文件，经过压缩/降采样处理后生成的 Base64_Data_URL 对应的原始数据大小应不超过该阈值。
+_For any_ 大小超过阈值（默认 4MB）的图片文件，经过压缩/降采样处理后生成的 Base64_Data_URL 对应的原始数据大小应不超过该阈值。
 
 **Validates: Requirements 1.3**
 
 ### Property 4: Vision 配置解析与 Fallback 链
 
-*For any* 环境变量组合（VISION_LLM_*、FALLBACK_LLM_*、LLM_*），getVisionConfig() 返回的配置应遵循优先级链：当 VISION_LLM_* 存在时使用 VISION_LLM_* 值；当 VISION_LLM_* 缺失但 FALLBACK_LLM_* 存在时使用 FALLBACK_LLM_* 值；当两者均缺失时使用主 LLM_* 值。maxTokens 字段应反映 VISION_LLM_MAX_TOKENS 的值（或默认值 1000）。
+_For any_ 环境变量组合（VISION*LLM*_、FALLBACK*LLM*_、LLM*\*），getVisionConfig() 返回的配置应遵循优先级链：当 VISION_LLM*_ 存在时使用 VISION*LLM*_ 值；当 VISION*LLM*_ 缺失但 FALLBACK*LLM*_ 存在时使用 FALLBACK*LLM*_ 值；当两者均缺失时使用主 LLM\__ 值。maxTokens 字段应反映 VISION_LLM_MAX_TOKENS 的值（或默认值 1000）。
 
 **Validates: Requirements 2.1, 2.2, 7.1**
 
 ### Property 5: 多模态消息格式转换
 
-*For any* 包含 text 和 image_url 条目的 LLMMessage，当 wireApi 为 "chat_completions" 时，构建的请求体中 message.content 应直接包含该数组；当 wireApi 为 "responses" 时，image_url 条目应被转换为 input_image 格式，text 条目应被转换为 input_text 格式。
+_For any_ 包含 text 和 image_url 条目的 LLMMessage，当 wireApi 为 "chat_completions" 时，构建的请求体中 message.content 应直接包含该数组；当 wireApi 为 "responses" 时，image_url 条目应被转换为 input_image 格式，text 条目应被转换为 input_text 格式。
 
 **Validates: Requirements 3.1, 3.2, 3.3**
 
 ### Property 6: 多模态消息序列化 round-trip
 
-*For any* 有效的 LLMMessage（content 为 string 或 LLMMessageContentPart 数组），JSON.stringify 后再 JSON.parse 应产生与原始对象深度相等的结果。
+_For any_ 有效的 LLMMessage（content 为 string 或 LLMMessageContentPart 数组），JSON.stringify 后再 JSON.parse 应产生与原始对象深度相等的结果。
 
 **Validates: Requirements 3.4**
 
 ### Property 7: 视觉描述存储一致性
 
-*For any* VisionAnalysisResult，当其被存储到 WorkflowInputAttachment 时，visualDescription 字段应包含 description、elements 和 textContent 的格式化内容，且 content 字段应被更新为 visualDescription 的文本摘要。
+_For any_ VisionAnalysisResult，当其被存储到 WorkflowInputAttachment 时，visualDescription 字段应包含 description、elements 和 textContent 的格式化内容，且 content 字段应被更新为 visualDescription 的文本摘要。
 
 **Validates: Requirements 4.2**
 
 ### Property 8: 指令上下文包含视觉分析
 
-*For any* 包含 visualDescription 的 WorkflowInputAttachment 列表，buildWorkflowDirectiveContext 的输出应对每个有 visualDescription 的附件包含 "[Vision Analysis] {name}" 标记及其 visualDescription 内容。
+_For any_ 包含 visualDescription 的 WorkflowInputAttachment 列表，buildWorkflowDirectiveContext 的输出应对每个有 visualDescription 的附件包含 "[Vision Analysis] {name}" 标记及其 visualDescription 内容。
 
 **Validates: Requirements 4.3**
 
 ### Property 9: Agent 消息序列中视觉上下文的注入与排序
 
-*For any* 包含视觉上下文的 AgentInvokeOptions，composeAgentMessages 生成的消息序列中应包含所有 Visual_Context 作为独立的 user message，且这些 Visual_Context 消息应位于最终用户 prompt 消息之前。
+_For any_ 包含视觉上下文的 AgentInvokeOptions，composeAgentMessages 生成的消息序列中应包含所有 Visual_Context 作为独立的 user message，且这些 Visual_Context 消息应位于最终用户 prompt 消息之前。
 
 **Validates: Requirements 5.1, 5.2**
 
 ### Property 10: 视觉上下文触发 maxTokens 增加
 
-*For any* 包含视觉上下文的 Agent 调用，LLM 调用选项中的 maxTokens 应比无视觉上下文时增加（默认增加 1000 tokens）。
+_For any_ 包含视觉上下文的 Agent 调用，LLM 调用选项中的 maxTokens 应比无视觉上下文时增加（默认增加 1000 tokens）。
 
 **Validates: Requirements 5.3**
 
 ### Property 11: 多图分析时 detail 参数约束
 
-*For any* 包含多张图片的分析请求，当 VISION_LLM_DETAIL 未显式设置为 "high" 或 "auto" 时，所有 image_url 的 detail 参数应为 "low"。
+_For any_ 包含多张图片的分析请求，当 VISION_LLM_DETAIL 未显式设置为 "high" 或 "auto" 时，所有 image_url 的 detail 参数应为 "low"。
 
 **Validates: Requirements 7.2**
 
@@ -384,21 +387,21 @@ case 'examining':
 
 ### Vision LLM 调用失败
 
-| 场景 | 处理策略 |
-|------|---------|
-| Vision LLM 超时（>30s） | 终止当前图片分析，回退到 OCR 文字提取，记录 excerptStatus 为 "vision_fallback" |
-| Vision LLM 返回 4xx 错误 | 记录错误日志，回退到 OCR，不触发熔断（可能是模型不支持 Vision） |
-| Vision LLM 返回 5xx 错误 | 触发现有熔断机制，尝试 fallback provider，最终回退到 OCR |
-| Vision LLM 返回空响应 | 视为分析失败，回退到 OCR |
-| 所有 Provider 均不可用 | 所有图片回退到 OCR，工作流正常继续（降级但不中断） |
+| 场景                     | 处理策略                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| Vision LLM 超时（>30s）  | 终止当前图片分析，回退到 OCR 文字提取，记录 excerptStatus 为 "vision_fallback" |
+| Vision LLM 返回 4xx 错误 | 记录错误日志，回退到 OCR，不触发熔断（可能是模型不支持 Vision）                |
+| Vision LLM 返回 5xx 错误 | 触发现有熔断机制，尝试 fallback provider，最终回退到 OCR                       |
+| Vision LLM 返回空响应    | 视为分析失败，回退到 OCR                                                       |
+| 所有 Provider 均不可用   | 所有图片回退到 OCR，工作流正常继续（降级但不中断）                             |
 
 ### 图片处理失败
 
-| 场景 | 处理策略 |
-|------|---------|
-| Base64 编码失败 | 回退到 OCR，记录 "vision_fallback" |
-| 图片压缩失败 | 尝试使用原始图片（如果在大小限制内），否则回退到 OCR |
-| 不支持的图片格式 | 不标记 visionReady，走现有 OCR 路径 |
+| 场景             | 处理策略                                             |
+| ---------------- | ---------------------------------------------------- |
+| Base64 编码失败  | 回退到 OCR，记录 "vision_fallback"                   |
+| 图片压缩失败     | 尝试使用原始图片（如果在大小限制内），否则回退到 OCR |
+| 不支持的图片格式 | 不标记 visionReady，走现有 OCR 路径                  |
 
 ### 多图部分失败
 
@@ -427,31 +430,31 @@ case 'examining':
 
 ### 单元测试覆盖
 
-| 测试范围 | 测试内容 |
-|---------|---------|
-| 图片类型检测 | 各种 MIME 类型和扩展名的识别 |
-| Base64 编码 | 正常编码、空文件、大文件 |
-| Vision 配置 | 各种环境变量组合的配置解析 |
-| 多模态消息 | chat_completions 和 responses 格式转换 |
-| 上下文注入 | 视觉上下文在消息序列中的位置 |
-| 错误降级 | Vision 失败回退到 OCR 的各种场景 |
-| 3D 状态事件 | analyzing_image 事件的发出和恢复 |
+| 测试范围     | 测试内容                               |
+| ------------ | -------------------------------------- |
+| 图片类型检测 | 各种 MIME 类型和扩展名的识别           |
+| Base64 编码  | 正常编码、空文件、大文件               |
+| Vision 配置  | 各种环境变量组合的配置解析             |
+| 多模态消息   | chat_completions 和 responses 格式转换 |
+| 上下文注入   | 视觉上下文在消息序列中的位置           |
+| 错误降级     | Vision 失败回退到 OCR 的各种场景       |
+| 3D 状态事件  | analyzing_image 事件的发出和恢复       |
 
 ### 属性测试覆盖
 
-| 属性 | 测试文件 | 说明 |
-|------|---------|------|
-| Property 1 | vision-detection.property.test.ts | 图片类型检测准确性 |
-| Property 2 | base64-encoding.property.test.ts | Base64 round-trip |
-| Property 3 | image-compression.property.test.ts | 大图压缩约束 |
-| Property 4 | vision-config.property.test.ts | 配置解析与 fallback |
-| Property 5 | multimodal-message.property.test.ts | 消息格式转换 |
-| Property 6 | multimodal-message.property.test.ts | 消息序列化 round-trip |
-| Property 7 | visual-context.property.test.ts | 视觉描述存储 |
-| Property 8 | directive-context.property.test.ts | 指令上下文包含视觉分析 |
-| Property 9 | agent-messages.property.test.ts | 视觉上下文注入与排序 |
-| Property 10 | agent-messages.property.test.ts | maxTokens 增加 |
-| Property 11 | vision-detail.property.test.ts | 多图 detail 参数 |
+| 属性        | 测试文件                            | 说明                   |
+| ----------- | ----------------------------------- | ---------------------- |
+| Property 1  | vision-detection.property.test.ts   | 图片类型检测准确性     |
+| Property 2  | base64-encoding.property.test.ts    | Base64 round-trip      |
+| Property 3  | image-compression.property.test.ts  | 大图压缩约束           |
+| Property 4  | vision-config.property.test.ts      | 配置解析与 fallback    |
+| Property 5  | multimodal-message.property.test.ts | 消息格式转换           |
+| Property 6  | multimodal-message.property.test.ts | 消息序列化 round-trip  |
+| Property 7  | visual-context.property.test.ts     | 视觉描述存储           |
+| Property 8  | directive-context.property.test.ts  | 指令上下文包含视觉分析 |
+| Property 9  | agent-messages.property.test.ts     | 视觉上下文注入与排序   |
+| Property 10 | agent-messages.property.test.ts     | maxTokens 增加         |
+| Property 11 | vision-detail.property.test.ts      | 多图 detail 参数       |
 
 ### 测试文件位置
 

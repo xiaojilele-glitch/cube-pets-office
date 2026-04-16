@@ -59,7 +59,9 @@ export class RAGMetrics {
   /** 获取当前指标快照 */
   snapshot(): RAGMetricsSnapshot {
     const vectorCount: Record<string, number> = {};
-    this.vectorCounts.forEach((v, k) => { vectorCount[k] = v; });
+    this.vectorCounts.forEach((v, k) => {
+      vectorCount[k] = v;
+    });
 
     return {
       ingestion: {
@@ -70,11 +72,20 @@ export class RAGMetrics {
       retrieval: {
         total: this.retrievalTotal,
         latencyMs: [...this.retrievalLatencies],
-        hitRate: this.retrievalTotal > 0 ? this.retrievalHits / this.retrievalTotal : 0,
+        hitRate:
+          this.retrievalTotal > 0
+            ? this.retrievalHits / this.retrievalTotal
+            : 0,
       },
-      augmentation: { total: this.augmentationTotal, tokenUsage: this.augmentationTokens },
+      augmentation: {
+        total: this.augmentationTotal,
+        tokenUsage: this.augmentationTokens,
+      },
       vectorCount,
-      embeddingCost: { apiCalls: this.embeddingApiCalls, tokenCount: this.embeddingTokenCount },
+      embeddingCost: {
+        apiCalls: this.embeddingApiCalls,
+        tokenCount: this.embeddingTokenCount,
+      },
     };
   }
 
@@ -88,7 +99,9 @@ export class RAGMetrics {
     lines.push(`# HELP rag_retrieval_total Total retrieval queries`);
     lines.push(`# TYPE rag_retrieval_total counter`);
     lines.push(`rag_retrieval_total ${this.retrievalTotal}`);
-    lines.push(`rag_retrieval_hit_rate ${this.retrievalTotal > 0 ? (this.retrievalHits / this.retrievalTotal).toFixed(4) : '0'}`);
+    lines.push(
+      `rag_retrieval_hit_rate ${this.retrievalTotal > 0 ? (this.retrievalHits / this.retrievalTotal).toFixed(4) : "0"}`
+    );
     lines.push(`rag_augmentation_total ${this.augmentationTotal}`);
     lines.push(`rag_augmentation_token_usage ${this.augmentationTokens}`);
     this.vectorCounts.forEach((count, collection) => {
@@ -96,7 +109,7 @@ export class RAGMetrics {
     });
     lines.push(`rag_embedding_api_calls ${this.embeddingApiCalls}`);
     lines.push(`rag_embedding_token_count ${this.embeddingTokenCount}`);
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   reset(): void {

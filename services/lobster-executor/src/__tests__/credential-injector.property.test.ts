@@ -20,7 +20,7 @@ import {
 /** Non-empty string for credential values */
 const arbCredValue = fc
   .string({ minLength: 1, maxLength: 80 })
-  .filter((s) => s.trim().length > 0);
+  .filter(s => s.trim().length > 0);
 
 /** Optional credential value: either a non-empty string or undefined */
 const arbOptionalCred = fc.option(arbCredValue, { nil: undefined });
@@ -28,12 +28,12 @@ const arbOptionalCred = fc.option(arbCredValue, { nil: undefined });
 /** Valid API key: non-empty and length > 8 */
 const arbValidApiKey = fc
   .string({ minLength: 9, maxLength: 80 })
-  .filter((s) => s.trim().length > 0 && s.length > 8);
+  .filter(s => s.trim().length > 0 && s.length > 8);
 
 /** Invalid API key: empty or length ≤ 8 */
 const arbInvalidApiKey = fc.oneof(
   fc.constant(""),
-  fc.string({ minLength: 1, maxLength: 8 }),
+  fc.string({ minLength: 1, maxLength: 8 })
 );
 
 /* ─── Property 2: 凭证解析与覆盖优先级 ─── */
@@ -78,9 +78,9 @@ describe("Property 2: 凭证解析与覆盖优先级", () => {
           expect(creds.apiKey).toBe(pApiKey ?? hApiKey ?? "");
           expect(creds.baseUrl).toBe(pBaseUrl ?? hBaseUrl ?? "");
           expect(creds.model).toBe(pModel ?? hModel ?? "");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -117,9 +117,9 @@ describe("Property 2: 凭证解析与覆盖优先级", () => {
           expect(envVars[1]).toBe(`AI_BASE_URL=${creds.baseUrl}`);
           expect(envVars[2]).toBe(`AI_MODEL=${creds.model}`);
           expect(envVars[3]).toMatch(/^AI_WIRE_API=/);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -142,13 +142,12 @@ describe("Property 2: 凭证解析与覆盖优先级", () => {
           expect(creds.apiKey).toBe(hApiKey ?? "");
           expect(creds.baseUrl).toBe(hBaseUrl ?? "");
           expect(creds.model).toBe(hModel ?? "");
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 3: 凭证验证拒绝无效输入 ─── */
 
@@ -162,41 +161,50 @@ describe("Property 3: 凭证验证拒绝无效输入", () => {
 
   it("rejects empty or short API keys (length ≤ 8)", () => {
     fc.assert(
-      fc.property(arbInvalidApiKey, (apiKey) => {
-        const creds = { apiKey, baseUrl: "https://api.example.com", model: "gpt-4" };
-        expect(() => validateCredentials(creds)).toThrow(CredentialValidationError);
+      fc.property(arbInvalidApiKey, apiKey => {
+        const creds = {
+          apiKey,
+          baseUrl: "https://api.example.com",
+          model: "gpt-4",
+        };
+        expect(() => validateCredentials(creds)).toThrow(
+          CredentialValidationError
+        );
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("accepts valid API keys (non-empty, length > 8)", () => {
     fc.assert(
-      fc.property(arbValidApiKey, (apiKey) => {
-        const creds = { apiKey, baseUrl: "https://api.example.com", model: "gpt-4" };
+      fc.property(arbValidApiKey, apiKey => {
+        const creds = {
+          apiKey,
+          baseUrl: "https://api.example.com",
+          model: "gpt-4",
+        };
         expect(() => validateCredentials(creds)).not.toThrow();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("the boundary: exactly 8 characters should be rejected, 9 should pass", () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 20 }),
-        (len) => {
-          // Generate a string of exactly `len` alphanumeric characters
-          const apiKey = "a".repeat(len);
-          const creds = { apiKey, baseUrl: "", model: "" };
+      fc.property(fc.integer({ min: 0, max: 20 }), len => {
+        // Generate a string of exactly `len` alphanumeric characters
+        const apiKey = "a".repeat(len);
+        const creds = { apiKey, baseUrl: "", model: "" };
 
-          if (len === 0 || len <= 8) {
-            expect(() => validateCredentials(creds)).toThrow(CredentialValidationError);
-          } else {
-            expect(() => validateCredentials(creds)).not.toThrow();
-          }
-        },
-      ),
-      { numRuns: 100 },
+        if (len === 0 || len <= 8) {
+          expect(() => validateCredentials(creds)).toThrow(
+            CredentialValidationError
+          );
+        } else {
+          expect(() => validateCredentials(creds)).not.toThrow();
+        }
+      }),
+      { numRuns: 100 }
     );
   });
 });

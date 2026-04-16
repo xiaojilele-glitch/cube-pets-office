@@ -35,7 +35,7 @@ function createMockMissionRuntime() {
 }
 
 function createBridgeOptions(
-  overrides?: Partial<ExecutionBridgeOptions>,
+  overrides?: Partial<ExecutionBridgeOptions>
 ): ExecutionBridgeOptions {
   return {
     missionRuntime: createMockMissionRuntime() as any,
@@ -59,10 +59,9 @@ describe("ExecutionBridge.detectExecutable", () => {
 
   describe("metadata override", () => {
     it("forces execution when requiresExecution is true", () => {
-      const result = bridge.detectExecutable(
-        ["just plain text"],
-        { requiresExecution: true },
-      );
+      const result = bridge.detectExecutable(["just plain text"], {
+        requiresExecution: true,
+      });
       expect(result.executable).toBe(true);
       expect(result.reason).toContain("metadata");
     });
@@ -70,17 +69,16 @@ describe("ExecutionBridge.detectExecutable", () => {
     it("forces skip when requiresExecution is false", () => {
       const result = bridge.detectExecutable(
         ["```python\nprint('hello')\n```\nnpm run test"],
-        { requiresExecution: false },
+        { requiresExecution: false }
       );
       expect(result.executable).toBe(false);
       expect(result.reason).toContain("metadata");
     });
 
     it("ignores non-boolean requiresExecution values", () => {
-      const result = bridge.detectExecutable(
-        ["just plain text"],
-        { requiresExecution: "yes" as any },
-      );
+      const result = bridge.detectExecutable(["just plain text"], {
+        requiresExecution: "yes" as any,
+      });
       expect(result.executable).toBe(false);
     });
   });
@@ -124,9 +122,7 @@ describe("ExecutionBridge.detectExecutable", () => {
     });
 
     it("detects npm run with code blocks", () => {
-      const result = bridge.detectExecutable([
-        "```bash\nnpm run test\n```",
-      ]);
+      const result = bridge.detectExecutable(["```bash\nnpm run test\n```"]);
       expect(result.executable).toBe(true);
     });
   });
@@ -211,7 +207,7 @@ describe("ExecutionBridge.bridge", () => {
     const result = await bridge.bridge(
       "mission-1",
       ["```python\nprint('hello')\n```\npython script.py"],
-      { requiresExecution: false },
+      { requiresExecution: false }
     );
 
     expect(result.triggered).toBe(false);
@@ -233,7 +229,7 @@ describe("ExecutionBridge.bridge", () => {
     const result = await bridge.bridge(
       "mission-1",
       ["```python\nprint('hello')\n```\npython script.py"],
-      { requiresExecution: true },
+      { requiresExecution: true }
     );
 
     expect(result.triggered).toBe(true);
@@ -241,7 +237,7 @@ describe("ExecutionBridge.bridge", () => {
     expect(mockRuntime.failMission).toHaveBeenCalledWith(
       "mission-1",
       expect.stringContaining("Unexpected runtime error"),
-      "brain",
+      "brain"
     );
   });
 });

@@ -7,17 +7,23 @@
  * @see Requirements 3.5, 4.4, 4.7, 5.6, 6.7, 7.5, 14.5
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
 
-import type { AuditEntry, AuditAction } from '../../../shared/cost-governance.js';
+import type {
+  AuditEntry,
+  AuditAction,
+} from "../../../shared/cost-governance.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DEFAULT_AUDIT_PATH = resolve(__dirname, '../../../data/cost-governance-audit.json');
+const DEFAULT_AUDIT_PATH = resolve(
+  __dirname,
+  "../../../data/cost-governance-audit.json"
+);
 
 interface AuditFile {
   version: number;
@@ -43,7 +49,7 @@ export class AuditTrail {
   /**
    * 记录审计事件，自动生成 id 和 timestamp。
    */
-  record(entry: Omit<AuditEntry, 'id' | 'timestamp'>): AuditEntry {
+  record(entry: Omit<AuditEntry, "id" | "timestamp">): AuditEntry {
     const full: AuditEntry = {
       ...entry,
       id: randomUUID(),
@@ -61,17 +67,17 @@ export class AuditTrail {
     let result = this.entries.slice();
 
     if (filters.missionId !== undefined) {
-      result = result.filter((e) => e.missionId === filters.missionId);
+      result = result.filter(e => e.missionId === filters.missionId);
     }
     if (filters.action !== undefined) {
-      result = result.filter((e) => e.action === filters.action);
+      result = result.filter(e => e.action === filters.action);
     }
     if (filters.userId !== undefined) {
-      result = result.filter((e) => e.userId === filters.userId);
+      result = result.filter(e => e.userId === filters.userId);
     }
     if (filters.timeRange !== undefined) {
       const { start, end } = filters.timeRange;
-      result = result.filter((e) => e.timestamp >= start && e.timestamp <= end);
+      result = result.filter(e => e.timestamp >= start && e.timestamp <= end);
     }
 
     result.sort((a, b) => b.timestamp - a.timestamp);
@@ -88,9 +94,9 @@ export class AuditTrail {
     };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[AuditTrail] 持久化写入失败:', err);
+      console.error("[AuditTrail] 持久化写入失败:", err);
     }
   }
 
@@ -102,13 +108,15 @@ export class AuditTrail {
       return;
     }
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as AuditFile;
       if (Array.isArray(parsed.entries)) {
         this.entries = parsed.entries;
       }
     } catch {
-      console.warn(`[AuditTrail] 持久化文件损坏，以空日志启动: ${this.filePath}`);
+      console.warn(
+        `[AuditTrail] 持久化文件损坏，以空日志启动: ${this.filePath}`
+      );
       this.entries = [];
     }
   }

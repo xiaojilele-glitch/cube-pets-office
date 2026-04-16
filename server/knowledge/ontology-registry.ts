@@ -40,14 +40,26 @@ function buildCoreEntityTypes(): EntityTypeDefinition[] {
       name: "CodeModule",
       description: "代码模块，表示一个源文件或包",
       source: "core",
-      extendedAttributes: ["filePath", "language", "linesOfCode", "complexity", "exports"],
+      extendedAttributes: [
+        "filePath",
+        "language",
+        "linesOfCode",
+        "complexity",
+        "exports",
+      ],
       registeredAt: now,
     },
     {
       name: "API",
       description: "API 端点，表示一个 HTTP 接口",
       source: "core",
-      extendedAttributes: ["endpoint", "httpMethod", "requestSchema", "responseSchema", "authRequired"],
+      extendedAttributes: [
+        "endpoint",
+        "httpMethod",
+        "requestSchema",
+        "responseSchema",
+        "authRequired",
+      ],
       registeredAt: now,
     },
     {
@@ -61,7 +73,13 @@ function buildCoreEntityTypes(): EntityTypeDefinition[] {
       name: "ArchitectureDecision",
       description: "架构决策记录（ADR）",
       source: "core",
-      extendedAttributes: ["context", "decision", "alternatives", "consequences", "supersededBy"],
+      extendedAttributes: [
+        "context",
+        "decision",
+        "alternatives",
+        "consequences",
+        "supersededBy",
+      ],
       registeredAt: now,
     },
     {
@@ -258,7 +276,7 @@ export class OntologyRegistry {
   // -------------------------------------------------------------------------
 
   registerEntityType(
-    definition: Omit<EntityTypeDefinition, "source" | "registeredAt">,
+    definition: Omit<EntityTypeDefinition, "source" | "registeredAt">
   ): void {
     const full: EntityTypeDefinition = {
       ...definition,
@@ -271,7 +289,7 @@ export class OntologyRegistry {
   }
 
   registerRelationType(
-    definition: Omit<RelationTypeDefinition, "source" | "registeredAt">,
+    definition: Omit<RelationTypeDefinition, "source" | "registeredAt">
   ): void {
     const full: RelationTypeDefinition = {
       ...definition,
@@ -332,7 +350,10 @@ export class OntologyRegistry {
         }
       }
     } catch (e) {
-      console.error("[OntologyRegistry] Failed to load ontology, using defaults:", e);
+      console.error(
+        "[OntologyRegistry] Failed to load ontology, using defaults:",
+        e
+      );
     }
   }
 

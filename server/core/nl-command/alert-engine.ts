@@ -14,14 +14,14 @@ import type {
   AlertType,
   AlertPriority,
   AuditEntry,
-} from '../../../shared/nl-command/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
+} from "../../../shared/nl-command/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
 
 /** Context passed to evaluate() containing current metric values and entity info. */
 export interface AlertContext {
   metrics: Record<string, number>;
   entityId: string;
-  entityType: 'command' | 'mission' | 'task' | 'plan';
+  entityType: "command" | "mission" | "task" | "plan";
 }
 
 /** Callback signature for alert notifications (e.g. Socket.IO push). */
@@ -40,15 +40,15 @@ const DEDUP_WINDOW_MS = 5 * 60 * 1000;
  */
 function evaluateCondition(value: number, condition: AlertCondition): boolean {
   switch (condition.operator) {
-    case 'gt':
+    case "gt":
       return value > condition.threshold;
-    case 'lt':
+    case "lt":
       return value < condition.threshold;
-    case 'eq':
+    case "eq":
       return value === condition.threshold;
-    case 'gte':
+    case "gte":
       return value >= condition.threshold;
-    case 'lte':
+    case "lte":
       return value <= condition.threshold;
     default:
       return false;
@@ -117,7 +117,10 @@ export class AlertEngine {
       // Dedup: skip if same type + same entityId within DEDUP_WINDOW_MS
       const dedupKey = `${rule.type}::${context.entityId}`;
       const lastTriggered = this.recentAlerts.get(dedupKey);
-      if (lastTriggered !== undefined && now - lastTriggered < DEDUP_WINDOW_MS) {
+      if (
+        lastTriggered !== undefined &&
+        now - lastTriggered < DEDUP_WINDOW_MS
+      ) {
         continue;
       }
 
@@ -171,11 +174,11 @@ export class AlertEngine {
   private async recordAudit(alert: Alert): Promise<void> {
     const entry: AuditEntry = {
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'alert_triggered',
-      operator: 'system',
+      operationType: "alert_triggered",
+      operator: "system",
       content: `Alert ${alert.type} triggered for ${alert.entityType} ${alert.entityId}: ${alert.message}`,
       timestamp: alert.triggeredAt,
-      result: 'success',
+      result: "success",
       entityId: alert.entityId,
       entityType: alert.entityType,
       metadata: {
@@ -189,14 +192,14 @@ export class AlertEngine {
 }
 
 function buildAlertMessage(rule: AlertRule, metricValue: number): string {
-  const opLabels: Record<AlertCondition['operator'], string> = {
-    gt: '>',
-    lt: '<',
-    eq: '==',
-    gte: '>=',
-    lte: '<=',
+  const opLabels: Record<AlertCondition["operator"], string> = {
+    gt: ">",
+    lt: "<",
+    eq: "==",
+    gte: ">=",
+    lte: "<=",
   };
   const op = opLabels[rule.condition.operator];
-  const unit = rule.condition.unit ? ` ${rule.condition.unit}` : '';
+  const unit = rule.condition.unit ? ` ${rule.condition.unit}` : "";
   return `${rule.condition.metric} (${metricValue}${unit}) ${op} threshold (${rule.condition.threshold}${unit})`;
 }

@@ -42,7 +42,7 @@ function makeEntity(overrides: Partial<Entity> = {}): Entity {
 function makeRelation(
   sourceEntityId: string,
   targetEntityId: string,
-  overrides: Partial<Relation> = {},
+  overrides: Partial<Relation> = {}
 ): Relation {
   return {
     relationId: `r-${sourceEntityId}-${targetEntityId}`,
@@ -66,8 +66,16 @@ function makeRelation(
 describe("getEntityColor", () => {
   it("returns distinct colors for all 10 core entity types", () => {
     const types = [
-      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
-      "Bug", "Agent", "Mission", "TechStack", "Role", "Config",
+      "CodeModule",
+      "API",
+      "BusinessRule",
+      "ArchitectureDecision",
+      "Bug",
+      "Agent",
+      "Mission",
+      "TechStack",
+      "Role",
+      "Config",
     ];
     const colors = types.map(getEntityColor);
     // All should be non-empty hex strings
@@ -109,17 +117,14 @@ describe("computeRadius", () => {
   it("caps at maximum radius", () => {
     // Create many relations to exceed max
     const edges = Array.from({ length: 20 }, (_, i) =>
-      makeRelation("e-1", `e-${i + 10}`),
+      makeRelation("e-1", `e-${i + 10}`)
     );
     const r = computeRadius("e-1", edges);
     expect(r).toBe(24); // NODE_MAX_RADIUS
   });
 
   it("does not count relations for other entities", () => {
-    const edges = [
-      makeRelation("e-2", "e-3"),
-      makeRelation("e-4", "e-5"),
-    ];
+    const edges = [makeRelation("e-2", "e-3"), makeRelation("e-4", "e-5")];
     const r = computeRadius("e-1", edges);
     expect(r).toBe(8);
   });

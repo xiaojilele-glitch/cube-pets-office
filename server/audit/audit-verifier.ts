@@ -42,7 +42,7 @@ export class AuditVerifier {
       entry.event,
       entry.timestamp.system,
       entry.previousHash,
-      entry.nonce,
+      entry.nonce
     );
 
     if (recomputed !== entry.currentHash) {
@@ -59,7 +59,7 @@ export class AuditVerifier {
     // 2. 验证签名
     const sigValid = this.chain.verifySignature(
       entry.currentHash,
-      entry.signature,
+      entry.signature
     );
 
     if (!sigValid) {
@@ -225,7 +225,7 @@ export class AuditVerifier {
    * 用于 Socket audit_verification 广播。
    */
   setOnVerificationComplete(
-    handler: (result: VerificationResult) => void,
+    handler: (result: VerificationResult) => void
   ): void {
     this.onVerificationComplete = handler;
   }

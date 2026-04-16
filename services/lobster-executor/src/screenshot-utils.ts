@@ -32,7 +32,7 @@ export function computeResizedDimensions(
   w: number,
   h: number,
   maxW: number,
-  maxH: number,
+  maxH: number
 ): { width: number; height: number } {
   if (w <= maxW && h <= maxH) {
     return { width: Math.round(w), height: Math.round(h) };

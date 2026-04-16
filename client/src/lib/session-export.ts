@@ -45,7 +45,7 @@ export async function buildSessionZip(snapshot: SnapshotRecord): Promise<Blob> {
 export function buildFilename(snapshot: SnapshotRecord): string {
   const safeTitle = snapshot.missionTitle.replace(
     /[^a-zA-Z0-9_\-\u4e00-\u9fff]/g,
-    "_",
+    "_"
   );
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   return `session-${safeTitle}-${ts}.zip`;
@@ -80,14 +80,13 @@ export async function exportSession(missionId?: string): Promise<void> {
     throw new Error(
       missionId
         ? `No snapshot found for mission "${missionId}"`
-        : "No snapshot found",
+        : "No snapshot found"
     );
   }
 
   const blob = await buildSessionZip(snapshot);
   triggerDownload(blob, buildFilename(snapshot));
 }
-
 
 /**
  * Import a session from a ZIP file (Session_Bundle).
@@ -117,20 +116,20 @@ export async function importSession(file: File | Blob): Promise<void> {
   };
 
   const snapshot = JSON.parse(
-    await snapshotFile.async("string"),
+    await snapshotFile.async("string")
   ) as SnapshotRecord;
 
   // Req 4.3 — version compatibility check
   if (manifest.version !== SNAPSHOT_VERSION) {
     throw new Error(
-      `Version incompatible: bundle version ${manifest.version} does not match current version ${SNAPSHOT_VERSION}`,
+      `Version incompatible: bundle version ${manifest.version} does not match current version ${SNAPSHOT_VERSION}`
     );
   }
 
   // Req 4.1 — checksum validation
   if (manifest.checksum !== snapshot.checksum) {
     throw new Error(
-      `Checksum validation failed: manifest checksum "${manifest.checksum}" does not match snapshot checksum "${snapshot.checksum}"`,
+      `Checksum validation failed: manifest checksum "${manifest.checksum}" does not match snapshot checksum "${snapshot.checksum}"`
     );
   }
 

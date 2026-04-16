@@ -63,7 +63,10 @@ export function createKnowledgeRouter(deps: {
       // Optional filters
       const entityTypesRaw = req.query.entityTypes as string | undefined;
       const entityTypes = entityTypesRaw
-        ? entityTypesRaw.split(",").map((t) => t.trim()).filter(Boolean)
+        ? entityTypesRaw
+            .split(",")
+            .map(t => t.trim())
+            .filter(Boolean)
         : undefined;
       const depth = req.query.depth
         ? parseInt(req.query.depth as string, 10)
@@ -75,7 +78,7 @@ export function createKnowledgeRouter(deps: {
       // Fetch entities with optional type filter
       let nodes = graphStore.findEntities({ projectId });
       if (entityTypes && entityTypes.length > 0) {
-        nodes = nodes.filter((e) => entityTypes.includes(e.entityType));
+        nodes = nodes.filter(e => entityTypes.includes(e.entityType));
       }
 
       // Fetch relations for this project
@@ -86,9 +89,9 @@ export function createKnowledgeRouter(deps: {
       // all project entities/relations filtered by type — depth is used by the
       // frontend to control expansion, but we still filter edges to only include
       // those connecting returned nodes.
-      const nodeIds = new Set(nodes.map((n) => n.entityId));
+      const nodeIds = new Set(nodes.map(n => n.entityId));
       edges = edges.filter(
-        (e) => nodeIds.has(e.sourceEntityId) && nodeIds.has(e.targetEntityId),
+        e => nodeIds.has(e.sourceEntityId) && nodeIds.has(e.targetEntityId)
       );
 
       const response: GetKnowledgeGraphResponse = {
@@ -139,9 +142,15 @@ export function createKnowledgeRouter(deps: {
       const { entityId } = req.params;
       const action = req.body as ReviewAction;
 
-      if (!action || !action.action || !action.reviewedBy || !action.reviewerType) {
+      if (
+        !action ||
+        !action.action ||
+        !action.reviewedBy ||
+        !action.reviewerType
+      ) {
         const errResp: KnowledgeApiErrorResponse = {
-          error: "Request body must include action, reviewedBy, and reviewerType",
+          error:
+            "Request body must include action, reviewedBy, and reviewerType",
         };
         return res.status(400).json(errResp);
       }

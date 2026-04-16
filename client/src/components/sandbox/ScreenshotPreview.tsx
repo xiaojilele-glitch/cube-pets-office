@@ -41,8 +41,15 @@ function ScreenshotPreviewInner({
   const wallVariant = variant === "wall";
   const compactFrame = embedded && !fullscreen;
   const headerHidden = headerMode === "hidden" && !fullscreen;
-  const headerHeight = headerHidden ? 0 : compactFrame ? 28 : wallVariant ? 28 : 28;
-  const showCenteredPlaceholder = !current && wallVariant && headerHidden && !fullscreen;
+  const headerHeight = headerHidden
+    ? 0
+    : compactFrame
+      ? 28
+      : wallVariant
+        ? 28
+        : 28;
+  const showCenteredPlaceholder =
+    !current && wallVariant && headerHidden && !fullscreen;
   const framelessWallPane = wallVariant && headerHidden && !fullscreen;
   const previewTitle =
     title ||
@@ -84,7 +91,13 @@ function ScreenshotPreviewInner({
             : compactFrame
               ? "linear-gradient(180deg, rgba(7,10,18,0.96), rgba(18,25,38,0.98))"
               : "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(30,41,59,0.98))",
-        borderRadius: framelessWallPane ? 12 : compactFrame ? 12 : wallVariant ? 14 : 12,
+        borderRadius: framelessWallPane
+          ? 12
+          : compactFrame
+            ? 12
+            : wallVariant
+              ? 14
+              : 12,
         overflow: "hidden",
         cursor: "pointer",
         border: framelessWallPane
@@ -106,7 +119,9 @@ function ScreenshotPreviewInner({
   const showControl = fullscreen || showFullscreenButton;
 
   const headerRight = (
-    <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+    <div
+      style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}
+    >
       {statusLabel ? (
         <span
           style={{
@@ -144,7 +159,11 @@ function ScreenshotPreviewInner({
             border: "1px solid rgba(148, 163, 184, 0.16)",
             color: "#e2e8f0",
             cursor: "pointer",
-            padding: compactFrame ? "2px 8px" : wallVariant ? "2px 7px" : "3px 9px",
+            padding: compactFrame
+              ? "2px 8px"
+              : wallVariant
+                ? "2px 7px"
+                : "3px 9px",
             borderRadius: 999,
             fontSize: compactFrame ? 10 : wallVariant ? 10 : 12,
             lineHeight: 1.2,
@@ -210,7 +229,11 @@ function ScreenshotPreviewInner({
               alignItems: "center",
               justifyContent: "space-between",
               height: headerHeight,
-              padding: compactFrame ? "0 10px" : wallVariant ? "0 10px" : "0 12px",
+              padding: compactFrame
+                ? "0 10px"
+                : wallVariant
+                  ? "0 10px"
+                  : "0 12px",
               borderBottom: wallVariant
                 ? "1px solid rgba(71,85,105,0.2)"
                 : compactFrame
@@ -224,40 +247,47 @@ function ScreenshotPreviewInner({
                   : "rgba(15,23,42,0.78)",
             }}
           >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            {wallVariant ? (
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 999,
-                  background: wallStatusColor,
-                  boxShadow: `0 0 12px ${wallStatusColor}`,
-                  flexShrink: 0,
-                }}
-              />
-            ) : null}
-            <span
+            <div
               style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
                 minWidth: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
-                fontWeight: 700,
-                letterSpacing: wallVariant
-                  ? "0.1em"
-                  : compactFrame
-                    ? "0.08em"
-                    : "0.12em",
-                textTransform: locale === "zh-CN" ? "none" : "uppercase",
-                color: wallVariant ? "#dbe6f3" : "#94a3b8",
               }}
             >
-              {previewTitle}
-            </span>
-          </div>
-          {headerRight}
+              {wallVariant ? (
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 999,
+                    background: wallStatusColor,
+                    boxShadow: `0 0 12px ${wallStatusColor}`,
+                    flexShrink: 0,
+                  }}
+                />
+              ) : null}
+              <span
+                style={{
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
+                  fontWeight: 700,
+                  letterSpacing: wallVariant
+                    ? "0.1em"
+                    : compactFrame
+                      ? "0.08em"
+                      : "0.12em",
+                  textTransform: locale === "zh-CN" ? "none" : "uppercase",
+                  color: wallVariant ? "#dbe6f3" : "#94a3b8",
+                }}
+              >
+                {previewTitle}
+              </span>
+            </div>
+            {headerRight}
           </div>
         )}
 
@@ -276,7 +306,7 @@ function ScreenshotPreviewInner({
             padding: showCenteredPlaceholder ? "0 18px" : "0 14px",
             zIndex: showCenteredPlaceholder ? 3 : undefined,
           }}
-          >
+        >
           <div
             style={{
               display: "flex",
@@ -285,10 +315,14 @@ function ScreenshotPreviewInner({
               justifyContent: "center",
               gap: showCenteredPlaceholder ? 6 : compactFrame ? 4 : 6,
               width: "100%",
-              transform: showCenteredPlaceholder ? "translateY(-10px)" : undefined,
+              transform: showCenteredPlaceholder
+                ? "translateY(-10px)"
+                : undefined,
             }}
           >
-            <span style={{ fontWeight: 700, color: "#e2e8f0" }}>{emptyTitle}</span>
+            <span style={{ fontWeight: 700, color: "#e2e8f0" }}>
+              {emptyTitle}
+            </span>
             <span
               style={{
                 maxWidth: showCenteredPlaceholder ? "82%" : undefined,
@@ -330,7 +364,11 @@ function ScreenshotPreviewInner({
             alignItems: "center",
             justifyContent: "space-between",
             height: headerHeight,
-            padding: compactFrame ? "0 10px" : wallVariant ? "0 10px" : "0 12px",
+            padding: compactFrame
+              ? "0 10px"
+              : wallVariant
+                ? "0 10px"
+                : "0 12px",
             borderBottom: wallVariant
               ? "1px solid rgba(71,85,105,0.2)"
               : compactFrame
@@ -344,40 +382,47 @@ function ScreenshotPreviewInner({
                 : "rgba(15,23,42,0.78)",
           }}
         >
-        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-          {wallVariant ? (
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: 999,
-                background: wallStatusColor,
-                boxShadow: `0 0 12px ${wallStatusColor}`,
-                flexShrink: 0,
-              }}
-            />
-          ) : null}
-          <span
+          <div
             style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
               minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-              fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
-              fontWeight: 700,
-              letterSpacing: wallVariant
-                ? "0.1em"
-                : compactFrame
-                  ? "0.08em"
-                  : "0.12em",
-              textTransform: locale === "zh-CN" ? "none" : "uppercase",
-              color: wallVariant ? "#dbe6f3" : "#94a3b8",
             }}
           >
-            {previewTitle}
-          </span>
-        </div>
-        {headerRight}
+            {wallVariant ? (
+              <span
+                style={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: 999,
+                  background: wallStatusColor,
+                  boxShadow: `0 0 12px ${wallStatusColor}`,
+                  flexShrink: 0,
+                }}
+              />
+            ) : null}
+            <span
+              style={{
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                fontSize: compactFrame ? 9 : wallVariant ? 9 : 10,
+                fontWeight: 700,
+                letterSpacing: wallVariant
+                  ? "0.1em"
+                  : compactFrame
+                    ? "0.08em"
+                    : "0.12em",
+                textTransform: locale === "zh-CN" ? "none" : "uppercase",
+                color: wallVariant ? "#dbe6f3" : "#94a3b8",
+              }}
+            >
+              {previewTitle}
+            </span>
+          </div>
+          {headerRight}
         </div>
       )}
 

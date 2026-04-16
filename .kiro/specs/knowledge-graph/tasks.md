@@ -207,7 +207,7 @@
     - POST /api/knowledge/query：统一知识检索
     - _Requirements: 7.1, 7.2, 9.6_
   - [x] 12.2 在 `server/index.ts` 中注册知识图谱路由和 WebSocket 事件
-    - 注册 /api/knowledge/* 和 /api/admin/knowledge/* 路由
+    - 注册 /api/knowledge/_ 和 /api/admin/knowledge/_ 路由
     - 广播 knowledge.entityChanged WebSocket 事件
     - _Requirements: 9.6_
 

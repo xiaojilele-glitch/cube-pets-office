@@ -13,7 +13,10 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import type { AuditEvent, AuditLogEntry } from "../../shared/audit/contracts.js";
+import type {
+  AuditEvent,
+  AuditLogEntry,
+} from "../../shared/audit/contracts.js";
 
 // ─── IAuditStore 接口 ──────────────────────────────────────────────────────
 
@@ -36,7 +39,7 @@ class InMemoryAuditStore implements IAuditStore {
 
   readEntries(startSeq: number, endSeq: number): AuditLogEntry[] {
     return this.entries.filter(
-      (e) => e.sequenceNumber >= startSeq && e.sequenceNumber <= endSeq,
+      e => e.sequenceNumber >= startSeq && e.sequenceNumber <= endSeq
     );
   }
 
@@ -45,14 +48,15 @@ class InMemoryAuditStore implements IAuditStore {
   }
 
   getLastEntry(): AuditLogEntry | null {
-    return this.entries.length > 0 ? this.entries[this.entries.length - 1] : null;
+    return this.entries.length > 0
+      ? this.entries[this.entries.length - 1]
+      : null;
   }
 
   getEntryById(entryId: string): AuditLogEntry | null {
-    return this.entries.find((e) => e.entryId === entryId) ?? null;
+    return this.entries.find(e => e.entryId === entryId) ?? null;
   }
 }
-
 
 // ─── 密钥目录常量 ──────────────────────────────────────────────────────────
 
@@ -125,12 +129,12 @@ export class AuditChain {
     fs.writeFileSync(
       PRIVATE_KEY_PATH,
       privateKey.export({ type: "sec1", format: "pem" }) as string,
-      "utf-8",
+      "utf-8"
     );
     fs.writeFileSync(
       PUBLIC_KEY_PATH,
       publicKey.export({ type: "spki", format: "pem" }) as string,
-      "utf-8",
+      "utf-8"
     );
 
     this.initialized = true;
@@ -152,10 +156,16 @@ export class AuditChain {
     event: AuditEvent,
     timestamp: number,
     previousHash: string,
-    nonce: string,
+    nonce: string
   ): string {
     const payload =
-      JSON.stringify(event) + "|" + timestamp + "|" + previousHash + "|" + nonce;
+      JSON.stringify(event) +
+      "|" +
+      timestamp +
+      "|" +
+      previousHash +
+      "|" +
+      nonce;
     return crypto.createHash("sha256").update(payload).digest("hex");
   }
 
@@ -211,7 +221,12 @@ export class AuditChain {
     const nonce = crypto.randomBytes(16).toString("hex");
     const systemTimestamp = Date.now();
 
-    const currentHash = this.computeHash(event, systemTimestamp, previousHash, nonce);
+    const currentHash = this.computeHash(
+      event,
+      systemTimestamp,
+      previousHash,
+      nonce
+    );
     const signature = this.signEntry(currentHash);
 
     const entry: AuditLogEntry = {
@@ -266,7 +281,9 @@ export class AuditChain {
 
   private ensureInitialized(): void {
     if (!this.initialized) {
-      throw new Error("AuditChain not initialized. Call init() first or provide keys in constructor.");
+      throw new Error(
+        "AuditChain not initialized. Call init() first or provide keys in constructor."
+      );
     }
   }
 }

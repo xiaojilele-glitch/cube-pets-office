@@ -10,11 +10,11 @@ inclusion: manual
 
 当前仓库必须按 3 类环境理解：
 
-| 环境 | 前端 | 服务端 | Executor | 实际行为 |
-| --- | --- | --- | --- | --- |
-| Local + Docker reachable | 有 | 有 | `real` | `DockerRunner` 真容器执行 |
-| Local + Docker unavailable | 有 | 有 | `native` | `NativeRunner` 宿主进程执行 |
-| GitHub Pages | 有 | 无 | 无 | Browser Runtime + IndexedDB + preview/demo |
+| 环境                       | 前端 | 服务端 | Executor | 实际行为                                   |
+| -------------------------- | ---- | ------ | -------- | ------------------------------------------ |
+| Local + Docker reachable   | 有   | 有     | `real`   | `DockerRunner` 真容器执行                  |
+| Local + Docker unavailable | 有   | 有     | `native` | `NativeRunner` 宿主进程执行                |
+| GitHub Pages               | 有   | 无     | 无       | Browser Runtime + IndexedDB + preview/demo |
 
 ## 关键边界
 

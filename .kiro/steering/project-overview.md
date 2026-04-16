@@ -141,12 +141,12 @@
 
 ### 📍 当前进度快照（Spec 视角，2026-04-14）
 
-| 状态            | 数量 | 说明                                                                                |
-| --------------- | ---- | ----------------------------------------------------------------------------------- |
-| 已完成          | 41   | 已合并或 `tasks.md` 已全勾选的主线/扩展 spec，覆盖 L01-L30 与多项近端工作台收口能力 |
+| 状态                     | 数量 | 说明                                                                                                                                                  |
+| ------------------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 已完成                   | 41   | 已合并或 `tasks.md` 已全勾选的主线/扩展 spec，覆盖 L01-L30 与多项近端工作台收口能力                                                                   |
 | 开发中 / 待回归 / 规划中 | 15   | 含 `office-task-cockpit`、`workflow-artifacts-display`、`office-cockpit-first-screen-refresh`、`office-wall-display-redesign` 及若干仅剩验证项的 spec |
-| 未开始          | 9    | 第四层 L31-L38 与 `i18n-cleanup`                                                    |
-| 待补任务清单    | 1    | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md`                              |
+| 未开始                   | 9    | 第四层 L31-L38 与 `i18n-cleanup`                                                                                                                      |
+| 待补任务清单             | 1    | `frontend-demo-mode` 目录已存在，但尚未形成 `tasks.md`                                                                                                |
 
 - `workflow-artifacts-display` 已完成 Artifact API、`tasks-store` 扩展、ArtifactListBlock / ArtifactPreviewDialog、页面集成与 Socket 联动；当前仅剩 `tasks.md` 的最终检查点未勾选。
 - `office-task-cockpit` 已进入开发中，桌面端办公室主壳、三栏驾驶舱、右侧上下文 tab 与统一双通道发起基础已落地；剩余回归、补测与桌面手测。
@@ -158,22 +158,22 @@
 
 ### 📋 待收尾 / 待启动 / 待环境就绪
 
-| 模块                         | 依赖 / 备注                                                       |
-| ---------------------------- | ----------------------------------------------------------------- |
-| P0 `office-task-cockpit`     | 桌面端办公室主壳 + 三栏驾驶舱已落地，待补测试、兼容回归与桌面手测 |
-| P1 `office-cockpit-first-screen-refresh` | `office-task-cockpit` 的后续桌面首屏收口，聚焦主次关系、Scene HUD 与统一驾驶台 |
-| P1 `office-wall-display-redesign` | `scene-mission-fusion` + `sandbox-live-preview` + `office-task-cockpit` 的后续场景化显示改造 |
-| `workflow-artifacts-display` | 仅剩 `tasks.md` 最终检查点与验收收尾                              |
-| i18n-cleanup                 | 前端文案 / 国际化收口，独立排期                                   |
-| frontend-demo-mode           | 需先补 `tasks.md`，再确认依赖与范围                               |
-| L31 Docker Compose 生产部署  | L22                                                               |
-| L32 多人实时协作             | 无                                                                |
-| L33 多租户隔离               | L25 + L31                                                         |
-| L34 Agent 交易市场平台       | L30 + L19                                                         |
-| L35 K8s Agent Operator       | L31                                                               |
-| L36 边缘部署                 | L31                                                               |
-| L37 多区域灾备               | L31 + L35                                                         |
-| L38 VR 沉浸式扩展            | L03                                                               |
+| 模块                                     | 依赖 / 备注                                                                                  |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------- |
+| P0 `office-task-cockpit`                 | 桌面端办公室主壳 + 三栏驾驶舱已落地，待补测试、兼容回归与桌面手测                            |
+| P1 `office-cockpit-first-screen-refresh` | `office-task-cockpit` 的后续桌面首屏收口，聚焦主次关系、Scene HUD 与统一驾驶台               |
+| P1 `office-wall-display-redesign`        | `scene-mission-fusion` + `sandbox-live-preview` + `office-task-cockpit` 的后续场景化显示改造 |
+| `workflow-artifacts-display`             | 仅剩 `tasks.md` 最终检查点与验收收尾                                                         |
+| i18n-cleanup                             | 前端文案 / 国际化收口，独立排期                                                              |
+| frontend-demo-mode                       | 需先补 `tasks.md`，再确认依赖与范围                                                          |
+| L31 Docker Compose 生产部署              | L22                                                                                          |
+| L32 多人实时协作                         | 无                                                                                           |
+| L33 多租户隔离                           | L25 + L31                                                                                    |
+| L34 Agent 交易市场平台                   | L30 + L19                                                                                    |
+| L35 K8s Agent Operator                   | L31                                                                                          |
+| L36 边缘部署                             | L31                                                                                          |
+| L37 多区域灾备                           | L31 + L35                                                                                    |
+| L38 VR 沉浸式扩展                        | L03                                                                                          |
 
 ## 工程健康快照
 

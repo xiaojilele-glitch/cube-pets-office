@@ -4,7 +4,10 @@
  * Tests detectRecoveryCandidate, restoreFromSnapshot, and discardSnapshot.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { SnapshotRecord, SnapshotPayload } from "../../../shared/mission/contracts";
+import type {
+  SnapshotRecord,
+  SnapshotPayload,
+} from "../../../shared/mission/contracts";
 import { SNAPSHOT_VERSION } from "../../../shared/mission/contracts";
 
 vi.mock("./browser-runtime-storage", () => ({
@@ -16,7 +19,11 @@ vi.mock("./snapshot-serializer", () => ({
   validateChecksum: vi.fn(),
 }));
 
-import { detectRecoveryCandidate, restoreFromSnapshot, discardSnapshot } from "./recovery-detector";
+import {
+  detectRecoveryCandidate,
+  restoreFromSnapshot,
+  discardSnapshot,
+} from "./recovery-detector";
 import { getLatestSnapshot, deleteSnapshot } from "./browser-runtime-storage";
 import { validateChecksum } from "./snapshot-serializer";
 
@@ -81,7 +88,7 @@ describe("detectRecoveryCandidate", () => {
 
   it("should return null when latest snapshot is not running or waiting", async () => {
     vi.mocked(getLatestSnapshot).mockResolvedValue(
-      makeSnapshot({ missionStatus: "done" }),
+      makeSnapshot({ missionStatus: "done" })
     );
 
     const result = await detectRecoveryCandidate();
@@ -90,7 +97,7 @@ describe("detectRecoveryCandidate", () => {
 
   it("should return null for failed mission status", async () => {
     vi.mocked(getLatestSnapshot).mockResolvedValue(
-      makeSnapshot({ missionStatus: "failed" }),
+      makeSnapshot({ missionStatus: "failed" })
     );
 
     const result = await detectRecoveryCandidate();

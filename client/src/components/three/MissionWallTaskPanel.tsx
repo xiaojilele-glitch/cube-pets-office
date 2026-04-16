@@ -405,7 +405,9 @@ function MissionWallTaskPanelInner({
                           <span style={{ color: "rgba(148,163,184,0.72)" }}>
                             {item.label}
                           </span>
-                          <span style={{ color: accentColor }}>{item.value}</span>
+                          <span style={{ color: accentColor }}>
+                            {item.value}
+                          </span>
                         </span>
                       );
                     })}

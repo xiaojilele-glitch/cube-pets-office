@@ -40,7 +40,7 @@ export function parseNetworkWhitelist(raw: string): string[] {
   if (!raw || !raw.trim()) return [];
   return raw
     .split(",")
-    .map((s) => s.trim())
+    .map(s => s.trim())
     .filter(Boolean);
 }
 
@@ -75,12 +75,12 @@ export function parseMemoryString(raw: string): number {
  * Read security configuration from environment variables with sensible defaults.
  */
 export function readSecurityConfig(
-  env: NodeJS.ProcessEnv = process.env,
+  env: NodeJS.ProcessEnv = process.env
 ): SecurityConfig {
   const rawLevel = env.LOBSTER_SECURITY_LEVEL ?? "strict";
   if (!SECURITY_LEVELS.includes(rawLevel as SecurityLevel)) {
     throw new Error(
-      `Invalid LOBSTER_SECURITY_LEVEL "${rawLevel}". Must be one of: ${SECURITY_LEVELS.join(", ")}`,
+      `Invalid LOBSTER_SECURITY_LEVEL "${rawLevel}". Must be one of: ${SECURITY_LEVELS.join(", ")}`
     );
   }
 
@@ -89,7 +89,9 @@ export function readSecurityConfig(
   if (rawPids !== undefined) {
     const parsed = Number.parseInt(rawPids, 10);
     if (!Number.isFinite(parsed) || parsed < 1) {
-      throw new Error(`Invalid LOBSTER_MAX_PIDS "${rawPids}". Must be a positive integer.`);
+      throw new Error(
+        `Invalid LOBSTER_MAX_PIDS "${rawPids}". Must be a positive integer.`
+      );
     }
     maxPids = parsed;
   }
@@ -101,7 +103,9 @@ export function readSecurityConfig(
     maxCpus: env.LOBSTER_MAX_CPUS ?? "1.0",
     maxPids,
     tmpfsSize: env.LOBSTER_TMPFS_SIZE ?? "64m",
-    networkWhitelist: parseNetworkWhitelist(env.LOBSTER_NETWORK_WHITELIST ?? ""),
+    networkWhitelist: parseNetworkWhitelist(
+      env.LOBSTER_NETWORK_WHITELIST ?? ""
+    ),
     seccompProfilePath: env.LOBSTER_SECCOMP_PROFILE || undefined,
   };
 }
@@ -178,13 +182,12 @@ function levelPreset(level: SecurityLevel): SecurityPolicy {
 
 function defaultResources() {
   return {
-    memoryBytes: 536_870_912,    // 512 MiB
-    nanoCpus: 1_000_000_000,     // 1.0 core
+    memoryBytes: 536_870_912, // 512 MiB
+    nanoCpus: 1_000_000_000, // 1.0 core
     pidsLimit: 256,
-    tmpfsSizeBytes: 67_108_864,  // 64 MiB
+    tmpfsSizeBytes: 67_108_864, // 64 MiB
   };
 }
-
 
 // ─── NetworkPolicyBuilder (Task 3.1) ────────────────────────────────────────
 
@@ -215,7 +218,7 @@ export function resolveNetworkMode(policy: SecurityPolicy): string {
  * Convert a SecurityPolicy into a partial Dockerode HostConfig.
  */
 export function toDockerHostConfig(
-  policy: SecurityPolicy,
+  policy: SecurityPolicy
 ): Partial<Dockerode.HostConfig> {
   const securityOpt: string[] = [];
   if (policy.noNewPrivileges) {
@@ -249,7 +252,7 @@ export function toDockerHostConfig(
  * (Currently only sets the User field; HostConfig is handled separately.)
  */
 export function toDockerCreateOptions(
-  policy: SecurityPolicy,
+  policy: SecurityPolicy
 ): Partial<Dockerode.ContainerCreateOptions> {
   return {
     User: policy.user,
@@ -265,7 +268,7 @@ export function toDockerCreateOptions(
  */
 export function validateWorkspacePath(
   requestedPath: string,
-  dataRoot: string,
+  dataRoot: string
 ): string {
   const resolvedRoot = resolve(dataRoot);
   const resolvedPath = resolve(resolvedRoot, requestedPath);
@@ -276,7 +279,7 @@ export function validateWorkspacePath(
     resolvedPath !== resolvedRoot
   ) {
     throw new Error(
-      `Path traversal detected: "${requestedPath}" resolves outside dataRoot`,
+      `Path traversal detected: "${requestedPath}" resolves outside dataRoot`
     );
   }
 

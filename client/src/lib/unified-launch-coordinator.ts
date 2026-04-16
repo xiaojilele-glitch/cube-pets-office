@@ -9,12 +9,12 @@ import {
   type LaunchRouteDecision,
   type UnifiedLaunchInput,
 } from "./launch-router";
-import { useNLCommandStore, type TaskHubCommandSubmissionResult } from "./nl-command-store";
-import { useTasksStore } from "./tasks-store";
 import {
-  useWorkflowStore,
-  type WorkflowLaunchResult,
-} from "./workflow-store";
+  useNLCommandStore,
+  type TaskHubCommandSubmissionResult,
+} from "./nl-command-store";
+import { useTasksStore } from "./tasks-store";
+import { useWorkflowStore, type WorkflowLaunchResult } from "./workflow-store";
 
 export interface UnifiedLaunchSubmitInput extends UnifiedLaunchInput {
   userId?: string;
@@ -88,7 +88,10 @@ function resolveDecision(input: UnifiedLaunchSubmitInput): LaunchRouteDecision {
     return decision;
   }
 
-  if (input.routeOverride === "mission" && decision.kind !== "upgrade-required") {
+  if (
+    input.routeOverride === "mission" &&
+    decision.kind !== "upgrade-required"
+  ) {
     return {
       ...decision,
       kind: "mission",
@@ -97,7 +100,10 @@ function resolveDecision(input: UnifiedLaunchSubmitInput): LaunchRouteDecision {
     };
   }
 
-  if (input.routeOverride === "workflow" && decision.kind !== "upgrade-required") {
+  if (
+    input.routeOverride === "workflow" &&
+    decision.kind !== "upgrade-required"
+  ) {
     return {
       ...decision,
       kind: "workflow",
@@ -133,13 +139,15 @@ export async function submitUnifiedLaunch(
     return toWorkflowResult(decision, workflowResult);
   }
 
-  const missionSubmission = await useNLCommandStore.getState().submitTaskHubCommand({
-    commandText: input.text,
-    userId: input.userId ?? "office-user",
-    priority: input.priority,
-    timeframe: input.timeframe,
-    createMission: useTasksStore.getState().createMission,
-  });
+  const missionSubmission = await useNLCommandStore
+    .getState()
+    .submitTaskHubCommand({
+      commandText: input.text,
+      userId: input.userId ?? "office-user",
+      priority: input.priority,
+      timeframe: input.timeframe,
+      createMission: useTasksStore.getState().createMission,
+    });
 
   focusMissionIfAvailable(missionSubmission.missionId);
   return toMissionResult(decision, missionSubmission);
@@ -148,15 +156,17 @@ export async function submitUnifiedLaunch(
 export async function submitUnifiedClarification(
   input: UnifiedClarificationSubmitInput
 ): Promise<UnifiedLaunchResult | null> {
-  const submission = await useNLCommandStore.getState().submitTaskHubClarification(
-    input.commandId,
-    {
-      answer: input.answer,
-    },
-    {
-      createMission: useTasksStore.getState().createMission,
-    }
-  );
+  const submission = await useNLCommandStore
+    .getState()
+    .submitTaskHubClarification(
+      input.commandId,
+      {
+        answer: input.answer,
+      },
+      {
+        createMission: useTasksStore.getState().createMission,
+      }
+    );
 
   if (!submission) {
     return null;

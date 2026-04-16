@@ -28,7 +28,9 @@ function normalizeDirective(directive: string): string {
   return directive.trim().replace(/\s+/g, " ");
 }
 
-function getWorkflowInputSignature(workflow: ReturnType<typeof db.getWorkflows>[number]) {
+function getWorkflowInputSignature(
+  workflow: ReturnType<typeof db.getWorkflows>[number]
+) {
   const signature = workflow.results?.input?.signature;
   return typeof signature === "string" && signature
     ? signature
@@ -38,7 +40,9 @@ function getWorkflowInputSignature(workflow: ReturnType<typeof db.getWorkflows>[
       );
 }
 
-function withMissionLink<T extends { id: string }>(workflow: T): T & {
+function withMissionLink<T extends { id: string }>(
+  workflow: T
+): T & {
   missionId: string | null;
 } {
   return {
@@ -63,7 +67,10 @@ router.post("/organization/preview", async (req, res) => {
   try {
     const { organization, debug } = await generateWorkflowOrganization({
       workflowId: `preview_${Date.now()}`,
-      directive: buildWorkflowDirectiveContext(normalizedDirective, attachments),
+      directive: buildWorkflowDirectiveContext(
+        normalizedDirective,
+        attachments
+      ),
       llmProvider: serverRuntime.llmProvider,
       model: getAIConfig().model,
     });
@@ -98,8 +105,9 @@ router.post("/", async (req, res) => {
       .getWorkflows()
       .find(
         workflow =>
-          ACTIVE_WORKFLOW_STATUSES.includes(workflow.status as (typeof ACTIVE_WORKFLOW_STATUSES)[number]) &&
-          getWorkflowInputSignature(workflow) === inputSignature
+          ACTIVE_WORKFLOW_STATUSES.includes(
+            workflow.status as (typeof ACTIVE_WORKFLOW_STATUSES)[number]
+          ) && getWorkflowInputSignature(workflow) === inputSignature
       );
     if (activeWorkflow) {
       return res.json({
@@ -136,12 +144,21 @@ router.post("/", async (req, res) => {
     // Create a Mission and link it to the workflow so ExecutionBridge can dispatch to Docker
     const mission = missionRuntime.createChatTask(
       normalizedDirective.slice(0, 120),
-      normalizedDirective,
+      normalizedDirective
     );
     linkWorkflowToMission(workflowId, mission.id);
-    missionRuntime.markMissionRunning(mission.id, "execute", `Workflow ${workflowId} started`);
+    missionRuntime.markMissionRunning(
+      mission.id,
+      "execute",
+      `Workflow ${workflowId} started`
+    );
 
-    res.json({ workflowId, missionId: mission.id, status: "running", deduped: false });
+    res.json({
+      workflowId,
+      missionId: mission.id,
+      status: "running",
+      deduped: false,
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -259,7 +276,17 @@ router.get("/:id/nodes/:nodeId/skills", (req, res) => {
   }
 
   const organization = wf.results?.organization as
-    | { nodes?: Array<{ id: string; skills?: Array<{ id: string; name: string; summary: string; prompt: string }> }> }
+    | {
+        nodes?: Array<{
+          id: string;
+          skills?: Array<{
+            id: string;
+            name: string;
+            summary: string;
+            prompt: string;
+          }>;
+        }>;
+      }
     | undefined;
 
   const node = organization?.nodes?.find(n => n.id === req.params.nodeId);

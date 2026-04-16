@@ -121,8 +121,11 @@ interface AgentDeploymentSpec {
   image: string;
   selector: { matchLabels: Record<string, string> };
   strategy: {
-    type: 'RollingUpdate' | 'Recreate';
-    rollingUpdate?: { maxSurge: number | string; maxUnavailable: number | string };
+    type: "RollingUpdate" | "Recreate";
+    rollingUpdate?: {
+      maxSurge: number | string;
+      maxUnavailable: number | string;
+    };
   };
   ports?: Array<{ name: string; containerPort: number; protocol?: string }>;
   resources?: {
@@ -135,7 +138,7 @@ interface AgentDeploymentSpec {
   readinessProbe?: ProbeConfig;
   config?: Record<string, string>;
   scaling?: ScalingSpec;
-  serviceType?: 'ClusterIP' | 'NodePort' | 'LoadBalancer';
+  serviceType?: "ClusterIP" | "NodePort" | "LoadBalancer";
   nodeSelector?: Record<string, string>;
   nodeAffinity?: object;
   podAffinity?: object;
@@ -147,11 +150,11 @@ interface AgentDeploymentSpec {
 interface ScalingSpec {
   minReplicas: number;
   maxReplicas: number;
-  targetCPUUtilization?: number;      // 百分比，如 80
-  targetMemoryUtilization?: number;   // 百分比，如 80
-  targetQueueLength?: number;         // 绝对值，如 10
-  scaleUpCooldown?: number;           // 秒
-  scaleDownCooldown?: number;         // 秒
+  targetCPUUtilization?: number; // 百分比，如 80
+  targetMemoryUtilization?: number; // 百分比，如 80
+  targetQueueLength?: number; // 绝对值，如 10
+  scaleUpCooldown?: number; // 秒
+  scaleDownCooldown?: number; // 秒
 }
 
 interface AgentDeploymentStatus {
@@ -160,7 +163,7 @@ interface AgentDeploymentStatus {
   availableReplicas: number;
   conditions: Array<{
     type: string;
-    status: 'True' | 'False' | 'Unknown';
+    status: "True" | "False" | "Unknown";
     lastTransitionTime: string;
     reason: string;
     message: string;
@@ -220,7 +223,10 @@ class Reconciler {
   );
 
   // 主协调入口
-  async reconcile(namespacedName: { namespace: string; name: string }): Promise<void>;
+  async reconcile(namespacedName: {
+    namespace: string;
+    name: string;
+  }): Promise<void>;
 
   // 子资源协调
   async ensureNamespace(namespace: string): Promise<void>;
@@ -235,8 +241,14 @@ class Reconciler {
   buildPodSpec(deployment: AgentDeployment, index: number): k8s.V1Pod;
 
   // 更新策略
-  async rollingUpdate(deployment: AgentDeployment, existingPods: k8s.V1Pod[]): Promise<void>;
-  async recreateUpdate(deployment: AgentDeployment, existingPods: k8s.V1Pod[]): Promise<void>;
+  async rollingUpdate(
+    deployment: AgentDeployment,
+    existingPods: k8s.V1Pod[]
+  ): Promise<void>;
+  async recreateUpdate(
+    deployment: AgentDeployment,
+    existingPods: k8s.V1Pod[]
+  ): Promise<void>;
 
   // 回滚
   async rollback(deployment: AgentDeployment, reason: string): Promise<void>;
@@ -273,11 +285,14 @@ class Scaler {
   ): number;
 
   // 应用扩缩容
-  async applyScaling(deployment: AgentDeployment, decision: ScalingDecision): Promise<void>;
+  async applyScaling(
+    deployment: AgentDeployment,
+    decision: ScalingDecision
+  ): Promise<void>;
 }
 
 interface ScalingDecision {
-  action: 'scale-up' | 'scale-down' | 'no-change' | 'cooldown-blocked';
+  action: "scale-up" | "scale-down" | "no-change" | "cooldown-blocked";
   currentReplicas: number;
   desiredReplicas: number;
   reason: string;
@@ -285,9 +300,9 @@ interface ScalingDecision {
 }
 
 class CooldownTracker {
-  isInCooldown(deploymentKey: string, direction: 'up' | 'down'): boolean;
-  recordScaling(deploymentKey: string, direction: 'up' | 'down'): void;
-  getRemainingCooldown(deploymentKey: string, direction: 'up' | 'down'): number;
+  isInCooldown(deploymentKey: string, direction: "up" | "down"): boolean;
+  recordScaling(deploymentKey: string, direction: "up" | "down"): void;
+  getRemainingCooldown(deploymentKey: string, direction: "up" | "down"): number;
 }
 ```
 
@@ -300,7 +315,10 @@ class MetricsClient {
   constructor(metricsApi: k8s.MetricsV1beta1Api, httpClient: HttpClient);
 
   // 从 Metrics Server 获取 Pod 的 CPU/内存使用
-  async getPodResourceMetrics(namespace: string, labelSelector: string): Promise<PodResourceMetrics[]>;
+  async getPodResourceMetrics(
+    namespace: string,
+    labelSelector: string
+  ): Promise<PodResourceMetrics[]>;
 
   // 从 Pod 的 /metrics 端点获取队列长度
   async getPodQueueMetrics(pods: k8s.V1Pod[]): Promise<PodQueueMetrics[]>;
@@ -347,13 +365,46 @@ class MetricsExporter {
   registerMetrics(): void;
 
   // 更新指标值
-  setDeploymentReplicas(deployment: string, namespace: string, agentType: string, value: number): void;
-  setPodCount(deployment: string, namespace: string, agentType: string, value: number): void;
-  incScalingEvents(deployment: string, namespace: string, agentType: string): void;
-  setPodCpuUsage(pod: string, deployment: string, namespace: string, value: number): void;
-  setPodMemoryUsage(pod: string, deployment: string, namespace: string, value: number): void;
-  setPodQueueLength(pod: string, deployment: string, namespace: string, value: number): void;
-  observeUpdateDuration(deployment: string, namespace: string, durationSeconds: number): void;
+  setDeploymentReplicas(
+    deployment: string,
+    namespace: string,
+    agentType: string,
+    value: number
+  ): void;
+  setPodCount(
+    deployment: string,
+    namespace: string,
+    agentType: string,
+    value: number
+  ): void;
+  incScalingEvents(
+    deployment: string,
+    namespace: string,
+    agentType: string
+  ): void;
+  setPodCpuUsage(
+    pod: string,
+    deployment: string,
+    namespace: string,
+    value: number
+  ): void;
+  setPodMemoryUsage(
+    pod: string,
+    deployment: string,
+    namespace: string,
+    value: number
+  ): void;
+  setPodQueueLength(
+    pod: string,
+    deployment: string,
+    namespace: string,
+    value: number
+  ): void;
+  observeUpdateDuration(
+    deployment: string,
+    namespace: string,
+    durationSeconds: number
+  ): void;
   incPodRestartCount(pod: string, deployment: string, namespace: string): void;
 
   // 返回 Prometheus 文本格式
@@ -397,7 +448,10 @@ class MigrationTool {
   parseComposeFile(content: string): ComposeConfig;
 
   // 将单个 service 转换为 AgentDeployment
-  convertService(serviceName: string, service: ComposeService): AgentDeploymentManifest;
+  convertService(
+    serviceName: string,
+    service: ComposeService
+  ): AgentDeploymentManifest;
 
   // 转换整个 compose 文件
   convertAll(compose: ComposeConfig): AgentDeploymentManifest[];
@@ -442,8 +496,13 @@ class EventRecorder {
   constructor(coreApi: k8s.CoreV1Api);
 
   async record(
-    involvedObject: { kind: string; name: string; namespace: string; uid: string },
-    eventType: 'Normal' | 'Warning',
+    involvedObject: {
+      kind: string;
+      name: string;
+      namespace: string;
+      uid: string;
+    },
+    eventType: "Normal" | "Warning",
     reason: string,
     message: string
   ): Promise<void>;
@@ -722,7 +781,7 @@ interface ScalingHistoryEntry {
   timestamp: string;
   deploymentName: string;
   namespace: string;
-  action: 'scale-up' | 'scale-down';
+  action: "scale-up" | "scale-down";
   fromReplicas: number;
   toReplicas: number;
   reason: string;
@@ -736,15 +795,15 @@ interface ScalingHistoryEntry {
 
 ### Docker Compose 到 AgentDeployment 的映射规则
 
-| Docker Compose 字段 | AgentDeployment 字段 | 转换规则 |
-|---------------------|---------------------|---------|
-| `services.<name>.image` | `spec.image` | 直接映射 |
-| `services.<name>.environment` | `spec.env` | 对象转为 `{name, value}` 数组 |
-| `services.<name>.ports` | `spec.ports` | `"host:container"` 转为 `{containerPort}` |
-| `services.<name>.volumes` | `spec.volumeMounts` + `spec.config` | 绑定挂载转为 ConfigMap |
-| `services.<name>.deploy.replicas` | `spec.replicas` | 直接映射，默认 1 |
-| `services.<name>.deploy.resources` | `spec.resources` | 转换格式 |
-| `services.<name>` (name) | `metadata.name` | 直接映射 |
+| Docker Compose 字段                | AgentDeployment 字段                | 转换规则                                  |
+| ---------------------------------- | ----------------------------------- | ----------------------------------------- |
+| `services.<name>.image`            | `spec.image`                        | 直接映射                                  |
+| `services.<name>.environment`      | `spec.env`                          | 对象转为 `{name, value}` 数组             |
+| `services.<name>.ports`            | `spec.ports`                        | `"host:container"` 转为 `{containerPort}` |
+| `services.<name>.volumes`          | `spec.volumeMounts` + `spec.config` | 绑定挂载转为 ConfigMap                    |
+| `services.<name>.deploy.replicas`  | `spec.replicas`                     | 直接映射，默认 1                          |
+| `services.<name>.deploy.resources` | `spec.resources`                    | 转换格式                                  |
+| `services.<name>` (name)           | `metadata.name`                     | 直接映射                                  |
 
 ### REST API 响应数据结构
 
@@ -790,7 +849,7 @@ interface TenantQuotaResponse {
 
 ## 正确性属性
 
-*属性是系统在所有有效执行中应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_属性是系统在所有有效执行中应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: AgentDeployment CRD 序列化 round-trip
 
@@ -801,6 +860,7 @@ interface TenantQuotaResponse {
 ### Property 2: Pod spec 忠实反映 AgentDeployment 配置
 
 *对于任何*有效的 AgentDeployment，`buildPodSpec` 生成的 Pod 应该满足：
+
 - Pod 的 labels 包含 `app=agent`、`deployment=<name>`、`agent-type=<type>`
 - Pod 的 resources 与 AgentDeployment.spec.resources 一致
 - Pod 的 env 包含 AgentDeployment.spec.env 中的所有变量
@@ -811,13 +871,14 @@ interface TenantQuotaResponse {
 
 ### Property 3: 子资源 ownerReference 正确性
 
-*对于任何* AgentDeployment 生成的子资源（Pod、Service、ConfigMap），每个子资源的 ownerReference 应该包含一个条目，指向该 AgentDeployment 的 apiVersion、kind、name 和 uid，且 controller=true。
+_对于任何_ AgentDeployment 生成的子资源（Pod、Service、ConfigMap），每个子资源的 ownerReference 应该包含一个条目，指向该 AgentDeployment 的 apiVersion、kind、name 和 uid，且 controller=true。
 
 **Validates: Requirements 3.1, 4.5, 5.5**
 
 ### Property 4: Service spec 忠实反映 AgentDeployment 配置
 
 *对于任何*有效的 AgentDeployment，生成的 Service 应该满足：
+
 - Service 的 selector 能匹配到 AgentDeployment 关联的 Pod label
 - Service 的 ports 与 AgentDeployment.spec.ports 一致
 - Service 的 type 与 AgentDeployment.spec.serviceType 一致
@@ -833,6 +894,7 @@ interface TenantQuotaResponse {
 ### Property 6: 扩缩容计算正确性
 
 *对于任何*当前副本数、指标数据（CPU 使用率、内存使用率、队列长度）和 ScalingSpec 配置，`calculateDesiredReplicas` 应该满足：
+
 - 当平均使用率超过目标值时，返回值 > 当前副本数
 - 当平均使用率低于目标值时，返回值 < 当前副本数
 - 返回值始终在 [minReplicas, maxReplicas] 范围内
@@ -842,7 +904,7 @@ interface TenantQuotaResponse {
 
 ### Property 7: 冷却期阻止扩缩容
 
-*对于任何* CooldownTracker 状态，如果上次扩容时间距今小于 scaleUpCooldown，则 `isInCooldown(key, 'up')` 返回 true；如果上次缩容时间距今小于 scaleDownCooldown，则 `isInCooldown(key, 'down')` 返回 true。冷却期过后，对应方向的 `isInCooldown` 返回 false。
+_对于任何_ CooldownTracker 状态，如果上次扩容时间距今小于 scaleUpCooldown，则 `isInCooldown(key, 'up')` 返回 true；如果上次缩容时间距今小于 scaleDownCooldown，则 `isInCooldown(key, 'down')` 返回 true。冷却期过后，对应方向的 `isInCooldown` 返回 false。
 
 **Validates: Requirements 8.2, 8.3**
 
@@ -860,13 +922,14 @@ interface TenantQuotaResponse {
 
 ### Property 10: Webhook 变更注入默认值
 
-*对于任何*缺少 livenessProbe 的 AgentDeployment，MutatingWebhook 的 `mutate()` 应该注入默认的 HTTP GET /healthz 探针。*对于任何* AgentDeployment，`mutate()` 后应该包含 `managed-by=agent-operator` label 和 `creation-timestamp` annotation。
+*对于任何*缺少 livenessProbe 的 AgentDeployment，MutatingWebhook 的 `mutate()` 应该注入默认的 HTTP GET /healthz 探针。_对于任何_ AgentDeployment，`mutate()` 后应该包含 `managed-by=agent-operator` label 和 `creation-timestamp` annotation。
 
 **Validates: Requirements 16.4, 16.5**
 
 ### Property 11: Docker Compose 迁移转换正确性
 
 *对于任何*有效的 Docker Compose service 配置，MigrationTool 的 `convertService` 应该满足：
+
 - 生成的 AgentDeployment 的 spec.image 与 service.image 一致
 - service.environment 中的所有变量出现在 spec.env 中
 - service.ports 中的所有端口映射出现在 spec.ports 中
@@ -896,31 +959,31 @@ interface TenantQuotaResponse {
 
 ### Kubernetes API 错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| API Server 不可达 | 指数退避重试（初始 1s，最大 60s），记录 warn 日志 |
-| 资源冲突（409 Conflict） | 重新获取最新版本后重试 reconcile |
-| 资源不存在（404 Not Found） | 跳过删除操作，记录 info 日志 |
-| 权限不足（403 Forbidden） | 记录 error 日志，创建 Warning Event |
-| ResourceQuota 超限 | 记录 Warning Event，不重试创建 Pod |
-| Webhook TLS 证书过期 | 记录 error 日志，Webhook 拒绝所有请求直到证书更新 |
+| 错误场景                    | 处理策略                                          |
+| --------------------------- | ------------------------------------------------- |
+| API Server 不可达           | 指数退避重试（初始 1s，最大 60s），记录 warn 日志 |
+| 资源冲突（409 Conflict）    | 重新获取最新版本后重试 reconcile                  |
+| 资源不存在（404 Not Found） | 跳过删除操作，记录 info 日志                      |
+| 权限不足（403 Forbidden）   | 记录 error 日志，创建 Warning Event               |
+| ResourceQuota 超限          | 记录 Warning Event，不重试创建 Pod                |
+| Webhook TLS 证书过期        | 记录 error 日志，Webhook 拒绝所有请求直到证书更新 |
 
 ### 扩缩容错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| Metrics Server 不可达 | 跳过本次扩缩容评估，保持当前副本数，记录 warn 日志 |
-| Pod /metrics 端点不可达 | 将该 Pod 排除在指标计算之外，记录 warn 日志 |
-| 指标数据异常（NaN/负数） | 忽略异常数据点，使用其余 Pod 的平均值 |
-| 扩容后 Pod 启动失败 | 等待 readiness probe 超时后触发回滚 |
+| 错误场景                 | 处理策略                                           |
+| ------------------------ | -------------------------------------------------- |
+| Metrics Server 不可达    | 跳过本次扩缩容评估，保持当前副本数，记录 warn 日志 |
+| Pod /metrics 端点不可达  | 将该 Pod 排除在指标计算之外，记录 warn 日志        |
+| 指标数据异常（NaN/负数） | 忽略异常数据点，使用其余 Pod 的平均值              |
+| 扩容后 Pod 启动失败      | 等待 readiness probe 超时后触发回滚                |
 
 ### 迁移工具错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| docker-compose.yml 格式无效 | 返回解析错误，包含行号和错误描述 |
-| 不支持的 Compose 特性 | 记录 warn 日志，跳过不支持的字段，继续转换 |
-| image 字段缺失 | 返回错误，image 是必填字段 |
+| 错误场景                    | 处理策略                                   |
+| --------------------------- | ------------------------------------------ |
+| docker-compose.yml 格式无效 | 返回解析错误，包含行号和错误描述           |
+| 不支持的 Compose 特性       | 记录 warn 日志，跳过不支持的字段，继续转换 |
+| image 字段缺失              | 返回错误，image 是必填字段                 |
 
 ## 测试策略
 
@@ -928,38 +991,38 @@ interface TenantQuotaResponse {
 
 使用 `fast-check` 库进行属性测试，每个属性测试运行至少 100 次迭代。
 
-| 属性 | 测试文件 | 说明 |
-|------|---------|------|
-| Property 1: CRD round-trip | `src/__tests__/crd-schema.property.test.ts` | 生成随机 AgentDeploymentSpec，验证序列化 round-trip |
-| Property 2: Pod spec 忠实性 | `src/__tests__/pod-builder.property.test.ts` | 生成随机 AgentDeployment，验证 buildPodSpec 输出 |
-| Property 3: ownerReference | `src/__tests__/pod-builder.property.test.ts` | 验证所有子资源的 ownerReference |
-| Property 4: Service spec 忠实性 | `src/__tests__/service-builder.property.test.ts` | 生成随机 AgentDeployment，验证 Service 输出 |
-| Property 5: ConfigMap 忠实性 | `src/__tests__/configmap-builder.property.test.ts` | 生成随机 config，验证 ConfigMap 输出 |
-| Property 6: 扩缩容计算 | `src/__tests__/scaler.property.test.ts` | 生成随机指标和配置，验证计算结果 |
-| Property 7: 冷却期 | `src/__tests__/cooldown.property.test.ts` | 生成随机时间戳和冷却配置，验证冷却逻辑 |
-| Property 8: 日志格式 | `src/__tests__/logger.property.test.ts` | 生成随机日志内容，验证 JSON 格式 |
-| Property 9: Webhook 验证 | `src/__tests__/webhook.property.test.ts` | 生成随机无效配置，验证拒绝行为 |
-| Property 10: Webhook 变更 | `src/__tests__/webhook.property.test.ts` | 生成随机配置，验证默认值注入 |
-| Property 11: 迁移转换 | `src/__tests__/migration.property.test.ts` | 生成随机 Compose 配置，验证转换正确性 |
-| Property 12: 租户隔离 | `src/__tests__/tenant.property.test.ts` | 验证 namespace 资源完整性 |
-| Property 13: 指标完整性 | `src/__tests__/metrics.property.test.ts` | 生成随机指标数据，验证 Prometheus 输出 |
-| Property 14: Pod 数量一致性 | `src/__tests__/reconciler.property.test.ts` | 生成随机 replicas，验证 reconcile 后 Pod 数量 |
+| 属性                            | 测试文件                                           | 说明                                                |
+| ------------------------------- | -------------------------------------------------- | --------------------------------------------------- |
+| Property 1: CRD round-trip      | `src/__tests__/crd-schema.property.test.ts`        | 生成随机 AgentDeploymentSpec，验证序列化 round-trip |
+| Property 2: Pod spec 忠实性     | `src/__tests__/pod-builder.property.test.ts`       | 生成随机 AgentDeployment，验证 buildPodSpec 输出    |
+| Property 3: ownerReference      | `src/__tests__/pod-builder.property.test.ts`       | 验证所有子资源的 ownerReference                     |
+| Property 4: Service spec 忠实性 | `src/__tests__/service-builder.property.test.ts`   | 生成随机 AgentDeployment，验证 Service 输出         |
+| Property 5: ConfigMap 忠实性    | `src/__tests__/configmap-builder.property.test.ts` | 生成随机 config，验证 ConfigMap 输出                |
+| Property 6: 扩缩容计算          | `src/__tests__/scaler.property.test.ts`            | 生成随机指标和配置，验证计算结果                    |
+| Property 7: 冷却期              | `src/__tests__/cooldown.property.test.ts`          | 生成随机时间戳和冷却配置，验证冷却逻辑              |
+| Property 8: 日志格式            | `src/__tests__/logger.property.test.ts`            | 生成随机日志内容，验证 JSON 格式                    |
+| Property 9: Webhook 验证        | `src/__tests__/webhook.property.test.ts`           | 生成随机无效配置，验证拒绝行为                      |
+| Property 10: Webhook 变更       | `src/__tests__/webhook.property.test.ts`           | 生成随机配置，验证默认值注入                        |
+| Property 11: 迁移转换           | `src/__tests__/migration.property.test.ts`         | 生成随机 Compose 配置，验证转换正确性               |
+| Property 12: 租户隔离           | `src/__tests__/tenant.property.test.ts`            | 验证 namespace 资源完整性                           |
+| Property 13: 指标完整性         | `src/__tests__/metrics.property.test.ts`           | 生成随机指标数据，验证 Prometheus 输出              |
+| Property 14: Pod 数量一致性     | `src/__tests__/reconciler.property.test.ts`        | 生成随机 replicas，验证 reconcile 后 Pod 数量       |
 
 ### 单元测试
 
 使用 `vitest` 进行单元测试，覆盖具体示例和边界情况。
 
-| 测试范围 | 测试文件 | 说明 |
-|---------|---------|------|
-| Reconciler 创建流程 | `src/__tests__/reconciler.test.ts` | 测试创建 AgentDeployment 后的资源创建 |
-| Reconciler 删除流程 | `src/__tests__/reconciler.test.ts` | 测试删除 AgentDeployment 后的资源清理 |
-| 滚动更新 | `src/__tests__/rolling-update.test.ts` | 测试 maxSurge/maxUnavailable 行为 |
-| 回滚 | `src/__tests__/rollback.test.ts` | 测试新版本启动失败时的回滚 |
-| CrashLoopBackOff 告警 | `src/__tests__/health-monitor.test.ts` | 测试 Pod 崩溃循环时的告警 |
-| REST API 端点 | `src/__tests__/api-server.test.ts` | 测试各 API 端点的响应格式 |
-| WebSocket 推送 | `src/__tests__/websocket.test.ts` | 测试状态变化时的 WebSocket 事件 |
-| Event 记录 | `src/__tests__/event-recorder.test.ts` | 测试各场景的 Event 创建 |
-| ResourceQuota 超限 | `src/__tests__/quota.test.ts` | 测试超过配额时的告警行为 |
+| 测试范围              | 测试文件                               | 说明                                  |
+| --------------------- | -------------------------------------- | ------------------------------------- |
+| Reconciler 创建流程   | `src/__tests__/reconciler.test.ts`     | 测试创建 AgentDeployment 后的资源创建 |
+| Reconciler 删除流程   | `src/__tests__/reconciler.test.ts`     | 测试删除 AgentDeployment 后的资源清理 |
+| 滚动更新              | `src/__tests__/rolling-update.test.ts` | 测试 maxSurge/maxUnavailable 行为     |
+| 回滚                  | `src/__tests__/rollback.test.ts`       | 测试新版本启动失败时的回滚            |
+| CrashLoopBackOff 告警 | `src/__tests__/health-monitor.test.ts` | 测试 Pod 崩溃循环时的告警             |
+| REST API 端点         | `src/__tests__/api-server.test.ts`     | 测试各 API 端点的响应格式             |
+| WebSocket 推送        | `src/__tests__/websocket.test.ts`      | 测试状态变化时的 WebSocket 事件       |
+| Event 记录            | `src/__tests__/event-recorder.test.ts` | 测试各场景的 Event 创建               |
+| ResourceQuota 超限    | `src/__tests__/quota.test.ts`          | 测试超过配额时的告警行为              |
 
 ### 测试标签格式
 
@@ -975,11 +1038,11 @@ interface TenantQuotaResponse {
 // vitest.config.ts
 export default defineConfig({
   test: {
-    include: ['src/__tests__/**/*.test.ts'],
+    include: ["src/__tests__/**/*.test.ts"],
     coverage: {
-      provider: 'v8',
-      include: ['src/**/*.ts'],
-      exclude: ['src/__tests__/**', 'src/types/**'],
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      exclude: ["src/__tests__/**", "src/types/**"],
     },
   },
 });

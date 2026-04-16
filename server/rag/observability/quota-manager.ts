@@ -7,7 +7,7 @@
  * Requirements: 8.2
  */
 
-import { getRAGConfig } from '../config.js';
+import { getRAGConfig } from "../config.js";
 
 export interface QuotaCheckResult {
   allowed: boolean;
@@ -19,7 +19,10 @@ export class QuotaManager {
   private dailyTokens = new Map<string, { date: string; tokens: number }>();
 
   /** 检查项目是否允许摄入（向量数量配额） */
-  checkVectorQuota(projectId: string, currentVectorCount: number): QuotaCheckResult {
+  checkVectorQuota(
+    projectId: string,
+    currentVectorCount: number
+  ): QuotaCheckResult {
     const config = getRAGConfig();
     const quota = config.quota[projectId];
     if (!quota) return { allowed: true };
@@ -34,14 +37,17 @@ export class QuotaManager {
   }
 
   /** 检查每日嵌入 token 配额 */
-  checkDailyTokenQuota(projectId: string, additionalTokens: number): QuotaCheckResult {
+  checkDailyTokenQuota(
+    projectId: string,
+    additionalTokens: number
+  ): QuotaCheckResult {
     const config = getRAGConfig();
     const quota = config.quota[projectId];
     if (!quota) return { allowed: true };
 
     const today = new Date().toISOString().slice(0, 10);
     const entry = this.dailyTokens.get(projectId);
-    const currentTokens = (entry && entry.date === today) ? entry.tokens : 0;
+    const currentTokens = entry && entry.date === today ? entry.tokens : 0;
 
     if (currentTokens + additionalTokens > quota.maxDailyEmbeddingTokens) {
       return {
@@ -67,6 +73,6 @@ export class QuotaManager {
   getDailyUsage(projectId: string): number {
     const today = new Date().toISOString().slice(0, 10);
     const entry = this.dailyTokens.get(projectId);
-    return (entry && entry.date === today) ? entry.tokens : 0;
+    return entry && entry.date === today ? entry.tokens : 0;
   }
 }

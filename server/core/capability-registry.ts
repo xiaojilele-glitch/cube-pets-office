@@ -1,31 +1,31 @@
-import db, { type AgentCapabilityRow, type TaskRow } from '../db/index.js';
+import db, { type AgentCapabilityRow, type TaskRow } from "../db/index.js";
 
 const ACTION_HINTS = [
-  'design',
-  'plan',
-  'analyze',
-  'implement',
-  'optimize',
-  'integrate',
-  'research',
-  'draft',
-  'build',
-  'verify',
-  '设计',
-  '规划',
-  '分析',
-  '实现',
-  '优化',
-  '集成',
-  '研究',
-  '撰写',
-  '制定',
-  '验证',
-  '策划',
-  '拆解',
-  '诊断',
-  '评估',
-  '落地',
+  "design",
+  "plan",
+  "analyze",
+  "implement",
+  "optimize",
+  "integrate",
+  "research",
+  "draft",
+  "build",
+  "verify",
+  "设计",
+  "规划",
+  "分析",
+  "实现",
+  "优化",
+  "集成",
+  "研究",
+  "撰写",
+  "制定",
+  "验证",
+  "策划",
+  "拆解",
+  "诊断",
+  "评估",
+  "落地",
 ];
 
 interface CapabilityUpdateSummary {
@@ -34,7 +34,7 @@ interface CapabilityUpdateSummary {
 }
 
 function bestDeliverable(task: TaskRow): string {
-  return task.deliverable_v3 || task.deliverable_v2 || task.deliverable || '';
+  return task.deliverable_v3 || task.deliverable_v2 || task.deliverable || "";
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -46,17 +46,17 @@ function unique<T>(items: T[]): T[] {
 }
 
 function normalizeWhitespace(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
+  return text.replace(/\s+/g, " ").trim();
 }
 
 function cleanCapability(raw: string): string | null {
   const cleaned = normalizeWhitespace(
     raw
-      .replace(/^#{1,6}\s*/, '')
-      .replace(/^[-*+]\s*/, '')
-      .replace(/^\d+[.)]\s*/, '')
-      .replace(/[|`*_~]/g, '')
-      .replace(/[：:;；,，。.!！?？]+$/g, '')
+      .replace(/^#{1,6}\s*/, "")
+      .replace(/^[-*+]\s*/, "")
+      .replace(/^\d+[.)]\s*/, "")
+      .replace(/[|`*_~]/g, "")
+      .replace(/[：:;；,，。.!！?？]+$/g, "")
   );
 
   if (cleaned.length < 4 || cleaned.length > 80) {
@@ -68,13 +68,13 @@ function cleanCapability(raw: string): string | null {
 
 function hasActionSignal(text: string): boolean {
   const lower = text.toLowerCase();
-  return ACTION_HINTS.some((hint) => lower.includes(hint));
+  return ACTION_HINTS.some(hint => lower.includes(hint));
 }
 
 function splitCandidateSegments(text: string): string[] {
   return text
     .split(/\r?\n|[。！？!?；;]+/g)
-    .map((item) => item.trim())
+    .map(item => item.trim())
     .filter(Boolean);
 }
 
@@ -127,10 +127,14 @@ class CapabilityRegistry {
 
     for (const capability of capabilities) {
       const previous = existing.find(
-        (item) => item.capability.trim().toLowerCase() === capability.trim().toLowerCase()
+        item =>
+          item.capability.trim().toLowerCase() ===
+          capability.trim().toLowerCase()
       );
       const evidence = scoreToConfidence(task.total_score);
-      const confidence = previous ? previous.confidence * 0.7 + evidence * 0.3 : evidence;
+      const confidence = previous
+        ? previous.confidence * 0.7 + evidence * 0.3
+        : evidence;
 
       updated.push(
         db.upsertAgentCapability({

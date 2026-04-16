@@ -63,7 +63,7 @@ describe("AnomalyDetector (Audit)", () => {
     it("should load 5 built-in rules on construction", () => {
       const rules = detector.getRules();
       expect(rules).toHaveLength(5);
-      const ruleIds = rules.map((r) => r.ruleId);
+      const ruleIds = rules.map(r => r.ruleId);
       expect(ruleIds).toContain("high_frequency_access");
       expect(ruleIds).toContain("off_hours_access");
       expect(ruleIds).toContain("privilege_escalation_abuse");
@@ -84,14 +84,18 @@ describe("AnomalyDetector (Audit)", () => {
       };
       detector.addRule(customRule);
       expect(detector.getRules()).toHaveLength(6);
-      expect(detector.getRules().find((r) => r.ruleId === "custom_rule")).toBeTruthy();
+      expect(
+        detector.getRules().find(r => r.ruleId === "custom_rule")
+      ).toBeTruthy();
     });
 
     it("should remove a rule by ruleId", () => {
       detector.removeRule("high_frequency_access");
       const rules = detector.getRules();
       expect(rules).toHaveLength(4);
-      expect(rules.find((r) => r.ruleId === "high_frequency_access")).toBeUndefined();
+      expect(
+        rules.find(r => r.ruleId === "high_frequency_access")
+      ).toBeUndefined();
     });
 
     it("should not throw when removing non-existent rule", () => {
@@ -112,7 +116,9 @@ describe("AnomalyDetector (Audit)", () => {
       };
       detector.addRule(updated);
       expect(detector.getRules()).toHaveLength(5);
-      const rule = detector.getRules().find((r) => r.ruleId === "high_frequency_access");
+      const rule = detector
+        .getRules()
+        .find(r => r.ruleId === "high_frequency_access");
       expect(rule?.name).toBe("Updated Rule");
       expect(rule?.threshold).toBe(50);
     });
@@ -122,7 +128,9 @@ describe("AnomalyDetector (Audit)", () => {
 
   describe("8.2 Built-in rules configuration", () => {
     it("high_frequency_access has correct config", () => {
-      const rule = detector.getRules().find((r) => r.ruleId === "high_frequency_access");
+      const rule = detector
+        .getRules()
+        .find(r => r.ruleId === "high_frequency_access");
       expect(rule).toBeDefined();
       expect(rule!.severity).toBe("high");
       expect(rule!.threshold).toBe(100);
@@ -132,7 +140,9 @@ describe("AnomalyDetector (Audit)", () => {
     });
 
     it("off_hours_access has correct config", () => {
-      const rule = detector.getRules().find((r) => r.ruleId === "off_hours_access");
+      const rule = detector
+        .getRules()
+        .find(r => r.ruleId === "off_hours_access");
       expect(rule).toBeDefined();
       expect(rule!.severity).toBe("medium");
       expect(rule!.threshold).toBe(1);
@@ -140,7 +150,9 @@ describe("AnomalyDetector (Audit)", () => {
     });
 
     it("privilege_escalation_abuse has correct config", () => {
-      const rule = detector.getRules().find((r) => r.ruleId === "privilege_escalation_abuse");
+      const rule = detector
+        .getRules()
+        .find(r => r.ruleId === "privilege_escalation_abuse");
       expect(rule).toBeDefined();
       expect(rule!.severity).toBe("critical");
       expect(rule!.threshold).toBe(1);
@@ -148,7 +160,9 @@ describe("AnomalyDetector (Audit)", () => {
     });
 
     it("brute_force_pattern has correct config", () => {
-      const rule = detector.getRules().find((r) => r.ruleId === "brute_force_pattern");
+      const rule = detector
+        .getRules()
+        .find(r => r.ruleId === "brute_force_pattern");
       expect(rule).toBeDefined();
       expect(rule!.severity).toBe("high");
       expect(rule!.threshold).toBe(5);
@@ -156,7 +170,9 @@ describe("AnomalyDetector (Audit)", () => {
     });
 
     it("bulk_data_export has correct config", () => {
-      const rule = detector.getRules().find((r) => r.ruleId === "bulk_data_export");
+      const rule = detector
+        .getRules()
+        .find(r => r.ruleId === "bulk_data_export");
       expect(rule).toBeDefined();
       expect(rule!.severity).toBe("medium");
       expect(rule!.threshold).toBe(1000);
@@ -187,13 +203,16 @@ describe("AnomalyDetector (Audit)", () => {
           makeEvent({
             eventType: AuditEventType.DATA_ACCESSED,
             timestamp: now + i,
-          }),
+          })
         );
       }
 
-      const alerts = detector.detectAnomalies({ start: now - 1, end: now + 200 });
+      const alerts = detector.detectAnomalies({
+        start: now - 1,
+        end: now + 200,
+      });
       expect(alerts.length).toBeGreaterThanOrEqual(1);
-      const hfAlert = alerts.find((a) => a.ruleId === "high_frequency_access");
+      const hfAlert = alerts.find(a => a.ruleId === "high_frequency_access");
       expect(hfAlert).toBeDefined();
       expect(hfAlert!.severity).toBe("high");
       expect(hfAlert!.status).toBe("open");
@@ -213,11 +232,14 @@ describe("AnomalyDetector (Audit)", () => {
           makeEvent({
             eventType: AuditEventType.DATA_ACCESSED,
             timestamp: now + i,
-          }),
+          })
         );
       }
 
-      const alerts = detector.detectAnomalies({ start: now - 1, end: now + 100 });
+      const alerts = detector.detectAnomalies({
+        start: now - 1,
+        end: now + 100,
+      });
       expect(alerts).toHaveLength(0);
     });
 
@@ -237,7 +259,7 @@ describe("AnomalyDetector (Audit)", () => {
             timestamp: now + i * 1000,
             result: "failure",
             actor: { type: "user", id: "user-1" },
-          }),
+          })
         );
       }
       chain.append(
@@ -246,12 +268,15 @@ describe("AnomalyDetector (Audit)", () => {
           timestamp: now + 7000,
           result: "success",
           actor: { type: "user", id: "user-1" },
-        }),
+        })
       );
 
-      const alerts = detector.detectAnomalies({ start: now - 1, end: now + 10000 });
+      const alerts = detector.detectAnomalies({
+        start: now - 1,
+        end: now + 10000,
+      });
       expect(alerts.length).toBeGreaterThanOrEqual(1);
-      const bfAlert = alerts.find((a) => a.ruleId === "brute_force_pattern");
+      const bfAlert = alerts.find(a => a.ruleId === "brute_force_pattern");
       expect(bfAlert).toBeDefined();
       expect(bfAlert!.severity).toBe("high");
       expect(bfAlert!.description).toContain("6 failures");
@@ -272,7 +297,7 @@ describe("AnomalyDetector (Audit)", () => {
             eventType: AuditEventType.USER_LOGIN,
             timestamp: now + i * 1000,
             result: "failure",
-          }),
+          })
         );
       }
       chain.append(
@@ -280,10 +305,13 @@ describe("AnomalyDetector (Audit)", () => {
           eventType: AuditEventType.USER_LOGIN,
           timestamp: now + 4000,
           result: "success",
-        }),
+        })
       );
 
-      const alerts = detector.detectAnomalies({ start: now - 1, end: now + 5000 });
+      const alerts = detector.detectAnomalies({
+        start: now - 1,
+        end: now + 5000,
+      });
       expect(alerts).toHaveLength(0);
     });
 
@@ -299,11 +327,14 @@ describe("AnomalyDetector (Audit)", () => {
           makeEvent({
             eventType: AuditEventType.DATA_ACCESSED,
             timestamp: now + i,
-          }),
+          })
         );
       }
 
-      const alerts = detector.detectAnomalies({ start: now - 1, end: now + 300 });
+      const alerts = detector.detectAnomalies({
+        start: now - 1,
+        end: now + 300,
+      });
       expect(alerts).toHaveLength(0);
     });
   });
@@ -323,7 +354,7 @@ describe("AnomalyDetector (Audit)", () => {
           makeEvent({
             eventType: AuditEventType.DATA_ACCESSED,
             timestamp: now + i,
-          }),
+          })
         );
       }
       detector.detectAnomalies({ start: now - 1, end: now + 200 });
@@ -356,14 +387,20 @@ describe("AnomalyDetector (Audit)", () => {
       expect(recent.length).toBeGreaterThanOrEqual(1);
 
       // No alerts in far future
-      const future = detector.getAlerts({ start: now + 100000, end: now + 200000 });
+      const future = detector.getAlerts({
+        start: now + 100000,
+        end: now + 200000,
+      });
       expect(future).toHaveLength(0);
     });
 
     it("should update alert status to acknowledged", () => {
       triggerAlert();
       const alerts = detector.getAlerts();
-      const updated = detector.updateAlertStatus(alerts[0].alertId, "acknowledged");
+      const updated = detector.updateAlertStatus(
+        alerts[0].alertId,
+        "acknowledged"
+      );
       expect(updated).not.toBeNull();
       expect(updated!.status).toBe("acknowledged");
     });
@@ -379,7 +416,10 @@ describe("AnomalyDetector (Audit)", () => {
     it("should update alert status to dismissed", () => {
       triggerAlert();
       const alerts = detector.getAlerts();
-      const updated = detector.updateAlertStatus(alerts[0].alertId, "dismissed");
+      const updated = detector.updateAlertStatus(
+        alerts[0].alertId,
+        "dismissed"
+      );
       expect(updated).not.toBeNull();
       expect(updated!.status).toBe("dismissed");
     });
@@ -406,7 +446,7 @@ describe("AnomalyDetector (Audit)", () => {
           makeEvent({
             eventType: AuditEventType.DATA_ACCESSED,
             timestamp: now + i,
-          }),
+          })
         );
       }
 
@@ -422,13 +462,15 @@ describe("AnomalyDetector (Audit)", () => {
       // Find the ANOMALY_DETECTED entry
       const allEntries = chain.getEntries(0, countAfter - 1);
       const anomalyEntry = allEntries.find(
-        (e) => e.event.eventType === AuditEventType.ANOMALY_DETECTED,
+        e => e.event.eventType === AuditEventType.ANOMALY_DETECTED
       );
       expect(anomalyEntry).toBeDefined();
       expect(anomalyEntry!.event.actor.type).toBe("system");
       expect(anomalyEntry!.event.actor.id).toBe("anomaly-detector");
       expect(anomalyEntry!.event.action).toContain("anomaly_detected:");
-      expect(anomalyEntry!.event.metadata?.ruleId).toBe("high_frequency_access");
+      expect(anomalyEntry!.event.metadata?.ruleId).toBe(
+        "high_frequency_access"
+      );
       expect(anomalyEntry!.event.metadata?.severity).toBe("high");
     });
 
@@ -440,7 +482,7 @@ describe("AnomalyDetector (Audit)", () => {
           makeEvent({
             eventType: AuditEventType.AGENT_EXECUTED,
             timestamp: now + i,
-          }),
+          })
         );
       }
 

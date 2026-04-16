@@ -10,7 +10,10 @@ import os from "node:os";
 import { JsonLineageStorage } from "../lineage/lineage-store.js";
 import { LineageQueryService } from "../lineage/lineage-query.js";
 import { LineageAuditService } from "../lineage/lineage-audit.js";
-import type { DataLineageNode, LineageEdge } from "../../shared/lineage/contracts.js";
+import type {
+  DataLineageNode,
+  LineageEdge,
+} from "../../shared/lineage/contracts.js";
 
 // ─── 辅助 ──────────────────────────────────────────────────────────────────
 
@@ -173,7 +176,7 @@ describe("LineageAuditService", () => {
   describe("exportLineageReport()", () => {
     it("should throw when decision not found", async () => {
       await expect(audit.exportLineageReport("nonexistent")).rejects.toThrow(
-        "Decision node not found",
+        "Decision node not found"
       );
     });
 
@@ -232,9 +235,7 @@ describe("LineageAuditService", () => {
         context: { userId: "alice" },
       });
       await store.batchInsertNodes([src, dec]);
-      await store.batchInsertEdges([
-        makeEdge({ fromId: "src", toId: "dec" }),
-      ]);
+      await store.batchInsertEdges([makeEdge({ fromId: "src", toId: "dec" })]);
 
       const report = await audit.exportLineageReport("dec-002");
       expect(report.auditTrail.length).toBeGreaterThanOrEqual(1);
@@ -255,7 +256,10 @@ describe("LineageAuditService", () => {
       });
       await store.batchInsertNodes([node]);
 
-      const result = await audit.detectAnomalies({ start: t - 1000, end: t + 1000 });
+      const result = await audit.detectAnomalies({
+        start: t - 1000,
+        end: t + 1000,
+      });
       expect(result).toHaveLength(0);
     });
 
@@ -278,7 +282,7 @@ describe("LineageAuditService", () => {
       await store.batchInsertNodes([n1, n2]);
 
       const alerts = await audit.detectAnomalies({ start: t, end: t + 5000 });
-      const hashAlerts = alerts.filter((a) => a.type === "hash_mismatch");
+      const hashAlerts = alerts.filter(a => a.type === "hash_mismatch");
       expect(hashAlerts).toHaveLength(1);
       expect(hashAlerts[0].previousHash).toBe("hash_old");
       expect(hashAlerts[0].currentHash).toBe("hash_new");
@@ -304,7 +308,7 @@ describe("LineageAuditService", () => {
       await store.batchInsertNodes([n1, n2]);
 
       const alerts = await audit.detectAnomalies({ start: t, end: t + 5000 });
-      const hashAlerts = alerts.filter((a) => a.type === "hash_mismatch");
+      const hashAlerts = alerts.filter(a => a.type === "hash_mismatch");
       expect(hashAlerts).toHaveLength(0);
     });
 
@@ -327,7 +331,7 @@ describe("LineageAuditService", () => {
       await store.batchInsertNodes([old, suspicious]);
 
       const alerts = await audit.detectAnomalies({ start: t, end: t + 5000 });
-      const accessAlerts = alerts.filter((a) => a.type === "data_volume_anomaly");
+      const accessAlerts = alerts.filter(a => a.type === "data_volume_anomaly");
       expect(accessAlerts).toHaveLength(1);
       expect(accessAlerts[0].affectedAgents).toContain("unknown-agent");
     });
@@ -344,7 +348,7 @@ describe("LineageAuditService", () => {
       await store.batchInsertNodes([tagged]);
 
       const alerts = await audit.detectAnomalies({ start: t, end: t + 5000 });
-      const permAlerts = alerts.filter((a) => a.type === "quality_degradation");
+      const permAlerts = alerts.filter(a => a.type === "quality_degradation");
       expect(permAlerts).toHaveLength(1);
       expect(permAlerts[0].riskLevel).toBe("critical");
       expect(permAlerts[0].details).toContain("without user context");

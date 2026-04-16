@@ -13,8 +13,12 @@ import {
 
 describe("UnifiedLaunchComposer helper logic", () => {
   it("uses mission copy for direct mission launches", () => {
-    expect(getLaunchRouteBannerTitle("zh-CN", "mission")).toBe("系统判断：快速任务");
-    expect(getUnifiedLaunchRouteHint("zh-CN", "mission")).toContain("直接创建 mission");
+    expect(getLaunchRouteBannerTitle("zh-CN", "mission")).toBe(
+      "系统判断：快速任务"
+    );
+    expect(getUnifiedLaunchRouteHint("zh-CN", "mission")).toContain(
+      "直接创建 mission"
+    );
     expect(
       getUnifiedLaunchSubmitLabel("zh-CN", {
         kind: "mission",
@@ -24,8 +28,12 @@ describe("UnifiedLaunchComposer helper logic", () => {
   });
 
   it("uses clarification copy for underspecified requests", () => {
-    expect(getLaunchRouteBannerTitle("zh-CN", "clarify")).toBe("系统判断：先补问");
-    expect(getUnifiedLaunchRouteHint("zh-CN", "clarify")).toContain("先补问关键信息");
+    expect(getLaunchRouteBannerTitle("zh-CN", "clarify")).toBe(
+      "系统判断：先补问"
+    );
+    expect(getUnifiedLaunchRouteHint("zh-CN", "clarify")).toContain(
+      "先补问关键信息"
+    );
     expect(
       getUnifiedLaunchSubmitLabel("zh-CN", {
         kind: "clarify",
@@ -35,8 +43,12 @@ describe("UnifiedLaunchComposer helper logic", () => {
   });
 
   it("uses workflow copy when attachment context is required", () => {
-    expect(getLaunchRouteBannerTitle("zh-CN", "workflow")).toBe("系统判断：高级编排");
-    expect(getUnifiedLaunchRouteHint("zh-CN", "workflow")).toContain("进入 workflow");
+    expect(getLaunchRouteBannerTitle("zh-CN", "workflow")).toBe(
+      "系统判断：高级编排"
+    );
+    expect(getUnifiedLaunchRouteHint("zh-CN", "workflow")).toContain(
+      "进入 workflow"
+    );
     expect(
       getUnifiedLaunchSubmitLabel("zh-CN", {
         kind: "workflow",
@@ -81,4 +93,3 @@ describe("UnifiedLaunchComposer helper logic", () => {
     expect(getLaunchAttachmentCountLabel("zh-CN", 2)).toBe("已附 2 个文件");
   });
 });
-

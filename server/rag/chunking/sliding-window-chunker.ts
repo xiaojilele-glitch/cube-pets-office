@@ -13,9 +13,13 @@
  * Requirements: 2.1, 2.4
  */
 
-import type { ChunkRecord, ChunkMetadata, SourceType } from '../../../shared/rag/contracts.js';
-import type { Chunker } from './chunk-router.js';
-import type { ChunkingConfig } from '../config.js';
+import type {
+  ChunkRecord,
+  ChunkMetadata,
+  SourceType,
+} from "../../../shared/rag/contracts.js";
+import type { Chunker } from "./chunk-router.js";
+import type { ChunkingConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // 配置
@@ -96,7 +100,9 @@ export class SlidingWindowChunker implements Chunker {
 
     // 如果整体 token 数不超过窗口大小，直接作为单个 chunk
     if (tokens.length <= this.windowSize) {
-      return [this.buildChunkRecord(content.trim(), tokens.length, 0, metadata)];
+      return [
+        this.buildChunkRecord(content.trim(), tokens.length, 0, metadata),
+      ];
     }
 
     // 滑动窗口分块
@@ -110,7 +116,7 @@ export class SlidingWindowChunker implements Chunker {
 
     // 构建 ChunkRecord 数组
     return final.map((chunk, index) =>
-      this.buildChunkRecord(chunk.text, chunk.tokenCount, index, metadata),
+      this.buildChunkRecord(chunk.text, chunk.tokenCount, index, metadata)
     );
   }
 
@@ -128,7 +134,7 @@ export class SlidingWindowChunker implements Chunker {
       const end = Math.min(pos + this.windowSize, tokens.length);
       const slice = tokens.slice(pos, end);
       chunks.push({
-        text: slice.join(' '),
+        text: slice.join(" "),
         tokenCount: slice.length,
       });
 
@@ -152,7 +158,7 @@ export class SlidingWindowChunker implements Chunker {
       if (chunk.tokenCount < this.minTokens && result.length > 0) {
         // 合并到前一个 chunk
         const prev = result[result.length - 1];
-        prev.text = prev.text + ' ' + chunk.text;
+        prev.text = prev.text + " " + chunk.text;
         prev.tokenCount = estimateTokenCount(prev.text);
       } else {
         result.push({ ...chunk });
@@ -179,7 +185,7 @@ export class SlidingWindowChunker implements Chunker {
         const end = Math.min(pos + this.maxTokens, tokens.length);
         const slice = tokens.slice(pos, end);
         const subChunk: RawChunk = {
-          text: slice.join(' '),
+          text: slice.join(" "),
           tokenCount: slice.length,
         };
 
@@ -188,7 +194,7 @@ export class SlidingWindowChunker implements Chunker {
           const prev = result[result.length - 1];
           // 只在合并后不超过 maxTokens 时合并
           if (prev.tokenCount + subChunk.tokenCount <= this.maxTokens) {
-            prev.text = prev.text + ' ' + subChunk.text;
+            prev.text = prev.text + " " + subChunk.text;
             prev.tokenCount = estimateTokenCount(prev.text);
           } else {
             result.push(subChunk);
@@ -209,16 +215,16 @@ export class SlidingWindowChunker implements Chunker {
     content: string,
     tokenCount: number,
     chunkIndex: number,
-    metadata: ChunkMetadata,
+    metadata: ChunkMetadata
   ): ChunkRecord {
     // chunkId 格式来自 contracts.ts: `${sourceType}:${sourceId}:${chunkIndex}`
     // 从 metadata 中无法获取 sourceType/sourceId，使用占位符
     // 实际使用时由 IngestionPipeline 在外层设置正确的值
     return {
       chunkId: `chunk:${chunkIndex}`,
-      sourceType: 'task_result',
-      sourceId: '',
-      projectId: '',
+      sourceType: "task_result",
+      sourceId: "",
+      projectId: "",
       chunkIndex,
       content,
       tokenCount,

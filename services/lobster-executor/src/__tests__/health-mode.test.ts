@@ -18,7 +18,7 @@ async function request(app: express.Express, method: string, path: string) {
       }
       const url = `http://127.0.0.1:${addr.port}${path}`;
       fetch(url, { method })
-        .then(async (res) => {
+        .then(async res => {
           const json = await res.json().catch(() => null);
           resolve({ status: res.status, body: json });
         })
@@ -71,4 +71,3 @@ describe("/health execution mode", () => {
     }
   });
 });
-

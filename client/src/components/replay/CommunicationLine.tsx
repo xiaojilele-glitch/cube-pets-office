@@ -10,11 +10,11 @@
  * Requirements: 8.2
  */
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef } from "react";
 
-import { Line } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { Line } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
 export interface CommunicationLineProps {
   from: [number, number, number];
@@ -27,7 +27,7 @@ export function CommunicationLine({
   from,
   to,
   active,
-  color = '#60A5FA',
+  color = "#60A5FA",
 }: CommunicationLineProps) {
   const particleRef = useRef<THREE.Mesh>(null);
   const groupRef = useRef<THREE.Group>(null);
@@ -46,11 +46,11 @@ export function CommunicationLine({
     if (!groupRef.current) return;
 
     /* Fade line opacity */
-    groupRef.current.traverse((child) => {
+    groupRef.current.traverse(child => {
       const mesh = child as THREE.Mesh;
       if (mesh?.material) {
         const mat = mesh.material as THREE.Material & { opacity?: number };
-        if (typeof mat.opacity === 'number') {
+        if (typeof mat.opacity === "number") {
           mat.opacity = active
             ? 0.6 + Math.sin(clock.elapsedTime * 4) * 0.3
             : 0.12;
@@ -72,7 +72,7 @@ export function CommunicationLine({
       particleRef.current.position.set(
         invT * invT * from[0] + 2 * invT * t * points[1][0] + t * t * to[0],
         invT * invT * from[1] + 2 * invT * t * points[1][1] + t * t * to[1],
-        invT * invT * from[2] + 2 * invT * t * points[1][2] + t * t * to[2],
+        invT * invT * from[2] + 2 * invT * t * points[1][2] + t * t * to[2]
       );
     }
   });

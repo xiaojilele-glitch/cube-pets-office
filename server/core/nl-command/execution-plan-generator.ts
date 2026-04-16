@@ -26,11 +26,14 @@ import type {
   TaskDependency,
   TimelineEntry,
   TimelineMilestone,
-} from '../../../shared/nl-command/contracts.js';
-import type { ILLMProvider, LLMMessage } from '../../../shared/llm/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
-import type { Edge } from './topo-sort.js';
-import { topoSortWithGroups } from './topo-sort.js';
+} from "../../../shared/nl-command/contracts.js";
+import type {
+  ILLMProvider,
+  LLMMessage,
+} from "../../../shared/llm/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
+import type { Edge } from "./topo-sort.js";
+import { topoSortWithGroups } from "./topo-sort.js";
 
 // ─── Local types (not in shared contracts) ───
 
@@ -62,7 +65,7 @@ const BASE_DELAY_MS = 500;
 async function callLLMWithRetry(
   provider: ILLMProvider,
   messages: LLMMessage[],
-  model: string,
+  model: string
 ): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -78,7 +81,7 @@ async function callLLMWithRetry(
       const isTemporary = provider.isTemporaryError?.(err) ?? true;
       if (!isTemporary || attempt === MAX_RETRIES) break;
       const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((r) => setTimeout(r, delay));
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   throw lastError;
@@ -106,14 +109,14 @@ interface RiskAssessmentLLMResponse {
   risks: Array<{
     id: string;
     description: string;
-    level: 'low' | 'medium' | 'high' | 'critical';
+    level: "low" | "medium" | "high" | "critical";
     probability: number;
     impact: number;
     mitigation: string;
     contingency?: string;
     relatedEntityId?: string;
   }>;
-  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
+  overallRiskLevel: "low" | "medium" | "high" | "critical";
 }
 
 interface ContingencyPlanLLMResponse {
@@ -157,28 +160,33 @@ export class ExecutionPlanGenerator {
   async generate(
     command: FinalizedCommand,
     decomposition: MissionDecomposition,
-    taskDecompositions: TaskDecomposition[],
+    taskDecompositions: TaskDecomposition[]
   ): Promise<NLExecutionPlan> {
     const planId = `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = Date.now();
 
     // Flatten all tasks
-    const allTasks: DecomposedTask[] = taskDecompositions.flatMap((td) => td.tasks);
+    const allTasks: DecomposedTask[] = taskDecompositions.flatMap(
+      td => td.tasks
+    );
 
     // Build dependency edges for timeline computation
-    const { missionEdges, taskEdges } = this.collectEdges(decomposition, taskDecompositions);
+    const { missionEdges, taskEdges } = this.collectEdges(
+      decomposition,
+      taskDecompositions
+    );
 
     // Step 1 & 2: Build timeline entries and compute critical path
     const timelineEntries = this.buildTimelineEntries(
       decomposition.missions,
       allTasks,
       missionEdges,
-      taskEdges,
+      taskEdges
     );
 
     const criticalPathResult = this.computeCriticalPathFromEntries(
       timelineEntries,
-      [...missionEdges, ...taskEdges],
+      [...missionEdges, ...taskEdges]
     );
 
     // Mark critical path entries
@@ -188,8 +196,8 @@ export class ExecutionPlanGenerator {
     }
 
     // Build milestones (one per mission completion)
-    const milestones: TimelineMilestone[] = decomposition.missions.map((m) => {
-      const entry = timelineEntries.find((e) => e.entityId === m.missionId);
+    const milestones: TimelineMilestone[] = decomposition.missions.map(m => {
+      const entry = timelineEntries.find(e => e.entityId === m.missionId);
       return {
         id: `milestone-${m.missionId}`,
         label: `${m.title} complete`,
@@ -198,12 +206,18 @@ export class ExecutionPlanGenerator {
       };
     });
 
-    const startDate = timelineEntries.length > 0
-      ? new Date(Math.min(...timelineEntries.map((e) => e.startTime))).toISOString()
-      : new Date(now).toISOString();
-    const endDate = timelineEntries.length > 0
-      ? new Date(Math.max(...timelineEntries.map((e) => e.endTime))).toISOString()
-      : new Date(now).toISOString();
+    const startDate =
+      timelineEntries.length > 0
+        ? new Date(
+            Math.min(...timelineEntries.map(e => e.startTime))
+          ).toISOString()
+        : new Date(now).toISOString();
+    const endDate =
+      timelineEntries.length > 0
+        ? new Date(
+            Math.max(...timelineEntries.map(e => e.endTime))
+          ).toISOString()
+        : new Date(now).toISOString();
 
     const timeline: PlanTimeline = {
       startDate,
@@ -214,13 +228,16 @@ export class ExecutionPlanGenerator {
     };
 
     // Step 3: Build resource allocation
-    const resourceAllocation = this.buildResourceAllocation(allTasks, timelineEntries);
+    const resourceAllocation = this.buildResourceAllocation(
+      allTasks,
+      timelineEntries
+    );
 
     // Step 4: Call LLM for risk assessment
     const riskAssessment = await this.generateRiskAssessment(
       command,
       decomposition,
-      allTasks,
+      allTasks
     );
 
     // Step 5: Compute cost budget (Property 8 invariant)
@@ -230,13 +247,13 @@ export class ExecutionPlanGenerator {
     const contingencyPlan = await this.generateContingencyPlan(
       command,
       decomposition,
-      riskAssessment,
+      riskAssessment
     );
 
     const plan: NLExecutionPlan = {
       planId,
       commandId: command.commandId,
-      status: 'draft',
+      status: "draft",
       missions: decomposition.missions,
       tasks: allTasks,
       timeline,
@@ -251,13 +268,13 @@ export class ExecutionPlanGenerator {
     // Step 7: Record audit entry
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'plan_generated',
-      operator: 'system',
+      operationType: "plan_generated",
+      operator: "system",
       content: `Generated execution plan "${planId}" for command "${command.commandId}" with ${decomposition.missions.length} missions and ${allTasks.length} tasks`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: planId,
-      entityType: 'plan',
+      entityType: "plan",
       metadata: {
         commandId: command.commandId,
         missionCount: decomposition.missions.length,
@@ -277,14 +294,14 @@ export class ExecutionPlanGenerator {
    */
   async adjustPlan(
     plan: NLExecutionPlan,
-    adjustment: PlanAdjustmentRequest,
+    adjustment: PlanAdjustmentRequest
   ): Promise<NLExecutionPlan> {
     const updated = { ...plan };
 
     // Apply field-level changes
     if (adjustment.changes) {
       for (const [key, value] of Object.entries(adjustment.changes)) {
-        if (key in updated && key !== 'planId' && key !== 'commandId') {
+        if (key in updated && key !== "planId" && key !== "commandId") {
           (updated as Record<string, unknown>)[key] = value;
         }
       }
@@ -297,13 +314,13 @@ export class ExecutionPlanGenerator {
         updated.missions,
         updated.tasks,
         allEdges.missionEdges,
-        allEdges.taskEdges,
+        allEdges.taskEdges
       );
 
-      const cpResult = this.computeCriticalPathFromEntries(
-        entries,
-        [...allEdges.missionEdges, ...allEdges.taskEdges],
-      );
+      const cpResult = this.computeCriticalPathFromEntries(entries, [
+        ...allEdges.missionEdges,
+        ...allEdges.taskEdges,
+      ]);
 
       const cpSet = new Set(cpResult.criticalPathIds);
       for (const entry of entries) {
@@ -314,12 +331,14 @@ export class ExecutionPlanGenerator {
         ...updated.timeline,
         entries,
         criticalPath: cpResult.criticalPathIds,
-        startDate: entries.length > 0
-          ? new Date(Math.min(...entries.map((e) => e.startTime))).toISOString()
-          : updated.timeline.startDate,
-        endDate: entries.length > 0
-          ? new Date(Math.max(...entries.map((e) => e.endTime))).toISOString()
-          : updated.timeline.endDate,
+        startDate:
+          entries.length > 0
+            ? new Date(Math.min(...entries.map(e => e.startTime))).toISOString()
+            : updated.timeline.startDate,
+        endDate:
+          entries.length > 0
+            ? new Date(Math.max(...entries.map(e => e.endTime))).toISOString()
+            : updated.timeline.endDate,
       };
     }
 
@@ -328,14 +347,17 @@ export class ExecutionPlanGenerator {
     // Record audit entry
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'adjustment_applied',
-      operator: 'system',
+      operationType: "adjustment_applied",
+      operator: "system",
       content: `Adjusted plan "${plan.planId}": ${adjustment.reason}`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: plan.planId,
-      entityType: 'plan',
-      metadata: { reason: adjustment.reason, recomputeTimeline: adjustment.recomputeTimeline },
+      entityType: "plan",
+      metadata: {
+        reason: adjustment.reason,
+        recomputeTimeline: adjustment.recomputeTimeline,
+      },
     });
 
     return updated;
@@ -352,7 +374,10 @@ export class ExecutionPlanGenerator {
   computeCriticalPath(plan: NLExecutionPlan): CriticalPathResult {
     const allEdges = this.collectEdgesFromPlan(plan);
     const edges = [...allEdges.missionEdges, ...allEdges.taskEdges];
-    const result = this.computeCriticalPathFromEntries(plan.timeline.entries, edges);
+    const result = this.computeCriticalPathFromEntries(
+      plan.timeline.entries,
+      edges
+    );
 
     // Update entries in-place
     const cpSet = new Set(result.criticalPathIds);
@@ -370,14 +395,14 @@ export class ExecutionPlanGenerator {
    */
   private collectEdges(
     decomposition: MissionDecomposition,
-    taskDecompositions: TaskDecomposition[],
+    taskDecompositions: TaskDecomposition[]
   ): { missionEdges: Edge[]; taskEdges: Edge[] } {
     const missionEdges: Edge[] = decomposition.dependencies
-      .filter((d) => d.type === 'blocks' || d.type === 'depends_on')
-      .map((d) => ({ from: d.fromMissionId, to: d.toMissionId }));
+      .filter(d => d.type === "blocks" || d.type === "depends_on")
+      .map(d => ({ from: d.fromMissionId, to: d.toMissionId }));
 
-    const taskEdges: Edge[] = taskDecompositions.flatMap((td) =>
-      td.dependencies.map((d) => ({ from: d.fromTaskId, to: d.toTaskId })),
+    const taskEdges: Edge[] = taskDecompositions.flatMap(td =>
+      td.dependencies.map(d => ({ from: d.fromTaskId, to: d.toTaskId }))
     );
 
     return { missionEdges, taskEdges };
@@ -387,9 +412,10 @@ export class ExecutionPlanGenerator {
    * Collect dependency edges from an existing plan (for recomputation).
    * Since the plan doesn't store raw dependencies, we reconstruct from timeline ordering.
    */
-  private collectEdgesFromPlan(
-    plan: NLExecutionPlan,
-  ): { missionEdges: Edge[]; taskEdges: Edge[] } {
+  private collectEdgesFromPlan(plan: NLExecutionPlan): {
+    missionEdges: Edge[];
+    taskEdges: Edge[];
+  } {
     // Reconstruct edges from timeline entries: if entry A ends before entry B starts
     // and they share a dependency, we infer the edge. For simplicity, we use the
     // existing timeline criticalPath and entry ordering.
@@ -407,24 +433,32 @@ export class ExecutionPlanGenerator {
     missions: DecomposedMission[],
     tasks: DecomposedTask[],
     missionEdges: Edge[],
-    taskEdges: Edge[],
+    taskEdges: Edge[]
   ): TimelineEntry[] {
     const entries: TimelineEntry[] = [];
     const baseTime = Date.now();
 
     // Schedule missions
     const missionEntries = this.scheduleEntities(
-      missions.map((m) => ({ id: m.missionId, duration: m.estimatedDuration, type: 'mission' as const })),
+      missions.map(m => ({
+        id: m.missionId,
+        duration: m.estimatedDuration,
+        type: "mission" as const,
+      })),
       missionEdges,
-      baseTime,
+      baseTime
     );
     entries.push(...missionEntries);
 
     // Schedule tasks (within their mission time windows)
     const taskEntries = this.scheduleEntities(
-      tasks.map((t) => ({ id: t.taskId, duration: t.estimatedDuration, type: 'task' as const })),
+      tasks.map(t => ({
+        id: t.taskId,
+        duration: t.estimatedDuration,
+        type: "task" as const,
+      })),
       taskEdges,
-      baseTime,
+      baseTime
     );
     entries.push(...taskEntries);
 
@@ -435,17 +469,19 @@ export class ExecutionPlanGenerator {
    * Schedule a set of entities using topological sort and dependency-aware timing.
    */
   private scheduleEntities(
-    entities: Array<{ id: string; duration: number; type: 'mission' | 'task' }>,
+    entities: Array<{ id: string; duration: number; type: "mission" | "task" }>,
     edges: Edge[],
-    baseTime: number,
+    baseTime: number
   ): TimelineEntry[] {
     if (entities.length === 0) return [];
 
-    const entityMap = new Map(entities.map((e) => [e.id, e]));
-    const nodeIds = entities.map((e) => e.id);
+    const entityMap = new Map(entities.map(e => [e.id, e]));
+    const nodeIds = entities.map(e => e.id);
 
     // Filter edges to only include known entities
-    const validEdges = edges.filter((e) => entityMap.has(e.from) && entityMap.has(e.to));
+    const validEdges = edges.filter(
+      e => entityMap.has(e.from) && entityMap.has(e.to)
+    );
 
     let groups: string[][];
     try {
@@ -465,12 +501,11 @@ export class ExecutionPlanGenerator {
 
         // Start time = max end time of all dependencies
         const depEndTimes = validEdges
-          .filter((e) => e.from === entityId)
-          .map((e) => endTimeMap.get(e.to) ?? baseTime);
+          .filter(e => e.from === entityId)
+          .map(e => endTimeMap.get(e.to) ?? baseTime);
 
-        const startTime = depEndTimes.length > 0
-          ? Math.max(...depEndTimes)
-          : baseTime;
+        const startTime =
+          depEndTimes.length > 0 ? Math.max(...depEndTimes) : baseTime;
 
         const endTime = startTime + durationMs;
         endTimeMap.set(entityId, endTime);
@@ -497,15 +532,17 @@ export class ExecutionPlanGenerator {
    */
   private computeCriticalPathFromEntries(
     entries: TimelineEntry[],
-    edges: Edge[],
+    edges: Edge[]
   ): CriticalPathResult {
     if (entries.length === 0) {
       return { criticalPathIds: [], totalDuration: 0 };
     }
 
-    const entryMap = new Map(entries.map((e) => [e.entityId, e]));
-    const nodeIds = entries.map((e) => e.entityId);
-    const validEdges = edges.filter((e) => entryMap.has(e.from) && entryMap.has(e.to));
+    const entryMap = new Map(entries.map(e => [e.entityId, e]));
+    const nodeIds = entries.map(e => e.entityId);
+    const validEdges = edges.filter(
+      e => entryMap.has(e.from) && entryMap.has(e.to)
+    );
 
     // Build adjacency: for each node, which nodes depend on it (forward edges)
     // Edge semantics: from depends on to → to must come before from
@@ -585,17 +622,16 @@ export class ExecutionPlanGenerator {
    */
   private buildResourceAllocation(
     tasks: DecomposedTask[],
-    timelineEntries: TimelineEntry[],
+    timelineEntries: TimelineEntry[]
   ): ResourceAllocation {
-    const entryMap = new Map(timelineEntries.map((e) => [e.entityId, e]));
+    const entryMap = new Map(timelineEntries.map(e => [e.entityId, e]));
     const entries: ResourceEntry[] = [];
     const skillAgentTypes = new Set<string>();
 
     for (const task of tasks) {
       const timeEntry = entryMap.get(task.taskId);
-      const agentType = task.requiredSkills.length > 0
-        ? task.requiredSkills[0]
-        : 'general';
+      const agentType =
+        task.requiredSkills.length > 0 ? task.requiredSkills[0] : "general";
 
       skillAgentTypes.add(agentType);
 
@@ -639,27 +675,30 @@ export class ExecutionPlanGenerator {
   private async generateRiskAssessment(
     command: FinalizedCommand,
     decomposition: MissionDecomposition,
-    tasks: DecomposedTask[],
+    tasks: DecomposedTask[]
   ): Promise<RiskAssessment> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content: `You are a risk assessment expert. Given a strategic command, its mission decomposition, and task list, identify potential risks.
 For each risk, provide: id, description, level (low/medium/high/critical), probability (0-1), impact (0-1), mitigation strategy, and optional contingency.
 Also provide an overallRiskLevel.
 Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critical" }`,
       },
       {
-        role: 'user',
+        role: "user",
         content: JSON.stringify({
-          command: { commandId: command.commandId, refinedText: command.refinedText },
-          missions: decomposition.missions.map((m) => ({
+          command: {
+            commandId: command.commandId,
+            refinedText: command.refinedText,
+          },
+          missions: decomposition.missions.map(m => ({
             missionId: m.missionId,
             title: m.title,
             estimatedDuration: m.estimatedDuration,
             estimatedCost: m.estimatedCost,
           })),
-          tasks: tasks.map((t) => ({
+          tasks: tasks.map(t => ({
             taskId: t.taskId,
             title: t.title,
             requiredSkills: t.requiredSkills,
@@ -671,24 +710,38 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
     ];
 
     try {
-      const raw = await callLLMWithRetry(this.llmProvider, messages, this.model);
+      const raw = await callLLMWithRetry(
+        this.llmProvider,
+        messages,
+        this.model
+      );
       const parsed = safeParseJSON<RiskAssessmentLLMResponse>(raw);
 
       if (parsed?.risks) {
         return {
           risks: parsed.risks.map((r, idx) => ({
             id: r.id || `risk-${idx + 1}`,
-            description: r.description || 'Unknown risk',
-            level: (['low', 'medium', 'high', 'critical'].includes(r.level) ? r.level : 'medium') as IdentifiedRisk['level'],
-            probability: typeof r.probability === 'number' ? Math.max(0, Math.min(1, r.probability)) : 0.5,
-            impact: typeof r.impact === 'number' ? Math.max(0, Math.min(1, r.impact)) : 0.5,
-            mitigation: r.mitigation || 'No mitigation specified',
+            description: r.description || "Unknown risk",
+            level: (["low", "medium", "high", "critical"].includes(r.level)
+              ? r.level
+              : "medium") as IdentifiedRisk["level"],
+            probability:
+              typeof r.probability === "number"
+                ? Math.max(0, Math.min(1, r.probability))
+                : 0.5,
+            impact:
+              typeof r.impact === "number"
+                ? Math.max(0, Math.min(1, r.impact))
+                : 0.5,
+            mitigation: r.mitigation || "No mitigation specified",
             contingency: r.contingency,
             relatedEntityId: r.relatedEntityId,
           })),
-          overallRiskLevel: (['low', 'medium', 'high', 'critical'].includes(parsed.overallRiskLevel)
+          overallRiskLevel: (["low", "medium", "high", "critical"].includes(
+            parsed.overallRiskLevel
+          )
             ? parsed.overallRiskLevel
-            : 'medium') as RiskAssessment['overallRiskLevel'],
+            : "medium") as RiskAssessment["overallRiskLevel"],
         };
       }
     } catch {
@@ -696,10 +749,20 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
     }
 
     return {
-      risks: command.analysis.risks.length > 0
-        ? command.analysis.risks
-        : [{ id: 'risk-default', description: 'General execution risk', level: 'medium', probability: 0.3, impact: 0.5, mitigation: 'Monitor execution closely' }],
-      overallRiskLevel: 'medium',
+      risks:
+        command.analysis.risks.length > 0
+          ? command.analysis.risks
+          : [
+              {
+                id: "risk-default",
+                description: "General execution risk",
+                level: "medium",
+                probability: 0.3,
+                impact: 0.5,
+                mitigation: "Monitor execution closely",
+              },
+            ],
+      overallRiskLevel: "medium",
     };
   }
 
@@ -712,7 +775,7 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
    */
   private computeCostBudget(
     missions: DecomposedMission[],
-    tasks: DecomposedTask[],
+    tasks: DecomposedTask[]
   ): CostBudget {
     const missionCosts: Record<string, number> = {};
     for (const m of missions) {
@@ -727,7 +790,8 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
     // Agent costs: distribute by required skills
     const agentCosts: Record<string, number> = {};
     for (const t of tasks) {
-      const agentType = t.requiredSkills.length > 0 ? t.requiredSkills[0] : 'general';
+      const agentType =
+        t.requiredSkills.length > 0 ? t.requiredSkills[0] : "general";
       agentCosts[agentType] = (agentCosts[agentType] ?? 0) + t.estimatedCost;
     }
 
@@ -735,11 +799,14 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
     const modelCosts: Record<string, number> = {};
     const totalTaskCost = tasks.reduce((sum, t) => sum + t.estimatedCost, 0);
     if (totalTaskCost > 0) {
-      modelCosts['default'] = totalTaskCost;
+      modelCosts["default"] = totalTaskCost;
     }
 
     // Property 8: totalBudget = sum of missionCosts
-    const totalBudget = Object.values(missionCosts).reduce((sum, c) => sum + c, 0);
+    const totalBudget = Object.values(missionCosts).reduce(
+      (sum, c) => sum + c,
+      0
+    );
 
     return {
       totalBudget,
@@ -747,7 +814,7 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
       taskCosts,
       agentCosts,
       modelCosts,
-      currency: 'CNY',
+      currency: "CNY",
     };
   }
 
@@ -759,24 +826,27 @@ Return JSON: { "risks": [...], "overallRiskLevel": "low"|"medium"|"high"|"critic
   private async generateContingencyPlan(
     command: FinalizedCommand,
     decomposition: MissionDecomposition,
-    riskAssessment: RiskAssessment,
+    riskAssessment: RiskAssessment
   ): Promise<ContingencyPlan> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content: `You are a contingency planning expert. Given a strategic command, its mission decomposition, and risk assessment, generate a contingency plan.
 Include: alternative approaches, degradation strategies, and a rollback plan.
 Return JSON: { "alternatives": [{ "id", "description", "trigger", "action", "estimatedImpact" }], "degradationStrategies": [...], "rollbackPlan": "..." }`,
       },
       {
-        role: 'user',
+        role: "user",
         content: JSON.stringify({
-          command: { commandId: command.commandId, refinedText: command.refinedText },
-          missions: decomposition.missions.map((m) => ({
+          command: {
+            commandId: command.commandId,
+            refinedText: command.refinedText,
+          },
+          missions: decomposition.missions.map(m => ({
             missionId: m.missionId,
             title: m.title,
           })),
-          risks: riskAssessment.risks.map((r) => ({
+          risks: riskAssessment.risks.map(r => ({
             description: r.description,
             level: r.level,
             mitigation: r.mitigation,
@@ -786,7 +856,11 @@ Return JSON: { "alternatives": [{ "id", "description", "trigger", "action", "est
     ];
 
     try {
-      const raw = await callLLMWithRetry(this.llmProvider, messages, this.model);
+      const raw = await callLLMWithRetry(
+        this.llmProvider,
+        messages,
+        this.model
+      );
       const parsed = safeParseJSON<ContingencyPlanLLMResponse>(raw);
 
       if (parsed) {
@@ -794,16 +868,16 @@ Return JSON: { "alternatives": [{ "id", "description", "trigger", "action", "est
           alternatives: Array.isArray(parsed.alternatives)
             ? parsed.alternatives.map((a, idx) => ({
                 id: a.id || `alt-${idx + 1}`,
-                description: a.description || '',
-                trigger: a.trigger || '',
-                action: a.action || '',
-                estimatedImpact: a.estimatedImpact || 'unknown',
+                description: a.description || "",
+                trigger: a.trigger || "",
+                action: a.action || "",
+                estimatedImpact: a.estimatedImpact || "unknown",
               }))
             : [],
           degradationStrategies: Array.isArray(parsed.degradationStrategies)
             ? parsed.degradationStrategies
             : [],
-          rollbackPlan: parsed.rollbackPlan || 'Revert to previous state',
+          rollbackPlan: parsed.rollbackPlan || "Revert to previous state",
         };
       }
     } catch {
@@ -812,8 +886,8 @@ Return JSON: { "alternatives": [{ "id", "description", "trigger", "action", "est
 
     return {
       alternatives: [],
-      degradationStrategies: ['Reduce scope to critical missions only'],
-      rollbackPlan: 'Revert to previous state and reassess',
+      degradationStrategies: ["Reduce scope to critical missions only"],
+      rollbackPlan: "Revert to previous state and reassess",
     };
   }
 }

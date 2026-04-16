@@ -12,7 +12,7 @@ dotenv.config();
 
 export function resolveEffectiveExecutionMode(
   requestedMode: LobsterExecutorConfig["executionMode"],
-  dockerAvailable: boolean,
+  dockerAvailable: boolean
 ): LobsterExecutorConfig["executionMode"] {
   if (requestedMode !== "real") return requestedMode;
   return dockerAvailable ? "real" : "native";
@@ -32,14 +32,14 @@ export async function startLobsterExecutorServer(): Promise<void> {
       dockerAvailable = false;
       console.warn(
         `[lobster-executor] Docker daemon is not available at "${config.dockerHost}". Falling back to native execution.`,
-        err instanceof Error ? err.message : err,
+        err instanceof Error ? err.message : err
       );
     }
   }
 
   const effectiveMode = resolveEffectiveExecutionMode(
     config.executionMode,
-    dockerAvailable,
+    dockerAvailable
   );
   if (effectiveMode !== config.executionMode) {
     effectiveConfig = { ...config, executionMode: effectiveMode };
@@ -52,20 +52,20 @@ export async function startLobsterExecutorServer(): Promise<void> {
   const app = createLobsterExecutorApp(service);
   const server = createServer(app);
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>(resolve => {
     server.listen(effectiveConfig.port, effectiveConfig.host, () => {
       console.log(
-        `[lobster-executor] listening on http://${effectiveConfig.host}:${effectiveConfig.port}`,
+        `[lobster-executor] listening on http://${effectiveConfig.host}:${effectiveConfig.port}`
       );
       console.log(
-        `[lobster-executor] health: http://${effectiveConfig.host}:${effectiveConfig.port}/health`,
+        `[lobster-executor] health: http://${effectiveConfig.host}:${effectiveConfig.port}/health`
       );
       resolve();
     });
   });
 }
 
-const isMain = process.argv.slice(1).some((arg) => {
+const isMain = process.argv.slice(1).some(arg => {
   if (!arg) return false;
   try {
     return pathToFileURL(resolvePath(arg)).href === import.meta.url;
@@ -74,7 +74,7 @@ const isMain = process.argv.slice(1).some((arg) => {
   }
 });
 if (isMain) {
-  startLobsterExecutorServer().catch((error) => {
+  startLobsterExecutorServer().catch(error => {
     console.error("[lobster-executor] failed to start", error);
     process.exitCode = 1;
   });

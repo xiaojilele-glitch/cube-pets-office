@@ -1,10 +1,11 @@
 <!--
  * @Author: wangchunji
  * @Date: 2026-04-09 09:16:43
- * @Description: 
+ * @Description:
  * @LastEditTime: 2026-04-09 09:24:19
  * @LastEditors: wangchunji
 -->
+
 # 设计文档：工作流产物展示与下载
 
 ## 概述
@@ -70,6 +71,7 @@ GET /api/tasks/:missionId/artifacts
 ```
 
 **响应 200：**
+
 ```json
 {
   "ok": true,
@@ -88,6 +90,7 @@ GET /api/tasks/:missionId/artifacts
 ```
 
 **错误响应：**
+
 - 404：Mission 不存在
 
 #### 2. Artifact 文件下载
@@ -97,6 +100,7 @@ GET /api/tasks/:missionId/artifacts/:index/download
 ```
 
 **行为：**
+
 - kind 为 `file`/`report`/`log`：流式返回文件内容，设置 `Content-Disposition: attachment`
 - kind 为 `url`：302 重定向到目标 URL
 - 路径安全校验：拒绝包含 `..` 的路径，返回 403
@@ -104,14 +108,14 @@ GET /api/tasks/:missionId/artifacts/:index/download
 
 **Content-Type 映射：**
 
-| 扩展名 | Content-Type |
-|--------|-------------|
-| .json | application/json |
-| .md | text/markdown |
-| .log | text/plain |
-| .py / .ts / .js | text/plain |
-| .html | text/html |
-| 其他 | application/octet-stream |
+| 扩展名          | Content-Type             |
+| --------------- | ------------------------ |
+| .json           | application/json         |
+| .md             | text/markdown            |
+| .log            | text/plain               |
+| .py / .ts / .js | text/plain               |
+| .html           | text/html                |
+| 其他            | application/octet-stream |
 
 #### 3. Artifact 内容预览
 
@@ -120,6 +124,7 @@ GET /api/tasks/:missionId/artifacts/:index/preview
 ```
 
 **行为：**
+
 - 返回文本内容，不设置 `Content-Disposition`（不触发下载）
 - 文件 > 1MB 时截断，响应头附加 `X-Truncated: true`
 - 二进制文件返回 415
@@ -141,6 +146,7 @@ interface ArtifactListBlockProps {
 ```
 
 **职责：**
+
 - 渲染产物列表，每项显示 name、kind 标签、description
 - kind 为 `file`/`report`/`log` 时提供下载按钮
 - kind 为 `url` 时提供外部链接按钮
@@ -165,6 +171,7 @@ interface ArtifactPreviewDialogProps {
 ```
 
 **职责：**
+
 - 调用 `/api/tasks/:missionId/artifacts/:index/preview` 获取内容
 - MD 格式渲染为富文本（使用 react-markdown 或简单 HTML 转换）
 - JSON 格式渲染为格式化代码块（语法高亮）
@@ -181,8 +188,16 @@ function buildMissionArtifacts(mission: MissionRecord): TaskArtifact[] {
     // ...现有字段
     downloadUrl: `/api/tasks/${mission.id}/artifacts/${index}/download`,
     previewUrl: `/api/tasks/${mission.id}/artifacts/${index}/preview`,
-    downloadKind: artifact.url ? "external" : artifact.path ? "server" : undefined,
-    href: artifact.url || (artifact.path ? `/api/tasks/${mission.id}/artifacts/${index}/download` : undefined),
+    downloadKind: artifact.url
+      ? "external"
+      : artifact.path
+        ? "server"
+        : undefined,
+    href:
+      artifact.url ||
+      (artifact.path
+        ? `/api/tasks/${mission.id}/artifacts/${index}/download`
+        : undefined),
   }));
 }
 ```
@@ -224,8 +239,8 @@ interface ArtifactListResponse {
 // client/src/lib/tasks-store.ts — TaskArtifact 扩展
 interface TaskArtifact {
   // ...现有字段
-  downloadUrl?: string;   // 新增：服务端下载 URL
-  previewUrl?: string;    // 新增：服务端预览 URL
+  downloadUrl?: string; // 新增：服务端下载 URL
+  previewUrl?: string; // 新增：服务端预览 URL
 }
 ```
 
@@ -268,62 +283,61 @@ absolutePath = path.join(
 
 其中 jobId 从 MissionRecord.executor.jobId 获取。
 
-
 ## 正确性属性
 
-*属性（Property）是在系统所有合法执行路径上都应成立的特征或行为——本质上是对系统应做什么的形式化陈述。属性是人类可读规格说明与机器可验证正确性保证之间的桥梁。*
+_属性（Property）是在系统所有合法执行路径上都应成立的特征或行为——本质上是对系统应做什么的形式化陈述。属性是人类可读规格说明与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: Artifact 列表 round-trip
 
-*对于任意* MissionRecord 及其 artifacts 数组，通过列表 API 查询返回的每个条目应包含与原始 MissionArtifact 一致的 kind、name、path、description 字段，并且每个条目应附带格式正确的 downloadUrl（`/api/tasks/{missionId}/artifacts/{index}/download`）。
+_对于任意_ MissionRecord 及其 artifacts 数组，通过列表 API 查询返回的每个条目应包含与原始 MissionArtifact 一致的 kind、name、path、description 字段，并且每个条目应附带格式正确的 downloadUrl（`/api/tasks/{missionId}/artifacts/{index}/download`）。
 
 **Validates: Requirements 1.1, 1.4**
 
 ### Property 2: 文件下载内容一致性
 
-*对于任意* 存在于磁盘上的 artifact 文件，通过下载 API 获取的响应体内容应与磁盘上的原始文件内容字节一致，且响应头应包含 `Content-Disposition: attachment; filename="<artifact.name>"`。
+_对于任意_ 存在于磁盘上的 artifact 文件，通过下载 API 获取的响应体内容应与磁盘上的原始文件内容字节一致，且响应头应包含 `Content-Disposition: attachment; filename="<artifact.name>"`。
 
 **Validates: Requirements 2.1, 2.3**
 
 ### Property 3: Content-Type 扩展名映射
 
-*对于任意* 文件扩展名，下载 API 返回的 Content-Type 应与预定义的 EXTENSION_MIME_MAP 映射表一致；未在映射表中的扩展名应返回 `application/octet-stream`。
+_对于任意_ 文件扩展名，下载 API 返回的 Content-Type 应与预定义的 EXTENSION_MIME_MAP 映射表一致；未在映射表中的扩展名应返回 `application/octet-stream`。
 
 **Validates: Requirements 2.2**
 
 ### Property 4: 路径遍历拒绝
 
-*对于任意* 包含 `..` 路径片段的 artifact path，下载 API 和预览 API 均应返回 HTTP 403 状态码，且不应读取任何文件内容。
+_对于任意_ 包含 `..` 路径片段的 artifact path，下载 API 和预览 API 均应返回 HTTP 403 状态码，且不应读取任何文件内容。
 
 **Validates: Requirements 2.5, 7.4**
 
 ### Property 5: UI 产物列表渲染完整性
 
-*对于任意* 非空的 TaskArtifact 数组，ArtifactListBlock 组件渲染后的列表项数量应等于输入数组长度，且每个列表项的 DOM 中应包含对应 artifact 的 name 文本和 kind 标签文本。
+_对于任意_ 非空的 TaskArtifact 数组，ArtifactListBlock 组件渲染后的列表项数量应等于输入数组长度，且每个列表项的 DOM 中应包含对应 artifact 的 name 文本和 kind 标签文本。
 
 **Validates: Requirements 3.1, 3.2**
 
 ### Property 6: 操作按钮类型正确性
 
-*对于任意* TaskArtifact，当 kind 为 `file`、`report` 或 `log` 时应渲染下载按钮；当 kind 为 `url` 时应渲染外部链接按钮；当 kind 为 `report` 时应同时渲染预览按钮和下载按钮。
+_对于任意_ TaskArtifact，当 kind 为 `file`、`report` 或 `log` 时应渲染下载按钮；当 kind 为 `url` 时应渲染外部链接按钮；当 kind 为 `report` 时应同时渲染预览按钮和下载按钮。
 
 **Validates: Requirements 3.3, 3.4, 5.2**
 
 ### Property 7: Socket 广播 artifacts 一致性
 
-*对于任意* 包含 artifacts 字段的 Executor 回调事件，经 normalizeExecutorArtifacts 处理后写入 MissionRecord 的 artifacts 应与回调中的有效 artifact 条目一一对应，且通过 Socket 广播的 MissionRecord 应包含更新后的 artifacts 数组。
+_对于任意_ 包含 artifacts 字段的 Executor 回调事件，经 normalizeExecutorArtifacts 处理后写入 MissionRecord 的 artifacts 应与回调中的有效 artifact 条目一一对应，且通过 Socket 广播的 MissionRecord 应包含更新后的 artifacts 数组。
 
 **Validates: Requirements 6.1**
 
 ### Property 8: 预览截断
 
-*对于任意* 大于 1MB 的文本文件，预览 API 返回的内容长度应不超过 1MB，且响应头应包含 `X-Truncated: true`。
+_对于任意_ 大于 1MB 的文本文件，预览 API 返回的内容长度应不超过 1MB，且响应头应包含 `X-Truncated: true`。
 
 **Validates: Requirements 7.2**
 
 ### Property 9: 二进制文件拒绝预览
 
-*对于任意* MIME 类型不以 `text/` 开头且不属于 `application/json`、`application/xml` 的 artifact 文件，预览 API 应返回 HTTP 415 状态码。
+_对于任意_ MIME 类型不以 `text/` 开头且不属于 `application/json`、`application/xml` 的 artifact 文件，预览 API 应返回 HTTP 415 状态码。
 
 **Validates: Requirements 7.3**
 
@@ -331,25 +345,25 @@ absolutePath = path.join(
 
 ### 服务端错误处理
 
-| 场景 | HTTP 状态码 | 错误信息 | 处理方式 |
-|------|-----------|---------|---------|
-| missionId 不存在 | 404 | `Mission not found: {missionId}` | 直接返回 |
-| artifact index 越界 | 404 | `Artifact not found at index {index}` | 校验数组边界 |
-| artifact.path 为空 | 404 | `Artifact has no file path` | 检查 path 字段 |
-| 文件不存在于磁盘 | 404 | `Artifact file not found` | fs.access 预检 |
-| 路径包含 `..` | 403 | `Path traversal not allowed` | 正则校验 |
-| 二进制文件预览 | 415 | `Binary files cannot be previewed` | MIME 类型检查 |
-| 文件读取 I/O 错误 | 500 | `Failed to read artifact file` | try-catch + 日志 |
+| 场景                | HTTP 状态码 | 错误信息                              | 处理方式         |
+| ------------------- | ----------- | ------------------------------------- | ---------------- |
+| missionId 不存在    | 404         | `Mission not found: {missionId}`      | 直接返回         |
+| artifact index 越界 | 404         | `Artifact not found at index {index}` | 校验数组边界     |
+| artifact.path 为空  | 404         | `Artifact has no file path`           | 检查 path 字段   |
+| 文件不存在于磁盘    | 404         | `Artifact file not found`             | fs.access 预检   |
+| 路径包含 `..`       | 403         | `Path traversal not allowed`          | 正则校验         |
+| 二进制文件预览      | 415         | `Binary files cannot be previewed`    | MIME 类型检查    |
+| 文件读取 I/O 错误   | 500         | `Failed to read artifact file`        | try-catch + 日志 |
 
 ### 前端错误处理
 
-| 场景 | 处理方式 |
-|------|---------|
-| 列表 API 返回 404 | 显示空状态，不渲染产物区块 |
-| 下载 API 返回错误 | 恢复按钮状态，显示 toast 提示 |
+| 场景              | 处理方式                           |
+| ----------------- | ---------------------------------- |
+| 列表 API 返回 404 | 显示空状态，不渲染产物区块         |
+| 下载 API 返回错误 | 恢复按钮状态，显示 toast 提示      |
 | 预览 API 返回 415 | 在弹窗中显示"此文件类型不支持预览" |
-| 预览 API 返回 404 | 在弹窗中显示"文件不存在" |
-| 网络超时 | 恢复按钮状态，显示重试提示 |
+| 预览 API 返回 404 | 在弹窗中显示"文件不存在"           |
+| 网络超时          | 恢复按钮状态，显示重试提示         |
 
 ## 测试策略
 
@@ -360,33 +374,33 @@ absolutePath = path.join(
 每个正确性属性对应一个属性测试，测试文件标注格式：
 `Feature: workflow-artifacts-display, Property {number}: {property_text}`
 
-| 属性 | 测试方法 | 生成器 |
-|------|---------|--------|
-| P1: 列表 round-trip | 生成随机 MissionRecord + artifacts，调用列表构建函数，验证输出字段一致性 | `fc.array(arbMissionArtifact)` |
-| P2: 下载内容一致性 | 生成随机文件内容写入临时目录，通过 handler 读取，比较字节 | `fc.uint8Array()` + `fc.string()` |
-| P3: Content-Type 映射 | 生成随机扩展名，验证映射函数输出 | `fc.constantFrom(...knownExtensions)` + `fc.string()` |
-| P4: 路径遍历拒绝 | 生成包含 `..` 的随机路径，验证校验函数返回 false | `fc.string()` 组合 `..` 片段 |
-| P5: UI 列表渲染 | 生成随机 TaskArtifact 数组，渲染组件，验证 DOM 节点数量和文本 | `fc.array(arbTaskArtifact, {minLength: 1})` |
-| P6: 按钮类型 | 生成随机 kind 值的 artifact，验证渲染的按钮类型 | `fc.constantFrom("file","report","log","url")` |
-| P7: Socket artifacts | 生成随机 ExecutorEvent + artifacts，验证 normalize 后写入 MissionRecord | `fc.array(arbExecutorArtifact)` |
-| P8: 预览截断 | 生成大于 1MB 的随机文本，验证截断行为 | `fc.string({minLength: 1_048_577})` |
-| P9: 二进制拒绝 | 生成随机非文本 MIME 类型，验证返回 415 | `fc.constantFrom(binaryMimeTypes)` |
+| 属性                  | 测试方法                                                                 | 生成器                                                |
+| --------------------- | ------------------------------------------------------------------------ | ----------------------------------------------------- |
+| P1: 列表 round-trip   | 生成随机 MissionRecord + artifacts，调用列表构建函数，验证输出字段一致性 | `fc.array(arbMissionArtifact)`                        |
+| P2: 下载内容一致性    | 生成随机文件内容写入临时目录，通过 handler 读取，比较字节                | `fc.uint8Array()` + `fc.string()`                     |
+| P3: Content-Type 映射 | 生成随机扩展名，验证映射函数输出                                         | `fc.constantFrom(...knownExtensions)` + `fc.string()` |
+| P4: 路径遍历拒绝      | 生成包含 `..` 的随机路径，验证校验函数返回 false                         | `fc.string()` 组合 `..` 片段                          |
+| P5: UI 列表渲染       | 生成随机 TaskArtifact 数组，渲染组件，验证 DOM 节点数量和文本            | `fc.array(arbTaskArtifact, {minLength: 1})`           |
+| P6: 按钮类型          | 生成随机 kind 值的 artifact，验证渲染的按钮类型                          | `fc.constantFrom("file","report","log","url")`        |
+| P7: Socket artifacts  | 生成随机 ExecutorEvent + artifacts，验证 normalize 后写入 MissionRecord  | `fc.array(arbExecutorArtifact)`                       |
+| P8: 预览截断          | 生成大于 1MB 的随机文本，验证截断行为                                    | `fc.string({minLength: 1_048_577})`                   |
+| P9: 二进制拒绝        | 生成随机非文本 MIME 类型，验证返回 415                                   | `fc.constantFrom(binaryMimeTypes)`                    |
 
 ### 单元测试
 
-| 测试场景 | 类型 | 覆盖需求 |
-|---------|------|---------|
-| missionId 不存在返回 404 | example | 1.2 |
-| artifacts 为空返回空数组 | edge-case | 1.3 |
-| artifact path 为空返回 404 | edge-case | 2.4 |
-| kind 为 url 时 302 重定向 | example | 2.6 |
-| artifacts 为空时不渲染区块 | edge-case | 3.6 |
-| log artifact 内联预览 | example | 4.2 |
-| JSON report 内联预览 | example | 4.3 |
-| 下载中按钮加载状态 | example | 4.5 |
-| completed Mission 报告突出显示 | example | 5.1 |
-| 预览弹窗渲染 | example | 5.3 |
-| running 状态脉冲指示器 | example | 6.4 |
+| 测试场景                       | 类型      | 覆盖需求 |
+| ------------------------------ | --------- | -------- |
+| missionId 不存在返回 404       | example   | 1.2      |
+| artifacts 为空返回空数组       | edge-case | 1.3      |
+| artifact path 为空返回 404     | edge-case | 2.4      |
+| kind 为 url 时 302 重定向      | example   | 2.6      |
+| artifacts 为空时不渲染区块     | edge-case | 3.6      |
+| log artifact 内联预览          | example   | 4.2      |
+| JSON report 内联预览           | example   | 4.3      |
+| 下载中按钮加载状态             | example   | 4.5      |
+| completed Mission 报告突出显示 | example   | 5.1      |
+| 预览弹窗渲染                   | example   | 5.3      |
+| running 状态脉冲指示器         | example   | 6.4      |
 
 ### 测试文件组织
 

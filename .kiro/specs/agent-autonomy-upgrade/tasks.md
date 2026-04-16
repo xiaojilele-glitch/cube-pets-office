@@ -21,7 +21,7 @@
   - [x] 2.1 创建 `server/core/capability-profile-manager.ts`，实现 CapabilityProfileManager 类：getProfile、initProfile、updateSkillAfterTask（EMA 公式 alpha=0.1）、incrementLoad、decrementLoad、recalculateConfidence、applySkillDecay、applyCompetitionReward、serialize、deserialize
     - 内存中维护 Map<string, CapabilityProfile>
     - initProfile 设置 confidenceScore=0.5、needsReview=true
-    - 技能衰减公式：skill * (0.95 ^ weeksInactive)
+    - 技能衰减公式：skill \* (0.95 ^ weeksInactive)
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
   - [x] 2.2 编写 CapabilityProfile 结构完整性属性测试
     - **Property 1: CapabilityProfile 结构完整性**
@@ -88,7 +88,7 @@
   - [x] 6.1 创建 `server/core/competition-engine.ts`，实现 CompetitionEngine 类：shouldTrigger（四条件判定）、computeUncertainty、selectContestants（多样性优先）、runCompetition、checkDataSecurity
     - 触发条件：critical priority / high quality / uncertainty > 0.7 / 手动指定
     - 多样性选择：种子为最高 fitness，后续最大余弦距离且 fitness >= 0.5
-    - deadline = min(estimatedDurationMs * 1.5, maxDeadlineMs)
+    - deadline = min(estimatedDurationMs \* 1.5, maxDeadlineMs)
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
   - [x] 6.2 创建 `server/core/judge-agent.ts`，实现 JudgeAgent 类：judge、verifyCorrectness、llmReview（匿名评审）、computeEfficiency、computeWeightedScores、checkMergeRequired（差距 < 5%）、onJudgmentOverridden
     - 四维度权重：correctness 0.35, quality 0.30, efficiency 0.20, novelty 0.15
@@ -150,7 +150,7 @@
 
 - [x] 9. CostMonitor 实现
   - [x] 9.1 创建 `server/core/cost-monitor.ts`，实现 CostMonitor 类：checkCompetitionBudget、recordCompetitionCost、computeROI、getMetrics、isCompetitionDisabled
-    - 预算检查：estimatedTokens > remainingBudget * budgetRatio 时拒绝
+    - 预算检查：estimatedTokens > remainingBudget \* budgetRatio 时拒绝
     - ROI = winnerQuality / normalEstimate，< 1.0 触发告警
     - Prometheus 指标：assessment_duration_ms、competition_trigger_total、winner_quality_score、taskforce_formation_total、taskforce_duration_seconds
     - _Requirements: 8.1, 8.2, 8.3, 8.4_

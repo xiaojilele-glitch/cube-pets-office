@@ -2,7 +2,7 @@ import type {
   ExecutionEvent,
   ExecutionTimeline,
   PerformanceMetrics,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
 /* ─── Local Types ─── */
 
@@ -79,22 +79,26 @@ export class PerformanceAnalyzer {
     const stageMap = groupByStage(events);
     const stageDurations: Array<{ stageKey: string; duration: number }> = [];
     for (const [key, stageEvents] of Array.from(stageMap.entries())) {
-      stageDurations.push({ stageKey: key, duration: stageDuration(stageEvents) });
+      stageDurations.push({
+        stageKey: key,
+        duration: stageDuration(stageEvents),
+      });
     }
 
     const avgStageDuration =
       stageDurations.length > 0
-        ? stageDurations.reduce((s, d) => s + d.duration, 0) / stageDurations.length
+        ? stageDurations.reduce((s, d) => s + d.duration, 0) /
+          stageDurations.length
         : 0;
 
-    const stageMetrics = stageDurations.map((s) => ({
+    const stageMetrics = stageDurations.map(s => ({
       stageKey: s.stageKey,
       duration: s.duration,
       isBottleneck: avgStageDuration > 0 && s.duration > 2 * avgStageDuration,
     }));
 
     // ── LLM metrics ──
-    const decisionEvents = events.filter((e) => e.eventType === 'DECISION_MADE');
+    const decisionEvents = events.filter(e => e.eventType === "DECISION_MADE");
     const callCount = decisionEvents.length;
 
     let totalTokens = 0;
@@ -106,7 +110,7 @@ export class PerformanceAnalyzer {
       }
       // Use executionTime from eventData if available, else 0
       const rt = (e.eventData as Record<string, unknown>).executionTime;
-      if (typeof rt === 'number') {
+      if (typeof rt === "number") {
         totalResponseTime += rt;
       }
     }
@@ -140,8 +144,8 @@ export class PerformanceAnalyzer {
     if (avg === 0) return [];
 
     return stages
-      .filter((s) => s.duration > 2 * avg)
-      .map((s) => ({
+      .filter(s => s.duration > 2 * avg)
+      .map(s => ({
         stageKey: s.stageKey,
         duration: s.duration,
         averageDuration: avg,
@@ -162,7 +166,7 @@ export class PerformanceAnalyzer {
 
     // Build change-point list from AGENT_STARTED / AGENT_STOPPED
     const hasLifecycleEvents = events.some(
-      (e) => e.eventType === 'AGENT_STARTED' || e.eventType === 'AGENT_STOPPED',
+      e => e.eventType === "AGENT_STARTED" || e.eventType === "AGENT_STOPPED"
     );
 
     type TimePoint = { time: number; delta: number };
@@ -170,9 +174,9 @@ export class PerformanceAnalyzer {
 
     if (hasLifecycleEvents) {
       for (const e of events) {
-        if (e.eventType === 'AGENT_STARTED') {
+        if (e.eventType === "AGENT_STARTED") {
           points.push({ time: e.timestamp, delta: 1 });
-        } else if (e.eventType === 'AGENT_STOPPED') {
+        } else if (e.eventType === "AGENT_STOPPED") {
           points.push({ time: e.timestamp, delta: -1 });
         }
       }
@@ -182,7 +186,10 @@ export class PerformanceAnalyzer {
       for (const e of events) {
         const existing = agentRange.get(e.sourceAgent);
         if (!existing) {
-          agentRange.set(e.sourceAgent, { first: e.timestamp, last: e.timestamp });
+          agentRange.set(e.sourceAgent, {
+            first: e.timestamp,
+            last: e.timestamp,
+          });
         } else {
           if (e.timestamp < existing.first) existing.first = e.timestamp;
           if (e.timestamp > existing.last) existing.last = e.timestamp;
@@ -219,7 +226,10 @@ export class PerformanceAnalyzer {
     const avg = totalTime > 0 ? weightedSum / totalTime : max > 0 ? max : 0;
 
     return {
-      maxConcurrentAgents: Math.max(max, max > 0 ? max : events.length > 0 ? 1 : 0),
+      maxConcurrentAgents: Math.max(
+        max,
+        max > 0 ? max : events.length > 0 ? 1 : 0
+      ),
       avgConcurrentAgents: avg,
       timeline: timelinePoints,
     };
@@ -230,7 +240,7 @@ export class PerformanceAnalyzer {
    */
   comparePerformance(
     a: ExecutionTimeline,
-    b: ExecutionTimeline,
+    b: ExecutionTimeline
   ): PerformanceComparison {
     const metricsA = this.calculateMetrics(a);
     const metricsB = this.calculateMetrics(b);
@@ -239,9 +249,11 @@ export class PerformanceAnalyzer {
       a: metricsA,
       b: metricsB,
       durationDiff: metricsB.totalDuration - metricsA.totalDuration,
-      llmCallCountDiff: metricsB.llmMetrics.callCount - metricsA.llmMetrics.callCount,
+      llmCallCountDiff:
+        metricsB.llmMetrics.callCount - metricsA.llmMetrics.callCount,
       avgResponseTimeDiff:
-        metricsB.llmMetrics.avgResponseTime - metricsA.llmMetrics.avgResponseTime,
+        metricsB.llmMetrics.avgResponseTime -
+        metricsA.llmMetrics.avgResponseTime,
       concurrencyDiff:
         metricsB.concurrency.maxConcurrentAgents -
         metricsA.concurrency.maxConcurrentAgents,

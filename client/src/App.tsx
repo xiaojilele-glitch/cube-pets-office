@@ -40,12 +40,8 @@ function Router() {
       <Route path={"/replay/:missionId"}>
         {params => <ReplayPage missionId={params.missionId || ""} />}
       </Route>
-      <Route path={"/command-center/legacy"}>
-        {() => <Redirect to="/" />}
-      </Route>
-      <Route path={"/command-center"}>
-        {() => <Redirect to="/" />}
-      </Route>
+      <Route path={"/command-center/legacy"}>{() => <Redirect to="/" />}</Route>
+      <Route path={"/command-center"}>{() => <Redirect to="/" />}</Route>
       <Route path={"/debug"} component={DebugPage} />
       <Route path={"/lineage"} component={LineagePage} />
       <Route path={"/404"} component={NotFound} />

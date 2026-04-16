@@ -23,29 +23,33 @@ const arbEntry = fc
     data: fc.string({ minLength: 0, maxLength: 10240 }),
     timestamp: fc.constant(new Date().toISOString()),
   })
-  .map((r) => r as LogBufferEntry);
+  .map(r => r as LogBufferEntry);
 
 const arbEntries = fc.array(arbEntry, { minLength: 1, maxLength: 50 });
 
 describe("Property 2: 重试缓冲区溢出保护", () => {
   it("totalBytes never exceeds maxBufferSize after any sequence of buffer() calls", () => {
     fc.assert(
-      fc.property(arbEntries, (entries) => {
-        const buf = new RetryBuffer(async () => {}, { maxBufferSize: MAX_BUFFER_SIZE });
+      fc.property(arbEntries, entries => {
+        const buf = new RetryBuffer(async () => {}, {
+          maxBufferSize: MAX_BUFFER_SIZE,
+        });
 
         for (const entry of entries) {
           buf.buffer(entry);
           expect(buf.totalBytes).toBeLessThanOrEqual(MAX_BUFFER_SIZE);
         }
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("buffer() returns false when adding would exceed maxBufferSize", () => {
     fc.assert(
-      fc.property(arbEntries, (entries) => {
-        const buf = new RetryBuffer(async () => {}, { maxBufferSize: MAX_BUFFER_SIZE });
+      fc.property(arbEntries, entries => {
+        const buf = new RetryBuffer(async () => {}, {
+          maxBufferSize: MAX_BUFFER_SIZE,
+        });
 
         for (const entry of entries) {
           const bytesBefore = buf.totalBytes;
@@ -60,7 +64,7 @@ describe("Property 2: 重试缓冲区溢出保护", () => {
           }
         }
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 

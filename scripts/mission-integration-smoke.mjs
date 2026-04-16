@@ -43,14 +43,16 @@ function textFromFeishuBody(body) {
 
 function createConfig() {
   const serverPort = parseInteger(process.env.MISSION_SMOKE_SERVER_PORT, 3101);
-  const executorPort = parseInteger(process.env.MISSION_SMOKE_EXECUTOR_PORT, 3131);
+  const executorPort = parseInteger(
+    process.env.MISSION_SMOKE_EXECUTOR_PORT,
+    3131
+  );
   const feishuPort = parseInteger(process.env.MISSION_SMOKE_FEISHU_PORT, 3141);
   const serverBaseUrl =
     process.env.MISSION_SMOKE_SERVER_BASE_URL ||
     `http://127.0.0.1:${serverPort}`;
   const executorBaseUrl =
-    process.env.LOBSTER_EXECUTOR_BASE_URL ||
-    `http://127.0.0.1:${executorPort}`;
+    process.env.LOBSTER_EXECUTOR_BASE_URL || `http://127.0.0.1:${executorPort}`;
   const feishuApiBaseUrl =
     process.env.FEISHU_API_BASE_URL ||
     `http://127.0.0.1:${feishuPort}/open-apis`;
@@ -106,7 +108,10 @@ async function startFakeFeishuServer(port) {
     const rawBody = Buffer.concat(chunks).toString("utf8");
     const parsedBody = rawBody ? JSON.parse(rawBody) : {};
 
-    if (request.method === "POST" && url.pathname === "/open-apis/im/v1/messages") {
+    if (
+      request.method === "POST" &&
+      url.pathname === "/open-apis/im/v1/messages"
+    ) {
       messageCount += 1;
       const messageId = `mock-msg-${messageCount}`;
       const rootId = parsedBody.root_id || messageId;
@@ -212,7 +217,9 @@ async function waitForMissionTask(serverBaseUrl, missionId, expectedStatus) {
   return waitFor(
     `mission ${missionId} -> ${expectedStatus}`,
     async () => {
-      const { response, body } = await fetchJson(`${serverBaseUrl}/api/tasks/${missionId}`);
+      const { response, body } = await fetchJson(
+        `${serverBaseUrl}/api/tasks/${missionId}`
+      );
       if (!response.ok || !body?.task) return null;
       return body.task.status === expectedStatus ? body.task : null;
     },
@@ -283,7 +290,12 @@ async function postExecutorCallback(baseUrl, secret, event) {
   return body;
 }
 
-async function runFeishuRelayFlow({ serverBaseUrl, relaySecret, messages, outcome }) {
+async function runFeishuRelayFlow({
+  serverBaseUrl,
+  relaySecret,
+  messages,
+  outcome,
+}) {
   const label =
     outcome === "done"
       ? "Feishu relay smoke success path"
@@ -360,12 +372,17 @@ async function runFeishuRelayFlow({ serverBaseUrl, relaySecret, messages, outcom
       `Feishu done event did not finish task: ${JSON.stringify(completeResult)}`
     );
 
-    const completeMessage = await waitForFeishuMessage(messages, beforeCount + 2);
+    const completeMessage = await waitForFeishuMessage(
+      messages,
+      beforeCount + 2
+    );
     assert(
       completeMessage.text.includes(summary),
       `Feishu done message missing summary: ${completeMessage.text}`
     );
-    console.log(`[mission-integration-smoke] Feishu done flow ok -> ${relayResult.taskId}`);
+    console.log(
+      `[mission-integration-smoke] Feishu done flow ok -> ${relayResult.taskId}`
+    );
     return;
   }
 
@@ -393,7 +410,9 @@ async function runFeishuRelayFlow({ serverBaseUrl, relaySecret, messages, outcom
     failedMessage.text.includes(failureDetail),
     `Feishu failed message missing detail: ${failedMessage.text}`
   );
-  console.log(`[mission-integration-smoke] Feishu failed flow ok -> ${relayResult.taskId}`);
+  console.log(
+    `[mission-integration-smoke] Feishu failed flow ok -> ${relayResult.taskId}`
+  );
 }
 
 async function runExecutorMissionFlow({
@@ -412,13 +431,16 @@ async function runExecutorMissionFlow({
     executorBaseUrl,
   };
 
-  const { response, body } = await fetchJson(`${serverBaseUrl}/api/tasks/smoke/dispatch`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(dispatchBody),
-  });
+  const { response, body } = await fetchJson(
+    `${serverBaseUrl}/api/tasks/smoke/dispatch`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(dispatchBody),
+    }
+  );
 
   assert(
     response.ok && body?.missionId && body?.jobId,

@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { FeishuProgressBridge, type FeishuOutboundMessage } from "../feishu/bridge.js";
+import {
+  FeishuProgressBridge,
+  type FeishuOutboundMessage,
+} from "../feishu/bridge.js";
 import type { FeishuTaskRecord } from "../feishu/task-store.js";
 
 function makeTask(partial: Partial<FeishuTaskRecord>): FeishuTaskRecord {
@@ -12,7 +15,12 @@ function makeTask(partial: Partial<FeishuTaskRecord>): FeishuTaskRecord {
     currentStageKey: "understand",
     stages: [
       { key: "receive", label: "接收请求", status: "done" },
-      { key: "understand", label: "理解问题", status: "running", detail: "Understanding" },
+      {
+        key: "understand",
+        label: "理解问题",
+        status: "running",
+        detail: "Understanding",
+      },
       { key: "planning", label: "规划执行", status: "pending" },
       { key: "execution", label: "执行处理", status: "pending" },
       { key: "finalize", label: "整理答复", status: "pending" },
@@ -65,7 +73,12 @@ describe("FeishuProgressBridge", () => {
         progress: 15,
         events: [
           { type: "created", message: "Task created", time: Date.now() },
-          { type: "log", message: "Minor update", progress: 15, time: Date.now() },
+          {
+            type: "log",
+            message: "Minor update",
+            progress: 15,
+            time: Date.now(),
+          },
         ],
       })
     );
@@ -105,7 +118,11 @@ describe("FeishuProgressBridge", () => {
         },
         events: [
           { type: "created", message: "Task created", time: Date.now() },
-          { type: "waiting", message: "Need product direction", time: Date.now() },
+          {
+            type: "waiting",
+            message: "Need product direction",
+            time: Date.now(),
+          },
         ],
       })
     );
@@ -236,8 +253,7 @@ describe("FeishuProgressBridge", () => {
     // Check the prompt has the 🔴 prefix
     const promptDiv = waitingMsg!.card!.body.elements.find(
       (el: Record<string, unknown>) =>
-        el.tag === "div" &&
-        (el.text as any)?.content?.includes("待确认")
+        el.tag === "div" && (el.text as any)?.content?.includes("待确认")
     );
     expect((promptDiv as any).text.content).toContain("🔴");
   });
@@ -375,7 +391,11 @@ describe("FeishuProgressBridge", () => {
         },
         events: [
           { type: "created", message: "Task created", time: Date.now() },
-          { type: "decision", message: "Decision received: 批准", time: Date.now() },
+          {
+            type: "decision",
+            message: "Decision received: 批准",
+            time: Date.now(),
+          },
         ],
       })
     );
@@ -440,7 +460,8 @@ describe("FeishuProgressBridge", () => {
     const sent: Array<{ kind: string; progress: number }> = [];
     const bridge = new FeishuProgressBridge({
       send: async message => {
-        const delay = message.progress === 10 ? 30 : message.progress === 18 ? 20 : 10;
+        const delay =
+          message.progress === 10 ? 30 : message.progress === 18 ? 20 : 10;
         await new Promise(resolve => setTimeout(resolve, delay));
         sent.push({ kind: message.kind, progress: message.progress });
         return { messageId: `om_${sent.length}` };
@@ -454,7 +475,12 @@ describe("FeishuProgressBridge", () => {
         progress: 18,
         events: [
           { type: "created", message: "Task created", time: Date.now() },
-          { type: "progress", message: "Classified request", progress: 18, time: Date.now() },
+          {
+            type: "progress",
+            message: "Classified request",
+            progress: 18,
+            time: Date.now(),
+          },
         ],
       })
     );
@@ -463,7 +489,12 @@ describe("FeishuProgressBridge", () => {
         progress: 30,
         events: [
           { type: "created", message: "Task created", time: Date.now() },
-          { type: "progress", message: "Gathering context", progress: 30, time: Date.now() },
+          {
+            type: "progress",
+            message: "Gathering context",
+            progress: 30,
+            time: Date.now(),
+          },
         ],
       })
     );

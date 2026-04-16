@@ -18,14 +18,21 @@ const TYPE_ICONS: Record<string, string> = {
   risk: "⚠️",
 };
 
-export function SuggestionPanel({ suggestions, onApply }: SuggestionPanelProps) {
+export function SuggestionPanel({
+  suggestions,
+  onApply,
+}: SuggestionPanelProps) {
   if (suggestions.length === 0) {
-    return <div className="py-4 text-center text-sm text-stone-400">No suggestions.</div>;
+    return (
+      <div className="py-4 text-center text-sm text-stone-400">
+        No suggestions.
+      </div>
+    );
   }
 
   return (
     <ul className="flex flex-col gap-2">
-      {suggestions.map((s) => (
+      {suggestions.map(s => (
         <li
           key={s.suggestionId}
           className="rounded-lg border border-stone-200 bg-white px-3 py-2"
@@ -41,7 +48,8 @@ export function SuggestionPanel({ suggestions, onApply }: SuggestionPanelProps) 
           <div className="mt-1 text-xs text-stone-500">{s.description}</div>
           <div className="mt-1.5 flex items-center justify-between">
             <span className="text-[10px] text-stone-400">
-              Impact: {s.estimatedImpact.timelineImpact} · {s.estimatedImpact.costImpact}
+              Impact: {s.estimatedImpact.timelineImpact} ·{" "}
+              {s.estimatedImpact.costImpact}
             </span>
             {onApply && (
               <GlowButton

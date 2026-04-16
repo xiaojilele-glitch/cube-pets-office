@@ -8,16 +8,19 @@
  * 但不低于 decayFloor，且所有维度子分保持不变。当 Agent 恢复活跃后，衰减立即停止。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { ReputationService } from '../core/reputation/reputation-service.js';
-import { ReputationCalculator } from '../core/reputation/reputation-calculator.js';
-import { TrustTierEvaluator } from '../core/reputation/trust-tier-evaluator.js';
-import { AnomalyDetector } from '../core/reputation/anomaly-detector.js';
-import { DecayScheduler } from '../core/reputation/decay-scheduler.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { ReputationConfig, ReputationSignal } from '../../shared/reputation.js';
-import db from '../db/index.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { ReputationService } from "../core/reputation/reputation-service.js";
+import { ReputationCalculator } from "../core/reputation/reputation-calculator.js";
+import { TrustTierEvaluator } from "../core/reputation/trust-tier-evaluator.js";
+import { AnomalyDetector } from "../core/reputation/anomaly-detector.js";
+import { DecayScheduler } from "../core/reputation/decay-scheduler.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  ReputationConfig,
+  ReputationSignal,
+} from "../../shared/reputation.js";
+import db from "../db/index.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -30,20 +33,24 @@ function uniqueAgentId(): string {
   return `pbt14-agent-${++counter}-${Date.now()}`;
 }
 
-function createService(config: ReputationConfig = DEFAULT_REPUTATION_CONFIG): ReputationService {
+function createService(
+  config: ReputationConfig = DEFAULT_REPUTATION_CONFIG
+): ReputationService {
   return new ReputationService(
     new ReputationCalculator(config),
     new TrustTierEvaluator(config),
     new AnomalyDetector(config),
-    config,
+    config
   );
 }
 
-function createScheduler(config: ReputationConfig = DEFAULT_REPUTATION_CONFIG): DecayScheduler {
+function createScheduler(
+  config: ReputationConfig = DEFAULT_REPUTATION_CONFIG
+): DecayScheduler {
   return new DecayScheduler(
     config,
     new TrustTierEvaluator(config),
-    new ReputationCalculator(config),
+    new ReputationCalculator(config)
   );
 }
 
@@ -52,7 +59,9 @@ function createScheduler(config: ReputationConfig = DEFAULT_REPUTATION_CONFIG): 
  */
 function setInactiveDaysAgo(agentId: string, daysAgo: number): void {
   const profile = db.getReputationProfile(agentId)!;
-  profile.lastActiveAt = new Date(Date.now() - daysAgo * MS_PER_DAY).toISOString();
+  profile.lastActiveAt = new Date(
+    Date.now() - daysAgo * MS_PER_DAY
+  ).toISOString();
   db.upsertReputationProfile(profile);
 }
 
@@ -69,12 +78,12 @@ function setOverallScore(agentId: string, score: number): void {
 // Property Tests
 // ---------------------------------------------------------------------------
 
-describe('Property 14: 不活跃衰减规则', () => {
+describe("Property 14: 不活跃衰减规则", () => {
   // -------------------------------------------------------------------------
   // Req 6.1: Inactive agents decay by decayRate, floored at decayFloor
   // -------------------------------------------------------------------------
 
-  it('overallScore decreases by decayRate for inactive agents, never below decayFloor', () => {
+  it("overallScore decreases by decayRate for inactive agents, never below decayFloor", () => {
     const config = { ...DEFAULT_REPUTATION_CONFIG };
     const { decayRate, decayFloor, inactivityDays } = config.decay;
 
@@ -103,9 +112,9 @@ describe('Property 14: 不活跃衰减规则', () => {
 
           expect(after.overallScore).toBe(expected);
           expect(after.overallScore).toBeGreaterThanOrEqual(decayFloor);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -113,14 +122,14 @@ describe('Property 14: 不活跃衰减规则', () => {
   // Req 6.1: Agents at or below decayFloor do not decay further
   // -------------------------------------------------------------------------
 
-  it('agents already at or below decayFloor are not decayed further', () => {
+  it("agents already at or below decayFloor are not decayed further", () => {
     const config = { ...DEFAULT_REPUTATION_CONFIG };
     const { decayFloor, inactivityDays } = config.decay;
 
     fc.assert(
       fc.property(
         fc.integer({ min: 0, max: decayFloor }),
-        (scoreAtOrBelowFloor) => {
+        scoreAtOrBelowFloor => {
           const service = createService(config);
           const scheduler = createScheduler(config);
           const agentId = uniqueAgentId();
@@ -133,9 +142,9 @@ describe('Property 14: 不活跃衰减规则', () => {
 
           const after = db.getReputationProfile(agentId)!;
           expect(after.overallScore).toBe(scoreAtOrBelowFloor);
-        },
+        }
       ),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 
@@ -143,7 +152,7 @@ describe('Property 14: 不活跃衰减规则', () => {
   // Req 6.1: Active agents (within inactivityDays) are NOT decayed
   // -------------------------------------------------------------------------
 
-  it('agents active within inactivityDays are not decayed', () => {
+  it("agents active within inactivityDays are not decayed", () => {
     const config = { ...DEFAULT_REPUTATION_CONFIG };
     const { inactivityDays } = config.decay;
 
@@ -165,9 +174,9 @@ describe('Property 14: 不活跃衰减规则', () => {
 
           const after = db.getReputationProfile(agentId)!;
           expect(after.overallScore).toBe(initialScore);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -175,7 +184,7 @@ describe('Property 14: 不活跃衰减规则', () => {
   // Req 6.2: Dimension sub-scores remain unchanged after decay
   // -------------------------------------------------------------------------
 
-  it('all dimension sub-scores remain unchanged after decay', () => {
+  it("all dimension sub-scores remain unchanged after decay", () => {
     const config = { ...DEFAULT_REPUTATION_CONFIG };
     const { decayFloor, inactivityDays } = config.decay;
 
@@ -203,7 +212,9 @@ describe('Property 14: 不活跃衰减规则', () => {
           profile.dimensions.efficiencyScore = efficiency;
           profile.dimensions.collaborationScore = collab;
           profile.dimensions.reliabilityScore = reliability;
-          profile.lastActiveAt = new Date(Date.now() - (inactivityDays + 10) * MS_PER_DAY).toISOString();
+          profile.lastActiveAt = new Date(
+            Date.now() - (inactivityDays + 10) * MS_PER_DAY
+          ).toISOString();
           db.upsertReputationProfile(profile);
 
           scheduler.runDecayCycle();
@@ -216,9 +227,9 @@ describe('Property 14: 不活跃衰减规则', () => {
           expect(after.dimensions.efficiencyScore).toBe(efficiency);
           expect(after.dimensions.collaborationScore).toBe(collab);
           expect(after.dimensions.reliabilityScore).toBe(reliability);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -226,14 +237,14 @@ describe('Property 14: 不活跃衰减规则', () => {
   // Req 6.3: Decay stops immediately when agent becomes active again
   // -------------------------------------------------------------------------
 
-  it('decay stops immediately after agent completes a new task', () => {
+  it("decay stops immediately after agent completes a new task", () => {
     const config = { ...DEFAULT_REPUTATION_CONFIG };
     const { decayFloor, decayRate, inactivityDays } = config.decay;
 
     fc.assert(
       fc.property(
         fc.integer({ min: decayFloor + decayRate + 1, max: 1000 }),
-        (initialScore) => {
+        initialScore => {
           const service = createService(config);
           const scheduler = createScheduler(config);
           const agentId = uniqueAgentId();
@@ -246,7 +257,7 @@ describe('Property 14: 不活跃衰减规则', () => {
           scheduler.runDecayCycle();
           const afterDecay = db.getReputationProfile(agentId)!;
           expect(afterDecay.overallScore).toBe(
-            Math.max(decayFloor, initialScore - decayRate),
+            Math.max(decayFloor, initialScore - decayRate)
           );
 
           // Agent completes a task → becomes active (lastActiveAt updated to now)
@@ -260,21 +271,22 @@ describe('Property 14: 不活跃衰减规则', () => {
             tokenBudget: 1000,
             wasRolledBack: false,
             downstreamFailures: 0,
-            taskComplexity: 'medium',
+            taskComplexity: "medium",
             timestamp: new Date().toISOString(),
           };
           service.handleTaskCompleted(signal);
 
-          const scoreAfterReactivation = db.getReputationProfile(agentId)!.overallScore;
+          const scoreAfterReactivation =
+            db.getReputationProfile(agentId)!.overallScore;
 
           // Second decay cycle — should NOT decay because agent is now active
           scheduler.runDecayCycle();
           const afterSecondCycle = db.getReputationProfile(agentId)!;
 
           expect(afterSecondCycle.overallScore).toBe(scoreAfterReactivation);
-        },
+        }
       ),
-      { numRuns: 50 },
+      { numRuns: 50 }
     );
   });
 });

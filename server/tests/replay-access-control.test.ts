@@ -1,12 +1,15 @@
-import { describe, expect, it, beforeEach } from 'vitest';
-import type { Request, Response, NextFunction } from 'express';
+import { describe, expect, it, beforeEach } from "vitest";
+import type { Request, Response, NextFunction } from "express";
 
 import {
   replayAccessControl,
   registerMissionOwner,
-} from '../replay/access-control.js';
+} from "../replay/access-control.js";
 
-function mockReq(headers: Record<string, string>, params: Record<string, string> = {}): Request {
+function mockReq(
+  headers: Record<string, string>,
+  params: Record<string, string> = {}
+): Request {
   return { headers, params } as unknown as Request;
 }
 
@@ -26,17 +29,19 @@ function mockRes(): Response & { statusCode: number; body: unknown } {
   return res as unknown as Response & { statusCode: number; body: unknown };
 }
 
-describe('replayAccessControl', () => {
+describe("replayAccessControl", () => {
   beforeEach(() => {
     // Register a known mission owner for tests
-    registerMissionOwner('mission-owned', 'owner-user');
+    registerMissionOwner("mission-owned", "owner-user");
   });
 
-  it('returns 401 when x-user-id header is missing', () => {
-    const req = mockReq({}, { missionId: 'mission-1' });
+  it("returns 401 when x-user-id header is missing", () => {
+    const req = mockReq({}, { missionId: "mission-1" });
     const res = mockRes();
     let nextCalled = false;
-    const next: NextFunction = () => { nextCalled = true; };
+    const next: NextFunction = () => {
+      nextCalled = true;
+    };
 
     replayAccessControl(req, res, next);
 
@@ -44,14 +49,16 @@ describe('replayAccessControl', () => {
     expect(nextCalled).toBe(false);
   });
 
-  it('allows admin access to any mission', () => {
+  it("allows admin access to any mission", () => {
     const req = mockReq(
-      { 'x-user-id': 'admin-user', 'x-user-role': 'admin' },
-      { missionId: 'mission-owned' },
+      { "x-user-id": "admin-user", "x-user-role": "admin" },
+      { missionId: "mission-owned" }
     );
     const res = mockRes();
     let nextCalled = false;
-    const next: NextFunction = () => { nextCalled = true; };
+    const next: NextFunction = () => {
+      nextCalled = true;
+    };
 
     replayAccessControl(req, res, next);
 
@@ -59,28 +66,32 @@ describe('replayAccessControl', () => {
     expect(res.statusCode).toBe(200);
   });
 
-  it('allows owner to access their own mission', () => {
+  it("allows owner to access their own mission", () => {
     const req = mockReq(
-      { 'x-user-id': 'owner-user' },
-      { missionId: 'mission-owned' },
+      { "x-user-id": "owner-user" },
+      { missionId: "mission-owned" }
     );
     const res = mockRes();
     let nextCalled = false;
-    const next: NextFunction = () => { nextCalled = true; };
+    const next: NextFunction = () => {
+      nextCalled = true;
+    };
 
     replayAccessControl(req, res, next);
 
     expect(nextCalled).toBe(true);
   });
 
-  it('denies non-owner regular user access', () => {
+  it("denies non-owner regular user access", () => {
     const req = mockReq(
-      { 'x-user-id': 'other-user' },
-      { missionId: 'mission-owned' },
+      { "x-user-id": "other-user" },
+      { missionId: "mission-owned" }
     );
     const res = mockRes();
     let nextCalled = false;
-    const next: NextFunction = () => { nextCalled = true; };
+    const next: NextFunction = () => {
+      nextCalled = true;
+    };
 
     replayAccessControl(req, res, next);
 
@@ -88,25 +99,29 @@ describe('replayAccessControl', () => {
     expect(nextCalled).toBe(false);
   });
 
-  it('allows access when no owner is registered for the mission', () => {
+  it("allows access when no owner is registered for the mission", () => {
     const req = mockReq(
-      { 'x-user-id': 'any-user' },
-      { missionId: 'untracked-mission' },
+      { "x-user-id": "any-user" },
+      { missionId: "untracked-mission" }
     );
     const res = mockRes();
     let nextCalled = false;
-    const next: NextFunction = () => { nextCalled = true; };
+    const next: NextFunction = () => {
+      nextCalled = true;
+    };
 
     replayAccessControl(req, res, next);
 
     expect(nextCalled).toBe(true);
   });
 
-  it('allows access when no missionId param is present', () => {
-    const req = mockReq({ 'x-user-id': 'any-user' }, {});
+  it("allows access when no missionId param is present", () => {
+    const req = mockReq({ "x-user-id": "any-user" }, {});
     const res = mockRes();
     let nextCalled = false;
-    const next: NextFunction = () => { nextCalled = true; };
+    const next: NextFunction = () => {
+      nextCalled = true;
+    };
 
     replayAccessControl(req, res, next);
 

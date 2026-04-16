@@ -3,7 +3,10 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import type { ExecutionPlanJob, ExecutorJobRequest } from "../../../../shared/executor/contracts.js";
+import type {
+  ExecutionPlanJob,
+  ExecutorJobRequest,
+} from "../../../../shared/executor/contracts.js";
 import { EXECUTOR_CONTRACT_VERSION } from "../../../../shared/executor/contracts.js";
 import type { StoredJobRecord } from "../types.js";
 import type { CallbackSender } from "../callback-sender.js";
@@ -87,20 +90,26 @@ describe("NativeRunner AI-only job", () => {
     try {
       globalThis.fetch = (async () =>
         new Response(
-          JSON.stringify({ content: "ok", usage: { total_tokens: 1 }, model: "gpt" }),
-          { status: 200, headers: { "content-type": "application/json" } },
+          JSON.stringify({
+            content: "ok",
+            usage: { total_tokens: 1 },
+            model: "gpt",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
         )) as any;
 
       process.env.SERVER_BASE_URL = "http://127.0.0.1:3001";
 
       const record = makeRecord(root);
-      const callbackSender = { send: async () => {} } as unknown as CallbackSender;
+      const callbackSender = {
+        send: async () => {},
+      } as unknown as CallbackSender;
       const runner = new NativeRunner(callbackSender);
       const events: any[] = [];
-      await runner.run(record, (event) => events.push(event));
+      await runner.run(record, event => events.push(event));
 
-      expect(events.some((e) => e.type === "job.completed")).toBe(true);
-      const ai = record.artifacts.find((a) => a.name === "ai-result.json");
+      expect(events.some(e => e.type === "job.completed")).toBe(true);
+      const ai = record.artifacts.find(a => a.name === "ai-result.json");
       expect(ai).toBeTruthy();
       const aiPath = join(process.cwd(), ai!.path!);
       const content = JSON.parse(readFileSync(aiPath, "utf8"));
@@ -111,4 +120,3 @@ describe("NativeRunner AI-only job", () => {
     }
   });
 });
-

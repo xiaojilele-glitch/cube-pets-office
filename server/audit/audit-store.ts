@@ -111,7 +111,7 @@ export class AuditStore implements IAuditStore {
    */
   readEntries(startSeq: number, endSeq: number): AuditLogEntry[] {
     return this.entries
-      .filter((e) => e.sequenceNumber >= startSeq && e.sequenceNumber <= endSeq)
+      .filter(e => e.sequenceNumber >= startSeq && e.sequenceNumber <= endSeq)
       .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
   }
 
@@ -126,7 +126,9 @@ export class AuditStore implements IAuditStore {
    * 3.4 返回最后一条条目
    */
   getLastEntry(): AuditLogEntry | null {
-    return this.entries.length > 0 ? this.entries[this.entries.length - 1] : null;
+    return this.entries.length > 0
+      ? this.entries[this.entries.length - 1]
+      : null;
   }
 
   /**

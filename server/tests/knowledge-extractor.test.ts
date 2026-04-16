@@ -72,7 +72,7 @@ describe("CodeKnowledgeExtractor", () => {
 }
 
 export const PI = 3.14;
-`,
+`
       );
 
       writeTempFile(
@@ -81,7 +81,7 @@ export const PI = 3.14;
   return "Hello " + name;
 }
 module.exports = { greet };
-`,
+`
       );
 
       const result = await extractor.extract({
@@ -95,12 +95,14 @@ module.exports = { greet };
 
       // Find the CodeModule entities
       const codeModules = result.entities.filter(
-        (e) => e.entityType === "CodeModule",
+        e => e.entityType === "CodeModule"
       );
       expect(codeModules.length).toBe(2);
 
       const utilsModule = codeModules.find(
-        (e) => (e.extendedAttributes as Record<string, unknown>).filePath === "src/utils.ts",
+        e =>
+          (e.extendedAttributes as Record<string, unknown>).filePath ===
+          "src/utils.ts"
       );
       expect(utilsModule).toBeDefined();
       expect(utilsModule!.source).toBe("code_analysis");
@@ -114,11 +116,13 @@ module.exports = { greet };
 
       // JS file should have language "javascript"
       const helpersModule = codeModules.find(
-        (e) => (e.extendedAttributes as Record<string, unknown>).filePath === "src/helpers.js",
+        e =>
+          (e.extendedAttributes as Record<string, unknown>).filePath ===
+          "src/helpers.js"
       );
       expect(helpersModule).toBeDefined();
       expect(
-        (helpersModule!.extendedAttributes as Record<string, unknown>).language,
+        (helpersModule!.extendedAttributes as Record<string, unknown>).language
       ).toBe("javascript");
     });
 
@@ -139,7 +143,7 @@ module.exports = { greet };
   }
   return x > 10 ? "big" : "small";
 }
-`,
+`
       );
 
       const result = await extractor.extract({
@@ -148,7 +152,7 @@ module.exports = { greet };
         projectId: TEST_PROJECT,
       });
 
-      const mod = result.entities.find((e) => e.entityType === "CodeModule");
+      const mod = result.entities.find(e => e.entityType === "CodeModule");
       expect(mod).toBeDefined();
       const complexity = (mod!.extendedAttributes as Record<string, unknown>)
         .complexity as number;
@@ -157,9 +161,9 @@ module.exports = { greet };
     });
 
     it("excludes node_modules and dist directories", async () => {
-      writeTempFile("src/main.ts", 'export const x = 1;\n');
-      writeTempFile("node_modules/pkg/index.ts", 'export const y = 2;\n');
-      writeTempFile("dist/bundle.js", 'var z = 3;\n');
+      writeTempFile("src/main.ts", "export const x = 1;\n");
+      writeTempFile("node_modules/pkg/index.ts", "export const y = 2;\n");
+      writeTempFile("dist/bundle.js", "var z = 3;\n");
 
       const result = await extractor.extract({
         repoPath: tmpDir,
@@ -169,11 +173,11 @@ module.exports = { greet };
 
       expect(result.stats.filesAnalyzed).toBe(1);
       const modules = result.entities.filter(
-        (e) => e.entityType === "CodeModule",
+        e => e.entityType === "CodeModule"
       );
       expect(modules.length).toBe(1);
       expect(
-        (modules[0].extendedAttributes as Record<string, unknown>).filePath,
+        (modules[0].extendedAttributes as Record<string, unknown>).filePath
       ).toBe("src/main.ts");
     });
   });
@@ -191,7 +195,7 @@ export const MY_CONST = 42;
 export interface MyInterface { x: number; }
 export type MyType = string | number;
 export enum MyEnum { A, B }
-`,
+`
       );
 
       const result = await extractor.extract({
@@ -200,7 +204,7 @@ export enum MyEnum { A, B }
         projectId: TEST_PROJECT,
       });
 
-      const mod = result.entities.find((e) => e.entityType === "CodeModule");
+      const mod = result.entities.find(e => e.entityType === "CodeModule");
       expect(mod).toBeDefined();
       const exports = (mod!.extendedAttributes as Record<string, unknown>)
         .exports as string[];
@@ -216,7 +220,7 @@ export enum MyEnum { A, B }
       writeTempFile(
         "default-export.ts",
         `export default function handler() { return 1; }
-`,
+`
       );
 
       const result = await extractor.extract({
@@ -225,10 +229,10 @@ export enum MyEnum { A, B }
         projectId: TEST_PROJECT,
       });
 
-      const mod = result.entities.find((e) => e.entityType === "CodeModule");
+      const mod = result.entities.find(e => e.entityType === "CodeModule");
       const exports = (mod!.extendedAttributes as Record<string, unknown>)
         .exports as string[];
-      expect(exports.some((e) => e.includes("default"))).toBe(true);
+      expect(exports.some(e => e.includes("default"))).toBe(true);
     });
 
     it("extracts re-exports from export { ... }", async () => {
@@ -237,7 +241,7 @@ export enum MyEnum { A, B }
         `const a = 1;
 const b = 2;
 export { a, b };
-`,
+`
       );
 
       const result = await extractor.extract({
@@ -246,7 +250,7 @@ export { a, b };
         projectId: TEST_PROJECT,
       });
 
-      const mod = result.entities.find((e) => e.entityType === "CodeModule");
+      const mod = result.entities.find(e => e.entityType === "CodeModule");
       const exports = (mod!.extendedAttributes as Record<string, unknown>)
         .exports as string[];
       expect(exports).toContain("a");
@@ -266,10 +270,16 @@ import { greet } from "./helpers/greet.js";
 
 console.log(add(1, 2));
 console.log(greet("world"));
-`,
+`
       );
-      writeTempFile("src/utils.ts", 'export function add(a: number, b: number) { return a + b; }\n');
-      writeTempFile("src/helpers/greet.ts", 'export function greet(name: string) { return "Hi " + name; }\n');
+      writeTempFile(
+        "src/utils.ts",
+        "export function add(a: number, b: number) { return a + b; }\n"
+      );
+      writeTempFile(
+        "src/helpers/greet.ts",
+        'export function greet(name: string) { return "Hi " + name; }\n'
+      );
 
       const result = await extractor.extract({
         repoPath: tmpDir,
@@ -278,24 +288,24 @@ console.log(greet("world"));
       });
 
       const dependsOnRelations = result.relations.filter(
-        (r) => r.relationType === "DEPENDS_ON",
+        r => r.relationType === "DEPENDS_ON"
       );
       expect(dependsOnRelations.length).toBeGreaterThanOrEqual(2);
 
       // main 鈫?utils
       const mainToUtils = dependsOnRelations.find(
-        (r) =>
+        r =>
           r.sourceEntityId.includes("src/main") &&
-          r.targetEntityId.includes("src/utils"),
+          r.targetEntityId.includes("src/utils")
       );
       expect(mainToUtils).toBeDefined();
       expect(mainToUtils!.evidence).toContain("import");
 
       // main 鈫?helpers/greet
       const mainToGreet = dependsOnRelations.find(
-        (r) =>
+        r =>
           r.sourceEntityId.includes("src/main") &&
-          r.targetEntityId.includes("src/helpers/greet"),
+          r.targetEntityId.includes("src/helpers/greet")
       );
       expect(mainToGreet).toBeDefined();
     });
@@ -308,9 +318,12 @@ import path from "path";
 import { myUtil } from "./my-util.js";
 
 const app = express();
-`,
+`
       );
-      writeTempFile("src/my-util.ts", 'export function myUtil() { return 1; }\n');
+      writeTempFile(
+        "src/my-util.ts",
+        "export function myUtil() { return 1; }\n"
+      );
 
       const result = await extractor.extract({
         repoPath: tmpDir,
@@ -319,7 +332,7 @@ const app = express();
       });
 
       const dependsOnRelations = result.relations.filter(
-        (r) => r.relationType === "DEPENDS_ON",
+        r => r.relationType === "DEPENDS_ON"
       );
       // Should only have 1 relation (app 鈫?my-util), not express or path
       expect(dependsOnRelations.length).toBe(1);
@@ -332,8 +345,11 @@ const app = express();
   // -------------------------------------------------------------------------
   describe("extraction stats", () => {
     it("records correct extraction stats", async () => {
-      writeTempFile("a.ts", 'export const a = 1;\n');
-      writeTempFile("b.ts", 'import { a } from "./a.js";\nexport const b = a + 1;\n');
+      writeTempFile("a.ts", "export const a = 1;\n");
+      writeTempFile(
+        "b.ts",
+        'import { a } from "./a.js";\nexport const b = a + 1;\n'
+      );
 
       const result = await extractor.extract({
         repoPath: tmpDir,
@@ -366,11 +382,11 @@ const app = express();
   // -------------------------------------------------------------------------
   describe("error handling", () => {
     it("handles files with syntax errors gracefully", async () => {
-      writeTempFile("good.ts", 'export const x = 1;\n');
+      writeTempFile("good.ts", "export const x = 1;\n");
       // TypeScript parser is lenient 鈥?it won't throw on most syntax errors.
       // But we can test with an unreadable file scenario by making the
       // extractor handle errors in the stats.
-      writeTempFile("bad.ts", 'export const = ;\n'); // still parseable by TS
+      writeTempFile("bad.ts", "export const = ;\n"); // still parseable by TS
 
       const result = await extractor.extract({
         repoPath: tmpDir,
@@ -385,7 +401,7 @@ const app = express();
     });
 
     it("records errors for files that cannot be read", async () => {
-      writeTempFile("readable.ts", 'export const x = 1;\n');
+      writeTempFile("readable.ts", "export const x = 1;\n");
 
       // Create a file path that exists but make it a directory to cause read error
       const badPath = path.join(tmpDir, "unreadable.ts");
@@ -427,7 +443,7 @@ router.get("/users/:id", (req, res) => {
 });
 
 export default router;
-`,
+`
       );
 
       const result = await extractor.extract({
@@ -436,27 +452,23 @@ export default router;
         projectId: TEST_PROJECT,
       });
 
-      const apiEntities = result.entities.filter(
-        (e) => e.entityType === "API",
-      );
+      const apiEntities = result.entities.filter(e => e.entityType === "API");
       expect(apiEntities.length).toBe(3);
 
-      const getUsers = apiEntities.find((e) => e.name === "GET /users");
+      const getUsers = apiEntities.find(e => e.name === "GET /users");
       expect(getUsers).toBeDefined();
       expect(getUsers!.confidence).toBe(0.85);
       expect(
-        (getUsers!.extendedAttributes as Record<string, unknown>).httpMethod,
+        (getUsers!.extendedAttributes as Record<string, unknown>).httpMethod
       ).toBe("GET");
       expect(
-        (getUsers!.extendedAttributes as Record<string, unknown>).endpoint,
+        (getUsers!.extendedAttributes as Record<string, unknown>).endpoint
       ).toBe("/users");
 
-      const postUsers = apiEntities.find((e) => e.name === "POST /users");
+      const postUsers = apiEntities.find(e => e.name === "POST /users");
       expect(postUsers).toBeDefined();
 
-      const getUserById = apiEntities.find(
-        (e) => e.name === "GET /users/:id",
-      );
+      const getUserById = apiEntities.find(e => e.name === "GET /users/:id");
       expect(getUserById).toBeDefined();
     });
   });
@@ -466,7 +478,7 @@ export default router;
   // -------------------------------------------------------------------------
   describe("graph store integration", () => {
     it("writes extracted entities to the graph store via mergeEntity", async () => {
-      writeTempFile("src/index.ts", 'export const main = () => {};\n');
+      writeTempFile("src/index.ts", "export const main = () => {};\n");
 
       await extractor.extract({
         repoPath: tmpDir,
@@ -501,11 +513,11 @@ export default router;
       exec('git config user.name "Test"');
 
       // Create initial files
-      writeTempFile("src/keep.ts", 'export const keep = 1;\n');
-      writeTempFile("src/remove.ts", 'export const remove = 2;\n');
+      writeTempFile("src/keep.ts", "export const keep = 1;\n");
+      writeTempFile("src/remove.ts", "export const remove = 2;\n");
       writeTempFile(
         "src/modify.ts",
-        'import { remove } from "./remove.js";\nexport const modify = remove;\n',
+        'import { remove } from "./remove.js";\nexport const modify = remove;\n'
       );
 
       exec("git add -A");
@@ -527,7 +539,7 @@ export default router;
 
       // Now make changes: modify one file, add a new file
       writeTempFile("src/modify.ts", 'export const modify = "changed";\n');
-      writeTempFile("src/added.ts", 'export const added = true;\n');
+      writeTempFile("src/added.ts", "export const added = true;\n");
 
       execSync("git add -A", { cwd: tmpDir });
       execSync('git commit -m "changes"', { cwd: tmpDir });
@@ -544,8 +556,8 @@ export default router;
       expect(result.stats.filesAnalyzed).toBe(2);
 
       const moduleNames = result.entities
-        .filter((e) => e.entityType === "CodeModule")
-        .map((e) => e.name);
+        .filter(e => e.entityType === "CodeModule")
+        .map(e => e.name);
       expect(moduleNames).toContain("src/modify");
       expect(moduleNames).toContain("src/added");
       expect(moduleNames).not.toContain("src/keep");
@@ -589,7 +601,7 @@ export default router;
         entityType: "CodeModule",
         name: "src/remove",
       });
-      const deprecated = afterEntities.find((e) => e.name === "src/remove");
+      const deprecated = afterEntities.find(e => e.name === "src/remove");
       expect(deprecated).toBeDefined();
       expect(deprecated!.status).toBe("deprecated");
       expect(deprecated!.deprecationReason).toContain(initialCommit);
@@ -612,7 +624,7 @@ export default router;
         entityType: "CodeModule",
         name: "src/modify",
       });
-      const modifyEntity = modifyEntities.find((e) => e.name === "src/modify");
+      const modifyEntity = modifyEntities.find(e => e.name === "src/modify");
       expect(modifyEntity).toBeDefined();
 
       // Now delete src/modify.ts (which has DEPENDS_ON 鈫?src/remove)
@@ -634,14 +646,14 @@ export default router;
         entityType: "CodeModule",
         name: "src/modify",
       });
-      const deprecatedModify = modifyAfter.find((e) => e.name === "src/modify");
+      const deprecatedModify = modifyAfter.find(e => e.name === "src/modify");
       expect(deprecatedModify).toBeDefined();
       expect(deprecatedModify!.status).toBe("deprecated");
     });
 
     it("handles non-git repos gracefully", async () => {
       // tmpDir is NOT a git repo 鈥?no git init
-      writeTempFile("src/file.ts", 'export const x = 1;\n');
+      writeTempFile("src/file.ts", "export const x = 1;\n");
 
       const result = await extractor.extract({
         repoPath: tmpDir,
@@ -658,7 +670,7 @@ export default router;
     it("logs ExtractionStats after extraction", async () => {
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-      writeTempFile("src/index.ts", 'export const x = 1;\n');
+      writeTempFile("src/index.ts", "export const x = 1;\n");
 
       await extractor.extract({
         repoPath: tmpDir,
@@ -672,7 +684,7 @@ export default router;
           filesAnalyzed: 1,
           entitiesExtracted: 1,
           relationsExtracted: 0,
-        }),
+        })
       );
 
       consoleSpy.mockRestore();
@@ -698,7 +710,10 @@ export default router;
                 entityType: "CodeModule",
                 name: "utils_module",
                 description: "Utility functions",
-                extendedAttributes: { filePath: "utils.py", language: "python" },
+                extendedAttributes: {
+                  filePath: "utils.py",
+                  language: "python",
+                },
               },
             ],
             relations: [
@@ -709,17 +724,20 @@ export default router;
                 evidence: "import utils",
               },
             ],
-          }),
+          })
         ),
       };
 
       const llmExtractor = new CodeKnowledgeExtractor(
         graphStore,
         ontologyRegistry,
-        mockLLM,
+        mockLLM
       );
 
-      writeTempFile("main.py", 'import utils\n\ndef main():\n    utils.run()\n');
+      writeTempFile(
+        "main.py",
+        "import utils\n\ndef main():\n    utils.run()\n"
+      );
       writeTempFile("utils.py", 'def run():\n    print("running")\n');
 
       const result = await llmExtractor.extract({
@@ -751,17 +769,17 @@ export default router;
               },
             ],
             relations: [],
-          }),
+          })
         ),
       };
 
       const llmExtractor = new CodeKnowledgeExtractor(
         graphStore,
         ontologyRegistry,
-        mockLLM,
+        mockLLM
       );
 
-      writeTempFile("app.go", 'package main\n\nfunc main() {}\n');
+      writeTempFile("app.go", "package main\n\nfunc main() {}\n");
 
       const result = await llmExtractor.extract({
         repoPath: tmpDir,
@@ -791,7 +809,7 @@ export default router;
 
       // Should log a warning about missing LLM provider
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("no LLM provider is configured"),
+        expect.stringContaining("no LLM provider is configured")
       );
 
       warnSpy.mockRestore();
@@ -805,7 +823,7 @@ export default router;
       const llmExtractor = new CodeKnowledgeExtractor(
         graphStore,
         ontologyRegistry,
-        mockLLM,
+        mockLLM
       );
 
       writeTempFile("main.py", 'print("hello")\n');
@@ -819,18 +837,22 @@ export default router;
       // Should not crash 鈥?entities empty, error recorded in stats
       expect(result.entities).toHaveLength(0);
       expect(result.stats.errors.length).toBeGreaterThan(0);
-      expect(result.stats.errors[0].reason).toContain("Failed to parse LLM response");
+      expect(result.stats.errors[0].reason).toContain(
+        "Failed to parse LLM response"
+      );
     });
 
     it("handles LLM call failures gracefully", async () => {
       const mockLLM: CodeExtractorLLMProvider = {
-        generate: vi.fn().mockRejectedValue(new Error("LLM service unavailable")),
+        generate: vi
+          .fn()
+          .mockRejectedValue(new Error("LLM service unavailable")),
       };
 
       const llmExtractor = new CodeKnowledgeExtractor(
         graphStore,
         ontologyRegistry,
-        mockLLM,
+        mockLLM
       );
 
       writeTempFile("main.py", 'print("hello")\n');
@@ -844,16 +866,19 @@ export default router;
       // Should not crash 鈥?error recorded in stats
       expect(result.entities).toHaveLength(0);
       expect(result.stats.errors.length).toBeGreaterThan(0);
-      expect(result.stats.errors[0].reason).toContain("LLM service unavailable");
+      expect(result.stats.errors[0].reason).toContain(
+        "LLM service unavailable"
+      );
     });
 
     it("parses LLM response wrapped in markdown code blocks", () => {
       const llmExtractor = new CodeKnowledgeExtractor(
         graphStore,
-        ontologyRegistry,
+        ontologyRegistry
       );
 
-      const response = '```json\n{"entities": [{"entityType": "CodeModule", "name": "test", "description": "test mod"}], "relations": []}\n```';
+      const response =
+        '```json\n{"entities": [{"entityType": "CodeModule", "name": "test", "description": "test mod"}], "relations": []}\n```';
       const parsed = llmExtractor.parseLLMExtractionResponse(response);
 
       expect(parsed).not.toBeNull();
@@ -873,14 +898,14 @@ export default router;
               },
             ],
             relations: [],
-          }),
+          })
         ),
       };
 
       const llmExtractor = new CodeKnowledgeExtractor(
         graphStore,
         ontologyRegistry,
-        mockLLM,
+        mockLLM
       );
 
       writeTempFile("lib.rs", 'pub fn hello() { println!("hello"); }\n');
@@ -931,7 +956,11 @@ describe("Feature: knowledge-graph, Property 5: 提取实体扩展属性完整�
     }
   }
 
-  function pbtWriteTempFile(dir: string, relPath: string, content: string): void {
+  function pbtWriteTempFile(
+    dir: string,
+    relPath: string,
+    content: string
+  ): void {
     const fullPath = path.join(dir, relPath);
     const d = path.dirname(fullPath);
     if (!fs.existsSync(d)) {
@@ -946,97 +975,165 @@ describe("Feature: knowledge-graph, Property 5: 提取实体扩展属性完整�
 
   /** Reserved words that cannot be used as identifiers */
   const RESERVED = new Set([
-    "if", "for", "while", "do", "return", "const", "let", "var", "function",
-    "class", "export", "import", "default", "switch", "case", "break",
-    "continue", "new", "this", "true", "false", "null", "undefined", "typeof",
-    "void", "delete", "in", "of", "instanceof", "throw", "try", "catch",
-    "finally", "with", "debugger", "yield", "async", "await", "enum",
-    "interface", "type", "abstract", "as", "from", "get", "set", "static",
-    "super", "extends", "implements",
+    "if",
+    "for",
+    "while",
+    "do",
+    "return",
+    "const",
+    "let",
+    "var",
+    "function",
+    "class",
+    "export",
+    "import",
+    "default",
+    "switch",
+    "case",
+    "break",
+    "continue",
+    "new",
+    "this",
+    "true",
+    "false",
+    "null",
+    "undefined",
+    "typeof",
+    "void",
+    "delete",
+    "in",
+    "of",
+    "instanceof",
+    "throw",
+    "try",
+    "catch",
+    "finally",
+    "with",
+    "debugger",
+    "yield",
+    "async",
+    "await",
+    "enum",
+    "interface",
+    "type",
+    "abstract",
+    "as",
+    "from",
+    "get",
+    "set",
+    "static",
+    "super",
+    "extends",
+    "implements",
   ]);
 
   /** Generate a valid TS identifier */
-  const identifierArb = fc.stringMatching(/^[a-z][a-zA-Z0-9]{0,12}$/)
-    .filter((s) => s.length > 0 && !RESERVED.has(s));
+  const identifierArb = fc
+    .stringMatching(/^[a-z][a-zA-Z0-9]{0,12}$/)
+    .filter(s => s.length > 0 && !RESERVED.has(s));
 
   /** Generate a TypeScript module with exported functions/consts and optional control flow */
-  const tsModuleArb = fc.record({
-    fileName: identifierArb,
-    exportedFunctions: fc.array(identifierArb, { minLength: 0, maxLength: 4 }),
-    exportedConsts: fc.array(identifierArb, { minLength: 0, maxLength: 3 }),
-    hasIfStatement: fc.boolean(),
-    hasForLoop: fc.boolean(),
-  }).map(({ fileName, exportedFunctions, exportedConsts, hasIfStatement, hasForLoop }) => {
-    const usedNames = new Set<string>();
-    const funcs = exportedFunctions.filter((n) => {
-      if (usedNames.has(n)) return false;
-      usedNames.add(n);
-      return true;
-    });
-    const consts = exportedConsts.filter((n) => {
-      if (usedNames.has(n)) return false;
-      usedNames.add(n);
-      return true;
-    });
+  const tsModuleArb = fc
+    .record({
+      fileName: identifierArb,
+      exportedFunctions: fc.array(identifierArb, {
+        minLength: 0,
+        maxLength: 4,
+      }),
+      exportedConsts: fc.array(identifierArb, { minLength: 0, maxLength: 3 }),
+      hasIfStatement: fc.boolean(),
+      hasForLoop: fc.boolean(),
+    })
+    .map(
+      ({
+        fileName,
+        exportedFunctions,
+        exportedConsts,
+        hasIfStatement,
+        hasForLoop,
+      }) => {
+        const usedNames = new Set<string>();
+        const funcs = exportedFunctions.filter(n => {
+          if (usedNames.has(n)) return false;
+          usedNames.add(n);
+          return true;
+        });
+        const consts = exportedConsts.filter(n => {
+          if (usedNames.has(n)) return false;
+          usedNames.add(n);
+          return true;
+        });
 
-    let code = "";
-    for (const fn of funcs) {
-      code += `export function ${fn}(x: number): number {\n`;
-      if (hasIfStatement) code += `  if (x > 0) { return x; }\n`;
-      if (hasForLoop) code += `  for (let i = 0; i < x; i++) { x++; }\n`;
-      code += `  return x;\n}\n\n`;
-    }
-    for (const c of consts) {
-      code += `export const ${c} = 42;\n`;
-    }
-    if (code.trim() === "") {
-      code = "export const _placeholder = 1;\n";
-    }
-    return { fileName, code };
-  });
+        let code = "";
+        for (const fn of funcs) {
+          code += `export function ${fn}(x: number): number {\n`;
+          if (hasIfStatement) code += `  if (x > 0) { return x; }\n`;
+          if (hasForLoop) code += `  for (let i = 0; i < x; i++) { x++; }\n`;
+          code += `  return x;\n}\n\n`;
+        }
+        for (const c of consts) {
+          code += `export const ${c} = 42;\n`;
+        }
+        if (code.trim() === "") {
+          code = "export const _placeholder = 1;\n";
+        }
+        return { fileName, code };
+      }
+    );
 
   /** HTTP methods for route generation */
-  const httpMethodArb = fc.constantFrom("get", "post", "put", "delete", "patch");
+  const httpMethodArb = fc.constantFrom(
+    "get",
+    "post",
+    "put",
+    "delete",
+    "patch"
+  );
 
   /** Generate an Express-style route file with at least one route */
-  const apiRouteFileArb = fc.record({
-    fileName: identifierArb,
-    routes: fc.array(
-      fc.record({
-        method: httpMethodArb,
-        endpoint: fc.stringMatching(/^\/[a-z]{1,8}(\/:[a-z]{1,6})?$/),
-      }),
-      { minLength: 1, maxLength: 5 },
-    ),
-  }).map(({ fileName, routes }) => {
-    const seen = new Set<string>();
-    const uniqueRoutes = routes.filter((r) => {
-      const key = `${r.method}:${r.endpoint}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+  const apiRouteFileArb = fc
+    .record({
+      fileName: identifierArb,
+      routes: fc.array(
+        fc.record({
+          method: httpMethodArb,
+          endpoint: fc.stringMatching(/^\/[a-z]{1,8}(\/:[a-z]{1,6})?$/),
+        }),
+        { minLength: 1, maxLength: 5 }
+      ),
+    })
+    .map(({ fileName, routes }) => {
+      const seen = new Set<string>();
+      const uniqueRoutes = routes.filter(r => {
+        const key = `${r.method}:${r.endpoint}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
 
-    let code = `import { Router } from "express";\n\nconst router = Router();\n\n`;
-    for (const r of uniqueRoutes) {
-      code += `router.${r.method}("${r.endpoint}", (req, res) => {\n  res.json({});\n});\n\n`;
-    }
-    code += `export default router;\n`;
-    return { fileName, code, expectedRouteCount: uniqueRoutes.length };
-  });
+      let code = `import { Router } from "express";\n\nconst router = Router();\n\n`;
+      for (const r of uniqueRoutes) {
+        code += `router.${r.method}("${r.endpoint}", (req, res) => {\n  res.json({});\n});\n\n`;
+      }
+      code += `export default router;\n`;
+      return { fileName, code, expectedRouteCount: uniqueRoutes.length };
+    });
 
   it("CodeModule entities always contain filePath, language, linesOfCode, complexity, exports", async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(tsModuleArb, { minLength: 1, maxLength: 5 }).map((modules) => {
-          const seen = new Set<string>();
-          return modules.filter((m) => {
-            if (seen.has(m.fileName)) return false;
-            seen.add(m.fileName);
-            return true;
-          });
-        }).filter((arr) => arr.length > 0),
-        async (modules) => {
+        fc
+          .array(tsModuleArb, { minLength: 1, maxLength: 5 })
+          .map(modules => {
+            const seen = new Set<string>();
+            return modules.filter(m => {
+              if (seen.has(m.fileName)) return false;
+              seen.add(m.fileName);
+              return true;
+            });
+          })
+          .filter(arr => arr.length > 0),
+        async modules => {
           const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kg-pbt5-cm-"));
           pbtCleanupGraphFile();
           const gs = new GraphStore();
@@ -1055,13 +1152,16 @@ describe("Feature: knowledge-graph, Property 5: 提取实体扩展属性完整�
             });
 
             const codeModules = result.entities.filter(
-              (e) => e.entityType === "CodeModule",
+              e => e.entityType === "CodeModule"
             );
 
             expect(codeModules.length).toBeGreaterThanOrEqual(1);
 
             for (const entity of codeModules) {
-              const attrs = entity.extendedAttributes as Record<string, unknown>;
+              const attrs = entity.extendedAttributes as Record<
+                string,
+                unknown
+              >;
 
               // filePath: non-empty string
               expect(attrs).toHaveProperty("filePath");
@@ -1091,73 +1191,76 @@ describe("Feature: knowledge-graph, Property 5: 提取实体扩展属性完整�
             pbtCleanupGraphFile();
             fs.rmSync(dir, { recursive: true, force: true });
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("API entities always contain endpoint, httpMethod, requestSchema, responseSchema, authRequired", async () => {
     await fc.assert(
-      fc.asyncProperty(
-        apiRouteFileArb,
-        async (routeFile) => {
-          const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kg-pbt5-api-"));
-          pbtCleanupGraphFile();
-          const gs = new GraphStore();
-          const or = new OntologyRegistry();
-          const ext = new CodeKnowledgeExtractor(gs, or);
+      fc.asyncProperty(apiRouteFileArb, async routeFile => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kg-pbt5-api-"));
+        pbtCleanupGraphFile();
+        const gs = new GraphStore();
+        const or = new OntologyRegistry();
+        const ext = new CodeKnowledgeExtractor(gs, or);
 
-          try {
-            pbtWriteTempFile(dir, `routes/${routeFile.fileName}.ts`, routeFile.code);
+        try {
+          pbtWriteTempFile(
+            dir,
+            `routes/${routeFile.fileName}.ts`,
+            routeFile.code
+          );
 
-            const result = await ext.extract({
-              repoPath: dir,
-              language: "typescript",
-              projectId: PBT_PROJECT,
-            });
+          const result = await ext.extract({
+            repoPath: dir,
+            language: "typescript",
+            projectId: PBT_PROJECT,
+          });
 
-            const apiEntities = result.entities.filter(
-              (e) => e.entityType === "API",
+          const apiEntities = result.entities.filter(
+            e => e.entityType === "API"
+          );
+
+          expect(apiEntities.length).toBeGreaterThanOrEqual(1);
+
+          for (const entity of apiEntities) {
+            const attrs = entity.extendedAttributes as Record<string, unknown>;
+
+            // endpoint: string starting with /
+            expect(attrs).toHaveProperty("endpoint");
+            expect(typeof attrs.endpoint).toBe("string");
+            expect((attrs.endpoint as string).startsWith("/")).toBe(true);
+
+            // httpMethod: valid HTTP method (uppercase)
+            expect(attrs).toHaveProperty("httpMethod");
+            expect(typeof attrs.httpMethod).toBe("string");
+            expect(["GET", "POST", "PUT", "DELETE", "PATCH"]).toContain(
+              attrs.httpMethod
             );
 
-            expect(apiEntities.length).toBeGreaterThanOrEqual(1);
+            // requestSchema: non-null object
+            expect(attrs).toHaveProperty("requestSchema");
+            expect(typeof attrs.requestSchema).toBe("object");
+            expect(attrs.requestSchema).not.toBeNull();
 
-            for (const entity of apiEntities) {
-              const attrs = entity.extendedAttributes as Record<string, unknown>;
+            // responseSchema: non-null object
+            expect(attrs).toHaveProperty("responseSchema");
+            expect(typeof attrs.responseSchema).toBe("object");
+            expect(attrs.responseSchema).not.toBeNull();
 
-              // endpoint: string starting with /
-              expect(attrs).toHaveProperty("endpoint");
-              expect(typeof attrs.endpoint).toBe("string");
-              expect((attrs.endpoint as string).startsWith("/")).toBe(true);
-
-              // httpMethod: valid HTTP method (uppercase)
-              expect(attrs).toHaveProperty("httpMethod");
-              expect(typeof attrs.httpMethod).toBe("string");
-              expect(["GET", "POST", "PUT", "DELETE", "PATCH"]).toContain(attrs.httpMethod);
-
-              // requestSchema: non-null object
-              expect(attrs).toHaveProperty("requestSchema");
-              expect(typeof attrs.requestSchema).toBe("object");
-              expect(attrs.requestSchema).not.toBeNull();
-
-              // responseSchema: non-null object
-              expect(attrs).toHaveProperty("responseSchema");
-              expect(typeof attrs.responseSchema).toBe("object");
-              expect(attrs.responseSchema).not.toBeNull();
-
-              // authRequired: boolean
-              expect(attrs).toHaveProperty("authRequired");
-              expect(typeof attrs.authRequired).toBe("boolean");
-            }
-          } finally {
-            gs.forceSave();
-            pbtCleanupGraphFile();
-            fs.rmSync(dir, { recursive: true, force: true });
+            // authRequired: boolean
+            expect(attrs).toHaveProperty("authRequired");
+            expect(typeof attrs.authRequired).toBe("boolean");
           }
-        },
-      ),
-      { numRuns: 100 },
+        } finally {
+          gs.forceSave();
+          pbtCleanupGraphFile();
+          fs.rmSync(dir, { recursive: true, force: true });
+        }
+      }),
+      { numRuns: 100 }
     );
   });
 });
@@ -1188,7 +1291,11 @@ describe("Feature: knowledge-graph, Property 6: LLM 提取默认置信度", () =
     }
   }
 
-  function pbt6WriteTempFile(dir: string, relPath: string, content: string): void {
+  function pbt6WriteTempFile(
+    dir: string,
+    relPath: string,
+    content: string
+  ): void {
     const fullPath = path.join(dir, relPath);
     const d = path.dirname(fullPath);
     if (!fs.existsSync(d)) {
@@ -1203,7 +1310,17 @@ describe("Feature: knowledge-graph, Property 6: LLM 提取默认置信度", () =
 
   /** Non-AST languages that trigger LLM extraction */
   const llmLanguageArb = fc.constantFrom(
-    "python", "rust", "go", "java", "kotlin", "scala", "ruby", "php", "swift", "c", "cpp",
+    "python",
+    "rust",
+    "go",
+    "java",
+    "kotlin",
+    "scala",
+    "ruby",
+    "php",
+    "swift",
+    "c",
+    "cpp"
   );
 
   /** File extension matching the language */
@@ -1222,27 +1339,37 @@ describe("Feature: knowledge-graph, Property 6: LLM 提取默认置信度", () =
   };
 
   /** Generate a valid identifier for entity names */
-  const identArb = fc.stringMatching(/^[A-Z][a-zA-Z0-9]{1,10}$/).filter((s) => s.length >= 2);
+  const identArb = fc
+    .stringMatching(/^[A-Z][a-zA-Z0-9]{1,10}$/)
+    .filter(s => s.length >= 2);
 
   /** Generate a list of LLM-extracted entities (1-5) with varying entity types */
-  const entityTypeArb = fc.constantFrom("CodeModule", "API", "BusinessRule", "TechStack");
+  const entityTypeArb = fc.constantFrom(
+    "CodeModule",
+    "API",
+    "BusinessRule",
+    "TechStack"
+  );
 
-  const llmEntitiesArb = fc.array(
-    fc.record({
-      entityType: entityTypeArb,
-      name: identArb,
-      description: fc.string({ minLength: 1, maxLength: 40 }),
-    }),
-    { minLength: 1, maxLength: 5 },
-  ).map((entities) => {
-    // Deduplicate by name
-    const seen = new Set<string>();
-    return entities.filter((e) => {
-      if (seen.has(e.name)) return false;
-      seen.add(e.name);
-      return true;
-    });
-  }).filter((arr) => arr.length > 0);
+  const llmEntitiesArb = fc
+    .array(
+      fc.record({
+        entityType: entityTypeArb,
+        name: identArb,
+        description: fc.string({ minLength: 1, maxLength: 40 }),
+      }),
+      { minLength: 1, maxLength: 5 }
+    )
+    .map(entities => {
+      // Deduplicate by name
+      const seen = new Set<string>();
+      return entities.filter(e => {
+        if (seen.has(e.name)) return false;
+        seen.add(e.name);
+        return true;
+      });
+    })
+    .filter(arr => arr.length > 0);
 
   /** Generate optional LLM-extracted relations */
   const llmRelationsArb = fc.array(
@@ -1252,7 +1379,7 @@ describe("Feature: knowledge-graph, Property 6: LLM 提取默认置信度", () =
       targetEntityName: identArb,
       evidence: fc.string({ minLength: 1, maxLength: 30 }),
     }),
-    { minLength: 0, maxLength: 3 },
+    { minLength: 0, maxLength: 3 }
   );
 
   it("all LLM-extracted entities have confidence === 0.7 and source === 'llm_inferred'", async () => {
@@ -1282,7 +1409,11 @@ describe("Feature: knowledge-graph, Property 6: LLM 提取默认置信度", () =
           try {
             // Write a dummy source file with the correct extension
             const ext_ = langExtMap[language] || ".txt";
-            pbt6WriteTempFile(dir, `src/module${ext_}`, `// dummy ${language} source\n`);
+            pbt6WriteTempFile(
+              dir,
+              `src/module${ext_}`,
+              `// dummy ${language} source\n`
+            );
 
             const result = await ext.extract({
               repoPath: dir,
@@ -1308,9 +1439,9 @@ describe("Feature: knowledge-graph, Property 6: LLM 提取默认置信度", () =
             pbt6CleanupGraphFile();
             fs.rmSync(dir, { recursive: true, force: true });
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -1343,7 +1474,11 @@ describe("Feature: knowledge-graph, Property 17: 删除文件触发废弃标记�
     }
   }
 
-  function pbt17WriteTempFile(dir: string, relPath: string, content: string): void {
+  function pbt17WriteTempFile(
+    dir: string,
+    relPath: string,
+    content: string
+  ): void {
     const fullPath = path.join(dir, relPath);
     const d = path.dirname(fullPath);
     if (!fs.existsSync(d)) {
@@ -1362,18 +1497,62 @@ describe("Feature: knowledge-graph, Property 17: 删除文件触发废弃标记�
 
   /** Reserved words that cannot be used as identifiers */
   const RESERVED = new Set([
-    "if", "for", "while", "do", "return", "const", "let", "var", "function",
-    "class", "export", "import", "default", "switch", "case", "break",
-    "continue", "new", "this", "true", "false", "null", "undefined", "typeof",
-    "void", "delete", "in", "of", "instanceof", "throw", "try", "catch",
-    "finally", "with", "debugger", "yield", "async", "await", "enum",
-    "interface", "type", "abstract", "as", "from", "get", "set", "static",
-    "super", "extends", "implements",
+    "if",
+    "for",
+    "while",
+    "do",
+    "return",
+    "const",
+    "let",
+    "var",
+    "function",
+    "class",
+    "export",
+    "import",
+    "default",
+    "switch",
+    "case",
+    "break",
+    "continue",
+    "new",
+    "this",
+    "true",
+    "false",
+    "null",
+    "undefined",
+    "typeof",
+    "void",
+    "delete",
+    "in",
+    "of",
+    "instanceof",
+    "throw",
+    "try",
+    "catch",
+    "finally",
+    "with",
+    "debugger",
+    "yield",
+    "async",
+    "await",
+    "enum",
+    "interface",
+    "type",
+    "abstract",
+    "as",
+    "from",
+    "get",
+    "set",
+    "static",
+    "super",
+    "extends",
+    "implements",
   ]);
 
   /** Generate a valid TS identifier */
-  const identifierArb = fc.stringMatching(/^[a-z][a-zA-Z0-9]{1,8}$/)
-    .filter((s) => s.length >= 2 && !RESERVED.has(s));
+  const identifierArb = fc
+    .stringMatching(/^[a-z][a-zA-Z0-9]{1,8}$/)
+    .filter(s => s.length >= 2 && !RESERVED.has(s));
 
   /**
    * Generate a scenario: a set of modules where some import from others.
@@ -1390,11 +1569,17 @@ describe("Feature: knowledge-graph, Property 17: 删除文件触发废弃标记�
       const allNames: string[] = [];
       const seen = new Set<string>();
       for (const n of baseModules) {
-        if (!seen.has(n)) { seen.add(n); allNames.push(n); }
+        if (!seen.has(n)) {
+          seen.add(n);
+          allNames.push(n);
+        }
       }
       const bases = [...allNames];
       for (const n of depModules) {
-        if (!seen.has(n)) { seen.add(n); allNames.push(n); }
+        if (!seen.has(n)) {
+          seen.add(n);
+          allNames.push(n);
+        }
       }
       const deps = allNames.slice(bases.length);
 
@@ -1404,28 +1589,28 @@ describe("Feature: knowledge-graph, Property 17: 删除文件触发废弃标记�
 
       // Pick which modules to delete (at least 1)
       const maxDelete = allNames.length;
-      return fc
-        .integer({ min: 0, max: maxDelete - 1 })
-        .chain((deleteCount) => {
-          const actualDeleteCount = deleteCount + 1; // at least 1
-          return fc
-            .shuffledSubarray(allNames, {
-              minLength: Math.min(actualDeleteCount, allNames.length),
-              maxLength: Math.min(actualDeleteCount, allNames.length),
-            })
-            .map((toDelete) => ({
-              bases,
-              deps,
-              allNames,
-              toDelete: new Set(toDelete),
-            }));
-        });
+      return fc.integer({ min: 0, max: maxDelete - 1 }).chain(deleteCount => {
+        const actualDeleteCount = deleteCount + 1; // at least 1
+        return fc
+          .shuffledSubarray(allNames, {
+            minLength: Math.min(actualDeleteCount, allNames.length),
+            maxLength: Math.min(actualDeleteCount, allNames.length),
+          })
+          .map(toDelete => ({
+            bases,
+            deps,
+            allNames,
+            toDelete: new Set(toDelete),
+          }));
+      });
     })
-    .filter((s): s is NonNullable<typeof s> => s !== null && s.bases.length > 0);
+    .filter(
+      (s): s is NonNullable<typeof s> => s !== null && s.bases.length > 0
+    );
 
   it("deleted files and their DEPENDS_ON/CALLS targets are deprecated with commit hash", async () => {
     await fc.assert(
-      fc.asyncProperty(scenarioArb, async (scenario) => {
+      fc.asyncProperty(scenarioArb, async scenario => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kg-pbt17-"));
         pbt17CleanupGraphFile();
         const gs = new GraphStore();
@@ -1490,7 +1675,7 @@ describe("Feature: knowledge-graph, Property 17: 删除文件触发废弃标记�
               entityType: "CodeModule",
               name: moduleName,
             });
-            const entity = entities.find((e) => e.name === moduleName);
+            const entity = entities.find(e => e.name === moduleName);
 
             // The entity must exist and be deprecated
             expect(entity).toBeDefined();
@@ -1528,7 +1713,7 @@ describe("Feature: knowledge-graph, Property 17: 删除文件触发废弃标记�
           fs.rmSync(dir, { recursive: true, force: true });
         }
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });

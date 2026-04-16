@@ -3,7 +3,10 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import type { ExecutionPlanJob, ExecutorJobRequest } from "../../../../shared/executor/contracts.js";
+import type {
+  ExecutionPlanJob,
+  ExecutorJobRequest,
+} from "../../../../shared/executor/contracts.js";
 import { EXECUTOR_CONTRACT_VERSION } from "../../../../shared/executor/contracts.js";
 import type { StoredJobRecord } from "../types.js";
 import type { CallbackSender } from "../callback-sender.js";
@@ -80,20 +83,25 @@ describe("NativeRunner", () => {
   it("runs payload.command inside workspaceRoot", async () => {
     const root = mkdtempSync(join(tmpdir(), "native-runner-"));
     try {
-      writeFileSync(join(root, "script.js"), "console.log('hello-native')\n", "utf8");
+      writeFileSync(
+        join(root, "script.js"),
+        "console.log('hello-native')\n",
+        "utf8"
+      );
 
       const record = makeRecord(root);
-      const callbackSender = { send: async () => {} } as unknown as CallbackSender;
+      const callbackSender = {
+        send: async () => {},
+      } as unknown as CallbackSender;
       const runner = new NativeRunner(callbackSender);
       const events: any[] = [];
 
-      await runner.run(record, (event) => events.push(event));
+      await runner.run(record, event => events.push(event));
 
-      expect(events.some((e) => e.type === "job.started")).toBe(true);
-      expect(events.some((e) => e.type === "job.completed")).toBe(true);
+      expect(events.some(e => e.type === "job.started")).toBe(true);
+      expect(events.some(e => e.type === "job.completed")).toBe(true);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 });
-

@@ -3,7 +3,7 @@ import type {
   LineageNode,
   LineageEdge,
   LineageGraph,
-} from '../../../../shared/replay/contracts';
+} from "../../../../shared/replay/contracts";
 
 /* ─── Local Types ─── */
 
@@ -38,23 +38,27 @@ function extractOutputKeys(event: ExecutionEvent): string[] {
   const keys: string[] = [];
 
   // CODE_EXECUTED → output keys from executionOutput
-  if (event.eventType === 'CODE_EXECUTED' && data.executionOutput) {
+  if (event.eventType === "CODE_EXECUTED" && data.executionOutput) {
     keys.push(`code-output:${event.eventId}`);
   }
 
   // DECISION_MADE → decision result as a data key
-  if (event.eventType === 'DECISION_MADE' && data.decisionResult !== undefined) {
+  if (
+    event.eventType === "DECISION_MADE" &&
+    data.decisionResult !== undefined
+  ) {
     keys.push(`decision:${data.decisionId ?? event.eventId}`);
   }
 
   // RESOURCE_ACCESSED → resource data
-  if (event.eventType === 'RESOURCE_ACCESSED' && data.resourceId) {
+  if (event.eventType === "RESOURCE_ACCESSED" && data.resourceId) {
     keys.push(`resource:${data.resourceId}`);
   }
 
   // MESSAGE_SENT / MESSAGE_RECEIVED → message data
   if (
-    (event.eventType === 'MESSAGE_SENT' || event.eventType === 'MESSAGE_RECEIVED') &&
+    (event.eventType === "MESSAGE_SENT" ||
+      event.eventType === "MESSAGE_RECEIVED") &&
     data.messageId
   ) {
     keys.push(`message:${data.messageId}`);
@@ -71,7 +75,7 @@ function extractInputKeys(event: ExecutionEvent): string[] {
   const keys: string[] = [];
 
   // DECISION_MADE → input keys from decisionInput
-  if (event.eventType === 'DECISION_MADE' && data.decisionInput) {
+  if (event.eventType === "DECISION_MADE" && data.decisionInput) {
     const input = data.decisionInput as Record<string, unknown>;
     for (const k of Object.keys(input)) {
       keys.push(k);
@@ -79,7 +83,7 @@ function extractInputKeys(event: ExecutionEvent): string[] {
   }
 
   // CODE_EXECUTED → input keys from executionInput
-  if (event.eventType === 'CODE_EXECUTED' && data.executionInput) {
+  if (event.eventType === "CODE_EXECUTED" && data.executionInput) {
     const input = data.executionInput as Record<string, unknown>;
     for (const k of Object.keys(input)) {
       keys.push(k);
@@ -153,7 +157,10 @@ export class DataLineageTracker {
             edges.push({
               from: producer.id,
               to: consumer.id,
-              transformType: producer.agentId === event.sourceAgent ? 'pass-through' : 'transform',
+              transformType:
+                producer.agentId === event.sourceAgent
+                  ? "pass-through"
+                  : "transform",
             });
           }
         }
@@ -185,7 +192,7 @@ export class DataLineageTracker {
       if (!node) return;
 
       // Find all edges pointing TO this node (incoming)
-      const incoming = this.graph.edges.filter((e) => e.to === currentId);
+      const incoming = this.graph.edges.filter(e => e.to === currentId);
       for (const edge of incoming) {
         walk(edge.from);
         chainEdges.push(edge);
@@ -212,7 +219,7 @@ export class DataLineageTracker {
 
     for (const consumer of consumerNodes) {
       // Find all edges pointing to this consumer node
-      const incoming = this.graph.edges.filter((e) => e.to === consumer.id);
+      const incoming = this.graph.edges.filter(e => e.to === consumer.id);
       for (const edge of incoming) {
         const sourceNode = this.nodesById.get(edge.from);
         if (sourceNode) {
@@ -235,7 +242,7 @@ export class DataLineageTracker {
     const nodes = this.nodesByDataKey.get(dataKey) ?? [];
 
     return nodes
-      .map((n) => ({
+      .map(n => ({
         eventId: n.eventId,
         agentId: n.agentId,
         timestamp: n.timestamp,

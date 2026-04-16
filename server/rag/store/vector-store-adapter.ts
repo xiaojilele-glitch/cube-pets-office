@@ -11,7 +11,7 @@
  */
 
 // Re-export VectorRecord from shared contracts for convenience
-export type { VectorRecord } from '../../../shared/rag/contracts.js';
+export type { VectorRecord } from "../../../shared/rag/contracts.js";
 
 // ---------------------------------------------------------------------------
 // SearchOptions — ANN 搜索参数
@@ -76,10 +76,17 @@ export interface VectorStoreAdapter {
   createCollection(name: string, dimension: number): Promise<void>;
 
   /** 插入或更新向量记录（upsert 语义） */
-  upsert(collection: string, records: import('../../../shared/rag/contracts.js').VectorRecord[]): Promise<void>;
+  upsert(
+    collection: string,
+    records: import("../../../shared/rag/contracts.js").VectorRecord[]
+  ): Promise<void>;
 
   /** ANN 近似最近邻搜索 */
-  search(collection: string, query: number[], options: SearchOptions): Promise<SearchHit[]>;
+  search(
+    collection: string,
+    query: number[],
+    options: SearchOptions
+  ): Promise<SearchHit[]>;
 
   /** 按 ID 批量删除向量 */
   delete(collection: string, ids: string[]): Promise<void>;

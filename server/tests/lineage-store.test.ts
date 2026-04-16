@@ -7,7 +7,10 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { JsonLineageStorage, getRetentionDays } from "../lineage/lineage-store.js";
+import {
+  JsonLineageStorage,
+  getRetentionDays,
+} from "../lineage/lineage-store.js";
 import type {
   DataLineageNode,
   LineageEdge,
@@ -76,7 +79,10 @@ describe("JsonLineageStorage", () => {
 
     it("should write one JSON line per node", async () => {
       await store.batchInsertNodes([makeNode(), makeNode()]);
-      const content = fs.readFileSync(path.join(tmpDir, "nodes.jsonl"), "utf-8");
+      const content = fs.readFileSync(
+        path.join(tmpDir, "nodes.jsonl"),
+        "utf-8"
+      );
       const lines = content.trim().split("\n");
       expect(lines).toHaveLength(2);
       expect(() => JSON.parse(lines[0])).not.toThrow();
@@ -85,7 +91,10 @@ describe("JsonLineageStorage", () => {
     it("should persist edge data in edges.jsonl", async () => {
       await store.batchInsertEdges([makeEdge()]);
       expect(fs.existsSync(path.join(tmpDir, "edges.jsonl"))).toBe(true);
-      const content = fs.readFileSync(path.join(tmpDir, "edges.jsonl"), "utf-8");
+      const content = fs.readFileSync(
+        path.join(tmpDir, "edges.jsonl"),
+        "utf-8"
+      );
       const parsed = JSON.parse(content.trim());
       expect(parsed.fromId).toBe("ln_1");
     });
@@ -168,7 +177,7 @@ describe("JsonLineageStorage", () => {
       ]);
       const results = await store.queryNodes({ agentId: "agent-A" });
       expect(results).toHaveLength(2);
-      expect(results.every((n) => n.agentId === "agent-A")).toBe(true);
+      expect(results.every(n => n.agentId === "agent-A")).toBe(true);
     });
 
     it("bySession: queryNodes with sessionId filter", async () => {
@@ -225,7 +234,11 @@ describe("JsonLineageStorage", () => {
     it("combined filters work together", async () => {
       const now = Date.now();
       await store.batchInsertNodes([
-        makeNode({ type: "transformation", agentId: "a1", timestamp: now - 5000 }),
+        makeNode({
+          type: "transformation",
+          agentId: "a1",
+          timestamp: now - 5000,
+        }),
         makeNode({ type: "transformation", agentId: "a1", timestamp: now }),
         makeNode({ type: "source", agentId: "a1", timestamp: now }),
       ]);

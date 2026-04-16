@@ -41,7 +41,12 @@ router.get("/:id/versions", (req, res) => {
 router.put("/:id/:version/enable", (req, res) => {
   try {
     const { operator = "system", reason = "" } = req.body || {};
-    skillRegistry.enableSkill(req.params.id, req.params.version, operator, reason);
+    skillRegistry.enableSkill(
+      req.params.id,
+      req.params.version,
+      operator,
+      reason
+    );
     res.json({ ok: true });
   } catch (err: any) {
     res.status(404).json({ error: err.message });
@@ -52,7 +57,12 @@ router.put("/:id/:version/enable", (req, res) => {
 router.put("/:id/:version/disable", (req, res) => {
   try {
     const { operator = "system", reason = "" } = req.body || {};
-    skillRegistry.disableSkill(req.params.id, req.params.version, operator, reason);
+    skillRegistry.disableSkill(
+      req.params.id,
+      req.params.version,
+      operator,
+      reason
+    );
     res.json({ ok: true });
   } catch (err: any) {
     res.status(404).json({ error: err.message });

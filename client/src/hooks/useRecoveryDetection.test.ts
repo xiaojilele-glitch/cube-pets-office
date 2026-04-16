@@ -33,7 +33,9 @@ import { importSessionFromBase64 } from "@/lib/session-export";
 
 // ─── Helpers ───
 
-function makeCandidate(overrides?: Partial<RecoveryCandidate>): RecoveryCandidate {
+function makeCandidate(
+  overrides?: Partial<RecoveryCandidate>
+): RecoveryCandidate {
   return {
     snapshot: {
       id: "snap-1",
@@ -47,10 +49,18 @@ function makeCandidate(overrides?: Partial<RecoveryCandidate>): RecoveryCandidat
       payload: {
         mission: { id: "mission-1" } as any,
         agentMemories: [],
-        sceneLayout: { cameraPosition: [0, 8, 12], cameraTarget: [0, 0, 0], selectedPet: null },
+        sceneLayout: {
+          cameraPosition: [0, 8, 12],
+          cameraTarget: [0, 0, 0],
+          selectedPet: null,
+        },
         decisionHistory: [],
         attachmentIndex: [],
-        zustandSlice: { runtimeMode: "frontend", aiConfig: {} as any, chatMessages: [] },
+        zustandSlice: {
+          runtimeMode: "frontend",
+          aiConfig: {} as any,
+          chatMessages: [],
+        },
       },
     },
     isValid: true,
@@ -98,7 +108,10 @@ describe("Recovery detection logic", () => {
   });
 
   it("returns invalid candidate with reason", async () => {
-    const candidate = makeCandidate({ isValid: false, invalidReason: "checksum_mismatch" });
+    const candidate = makeCandidate({
+      isValid: false,
+      invalidReason: "checksum_mismatch",
+    });
     vi.mocked(checkForRecovery).mockResolvedValue(candidate);
 
     const result = await checkForRecovery("frontend");
@@ -141,9 +154,13 @@ describe("URL ?restore= parameter parsing", () => {
   });
 
   it("importSessionFromBase64 rejects on invalid input gracefully", async () => {
-    vi.mocked(importSessionFromBase64).mockRejectedValue(new Error("decode failed"));
+    vi.mocked(importSessionFromBase64).mockRejectedValue(
+      new Error("decode failed")
+    );
 
-    await expect(importSessionFromBase64("invalid!!!")).rejects.toThrow("decode failed");
+    await expect(importSessionFromBase64("invalid!!!")).rejects.toThrow(
+      "decode failed"
+    );
   });
 });
 
@@ -157,7 +174,10 @@ describe("Resume flow", () => {
   });
 
   it("invalid candidates should not trigger restore", () => {
-    const candidate = makeCandidate({ isValid: false, invalidReason: "checksum_mismatch" });
+    const candidate = makeCandidate({
+      isValid: false,
+      invalidReason: "checksum_mismatch",
+    });
 
     // The hook guards: if (!candidate.isValid) return — verify the flag
     expect(candidate.isValid).toBe(false);

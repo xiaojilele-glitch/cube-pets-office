@@ -10,10 +10,14 @@
  * Requirements: 2.1, 2.3
  */
 
-import type { ChunkRecord, ChunkMetadata, SourceType } from '../../../shared/rag/contracts.js';
-import type { Chunker } from './chunk-router.js';
-import type { ChunkingConfig } from '../config.js';
-import { estimateTokenCount } from './sliding-window-chunker.js';
+import type {
+  ChunkRecord,
+  ChunkMetadata,
+  SourceType,
+} from "../../../shared/rag/contracts.js";
+import type { Chunker } from "./chunk-router.js";
+import type { ChunkingConfig } from "../config.js";
+import { estimateTokenCount } from "./sliding-window-chunker.js";
 
 // ---------------------------------------------------------------------------
 // 配置
@@ -35,31 +39,47 @@ export function detectLanguage(content: string): string {
   const trimmed = content.trim();
 
   // Python: def/class/import with colon, or shebang
-  if (/^#!.*python/m.test(trimmed)) return 'python';
-  if (/^(from\s+\S+\s+import|import\s+\S+)\s*$/m.test(trimmed) &&
-      /\bdef\s+\w+\s*\(.*\)\s*(->\s*\S+\s*)?:/m.test(trimmed)) return 'python';
-  if (/\bdef\s+\w+\s*\(.*\)\s*(->\s*\S+\s*)?:/m.test(trimmed)) return 'python';
+  if (/^#!.*python/m.test(trimmed)) return "python";
+  if (
+    /^(from\s+\S+\s+import|import\s+\S+)\s*$/m.test(trimmed) &&
+    /\bdef\s+\w+\s*\(.*\)\s*(->\s*\S+\s*)?:/m.test(trimmed)
+  )
+    return "python";
+  if (/\bdef\s+\w+\s*\(.*\)\s*(->\s*\S+\s*)?:/m.test(trimmed)) return "python";
 
   // TypeScript: import with type annotations, interface, type alias
-  if (/\binterface\s+\w+/m.test(trimmed) || /\btype\s+\w+\s*=/m.test(trimmed)) return 'typescript';
-  if (/:\s*(string|number|boolean|void|any|never)\b/m.test(trimmed)) return 'typescript';
-  if (/import\s+.*\s+from\s+['"]/.test(trimmed) && /:\s*\w+(\[\])?\s*[=;,)]/m.test(trimmed)) return 'typescript';
+  if (/\binterface\s+\w+/m.test(trimmed) || /\btype\s+\w+\s*=/m.test(trimmed))
+    return "typescript";
+  if (/:\s*(string|number|boolean|void|any|never)\b/m.test(trimmed))
+    return "typescript";
+  if (
+    /import\s+.*\s+from\s+['"]/.test(trimmed) &&
+    /:\s*\w+(\[\])?\s*[=;,)]/m.test(trimmed)
+  )
+    return "typescript";
 
   // JavaScript: import/export, function, const/let/var, arrow functions
-  if (/^import\s+/m.test(trimmed) || /^export\s+(default\s+)?/m.test(trimmed)) return 'javascript';
-  if (/\bfunction\s+\w+\s*\(/m.test(trimmed) || /\bconst\s+\w+\s*=\s*(\(|async)/m.test(trimmed)) return 'javascript';
+  if (/^import\s+/m.test(trimmed) || /^export\s+(default\s+)?/m.test(trimmed))
+    return "javascript";
+  if (
+    /\bfunction\s+\w+\s*\(/m.test(trimmed) ||
+    /\bconst\s+\w+\s*=\s*(\(|async)/m.test(trimmed)
+  )
+    return "javascript";
 
   // Java: public class, package declaration
-  if (/^package\s+[\w.]+;/m.test(trimmed)) return 'java';
-  if (/\bpublic\s+(class|interface|enum)\s+\w+/m.test(trimmed)) return 'java';
+  if (/^package\s+[\w.]+;/m.test(trimmed)) return "java";
+  if (/\bpublic\s+(class|interface|enum)\s+\w+/m.test(trimmed)) return "java";
 
   // Go: package/func declarations
-  if (/^package\s+\w+$/m.test(trimmed) && /\bfunc\s+/m.test(trimmed)) return 'go';
+  if (/^package\s+\w+$/m.test(trimmed) && /\bfunc\s+/m.test(trimmed))
+    return "go";
 
   // Rust: fn/struct/impl/use
-  if (/\bfn\s+\w+\s*[<(]/m.test(trimmed) && /\buse\s+\w+/m.test(trimmed)) return 'rust';
+  if (/\bfn\s+\w+\s*[<(]/m.test(trimmed) && /\buse\s+\w+/m.test(trimmed))
+    return "rust";
 
-  return 'unknown';
+  return "unknown";
 }
 
 // ---------------------------------------------------------------------------
@@ -108,7 +128,7 @@ export function extractImports(content: string): string[] {
  */
 export interface CodeBlock {
   /** 块类型 */
-  type: 'import' | 'function' | 'class' | 'other';
+  type: "import" | "function" | "class" | "other";
   /** 块内容 */
   content: string;
   /** 函数/类签名（仅 function/class 类型） */
@@ -186,14 +206,14 @@ function isImportLine(line: string): boolean {
  * 连续的非声明、非 import 行合并为 other 块。
  */
 export function splitIntoBlocks(content: string): CodeBlock[] {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const blocks: CodeBlock[] = [];
   let currentLines: string[] = [];
-  let currentType: CodeBlock['type'] = 'other';
+  let currentType: CodeBlock["type"] = "other";
   let currentSignature: string | undefined;
 
   function flushBlock(): void {
-    const text = currentLines.join('\n');
+    const text = currentLines.join("\n");
     if (text.trim()) {
       blocks.push({
         type: currentType,
@@ -202,7 +222,7 @@ export function splitIntoBlocks(content: string): CodeBlock[] {
       });
     }
     currentLines = [];
-    currentType = 'other';
+    currentType = "other";
     currentSignature = undefined;
   }
 
@@ -212,33 +232,33 @@ export function splitIntoBlocks(content: string): CodeBlock[] {
 
     if (importLine) {
       // If we're already in an import block, continue accumulating
-      if (currentType === 'import') {
+      if (currentType === "import") {
         currentLines.push(line);
         continue;
       }
       // Otherwise flush current block and start import block
       flushBlock();
-      currentType = 'import';
+      currentType = "import";
       currentLines.push(line);
     } else if (declaration) {
       // New function/class declaration — flush and start new block
       flushBlock();
-      currentType = 'function'; // covers both function and class
+      currentType = "function"; // covers both function and class
       currentSignature = declaration;
       currentLines.push(line);
     } else {
       // Regular line — if we're in a function/class block, keep accumulating
       // (the body belongs to the declaration)
       // If we're in an import block, flush first
-      if (currentType === 'import') {
+      if (currentType === "import") {
         // Blank line after imports is still part of import block separation
         if (!line.trim()) {
           flushBlock();
-          currentType = 'other';
+          currentType = "other";
           currentLines.push(line);
         } else {
           flushBlock();
-          currentType = 'other';
+          currentType = "other";
           currentLines.push(line);
         }
       } else {
@@ -297,14 +317,16 @@ export class CodeChunker implements Chunker {
         ...metadata,
         codeLanguage: language,
         functionSignature: raw.signature,
-        imports: raw.isImportBlock ? this.extractImportsFromBlock(raw.text) : imports,
+        imports: raw.isImportBlock
+          ? this.extractImportsFromBlock(raw.text)
+          : imports,
       };
 
       return {
         chunkId: `chunk:${index}`,
-        sourceType: 'code_snippet' as SourceType,
-        sourceId: '',
-        projectId: '',
+        sourceType: "code_snippet" as SourceType,
+        sourceId: "",
+        projectId: "",
         chunkIndex: index,
         content: raw.text,
         tokenCount: raw.tokenCount,
@@ -326,7 +348,12 @@ export class CodeChunker implements Chunker {
    */
   private buildRawChunks(blocks: CodeBlock[]): RawCodeChunk[] {
     const result: RawCodeChunk[] = [];
-    let accumulator: AccumulatedBlock = { lines: [], tokenCount: 0, signature: undefined, isImportBlock: false };
+    let accumulator: AccumulatedBlock = {
+      lines: [],
+      tokenCount: 0,
+      signature: undefined,
+      isImportBlock: false,
+    };
 
     for (const block of blocks) {
       const blockTokens = estimateTokenCount(block.content);
@@ -334,15 +361,28 @@ export class CodeChunker implements Chunker {
       // If block alone exceeds maxTokens, flush accumulator then split the block
       if (blockTokens > this.maxTokens) {
         this.flushAccumulator(accumulator, result);
-        accumulator = { lines: [], tokenCount: 0, signature: undefined, isImportBlock: false };
+        accumulator = {
+          lines: [],
+          tokenCount: 0,
+          signature: undefined,
+          isImportBlock: false,
+        };
         this.splitLargeBlock(block, result);
         continue;
       }
 
       // If adding this block would exceed maxTokens, flush first
-      if (accumulator.tokenCount + blockTokens > this.maxTokens && accumulator.tokenCount > 0) {
+      if (
+        accumulator.tokenCount + blockTokens > this.maxTokens &&
+        accumulator.tokenCount > 0
+      ) {
         this.flushAccumulator(accumulator, result);
-        accumulator = { lines: [], tokenCount: 0, signature: undefined, isImportBlock: false };
+        accumulator = {
+          lines: [],
+          tokenCount: 0,
+          signature: undefined,
+          isImportBlock: false,
+        };
       }
 
       // Accumulate
@@ -351,7 +391,7 @@ export class CodeChunker implements Chunker {
       if (block.signature && !accumulator.signature) {
         accumulator.signature = block.signature;
       }
-      if (block.type === 'import') {
+      if (block.type === "import") {
         accumulator.isImportBlock = true;
       }
     }
@@ -364,9 +404,12 @@ export class CodeChunker implements Chunker {
   }
 
   /** Flush accumulated lines into a raw chunk */
-  private flushAccumulator(acc: AccumulatedBlock, result: RawCodeChunk[]): void {
+  private flushAccumulator(
+    acc: AccumulatedBlock,
+    result: RawCodeChunk[]
+  ): void {
     if (acc.lines.length === 0 || acc.tokenCount === 0) return;
-    const text = acc.lines.join('\n');
+    const text = acc.lines.join("\n");
     if (!text.trim()) return;
     result.push({
       text,
@@ -378,7 +421,7 @@ export class CodeChunker implements Chunker {
 
   /** Split a block that exceeds maxTokens by lines, then by words if needed */
   private splitLargeBlock(block: CodeBlock, result: RawCodeChunk[]): void {
-    const lines = block.content.split('\n');
+    const lines = block.content.split("\n");
     let currentLines: string[] = [];
     let currentTokens = 0;
 
@@ -390,10 +433,10 @@ export class CodeChunker implements Chunker {
         // Flush accumulated lines first
         if (currentLines.length > 0 && currentTokens > 0) {
           result.push({
-            text: currentLines.join('\n'),
+            text: currentLines.join("\n"),
             tokenCount: currentTokens,
             signature: block.signature,
-            isImportBlock: block.type === 'import',
+            isImportBlock: block.type === "import",
           });
           currentLines = [];
           currentTokens = 0;
@@ -403,13 +446,16 @@ export class CodeChunker implements Chunker {
         continue;
       }
 
-      if (currentTokens + lineTokens > this.maxTokens && currentLines.length > 0) {
-        const text = currentLines.join('\n');
+      if (
+        currentTokens + lineTokens > this.maxTokens &&
+        currentLines.length > 0
+      ) {
+        const text = currentLines.join("\n");
         result.push({
           text,
           tokenCount: currentTokens,
           signature: block.signature,
-          isImportBlock: block.type === 'import',
+          isImportBlock: block.type === "import",
         });
         currentLines = [];
         currentTokens = 0;
@@ -420,28 +466,32 @@ export class CodeChunker implements Chunker {
     }
 
     if (currentLines.length > 0 && currentTokens > 0) {
-      const text = currentLines.join('\n');
+      const text = currentLines.join("\n");
       result.push({
         text,
         tokenCount: currentTokens,
         signature: block.signature,
-        isImportBlock: block.type === 'import',
+        isImportBlock: block.type === "import",
       });
     }
   }
 
   /** Split a single long line into word-based chunks */
-  private splitLongLine(line: string, block: CodeBlock, result: RawCodeChunk[]): void {
+  private splitLongLine(
+    line: string,
+    block: CodeBlock,
+    result: RawCodeChunk[]
+  ): void {
     const words = line.split(/\s+/).filter(Boolean);
     let pos = 0;
     while (pos < words.length) {
       const end = Math.min(pos + this.maxTokens, words.length);
       const slice = words.slice(pos, end);
       result.push({
-        text: slice.join(' '),
+        text: slice.join(" "),
         tokenCount: slice.length,
         signature: block.signature,
-        isImportBlock: block.type === 'import',
+        isImportBlock: block.type === "import",
       });
       pos = end;
     }
@@ -458,7 +508,7 @@ export class CodeChunker implements Chunker {
         const prev = result[result.length - 1];
         // Merge if combined doesn't exceed maxTokens
         if (prev.tokenCount + chunk.tokenCount <= this.maxTokens) {
-          prev.text = prev.text + '\n' + chunk.text;
+          prev.text = prev.text + "\n" + chunk.text;
           prev.tokenCount = estimateTokenCount(prev.text);
           if (chunk.signature && !prev.signature) {
             prev.signature = chunk.signature;

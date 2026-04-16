@@ -10,11 +10,14 @@ import {
   validateCrossPod,
 } from "../../shared/message-bus-rules.js";
 import { DEFAULT_SWARM_CONFIG } from "../../shared/swarm.js";
-import db, { type AgentRow, type MessageRow } from '../db/index.js';
-import { sessionStore } from '../memory/session-store.js';
-import { getSocketIO } from './socket.js';
-import { registry } from './registry.js';
-import type { A2AFrameworkType, A2AResponse } from "../../shared/a2a-protocol.js";
+import db, { type AgentRow, type MessageRow } from "../db/index.js";
+import { sessionStore } from "../memory/session-store.js";
+import { getSocketIO } from "./socket.js";
+import { registry } from "./registry.js";
+import type {
+  A2AFrameworkType,
+  A2AResponse,
+} from "../../shared/a2a-protocol.js";
 
 export interface CrossPodMessageMetadata {
   crossPod: true;
@@ -29,7 +32,7 @@ export class MessageBusValidationError extends Error {
 
   constructor(code: string, message: string) {
     super(message);
-    this.name = 'MessageBusValidationError';
+    this.name = "MessageBusValidationError";
     this.code = code;
   }
 }
@@ -60,7 +63,7 @@ export class MessageBus {
     sessionStore.appendMessageLog(fromId, {
       workflowId,
       stage,
-      direction: 'outbound',
+      direction: "outbound",
       otherAgentId: toId,
       content,
       metadata,
@@ -68,7 +71,7 @@ export class MessageBus {
     sessionStore.appendMessageLog(toId, {
       workflowId,
       stage,
-      direction: 'inbound',
+      direction: "inbound",
       otherAgentId: fromId,
       content,
       metadata,
@@ -76,8 +79,8 @@ export class MessageBus {
 
     const io = getSocketIO();
     if (io) {
-      io.emit('agent_event', {
-        type: 'message_sent',
+      io.emit("agent_event", {
+        type: "message_sent",
         workflowId,
         from: fromId,
         to: toId,
@@ -102,23 +105,32 @@ export class MessageBus {
     metadata?: CrossPodMessageMetadata
   ): Promise<MessageRow> {
     if (!fromId.trim() || !toId.trim()) {
-      throw new MessageBusValidationError('missing_agent_id', 'Sender and receiver IDs are required');
+      throw new MessageBusValidationError(
+        "missing_agent_id",
+        "Sender and receiver IDs are required"
+      );
     }
     if (!content.trim()) {
-      throw new MessageBusValidationError('empty_content', 'Message content must not be empty');
+      throw new MessageBusValidationError(
+        "empty_content",
+        "Message content must not be empty"
+      );
     }
     if (!workflowId.trim()) {
-      throw new MessageBusValidationError('missing_workflow_id', 'workflowId is required');
+      throw new MessageBusValidationError(
+        "missing_workflow_id",
+        "workflowId is required"
+      );
     }
 
-    const fromAgent = this.assertAgentExists(fromId, 'sender');
-    const toAgent = this.assertAgentExists(toId, 'receiver');
+    const fromAgent = this.assertAgentExists(fromId, "sender");
+    const toAgent = this.assertAgentExists(toId, "receiver");
     this.assertWorkflowExists(workflowId);
 
     // Validate same-pod violation first (more specific error)
     if (fromAgent.department === toAgent.department) {
       throw new MessageBusValidationError(
-        'same_pod_violation',
+        "same_pod_violation",
         `Cross-pod messages must be between different pods: both agents are in "${fromAgent.department}"`
       );
     }
@@ -126,12 +138,15 @@ export class MessageBus {
     // Validate cross-pod permissions (Manager-to-Manager)
     if (!validateCrossPod(fromAgent, toAgent)) {
       throw new MessageBusValidationError(
-        'cross_pod_unauthorized',
+        "cross_pod_unauthorized",
         `Cross-pod messaging requires both agents to be managers: ${fromId} (${fromAgent.role}) -> ${toId} (${toAgent.role})`
       );
     }
 
-    const contentPreview = content.substring(0, DEFAULT_SWARM_CONFIG.summaryMaxLength);
+    const contentPreview = content.substring(
+      0,
+      DEFAULT_SWARM_CONFIG.summaryMaxLength
+    );
 
     const crossPodMeta: CrossPodMessageMetadata = metadata ?? {
       crossPod: true,
@@ -140,29 +155,32 @@ export class MessageBus {
       contentPreview,
     };
     // Ensure contentPreview is always truncated
-    crossPodMeta.contentPreview = content.substring(0, DEFAULT_SWARM_CONFIG.summaryMaxLength);
+    crossPodMeta.contentPreview = content.substring(
+      0,
+      DEFAULT_SWARM_CONFIG.summaryMaxLength
+    );
 
     const msg = db.createMessage({
       workflow_id: workflowId,
       from_agent: fromId,
       to_agent: toId,
-      stage: 'cross_pod',
+      stage: "cross_pod",
       content,
       metadata: crossPodMeta,
     });
 
     sessionStore.appendMessageLog(fromId, {
       workflowId,
-      stage: 'cross_pod',
-      direction: 'outbound',
+      stage: "cross_pod",
+      direction: "outbound",
       otherAgentId: toId,
       content,
       metadata: crossPodMeta,
     });
     sessionStore.appendMessageLog(toId, {
       workflowId,
-      stage: 'cross_pod',
-      direction: 'inbound',
+      stage: "cross_pod",
+      direction: "inbound",
       otherAgentId: fromId,
       content,
       metadata: crossPodMeta,
@@ -170,7 +188,7 @@ export class MessageBus {
 
     const io = getSocketIO();
     if (io) {
-      io.emit('cross_pod_message', {
+      io.emit("cross_pod_message", {
         sourcePodId: crossPodMeta.sourcePodId,
         targetPodId: crossPodMeta.targetPodId,
         contentPreview: crossPodMeta.contentPreview,
@@ -189,7 +207,7 @@ export class MessageBus {
     const msg = db.getMessage(messageId);
     if (!msg) {
       throw new MessageBusValidationError(
-        'message_not_found',
+        "message_not_found",
         `Message not found: ${messageId}`
       );
     }
@@ -200,7 +218,7 @@ export class MessageBus {
    * Get inbox for an agent.
    */
   async getInbox(agentId: string, workflowId?: string): Promise<MessageRow[]> {
-    this.assertAgentExists(agentId, 'receiver');
+    this.assertAgentExists(agentId, "receiver");
     if (workflowId) {
       this.assertWorkflowExists(workflowId);
     }
@@ -224,16 +242,29 @@ export class MessageBus {
     toExternalId: string,
     content: string,
     workflowId: string,
-    metadata?: { frameworkType: A2AFrameworkType; sessionId: string; [key: string]: unknown }
+    metadata?: {
+      frameworkType: A2AFrameworkType;
+      sessionId: string;
+      [key: string]: unknown;
+    }
   ): Promise<MessageRow> {
     if (!fromId.trim() || !toExternalId.trim()) {
-      throw new MessageBusValidationError('missing_agent_id', 'Sender and receiver IDs are required');
+      throw new MessageBusValidationError(
+        "missing_agent_id",
+        "Sender and receiver IDs are required"
+      );
     }
     if (!content.trim()) {
-      throw new MessageBusValidationError('empty_content', 'Message content must not be empty');
+      throw new MessageBusValidationError(
+        "empty_content",
+        "Message content must not be empty"
+      );
     }
     if (!workflowId.trim()) {
-      throw new MessageBusValidationError('missing_workflow_id', 'workflowId is required');
+      throw new MessageBusValidationError(
+        "missing_workflow_id",
+        "workflowId is required"
+      );
     }
 
     const a2aMetadata = {
@@ -285,7 +316,10 @@ export class MessageBus {
         workflowId,
         sessionId,
         hasError: !!response.error,
-        preview: response.result?.output?.substring(0, 100) ?? response.error?.message ?? "",
+        preview:
+          response.result?.output?.substring(0, 100) ??
+          response.error?.message ??
+          "",
         timestamp: new Date().toISOString(),
       });
     }
@@ -299,41 +333,56 @@ export class MessageBus {
     stage: string
   ): void {
     if (!fromId.trim() || !toId.trim()) {
-      throw new MessageBusValidationError('missing_agent_id', 'Sender and receiver IDs are required');
+      throw new MessageBusValidationError(
+        "missing_agent_id",
+        "Sender and receiver IDs are required"
+      );
     }
 
     if (!content.trim()) {
-      throw new MessageBusValidationError('empty_content', 'Message content must not be empty');
+      throw new MessageBusValidationError(
+        "empty_content",
+        "Message content must not be empty"
+      );
     }
 
     if (!workflowId.trim()) {
-      throw new MessageBusValidationError('missing_workflow_id', 'workflowId is required');
+      throw new MessageBusValidationError(
+        "missing_workflow_id",
+        "workflowId is required"
+      );
     }
 
     if (!WORKFLOW_STAGE_SET.has(stage)) {
-      throw new MessageBusValidationError('invalid_stage', `Unsupported message stage: ${stage}`);
+      throw new MessageBusValidationError(
+        "invalid_stage",
+        `Unsupported message stage: ${stage}`
+      );
     }
 
-    const fromAgent = this.assertAgentExists(fromId, 'sender');
-    const toAgent = this.assertAgentExists(toId, 'receiver');
+    const fromAgent = this.assertAgentExists(fromId, "sender");
+    const toAgent = this.assertAgentExists(toId, "receiver");
     this.assertWorkflowExists(workflowId);
 
     if (!this.validateHierarchy(fromAgent, toAgent)) {
       throw new MessageBusValidationError(
-        'hierarchy_violation',
+        "hierarchy_violation",
         `Hierarchy violation: ${fromId} (${fromAgent.role}) -> ${toId} (${toAgent.role})`
       );
     }
 
     if (!validateStageRoute(fromAgent, toAgent, stage as WorkflowStage)) {
       throw new MessageBusValidationError(
-        'stage_route_violation',
+        "stage_route_violation",
         `Stage route violation at ${stage}: ${fromId} -> ${toId}`
       );
     }
   }
 
-  private assertAgentExists(agentId: string, label: 'sender' | 'receiver'): AgentRow {
+  private assertAgentExists(
+    agentId: string,
+    label: "sender" | "receiver"
+  ): AgentRow {
     const agent = db.getAgent(agentId);
     if (agent) return agent;
 
@@ -345,10 +394,10 @@ export class MessageBus {
         return {
           id: guest.config.id,
           name: guest.config.name,
-          department: guest.config.department ?? 'engineering',
-          role: (guest.config.role as AgentRow['role']) ?? 'worker',
+          department: guest.config.department ?? "engineering",
+          role: (guest.config.role as AgentRow["role"]) ?? "worker",
           manager_id: guest.config.managerId ?? null,
-          model: guest.config.model ?? '',
+          model: guest.config.model ?? "",
           soul_md: null,
           heartbeat_config: null,
           is_active: 1,
@@ -358,14 +407,17 @@ export class MessageBus {
       }
     }
 
-    throw new MessageBusValidationError('unknown_agent', `${label} agent not found: ${agentId}`);
+    throw new MessageBusValidationError(
+      "unknown_agent",
+      `${label} agent not found: ${agentId}`
+    );
   }
 
   private assertWorkflowExists(workflowId: string): void {
     const workflow = db.getWorkflow(workflowId);
     if (!workflow) {
       throw new MessageBusValidationError(
-        'unknown_workflow',
+        "unknown_workflow",
         `Workflow not found for message bus operation: ${workflowId}`
       );
     }

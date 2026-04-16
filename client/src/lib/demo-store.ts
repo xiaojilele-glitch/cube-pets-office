@@ -62,7 +62,7 @@ interface DemoState {
 // Store
 // ---------------------------------------------------------------------------
 
-export const useDemoStore = create<DemoState>((set) => ({
+export const useDemoStore = create<DemoState>(set => ({
   isActive: false,
   playbackState: "idle",
   memoryTimeline: [],
@@ -73,14 +73,14 @@ export const useDemoStore = create<DemoState>((set) => ({
 
   deactivate: () => set({ isActive: false }),
 
-  setPlaybackState: (playbackState) => set({ playbackState }),
+  setPlaybackState: playbackState => set({ playbackState }),
 
-  appendMemoryEntry: (entry) =>
-    set((state) => ({ memoryTimeline: [...state.memoryTimeline, entry] })),
+  appendMemoryEntry: entry =>
+    set(state => ({ memoryTimeline: [...state.memoryTimeline, entry] })),
 
-  setEvolutionLogs: (evolutionLogs) => set({ evolutionLogs }),
+  setEvolutionLogs: evolutionLogs => set({ evolutionLogs }),
 
-  setCurrentStage: (currentStage) => set({ currentStage }),
+  setCurrentStage: currentStage => set({ currentStage }),
 
   reset: () =>
     set({

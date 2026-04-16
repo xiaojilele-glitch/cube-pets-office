@@ -30,9 +30,7 @@ describe("navigation convergence config", () => {
   });
 
   it("collects low-frequency destinations in the More drawer", () => {
-    expect(MORE_NAV_ITEMS.map(item => item.id)).toEqual([
-      "help",
-    ]);
+    expect(MORE_NAV_ITEMS.map(item => item.id)).toEqual(["help"]);
   });
 
   it("treats debug and legacy command center routes as low-frequency paths", () => {

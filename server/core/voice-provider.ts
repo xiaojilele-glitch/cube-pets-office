@@ -71,7 +71,7 @@ export function getVoiceConfig(): VoiceConfig {
  */
 export async function synthesizeSpeech(
   text: string,
-  voice?: string,
+  voice?: string
 ): Promise<Buffer> {
   const config = getVoiceConfig();
   if (!config.tts.available) {
@@ -110,7 +110,7 @@ export async function synthesizeSpeech(
  */
 export async function recognizeSpeech(
   audioBuffer: Buffer,
-  mimeType = "audio/webm",
+  mimeType = "audio/webm"
 ): Promise<{ transcript: string }> {
   const config = getVoiceConfig();
   if (!config.stt.available) {

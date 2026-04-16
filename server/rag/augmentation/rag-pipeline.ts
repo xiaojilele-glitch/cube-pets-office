@@ -9,12 +9,19 @@
  * Requirements: 5.1, 5.4, 5.5
  */
 
-import type { RetrievalResult, SourceType, RAGAugmentationLog } from '../../../shared/rag/contracts.js';
-import type { RAGRetriever } from '../retrieval/rag-retriever.js';
-import type { Reranker } from './reranker.js';
-import type { AugmentationLogger } from './augmentation-logger.js';
-import { TokenBudgetManager, type BudgetedChunk } from './token-budget-manager.js';
-import { getRAGConfig } from '../config.js';
+import type {
+  RetrievalResult,
+  SourceType,
+  RAGAugmentationLog,
+} from "../../../shared/rag/contracts.js";
+import type { RAGRetriever } from "../retrieval/rag-retriever.js";
+import type { Reranker } from "./reranker.js";
+import type { AugmentationLogger } from "./augmentation-logger.js";
+import {
+  TokenBudgetManager,
+  type BudgetedChunk,
+} from "./token-budget-manager.js";
+import { getRAGConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,13 +41,13 @@ export interface AgentContext {
 }
 
 export interface RAGContext {
-  mode: 'auto' | 'on_demand' | 'disabled';
+  mode: "auto" | "on_demand" | "disabled";
   chunks: Array<{
     content: string;
     sourceType: SourceType;
     sourceId: string;
     score: number;
-    status: 'injected' | 'pruned' | 'below_threshold';
+    status: "injected" | "pruned" | "below_threshold";
   }>;
   totalTokens: number;
   retrievalLatencyMs: number;
@@ -74,21 +81,26 @@ export class RAGPipeline {
   constructor(deps: RAGPipelineDeps) {
     this.deps = deps;
     const config = getRAGConfig();
-    this.budgetManager = deps.tokenBudgetManager ?? new TokenBudgetManager(config.augmentation.tokenBudget);
+    this.budgetManager =
+      deps.tokenBudgetManager ??
+      new TokenBudgetManager(config.augmentation.tokenBudget);
   }
 
-  async augment(task: TaskContext, agent: AgentContext): Promise<AugmentationResult> {
+  async augment(
+    task: TaskContext,
+    agent: AgentContext
+  ): Promise<AugmentationResult> {
     const start = Date.now();
     const config = getRAGConfig();
     const mode = config.augmentation.mode;
 
     // disabled mode → empty result
-    if (mode === 'disabled') {
+    if (mode === "disabled") {
       return this.emptyResult(mode, Date.now() - start);
     }
 
     // on_demand mode → only augment if directive contains RAG trigger
-    if (mode === 'on_demand' && !this.shouldAugment(task.directive)) {
+    if (mode === "on_demand" && !this.shouldAugment(task.directive)) {
       return this.emptyResult(mode, Date.now() - start);
     }
 
@@ -119,9 +131,11 @@ export class RAGPipeline {
     // Token budget allocation
     const allocation = this.budgetManager.allocate(reranked);
 
-    const injected = allocation.chunks.filter(c => c.status === 'injected');
-    const pruned = allocation.chunks.filter(c => c.status === 'pruned');
-    const belowThreshold = allocation.chunks.filter(c => c.status === 'below_threshold');
+    const injected = allocation.chunks.filter(c => c.status === "injected");
+    const pruned = allocation.chunks.filter(c => c.status === "pruned");
+    const belowThreshold = allocation.chunks.filter(
+      c => c.status === "below_threshold"
+    );
 
     const ragContext: RAGContext = {
       mode,
@@ -163,11 +177,14 @@ export class RAGPipeline {
   }
 
   private shouldAugment(directive: string): boolean {
-    const triggers = ['@rag', '@context', '@search', '检索', '历史'];
+    const triggers = ["@rag", "@context", "@search", "检索", "历史"];
     return triggers.some(t => directive.toLowerCase().includes(t));
   }
 
-  private emptyResult(mode: RAGContext['mode'], latencyMs: number): AugmentationResult {
+  private emptyResult(
+    mode: RAGContext["mode"],
+    latencyMs: number
+  ): AugmentationResult {
     return {
       ragContext: { mode, chunks: [], totalTokens: 0, retrievalLatencyMs: 0 },
       retrievedChunks: [],

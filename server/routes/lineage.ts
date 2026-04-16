@@ -60,7 +60,9 @@ export function createLineageRouter(deps: LineageRouterDeps): Router {
       const start = Number(req.query.start);
       const end = Number(req.query.end);
       if (!userId || isNaN(start) || isNaN(end)) {
-        return res.status(400).json({ ok: false, error: "userId, start, and end are required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "userId, start, and end are required" });
       }
       const entries = await auditService.getAuditTrail(userId, { start, end });
       res.json({ ok: true, entries });
@@ -86,7 +88,9 @@ export function createLineageRouter(deps: LineageRouterDeps): Router {
       const start = Number(req.query.start);
       const end = Number(req.query.end);
       if (isNaN(start) || isNaN(end)) {
-        return res.status(400).json({ ok: false, error: "start and end are required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "start and end are required" });
       }
       const alerts = await auditService.detectAnomalies({ start, end });
       res.json({ ok: true, alerts });
@@ -105,7 +109,9 @@ export function createLineageRouter(deps: LineageRouterDeps): Router {
       const sourceId = req.query.sourceId as string;
       const decisionId = req.query.decisionId as string;
       if (!sourceId || !decisionId) {
-        return res.status(400).json({ ok: false, error: "sourceId and decisionId are required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "sourceId and decisionId are required" });
       }
       const graph = await queryService.getFullPath(sourceId, decisionId);
       res.json({ ok: true, graph });
@@ -121,9 +127,15 @@ export function createLineageRouter(deps: LineageRouterDeps): Router {
       const endTime = Number(req.query.endTime);
       const format = (req.query.format as string) === "csv" ? "csv" : "json";
       if (isNaN(startTime) || isNaN(endTime)) {
-        return res.status(400).json({ ok: false, error: "startTime and endTime are required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "startTime and endTime are required" });
       }
-      const data = await exportService.exportLineage(startTime, endTime, format);
+      const data = await exportService.exportLineage(
+        startTime,
+        endTime,
+        format
+      );
       res.json({ ok: true, data: data.toString("utf-8") });
     } catch (err) {
       res.status(500).json({ ok: false, error: errorMessage(err) });
@@ -176,7 +188,9 @@ export function createLineageRouter(deps: LineageRouterDeps): Router {
     try {
       const { sourceId } = req.body ?? {};
       if (!sourceId) {
-        return res.status(400).json({ ok: false, error: "sourceId is required" });
+        return res
+          .status(400)
+          .json({ ok: false, error: "sourceId is required" });
       }
       const alert = await changeDetectionService.detectChanges(sourceId);
       res.json({ ok: true, alert });
@@ -246,8 +260,10 @@ export function createLineageRouter(deps: LineageRouterDeps): Router {
       if (req.query.sessionId) filter.sessionId = req.query.sessionId;
       if (req.query.missionId) filter.missionId = req.query.missionId;
       if (req.query.decisionId) filter.decisionId = req.query.decisionId;
-      if (req.query.fromTimestamp) filter.fromTimestamp = Number(req.query.fromTimestamp);
-      if (req.query.toTimestamp) filter.toTimestamp = Number(req.query.toTimestamp);
+      if (req.query.fromTimestamp)
+        filter.fromTimestamp = Number(req.query.fromTimestamp);
+      if (req.query.toTimestamp)
+        filter.toTimestamp = Number(req.query.toTimestamp);
       if (req.query.limit) filter.limit = Number(req.query.limit);
       const nodes = await store.queryNodes(filter);
       res.json({ ok: true, nodes });

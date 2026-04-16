@@ -10,10 +10,14 @@
  * Requirements: 2.1, 2.4
  */
 
-import type { ChunkRecord, ChunkMetadata, SourceType } from '../../../shared/rag/contracts.js';
-import type { Chunker } from './chunk-router.js';
-import type { ChunkingConfig } from '../config.js';
-import { estimateTokenCount } from './sliding-window-chunker.js';
+import type {
+  ChunkRecord,
+  ChunkMetadata,
+  SourceType,
+} from "../../../shared/rag/contracts.js";
+import type { Chunker } from "./chunk-router.js";
+import type { ChunkingConfig } from "../config.js";
+import { estimateTokenCount } from "./sliding-window-chunker.js";
 
 // ---------------------------------------------------------------------------
 // 配置
@@ -69,7 +73,7 @@ export class DocumentChunker implements Chunker {
 
     // 4. 构建 ChunkRecord 数组
     return merged.map((chunk, index) =>
-      this.buildChunkRecord(chunk.text, chunk.tokenCount, index, metadata),
+      this.buildChunkRecord(chunk.text, chunk.tokenCount, index, metadata)
     );
   }
 
@@ -83,9 +87,9 @@ export class DocumentChunker implements Chunker {
   private splitParagraphs(content: string): RawParagraph[] {
     return content
       .split(/\n\s*\n/)
-      .map((p) => p.trim())
+      .map(p => p.trim())
       .filter(Boolean)
-      .map((text) => ({
+      .map(text => ({
         text,
         tokenCount: estimateTokenCount(text),
       }));
@@ -110,7 +114,7 @@ export class DocumentChunker implements Chunker {
         const end = Math.min(pos + this.maxTokens, words.length);
         const slice = words.slice(pos, end);
         result.push({
-          text: slice.join(' '),
+          text: slice.join(" "),
           tokenCount: slice.length,
         });
         pos = end;
@@ -134,7 +138,7 @@ export class DocumentChunker implements Chunker {
         const prev = result[result.length - 1];
         // Merge if combined doesn't exceed maxTokens
         if (prev.tokenCount + para.tokenCount <= this.maxTokens) {
-          prev.text = prev.text + '\n\n' + para.text;
+          prev.text = prev.text + "\n\n" + para.text;
           prev.tokenCount = estimateTokenCount(prev.text);
           continue;
         }
@@ -147,7 +151,7 @@ export class DocumentChunker implements Chunker {
       const first = result[0];
       const second = result[1];
       if (first.tokenCount + second.tokenCount <= this.maxTokens) {
-        second.text = first.text + '\n\n' + second.text;
+        second.text = first.text + "\n\n" + second.text;
         second.tokenCount = estimateTokenCount(second.text);
         result.shift();
       }
@@ -161,13 +165,13 @@ export class DocumentChunker implements Chunker {
     content: string,
     tokenCount: number,
     chunkIndex: number,
-    metadata: ChunkMetadata,
+    metadata: ChunkMetadata
   ): ChunkRecord {
     return {
       chunkId: `chunk:${chunkIndex}`,
-      sourceType: 'document' as SourceType,
-      sourceId: '',
-      projectId: '',
+      sourceType: "document" as SourceType,
+      sourceId: "",
+      projectId: "",
       chunkIndex,
       content,
       tokenCount,

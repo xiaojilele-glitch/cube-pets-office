@@ -43,7 +43,10 @@ function createMockMissionRuntime() {
 function createFakeExecutorFetch(jobId = "job-integration-001") {
   const calls: { url: string; init: RequestInit }[] = [];
 
-  const fakeFetch = async (url: string | URL | Request, init?: RequestInit): Promise<Response> => {
+  const fakeFetch = async (
+    url: string | URL | Request,
+    init?: RequestInit
+  ): Promise<Response> => {
     const urlStr = typeof url === "string" ? url : url.toString();
     calls.push({ url: urlStr, init: init ?? {} });
 
@@ -72,7 +75,9 @@ function createFakeExecutorFetch(jobId = "job-integration-001") {
       });
     }
 
-    return new Response(JSON.stringify({ error: "Not found" }), { status: 404 });
+    return new Response(JSON.stringify({ error: "Not found" }), {
+      status: 404,
+    });
   };
 
   return { fakeFetch: fakeFetch as typeof fetch, calls };
@@ -85,7 +90,9 @@ function createIntegrationBridge(overrides?: {
   jobId?: string;
 }) {
   const mockRuntime = createMockMissionRuntime();
-  const { fakeFetch, calls } = createFakeExecutorFetch(overrides?.jobId ?? "job-int-001");
+  const { fakeFetch, calls } = createFakeExecutorFetch(
+    overrides?.jobId ?? "job-int-001"
+  );
 
   const options: ExecutionBridgeOptions = {
     missionRuntime: mockRuntime as any,
@@ -138,11 +145,16 @@ describe("Integration: mock 模式完整桥接流程", () => {
     it("bridge() builds a plan with correct missionId and sourceText", async () => {
       const { bridge, calls } = createIntegrationBridge();
 
-      const result = await bridge.bridge("mission-int-1", EXECUTABLE_DELIVERABLE);
+      const result = await bridge.bridge(
+        "mission-int-1",
+        EXECUTABLE_DELIVERABLE
+      );
 
       expect(result.triggered).toBe(true);
       // The plan was dispatched — verify the job request sent to the executor
-      const createJobCall = calls.find((c) => c.url.endsWith("/api/executor/jobs"));
+      const createJobCall = calls.find(c =>
+        c.url.endsWith("/api/executor/jobs")
+      );
       expect(createJobCall).toBeDefined();
 
       const jobRequest = JSON.parse(createJobCall!.init.body as string);
@@ -155,17 +167,22 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
   describe("Req 3.1 — ExecutorClient receives the dispatch call", () => {
     it("dispatches to the executor and receives accepted response", async () => {
-      const { bridge, calls } = createIntegrationBridge({ jobId: "job-dispatch-test" });
+      const { bridge, calls } = createIntegrationBridge({
+        jobId: "job-dispatch-test",
+      });
 
-      const result = await bridge.bridge("mission-dispatch-1", EXECUTABLE_DELIVERABLE);
+      const result = await bridge.bridge(
+        "mission-dispatch-1",
+        EXECUTABLE_DELIVERABLE
+      );
 
       expect(result.triggered).toBe(true);
       expect(result.jobId).toBe("job-dispatch-test");
       expect(result.requestId).toBeTruthy();
 
       // Verify health check + create job calls were made
-      const healthCall = calls.find((c) => c.url.endsWith("/health"));
-      const jobCall = calls.find((c) => c.url.endsWith("/api/executor/jobs"));
+      const healthCall = calls.find(c => c.url.endsWith("/health"));
+      const jobCall = calls.find(c => c.url.endsWith("/api/executor/jobs"));
       expect(healthCall).toBeDefined();
       expect(jobCall).toBeDefined();
     });
@@ -173,11 +190,15 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
   describe("Req 7.1 — Mock mode payload has runner.kind === 'mock'", () => {
     it("injects mock runner config into the job payload", async () => {
-      const { bridge, calls } = createIntegrationBridge({ executionMode: "mock" });
+      const { bridge, calls } = createIntegrationBridge({
+        executionMode: "mock",
+      });
 
       await bridge.bridge("mission-mock-1", EXECUTABLE_DELIVERABLE);
 
-      const createJobCall = calls.find((c) => c.url.endsWith("/api/executor/jobs"));
+      const createJobCall = calls.find(c =>
+        c.url.endsWith("/api/executor/jobs")
+      );
       expect(createJobCall).toBeDefined();
 
       const jobRequest = JSON.parse(createJobCall!.init.body as string);
@@ -190,11 +211,15 @@ describe("Integration: mock 模式完整桥接流程", () => {
     });
 
     it("injects real mode payload when executionMode is 'real'", async () => {
-      const { bridge, calls } = createIntegrationBridge({ executionMode: "real" });
+      const { bridge, calls } = createIntegrationBridge({
+        executionMode: "real",
+      });
 
       await bridge.bridge("mission-real-1", EXECUTABLE_DELIVERABLE);
 
-      const createJobCall = calls.find((c) => c.url.endsWith("/api/executor/jobs"));
+      const createJobCall = calls.find(c =>
+        c.url.endsWith("/api/executor/jobs")
+      );
       const jobRequest = JSON.parse(createJobCall!.init.body as string);
       const firstJob = jobRequest.plan.jobs[0];
       expect(firstJob.payload.aiEnabled).toBe(true);
@@ -213,9 +238,14 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
   describe("Mission state updates after successful dispatch", () => {
     it("updates mission executor context with jobId and requestId", async () => {
-      const { bridge, mockRuntime } = createIntegrationBridge({ jobId: "job-state-001" });
+      const { bridge, mockRuntime } = createIntegrationBridge({
+        jobId: "job-state-001",
+      });
 
-      const result = await bridge.bridge("mission-state-1", EXECUTABLE_DELIVERABLE);
+      const result = await bridge.bridge(
+        "mission-state-1",
+        EXECUTABLE_DELIVERABLE
+      );
 
       expect(result.triggered).toBe(true);
 
@@ -230,7 +260,7 @@ describe("Integration: mock 模式完整桥接流程", () => {
             baseUrl: "http://localhost:9800",
             lastEventType: "job.accepted",
           }),
-        }),
+        })
       );
 
       // Verify requestId is present in the executor context
@@ -245,7 +275,7 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
       // Should have called markMissionRunning for execute stage
       const executeCalls = mockRuntime.markMissionRunning.mock.calls.filter(
-        (call: any[]) => call[1] === "execute",
+        (call: any[]) => call[1] === "execute"
       );
       expect(executeCalls.length).toBeGreaterThanOrEqual(1);
       const executeCall = executeCalls[executeCalls.length - 1];
@@ -260,13 +290,13 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
       // Verify provision stage was set first
       const provisionCalls = mockRuntime.markMissionRunning.mock.calls.filter(
-        (call: any[]) => call[1] === "provision",
+        (call: any[]) => call[1] === "provision"
       );
       expect(provisionCalls.length).toBeGreaterThanOrEqual(1);
 
       // Then execute stage
       const executeCalls = mockRuntime.markMissionRunning.mock.calls.filter(
-        (call: any[]) => call[1] === "execute",
+        (call: any[]) => call[1] === "execute"
       );
       expect(executeCalls.length).toBeGreaterThanOrEqual(1);
     });
@@ -314,8 +344,16 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
     it("event mapping is consistent for mock and real mode events", () => {
       // The same event structure should produce the same mapping regardless of source
-      const mockEvent = { type: "job.completed" as const, status: "completed", summary: "Mock done" };
-      const realEvent = { type: "job.completed" as const, status: "completed", summary: "Real done" };
+      const mockEvent = {
+        type: "job.completed" as const,
+        status: "completed",
+        summary: "Mock done",
+      };
+      const realEvent = {
+        type: "job.completed" as const,
+        status: "completed",
+        summary: "Real done",
+      };
 
       const mockResult = mapExecutorEventToAction(mockEvent);
       const realResult = mapExecutorEventToAction(realEvent);
@@ -333,14 +371,17 @@ describe("Integration: mock 模式完整桥接流程", () => {
       });
 
       // Step 1: Bridge with executable deliverables
-      const result = await bridge.bridge("mission-e2e-1", EXECUTABLE_DELIVERABLE);
+      const result = await bridge.bridge(
+        "mission-e2e-1",
+        EXECUTABLE_DELIVERABLE
+      );
 
       // Step 2: Verify detection triggered
       expect(result.triggered).toBe(true);
       expect(result.jobId).toBe("job-e2e-001");
 
       // Step 3: Verify plan was built and dispatched
-      const jobCall = calls.find((c) => c.url.endsWith("/api/executor/jobs"));
+      const jobCall = calls.find(c => c.url.endsWith("/api/executor/jobs"));
       expect(jobCall).toBeDefined();
       const jobRequest = JSON.parse(jobCall!.init.body as string);
       expect(jobRequest.plan.missionId).toBe("mission-e2e-1");
@@ -348,7 +389,7 @@ describe("Integration: mock 模式完整桥接流程", () => {
 
       // Step 4: Verify callback URL in the request
       expect(jobRequest.callback.eventsUrl).toBe(
-        "http://localhost:3000/api/executor/events",
+        "http://localhost:3000/api/executor/events"
       );
 
       // Step 5: Verify mission state was updated
@@ -371,11 +412,14 @@ describe("Integration: mock 模式完整桥接流程", () => {
     it("does not dispatch when deliverables are non-executable", async () => {
       const { bridge, mockRuntime, calls } = createIntegrationBridge();
 
-      const result = await bridge.bridge("mission-skip-1", NON_EXECUTABLE_DELIVERABLE);
+      const result = await bridge.bridge(
+        "mission-skip-1",
+        NON_EXECUTABLE_DELIVERABLE
+      );
 
       expect(result.triggered).toBe(false);
       // No executor calls should have been made
-      const jobCalls = calls.filter((c) => c.url.endsWith("/api/executor/jobs"));
+      const jobCalls = calls.filter(c => c.url.endsWith("/api/executor/jobs"));
       expect(jobCalls).toHaveLength(0);
       // No mission state updates
       expect(mockRuntime.patchMissionExecution).not.toHaveBeenCalled();

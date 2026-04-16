@@ -13,31 +13,36 @@
  * **Validates: Requirements 8.1, 8.5**
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
-import fc from 'fast-check';
-import { existsSync, rmSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it } from "vitest";
+import fc from "fast-check";
+import { existsSync, rmSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { RoleTemplate, RoleOperationLog } from '../../shared/role-schema.js';
-import { RoleRegistry } from '../core/role-registry.js';
+import type {
+  RoleTemplate,
+  RoleOperationLog,
+} from "../../shared/role-schema.js";
+import { RoleRegistry } from "../core/role-registry.js";
 
 const __test_dirname = dirname(fileURLToPath(import.meta.url));
-const TEST_DIR = resolve(__test_dirname, '../../data/__test_role_api_prop__');
-const TEST_REGISTRY_PATH = resolve(TEST_DIR, 'role-templates.json');
+const TEST_DIR = resolve(__test_dirname, "../../data/__test_role_api_prop__");
+const TEST_REGISTRY_PATH = resolve(TEST_DIR, "role-templates.json");
 
 // ── Helpers ──────────────────────────────────────────────────────
 
-function makeTemplate(overrides: Partial<RoleTemplate> & { roleId: string }): RoleTemplate {
+function makeTemplate(
+  overrides: Partial<RoleTemplate> & { roleId: string }
+): RoleTemplate {
   const now = new Date().toISOString();
   return {
     roleName: overrides.roleName ?? overrides.roleId,
-    responsibilityPrompt: 'test prompt',
+    responsibilityPrompt: "test prompt",
     requiredSkillIds: [],
     mcpIds: [],
-    defaultModelConfig: { model: 'gpt-4o', temperature: 0.7, maxTokens: 4096 },
-    authorityLevel: 'medium',
-    source: 'predefined',
+    defaultModelConfig: { model: "gpt-4o", temperature: 0.7, maxTokens: 4096 },
+    authorityLevel: "medium",
+    source: "predefined",
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -58,7 +63,7 @@ function buildApiRoleResponse(
   currentRoleId: string | null,
   currentRoleLoadedAt: string | null,
   opLog: RoleOperationLog[],
-  registry: RoleRegistry,
+  registry: RoleRegistry
 ): {
   currentRole: { roleId: string; roleName: string; loadedAt: string } | null;
   roleHistory: Array<{
@@ -68,7 +73,11 @@ function buildApiRoleResponse(
     timestamp: string;
   }>;
 } {
-  let currentRole: { roleId: string; roleName: string; loadedAt: string } | null = null;
+  let currentRole: {
+    roleId: string;
+    roleName: string;
+    loadedAt: string;
+  } | null = null;
 
   if (currentRoleId && currentRoleLoadedAt) {
     const template = registry.get(currentRoleId);
@@ -88,9 +97,9 @@ function buildApiRoleResponse(
 
   for (let i = 0; i < opLog.length; i++) {
     const entry = opLog[i];
-    if (entry.action === 'load') {
+    if (entry.action === "load") {
       let fromRoleId: string | null = null;
-      if (i > 0 && opLog[i - 1].action === 'unload') {
+      if (i > 0 && opLog[i - 1].action === "unload") {
         fromRoleId = opLog[i - 1].roleId;
       }
       const fromTemplate = fromRoleId ? registry.get(fromRoleId) : null;
@@ -101,8 +110,9 @@ function buildApiRoleResponse(
         missionName: entry.triggerSource,
         timestamp: entry.timestamp,
       });
-    } else if (entry.action === 'unload') {
-      const isFollowedByLoad = i + 1 < opLog.length && opLog[i + 1].action === 'load';
+    } else if (entry.action === "unload") {
+      const isFollowedByLoad =
+        i + 1 < opLog.length && opLog[i + 1].action === "load";
       if (!isFollowedByLoad) {
         const fromTemplate = registry.get(entry.roleId);
         switchRecords.push({
@@ -124,7 +134,7 @@ function buildApiRoleResponse(
 
 const arbRoleId = fc
   .stringMatching(/^[a-z][a-z0-9-]{0,19}$/)
-  .filter((s) => s.length >= 2);
+  .filter(s => s.length >= 2);
 
 const arbRoleName = fc.string({ minLength: 1, maxLength: 30 });
 
@@ -133,19 +143,19 @@ const arbTimestamp = fc
     min: Date.UTC(2024, 0, 1),
     max: Date.UTC(2025, 11, 31, 23, 59, 59, 999),
   })
-  .map((timestamp) => new Date(timestamp).toISOString());
+  .map(timestamp => new Date(timestamp).toISOString());
 
 const arbTriggerSource = fc.string({ minLength: 1, maxLength: 30 });
 
 // ── Property Tests ───────────────────────────────────────────────
 
-describe('Property 18: API 角色状态响应正确性', () => {
+describe("Property 18: API 角色状态响应正确性", () => {
   afterEach(cleanup);
 
   // **Validates: Requirements 8.1, 8.5**
   // For any Agent with a currently loaded role, currentRole should reflect
   // the roleId, roleName (resolved from registry), and loadedAt timestamp.
-  it('currentRole reflects the currently loaded role from registry', () => {
+  it("currentRole reflects the currently loaded role from registry", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -161,78 +171,66 @@ describe('Property 18: API 角色状态响应正确性', () => {
             roleId,
             loadedAt,
             [],
-            registry,
+            registry
           );
 
           expect(currentRole).not.toBeNull();
           expect(currentRole!.roleId).toBe(roleId);
           expect(currentRole!.roleName).toBe(roleName);
           expect(currentRole!.loadedAt).toBe(loadedAt);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // When no role is loaded (currentRoleId is null), currentRole should be null.
-  it('currentRole is null when no role is loaded', () => {
+  it("currentRole is null when no role is loaded", () => {
     fc.assert(
-      fc.property(
-        arbTimestamp,
-        (timestamp) => {
-          cleanup();
+      fc.property(arbTimestamp, timestamp => {
+        cleanup();
 
-          const registry = new RoleRegistry(TEST_REGISTRY_PATH);
+        const registry = new RoleRegistry(TEST_REGISTRY_PATH);
 
-          const { currentRole } = buildApiRoleResponse(
-            null,
-            null,
-            [],
-            registry,
-          );
+        const { currentRole } = buildApiRoleResponse(null, null, [], registry);
 
-          expect(currentRole).toBeNull();
-        },
-      ),
-      { numRuns: 100 },
+        expect(currentRole).toBeNull();
+      }),
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // When currentRoleId is set but the role is not in the registry,
   // roleName should fall back to the roleId string.
-  it('currentRole falls back to roleId as roleName when template not in registry', () => {
+  it("currentRole falls back to roleId as roleName when template not in registry", () => {
     fc.assert(
-      fc.property(
-        arbRoleId,
-        arbTimestamp,
-        (roleId, loadedAt) => {
-          cleanup();
+      fc.property(arbRoleId, arbTimestamp, (roleId, loadedAt) => {
+        cleanup();
 
-          const registry = new RoleRegistry(TEST_REGISTRY_PATH);
-          // Do NOT register the template
+        const registry = new RoleRegistry(TEST_REGISTRY_PATH);
+        // Do NOT register the template
 
-          const { currentRole } = buildApiRoleResponse(
-            roleId,
-            loadedAt,
-            [],
-            registry,
-          );
+        const { currentRole } = buildApiRoleResponse(
+          roleId,
+          loadedAt,
+          [],
+          registry
+        );
 
-          expect(currentRole).not.toBeNull();
-          expect(currentRole!.roleId).toBe(roleId);
-          expect(currentRole!.roleName).toBe(roleId); // fallback
-          expect(currentRole!.loadedAt).toBe(loadedAt);
-        },
-      ),
-      { numRuns: 100 },
+        expect(currentRole).not.toBeNull();
+        expect(currentRole!.roleId).toBe(roleId);
+        expect(currentRole!.roleName).toBe(roleId); // fallback
+        expect(currentRole!.loadedAt).toBe(loadedAt);
+      }),
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // roleHistory should contain at most 20 records, taking the most recent ones.
-  it('roleHistory contains at most 20 records (most recent)', () => {
+  it("roleHistory contains at most 20 records (most recent)", () => {
     fc.assert(
       fc.property(
         // Generate between 1 and 30 role switch pairs (unload+load)
@@ -250,18 +248,20 @@ describe('Property 18: API 角色状态响应正确性', () => {
           for (let i = 0; i < switchCount + 1; i++) {
             const rid = `${baseRoleId}-${i}`;
             roleIds.push(rid);
-            registry.register(makeTemplate({ roleId: rid, roleName: `${roleName}-${i}` }));
+            registry.register(
+              makeTemplate({ roleId: rid, roleName: `${roleName}-${i}` })
+            );
           }
 
           // Build operation log: initial load, then unload+load pairs
           const opLog: RoleOperationLog[] = [];
-          const baseTime = new Date('2025-01-01T00:00:00.000Z').getTime();
+          const baseTime = new Date("2025-01-01T00:00:00.000Z").getTime();
 
           // Initial load
           opLog.push({
-            agentId: 'test-agent',
+            agentId: "test-agent",
             roleId: roleIds[0],
-            action: 'load',
+            action: "load",
             timestamp: new Date(baseTime).toISOString(),
             triggerSource,
           });
@@ -269,16 +269,16 @@ describe('Property 18: API 角色状态响应正确性', () => {
           // Subsequent switches (unload old + load new)
           for (let i = 1; i <= switchCount; i++) {
             opLog.push({
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleIds[i - 1],
-              action: 'unload',
+              action: "unload",
               timestamp: new Date(baseTime + i * 2000 - 1000).toISOString(),
               triggerSource,
             });
             opLog.push({
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleIds[i],
-              action: 'load',
+              action: "load",
               timestamp: new Date(baseTime + i * 2000).toISOString(),
               triggerSource,
             });
@@ -288,7 +288,7 @@ describe('Property 18: API 角色状态响应正确性', () => {
             roleIds[switchCount],
             new Date(baseTime + switchCount * 2000).toISOString(),
             opLog,
-            registry,
+            registry
           );
 
           // Total switch records = switchCount + 1 (initial load + switchCount switches)
@@ -301,16 +301,16 @@ describe('Property 18: API 角色状态响应正确性', () => {
             const lastRecord = roleHistory[roleHistory.length - 1];
             expect(lastRecord.toRole).toBe(`${roleName}-${switchCount}`);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // Each roleHistory record from a load event should contain fromRole, toRole,
   // missionName, and timestamp fields.
-  it('each roleHistory record contains fromRole, toRole, missionName, and timestamp', () => {
+  it("each roleHistory record contains fromRole, toRole, missionName, and timestamp", () => {
     fc.assert(
       fc.property(
         // Generate 1-10 switch pairs
@@ -327,33 +327,35 @@ describe('Property 18: API 角色状态响应正确性', () => {
           for (let i = 0; i < switchCount + 1; i++) {
             const rid = `${baseRoleId}-${i}`;
             roleIds.push(rid);
-            registry.register(makeTemplate({ roleId: rid, roleName: `${roleName}-${i}` }));
+            registry.register(
+              makeTemplate({ roleId: rid, roleName: `${roleName}-${i}` })
+            );
           }
 
           const opLog: RoleOperationLog[] = [];
-          const baseTime = new Date('2025-01-01T00:00:00.000Z').getTime();
+          const baseTime = new Date("2025-01-01T00:00:00.000Z").getTime();
 
           // Initial load
           opLog.push({
-            agentId: 'test-agent',
+            agentId: "test-agent",
             roleId: roleIds[0],
-            action: 'load',
+            action: "load",
             timestamp: new Date(baseTime).toISOString(),
             triggerSource,
           });
 
           for (let i = 1; i <= switchCount; i++) {
             opLog.push({
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleIds[i - 1],
-              action: 'unload',
+              action: "unload",
               timestamp: new Date(baseTime + i * 2000 - 1000).toISOString(),
               triggerSource,
             });
             opLog.push({
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleIds[i],
-              action: 'load',
+              action: "load",
               timestamp: new Date(baseTime + i * 2000).toISOString(),
               triggerSource,
             });
@@ -363,17 +365,17 @@ describe('Property 18: API 角色状态响应正确性', () => {
             roleIds[switchCount],
             new Date(baseTime + switchCount * 2000).toISOString(),
             opLog,
-            registry,
+            registry
           );
 
           // Every record must have all four required fields
           for (const record of roleHistory) {
-            expect(record).toHaveProperty('fromRole');
-            expect(record).toHaveProperty('toRole');
-            expect(record).toHaveProperty('missionName');
-            expect(record).toHaveProperty('timestamp');
-            expect(typeof record.timestamp).toBe('string');
-            expect(typeof record.missionName).toBe('string');
+            expect(record).toHaveProperty("fromRole");
+            expect(record).toHaveProperty("toRole");
+            expect(record).toHaveProperty("missionName");
+            expect(record).toHaveProperty("timestamp");
+            expect(typeof record.timestamp).toBe("string");
+            expect(typeof record.missionName).toBe("string");
             expect(record.missionName).toBe(triggerSource);
           }
 
@@ -387,16 +389,16 @@ describe('Property 18: API 角色状态响应正确性', () => {
             expect(roleHistory[i].fromRole).not.toBeNull();
             expect(roleHistory[i].toRole).not.toBeNull();
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // A standalone unload (not followed by a load) should produce a record
   // with toRole = null, representing the Agent unloading its role entirely.
-  it('standalone unload produces a record with toRole = null', () => {
+  it("standalone unload produces a record with toRole = null", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -412,16 +414,16 @@ describe('Property 18: API 角色状态响应正确性', () => {
           // Load then standalone unload (no subsequent load)
           const opLog: RoleOperationLog[] = [
             {
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId,
-              action: 'load',
-              timestamp: '2025-01-01T00:00:00.000Z',
+              action: "load",
+              timestamp: "2025-01-01T00:00:00.000Z",
               triggerSource,
             },
             {
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId,
-              action: 'unload',
+              action: "unload",
               timestamp,
               triggerSource,
             },
@@ -431,7 +433,7 @@ describe('Property 18: API 角色状态响应正确性', () => {
             null,
             null,
             opLog,
-            registry,
+            registry
           );
 
           // Should have 2 records: initial load + standalone unload
@@ -445,16 +447,16 @@ describe('Property 18: API 角色状态响应正确性', () => {
           expect(roleHistory[1].fromRole).toBe(roleName);
           expect(roleHistory[1].toRole).toBeNull();
           expect(roleHistory[1].timestamp).toBe(timestamp);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // An unload followed by a load (role switch) should NOT produce a separate
   // unload record — only the load record captures the switch with fromRole set.
-  it('unload followed by load produces a single switch record, not separate unload record', () => {
+  it("unload followed by load produces a single switch record, not separate unload record", () => {
     fc.assert(
       fc.property(
         arbRoleId,
@@ -466,39 +468,43 @@ describe('Property 18: API 角色状态响应正确性', () => {
           const registry = new RoleRegistry(TEST_REGISTRY_PATH);
           const roleA = `${baseRoleId}-a`;
           const roleB = `${baseRoleId}-b`;
-          registry.register(makeTemplate({ roleId: roleA, roleName: `${roleName}-A` }));
-          registry.register(makeTemplate({ roleId: roleB, roleName: `${roleName}-B` }));
+          registry.register(
+            makeTemplate({ roleId: roleA, roleName: `${roleName}-A` })
+          );
+          registry.register(
+            makeTemplate({ roleId: roleB, roleName: `${roleName}-B` })
+          );
 
           // Load A, then switch to B (unload A + load B)
           const opLog: RoleOperationLog[] = [
             {
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleA,
-              action: 'load',
-              timestamp: '2025-01-01T00:00:00.000Z',
+              action: "load",
+              timestamp: "2025-01-01T00:00:00.000Z",
               triggerSource,
             },
             {
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleA,
-              action: 'unload',
-              timestamp: '2025-01-01T01:00:00.000Z',
+              action: "unload",
+              timestamp: "2025-01-01T01:00:00.000Z",
               triggerSource,
             },
             {
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleB,
-              action: 'load',
-              timestamp: '2025-01-01T01:00:01.000Z',
+              action: "load",
+              timestamp: "2025-01-01T01:00:01.000Z",
               triggerSource,
             },
           ];
 
           const { roleHistory } = buildApiRoleResponse(
             roleB,
-            '2025-01-01T01:00:01.000Z',
+            "2025-01-01T01:00:01.000Z",
             opLog,
-            registry,
+            registry
           );
 
           // Should have exactly 2 records:
@@ -510,15 +516,15 @@ describe('Property 18: API 角色状态响应正确性', () => {
           expect(roleHistory[0].toRole).toBe(`${roleName}-A`);
           expect(roleHistory[1].fromRole).toBe(`${roleName}-A`);
           expect(roleHistory[1].toRole).toBe(`${roleName}-B`);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   // **Validates: Requirements 8.1, 8.5**
   // roleHistory records should preserve chronological order from the operation log.
-  it('roleHistory preserves chronological order from operation log', () => {
+  it("roleHistory preserves chronological order from operation log", () => {
     fc.assert(
       fc.property(
         // Generate 2-15 switches
@@ -535,32 +541,34 @@ describe('Property 18: API 角色状态响应正确性', () => {
           for (let i = 0; i < switchCount + 1; i++) {
             const rid = `${baseRoleId}-${i}`;
             roleIds.push(rid);
-            registry.register(makeTemplate({ roleId: rid, roleName: `${roleName}-${i}` }));
+            registry.register(
+              makeTemplate({ roleId: rid, roleName: `${roleName}-${i}` })
+            );
           }
 
           const opLog: RoleOperationLog[] = [];
-          const baseTime = new Date('2025-01-01T00:00:00.000Z').getTime();
+          const baseTime = new Date("2025-01-01T00:00:00.000Z").getTime();
 
           opLog.push({
-            agentId: 'test-agent',
+            agentId: "test-agent",
             roleId: roleIds[0],
-            action: 'load',
+            action: "load",
             timestamp: new Date(baseTime).toISOString(),
             triggerSource,
           });
 
           for (let i = 1; i <= switchCount; i++) {
             opLog.push({
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleIds[i - 1],
-              action: 'unload',
+              action: "unload",
               timestamp: new Date(baseTime + i * 2000 - 1000).toISOString(),
               triggerSource,
             });
             opLog.push({
-              agentId: 'test-agent',
+              agentId: "test-agent",
               roleId: roleIds[i],
-              action: 'load',
+              action: "load",
               timestamp: new Date(baseTime + i * 2000).toISOString(),
               triggerSource,
             });
@@ -570,7 +578,7 @@ describe('Property 18: API 角色状态响应正确性', () => {
             roleIds[switchCount],
             new Date(baseTime + switchCount * 2000).toISOString(),
             opLog,
-            registry,
+            registry
           );
 
           // Verify chronological order
@@ -579,9 +587,9 @@ describe('Property 18: API 角色状态响应正确性', () => {
             const currTime = new Date(roleHistory[i].timestamp).getTime();
             expect(currTime).toBeGreaterThanOrEqual(prevTime);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

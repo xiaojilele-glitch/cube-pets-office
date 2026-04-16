@@ -71,9 +71,12 @@ const RADIUS_PER_EDGE = 2;
 
 export function computeRadius(entityId: string, edges: Relation[]): number {
   const count = edges.filter(
-    (e) => e.sourceEntityId === entityId || e.targetEntityId === entityId,
+    e => e.sourceEntityId === entityId || e.targetEntityId === entityId
   ).length;
-  return Math.min(NODE_MAX_RADIUS, Math.max(NODE_MIN_RADIUS, NODE_MIN_RADIUS + count * RADIUS_PER_EDGE));
+  return Math.min(
+    NODE_MAX_RADIUS,
+    Math.max(NODE_MIN_RADIUS, NODE_MIN_RADIUS + count * RADIUS_PER_EDGE)
+  );
 }
 
 export function matchesSearch(entity: Entity, term: string): boolean {
@@ -104,7 +107,7 @@ export default function KnowledgeGraphPanel({
   // Build simulation data from props
   const { simNodes, simLinks } = useMemo(() => {
     const nodeMap = new Map<string, SimNode>();
-    const sNodes: SimNode[] = nodes.map((entity) => {
+    const sNodes: SimNode[] = nodes.map(entity => {
       const node: SimNode = {
         id: entity.entityId,
         entity,
@@ -117,8 +120,10 @@ export default function KnowledgeGraphPanel({
     });
 
     const sLinks: SimLink[] = edges
-      .filter((e) => nodeMap.has(e.sourceEntityId) && nodeMap.has(e.targetEntityId))
-      .map((relation) => ({
+      .filter(
+        e => nodeMap.has(e.sourceEntityId) && nodeMap.has(e.targetEntityId)
+      )
+      .map(relation => ({
         source: relation.sourceEntityId,
         target: relation.targetEntityId,
         relation,
@@ -132,7 +137,7 @@ export default function KnowledgeGraphPanel({
     (_event: MouseEvent, d: SimNode) => {
       onNodeExpand?.(d.id);
     },
-    [onNodeExpand],
+    [onNodeExpand]
   );
 
   // Click handler (stable ref)
@@ -140,7 +145,7 @@ export default function KnowledgeGraphPanel({
     (_event: MouseEvent, d: SimNode) => {
       onNodeClick?.(d.entity);
     },
-    [onNodeClick],
+    [onNodeClick]
   );
 
   // ---------------------------------------------------------------------------
@@ -162,9 +167,10 @@ export default function KnowledgeGraphPanel({
     const g = root.append("g");
 
     // Zoom behaviour
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
-      .on("zoom", (event) => {
+      .on("zoom", event => {
         g.attr("transform", event.transform);
       });
     root.call(zoom);
@@ -200,7 +206,7 @@ export default function KnowledgeGraphPanel({
       .append("g")
       .attr("class", "kg-nodes")
       .selectAll<SVGGElement, SimNode>("g")
-      .data(simNodes, (d) => d.id)
+      .data(simNodes, d => d.id)
       .join("g")
       .attr("cursor", "pointer")
       .on("click", handleClick as any)
@@ -209,26 +215,22 @@ export default function KnowledgeGraphPanel({
     // Circle for each node
     node
       .append("circle")
-      .attr("r", (d) => d.radius)
-      .attr("fill", (d) => d.color)
-      .attr("stroke", (d) => (d.matched ? "#FFD700" : "#fff"))
-      .attr("stroke-width", (d) => (d.matched ? 3 : 1.5))
-      .attr("opacity", (d) =>
-        searchTerm && !d.matched ? 0.3 : 1,
-      );
+      .attr("r", d => d.radius)
+      .attr("fill", d => d.color)
+      .attr("stroke", d => (d.matched ? "#FFD700" : "#fff"))
+      .attr("stroke-width", d => (d.matched ? 3 : 1.5))
+      .attr("opacity", d => (searchTerm && !d.matched ? 0.3 : 1));
 
     // Label
     node
       .append("text")
-      .text((d) => d.entity.name)
+      .text(d => d.entity.name)
       .attr("text-anchor", "middle")
-      .attr("dy", (d) => d.radius + 12)
+      .attr("dy", d => d.radius + 12)
       .attr("font-size", 10)
       .attr("fill", "#333")
       .attr("pointer-events", "none")
-      .attr("opacity", (d) =>
-        searchTerm && !d.matched ? 0.3 : 1,
-      );
+      .attr("opacity", d => (searchTerm && !d.matched ? 0.3 : 1));
 
     // Drag behaviour
     const drag = d3
@@ -252,25 +254,31 @@ export default function KnowledgeGraphPanel({
 
     // Box-selection via d3-brush (Shift + drag to select multiple nodes)
     const brushG = g.append("g").attr("class", "kg-brush");
-    const brush = d3.brush<unknown>()
-      .extent([[0, 0], [width * 4, height * 4]])
-      .on("start", (event) => {
+    const brush = d3
+      .brush<unknown>()
+      .extent([
+        [0, 0],
+        [width * 4, height * 4],
+      ])
+      .on("start", event => {
         // Only activate brush on shift-click; otherwise let zoom/drag handle it
         if (!event.sourceEvent?.shiftKey) {
           brushG.call(brush.move, null);
         }
       })
-      .on("end", (event) => {
-        const sel = event.selection as [[number, number], [number, number]] | null;
+      .on("end", event => {
+        const sel = event.selection as
+          | [[number, number], [number, number]]
+          | null;
         if (!sel) return;
         const [[x0, y0], [x1, y1]] = sel;
         const selected = simNodes
-          .filter((d) => {
+          .filter(d => {
             const nx = d.x ?? 0;
             const ny = d.y ?? 0;
             return nx >= x0 && nx <= x1 && ny >= y0 && ny <= y1;
           })
-          .map((d) => d.id);
+          .map(d => d.id);
         if (selected.length > 0) {
           onBoxSelect?.(selected);
         }
@@ -283,10 +291,12 @@ export default function KnowledgeGraphPanel({
     // Re-enable brush overlay only when shift is held
     const svgEl = svg;
     const enableBrush = (e: KeyboardEvent) => {
-      if (e.key === "Shift") brushG.select(".overlay").attr("pointer-events", "all");
+      if (e.key === "Shift")
+        brushG.select(".overlay").attr("pointer-events", "all");
     };
     const disableBrush = (e: KeyboardEvent) => {
-      if (e.key === "Shift") brushG.select(".overlay").attr("pointer-events", "none");
+      if (e.key === "Shift")
+        brushG.select(".overlay").attr("pointer-events", "none");
     };
     svgEl.ownerDocument.addEventListener("keydown", enableBrush);
     svgEl.ownerDocument.addEventListener("keyup", disableBrush);
@@ -298,32 +308,38 @@ export default function KnowledgeGraphPanel({
         "link",
         d3
           .forceLink<SimNode, SimLink>(simLinks)
-          .id((d) => d.id)
-          .distance(100),
+          .id(d => d.id)
+          .distance(100)
       )
       .force("charge", d3.forceManyBody().strength(-200))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide<SimNode>().radius((d) => d.radius + 4))
+      .force(
+        "collision",
+        d3.forceCollide<SimNode>().radius(d => d.radius + 4)
+      )
       .on("tick", () => {
         link
-          .attr("x1", (d) => (d.source as SimNode).x ?? 0)
-          .attr("y1", (d) => (d.source as SimNode).y ?? 0)
-          .attr("x2", (d) => (d.target as SimNode).x ?? 0)
-          .attr("y2", (d) => (d.target as SimNode).y ?? 0);
+          .attr("x1", d => (d.source as SimNode).x ?? 0)
+          .attr("y1", d => (d.source as SimNode).y ?? 0)
+          .attr("x2", d => (d.target as SimNode).x ?? 0)
+          .attr("y2", d => (d.target as SimNode).y ?? 0);
 
-        node.attr("transform", (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
+        node.attr("transform", d => `translate(${d.x ?? 0},${d.y ?? 0})`);
       });
 
     simulationRef.current = simulation;
 
     // If there's a search match, zoom to the first matched node after simulation settles
     if (searchTerm) {
-      const firstMatch = simNodes.find((n) => n.matched);
+      const firstMatch = simNodes.find(n => n.matched);
       if (firstMatch) {
         simulation.on("end", () => {
           const x = firstMatch.x ?? width / 2;
           const y = firstMatch.y ?? height / 2;
-          const transform = d3.zoomIdentity.translate(width / 2 - x, height / 2 - y);
+          const transform = d3.zoomIdentity.translate(
+            width / 2 - x,
+            height / 2 - y
+          );
           root.transition().duration(500).call(zoom.transform, transform);
         });
       }
@@ -335,7 +351,14 @@ export default function KnowledgeGraphPanel({
       svgEl.ownerDocument.removeEventListener("keydown", enableBrush);
       svgEl.ownerDocument.removeEventListener("keyup", disableBrush);
     };
-  }, [simNodes, simLinks, searchTerm, handleClick, handleDblClick, onBoxSelect]);
+  }, [
+    simNodes,
+    simLinks,
+    searchTerm,
+    handleClick,
+    handleDblClick,
+    onBoxSelect,
+  ]);
 
   return (
     <svg

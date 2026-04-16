@@ -50,15 +50,15 @@ export interface SkillDefinition {
 }
 
 export const SKILL_CATEGORIES = [
-  "analysis",     // 分析类（数据分析、竞品分析）
-  "coding",       // 编程类（代码生成、代码审查）
-  "writing",      // 写作类（报告撰写、文案生成）
-  "research",     // 研究类（信息检索、趋势分析）
-  "planning",     // 规划类（项目规划、任务分解）
-  "review",       // 评审类（质量检查、合规审计）
-  "communication",// 沟通类（消息格式化、多语言翻译）
-  "tool",         // 工具类（API 调用、文件处理）
-  "custom",       // 自定义
+  "analysis", // 分析类（数据分析、竞品分析）
+  "coding", // 编程类（代码生成、代码审查）
+  "writing", // 写作类（报告撰写、文案生成）
+  "research", // 研究类（信息检索、趋势分析）
+  "planning", // 规划类（项目规划、任务分解）
+  "review", // 评审类（质量检查、合规审计）
+  "communication", // 沟通类（消息格式化、多语言翻译）
+  "tool", // 工具类（API 调用、文件处理）
+  "custom", // 自定义
 ] as const;
 
 export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
@@ -152,7 +152,13 @@ export type SkillLifecycleEvent =
   | { type: "skill:enabled"; skillId: string }
   | { type: "skill:disabled"; skillId: string }
   | { type: "skill:unregistered"; skillId: string }
-  | { type: "skill:executed"; skillId: string; agentId: string; durationMs: number; success: boolean };
+  | {
+      type: "skill:executed";
+      skillId: string;
+      agentId: string;
+      durationMs: number;
+      success: boolean;
+    };
 
 // ---------------------------------------------------------------------------
 // 现有实现的适配说明

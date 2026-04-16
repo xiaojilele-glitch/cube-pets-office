@@ -33,9 +33,9 @@ describe("CallbackSender", () => {
   });
 
   it("sends event successfully on first attempt", async () => {
-    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(null, { status: 200 }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 200 }));
 
     const sender = new CallbackSender(BASE_CONFIG, mockFetch);
     await sender.send("https://brain.test/events", makeEvent());
@@ -68,7 +68,9 @@ describe("CallbackSender", () => {
   it("retries on non-2xx HTTP status", async () => {
     const mockFetch = vi
       .fn<typeof fetch>()
-      .mockResolvedValueOnce(new Response(null, { status: 503, statusText: "Service Unavailable" }))
+      .mockResolvedValueOnce(
+        new Response(null, { status: 503, statusText: "Service Unavailable" })
+      )
       .mockResolvedValueOnce(new Response(null, { status: 200 }));
 
     const sender = new CallbackSender(BASE_CONFIG, mockFetch);
@@ -86,7 +88,7 @@ describe("CallbackSender", () => {
 
     // Should NOT throw
     await expect(
-      sender.send("https://brain.test/events", makeEvent()),
+      sender.send("https://brain.test/events", makeEvent())
     ).resolves.toBeUndefined();
 
     // 1 initial + 3 retries = 4 total attempts
@@ -96,23 +98,26 @@ describe("CallbackSender", () => {
   });
 
   it("includes HMAC headers in the request", async () => {
-    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(null, { status: 200 }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 200 }));
 
     const sender = new CallbackSender(BASE_CONFIG, mockFetch);
     await sender.send("https://brain.test/events", makeEvent());
 
-    const headers = mockFetch.mock.calls[0][1]!.headers as Record<string, string>;
+    const headers = mockFetch.mock.calls[0][1]!.headers as Record<
+      string,
+      string
+    >;
     expect(headers["x-cube-executor-signature"]).toBeDefined();
     expect(headers["x-cube-executor-timestamp"]).toBeDefined();
     expect(headers["x-cube-executor-id"]).toBe("exec-1");
   });
 
   it("serializes event body as JSON", async () => {
-    const mockFetch = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(null, { status: 200 }),
-    );
+    const mockFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(new Response(null, { status: 200 }));
 
     const event = makeEvent({ type: "job.completed", status: "completed" });
     const sender = new CallbackSender(BASE_CONFIG, mockFetch);

@@ -15,8 +15,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "directive-decomposition",
     name: "Directive Decomposition",
     category: "planning",
-    summary: "Break vague requests into concrete deliverables, risks, and ownership.",
-    prompt: "Given the context: {context}\n\nTranslate the incoming request into explicit goals, constraints, assumptions, and review checkpoints before acting.\n\nInput: {input}",
+    summary:
+      "Break vague requests into concrete deliverables, risks, and ownership.",
+    prompt:
+      "Given the context: {context}\n\nTranslate the incoming request into explicit goals, constraints, assumptions, and review checkpoints before acting.\n\nInput: {input}",
     requiredMcp: [],
     version: "1.0.0",
     tags: ["planning", "decomposition"],
@@ -25,8 +27,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "plan-synthesis",
     name: "Plan Synthesis",
     category: "planning",
-    summary: "Convert a direction into execution-ready sub-tasks with clear handoffs.",
-    prompt: "Given the context: {context}\n\nWrite plans as scoped work packets with owners, expected output, and dependency notes.\n\nInput: {input}",
+    summary:
+      "Convert a direction into execution-ready sub-tasks with clear handoffs.",
+    prompt:
+      "Given the context: {context}\n\nWrite plans as scoped work packets with owners, expected output, and dependency notes.\n\nInput: {input}",
     requiredMcp: [],
     version: "1.0.0",
     tags: ["planning", "synthesis"],
@@ -35,8 +39,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "system-design",
     name: "System Design",
     category: "code",
-    summary: "Design service, API, data, and integration changes with tradeoffs.",
-    prompt: "Given the context: {context}\n\nFavor durable architecture, call out constraints, and explain why each technical path is chosen.\n\nInput: {input}",
+    summary:
+      "Design service, API, data, and integration changes with tradeoffs.",
+    prompt:
+      "Given the context: {context}\n\nFavor durable architecture, call out constraints, and explain why each technical path is chosen.\n\nInput: {input}",
     requiredMcp: [],
     version: "1.0.0",
     tags: ["code", "architecture"],
@@ -45,8 +51,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "execution-playbook",
     name: "Execution Playbook",
     category: "code",
-    summary: "Produce implementation steps that another engineer can follow directly.",
-    prompt: "Given the context: {context}\n\nReturn implementation guidance as ordered steps, acceptance signals, and edge cases to watch.\n\nInput: {input}",
+    summary:
+      "Produce implementation steps that another engineer can follow directly.",
+    prompt:
+      "Given the context: {context}\n\nReturn implementation guidance as ordered steps, acceptance signals, and edge cases to watch.\n\nInput: {input}",
     requiredMcp: [],
     version: "1.0.0",
     tags: ["code", "execution"],
@@ -56,7 +64,8 @@ const SEED_SKILLS: SkillDefinition[] = [
     name: "Evidence Review",
     category: "analysis",
     summary: "Ground claims in observable workflow artifacts and task outputs.",
-    prompt: "Given the context: {context}\n\nPrefer evidence, examples, and concrete references over generic claims or filler language.\n\nInput: {input}",
+    prompt:
+      "Given the context: {context}\n\nPrefer evidence, examples, and concrete references over generic claims or filler language.\n\nInput: {input}",
     requiredMcp: ["workflow-memory"],
     version: "1.0.0",
     tags: ["analysis", "review"],
@@ -65,8 +74,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "quality-audit",
     name: "Quality Audit",
     category: "analysis",
-    summary: "Check depth, correctness, coverage, and actionability across outputs.",
-    prompt: "Given the context: {context}\n\nAudit for weak logic, missing detail, untested assumptions, and unclear next actions.\n\nInput: {input}",
+    summary:
+      "Check depth, correctness, coverage, and actionability across outputs.",
+    prompt:
+      "Given the context: {context}\n\nAudit for weak logic, missing detail, untested assumptions, and unclear next actions.\n\nInput: {input}",
     requiredMcp: [],
     version: "1.0.0",
     tags: ["analysis", "quality"],
@@ -75,8 +86,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "user-outcome-thinking",
     name: "User Outcome Thinking",
     category: "analysis",
-    summary: "Evaluate work through user value, clarity, and operational impact.",
-    prompt: "Given the context: {context}\n\nExplain how each recommendation changes outcomes for users, operators, or maintainers.\n\nInput: {input}",
+    summary:
+      "Evaluate work through user value, clarity, and operational impact.",
+    prompt:
+      "Given the context: {context}\n\nExplain how each recommendation changes outcomes for users, operators, or maintainers.\n\nInput: {input}",
     requiredMcp: [],
     version: "1.0.0",
     tags: ["analysis", "user-focus"],
@@ -85,8 +98,10 @@ const SEED_SKILLS: SkillDefinition[] = [
     id: "tooling-integration",
     name: "Tooling Integration",
     category: "code",
-    summary: "Reason about skills, tools, MCP connectors, and interface boundaries.",
-    prompt: "Given the context: {context}\n\nWhen tools are involved, specify the connector purpose, required inputs, and fallback path when a tool is unavailable.\n\nInput: {input}",
+    summary:
+      "Reason about skills, tools, MCP connectors, and interface boundaries.",
+    prompt:
+      "Given the context: {context}\n\nWhen tools are involved, specify the connector purpose, required inputs, and fallback path when a tool is unavailable.\n\nInput: {input}",
     requiredMcp: ["tool-registry"],
     version: "1.0.0",
     tags: ["code", "tooling", "mcp"],

@@ -9,9 +9,9 @@
  * Requirements: 3.2 — 批量调用失败时按单条逐一重试
  */
 
-import type { ChunkRecord } from '../../../shared/rag/contracts.js';
-import type { EmbeddingProvider } from './embedding-provider.js';
-import { getRAGConfig } from '../config.js';
+import type { ChunkRecord } from "../../../shared/rag/contracts.js";
+import type { EmbeddingProvider } from "./embedding-provider.js";
+import { getRAGConfig } from "../config.js";
 
 // ---------------------------------------------------------------------------
 // EmbeddedChunk 接口

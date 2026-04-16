@@ -24,17 +24,17 @@
   --glow-purple: rgba(168, 85, 247, 0.4);
 
   /* 状态色 */
-  --status-working: #06b6d4;   /* cyan-500 */
-  --status-thinking: #f59e0b;  /* amber-500 */
+  --status-working: #06b6d4; /* cyan-500 */
+  --status-thinking: #f59e0b; /* amber-500 */
   --status-reviewing: #a855f7; /* purple-500 */
   --status-idle: rgba(255, 255, 255, 0.6);
-  --status-done: #22c55e;      /* green-500 */
-  --status-error: #ef4444;     /* red-500 */
+  --status-done: #22c55e; /* green-500 */
+  --status-error: #ef4444; /* red-500 */
 
   /* 字体 */
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-body: "DM Sans", system-ui, sans-serif;
 }
 ```
 
@@ -188,38 +188,41 @@ Props:
 
 ```html
 <!-- index.html <head> 中添加 -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+  rel="stylesheet"
+/>
 ```
 
 ## 动效规范
 
-| 动效 | 时长 | 曲线 | 库 |
-|------|------|------|-----|
-| Dock 图标放大 | 200ms | spring(stiffness: 400, damping: 17) | framer-motion |
-| 抽屉滑入 | 300ms | spring(stiffness: 300, damping: 25) | framer-motion |
-| 抽屉滑出 | 200ms | ease-out | framer-motion |
-| 卡片 hover 上浮 | 200ms | ease-out | CSS transition |
-| CTA 发光 | 200ms | ease-in-out | CSS transition |
-| 呼吸光晕 | 2000ms | ease-in-out infinite | CSS @keyframes |
-| 波纹扩散 | 600ms | ease-out | CSS @keyframes |
-| 数字滚动 | 300ms | spring | framer-motion |
+| 动效            | 时长   | 曲线                                | 库             |
+| --------------- | ------ | ----------------------------------- | -------------- |
+| Dock 图标放大   | 200ms  | spring(stiffness: 400, damping: 17) | framer-motion  |
+| 抽屉滑入        | 300ms  | spring(stiffness: 300, damping: 25) | framer-motion  |
+| 抽屉滑出        | 200ms  | ease-out                            | framer-motion  |
+| 卡片 hover 上浮 | 200ms  | ease-out                            | CSS transition |
+| CTA 发光        | 200ms  | ease-in-out                         | CSS transition |
+| 呼吸光晕        | 2000ms | ease-in-out infinite                | CSS @keyframes |
+| 波纹扩散        | 600ms  | ease-out                            | CSS @keyframes |
+| 数字滚动        | 300ms  | spring                              | framer-motion  |
 
 ## 受影响文件清单
 
-| 文件 | 改动类型 | 说明 |
-|------|---------|------|
-| `client/src/index.css` | 修改 | 新增 glass 工具类、字体变量、动画 keyframes |
-| `client/index.html` | 修改 | 添加 Google Fonts 预连接 |
-| `client/src/components/Toolbar.tsx` | 重写 → `HoloDock.tsx` | 胶囊 Dock |
-| `client/src/components/WorkflowPanel.tsx` | 修改 | 毛玻璃材质 + 抽屉化 |
-| `client/src/components/ChatPanel.tsx` | 修改 | 毛玻璃材质 + 抽屉化 |
-| `client/src/components/ConfigPanel.tsx` | 修改 | 毛玻璃材质 + 抽屉化 |
-| `client/src/components/LoadingScreen.tsx` | 修改 | 毛玻璃材质 |
-| `client/src/components/GitHubRepoBadge.tsx` | 修改 | 毛玻璃材质 |
-| `client/src/pages/Home.tsx` | 修改 | 布局重构（Dock + 抽屉） |
-| `client/src/components/three/` | 修改 | Agent 姓名牌毛玻璃化 |
-| 新增 `client/src/components/HoloDock.tsx` | 新增 | 胶囊 Dock 组件 |
-| 新增 `client/src/components/HoloDrawer.tsx` | 新增 | 侧边抽屉容器 |
-| 新增 `client/src/components/ui/GlowButton.tsx` | 新增 | 发光 CTA 按钮 |
+| 文件                                           | 改动类型              | 说明                                        |
+| ---------------------------------------------- | --------------------- | ------------------------------------------- |
+| `client/src/index.css`                         | 修改                  | 新增 glass 工具类、字体变量、动画 keyframes |
+| `client/index.html`                            | 修改                  | 添加 Google Fonts 预连接                    |
+| `client/src/components/Toolbar.tsx`            | 重写 → `HoloDock.tsx` | 胶囊 Dock                                   |
+| `client/src/components/WorkflowPanel.tsx`      | 修改                  | 毛玻璃材质 + 抽屉化                         |
+| `client/src/components/ChatPanel.tsx`          | 修改                  | 毛玻璃材质 + 抽屉化                         |
+| `client/src/components/ConfigPanel.tsx`        | 修改                  | 毛玻璃材质 + 抽屉化                         |
+| `client/src/components/LoadingScreen.tsx`      | 修改                  | 毛玻璃材质                                  |
+| `client/src/components/GitHubRepoBadge.tsx`    | 修改                  | 毛玻璃材质                                  |
+| `client/src/pages/Home.tsx`                    | 修改                  | 布局重构（Dock + 抽屉）                     |
+| `client/src/components/three/`                 | 修改                  | Agent 姓名牌毛玻璃化                        |
+| 新增 `client/src/components/HoloDock.tsx`      | 新增                  | 胶囊 Dock 组件                              |
+| 新增 `client/src/components/HoloDrawer.tsx`    | 新增                  | 侧边抽屉容器                                |
+| 新增 `client/src/components/ui/GlowButton.tsx` | 新增                  | 发光 CTA 按钮                               |

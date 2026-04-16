@@ -17,9 +17,12 @@ import type {
   FinalizedCommand,
   IdentifiedRisk,
   StrategicCommand,
-} from '../../../shared/nl-command/contracts.js';
-import type { ILLMProvider, LLMMessage } from '../../../shared/llm/contracts.js';
-import { AuditTrail } from './audit-trail.js';
+} from "../../../shared/nl-command/contracts.js";
+import type {
+  ILLMProvider,
+  LLMMessage,
+} from "../../../shared/llm/contracts.js";
+import { AuditTrail } from "./audit-trail.js";
 
 export interface CommandAnalyzerOptions {
   llmProvider: ILLMProvider;
@@ -36,7 +39,7 @@ const BASE_DELAY_MS = 500;
 async function callLLMWithRetry(
   provider: ILLMProvider,
   messages: LLMMessage[],
-  model: string,
+  model: string
 ): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -54,7 +57,7 @@ async function callLLMWithRetry(
         break;
       }
       const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((r) => setTimeout(r, delay));
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   throw lastError;
@@ -98,7 +101,7 @@ interface ClarificationLLMResponse {
   questions: Array<{
     questionId: string;
     text: string;
-    type: 'free_text' | 'single_choice' | 'multi_choice';
+    type: "free_text" | "single_choice" | "multi_choice";
     options?: string[];
     context?: string;
   }>;
@@ -147,13 +150,13 @@ Respond ONLY with valid JSON.`;
 Command metadata:
 - Priority: ${command.priority}
 - User ID: ${command.userId}
-${command.timeframe ? `- Timeframe: ${JSON.stringify(command.timeframe)}` : ''}
-${command.constraints.length > 0 ? `- Existing constraints: ${JSON.stringify(command.constraints)}` : ''}
-${command.objectives.length > 0 ? `- Existing objectives: ${JSON.stringify(command.objectives)}` : ''}`;
+${command.timeframe ? `- Timeframe: ${JSON.stringify(command.timeframe)}` : ""}
+${command.constraints.length > 0 ? `- Existing constraints: ${JSON.stringify(command.constraints)}` : ""}
+${command.objectives.length > 0 ? `- Existing objectives: ${JSON.stringify(command.objectives)}` : ""}`;
 
     const messages: LLMMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ];
 
     const raw = await callLLMWithRetry(this.llmProvider, messages, this.model);
@@ -164,14 +167,17 @@ ${command.objectives.length > 0 ? `- Existing objectives: ${JSON.stringify(comma
     // 记录审计
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'command_analyzed',
+      operationType: "command_analyzed",
       operator: command.userId,
       content: `Analyzed command: "${command.commandText}"`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: command.commandId,
-      entityType: 'command',
-      metadata: { confidence: analysis.confidence, needsClarification: analysis.needsClarification },
+      entityType: "command",
+      metadata: {
+        confidence: analysis.confidence,
+        needsClarification: analysis.needsClarification,
+      },
     });
 
     return analysis;
@@ -183,7 +189,7 @@ ${command.objectives.length > 0 ? `- Existing objectives: ${JSON.stringify(comma
    */
   async generateClarificationQuestions(
     command: StrategicCommand,
-    analysis: CommandAnalysis,
+    analysis: CommandAnalysis
   ): Promise<ClarificationQuestion[]> {
     const systemPrompt = `You are a strategic command clarification assistant. Based on the command analysis, generate clarification questions to resolve ambiguities.
 Return a JSON object with a "questions" array. Each question has:
@@ -201,14 +207,14 @@ Analysis result:
 - Intent: ${analysis.intent}
 - Confidence: ${analysis.confidence}
 - Needs clarification: ${analysis.needsClarification}
-${analysis.clarificationTopics?.length ? `- Clarification topics: ${analysis.clarificationTopics.join(', ')}` : ''}
-- Assumptions: ${analysis.assumptions.join('; ')}
+${analysis.clarificationTopics?.length ? `- Clarification topics: ${analysis.clarificationTopics.join(", ")}` : ""}
+- Assumptions: ${analysis.assumptions.join("; ")}
 
 Generate clarification questions to resolve ambiguities and improve confidence.`;
 
     const messages: LLMMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ];
 
     const raw = await callLLMWithRetry(this.llmProvider, messages, this.model);
@@ -219,13 +225,13 @@ Generate clarification questions to resolve ambiguities and improve confidence.`
     // 记录审计
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'clarification_question',
+      operationType: "clarification_question",
       operator: command.userId,
       content: `Generated ${questions.length} clarification questions`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: command.commandId,
-      entityType: 'command',
+      entityType: "command",
       metadata: { questionCount: questions.length },
     });
 
@@ -239,7 +245,7 @@ Generate clarification questions to resolve ambiguities and improve confidence.`
   async updateAnalysis(
     command: StrategicCommand,
     analysis: CommandAnalysis,
-    answer: ClarificationAnswer,
+    answer: ClarificationAnswer
   ): Promise<CommandAnalysis> {
     const systemPrompt = `You are a strategic command analyzer. Update the existing analysis based on a new clarification answer.
 Return a JSON object with the same structure as the original analysis, with updated fields reflecting the new information:
@@ -256,13 +262,13 @@ ${JSON.stringify(analysis, null, 2)}
 Clarification answer:
 - Question ID: ${answer.questionId}
 - Answer text: ${answer.text}
-${answer.selectedOptions?.length ? `- Selected options: ${answer.selectedOptions.join(', ')}` : ''}
+${answer.selectedOptions?.length ? `- Selected options: ${answer.selectedOptions.join(", ")}` : ""}
 
 Update the analysis to incorporate this new information.`;
 
     const messages: LLMMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ];
 
     const raw = await callLLMWithRetry(this.llmProvider, messages, this.model);
@@ -273,14 +279,17 @@ Update the analysis to incorporate this new information.`;
     // 记录审计
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'clarification_answer',
+      operationType: "clarification_answer",
       operator: command.userId,
       content: `Updated analysis with clarification answer for question ${answer.questionId}`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: command.commandId,
-      entityType: 'command',
-      metadata: { questionId: answer.questionId, newConfidence: updatedAnalysis.confidence },
+      entityType: "command",
+      metadata: {
+        questionId: answer.questionId,
+        newConfidence: updatedAnalysis.confidence,
+      },
     });
 
     return updatedAnalysis;
@@ -292,7 +301,7 @@ Update the analysis to incorporate this new information.`;
    */
   async finalize(
     command: StrategicCommand,
-    analysis: CommandAnalysis,
+    analysis: CommandAnalysis
   ): Promise<FinalizedCommand> {
     const systemPrompt = `You are a strategic command finalizer. Based on the original command and the completed analysis, produce a refined version of the command and an optional clarification summary.
 Return a JSON object with:
@@ -309,8 +318,8 @@ ${JSON.stringify(analysis, null, 2)}
 Produce a refined command text that incorporates all the analysis findings.`;
 
     const messages: LLMMessage[] = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ];
 
     const raw = await callLLMWithRetry(this.llmProvider, messages, this.model);
@@ -328,13 +337,13 @@ Produce a refined command text that incorporates all the analysis findings.`;
     // 记录审计
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'command_finalized',
+      operationType: "command_finalized",
       operator: command.userId,
       content: `Finalized command: "${finalized.refinedText}"`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: command.commandId,
-      entityType: 'command',
+      entityType: "command",
       metadata: { refinedText: finalized.refinedText },
     });
 
@@ -348,33 +357,56 @@ Produce a refined command text that incorporates all the analysis findings.`;
    */
   private buildAnalysis(
     parsed: AnalysisLLMResponse | null,
-    fallback?: CommandAnalysis,
+    fallback?: CommandAnalysis
   ): CommandAnalysis {
     if (!parsed) {
       // LLM 返回格式异常，使用 fallback 或默认值
-      return fallback ?? {
-        intent: 'unknown',
-        entities: [],
-        constraints: [],
-        objectives: [],
-        risks: [],
-        assumptions: [],
-        confidence: 0,
-        needsClarification: true,
-        clarificationTopics: ['Unable to parse command, please rephrase'],
-      };
+      return (
+        fallback ?? {
+          intent: "unknown",
+          entities: [],
+          constraints: [],
+          objectives: [],
+          risks: [],
+          assumptions: [],
+          confidence: 0,
+          needsClarification: true,
+          clarificationTopics: ["Unable to parse command, please rephrase"],
+        }
+      );
     }
 
     return {
-      intent: typeof parsed.intent === 'string' ? parsed.intent : (fallback?.intent ?? 'unknown'),
-      entities: Array.isArray(parsed.entities) ? parsed.entities : (fallback?.entities ?? []),
-      constraints: Array.isArray(parsed.constraints) ? parsed.constraints : (fallback?.constraints ?? []),
-      objectives: Array.isArray(parsed.objectives) ? parsed.objectives : (fallback?.objectives ?? []),
-      risks: Array.isArray(parsed.risks) ? parsed.risks : (fallback?.risks ?? []),
-      assumptions: Array.isArray(parsed.assumptions) ? parsed.assumptions : (fallback?.assumptions ?? []),
-      confidence: typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : (fallback?.confidence ?? 0),
-      needsClarification: typeof parsed.needsClarification === 'boolean' ? parsed.needsClarification : (fallback?.needsClarification ?? true),
-      clarificationTopics: Array.isArray(parsed.clarificationTopics) ? parsed.clarificationTopics : fallback?.clarificationTopics,
+      intent:
+        typeof parsed.intent === "string"
+          ? parsed.intent
+          : (fallback?.intent ?? "unknown"),
+      entities: Array.isArray(parsed.entities)
+        ? parsed.entities
+        : (fallback?.entities ?? []),
+      constraints: Array.isArray(parsed.constraints)
+        ? parsed.constraints
+        : (fallback?.constraints ?? []),
+      objectives: Array.isArray(parsed.objectives)
+        ? parsed.objectives
+        : (fallback?.objectives ?? []),
+      risks: Array.isArray(parsed.risks)
+        ? parsed.risks
+        : (fallback?.risks ?? []),
+      assumptions: Array.isArray(parsed.assumptions)
+        ? parsed.assumptions
+        : (fallback?.assumptions ?? []),
+      confidence:
+        typeof parsed.confidence === "number"
+          ? Math.max(0, Math.min(1, parsed.confidence))
+          : (fallback?.confidence ?? 0),
+      needsClarification:
+        typeof parsed.needsClarification === "boolean"
+          ? parsed.needsClarification
+          : (fallback?.needsClarification ?? true),
+      clarificationTopics: Array.isArray(parsed.clarificationTopics)
+        ? parsed.clarificationTopics
+        : fallback?.clarificationTopics,
     };
   }
 
@@ -382,20 +414,24 @@ Produce a refined command text that incorporates all the analysis findings.`;
    * 从 LLM 响应构建 ClarificationQuestion 数组。
    */
   private buildClarificationQuestions(
-    parsed: ClarificationLLMResponse | null,
+    parsed: ClarificationLLMResponse | null
   ): ClarificationQuestion[] {
     if (!parsed || !Array.isArray(parsed.questions)) {
       return [];
     }
 
     return parsed.questions.map((q, i) => ({
-      questionId: typeof q.questionId === 'string' ? q.questionId : `q-${i + 1}`,
-      text: typeof q.text === 'string' ? q.text : 'Could you provide more details?',
-      type: (['free_text', 'single_choice', 'multi_choice'] as const).includes(q.type as any)
+      questionId:
+        typeof q.questionId === "string" ? q.questionId : `q-${i + 1}`,
+      text:
+        typeof q.text === "string" ? q.text : "Could you provide more details?",
+      type: (["free_text", "single_choice", "multi_choice"] as const).includes(
+        q.type as any
+      )
         ? q.type
-        : 'free_text',
+        : "free_text",
       options: Array.isArray(q.options) ? q.options : undefined,
-      context: typeof q.context === 'string' ? q.context : undefined,
+      context: typeof q.context === "string" ? q.context : undefined,
     }));
   }
 }

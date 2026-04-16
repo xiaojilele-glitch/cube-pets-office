@@ -38,7 +38,8 @@ export function registerFeishuRelayRoutes(
   const relayAuth = createFeishuRelayAuth(runtime.config);
 
   router.post("/relay", async (request, response) => {
-    if (!relayAuth.verifyRequest(request, response, "/api/feishu/relay")) return;
+    if (!relayAuth.verifyRequest(request, response, "/api/feishu/relay"))
+      return;
 
     const body = (request.body || {}) as FeishuRelayBody;
     const chatId = body.chatId?.trim();
@@ -72,7 +73,8 @@ export function registerFeishuRelayRoutes(
       });
     }
 
-    const shouldStartTask = finalAnswerSource === "openclaw" || isComplexRequest(text);
+    const shouldStartTask =
+      finalAnswerSource === "openclaw" || isComplexRequest(text);
     if (!shouldStartTask) {
       return response.json({
         ok: true,
@@ -122,12 +124,15 @@ export function registerFeishuRelayRoutes(
   });
 
   router.post("/relay/event", async (request, response) => {
-    if (!relayAuth.verifyRequest(request, response, "/api/feishu/relay/event")) return;
+    if (!relayAuth.verifyRequest(request, response, "/api/feishu/relay/event"))
+      return;
 
     const body = (request.body || {}) as FeishuRelayEventBody;
     const taskId = body.taskId?.trim();
     if (!taskId) {
-      return response.status(400).json({ ok: false, error: "taskId is required" });
+      return response
+        .status(400)
+        .json({ ok: false, error: "taskId is required" });
     }
 
     const task = runtime.taskStore.getTask(taskId);
@@ -139,13 +144,17 @@ export function registerFeishuRelayRoutes(
       if (!body.stageKey?.trim()) {
         return response
           .status(400)
-          .json({ ok: false, error: "stageKey is required for progress updates" });
+          .json({
+            ok: false,
+            error: "stageKey is required for progress updates",
+          });
       }
       const updated = await runtime.taskStore.markTaskRunning(taskId, {
         stageKey: body.stageKey.trim(),
         stageLabel: body.stageLabel?.trim(),
         detail: body.detail?.trim() || "Relay is processing the request",
-        progress: typeof body.progress === "number" ? body.progress : task.progress,
+        progress:
+          typeof body.progress === "number" ? body.progress : task.progress,
       });
       return response.json({ ok: true, task: updated });
     }
@@ -154,7 +163,8 @@ export function registerFeishuRelayRoutes(
       const updated = await runtime.taskStore.waitOnTask(taskId, {
         waitingFor: body.waitingFor?.trim() || "Need user decision",
         detail: body.detail?.trim() || "Waiting for user confirmation",
-        progress: typeof body.progress === "number" ? body.progress : task.progress,
+        progress:
+          typeof body.progress === "number" ? body.progress : task.progress,
         stageKey: body.stageKey?.trim() || task.currentStageKey || "execution",
         stageLabel: body.stageLabel?.trim(),
         decision: {
@@ -167,7 +177,8 @@ export function registerFeishuRelayRoutes(
 
     if (body.type === "done") {
       const updated = await runtime.taskStore.completeTask(taskId, {
-        summary: body.summary?.trim() || body.detail?.trim() || "Task completed",
+        summary:
+          body.summary?.trim() || body.detail?.trim() || "Task completed",
         detail: body.detail?.trim() || "Relay reported completion",
         progress: 100,
         stageKey: body.stageKey?.trim() || "finalize",
@@ -179,7 +190,8 @@ export function registerFeishuRelayRoutes(
     if (body.type === "failed") {
       const updated = await runtime.taskStore.failTask(taskId, {
         detail: body.detail?.trim() || "Relay reported failure",
-        progress: typeof body.progress === "number" ? body.progress : task.progress,
+        progress:
+          typeof body.progress === "number" ? body.progress : task.progress,
         stageKey: body.stageKey?.trim() || task.currentStageKey || "finalize",
         stageLabel: body.stageLabel?.trim(),
       });
@@ -202,7 +214,9 @@ export function registerFeishuRelayRoutes(
       );
 
       if (!result.ok) {
-        return response.status(result.statusCode).json({ ok: false, error: result.error });
+        return response
+          .status(result.statusCode)
+          .json({ ok: false, error: result.error });
       }
 
       return response.json({
@@ -213,6 +227,8 @@ export function registerFeishuRelayRoutes(
       });
     }
 
-    return response.status(400).json({ ok: false, error: "Unsupported relay event type" });
+    return response
+      .status(400)
+      .json({ ok: false, error: "Unsupported relay event type" });
   });
 }

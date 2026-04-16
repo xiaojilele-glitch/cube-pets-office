@@ -18,7 +18,11 @@ import {
   type ExecutorJobStatus,
   type SecurityPolicy,
 } from "../../../shared/executor/contracts.js";
-import type { AIResultArtifact, LobsterExecutorConfig, StoredJobRecord } from "./types.js";
+import type {
+  AIResultArtifact,
+  LobsterExecutorConfig,
+  StoredJobRecord,
+} from "./types.js";
 import type { JobRunner } from "./runner.js";
 import type { CallbackSender } from "./callback-sender.js";
 import { LogBatcher } from "./log-batcher.js";
@@ -75,7 +79,7 @@ export class DockerRunner implements JobRunner {
   constructor(
     executorConfig: LobsterExecutorConfig,
     callbackSender: CallbackSender,
-    docker?: Dockerode,
+    docker?: Dockerode
   ) {
     this.callbackSender = callbackSender;
     this.config = {
@@ -87,7 +91,10 @@ export class DockerRunner implements JobRunner {
     };
 
     this.securityConfig = {
-      securityLevel: executorConfig.securityLevel as "strict" | "balanced" | "permissive",
+      securityLevel: executorConfig.securityLevel as
+        | "strict"
+        | "balanced"
+        | "permissive",
       containerUser: executorConfig.containerUser ?? "65534",
       maxMemory: executorConfig.maxMemory ?? "512m",
       maxCpus: executorConfig.maxCpus ?? "1.0",
@@ -122,7 +129,9 @@ export class DockerRunner implements JobRunner {
         } else {
           // Parse tcp://host:port or http://host:port
           try {
-            const url = new URL(executorConfig.dockerHost.replace(/^tcp:\/\//, "http://"));
+            const url = new URL(
+              executorConfig.dockerHost.replace(/^tcp:\/\//, "http://")
+            );
             opts.host = url.hostname;
             opts.port = url.port || "2375";
             opts.protocol = "http";
@@ -138,13 +147,16 @@ export class DockerRunner implements JobRunner {
         // docker-modem reads ca/cert/key from the cert directory
         const certDir = executorConfig.dockerCertPath;
         try {
-          const { readFileSync } = require("node:fs") as typeof import("node:fs");
+          const { readFileSync } =
+            require("node:fs") as typeof import("node:fs");
           opts.ca = readFileSync(join(certDir, "ca.pem"));
           opts.cert = readFileSync(join(certDir, "cert.pem"));
           opts.key = readFileSync(join(certDir, "key.pem"));
         } catch {
           // If cert files don't exist, proceed without TLS certs
-          console.warn(`[DockerRunner] Failed to read TLS certs from ${certDir}`);
+          console.warn(
+            `[DockerRunner] Failed to read TLS certs from ${certDir}`
+          );
         }
       }
       this.docker = new Dockerode(opts);
@@ -155,7 +167,7 @@ export class DockerRunner implements JobRunner {
 
   async run(
     record: StoredJobRecord,
-    emitEvent: (event: ExecutorEvent) => void,
+    emitEvent: (event: ExecutorEvent) => void
   ): Promise<void> {
     const startTime = Date.now();
     let container: Dockerode.Container | undefined;
@@ -184,7 +196,9 @@ export class DockerRunner implements JobRunner {
         securityLevel: securityPolicy.level,
         detail: {
           containerId,
-          image: (record.planJob.payload as Record<string, unknown>)?.image ?? this.config.defaultImage,
+          image:
+            (record.planJob.payload as Record<string, unknown>)?.image ??
+            this.config.defaultImage,
           user: securityPolicy.user,
           readonlyRootfs: securityPolicy.readonlyRootfs,
           capDrop: securityPolicy.capDrop,
@@ -223,10 +237,13 @@ export class DockerRunner implements JobRunner {
       // Task 3.2: Attach network policy info to job.started payload
       // Task 5.1: Attach securitySummary to job.started payload
       const memBytes = securityPolicy.resources.memoryBytes;
-      const memoryLimit = memBytes >= 1_073_741_824
-        ? `${Math.round(memBytes / 1_073_741_824)}GB`
-        : `${Math.round(memBytes / 1_048_576)}MB`;
-      const cpuLimit = (securityPolicy.resources.nanoCpus / 1_000_000_000).toFixed(1);
+      const memoryLimit =
+        memBytes >= 1_073_741_824
+          ? `${Math.round(memBytes / 1_073_741_824)}GB`
+          : `${Math.round(memBytes / 1_048_576)}MB`;
+      const cpuLimit = (
+        securityPolicy.resources.nanoCpus / 1_000_000_000
+      ).toFixed(1);
 
       startedEvent.payload = {
         ...startedEvent.payload,
@@ -253,23 +270,30 @@ export class DockerRunner implements JobRunner {
         container,
         record,
         emitEvent,
-        stderrLines,
+        stderrLines
       );
 
       // 6. Inspect exit code
       const inspection = await container.inspect();
       const exitCode = inspection.State.ExitCode;
-      const oomKilled = !!(inspection.State as Record<string, unknown>).OOMKilled;
+      const oomKilled = !!(inspection.State as Record<string, unknown>)
+        .OOMKilled;
       const finishedAt = new Date().toISOString();
       const durationMs = Date.now() - startTime;
       const cancelReason =
         record.cancelRequested?.reason?.trim() || "Docker execution cancelled";
 
       // 7. Write result.json before artifact collection so it is exposed to the UI.
-      const resultFile = this.writeResult(record, exitCode, durationMs, timedOut, {
-        outcome: record.cancelRequested ? "cancelled" : undefined,
-        summary: record.cancelRequested ? cancelReason : undefined,
-      });
+      const resultFile = this.writeResult(
+        record,
+        exitCode,
+        durationMs,
+        timedOut,
+        {
+          outcome: record.cancelRequested ? "cancelled" : undefined,
+          summary: record.cancelRequested ? cancelReason : undefined,
+        }
+      );
 
       // 8. Collect artifacts
       const artifacts = this.collectArtifacts(record, workspaceDir, resultFile);
@@ -288,7 +312,7 @@ export class DockerRunner implements JobRunner {
         } catch (scrubErr) {
           console.warn(
             "[DockerRunner] Credential scrubbing failed:",
-            scrubErr instanceof Error ? scrubErr.message : scrubErr,
+            scrubErr instanceof Error ? scrubErr.message : scrubErr
           );
         }
       }
@@ -301,9 +325,13 @@ export class DockerRunner implements JobRunner {
         await this.emitCancelled(record, emitEvent, durationMs, artifacts);
       } else if (timedOut) {
         await this.emitFailed(
-          record, emitEvent, "TIMEOUT",
+          record,
+          emitEvent,
+          "TIMEOUT",
           `Container timed out after ${durationMs}ms`,
-          durationMs, artifacts, stderrLines,
+          durationMs,
+          artifacts,
+          stderrLines
         );
       } else if (oomKilled) {
         // Task 2.4: OOM detection
@@ -313,12 +341,19 @@ export class DockerRunner implements JobRunner {
           missionId: record.request.missionId,
           eventType: "container.oom",
           securityLevel: securityPolicy.level,
-          detail: { exitCode, memoryLimit: securityPolicy.resources.memoryBytes },
+          detail: {
+            exitCode,
+            memoryLimit: securityPolicy.resources.memoryBytes,
+          },
         });
         await this.emitFailed(
-          record, emitEvent, "OOM_KILLED",
+          record,
+          emitEvent,
+          "OOM_KILLED",
           `Container killed by OOM (exit code ${exitCode})`,
-          durationMs, artifacts, stderrLines,
+          durationMs,
+          artifacts,
+          stderrLines
         );
       } else if (exitCode === 159) {
         // Task 2.5: Seccomp violation detection (128 + 31 = SIGSYS)
@@ -331,15 +366,23 @@ export class DockerRunner implements JobRunner {
           detail: { exitCode, signal: "SIGSYS" },
         });
         await this.emitFailed(
-          record, emitEvent, "SECCOMP_VIOLATION",
+          record,
+          emitEvent,
+          "SECCOMP_VIOLATION",
           `Container killed by seccomp violation (SIGSYS, exit code 159)`,
-          durationMs, artifacts, stderrLines,
+          durationMs,
+          artifacts,
+          stderrLines
         );
       } else if (exitCode !== 0) {
         await this.emitFailed(
-          record, emitEvent, `EXIT_CODE_${exitCode}`,
+          record,
+          emitEvent,
+          `EXIT_CODE_${exitCode}`,
           `Container exited with code ${exitCode}`,
-          durationMs, artifacts, stderrLines,
+          durationMs,
+          artifacts,
+          stderrLines
         );
       } else {
         await this.emitCompleted(record, emitEvent, durationMs, artifacts);
@@ -361,8 +404,13 @@ export class DockerRunner implements JobRunner {
 
       record.finishedAt = new Date().toISOString();
       await this.emitFailed(
-        record, emitEvent, errorCode, errorMessage,
-        durationMs, [], [],
+        record,
+        emitEvent,
+        errorCode,
+        errorMessage,
+        durationMs,
+        [],
+        []
       );
     } finally {
       // 10. Cleanup container
@@ -428,7 +476,7 @@ export class DockerRunner implements JobRunner {
    */
   buildContainerOptions(
     record: StoredJobRecord,
-    workspaceDir: string,
+    workspaceDir: string
   ): Dockerode.ContainerCreateOptions {
     const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
     const aiEnabled = payload.aiEnabled === true;
@@ -459,7 +507,9 @@ export class DockerRunner implements JobRunner {
     // When Docker is remote (TCP), skip bind mount since local paths don't exist on the remote host
     const hostWorkspace =
       (payload.workspaceRoot as string | undefined) || workspaceDir;
-    const isRemoteDocker = this.config.dockerHost?.startsWith("tcp:") || this.config.dockerHost?.startsWith("http:");
+    const isRemoteDocker =
+      this.config.dockerHost?.startsWith("tcp:") ||
+      this.config.dockerHost?.startsWith("http:");
 
     // Security policy → Docker options
     const securityCreateOpts = toDockerCreateOptions(securityPolicy);
@@ -473,7 +523,9 @@ export class DockerRunner implements JobRunner {
       User: securityCreateOpts.User,
       HostConfig: {
         // Only bind-mount workspace for local Docker; remote Docker uses an anonymous volume
-        ...(isRemoteDocker ? { Binds: [] } : { Binds: [`${hostWorkspace}:/workspace`] }),
+        ...(isRemoteDocker
+          ? { Binds: [] }
+          : { Binds: [`${hostWorkspace}:/workspace`] }),
         ...securityHostConfig,
       },
     };
@@ -481,7 +533,7 @@ export class DockerRunner implements JobRunner {
 
   private async createContainer(
     record: StoredJobRecord,
-    workspaceDir: string,
+    workspaceDir: string
   ): Promise<Dockerode.Container> {
     const opts = this.buildContainerOptions(record, workspaceDir);
     try {
@@ -489,9 +541,13 @@ export class DockerRunner implements JobRunner {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("No such image") || msg.includes("pull")) {
-        throw Object.assign(new Error(msg), { _errorCode: "IMAGE_PULL_FAILED" });
+        throw Object.assign(new Error(msg), {
+          _errorCode: "IMAGE_PULL_FAILED",
+        });
       }
-      throw Object.assign(new Error(msg), { _errorCode: "CONTAINER_CREATE_FAILED" });
+      throw Object.assign(new Error(msg), {
+        _errorCode: "CONTAINER_CREATE_FAILED",
+      });
     }
   }
 
@@ -501,17 +557,16 @@ export class DockerRunner implements JobRunner {
     container: Dockerode.Container,
     record: StoredJobRecord,
     emitEvent: (event: ExecutorEvent) => void,
-    stderrLines: string[],
+    stderrLines: string[]
   ): Promise<{ timedOut: boolean }> {
-    const timeoutMs =
-      record.planJob.timeoutMs ?? 300_000; // default 5 min
+    const timeoutMs = record.planJob.timeoutMs ?? 300_000; // default 5 min
 
     let timedOut = false;
     let timeoutTimer: ReturnType<typeof setTimeout> | undefined;
 
     // Set up LogBatcher for batched log callbacks
     const logBatcher = new LogBatcher(
-      (lines) => {
+      lines => {
         const logEvent = this.createEvent(record, {
           type: "job.log",
           status: "running",
@@ -521,7 +576,7 @@ export class DockerRunner implements JobRunner {
         void this.sendCallback(record, logEvent);
       },
       500,
-      4096,
+      4096
     );
 
     // Progress ticker — emit job.progress every 5 seconds
@@ -554,7 +609,11 @@ export class DockerRunner implements JobRunner {
       // Docker multiplexed stream demux
       const stdoutStream = new PassThrough();
       const stderrStream = new PassThrough();
-      container.modem.demuxStream(logStream as NodeJS.ReadableStream, stdoutStream, stderrStream);
+      container.modem.demuxStream(
+        logStream as NodeJS.ReadableStream,
+        stdoutStream,
+        stderrStream
+      );
 
       // Process stdout
       let stdoutBuffer = "";
@@ -593,7 +652,7 @@ export class DockerRunner implements JobRunner {
       // Wait for container to exit, with timeout
       const waitPromise = container.wait();
 
-      const timeoutPromise = new Promise<"timeout">((resolve) => {
+      const timeoutPromise = new Promise<"timeout">(resolve => {
         timeoutTimer = setTimeout(() => resolve("timeout"), timeoutMs);
       });
 
@@ -637,7 +696,7 @@ export class DockerRunner implements JobRunner {
   private collectArtifacts(
     record: StoredJobRecord,
     workspaceDir: string,
-    resultFile: string,
+    resultFile: string
   ): ExecutionPlanArtifact[] {
     const artifacts: ExecutionPlanArtifact[] = [];
 
@@ -677,7 +736,7 @@ export class DockerRunner implements JobRunner {
     } catch (err) {
       console.warn(
         `[DockerRunner] Failed to collect artifacts from ${artifactsDir}:`,
-        err instanceof Error ? err.message : err,
+        err instanceof Error ? err.message : err
       );
     }
 
@@ -694,11 +753,10 @@ export class DockerRunner implements JobRunner {
     options: {
       outcome?: "success" | "failed" | "cancelled";
       summary?: string;
-    } = {},
+    } = {}
   ): string {
     const outcome =
-      options.outcome ??
-      (exitCode === 0 && !timedOut ? "success" : "failed");
+      options.outcome ?? (exitCode === 0 && !timedOut ? "success" : "failed");
     const summary =
       options.summary ??
       (timedOut
@@ -725,20 +783,22 @@ export class DockerRunner implements JobRunner {
     writeFileSync(
       resultFile,
       `${JSON.stringify(resultPayload, null, 2)}\n`,
-      "utf-8",
+      "utf-8"
     );
     return resultFile;
   }
 
   /* ── container cleanup ── */
 
-  private async cleanupContainer(container: Dockerode.Container): Promise<void> {
+  private async cleanupContainer(
+    container: Dockerode.Container
+  ): Promise<void> {
     try {
       await container.remove({ force: true });
     } catch (err) {
       console.error(
         `[DockerRunner] Failed to remove container ${container.id}:`,
-        err instanceof Error ? err.message : err,
+        err instanceof Error ? err.message : err
       );
     }
   }
@@ -746,7 +806,7 @@ export class DockerRunner implements JobRunner {
   private async stopOrKillContainer(
     container: Dockerode.Container,
     stopSeconds: number,
-    killAfterMs: number,
+    killAfterMs: number
   ): Promise<"stopped" | "killed"> {
     try {
       await Promise.race([
@@ -797,7 +857,7 @@ export class DockerRunner implements JobRunner {
         record.dataDirectory,
         "workspace",
         "artifacts",
-        "ai-result.json",
+        "ai-result.json"
       );
       if (existsSync(artifactPath)) {
         const raw = readFileSync(artifactPath, "utf-8");
@@ -813,14 +873,17 @@ export class DockerRunner implements JobRunner {
     record: StoredJobRecord,
     emitEvent: (event: ExecutorEvent) => void,
     durationMs: number,
-    artifacts: ExecutionPlanArtifact[],
+    artifacts: ExecutionPlanArtifact[]
   ): Promise<void> {
     record.status = "completed";
     record.progress = 100;
     record.summary = "Docker execution completed successfully";
     record.message = record.summary;
 
-    const jobPayload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const jobPayload = (record.planJob.payload ?? {}) as Record<
+      string,
+      unknown
+    >;
     const aiEnabled = jobPayload.aiEnabled === true;
 
     let eventPayload: Record<string, unknown> | undefined;
@@ -829,7 +892,11 @@ export class DockerRunner implements JobRunner {
       const aiResult = this.readAIResult(record);
       eventPayload = {
         aiTaskType,
-        aiModel: aiResult?.model ?? (jobPayload.llmConfig as Record<string, unknown> | undefined)?.model ?? "",
+        aiModel:
+          aiResult?.model ??
+          (jobPayload.llmConfig as Record<string, unknown> | undefined)
+            ?.model ??
+          "",
       };
       if (aiResult) {
         eventPayload.aiResult = DockerRunner.buildAIResultSummary(aiResult);
@@ -839,7 +906,9 @@ export class DockerRunner implements JobRunner {
       const creds = resolveAICredentials(jobPayload, process.env);
       if (creds.apiKey) {
         const scrubber = new CredentialScrubber([creds.apiKey]);
-        eventPayload = JSON.parse(scrubber.scrubLine(JSON.stringify(eventPayload)));
+        eventPayload = JSON.parse(
+          scrubber.scrubLine(JSON.stringify(eventPayload))
+        );
       }
     }
 
@@ -861,7 +930,7 @@ export class DockerRunner implements JobRunner {
     record: StoredJobRecord,
     emitEvent: (event: ExecutorEvent) => void,
     durationMs: number,
-    artifacts: ExecutionPlanArtifact[],
+    artifacts: ExecutionPlanArtifact[]
   ): Promise<void> {
     const summary =
       record.cancelRequested?.reason?.trim() || "Docker execution cancelled";
@@ -893,7 +962,7 @@ export class DockerRunner implements JobRunner {
     errorMessage: string,
     durationMs: number,
     artifacts: ExecutionPlanArtifact[],
-    stderrLines: string[],
+    stderrLines: string[]
   ): Promise<void> {
     record.status = "failed";
     record.progress = 100;
@@ -901,14 +970,15 @@ export class DockerRunner implements JobRunner {
     record.errorMessage = errorMessage;
     record.message = errorMessage;
 
-    const jobPayload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const jobPayload = (record.planJob.payload ?? {}) as Record<
+      string,
+      unknown
+    >;
     const aiEnabled = jobPayload.aiEnabled === true;
 
     // detail: last 50 lines of stderr
     let detail =
-      stderrLines.length > 0
-        ? stderrLines.slice(-50).join("\n")
-        : undefined;
+      stderrLines.length > 0 ? stderrLines.slice(-50).join("\n") : undefined;
 
     let scrubMessage = errorMessage;
     let eventPayload: Record<string, unknown> | undefined;
@@ -918,7 +988,11 @@ export class DockerRunner implements JobRunner {
       const aiResult = this.readAIResult(record);
       eventPayload = {
         aiTaskType,
-        aiModel: aiResult?.model ?? (jobPayload.llmConfig as Record<string, unknown> | undefined)?.model ?? "",
+        aiModel:
+          aiResult?.model ??
+          (jobPayload.llmConfig as Record<string, unknown> | undefined)
+            ?.model ??
+          "",
       };
       if (aiResult) {
         eventPayload.aiResult = DockerRunner.buildAIResultSummary(aiResult);
@@ -932,7 +1006,9 @@ export class DockerRunner implements JobRunner {
         if (detail) {
           detail = scrubber.scrubLine(detail);
         }
-        eventPayload = JSON.parse(scrubber.scrubLine(JSON.stringify(eventPayload)));
+        eventPayload = JSON.parse(
+          scrubber.scrubLine(JSON.stringify(eventPayload))
+        );
       }
     }
 
@@ -950,7 +1026,11 @@ export class DockerRunner implements JobRunner {
     });
 
     // Task 4.4: Attach securityContext for security-related failures
-    const SECURITY_ERROR_CODES = ["OOM_KILLED", "SECCOMP_VIOLATION", "SECURITY_CONFIG_INVALID"];
+    const SECURITY_ERROR_CODES = [
+      "OOM_KILLED",
+      "SECCOMP_VIOLATION",
+      "SECURITY_CONFIG_INVALID",
+    ];
     if (SECURITY_ERROR_CODES.includes(errorCode)) {
       const securityPolicy = this.resolveSecurityPolicyForRecord(record);
       event.payload = {
@@ -979,7 +1059,9 @@ export class DockerRunner implements JobRunner {
     return exitCode === 0 ? "completed" : "failed";
   }
 
-  private resolveSecurityPolicyForRecord(record: StoredJobRecord): SecurityPolicy {
+  private resolveSecurityPolicyForRecord(
+    record: StoredJobRecord
+  ): SecurityPolicy {
     const payload = (record.planJob.payload ?? {}) as Record<string, unknown>;
     const aiEnabled = payload.aiEnabled === true;
 
@@ -1008,7 +1090,7 @@ export class DockerRunner implements JobRunner {
       artifacts?: ExecutionPlanArtifact[];
       metrics?: ExecutorEvent["metrics"];
       payload?: Record<string, unknown>;
-    },
+    }
   ): ExecutorEvent {
     return {
       version: EXECUTOR_CONTRACT_VERSION,
@@ -1034,19 +1116,16 @@ export class DockerRunner implements JobRunner {
     appendFileSync(
       record.logFile,
       `[${new Date().toISOString()}] ${message}\n`,
-      "utf-8",
+      "utf-8"
     );
   }
 
   private async sendCallback(
     record: StoredJobRecord,
-    event: ExecutorEvent,
+    event: ExecutorEvent
   ): Promise<void> {
     try {
-      await this.callbackSender.send(
-        record.request.callback.eventsUrl,
-        event,
-      );
+      await this.callbackSender.send(record.request.callback.eventsUrl, event);
     } catch {
       // Callback failure must not block job execution (Req 2.5)
     }

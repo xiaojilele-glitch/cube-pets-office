@@ -59,13 +59,33 @@ function makeTestIR(): ExportIR {
     ],
     pipeline: {
       stages: [
-        { name: "direction", label: "Direction", participantRoles: ["ceo"], executionStrategy: "sequential" },
-        { name: "planning", label: "Planning", participantRoles: ["ceo", "manager"], executionStrategy: "sequential" },
-        { name: "execution", label: "Execution", participantRoles: ["worker"], executionStrategy: "parallel" },
+        {
+          name: "direction",
+          label: "Direction",
+          participantRoles: ["ceo"],
+          executionStrategy: "sequential",
+        },
+        {
+          name: "planning",
+          label: "Planning",
+          participantRoles: ["ceo", "manager"],
+          executionStrategy: "sequential",
+        },
+        {
+          name: "execution",
+          label: "Execution",
+          participantRoles: ["worker"],
+          executionStrategy: "parallel",
+        },
       ],
     },
     skills: [
-      { id: "s1", name: "Strategic Thinking", summary: "Think strategically", prompt: "You are a strategic thinker who analyzes problems deeply." },
+      {
+        id: "s1",
+        name: "Strategic Thinking",
+        summary: "Think strategically",
+        prompt: "You are a strategic thinker who analyzes problems deeply.",
+      },
     ],
     tools: [
       {
@@ -84,7 +104,7 @@ describe("toAutoGen", () => {
   it("should return exactly 4 files", () => {
     const files = toAutoGen(makeTestIR());
     expect(files).toHaveLength(4);
-    const paths = files.map((f) => f.path);
+    const paths = files.map(f => f.path);
     expect(paths).toContain("agents.json");
     expect(paths).toContain("group_chat.json");
     expect(paths).toContain("main.py");
@@ -94,7 +114,9 @@ describe("toAutoGen", () => {
   describe("agents.json (Req 4.1)", () => {
     it("should contain an entry for every agent with name/system_message/llm_config", () => {
       const files = toAutoGen(makeTestIR());
-      const agentsJson = JSON.parse(files.find((f) => f.path === "agents.json")!.content);
+      const agentsJson = JSON.parse(
+        files.find(f => f.path === "agents.json")!.content
+      );
 
       expect(Object.keys(agentsJson)).toHaveLength(3);
       expect(agentsJson).toHaveProperty("chief_officer");
@@ -113,7 +135,9 @@ describe("toAutoGen", () => {
 
     it("should build system_message from title, responsibility, and goals", () => {
       const files = toAutoGen(makeTestIR());
-      const agentsJson = JSON.parse(files.find((f) => f.path === "agents.json")!.content);
+      const agentsJson = JSON.parse(
+        files.find(f => f.path === "agents.json")!.content
+      );
 
       const ceo = agentsJson.chief_officer;
       expect(ceo.system_message).toContain("Chief Executive Officer");
@@ -123,19 +147,25 @@ describe("toAutoGen", () => {
 
     it("should embed skill prompts in system_message for agents with skills", () => {
       const files = toAutoGen(makeTestIR());
-      const agentsJson = JSON.parse(files.find((f) => f.path === "agents.json")!.content);
+      const agentsJson = JSON.parse(
+        files.find(f => f.path === "agents.json")!.content
+      );
 
       // CEO has skill s1
       expect(agentsJson.chief_officer.system_message).toContain(
         "You are a strategic thinker who analyzes problems deeply."
       );
       // Project Manager has no skills
-      expect(agentsJson.project_manager.system_message).not.toContain("Skills:");
+      expect(agentsJson.project_manager.system_message).not.toContain(
+        "Skills:"
+      );
     });
 
     it("should set correct model and temperature from IR", () => {
       const files = toAutoGen(makeTestIR());
-      const agentsJson = JSON.parse(files.find((f) => f.path === "agents.json")!.content);
+      const agentsJson = JSON.parse(
+        files.find(f => f.path === "agents.json")!.content
+      );
 
       expect(agentsJson.chief_officer.llm_config.model).toBe("gpt-4");
       expect(agentsJson.chief_officer.llm_config.temperature).toBe(0.7);
@@ -145,7 +175,7 @@ describe("toAutoGen", () => {
 
     it("should have json language", () => {
       const files = toAutoGen(makeTestIR());
-      const agentsFile = files.find((f) => f.path === "agents.json")!;
+      const agentsFile = files.find(f => f.path === "agents.json")!;
       expect(agentsFile.language).toBe("json");
     });
   });
@@ -153,7 +183,9 @@ describe("toAutoGen", () => {
   describe("group_chat.json (Req 4.2)", () => {
     it("should contain a GroupChat entry for each team", () => {
       const files = toAutoGen(makeTestIR());
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
 
       expect(Object.keys(gcJson)).toHaveLength(1);
       expect(gcJson).toHaveProperty("dev_team");
@@ -161,7 +193,9 @@ describe("toAutoGen", () => {
 
     it("should list member agent keys in agents array", () => {
       const files = toAutoGen(makeTestIR());
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
 
       expect(gcJson.dev_team.agents).toContain("project_manager");
       expect(gcJson.dev_team.agents).toContain("developer");
@@ -169,7 +203,9 @@ describe("toAutoGen", () => {
 
     it("should set max_round based on pipeline stages count", () => {
       const files = toAutoGen(makeTestIR());
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
 
       // 3 stages in test IR
       expect(gcJson.dev_team.max_round).toBe(3);
@@ -177,7 +213,9 @@ describe("toAutoGen", () => {
 
     it("should set speaker_selection_method based on team strategy", () => {
       const files = toAutoGen(makeTestIR());
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
 
       // parallel strategy → "auto"
       expect(gcJson.dev_team.speaker_selection_method).toBe("auto");
@@ -187,14 +225,16 @@ describe("toAutoGen", () => {
       const ir = makeTestIR();
       ir.teams[0].strategy = "sequential";
       const files = toAutoGen(ir);
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
 
       expect(gcJson.dev_team.speaker_selection_method).toBe("round_robin");
     });
 
     it("should have json language", () => {
       const files = toAutoGen(makeTestIR());
-      const gcFile = files.find((f) => f.path === "group_chat.json")!;
+      const gcFile = files.find(f => f.path === "group_chat.json")!;
       expect(gcFile.language).toBe("json");
     });
   });
@@ -202,7 +242,7 @@ describe("toAutoGen", () => {
   describe("main.py (Req 4.3)", () => {
     it("should contain autogen imports and main function", () => {
       const files = toAutoGen(makeTestIR());
-      const mainPy = files.find((f) => f.path === "main.py")!.content;
+      const mainPy = files.find(f => f.path === "main.py")!.content;
 
       expect(mainPy).toContain("import autogen");
       expect(mainPy).toContain("def main():");
@@ -211,7 +251,7 @@ describe("toAutoGen", () => {
 
     it("should instantiate all agents as AssistantAgent", () => {
       const files = toAutoGen(makeTestIR());
-      const mainPy = files.find((f) => f.path === "main.py")!.content;
+      const mainPy = files.find(f => f.path === "main.py")!.content;
 
       expect(mainPy).toContain("chief_officer = autogen.AssistantAgent(");
       expect(mainPy).toContain("project_manager = autogen.AssistantAgent(");
@@ -220,7 +260,7 @@ describe("toAutoGen", () => {
 
     it("should create GroupChat for each team", () => {
       const files = toAutoGen(makeTestIR());
-      const mainPy = files.find((f) => f.path === "main.py")!.content;
+      const mainPy = files.find(f => f.path === "main.py")!.content;
 
       expect(mainPy).toContain("group_chat_dev_team = autogen.GroupChat(");
       expect(mainPy).toContain("manager_dev_team = autogen.GroupChatManager(");
@@ -228,14 +268,14 @@ describe("toAutoGen", () => {
 
     it("should include UserProxyAgent for conversation initiation", () => {
       const files = toAutoGen(makeTestIR());
-      const mainPy = files.find((f) => f.path === "main.py")!.content;
+      const mainPy = files.find(f => f.path === "main.py")!.content;
 
       expect(mainPy).toContain("user_proxy = autogen.UserProxyAgent(");
     });
 
     it("should initiate chat with the first team manager", () => {
       const files = toAutoGen(makeTestIR());
-      const mainPy = files.find((f) => f.path === "main.py")!.content;
+      const mainPy = files.find(f => f.path === "main.py")!.content;
 
       expect(mainPy).toContain("user_proxy.initiate_chat(");
       expect(mainPy).toContain("manager_dev_team");
@@ -243,7 +283,7 @@ describe("toAutoGen", () => {
 
     it("should have python language", () => {
       const files = toAutoGen(makeTestIR());
-      const mainFile = files.find((f) => f.path === "main.py")!;
+      const mainFile = files.find(f => f.path === "main.py")!;
       expect(mainFile.language).toBe("python");
     });
   });
@@ -251,7 +291,7 @@ describe("toAutoGen", () => {
   describe("requirements.txt (Req 4.4)", () => {
     it("should list pyautogen dependency", () => {
       const files = toAutoGen(makeTestIR());
-      const reqTxt = files.find((f) => f.path === "requirements.txt")!.content;
+      const reqTxt = files.find(f => f.path === "requirements.txt")!.content;
 
       expect(reqTxt).toContain("pyautogen");
     });
@@ -265,7 +305,9 @@ describe("toAutoGen", () => {
       const files = toAutoGen(ir);
       expect(files).toHaveLength(4);
 
-      const agentsJson = JSON.parse(files.find((f) => f.path === "agents.json")!.content);
+      const agentsJson = JSON.parse(
+        files.find(f => f.path === "agents.json")!.content
+      );
       expect(Object.keys(agentsJson)).toHaveLength(0);
     });
 
@@ -275,11 +317,13 @@ describe("toAutoGen", () => {
       const files = toAutoGen(ir);
       expect(files).toHaveLength(4);
 
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
       expect(Object.keys(gcJson)).toHaveLength(0);
 
       // main.py should fall back to chatting with first agent
-      const mainPy = files.find((f) => f.path === "main.py")!.content;
+      const mainPy = files.find(f => f.path === "main.py")!.content;
       expect(mainPy).toContain("user_proxy.initiate_chat(");
       expect(mainPy).toContain("chief_officer");
     });
@@ -289,7 +333,9 @@ describe("toAutoGen", () => {
       ir.pipeline.stages = [];
       const files = toAutoGen(ir);
 
-      const gcJson = JSON.parse(files.find((f) => f.path === "group_chat.json")!.content);
+      const gcJson = JSON.parse(
+        files.find(f => f.path === "group_chat.json")!.content
+      );
       expect(gcJson.dev_team.max_round).toBe(0);
     });
 
@@ -299,8 +345,12 @@ describe("toAutoGen", () => {
       ir.skills = [];
       const files = toAutoGen(ir);
 
-      const agentsJson = JSON.parse(files.find((f) => f.path === "agents.json")!.content);
-      expect(agentsJson.project_manager.system_message).not.toContain("Skills:");
+      const agentsJson = JSON.parse(
+        files.find(f => f.path === "agents.json")!.content
+      );
+      expect(agentsJson.project_manager.system_message).not.toContain(
+        "Skills:"
+      );
     });
   });
 });

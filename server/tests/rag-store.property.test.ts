@@ -6,21 +6,24 @@
  * Property 10: Vector store and metadata store have matching chunkIds
  */
 
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import fc from 'fast-check';
-import { existsSync, unlinkSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import fc from "fast-check";
+import { existsSync, unlinkSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { VectorRecord } from '../../shared/rag/contracts.js';
+import type { VectorRecord } from "../../shared/rag/contracts.js";
 import type {
   VectorStoreAdapter,
   SearchOptions,
   SearchHit,
   CollectionInfo,
   HealthStatus,
-} from '../rag/store/vector-store-adapter.js';
-import { MetadataStore, type RagChunkMetadataRow } from '../rag/store/metadata-store.js';
+} from "../rag/store/vector-store-adapter.js";
+import {
+  MetadataStore,
+  type RagChunkMetadataRow,
+} from "../rag/store/metadata-store.js";
 
 /* ---- In-Memory VectorStoreAdapter ---- */
 
@@ -44,7 +47,11 @@ class InMemoryVectorStore implements VectorStoreAdapter {
     }
   }
 
-  async search(_collection: string, _query: number[], _options: SearchOptions): Promise<SearchHit[]> {
+  async search(
+    _collection: string,
+    _query: number[],
+    _options: SearchOptions
+  ): Promise<SearchHit[]> {
     return [];
   }
 
@@ -56,11 +63,11 @@ class InMemoryVectorStore implements VectorStoreAdapter {
 
   async collectionInfo(name: string): Promise<CollectionInfo> {
     const col = this.collections.get(name);
-    return { name, vectorCount: col?.size ?? 0, dimension: 8, status: 'ready' };
+    return { name, vectorCount: col?.size ?? 0, dimension: 8, status: "ready" };
   }
 
   async healthCheck(): Promise<HealthStatus> {
-    return { connected: true, backend: 'in-memory', latencyMs: 0 };
+    return { connected: true, backend: "in-memory", latencyMs: 0 };
   }
 
   getCollectionNames(): string[] {
@@ -77,41 +84,44 @@ class InMemoryVectorStore implements VectorStoreAdapter {
   }
 }
 
-
 /* ---- Arbitraries ---- */
 
 const arbProjectId = fc.stringMatching(/^proj-[a-z0-9]{3,8}$/);
 
-const arbChunkId = fc.tuple(
-  fc.stringMatching(/^[a-z]{3,8}$/),
-  fc.integer({ min: 0, max: 99 }),
-).map(([src, idx]) => `task_result:${src}:${idx}`);
+const arbChunkId = fc
+  .tuple(fc.stringMatching(/^[a-z]{3,8}$/), fc.integer({ min: 0, max: 99 }))
+  .map(([src, idx]) => `task_result:${src}:${idx}`);
 
 /* ---- Test file path ---- */
 
 const __filename2 = fileURLToPath(import.meta.url);
 const __dirname2 = dirname(__filename2);
-const TEST_META_PATH = resolve(__dirname2, '../../data/test_rag_store_prop.json');
+const TEST_META_PATH = resolve(
+  __dirname2,
+  "../../data/test_rag_store_prop.json"
+);
 
 /* ---- Property 9: Each projectId gets its own rag_{projectId} collection ---- */
 
-describe('Property 9: Each projectId gets a separate collection', () => {
-  it('for any set of projectIds, each gets its own rag_{projectId} collection', async () => {
+describe("Property 9: Each projectId gets a separate collection", () => {
+  it("for any set of projectIds, each gets its own rag_{projectId} collection", async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.uniqueArray(arbProjectId, { minLength: 1, maxLength: 5 }),
-        async (projectIds) => {
+        async projectIds => {
           const store = new InMemoryVectorStore();
 
           for (const pid of projectIds) {
             const collName = `rag_${pid}`;
             await store.createCollection(collName, 8);
-            await store.upsert(collName, [{
-              id: `chunk-${pid}-0`,
-              vector: Array.from({ length: 8 }, () => 0.1),
-              content: `content for ${pid}`,
-              metadata: { projectId: pid },
-            }]);
+            await store.upsert(collName, [
+              {
+                id: `chunk-${pid}-0`,
+                vector: Array.from({ length: 8 }, () => 0.1),
+                content: `content for ${pid}`,
+                metadata: { projectId: pid },
+              },
+            ]);
           }
 
           const collNames = store.getCollectionNames();
@@ -133,16 +143,16 @@ describe('Property 9: Each projectId gets a separate collection', () => {
               expect((r.metadata as any)?.projectId).toBe(pid);
             }
           }
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });
 
 /* ---- Property 10: Vector store and metadata store have matching chunkIds ---- */
 
-describe('Property 10: Vector store and metadata store chunkIds match', () => {
+describe("Property 10: Vector store and metadata store chunkIds match", () => {
   let metaStore: MetadataStore;
 
   beforeEach(() => {
@@ -155,7 +165,7 @@ describe('Property 10: Vector store and metadata store chunkIds match', () => {
     if (existsSync(TEST_META_PATH)) unlinkSync(TEST_META_PATH);
   });
 
-  it('for any ingested chunk, vector store and metadata store have matching chunkIds', async () => {
+  it("for any ingested chunk, vector store and metadata store have matching chunkIds", async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.uniqueArray(arbChunkId, { minLength: 1, maxLength: 10 }),
@@ -176,19 +186,19 @@ describe('Property 10: Vector store and metadata store chunkIds match', () => {
 
           const metaRows: RagChunkMetadataRow[] = chunkIds.map((id, idx) => ({
             chunk_id: id,
-            source_type: 'task_result' as const,
+            source_type: "task_result" as const,
             source_id: `src-${idx}`,
             project_id: projectId,
             chunk_index: idx,
-            content_hash: 'abcdef0123456789',
+            content_hash: "abcdef0123456789",
             token_count: 100,
             code_language: null,
             function_signature: null,
             agent_id: null,
             ingested_at: new Date().toISOString(),
             last_accessed_at: new Date().toISOString(),
-            storage_tier: 'hot' as const,
-            metadata_json: '{}',
+            storage_tier: "hot" as const,
+            metadata_json: "{}",
           }));
 
           metaStore.upsertBatch(metaRows);
@@ -203,9 +213,9 @@ describe('Property 10: Vector store and metadata store chunkIds match', () => {
 
           const info = await vectorStore.collectionInfo(collName);
           expect(info.vectorCount).toBe(chunkIds.length);
-        },
+        }
       ),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });

@@ -35,7 +35,9 @@ const STORE_BUDGET = "budget";
 // ---------------------------------------------------------------------------
 
 function canUseIndexedDb(): boolean {
-  return typeof window !== "undefined" && typeof window.indexedDB !== "undefined";
+  return (
+    typeof window !== "undefined" && typeof window.indexedDB !== "undefined"
+  );
 }
 
 function requestToPromise<T>(request: IDBRequest<T>): Promise<T> {
@@ -61,7 +63,9 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 
 function openCostDatabase(): Promise<IDBDatabase> {
   if (!canUseIndexedDb()) {
-    return Promise.reject(new Error("IndexedDB is not available in this browser."));
+    return Promise.reject(
+      new Error("IndexedDB is not available in this browser.")
+    );
   }
 
   if (!dbPromise) {
@@ -94,7 +98,9 @@ async function readAllRecords(): Promise<CostRecord[]> {
   const db = await openCostDatabase();
   const tx = db.transaction(STORE_COST_RECORDS, "readonly");
   const store = tx.objectStore(STORE_COST_RECORDS);
-  const result = await requestToPromise(store.getAll() as IDBRequest<CostRecord[]>);
+  const result = await requestToPromise(
+    store.getAll() as IDBRequest<CostRecord[]>
+  );
   await transactionToPromise(tx);
   return result;
 }
@@ -118,7 +124,9 @@ async function readBudget(): Promise<Budget | null> {
   const tx = db.transaction(STORE_BUDGET, "readonly");
   const store = tx.objectStore(STORE_BUDGET);
   const row = await requestToPromise(
-    store.get("browser_budget") as IDBRequest<{ key: string; value: Budget } | undefined>
+    store.get("browser_budget") as IDBRequest<
+      { key: string; value: Budget } | undefined
+    >
   );
   await transactionToPromise(tx);
   return row?.value ?? null;
@@ -142,7 +150,12 @@ function computeSnapshot(records: CostRecord[], budget: Budget): CostSnapshot {
 
   const agentMap = new Map<
     string,
-    { tokensIn: number; tokensOut: number; totalCost: number; callCount: number }
+    {
+      tokensIn: number;
+      tokensOut: number;
+      totalCost: number;
+      callCount: number;
+    }
   >();
 
   for (const r of records) {
@@ -215,7 +228,10 @@ function generateId(): string {
  * The record is written to IndexedDB immediately.
  */
 export async function recordBrowserCost(
-  record: Omit<CostRecord, "id" | "unitPriceIn" | "unitPriceOut" | "actualCost"> & {
+  record: Omit<
+    CostRecord,
+    "id" | "unitPriceIn" | "unitPriceOut" | "actualCost"
+  > & {
     id?: string;
     unitPriceIn?: number;
     unitPriceOut?: number;
@@ -232,7 +248,8 @@ export async function recordBrowserCost(
     unitPriceIn: record.unitPriceIn ?? pricing.input,
     unitPriceOut: record.unitPriceOut ?? pricing.output,
     actualCost:
-      record.actualCost ?? estimateCost(record.model, record.tokensIn, record.tokensOut),
+      record.actualCost ??
+      estimateCost(record.model, record.tokensIn, record.tokensOut),
     durationMs: record.durationMs,
     agentId: record.agentId,
     missionId: record.missionId,

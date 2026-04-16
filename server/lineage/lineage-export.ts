@@ -96,11 +96,15 @@ function csvParseLine(line: string): string[] {
 // ─── 序列化辅助 ────────────────────────────────────────────────────────────
 
 function nodeToCSVRow(node: DataLineageNode): string {
-  return NODE_CSV_FIELDS.map((f) => csvEscape((node as unknown as Record<string, unknown>)[f])).join(",");
+  return NODE_CSV_FIELDS.map(f =>
+    csvEscape((node as unknown as Record<string, unknown>)[f])
+  ).join(",");
 }
 
 function edgeToCSVRow(edge: LineageEdge): string {
-  return EDGE_CSV_FIELDS.map((f) => csvEscape((edge as unknown as Record<string, unknown>)[f])).join(",");
+  return EDGE_CSV_FIELDS.map(f =>
+    csvEscape((edge as unknown as Record<string, unknown>)[f])
+  ).join(",");
 }
 
 function csvRowToNode(headers: string[], values: string[]): DataLineageNode {
@@ -110,7 +114,12 @@ function csvRowToNode(headers: string[], values: string[]): DataLineageNode {
     const val = values[i] ?? "";
     if (val === "") {
       raw[key] = undefined;
-    } else if (key === "timestamp" || key === "resultSize" || key === "executionTimeMs" || key === "confidence") {
+    } else if (
+      key === "timestamp" ||
+      key === "resultSize" ||
+      key === "executionTimeMs" ||
+      key === "confidence"
+    ) {
       raw[key] = Number(val);
     } else if (key === "dataChanged") {
       raw[key] = val === "true";
@@ -152,7 +161,7 @@ export class LineageExportService {
   async exportLineage(
     startTime: number,
     endTime: number,
-    format: "json" | "csv",
+    format: "json" | "csv"
   ): Promise<Buffer> {
     const nodes = await this.store.queryNodes({
       fromTimestamp: startTime,
@@ -177,7 +186,7 @@ export class LineageExportService {
    */
   async importLineage(
     data: Buffer,
-    format: "json" | "csv",
+    format: "json" | "csv"
   ): Promise<ImportResult> {
     let nodes: DataLineageNode[];
     let edges: LineageEdge[];
@@ -220,7 +229,7 @@ export class LineageExportService {
         }
       } catch (err) {
         result.errors.push(
-          `Failed to import node ${node.lineageId}: ${err instanceof Error ? err.message : String(err)}`,
+          `Failed to import node ${node.lineageId}: ${err instanceof Error ? err.message : String(err)}`
         );
       }
     }
@@ -232,7 +241,7 @@ export class LineageExportService {
     // ── 边导入：去重（基于 fromId + toId + type） ──
     const existingEdges = await this.store.queryEdges({});
     const edgeKeySet = new Set(
-      existingEdges.map((e) => `${e.fromId}|${e.toId}|${e.type}`),
+      existingEdges.map(e => `${e.fromId}|${e.toId}|${e.type}`)
     );
 
     const edgesToInsert: LineageEdge[] = [];
@@ -259,7 +268,7 @@ export class LineageExportService {
    */
   async exportIncremental(
     sinceTimestamp: number,
-    format: "json" | "csv",
+    format: "json" | "csv"
   ): Promise<Buffer> {
     return this.exportLineage(sinceTimestamp, Date.now(), format);
   }
@@ -268,7 +277,7 @@ export class LineageExportService {
 
   private serializeJSON(
     nodes: DataLineageNode[],
-    edges: LineageEdge[],
+    edges: LineageEdge[]
   ): Buffer {
     const payload = JSON.stringify({ nodes, edges }, null, 2);
     return Buffer.from(payload, "utf-8");
@@ -287,10 +296,7 @@ export class LineageExportService {
 
   // ─── CSV 序列化 / 反序列化 ───────────────────────────────────────────
 
-  private serializeCSV(
-    nodes: DataLineageNode[],
-    edges: LineageEdge[],
-  ): Buffer {
+  private serializeCSV(nodes: DataLineageNode[], edges: LineageEdge[]): Buffer {
     const lines: string[] = [];
 
     // Node header + rows
@@ -316,7 +322,7 @@ export class LineageExportService {
     edges: LineageEdge[];
   } {
     const content = data.toString("utf-8");
-    const allLines = content.split("\n").filter((l) => l.trim() !== "");
+    const allLines = content.split("\n").filter(l => l.trim() !== "");
 
     const separatorIdx = allLines.indexOf(CSV_EDGE_SEPARATOR);
 

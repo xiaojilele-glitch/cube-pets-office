@@ -31,12 +31,22 @@ function createInMemoryDb() {
 
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: PermissionRole[]) => { roles = r; },
+    setPermissionRoles: (r: PermissionRole[]) => {
+      roles = r;
+    },
     getPermissionPolicies: () => policies,
-    setPermissionPolicies: (p: AgentPermissionPolicy[]) => { policies = p; },
+    setPermissionPolicies: (p: AgentPermissionPolicy[]) => {
+      policies = p;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
-    _reset: () => { roles = []; policies = []; templates = []; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
+    _reset: () => {
+      roles = [];
+      policies = [];
+      templates = [];
+    },
   };
 }
 
@@ -45,7 +55,11 @@ type StubDb = ReturnType<typeof createInMemoryDb>;
 /* ─── Helper: build a minimal organization snapshot ─── */
 
 function makeNode(
-  overrides: Partial<WorkflowOrganizationNode> & { id: string; agentId: string; role: "ceo" | "manager" | "worker" },
+  overrides: Partial<WorkflowOrganizationNode> & {
+    id: string;
+    agentId: string;
+    role: "ceo" | "manager" | "worker";
+  }
 ): WorkflowOrganizationNode {
   return {
     parentId: null,
@@ -67,7 +81,7 @@ function makeNode(
 
 function makeOrganization(
   workflowId: string,
-  nodes: WorkflowOrganizationNode[],
+  nodes: WorkflowOrganizationNode[]
 ): WorkflowOrganizationSnapshot {
   return {
     kind: "workflow_organization",
@@ -112,9 +126,24 @@ describe("Organization ↔ Permission Integration", () => {
   describe("assignOrganizationPermissions", () => {
     it("creates a policy for each node in the organization", () => {
       const org = makeOrganization("wf-1", [
-        makeNode({ id: "n1", agentId: "agent-ceo", role: "ceo", parentId: null }),
-        makeNode({ id: "n2", agentId: "agent-mgr", role: "manager", parentId: "n1" }),
-        makeNode({ id: "n3", agentId: "agent-wkr", role: "worker", parentId: "n2" }),
+        makeNode({
+          id: "n1",
+          agentId: "agent-ceo",
+          role: "ceo",
+          parentId: null,
+        }),
+        makeNode({
+          id: "n2",
+          agentId: "agent-mgr",
+          role: "manager",
+          parentId: "n1",
+        }),
+        makeNode({
+          id: "n3",
+          agentId: "agent-wkr",
+          role: "worker",
+          parentId: "n2",
+        }),
       ]);
 
       assignOrganizationPermissions(org, roleStore, policyStore);
@@ -186,7 +215,12 @@ describe("Organization ↔ Permission Integration", () => {
 
       const org = makeOrganization("wf-1", [
         makeNode({ id: "n1", agentId: "agent-ceo", role: "ceo" }),
-        makeNode({ id: "n2", agentId: "agent-wkr", role: "worker", parentId: "n1" }),
+        makeNode({
+          id: "n2",
+          agentId: "agent-wkr",
+          role: "worker",
+          parentId: "n1",
+        }),
       ]);
 
       assignOrganizationPermissions(org, roleStore, policyStore);
@@ -206,7 +240,12 @@ describe("Organization ↔ Permission Integration", () => {
         description: "Template for CEO",
         targetRole: "ceo",
         permissions: [
-          { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
+          {
+            resourceType: "filesystem",
+            action: "read",
+            constraints: {},
+            effect: "allow",
+          },
         ],
       });
 
@@ -227,7 +266,12 @@ describe("Organization ↔ Permission Integration", () => {
     it("CEO effective permissions are a superset of Manager's", () => {
       const org = makeOrganization("wf-1", [
         makeNode({ id: "n1", agentId: "agent-ceo", role: "ceo" }),
-        makeNode({ id: "n2", agentId: "agent-mgr", role: "manager", parentId: "n1" }),
+        makeNode({
+          id: "n2",
+          agentId: "agent-mgr",
+          role: "manager",
+          parentId: "n1",
+        }),
       ]);
 
       assignOrganizationPermissions(org, roleStore, policyStore);
@@ -235,7 +279,9 @@ describe("Organization ↔ Permission Integration", () => {
       const ceoPerms = policyStore.resolveEffectivePermissions("agent-ceo");
       const mgrPerms = policyStore.resolveEffectivePermissions("agent-mgr");
 
-      const ceoKeys = new Set(ceoPerms.map(p => `${p.resourceType}:${p.action}`));
+      const ceoKeys = new Set(
+        ceoPerms.map(p => `${p.resourceType}:${p.action}`)
+      );
       for (const perm of mgrPerms) {
         expect(ceoKeys.has(`${perm.resourceType}:${perm.action}`)).toBe(true);
       }
@@ -244,7 +290,12 @@ describe("Organization ↔ Permission Integration", () => {
     it("Manager effective permissions are a superset of Worker's", () => {
       const org = makeOrganization("wf-1", [
         makeNode({ id: "n1", agentId: "agent-mgr", role: "manager" }),
-        makeNode({ id: "n2", agentId: "agent-wkr", role: "worker", parentId: "n1" }),
+        makeNode({
+          id: "n2",
+          agentId: "agent-wkr",
+          role: "worker",
+          parentId: "n1",
+        }),
       ]);
 
       assignOrganizationPermissions(org, roleStore, policyStore);
@@ -252,7 +303,9 @@ describe("Organization ↔ Permission Integration", () => {
       const mgrPerms = policyStore.resolveEffectivePermissions("agent-mgr");
       const wkrPerms = policyStore.resolveEffectivePermissions("agent-wkr");
 
-      const mgrKeys = new Set(mgrPerms.map(p => `${p.resourceType}:${p.action}`));
+      const mgrKeys = new Set(
+        mgrPerms.map(p => `${p.resourceType}:${p.action}`)
+      );
       for (const perm of wkrPerms) {
         expect(mgrKeys.has(`${perm.resourceType}:${perm.action}`)).toBe(true);
       }
@@ -261,7 +314,12 @@ describe("Organization ↔ Permission Integration", () => {
     it("CEO has strictly more permissions than Worker", () => {
       const org = makeOrganization("wf-1", [
         makeNode({ id: "n1", agentId: "agent-ceo", role: "ceo" }),
-        makeNode({ id: "n2", agentId: "agent-wkr", role: "worker", parentId: "n1" }),
+        makeNode({
+          id: "n2",
+          agentId: "agent-wkr",
+          role: "worker",
+          parentId: "n1",
+        }),
       ]);
 
       assignOrganizationPermissions(org, roleStore, policyStore);
@@ -336,7 +394,10 @@ describe("Property 12: 权限继承层级正确性", () => {
         // Fresh stores for each run
         const localDb = createInMemoryDb();
         const localRoleStore = new RoleStore(localDb as any);
-        const localPolicyStore = new PolicyStore(localDb as any, localRoleStore);
+        const localPolicyStore = new PolicyStore(
+          localDb as any,
+          localRoleStore
+        );
         localRoleStore.initBuiltinRoles();
 
         // Build nodes: 1 CEO + N Managers + M Workers
@@ -370,9 +431,12 @@ describe("Property 12: 权限继承层级正确性", () => {
         // Workers
         const workerAgentIds: string[] = [];
         for (let i = 0; i < workerCount; i++) {
-          const parentMgr = managerAgentIds.length > 0
-            ? nodes.find(n => n.agentId === managerAgentIds[i % managerAgentIds.length])!
-            : ceoNode;
+          const parentMgr =
+            managerAgentIds.length > 0
+              ? nodes.find(
+                  n => n.agentId === managerAgentIds[i % managerAgentIds.length]
+                )!
+              : ceoNode;
           const wkrNode = makeNode({
             id: `n${nodeIdx}`,
             agentId: `agent-wkr-${i}-${workflowId}`,
@@ -388,13 +452,19 @@ describe("Property 12: 权限继承层级正确性", () => {
         assignOrganizationPermissions(org, localRoleStore, localPolicyStore);
 
         // Resolve effective permissions
-        const ceoPerms = localPolicyStore.resolveEffectivePermissions(ceoNode.agentId);
-        const ceoKeys = new Set(ceoPerms.map(p => `${p.resourceType}:${p.action}`));
+        const ceoPerms = localPolicyStore.resolveEffectivePermissions(
+          ceoNode.agentId
+        );
+        const ceoKeys = new Set(
+          ceoPerms.map(p => `${p.resourceType}:${p.action}`)
+        );
 
         // Check: CEO ⊇ every Manager
         for (const mgrId of managerAgentIds) {
           const mgrPerms = localPolicyStore.resolveEffectivePermissions(mgrId);
-          const mgrKeys = new Set(mgrPerms.map(p => `${p.resourceType}:${p.action}`));
+          const mgrKeys = new Set(
+            mgrPerms.map(p => `${p.resourceType}:${p.action}`)
+          );
 
           for (const key of mgrKeys) {
             if (!ceoKeys.has(key)) return false;
@@ -402,16 +472,18 @@ describe("Property 12: 权限继承层级正确性", () => {
 
           // Check: this Manager ⊇ every Worker under it
           for (const wkrId of workerAgentIds) {
-            const wkrPerms = localPolicyStore.resolveEffectivePermissions(wkrId);
+            const wkrPerms =
+              localPolicyStore.resolveEffectivePermissions(wkrId);
             for (const perm of wkrPerms) {
-              if (!mgrKeys.has(`${perm.resourceType}:${perm.action}`)) return false;
+              if (!mgrKeys.has(`${perm.resourceType}:${perm.action}`))
+                return false;
             }
           }
         }
 
         return true;
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

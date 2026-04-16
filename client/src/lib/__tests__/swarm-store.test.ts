@@ -19,7 +19,7 @@ import type { CrossPodMessageEvent } from "../swarm-store";
 
 function makeSession(
   id: string,
-  status: CollaborationSession["status"] = "active",
+  status: CollaborationSession["status"] = "active"
 ): CollaborationSession {
   return {
     id,
@@ -135,7 +135,7 @@ describe("initSocket", () => {
 
     expect(fakeSocket.on).toHaveBeenCalledWith(
       "cross_pod_message",
-      expect.any(Function),
+      expect.any(Function)
     );
 
     // Simulate event
@@ -157,7 +157,7 @@ describe("initSocket", () => {
 
     expect(fakeSocket.on).toHaveBeenCalledWith(
       "collaboration_session_update",
-      expect.any(Function),
+      expect.any(Function)
     );
 
     // Simulate new session event

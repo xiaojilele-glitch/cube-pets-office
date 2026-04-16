@@ -49,8 +49,8 @@ export interface KnowledgeApiErrorResponse {
 
 export interface GetKnowledgeGraphQuery {
   projectId: string;
-  entityTypes?: string;   // 逗号分隔的实体类型列表
-  depth?: number;         // 遍历深度，默认 2
+  entityTypes?: string; // 逗号分隔的实体类型列表
+  depth?: number; // 遍历深度，默认 2
 }
 
 export interface GetKnowledgeGraphResponse {
@@ -115,7 +115,7 @@ export interface StatusDistribution {
 }
 
 export interface DailyTrend {
-  date: string;           // YYYY-MM-DD
+  date: string; // YYYY-MM-DD
   entitiesCreated: number;
   relationsCreated: number;
 }
@@ -135,7 +135,7 @@ export interface GetKnowledgeStatsResponse {
     byEntityType: EntityTypeCount[];
     statusDistribution: StatusDistribution[];
     averageConfidence: number;
-    trends: DailyTrend[];   // 最近 7 天
+    trends: DailyTrend[]; // 最近 7 天
   };
 }
 
@@ -156,7 +156,7 @@ export interface GetReindexStatusResponse {
   ok: true;
   taskId: string;
   status: "pending" | "running" | "completed" | "failed";
-  progress: number;       // 0-100
+  progress: number; // 0-100
   startedAt?: string;
   completedAt?: string;
   error?: string;
@@ -168,7 +168,7 @@ export interface GetReindexStatusResponse {
 
 export interface GetKnowledgeExportQuery {
   projectId: string;
-  format?: "json";        // 目前仅支持 json
+  format?: "json"; // 目前仅支持 json
 }
 
 export interface GetKnowledgeExportResponse {

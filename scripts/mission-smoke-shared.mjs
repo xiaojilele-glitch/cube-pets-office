@@ -35,20 +35,10 @@ function stableSerialize(value) {
 }
 
 export function buildRelayHeaders(secret, path, body, options = {}) {
-  const timestamp = String(
-    options.timestamp ?? Math.floor(Date.now() / 1_000)
-  );
+  const timestamp = String(options.timestamp ?? Math.floor(Date.now() / 1_000));
   const nonce = options.nonce?.trim() || randomUUID();
   const signature = createHmac("sha256", secret)
-    .update(
-      [
-        "POST",
-        path,
-        timestamp,
-        nonce,
-        stableSerialize(body),
-      ].join("\n")
-    )
+    .update(["POST", path, timestamp, nonce, stableSerialize(body)].join("\n"))
     .digest("hex");
 
   return {
@@ -59,9 +49,7 @@ export function buildRelayHeaders(secret, path, body, options = {}) {
 }
 
 export function buildExecutorCallbackRequest(secret, payload, options = {}) {
-  const timestamp = String(
-    options.timestamp ?? Math.floor(Date.now() / 1_000)
-  );
+  const timestamp = String(options.timestamp ?? Math.floor(Date.now() / 1_000));
   const rawBody = JSON.stringify(payload);
   const signature = createHmac("sha256", secret)
     .update(`${timestamp}.${rawBody}`)
@@ -116,7 +104,9 @@ export async function waitForUrl(url, options = {}) {
 
   throw new Error(
     `Timed out waiting for ${url}${
-      lastError ? `: ${lastError instanceof Error ? lastError.message : String(lastError)}` : ""
+      lastError
+        ? `: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+        : ""
     }`
   );
 }

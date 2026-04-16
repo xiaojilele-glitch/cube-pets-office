@@ -1,12 +1,12 @@
-import { describe, expect, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
 import type {
   MissionRecord,
   MissionStageStatus,
-} from '../../shared/mission/contracts.js';
-import { MISSION_STAGE_STATUSES } from '../../shared/mission/contracts.js';
-import { MissionStore } from '../tasks/mission-store.js';
+} from "../../shared/mission/contracts.js";
+import { MISSION_STAGE_STATUSES } from "../../shared/mission/contracts.js";
+import { MissionStore } from "../tasks/mission-store.js";
 
 /* ─── Helpers ─── */
 
@@ -18,15 +18,20 @@ import { MissionStore } from '../tasks/mission-store.js';
  *
  * All other transitions are illegal.
  */
-const ALLOWED_TRANSITIONS: ReadonlyMap<MissionStageStatus, ReadonlySet<MissionStageStatus>> =
-  new Map([
-    ['pending', new Set<MissionStageStatus>(['running'])],
-    ['running', new Set<MissionStageStatus>(['done', 'failed'])],
-    ['done', new Set<MissionStageStatus>([])],
-    ['failed', new Set<MissionStageStatus>([])],
-  ]);
+const ALLOWED_TRANSITIONS: ReadonlyMap<
+  MissionStageStatus,
+  ReadonlySet<MissionStageStatus>
+> = new Map([
+  ["pending", new Set<MissionStageStatus>(["running"])],
+  ["running", new Set<MissionStageStatus>(["done", "failed"])],
+  ["done", new Set<MissionStageStatus>([])],
+  ["failed", new Set<MissionStageStatus>([])],
+]);
 
-function isLegalTransition(from: MissionStageStatus, to: MissionStageStatus): boolean {
+function isLegalTransition(
+  from: MissionStageStatus,
+  to: MissionStageStatus
+): boolean {
   if (from === to) return true; // identity transition is always a no-op
   return ALLOWED_TRANSITIONS.get(from)?.has(to) ?? false;
 }
@@ -37,38 +42,44 @@ function createTestStore(): MissionStore {
 }
 
 /** Create a mission with a single stage for focused transition testing. */
-function createMissionWithStage(store: MissionStore, stageKey: string): MissionRecord {
+function createMissionWithStage(
+  store: MissionStore,
+  stageKey: string
+): MissionRecord {
   return store.create({
-    kind: 'test',
-    title: 'PBT stage transition test',
-    stageLabels: [{ key: stageKey, label: 'Test Stage' }],
+    kind: "test",
+    title: "PBT stage transition test",
+    stageLabels: [{ key: stageKey, label: "Test Stage" }],
   });
 }
 
 /* ─── Arbitraries ─── */
 
 const arbStageStatus: fc.Arbitrary<MissionStageStatus> = fc.constantFrom(
-  ...MISSION_STAGE_STATUSES,
+  ...MISSION_STAGE_STATUSES
 );
 
 /** Generate a sequence of target statuses to attempt transitioning to. */
-const arbTransitionSequence: fc.Arbitrary<MissionStageStatus[]> = fc.array(arbStageStatus, {
-  minLength: 1,
-  maxLength: 15,
-});
+const arbTransitionSequence: fc.Arbitrary<MissionStageStatus[]> = fc.array(
+  arbStageStatus,
+  {
+    minLength: 1,
+    maxLength: 15,
+  }
+);
 
 /* ─── Property 6: 阶段状态转换合法性 ─── */
 /* **Validates: Requirements 3.5** */
 
-describe('Feature: mission-native-projection, Property 6: 阶段状态转换合法性', () => {
-  it('stage status only transitions along allowed paths: pending→running, running→done, running→failed', () => {
+describe("Feature: mission-native-projection, Property 6: 阶段状态转换合法性", () => {
+  it("stage status only transitions along allowed paths: pending→running, running→done, running→failed", () => {
     fc.assert(
-      fc.property(arbTransitionSequence, (transitions) => {
+      fc.property(arbTransitionSequence, transitions => {
         const store = createTestStore();
-        const stageKey = 'test-stage';
+        const stageKey = "test-stage";
         const mission = createMissionWithStage(store, stageKey);
 
-        let currentStatus: MissionStageStatus = 'pending'; // initial status
+        let currentStatus: MissionStageStatus = "pending"; // initial status
 
         for (const targetStatus of transitions) {
           // Apply the stage update
@@ -77,7 +88,7 @@ describe('Feature: mission-native-projection, Property 6: 阶段状态转换合�
           // Read back the actual stage status
           const updated = store.get(mission.id);
           expect(updated).toBeDefined();
-          const stage = updated!.stages.find((s) => s.key === stageKey);
+          const stage = updated!.stages.find(s => s.key === stageKey);
           expect(stage).toBeDefined();
 
           const actualStatus = stage!.status;
@@ -100,87 +111,90 @@ describe('Feature: mission-native-projection, Property 6: 阶段状态转换合�
 
         return true;
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('a stage in done status SHALL NOT transition to any other status', () => {
+  it("a stage in done status SHALL NOT transition to any other status", () => {
     fc.assert(
-      fc.property(arbStageStatus, (targetStatus) => {
+      fc.property(arbStageStatus, targetStatus => {
         const store = createTestStore();
-        const stageKey = 'done-stage';
+        const stageKey = "done-stage";
         const mission = createMissionWithStage(store, stageKey);
 
         // Drive stage to done: pending → running → done
-        store.updateStage(mission.id, stageKey, { status: 'running' });
-        store.updateStage(mission.id, stageKey, { status: 'done' });
+        store.updateStage(mission.id, stageKey, { status: "running" });
+        store.updateStage(mission.id, stageKey, { status: "done" });
 
         // Verify stage is done
         const beforeAttempt = store.get(mission.id)!;
-        expect(beforeAttempt.stages[0].status).toBe('done');
+        expect(beforeAttempt.stages[0].status).toBe("done");
 
         // Attempt transition to targetStatus
         store.updateStage(mission.id, stageKey, { status: targetStatus });
         const afterAttempt = store.get(mission.id)!;
         const actualStatus = afterAttempt.stages[0].status;
 
-        if (targetStatus === 'done') {
+        if (targetStatus === "done") {
           // Identity: should remain done
-          expect(actualStatus).toBe('done');
+          expect(actualStatus).toBe("done");
         } else {
           // Illegal transition from done: should remain done
           // (This tests the requirement; if the store allows it, the test will catch it)
-          expect(actualStatus).toBe('done');
+          expect(actualStatus).toBe("done");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('a stage in failed status SHALL NOT transition to any other status', () => {
+  it("a stage in failed status SHALL NOT transition to any other status", () => {
     fc.assert(
-      fc.property(arbStageStatus, (targetStatus) => {
+      fc.property(arbStageStatus, targetStatus => {
         const store = createTestStore();
-        const stageKey = 'failed-stage';
+        const stageKey = "failed-stage";
         const mission = createMissionWithStage(store, stageKey);
 
         // Drive stage to failed: pending → running → failed
-        store.updateStage(mission.id, stageKey, { status: 'running' });
-        store.updateStage(mission.id, stageKey, { status: 'failed' });
+        store.updateStage(mission.id, stageKey, { status: "running" });
+        store.updateStage(mission.id, stageKey, { status: "failed" });
 
         // Verify stage is failed
         const beforeAttempt = store.get(mission.id)!;
-        expect(beforeAttempt.stages[0].status).toBe('failed');
+        expect(beforeAttempt.stages[0].status).toBe("failed");
 
         // Attempt transition to targetStatus
         store.updateStage(mission.id, stageKey, { status: targetStatus });
         const afterAttempt = store.get(mission.id)!;
         const actualStatus = afterAttempt.stages[0].status;
 
-        if (targetStatus === 'failed') {
+        if (targetStatus === "failed") {
           // Identity: should remain failed
-          expect(actualStatus).toBe('failed');
+          expect(actualStatus).toBe("failed");
         } else {
           // Illegal transition from failed: should remain failed
-          expect(actualStatus).toBe('failed');
+          expect(actualStatus).toBe("failed");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('pending SHALL NOT skip directly to done or failed', () => {
+  it("pending SHALL NOT skip directly to done or failed", () => {
     fc.assert(
       fc.property(
-        fc.constantFrom('done' as MissionStageStatus, 'failed' as MissionStageStatus),
-        (illegalTarget) => {
+        fc.constantFrom(
+          "done" as MissionStageStatus,
+          "failed" as MissionStageStatus
+        ),
+        illegalTarget => {
           const store = createTestStore();
-          const stageKey = 'skip-stage';
+          const stageKey = "skip-stage";
           const mission = createMissionWithStage(store, stageKey);
 
           // Verify initial status is pending
           const initial = store.get(mission.id)!;
-          expect(initial.stages[0].status).toBe('pending');
+          expect(initial.stages[0].status).toBe("pending");
 
           // Attempt to skip from pending directly to done/failed
           store.updateStage(mission.id, stageKey, { status: illegalTarget });
@@ -188,10 +202,10 @@ describe('Feature: mission-native-projection, Property 6: 阶段状态转换合�
           const actualStatus = afterAttempt.stages[0].status;
 
           // Should remain pending (illegal skip)
-          expect(actualStatus).toBe('pending');
-        },
+          expect(actualStatus).toBe("pending");
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

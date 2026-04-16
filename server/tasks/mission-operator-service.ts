@@ -1,40 +1,41 @@
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 import {
   EXECUTOR_API_ROUTES,
   type CancelExecutorJobRequest,
   type PauseExecutorJobRequest,
   type ResumeExecutorJobRequest,
-} from '../../shared/executor/api.js';
+} from "../../shared/executor/api.js";
 import type {
   MissionEvent,
   MissionOperatorActionRecord,
   MissionOperatorActionType,
   MissionOperatorState,
   MissionRecord,
-} from '../../shared/mission/contracts.js';
-import type {
-  SubmitMissionOperatorActionRequest,
-} from '../../shared/mission/api.js';
-import type { MissionRuntime } from './mission-runtime.js';
+} from "../../shared/mission/contracts.js";
+import type { SubmitMissionOperatorActionRequest } from "../../shared/mission/api.js";
+import type { MissionRuntime } from "./mission-runtime.js";
 
-const DEFAULT_EXECUTOR_BASE_URL = 'http://127.0.0.1:3031';
-const FINAL_MISSION_STATUSES = new Set(['done', 'failed', 'cancelled']);
+const DEFAULT_EXECUTOR_BASE_URL = "http://127.0.0.1:3031";
+const FINAL_MISSION_STATUSES = new Set(["done", "failed", "cancelled"]);
 
 function buildExecutorUrl(baseUrl: string, path: string): string {
-  return new URL(path, baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`).toString();
+  return new URL(
+    path,
+    baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`
+  ).toString();
 }
 
 function getOperatorState(task: MissionRecord): MissionOperatorState {
-  return task.operatorState ?? 'active';
+  return task.operatorState ?? "active";
 }
 
 function trimOptional(value: unknown): string | undefined {
-  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function toExecutorSource(): CancelExecutorJobRequest['source'] {
-  return 'user';
+function toExecutorSource(): CancelExecutorJobRequest["source"] {
+  return "user";
 }
 
 function appendOperatorAction(
@@ -44,8 +45,8 @@ function appendOperatorAction(
     requestedBy?: string;
     reason?: string;
     detail?: string;
-    result?: MissionOperatorActionRecord['result'];
-  },
+    result?: MissionOperatorActionRecord["result"];
+  }
 ): MissionOperatorActionRecord {
   const record: MissionOperatorActionRecord = {
     id: randomUUID(),
@@ -53,7 +54,7 @@ function appendOperatorAction(
     requestedBy: input.requestedBy,
     reason: input.reason,
     createdAt: Date.now(),
-    result: input.result ?? 'completed',
+    result: input.result ?? "completed",
     detail: input.detail,
   };
 
@@ -65,48 +66,48 @@ function appendMissionLog(
   task: MissionRecord,
   input: {
     message: string;
-    level?: MissionEvent['level'];
-    source?: MissionEvent['source'];
-  },
+    level?: MissionEvent["level"];
+    source?: MissionEvent["source"];
+  }
 ): void {
   task.events.push({
-    type: 'log',
+    type: "log",
     message: input.message,
     level: input.level,
     progress: task.progress,
     stageKey: task.currentStageKey,
     time: Date.now(),
-    source: input.source ?? 'user',
+    source: input.source ?? "user",
   });
 }
 
 function getAvailableOperatorActions(
-  task: MissionRecord,
+  task: MissionRecord
 ): MissionOperatorActionType[] {
   const operatorState = getOperatorState(task);
 
-  if (task.status === 'failed' || task.status === 'cancelled') {
-    return ['retry'];
+  if (task.status === "failed" || task.status === "cancelled") {
+    return ["retry"];
   }
 
-  if (operatorState === 'terminating') {
+  if (operatorState === "terminating") {
     return [];
   }
 
-  if (operatorState === 'paused') {
-    return ['resume', 'terminate'];
+  if (operatorState === "paused") {
+    return ["resume", "terminate"];
   }
 
-  if (operatorState === 'blocked') {
-    return ['resume', 'retry', 'terminate'];
+  if (operatorState === "blocked") {
+    return ["resume", "retry", "terminate"];
   }
 
-  if (task.status === 'queued' || task.status === 'running') {
-    return ['pause', 'mark-blocked', 'terminate'];
+  if (task.status === "queued" || task.status === "running") {
+    return ["pause", "mark-blocked", "terminate"];
   }
 
-  if (task.status === 'waiting') {
-    return ['mark-blocked', 'terminate'];
+  if (task.status === "waiting") {
+    return ["mark-blocked", "terminate"];
   }
 
   return [];
@@ -114,7 +115,7 @@ function getAvailableOperatorActions(
 
 function createUnavailableActionMessage(
   action: MissionOperatorActionType,
-  task: MissionRecord,
+  task: MissionRecord
 ): string {
   return `Action "${action}" is not allowed while mission status is "${task.status}" and operator state is "${getOperatorState(task)}".`;
 }
@@ -122,7 +123,7 @@ function createUnavailableActionMessage(
 function resetMissionForRetry(task: MissionRecord, requestedBy?: string): void {
   const nextAttempt = Math.max(1, task.attempt ?? 1) + 1;
 
-  task.status = 'queued';
+  task.status = "queued";
   task.progress = 0;
   task.summary = undefined;
   task.waitingFor = undefined;
@@ -131,13 +132,13 @@ function resetMissionForRetry(task: MissionRecord, requestedBy?: string): void {
   task.cancelledAt = undefined;
   task.cancelledBy = undefined;
   task.cancelReason = undefined;
-  task.operatorState = 'active';
+  task.operatorState = "active";
   task.blocker = undefined;
   task.attempt = nextAttempt;
   task.currentStageKey = undefined;
 
   for (const stage of task.stages) {
-    stage.status = 'pending';
+    stage.status = "pending";
     stage.detail = undefined;
     stage.startedAt = undefined;
     stage.completedAt = undefined;
@@ -148,7 +149,7 @@ function resetMissionForRetry(task: MissionRecord, requestedBy?: string): void {
       ...task.executor,
       requestId: undefined,
       jobId: undefined,
-      status: 'queued',
+      status: "queued",
       lastEventType: undefined,
       lastEventAt: undefined,
     };
@@ -167,11 +168,11 @@ function resetMissionForRetry(task: MissionRecord, requestedBy?: string): void {
   const detail = `Retry requested. Attempt ${nextAttempt} queued for execution.`;
   appendMissionLog(task, {
     message: detail,
-    level: 'info',
-    source: 'user',
+    level: "info",
+    source: "user",
   });
   appendOperatorAction(task, {
-    action: 'retry',
+    action: "retry",
     requestedBy,
     detail,
   });
@@ -181,10 +182,10 @@ class MissionOperatorActionError extends Error {
   constructor(
     message: string,
     readonly statusCode: number,
-    readonly allowedActions?: MissionOperatorActionType[],
+    readonly allowedActions?: MissionOperatorActionType[]
   ) {
     super(message);
-    this.name = 'MissionOperatorActionError';
+    this.name = "MissionOperatorActionError";
   }
 }
 
@@ -204,7 +205,7 @@ export class MissionOperatorService {
 
   constructor(
     private readonly runtime: MissionRuntime,
-    options: MissionOperatorServiceOptions = {},
+    options: MissionOperatorServiceOptions = {}
   ) {
     this.fetchImpl = options.fetchImpl ?? fetch;
     this.defaultExecutorBaseUrl =
@@ -213,11 +214,11 @@ export class MissionOperatorService {
 
   async submit(
     missionId: string,
-    input: SubmitMissionOperatorActionRequest,
+    input: SubmitMissionOperatorActionRequest
   ): Promise<MissionOperatorActionResult> {
     const task = this.runtime.getTask(missionId);
     if (!task) {
-      throw new MissionOperatorActionError('Task not found', 404);
+      throw new MissionOperatorActionError("Task not found", 404);
     }
 
     const requestedBy = trimOptional(input.requestedBy);
@@ -228,31 +229,31 @@ export class MissionOperatorService {
       throw new MissionOperatorActionError(
         createUnavailableActionMessage(input.action, task),
         409,
-        allowedActions,
+        allowedActions
       );
     }
 
-    if (input.action === 'mark-blocked' && !reason) {
+    if (input.action === "mark-blocked" && !reason) {
       throw new MissionOperatorActionError(
-        'A blocker reason is required for mark-blocked.',
+        "A blocker reason is required for mark-blocked.",
         400,
-        allowedActions,
+        allowedActions
       );
     }
 
-    if (input.action === 'pause') {
+    if (input.action === "pause") {
       return this.pauseMission(task, requestedBy, reason);
     }
 
-    if (input.action === 'resume') {
+    if (input.action === "resume") {
       return this.resumeMission(task, requestedBy, reason);
     }
 
-    if (input.action === 'mark-blocked') {
+    if (input.action === "mark-blocked") {
       return this.markMissionBlocked(task, requestedBy, reason!);
     }
 
-    if (input.action === 'retry') {
+    if (input.action === "retry") {
       return this.retryMission(task, requestedBy);
     }
 
@@ -262,32 +263,32 @@ export class MissionOperatorService {
   private async pauseMission(
     task: MissionRecord,
     requestedBy?: string,
-    reason?: string,
+    reason?: string
   ): Promise<MissionOperatorActionResult> {
     await this.forwardPauseToExecutor(task, requestedBy, reason);
 
     let actionRecord: MissionOperatorActionRecord | null = null;
     const updated = this.runtime.updateMission(task.id, current => {
-      current.operatorState = 'paused';
+      current.operatorState = "paused";
       if (current.executor) {
         current.executor = {
           ...current.executor,
-          status: 'paused',
-          lastEventType: 'operator.pause',
+          status: "paused",
+          lastEventType: "operator.pause",
           lastEventAt: Date.now(),
         };
       }
       const detail =
-        current.status === 'queued'
-          ? 'Mission paused before executor dispatch.'
-          : 'Mission paused while execution is in progress.';
+        current.status === "queued"
+          ? "Mission paused before executor dispatch."
+          : "Mission paused while execution is in progress.";
       appendMissionLog(current, {
         message: reason || detail,
-        level: 'warn',
-        source: 'user',
+        level: "warn",
+        source: "user",
       });
       actionRecord = appendOperatorAction(current, {
-        action: 'pause',
+        action: "pause",
         requestedBy,
         reason,
         detail,
@@ -303,30 +304,30 @@ export class MissionOperatorService {
   private async resumeMission(
     task: MissionRecord,
     requestedBy?: string,
-    reason?: string,
+    reason?: string
   ): Promise<MissionOperatorActionResult> {
     await this.forwardResumeToExecutor(task, requestedBy, reason);
 
     let actionRecord: MissionOperatorActionRecord | null = null;
     const updated = this.runtime.updateMission(task.id, current => {
-      current.operatorState = 'active';
+      current.operatorState = "active";
       current.blocker = undefined;
       if (current.executor) {
         current.executor = {
           ...current.executor,
-          status: current.status === 'queued' ? 'queued' : 'running',
-          lastEventType: 'operator.resume',
+          status: current.status === "queued" ? "queued" : "running",
+          lastEventType: "operator.resume",
           lastEventAt: Date.now(),
         };
       }
-      const detail = 'Mission resumed and returned to active operator state.';
+      const detail = "Mission resumed and returned to active operator state.";
       appendMissionLog(current, {
         message: reason || detail,
-        level: 'info',
-        source: 'user',
+        level: "info",
+        source: "user",
       });
       actionRecord = appendOperatorAction(current, {
-        action: 'resume',
+        action: "resume",
         requestedBy,
         reason,
         detail,
@@ -342,11 +343,11 @@ export class MissionOperatorService {
   private async markMissionBlocked(
     task: MissionRecord,
     requestedBy: string | undefined,
-    reason: string,
+    reason: string
   ): Promise<MissionOperatorActionResult> {
     let actionRecord: MissionOperatorActionRecord | null = null;
     const updated = this.runtime.updateMission(task.id, current => {
-      current.operatorState = 'blocked';
+      current.operatorState = "blocked";
       current.blocker = {
         reason,
         createdAt: Date.now(),
@@ -354,14 +355,14 @@ export class MissionOperatorService {
       };
       appendMissionLog(current, {
         message: `Mission marked blocked: ${reason}`,
-        level: 'warn',
-        source: 'user',
+        level: "warn",
+        source: "user",
       });
       actionRecord = appendOperatorAction(current, {
-        action: 'mark-blocked',
+        action: "mark-blocked",
         requestedBy,
         reason,
-        detail: 'Mission is blocked pending manual follow-up.',
+        detail: "Mission is blocked pending manual follow-up.",
       });
     });
 
@@ -373,7 +374,7 @@ export class MissionOperatorService {
 
   private async retryMission(
     task: MissionRecord,
-    requestedBy?: string,
+    requestedBy?: string
   ): Promise<MissionOperatorActionResult> {
     let actionRecord: MissionOperatorActionRecord | null = null;
     const updated = this.runtime.updateMission(task.id, current => {
@@ -390,23 +391,23 @@ export class MissionOperatorService {
   private async terminateMission(
     task: MissionRecord,
     requestedBy?: string,
-    reason?: string,
+    reason?: string
   ): Promise<MissionOperatorActionResult> {
     await this.forwardTerminateToExecutor(task, requestedBy, reason);
     this.runtime.cancelMission(task.id, {
-      reason: reason || 'Mission terminated by operator.',
+      reason: reason || "Mission terminated by operator.",
       requestedBy,
-      source: 'user',
+      source: "user",
     });
 
     let actionRecord: MissionOperatorActionRecord | null = null;
     const updated = this.runtime.updateMission(task.id, current => {
-      current.operatorState = 'terminating';
+      current.operatorState = "terminating";
       actionRecord = appendOperatorAction(current, {
-        action: 'terminate',
+        action: "terminate",
         requestedBy,
         reason,
-        detail: 'Mission termination reused the cancel execution path.',
+        detail: "Mission termination reused the cancel execution path.",
       });
     });
 
@@ -419,7 +420,7 @@ export class MissionOperatorService {
   private async forwardPauseToExecutor(
     task: MissionRecord,
     requestedBy?: string,
-    reason?: string,
+    reason?: string
   ): Promise<void> {
     const executorJobId = task.executor?.jobId?.trim();
     if (!executorJobId) {
@@ -434,16 +435,19 @@ export class MissionOperatorService {
 
     await this.postExecutorControl(
       task,
-      EXECUTOR_API_ROUTES.pauseJob.replace(':id', encodeURIComponent(executorJobId)),
+      EXECUTOR_API_ROUTES.pauseJob.replace(
+        ":id",
+        encodeURIComponent(executorJobId)
+      ),
       requestBody,
-      'Executor pause request failed',
+      "Executor pause request failed"
     );
   }
 
   private async forwardResumeToExecutor(
     task: MissionRecord,
     requestedBy?: string,
-    reason?: string,
+    reason?: string
   ): Promise<void> {
     const executorJobId = task.executor?.jobId?.trim();
     if (!executorJobId) {
@@ -458,16 +462,19 @@ export class MissionOperatorService {
 
     await this.postExecutorControl(
       task,
-      EXECUTOR_API_ROUTES.resumeJob.replace(':id', encodeURIComponent(executorJobId)),
+      EXECUTOR_API_ROUTES.resumeJob.replace(
+        ":id",
+        encodeURIComponent(executorJobId)
+      ),
       requestBody,
-      'Executor resume request failed',
+      "Executor resume request failed"
     );
   }
 
   private async forwardTerminateToExecutor(
     task: MissionRecord,
     requestedBy?: string,
-    reason?: string,
+    reason?: string
   ): Promise<void> {
     const executorJobId = task.executor?.jobId?.trim();
     if (!executorJobId || FINAL_MISSION_STATUSES.has(task.status)) {
@@ -482,9 +489,12 @@ export class MissionOperatorService {
 
     await this.postExecutorControl(
       task,
-      EXECUTOR_API_ROUTES.cancelJob.replace(':id', encodeURIComponent(executorJobId)),
+      EXECUTOR_API_ROUTES.cancelJob.replace(
+        ":id",
+        encodeURIComponent(executorJobId)
+      ),
       requestBody,
-      'Executor terminate request failed',
+      "Executor terminate request failed"
     );
   }
 
@@ -492,7 +502,7 @@ export class MissionOperatorService {
     task: MissionRecord,
     route: string,
     body: object,
-    fallbackMessage: string,
+    fallbackMessage: string
   ): Promise<void> {
     const executorBaseUrl =
       task.executor?.baseUrl?.trim() || this.defaultExecutorBaseUrl;
@@ -502,19 +512,19 @@ export class MissionOperatorService {
       downstreamResponse = await this.fetchImpl(
         buildExecutorUrl(executorBaseUrl, route),
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(body),
-        },
+        }
       );
     } catch (error) {
       throw new MissionOperatorActionError(
         error instanceof Error
           ? `${fallbackMessage}: ${error.message}`
           : fallbackMessage,
-        503,
+        503
       );
     }
 
@@ -531,23 +541,23 @@ export class MissionOperatorService {
     }
 
     const message =
-      typeof parsedBody === 'object' &&
+      typeof parsedBody === "object" &&
       parsedBody !== null &&
-      'error' in parsedBody &&
-      typeof parsedBody.error === 'string'
+      "error" in parsedBody &&
+      typeof parsedBody.error === "string"
         ? parsedBody.error
         : `${fallbackMessage} with HTTP ${downstreamResponse.status}`;
 
     throw new MissionOperatorActionError(
       message,
-      downstreamResponse.status === 404 ? 502 : 503,
+      downstreamResponse.status === 404 ? 502 : 503
     );
   }
 }
 
 export function createMissionOperatorService(
   runtime: MissionRuntime,
-  options: MissionOperatorServiceOptions = {},
+  options: MissionOperatorServiceOptions = {}
 ): MissionOperatorService {
   return new MissionOperatorService(runtime, options);
 }

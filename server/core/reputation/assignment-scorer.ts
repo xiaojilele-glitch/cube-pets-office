@@ -6,7 +6,10 @@
  * @see Requirements 4.1, 4.2, 4.3, 4.4
  */
 
-import type { ReputationConfig, ReputationProfile } from '../../../shared/reputation.js';
+import type {
+  ReputationConfig,
+  ReputationProfile,
+} from "../../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,7 +28,7 @@ export interface AssignmentResult {
   assignmentScore: number;
 }
 
-export type TaskforceRole = 'lead' | 'worker' | 'reviewer';
+export type TaskforceRole = "lead" | "worker" | "reviewer";
 
 // ---------------------------------------------------------------------------
 // AssignmentScorer
@@ -48,7 +51,7 @@ export class AssignmentScorer {
     fitnessScore: number,
     profile: ReputationProfile,
     taskRole?: string,
-    config?: ReputationConfig,
+    config?: ReputationConfig
   ): AssignmentResult {
     const cfg = config ?? this.config;
     let reputationFactor = profile.overallScore / 1000;
@@ -84,9 +87,9 @@ export class AssignmentScorer {
    */
   filterByReputationThreshold(
     candidates: AssignmentCandidate[],
-    threshold: number,
+    threshold: number
   ): AssignmentCandidate[] {
-    return candidates.filter((c) => c.profile.overallScore >= threshold);
+    return candidates.filter(c => c.profile.overallScore >= threshold);
   }
 
   /**
@@ -97,20 +100,22 @@ export class AssignmentScorer {
    */
   filterByTaskforceRequirements(
     candidates: AssignmentCandidate[],
-    role: TaskforceRole,
+    role: TaskforceRole
   ): AssignmentCandidate[] {
     switch (role) {
-      case 'lead':
+      case "lead":
         return candidates.filter(
-          (c) => c.profile.overallScore >= this.config.scheduling.leadMinScore,
+          c => c.profile.overallScore >= this.config.scheduling.leadMinScore
         );
-      case 'worker':
+      case "worker":
         return candidates.filter(
-          (c) => c.profile.overallScore >= this.config.scheduling.workerMinScore,
+          c => c.profile.overallScore >= this.config.scheduling.workerMinScore
         );
-      case 'reviewer':
+      case "reviewer":
         return candidates.filter(
-          (c) => c.profile.dimensions.qualityScore >= this.config.scheduling.reviewerMinQuality,
+          c =>
+            c.profile.dimensions.qualityScore >=
+            this.config.scheduling.reviewerMinQuality
         );
     }
   }

@@ -9,7 +9,11 @@
  * Requirements: 6.3
  */
 
-import type { Entity, GCConfig, GCResult } from "../../shared/knowledge/types.js";
+import type {
+  Entity,
+  GCConfig,
+  GCResult,
+} from "../../shared/knowledge/types.js";
 import type { GraphStore } from "./graph-store.js";
 import type { LifecycleLog } from "./lifecycle-log.js";
 
@@ -36,7 +40,7 @@ export class KnowledgeGarbageCollector {
   constructor(
     graphStore: GraphStore,
     lifecycleLog: LifecycleLog,
-    config?: Partial<GCConfig>,
+    config?: Partial<GCConfig>
   ) {
     this.graphStore = graphStore;
     this.lifecycleLog = lifecycleLog;
@@ -85,7 +89,7 @@ export class KnowledgeGarbageCollector {
             "archived",
             `Auto-archived: deprecated for ${Math.floor(age / (24 * 60 * 60 * 1000))} days (threshold: ${this.config.archiveAfterDays})`,
             "auto_cleanup",
-            this.lifecycleLog,
+            this.lifecycleLog
           );
           count++;
         } catch {
@@ -111,9 +115,9 @@ export class KnowledgeGarbageCollector {
 
     // Collect all active entities across all projects
     const candidates = this.findAllEntitiesByStatus("active").filter(
-      (e) =>
+      e =>
         e.confidence < this.config.lowConfidenceThreshold &&
-        now - new Date(e.createdAt).getTime() > maxAgeMs,
+        now - new Date(e.createdAt).getTime() > maxAgeMs
     );
 
     for (const entity of candidates) {
@@ -231,7 +235,7 @@ export class KnowledgeGarbageCollector {
     const projects = this.getKnownProjectIds();
     for (const projectId of projects) {
       const entities = this.graphStore.getAllEntities(projectId);
-      results.push(...entities.filter((e) => e.status === status));
+      results.push(...entities.filter(e => e.status === status));
     }
     return results;
   }
@@ -256,9 +260,7 @@ export class KnowledgeGarbageCollector {
    */
   private removeEntityFromStore(entity: Entity): void {
     const data = this.graphStore.getGraphData(entity.projectId);
-    const idx = data.entities.findIndex(
-      (e) => e.entityId === entity.entityId,
-    );
+    const idx = data.entities.findIndex(e => e.entityId === entity.entityId);
     if (idx !== -1) {
       data.entities.splice(idx, 1);
       data._counters.entities = Math.max(0, data._counters.entities - 1);
@@ -326,9 +328,9 @@ export class KnowledgeGarbageCollector {
       for (let j = 1; j <= n; j++) {
         const cost = a[i - 1] === b[j - 1] ? 0 : 1;
         curr[j] = Math.min(
-          prev[j] + 1,       // deletion
-          curr[j - 1] + 1,   // insertion
-          prev[j - 1] + cost, // substitution
+          prev[j] + 1, // deletion
+          curr[j - 1] + 1, // insertion
+          prev[j - 1] + cost // substitution
         );
       }
       for (let j = 0; j <= n; j++) prev[j] = curr[j];

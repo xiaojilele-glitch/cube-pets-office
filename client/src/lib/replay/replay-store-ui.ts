@@ -8,16 +8,16 @@
  * Requirements: 7.1, 14.1, 14.2, 14.3, 17.1
  */
 
-import { create } from 'zustand';
+import { create } from "zustand";
 
 import type {
   ExecutionTimeline,
   ReplaySnapshot,
   PlaybackSpeed,
   ReplayFilters,
-} from '../../../../shared/replay/contracts';
-import { ReplayEngine } from './replay-engine';
-import { BrowserReplayStore } from './browser-replay-store';
+} from "../../../../shared/replay/contracts";
+import { ReplayEngine } from "./replay-engine";
+import { BrowserReplayStore } from "./browser-replay-store";
 
 /* ─── Store Interface ─── */
 
@@ -52,7 +52,9 @@ export interface ReplayUIState {
   toggleFullscreen: () => void;
   startComparison: (missionId: string) => void;
   stopComparison: () => void;
-  togglePanel: (panel: 'costTracker' | 'performance' | 'dataLineage' | 'permissionAudit') => void;
+  togglePanel: (
+    panel: "costTracker" | "performance" | "dataLineage" | "permissionAudit"
+  ) => void;
   reset: () => void;
 }
 
@@ -92,7 +94,11 @@ export const useReplayStore = create<ReplayUIState>((set, get) => ({
     // Stop any existing engine
     const prev = get().engine;
     if (prev) {
-      try { prev.stop(); } catch { /* ignore if already stopped */ }
+      try {
+        prev.stop();
+      } catch {
+        /* ignore if already stopped */
+      }
     }
 
     const store = getBrowserStore();
@@ -144,7 +150,7 @@ export const useReplayStore = create<ReplayUIState>((set, get) => ({
     const { engine, snapshots } = get();
     if (!engine) return;
 
-    const snapshot = snapshots.find((s) => s.snapshotId === snapshotId);
+    const snapshot = snapshots.find(s => s.snapshotId === snapshotId);
     if (!snapshot) return;
 
     engine.seek(snapshot.timestamp);
@@ -156,12 +162,12 @@ export const useReplayStore = create<ReplayUIState>((set, get) => ({
 
   /* ── Toggle demo mode (simplified UI for teaching) ── */
   toggleDemoMode() {
-    set((s) => ({ isDemoMode: !s.isDemoMode }));
+    set(s => ({ isDemoMode: !s.isDemoMode }));
   },
 
   /* ── Toggle fullscreen ── */
   toggleFullscreen() {
-    set((s) => ({ isFullscreen: !s.isFullscreen }));
+    set(s => ({ isFullscreen: !s.isFullscreen }));
   },
 
   /* ── Start comparison with another mission ── */
@@ -177,20 +183,24 @@ export const useReplayStore = create<ReplayUIState>((set, get) => ({
   /* ── Toggle analysis panels ── */
   togglePanel(panel) {
     const keyMap = {
-      costTracker: 'showCostTracker',
-      performance: 'showPerformance',
-      dataLineage: 'showDataLineage',
-      permissionAudit: 'showPermissionAudit',
+      costTracker: "showCostTracker",
+      performance: "showPerformance",
+      dataLineage: "showDataLineage",
+      permissionAudit: "showPermissionAudit",
     } as const;
     const key = keyMap[panel];
-    set((s) => ({ [key]: !s[key] }) as Partial<ReplayUIState>);
+    set(s => ({ [key]: !s[key] }) as Partial<ReplayUIState>);
   },
 
   /* ── Reset store to initial state ── */
   reset() {
     const prev = get().engine;
     if (prev) {
-      try { prev.stop(); } catch { /* ignore */ }
+      try {
+        prev.stop();
+      } catch {
+        /* ignore */
+      }
     }
     set({ ...INITIAL_STATE, snapshots: [] });
   },

@@ -85,8 +85,10 @@ export async function syncBrowserRuntimeFromServer(): Promise<BrowserRuntimeSync
   await persistAgents(agents);
 
   await Promise.all(
-    agents.map(async (agent) => {
-      const soul = await fetchJson<SoulResponse>(`/api/agents/${agent.id}/soul`);
+    agents.map(async agent => {
+      const soul = await fetchJson<SoulResponse>(
+        `/api/agents/${agent.id}/soul`
+      );
       await persistSoul({
         agentId: agent.id,
         soulMd: soul.soulMd,
@@ -112,13 +114,16 @@ export async function syncBrowserRuntimeFromServer(): Promise<BrowserRuntimeSync
     })
   );
 
-  const workflowsResponse = await fetchJson<WorkflowsResponse>("/api/workflows");
+  const workflowsResponse =
+    await fetchJson<WorkflowsResponse>("/api/workflows");
   const workflows = workflowsResponse.workflows || [];
   await persistWorkflows(workflows);
 
   await Promise.all(
-    workflows.map(async (workflow) => {
-      const detail = await fetchJson<WorkflowDetailResponse>(`/api/workflows/${workflow.id}`);
+    workflows.map(async workflow => {
+      const detail = await fetchJson<WorkflowDetailResponse>(
+        `/api/workflows/${workflow.id}`
+      );
       await persistWorkflowDetail({
         id: workflow.id,
         workflow: detail.workflow,
@@ -129,7 +134,9 @@ export async function syncBrowserRuntimeFromServer(): Promise<BrowserRuntimeSync
     })
   );
 
-  const heartbeatStatuses = await fetchJson<HeartbeatStatusesResponse>("/api/reports/heartbeat/status");
+  const heartbeatStatuses = await fetchJson<HeartbeatStatusesResponse>(
+    "/api/reports/heartbeat/status"
+  );
   await persistHeartbeatStatuses(heartbeatStatuses.statuses || []);
 
   const heartbeatReportsResponse = await fetchJson<HeartbeatReportsResponse>(
@@ -138,7 +145,7 @@ export async function syncBrowserRuntimeFromServer(): Promise<BrowserRuntimeSync
   const heartbeatReports = heartbeatReportsResponse.reports || [];
 
   const heartbeatSnapshots = await Promise.all(
-    heartbeatReports.map(async (summary) => {
+    heartbeatReports.map(async summary => {
       try {
         const detail = await fetchJson<HeartbeatReportDetailResponse>(
           `/api/reports/heartbeat/${summary.agentId}/${summary.reportId}`

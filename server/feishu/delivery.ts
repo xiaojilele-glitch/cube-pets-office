@@ -30,14 +30,20 @@ interface FeishuSendMessageResponse {
 type FeishuReceiveIdType = "chat_id" | "open_id" | "union_id";
 
 function resolveApiBaseUrl(config: FeishuBridgeConfig): string {
-  return (config.apiBaseUrl || "https://open.feishu.cn/open-apis").replace(/\/$/, "");
+  return (config.apiBaseUrl || "https://open.feishu.cn/open-apis").replace(
+    /\/$/,
+    ""
+  );
 }
 
 function resolveReceiveTarget(rawTarget: string): {
   receiveId: string;
   receiveIdType: FeishuReceiveIdType;
 } {
-  let value = rawTarget.trim().replace(/^(feishu|lark):/i, "").trim();
+  let value = rawTarget
+    .trim()
+    .replace(/^(feishu|lark):/i, "")
+    .trim();
 
   if (/^(chat|group):/i.test(value)) {
     return {
@@ -117,7 +123,10 @@ export class FeishuApiDelivery implements FeishuBridgeDelivery {
   }
 
   private retryMaxMs(): number {
-    return Math.max(this.retryBaseMs(), this.config.deliveryRetryMaxMs ?? 5_000);
+    return Math.max(
+      this.retryBaseMs(),
+      this.config.deliveryRetryMaxMs ?? 5_000
+    );
   }
 
   private async sleep(ms: number): Promise<void> {
@@ -125,23 +134,35 @@ export class FeishuApiDelivery implements FeishuBridgeDelivery {
     await new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  private computeRetryDelay(attempt: number, retryAfterHeader: string | null): number {
+  private computeRetryDelay(
+    attempt: number,
+    retryAfterHeader: string | null
+  ): number {
     const hinted = parseRetryAfter(retryAfterHeader);
     if (hinted !== null) return Math.min(hinted, this.retryMaxMs());
     const delay = this.retryBaseMs() * 2 ** attempt;
     return Math.min(delay, this.retryMaxMs());
   }
 
-  private async fetchWithRetry(input: string, init: RequestInit): Promise<Response> {
+  private async fetchWithRetry(
+    input: string,
+    init: RequestInit
+  ): Promise<Response> {
     const maxRetries = this.retryLimit();
 
     for (let attempt = 0; ; attempt += 1) {
       try {
         const response = await fetch(input, init);
-        if (response.ok || !isRetryableStatus(response.status) || attempt >= maxRetries) {
+        if (
+          response.ok ||
+          !isRetryableStatus(response.status) ||
+          attempt >= maxRetries
+        ) {
           return response;
         }
-        await this.sleep(this.computeRetryDelay(attempt, response.headers.get("retry-after")));
+        await this.sleep(
+          this.computeRetryDelay(attempt, response.headers.get("retry-after"))
+        );
       } catch (error) {
         if (attempt >= maxRetries) throw error;
         await this.sleep(this.computeRetryDelay(attempt, null));
@@ -193,7 +214,9 @@ export class FeishuApiDelivery implements FeishuBridgeDelivery {
     return json.tenant_access_token;
   }
 
-  async send(message: FeishuOutboundMessage): Promise<FeishuDeliveryReceipt | void> {
+  async send(
+    message: FeishuOutboundMessage
+  ): Promise<FeishuDeliveryReceipt | void> {
     if (!this.isLive()) return;
     if (!message.target.chatId) {
       throw new Error("Feishu outbound message missing chatId");
@@ -214,7 +237,9 @@ export class FeishuApiDelivery implements FeishuBridgeDelivery {
           receive_id: target.receiveId,
           msg_type: payload.msgType,
           content: payload.content,
-          reply_in_thread: Boolean(message.target.threadId || message.target.rootMessageId),
+          reply_in_thread: Boolean(
+            message.target.threadId || message.target.rootMessageId
+          ),
           root_id: message.target.rootMessageId,
           reply_to_message_id: message.target.replyToMessageId,
         }),

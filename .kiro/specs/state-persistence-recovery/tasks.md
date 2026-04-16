@@ -19,11 +19,11 @@
     - 实现 saveSnapshot、getSnapshot、getLatestSnapshot、listSnapshots、deleteSnapshot、pruneSnapshots 函数
     - _Requirements: 1.5, 1.6_
 
-  - [ ]* 1.3 为 SnapshotStore 编写属性测试
+  - [ ]\* 1.3 为 SnapshotStore 编写属性测试
     - **Property 3: 快照修剪不变量**
     - **Validates: Requirements 1.5**
 
-  - [ ]* 1.4 为 SnapshotStore 编写属性测试
+  - [ ]\* 1.4 为 SnapshotStore 编写属性测试
     - **Property 7: 丢弃操作移除快照**
     - **Validates: Requirements 2.4**
 
@@ -40,11 +40,11 @@
     - 提供 validateChecksum(record) → boolean 校验函数
     - _Requirements: 5.1, 5.2, 5.3, 8.1_
 
-  - [ ]* 2.3 为快照序列化编写属性测试
+  - [ ]\* 2.3 为快照序列化编写属性测试
     - **Property 1: 快照序列化往返一致性**
     - **Validates: Requirements 5.3**
 
-  - [ ]* 2.4 为快照结构编写属性测试
+  - [ ]\* 2.4 为快照结构编写属性测试
     - **Property 2: 快照结构完整性**
     - **Validates: Requirements 1.3, 1.4**
 
@@ -66,7 +66,7 @@
     - 监听 MissionStage 状态变更事件，调用 triggerImmediate()
     - _Requirements: 1.1, 1.2, 1.3_
 
-  - [ ]* 4.3 为快照错误韧性编写属性测试
+  - [ ]\* 4.3 为快照错误韧性编写属性测试
     - **Property 12: 快照错误不中断任务**
     - **Validates: Requirements 8.2**
 
@@ -82,16 +82,16 @@
     - 根据 runtimeMode 决定恢复源优先级（Advanced 模式服务端优先）
     - _Requirements: 6.1, 6.2, 6.3_
 
-  - [ ]* 5.3 为恢复检测编写属性测试
+  - [ ]\* 5.3 为恢复检测编写属性测试
     - **Property 4: 损坏/不兼容快照检测**
     - **Property 5: 恢复候选检测正确性**
     - **Validates: Requirements 2.1, 2.5, 2.6**
 
-  - [ ]* 5.4 为状态恢复编写属性测试
+  - [ ]\* 5.4 为状态恢复编写属性测试
     - **Property 6: 状态恢复正确性**
     - **Validates: Requirements 2.3**
 
-  - [ ]* 5.5 为恢复源优先级编写属性测试
+  - [ ]\* 5.5 为恢复源优先级编写属性测试
     - **Property 10: 恢复源优先级**
     - **Property 11: 模式切换保留快照**
     - **Validates: Requirements 6.1, 6.2, 6.3**
@@ -110,11 +110,11 @@
     - importSessionFromBase64(encoded)：解码 URL 参数并触发导入
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
-  - [ ]* 7.3 为导出包编写属性测试
+  - [ ]\* 7.3 为导出包编写属性测试
     - **Property 8: 导出包完整性**
     - **Validates: Requirements 3.1, 3.3**
 
-  - [ ]* 7.4 为导入验证编写属性测试
+  - [ ]\* 7.4 为导入验证编写属性测试
     - **Property 9: 导入验证与存储**
     - **Validates: Requirements 4.1, 4.4**
 

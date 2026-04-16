@@ -5,6 +5,7 @@
 本设计文档描述演示回放引擎与引导体验层的技术架构。核心目标是构建一个基于时间线的事件调度引擎（DemoPlaybackEngine），将 demo-data-engine 提供的 DemoDataBundle 中的 DemoTimedEvent 序列按时间戳偏移量调度到现有的 Zustand 状态管理层（workflow-store 和 tasks-store），从而驱动 WorkflowPanel、Scene3D 等 UI 组件自动响应，实现零配置的完整演示体验。
 
 设计遵循以下原则：
+
 - 演示数据通过 RuntimeEventBus 和 Mission_Store 原生接口流转，复用现有事件处理链路
 - 使用 setTimeout 进行事件调度，确保确定性回放
 - 不引入新的 npm 依赖
@@ -70,7 +71,12 @@ graph TD
 回放引擎是一个纯 TypeScript 类，不依赖 React。负责按时间线调度 DemoTimedEvent 序列。
 
 ```typescript
-export type PlaybackState = 'idle' | 'playing' | 'paused' | 'completed' | 'failed';
+export type PlaybackState =
+  | "idle"
+  | "playing"
+  | "paused"
+  | "completed"
+  | "failed";
 
 export interface PlaybackCallbacks {
   onEvent: (event: DemoTimedEvent) => void;
@@ -81,7 +87,7 @@ export interface PlaybackCallbacks {
 }
 
 export class DemoPlaybackEngine {
-  private state: PlaybackState = 'idle';
+  private state: PlaybackState = "idle";
   private timers: number[] = [];
   private pausedAt: number | null = null;
   private startTime: number = 0;
@@ -114,6 +120,7 @@ export class DemoPlaybackEngine {
 ```
 
 调度策略：
+
 - `start()` 时记录 `startTime = performance.now()`
 - 遍历事件序列，为每个事件计算 `delay = event.timestampOffset - elapsed`
 - 使用 `setTimeout(callback, delay)` 调度每个事件
@@ -145,6 +152,7 @@ export class DemoStoreAdapter {
 ```
 
 事件分发逻辑：
+
 - `stage_change` → 通过 RuntimeEventBus.emit() 触发 workflow-store 的 handleRuntimeEvent
 - `agent_active` → 通过 RuntimeEventBus.emit() 更新 agentStatuses
 - `message_sent` → 通过 RuntimeEventBus.emit() 触发 fetchWorkflowDetail
@@ -153,6 +161,7 @@ export class DemoStoreAdapter {
 - `workflow_complete` → 通过 RuntimeEventBus.emit() 设置最终状态
 
 Mission Store 集成：
+
 - `initializeDemoMission()` 调用 tasks-store 的 `createMission()` 创建 kind="demo" 的 MissionRecord
 - 将 demo mission 设置为 `selectedTaskId`
 - `cleanup()` 时移除 demo mission 并恢复 `selectedTaskId` 到之前的值
@@ -201,6 +210,7 @@ export function useDemoMode() {
 ```
 
 生命周期：
+
 1. `startDemo()` → 创建 DemoPlaybackEngine 实例 → 调用 StoreAdapter.initializeDemoMission() → 调用 engine.start()
 2. 组件卸载时自动调用 `stopDemo()` → engine.dispose() → StoreAdapter.cleanup()
 
@@ -233,6 +243,7 @@ interface MemoryTimelineProps {
 ```
 
 每条记忆条目显示：
+
 - 类型标签（短期/中期/长期），用不同颜色区分
 - 关联的 Agent 名称
 - 阶段标签
@@ -252,10 +263,10 @@ interface EvolutionScoreCardProps {
 ```
 
 展示内容：
+
 - 每个 Agent 的四维评分变化（accuracy、completeness、actionability、format）
 - 数值从 oldScore 平滑过渡到 newScore 的动画效果（CSS transition）
 - SOUL.md 补丁内容预览
-
 
 ## 数据模型
 
@@ -279,28 +290,28 @@ stateDiagram-v2
 
 回放引擎按 DemoTimedEvent 的 timestampOffset 调度事件。事件序列来自 DemoDataBundle.events，已按 timestampOffset 升序排列。
 
-| 阶段 | 偏移范围(ms) | 主要事件类型 |
-|------|-------------|-------------|
-| direction | 0-2000 | stage_change, agent_active, message_sent |
-| planning | 2000-5000 | stage_change, agent_active, message_sent, task_update |
-| execution | 5000-12000 | stage_change, agent_active, message_sent, task_update |
-| review | 12000-15000 | stage_change, agent_active, score_assigned |
-| meta_audit | 15000-18000 | stage_change, agent_active |
-| revision | 18000-21000 | stage_change, agent_active, task_update |
-| verify | 21000-23000 | stage_change, agent_active |
-| summary | 23000-25000 | stage_change, agent_active, message_sent |
-| feedback | 25000-27000 | stage_change, agent_active, message_sent |
-| evolution | 27000-30000 | stage_change, agent_active, workflow_complete |
+| 阶段       | 偏移范围(ms) | 主要事件类型                                          |
+| ---------- | ------------ | ----------------------------------------------------- |
+| direction  | 0-2000       | stage_change, agent_active, message_sent              |
+| planning   | 2000-5000    | stage_change, agent_active, message_sent, task_update |
+| execution  | 5000-12000   | stage_change, agent_active, message_sent, task_update |
+| review     | 12000-15000  | stage_change, agent_active, score_assigned            |
+| meta_audit | 15000-18000  | stage_change, agent_active                            |
+| revision   | 18000-21000  | stage_change, agent_active, task_update               |
+| verify     | 21000-23000  | stage_change, agent_active                            |
+| summary    | 23000-25000  | stage_change, agent_active, message_sent              |
+| feedback   | 25000-27000  | stage_change, agent_active, message_sent              |
+| evolution  | 27000-30000  | stage_change, agent_active, workflow_complete         |
 
 ### 记忆条目调度
 
 记忆条目（DemoMemoryEntry）不通过 RuntimeEventBus 分发，而是由回放引擎根据 timestampOffset 直接写入 demo-store。
 
-| 记忆类型 | 触发阶段 | 写入目标 |
-|---------|---------|---------|
-| short_term | execution | demo-store.memoryTimeline |
-| medium_term | summary | demo-store.memoryTimeline |
-| long_term | evolution | demo-store.memoryTimeline |
+| 记忆类型    | 触发阶段  | 写入目标                  |
+| ----------- | --------- | ------------------------- |
+| short_term  | execution | demo-store.memoryTimeline |
+| medium_term | summary   | demo-store.memoryTimeline |
+| long_term   | evolution | demo-store.memoryTimeline |
 
 ### 进化日志调度
 
@@ -345,44 +356,43 @@ sequenceDiagram
     end
 ```
 
-
 ## 正确性属性
 
-*属性是系统在所有有效执行中应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_属性是系统在所有有效执行中应保持为真的特征或行为——本质上是关于系统应该做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 ### Property 1: 事件按时间戳顺序发射
 
-*For any* 有效的 DemoDataBundle，DemoPlaybackEngine 发射事件的顺序 SHALL 与 events 数组中 timestampOffset 的非递减顺序一致。即对于任意两个连续发射的事件 e_i 和 e_{i+1}，e_i.timestampOffset ≤ e_{i+1}.timestampOffset。
+_For any_ 有效的 DemoDataBundle，DemoPlaybackEngine 发射事件的顺序 SHALL 与 events 数组中 timestampOffset 的非递减顺序一致。即对于任意两个连续发射的事件 e*i 和 e*{i+1}，e*i.timestampOffset ≤ e*{i+1}.timestampOffset。
 
 **Validates: Requirements 3.2, 3.4**
 
 ### Property 2: 暂停恢复不丢失不重复事件
 
-*For any* 事件序列和任意暂停时间点，暂停后恢复回放，最终发射的事件集合 SHALL 与不暂停直接播放完毕的事件集合完全相同（相同的事件、相同的顺序、无遗漏、无重复）。
+_For any_ 事件序列和任意暂停时间点，暂停后恢复回放，最终发射的事件集合 SHALL 与不暂停直接播放完毕的事件集合完全相同（相同的事件、相同的顺序、无遗漏、无重复）。
 
 **Validates: Requirements 3.5**
 
 ### Property 3: 异常导致 failed 状态转换
 
-*For any* 回放过程中抛出的异常，DemoPlaybackEngine SHALL 转换到 'failed' 状态，且 onError 回调 SHALL 被调用恰好一次，传入的 Error 对象包含异常信息。
+_For any_ 回放过程中抛出的异常，DemoPlaybackEngine SHALL 转换到 'failed' 状态，且 onError 回调 SHALL 被调用恰好一次，传入的 Error 对象包含异常信息。
 
 **Validates: Requirements 3.7**
 
 ### Property 4: Demo 退出恢复 Store 状态
 
-*For any* 初始 Mission_Store 状态（selectedTaskId 和 tasks 列表），进入 Demo 模式再退出后，Mission_Store 的 selectedTaskId SHALL 恢复为进入前的值，且 tasks 列表中不包含 kind="demo" 的记录。
+_For any_ 初始 Mission_Store 状态（selectedTaskId 和 tasks 列表），进入 Demo 模式再退出后，Mission_Store 的 selectedTaskId SHALL 恢复为进入前的值，且 tasks 列表中不包含 kind="demo" 的记录。
 
 **Validates: Requirements 4.5**
 
 ### Property 5: 记忆时间线条目包含完整标注
 
-*For any* DemoMemoryEntry，MemoryTimeline 组件渲染的对应条目 SHALL 包含记忆类型标签（short_term/medium_term/long_term）和关联的 Agent 标识。
+_For any_ DemoMemoryEntry，MemoryTimeline 组件渲染的对应条目 SHALL 包含记忆类型标签（short_term/medium_term/long_term）和关联的 Agent 标识。
 
 **Validates: Requirements 7.4**
 
 ### Property 6: 进化评分卡包含全维度数据
 
-*For any* DemoEvolutionLog 列表，EvolutionScoreCard 组件渲染的输出 SHALL 为每个 Agent 展示 accuracy、completeness、actionability、format 四个维度的 oldScore 和 newScore。
+_For any_ DemoEvolutionLog 列表，EvolutionScoreCard 组件渲染的输出 SHALL 为每个 Agent 展示 accuracy、completeness、actionability、format 四个维度的 oldScore 和 newScore。
 
 **Validates: Requirements 7.5**
 
@@ -390,27 +400,27 @@ sequenceDiagram
 
 ### 回放引擎错误
 
-| 错误场景 | 处理方式 |
-|---------|---------|
-| DemoDataBundle 为空或无效 | engine.start() 抛出 Error，状态保持 idle |
-| 事件处理回调抛出异常 | 捕获异常，调用 onError 回调，状态转为 failed，清理所有定时器 |
-| 浏览器标签页不可见（visibilitychange） | 自动暂停回放，标签页恢复可见时自动恢复 |
-| 组件卸载时回放未完成 | dispose() 清理所有定时器和事件监听，状态转为 idle |
+| 错误场景                               | 处理方式                                                     |
+| -------------------------------------- | ------------------------------------------------------------ |
+| DemoDataBundle 为空或无效              | engine.start() 抛出 Error，状态保持 idle                     |
+| 事件处理回调抛出异常                   | 捕获异常，调用 onError 回调，状态转为 failed，清理所有定时器 |
+| 浏览器标签页不可见（visibilitychange） | 自动暂停回放，标签页恢复可见时自动恢复                       |
+| 组件卸载时回放未完成                   | dispose() 清理所有定时器和事件监听，状态转为 idle            |
 
 ### Store 写入错误
 
-| 错误场景 | 处理方式 |
-|---------|---------|
-| Mission_Store.createMission 失败 | 记录 console.error，状态转为 failed，显示错误提示 |
-| RuntimeEventBus.emit 抛出异常 | 捕获异常，记录日志，继续处理后续事件（非致命错误） |
-| cleanup() 过程中异常 | 捕获异常，记录 console.warn，尽力恢复状态 |
+| 错误场景                         | 处理方式                                           |
+| -------------------------------- | -------------------------------------------------- |
+| Mission_Store.createMission 失败 | 记录 console.error，状态转为 failed，显示错误提示  |
+| RuntimeEventBus.emit 抛出异常    | 捕获异常，记录日志，继续处理后续事件（非致命错误） |
+| cleanup() 过程中异常             | 捕获异常，记录 console.warn，尽力恢复状态          |
 
 ### UI 错误
 
-| 错误场景 | 处理方式 |
-|---------|---------|
-| MemoryTimeline 渲染异常 | React Error Boundary 捕获，显示降级 UI |
-| EvolutionScoreCard 动画异常 | CSS transition 失败时静态显示最终值 |
+| 错误场景                    | 处理方式                               |
+| --------------------------- | -------------------------------------- |
+| MemoryTimeline 渲染异常     | React Error Boundary 捕获，显示降级 UI |
+| EvolutionScoreCard 动画异常 | CSS transition 失败时静态显示最终值    |
 
 ## 测试策略
 
@@ -419,12 +429,14 @@ sequenceDiagram
 使用 `fast-check` 库进行属性测试，每个属性至少运行 100 次迭代。
 
 需要构建的 fast-check Arbitrary 生成器：
+
 - **DemoTimedEvent 序列生成器**：生成按 timestampOffset 升序排列的随机事件序列，事件类型覆盖 stage_change、agent_active、message_sent、score_assigned、task_update、workflow_complete
 - **DemoMemoryEntry 生成器**：生成随机记忆条目，kind 覆盖 short_term、medium_term、long_term
 - **DemoEvolutionLog 生成器**：生成随机进化日志，包含四维评分变化
 - **暂停时间点生成器**：在事件序列的有效时间范围内生成随机暂停时间点
 
 每个属性测试标注对应的设计属性编号：
+
 - **Feature: demo-guided-experience, Property 1: 事件按时间戳顺序发射**
 - **Feature: demo-guided-experience, Property 2: 暂停恢复不丢失不重复事件**
 - **Feature: demo-guided-experience, Property 3: 异常导致 failed 状态转换**

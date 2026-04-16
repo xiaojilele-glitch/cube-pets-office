@@ -66,19 +66,14 @@ export class GuestLifecycleManager {
       fs.rmSync(workspacePath, { recursive: true, force: true });
     } catch {
       // Log but don't block other cleanup operations
-      console.warn(
-        `[GuestLifecycle] Failed to clean workspace for ${guestId}`,
-      );
+      console.warn(`[GuestLifecycle] Failed to clean workspace for ${guestId}`);
     }
   }
 
   /**
    * Emit a Socket.IO event to notify the frontend about guest join/leave.
    */
-  private notifyFrontend(
-    guestId: string,
-    event: "join" | "leave",
-  ): void {
+  private notifyFrontend(guestId: string, event: "join" | "leave"): void {
     const io = getSocketIO();
     if (io) {
       io.emit(event === "join" ? "guest_join" : "guest_leave", { guestId });

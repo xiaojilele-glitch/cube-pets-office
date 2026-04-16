@@ -1,23 +1,23 @@
-import { describe, expect, it } from 'vitest';
-import { RingBuffer } from './ring-buffer.js';
+import { describe, expect, it } from "vitest";
+import { RingBuffer } from "./ring-buffer.js";
 
-describe('RingBuffer', () => {
-  describe('constructor', () => {
-    it('throws on non-positive capacity', () => {
+describe("RingBuffer", () => {
+  describe("constructor", () => {
+    it("throws on non-positive capacity", () => {
       expect(() => new RingBuffer(0)).toThrow(RangeError);
       expect(() => new RingBuffer(-1)).toThrow(RangeError);
       expect(() => new RingBuffer(1.5)).toThrow(RangeError);
     });
 
-    it('creates empty buffer with given capacity', () => {
+    it("creates empty buffer with given capacity", () => {
       const rb = new RingBuffer<number>(5);
       expect(rb.length).toBe(0);
       expect(rb.toArray()).toEqual([]);
     });
   });
 
-  describe('push and toArray', () => {
-    it('adds items in order', () => {
+  describe("push and toArray", () => {
+    it("adds items in order", () => {
       const rb = new RingBuffer<number>(3);
       rb.push(1);
       rb.push(2);
@@ -25,7 +25,7 @@ describe('RingBuffer', () => {
       expect(rb.length).toBe(2);
     });
 
-    it('overwrites oldest when full', () => {
+    it("overwrites oldest when full", () => {
       const rb = new RingBuffer<number>(3);
       rb.push(1);
       rb.push(2);
@@ -35,24 +35,24 @@ describe('RingBuffer', () => {
       expect(rb.length).toBe(3);
     });
 
-    it('handles capacity of 1', () => {
+    it("handles capacity of 1", () => {
       const rb = new RingBuffer<string>(1);
-      rb.push('a');
-      expect(rb.toArray()).toEqual(['a']);
-      rb.push('b');
-      expect(rb.toArray()).toEqual(['b']);
+      rb.push("a");
+      expect(rb.toArray()).toEqual(["a"]);
+      rb.push("b");
+      expect(rb.toArray()).toEqual(["b"]);
       expect(rb.length).toBe(1);
     });
 
-    it('handles multiple wraps around', () => {
+    it("handles multiple wraps around", () => {
       const rb = new RingBuffer<number>(3);
       for (let i = 0; i < 10; i++) rb.push(i);
       expect(rb.toArray()).toEqual([7, 8, 9]);
     });
   });
 
-  describe('toJSON / fromJSON round-trip', () => {
-    it('round-trips an empty buffer', () => {
+  describe("toJSON / fromJSON round-trip", () => {
+    it("round-trips an empty buffer", () => {
       const rb = new RingBuffer<number>(5);
       const json = rb.toJSON();
       const restored = RingBuffer.fromJSON<number>(json);
@@ -61,7 +61,7 @@ describe('RingBuffer', () => {
       expect(restored.toJSON().capacity).toBe(5);
     });
 
-    it('round-trips a partially filled buffer', () => {
+    it("round-trips a partially filled buffer", () => {
       const rb = new RingBuffer<number>(5);
       rb.push(10);
       rb.push(20);
@@ -70,7 +70,7 @@ describe('RingBuffer', () => {
       expect(restored.length).toBe(2);
     });
 
-    it('round-trips a full buffer that has wrapped', () => {
+    it("round-trips a full buffer that has wrapped", () => {
       const rb = new RingBuffer<number>(3);
       for (let i = 1; i <= 5; i++) rb.push(i);
       const restored = RingBuffer.fromJSON<number>(rb.toJSON());
@@ -78,19 +78,19 @@ describe('RingBuffer', () => {
       expect(restored.length).toBe(3);
     });
 
-    it('round-trips through JSON.stringify/parse', () => {
+    it("round-trips through JSON.stringify/parse", () => {
       const rb = new RingBuffer<{ id: string }>(2);
-      rb.push({ id: 'a' });
-      rb.push({ id: 'b' });
-      rb.push({ id: 'c' });
+      rb.push({ id: "a" });
+      rb.push({ id: "b" });
+      rb.push({ id: "c" });
       const raw = JSON.parse(JSON.stringify(rb.toJSON()));
       const restored = RingBuffer.fromJSON<{ id: string }>(raw);
-      expect(restored.toArray()).toEqual([{ id: 'b' }, { id: 'c' }]);
+      expect(restored.toArray()).toEqual([{ id: "b" }, { id: "c" }]);
     });
   });
 
-  describe('continued use after fromJSON', () => {
-    it('can push new items after restoring', () => {
+  describe("continued use after fromJSON", () => {
+    it("can push new items after restoring", () => {
       const rb = new RingBuffer<number>(3);
       rb.push(1);
       rb.push(2);

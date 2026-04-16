@@ -7,11 +7,11 @@
  * Requirements: 6.1, 6.2
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
-import type { FeedbackRecord } from '../../../shared/rag/contracts.js';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
+import type { FeedbackRecord } from "../../../shared/rag/contracts.js";
 
 interface FeedbackFile {
   version: 1;
@@ -20,7 +20,7 @@ interface FeedbackFile {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DEFAULT_FILE_PATH = resolve(__dirname, '../../../data/rag_feedback.json');
+const DEFAULT_FILE_PATH = resolve(__dirname, "../../../data/rag_feedback.json");
 
 export interface ExplicitFeedback {
   taskId: string;
@@ -59,7 +59,7 @@ export class FeedbackCollector {
     agentId: string,
     projectId: string,
     injectedCount: number,
-    usedCount: number,
+    usedCount: number
   ): FeedbackRecord {
     const utilizationRate = injectedCount > 0 ? usedCount / injectedCount : 0;
     const record: FeedbackRecord = {
@@ -98,18 +98,34 @@ export class FeedbackCollector {
   /** 获取反馈统计 */
   getStats(options?: FeedbackStatsOptions): FeedbackStats {
     let filtered = this.records;
-    if (options?.projectId) filtered = filtered.filter(r => r.projectId === options.projectId);
-    if (options?.since) filtered = filtered.filter(r => r.timestamp >= options.since!);
-    if (options?.until) filtered = filtered.filter(r => r.timestamp <= options.until!);
+    if (options?.projectId)
+      filtered = filtered.filter(r => r.projectId === options.projectId);
+    if (options?.since)
+      filtered = filtered.filter(r => r.timestamp >= options.since!);
+    if (options?.until)
+      filtered = filtered.filter(r => r.timestamp <= options.until!);
 
     const totalFeedbacks = filtered.length;
-    const avgUtilizationRate = totalFeedbacks > 0
-      ? filtered.reduce((sum, r) => sum + r.utilizationRate, 0) / totalFeedbacks
-      : 0;
-    const totalHelpful = filtered.reduce((sum, r) => sum + r.helpfulChunkIds.length, 0);
-    const totalIrrelevant = filtered.reduce((sum, r) => sum + r.irrelevantChunkIds.length, 0);
+    const avgUtilizationRate =
+      totalFeedbacks > 0
+        ? filtered.reduce((sum, r) => sum + r.utilizationRate, 0) /
+          totalFeedbacks
+        : 0;
+    const totalHelpful = filtered.reduce(
+      (sum, r) => sum + r.helpfulChunkIds.length,
+      0
+    );
+    const totalIrrelevant = filtered.reduce(
+      (sum, r) => sum + r.irrelevantChunkIds.length,
+      0
+    );
 
-    return { totalFeedbacks, avgUtilizationRate, totalHelpful, totalIrrelevant };
+    return {
+      totalFeedbacks,
+      avgUtilizationRate,
+      totalHelpful,
+      totalIrrelevant,
+    };
   }
 
   /** 获取最近的 utilizationRate 值列表 */
@@ -117,17 +133,23 @@ export class FeedbackCollector {
     return this.records.slice(-limit).map(r => r.utilizationRate);
   }
 
-  count(): number { return this.records.length; }
+  count(): number {
+    return this.records.length;
+  }
 
-  async flush(): Promise<void> { await this.writeQueue; }
+  async flush(): Promise<void> {
+    await this.writeQueue;
+  }
 
   private load(): void {
     if (!existsSync(this.filePath)) return;
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as FeedbackFile;
       this.records = Array.isArray(parsed?.records) ? parsed.records : [];
-    } catch { /* start empty */ }
+    } catch {
+      /* start empty */
+    }
   }
 
   private scheduleSave(): void {
@@ -138,9 +160,9 @@ export class FeedbackCollector {
     const data: FeedbackFile = { version: 1, records: this.records };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[FeedbackCollector] Failed to save:', err);
+      console.error("[FeedbackCollector] Failed to save:", err);
     }
   }
 }

@@ -7,7 +7,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import crypto from "node:crypto";
 import { AuditChain } from "../audit/audit-chain.js";
 import { AuditVerifier } from "../audit/audit-verifier.js";
-import type { AuditEvent, AuditLogEntry } from "../../shared/audit/contracts.js";
+import type {
+  AuditEvent,
+  AuditLogEntry,
+} from "../../shared/audit/contracts.js";
 import { AuditEventType } from "../../shared/audit/contracts.js";
 
 // ─── 辅助 ──────────────────────────────────────────────────────────────────

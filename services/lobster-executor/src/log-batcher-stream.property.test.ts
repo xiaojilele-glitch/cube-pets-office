@@ -47,7 +47,7 @@ describe("Property 1: 日志批处理数据约束 (stream-aware API)", () => {
 
   it("every flushed entry has data byte length ≤ maxBatchSize (4096)", () => {
     fc.assert(
-      fc.property(arbAppendOps, (ops) => {
+      fc.property(arbAppendOps, ops => {
         const batcher = new LogBatcher(null, MAX_INTERVAL_MS, MAX_BATCH_SIZE);
 
         for (const [stream, chunk] of ops) {
@@ -63,13 +63,13 @@ describe("Property 1: 日志批处理数据约束 (stream-aware API)", () => {
 
         batcher.destroy();
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("every flushed entry has a valid stream field ('stdout' or 'stderr')", () => {
     fc.assert(
-      fc.property(arbAppendOps, (ops) => {
+      fc.property(arbAppendOps, ops => {
         const batcher = new LogBatcher(null, MAX_INTERVAL_MS, MAX_BATCH_SIZE);
 
         for (const [stream, chunk] of ops) {
@@ -84,44 +84,48 @@ describe("Property 1: 日志批处理数据约束 (stream-aware API)", () => {
 
         batcher.destroy();
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("constraints hold even with interleaved flush calls", () => {
     fc.assert(
-      fc.property(arbAppendOps, fc.integer({ min: 1, max: 10 }), (ops, flushEvery) => {
-        const batcher = new LogBatcher(null, MAX_INTERVAL_MS, MAX_BATCH_SIZE);
-        const allEntries: LogBatchEntry[] = [];
+      fc.property(
+        arbAppendOps,
+        fc.integer({ min: 1, max: 10 }),
+        (ops, flushEvery) => {
+          const batcher = new LogBatcher(null, MAX_INTERVAL_MS, MAX_BATCH_SIZE);
+          const allEntries: LogBatchEntry[] = [];
 
-        for (let i = 0; i < ops.length; i++) {
-          const [stream, chunk] = ops[i];
-          batcher.append(stream, chunk);
+          for (let i = 0; i < ops.length; i++) {
+            const [stream, chunk] = ops[i];
+            batcher.append(stream, chunk);
 
-          // Periodically flush mid-stream
-          if ((i + 1) % flushEvery === 0) {
-            allEntries.push(...batcher.flush());
+            // Periodically flush mid-stream
+            if ((i + 1) % flushEvery === 0) {
+              allEntries.push(...batcher.flush());
+            }
           }
+
+          // Final flush
+          allEntries.push(...batcher.flush());
+
+          for (const entry of allEntries) {
+            const byteLen = Buffer.byteLength(entry.data, "utf8");
+            expect(byteLen).toBeLessThanOrEqual(MAX_BATCH_SIZE);
+            expect(["stdout", "stderr"]).toContain(entry.stream);
+          }
+
+          batcher.destroy();
         }
-
-        // Final flush
-        allEntries.push(...batcher.flush());
-
-        for (const entry of allEntries) {
-          const byteLen = Buffer.byteLength(entry.data, "utf8");
-          expect(byteLen).toBeLessThanOrEqual(MAX_BATCH_SIZE);
-          expect(["stdout", "stderr"]).toContain(entry.stream);
-        }
-
-        batcher.destroy();
-      }),
-      { numRuns: 200 },
+      ),
+      { numRuns: 200 }
     );
   });
 
   it("no data is lost: concatenated flush data equals concatenated input per stream", () => {
     fc.assert(
-      fc.property(arbAppendOps, (ops) => {
+      fc.property(arbAppendOps, ops => {
         const batcher = new LogBatcher(null, MAX_INTERVAL_MS, MAX_BATCH_SIZE);
 
         // Track expected data per stream
@@ -144,7 +148,7 @@ describe("Property 1: 日志批处理数据约束 (stream-aware API)", () => {
 
         batcher.destroy();
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 });

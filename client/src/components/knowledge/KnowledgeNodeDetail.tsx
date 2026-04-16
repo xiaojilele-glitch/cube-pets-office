@@ -39,7 +39,7 @@ function formatDate(iso: string): string {
 function getRelationType(
   entityId: string,
   relatedId: string,
-  relations: Relation[],
+  relations: Relation[]
 ): { type: string; direction: "outgoing" | "incoming" } | null {
   for (const r of relations) {
     if (r.sourceEntityId === entityId && r.targetEntityId === relatedId) {
@@ -84,7 +84,9 @@ export default function KnowledgeNodeDetail({
             style={{ backgroundColor: color }}
             aria-hidden="true"
           />
-          <h3 className="font-semibold text-gray-900 truncate">{entity.name}</h3>
+          <h3 className="font-semibold text-gray-900 truncate">
+            {entity.name}
+          </h3>
         </div>
         <button
           onClick={onClose}
@@ -110,7 +112,9 @@ export default function KnowledgeNodeDetail({
         <dt className="text-gray-500">Confidence</dt>
         <dd>
           <span
-            className={entity.confidence < 0.5 ? "text-amber-600 font-medium" : ""}
+            className={
+              entity.confidence < 0.5 ? "text-amber-600 font-medium" : ""
+            }
           >
             {entity.confidence.toFixed(2)}
           </span>
@@ -132,9 +136,11 @@ export default function KnowledgeNodeDetail({
       {/* Extended attributes */}
       {extKeys.length > 0 && (
         <div className="mb-3">
-          <h4 className="font-semibold text-gray-700 mb-1">Extended Attributes</h4>
+          <h4 className="font-semibold text-gray-700 mb-1">
+            Extended Attributes
+          </h4>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-gray-600">
-            {extKeys.map((key) => (
+            {extKeys.map(key => (
               <ExtAttrRow key={key} label={key} value={extAttrs[key]} />
             ))}
           </dl>
@@ -148,8 +154,12 @@ export default function KnowledgeNodeDetail({
             Related Entities ({relatedEntities.length})
           </h4>
           <ul className="space-y-1">
-            {relatedEntities.map((re) => {
-              const rel = getRelationType(entity.entityId, re.entityId, relations);
+            {relatedEntities.map(re => {
+              const rel = getRelationType(
+                entity.entityId,
+                re.entityId,
+                relations
+              );
               return (
                 <li key={re.entityId}>
                   <button

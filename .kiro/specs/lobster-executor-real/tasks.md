@@ -21,7 +21,7 @@
 
   - [x] 1.3 Write property test for Docker config mapping (Property 11)
     - **Property 11: Docker 配置映射**
-    - *For any* DOCKER_HOST, DOCKER_TLS_VERIFY, DOCKER_CERT_PATH env var combination, `readLobsterExecutorConfig` should correctly reflect these values with platform-appropriate defaults
+    - _For any_ DOCKER_HOST, DOCKER_TLS_VERIFY, DOCKER_CERT_PATH env var combination, `readLobsterExecutorConfig` should correctly reflect these values with platform-appropriate defaults
     - **Validates: Requirements 4.1**
 
 - [x] 2. Implement pure function modules
@@ -32,7 +32,7 @@
 
   - [x] 2.2 Write property test for HMAC round-trip (Property 2)
     - **Property 2: HMAC 签名验证往返**
-    - *For any* random secret, timestamp, and rawBody, `signPayload` output should equal recomputing HMAC-SHA256 on `"timestamp.rawBody"`
+    - _For any_ random secret, timestamp, and rawBody, `signPayload` output should equal recomputing HMAC-SHA256 on `"timestamp.rawBody"`
     - **Validates: Requirements 2.2**
 
   - [x] 2.3 Create `services/lobster-executor/src/log-batcher.ts`
@@ -43,7 +43,7 @@
 
   - [x] 2.4 Write property test for log batch constraints (Property 8)
     - **Property 8: 日志批量约束**
-    - *For any* sequence of log lines, each batch produced by LogBatcher should not exceed 4KB and batches should flush within 500ms
+    - _For any_ sequence of log lines, each batch produced by LogBatcher should not exceed 4KB and batches should flush within 500ms
     - **Validates: Requirements 2.6**
 
   - [x] 2.5 Create `services/lobster-executor/src/concurrency-limiter.ts`
@@ -53,7 +53,7 @@
 
   - [x] 2.6 Write property test for concurrency limit (Property 12)
     - **Property 12: 并发 Job 限制**
-    - *For any* number of concurrent acquire calls exceeding maxConcurrent, the number of simultaneously held permits should never exceed maxConcurrent
+    - _For any_ number of concurrent acquire calls exceeding maxConcurrent, the number of simultaneously held permits should never exceed maxConcurrent
     - **Validates: Requirements 4.5**
 
 - [x] 3. Checkpoint - Ensure all tests pass
@@ -69,12 +69,12 @@
 
   - [x] 4.2 Write property test for callback retry and fault tolerance (Property 7)
     - **Property 7: 回调重试与容错**
-    - *For any* callback failure scenario, CallbackSender should retry up to 3 times with exponential backoff, and Job execution should continue after all retries fail
+    - _For any_ callback failure scenario, CallbackSender should retry up to 3 times with exponential backoff, and Job execution should continue after all retries fail
     - **Validates: Requirements 2.4, 2.5**
 
   - [x] 4.3 Write property test for callback event coverage (Property 6)
     - **Property 6: 回调投递覆盖所有事件**
-    - *For any* sequence of events emitted during Job execution, each event should trigger exactly one HTTP POST to callback.eventsUrl
+    - _For any_ sequence of events emitted during Job execution, each event should trigger exactly one HTTP POST to callback.eventsUrl
     - **Validates: Requirements 2.1**
 
 - [x] 5. Implement JobRunner strategy pattern
@@ -101,32 +101,32 @@
 
   - [x] 5.4 Write property test for container creation config (Property 1)
     - **Property 1: 容器创建配置正确性**
-    - *For any* Job payload with image, env, command, workspaceRoot fields, DockerRunner's container creation options should correctly reflect Image, Env, Cmd, and Binds
+    - _For any_ Job payload with image, env, command, workspaceRoot fields, DockerRunner's container creation options should correctly reflect Image, Env, Cmd, and Binds
     - **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 4.4**
 
   - [x] 5.5 Write property test for exit code mapping (Property 3)
     - **Property 3: 退出码到状态映射**
-    - *For any* integer exit code, exit code 0 should map to "completed" status, non-zero should map to "failed"
+    - _For any_ integer exit code, exit code 0 should map to "completed" status, non-zero should map to "failed"
     - **Validates: Requirements 1.8**
 
   - [x] 5.6 Write property test for event sequence order (Property 9)
     - **Property 9: 事件序列顺序**
-    - *For any* successfully completed Job, events should start with job.accepted (queued), then job.started (running), zero or more job.progress, ending with job.completed (completed)
+    - _For any_ successfully completed Job, events should start with job.accepted (queued), then job.started (running), zero or more job.progress, ending with job.completed (completed)
     - **Validates: Requirements 3.1, 3.2, 3.4**
 
   - [x] 5.7 Write property test for failed event content (Property 10)
     - **Property 10: 失败事件内容完整性**
-    - *For any* failed Job, the job.failed event should contain non-empty errorCode, metrics.durationMs > 0, and detail with at most 50 lines of stderr
+    - _For any_ failed Job, the job.failed event should contain non-empty errorCode, metrics.durationMs > 0, and detail with at most 50 lines of stderr
     - **Validates: Requirements 3.5, 3.6**
 
   - [x] 5.8 Write property test for log stream integrity (Property 5)
     - **Property 5: 日志流完整性**
-    - *For any* sequence of stdout/stderr output from a container, the Job's log file should contain all output lines in order
+    - _For any_ sequence of stdout/stderr output from a container, the Job's log file should contain all output lines in order
     - **Validates: Requirements 1.5**
 
   - [x] 5.9 Write property test for container cleanup with file retention (Property 4)
     - **Property 4: 容器清理后文件保留**
-    - *For any* completed Job (success or failure), the container should be removed but log files and artifacts directory should remain in dataDirectory
+    - _For any_ completed Job (success or failure), the container should be removed but log files and artifacts directory should remain in dataDirectory
     - **Validates: Requirements 1.9, 1.10**
 
 - [x] 6. Checkpoint - Ensure all tests pass

@@ -132,8 +132,8 @@ function extractMessage(logLine: string): string {
  * Avoid newlines inside messages since each log line is delimited by \n.
  */
 const arbLogs = fc.array(
-  fc.string({ minLength: 1, maxLength: 80 }).filter((s) => !s.includes("\n")),
-  { minLength: 1, maxLength: 20 },
+  fc.string({ minLength: 1, maxLength: 80 }).filter(s => !s.includes("\n")),
+  { minLength: 1, maxLength: 20 }
 );
 
 /* ─── Tests ─── */
@@ -141,17 +141,20 @@ const arbLogs = fc.array(
 describe("Property 5: 日志流完整性", () => {
   it("all log messages appear in the log file in order with none missing", async () => {
     await fc.assert(
-      fc.asyncProperty(arbLogs, async (logs) => {
+      fc.asyncProperty(arbLogs, async logs => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeRecord(dataDir, logs);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         // Read the log file
         const logContent = readFileSync(record.logFile, "utf-8");
-        const logLines = logContent.split("\n").filter((l) => l.length > 0);
+        const logLines = logContent.split("\n").filter(l => l.length > 0);
 
         // Extract messages from log lines
         const loggedMessages = logLines.map(extractMessage);
@@ -167,43 +170,49 @@ describe("Property 5: 日志流完整性", () => {
           searchFrom = idx + 1;
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("log file line count matches the number of steps executed", async () => {
     await fc.assert(
-      fc.asyncProperty(arbLogs, async (logs) => {
+      fc.asyncProperty(arbLogs, async logs => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeRecord(dataDir, logs);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         const logContent = readFileSync(record.logFile, "utf-8");
-        const logLines = logContent.split("\n").filter((l) => l.length > 0);
+        const logLines = logContent.split("\n").filter(l => l.length > 0);
 
         // MockRunner writes one log line per step; steps = max(runner.steps, logs.length)
         // Since we set steps = logs.length, there should be exactly logs.length lines
         expect(logLines.length).toBe(logs.length);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("each log line follows the [timestamp] message format", async () => {
     await fc.assert(
-      fc.asyncProperty(arbLogs, async (logs) => {
+      fc.asyncProperty(arbLogs, async logs => {
         const dataDir = makeTempDir();
-        const runner = new MockRunner({ sleep: async () => {}, now: () => new Date() });
+        const runner = new MockRunner({
+          sleep: async () => {},
+          now: () => new Date(),
+        });
         const record = makeRecord(dataDir, logs);
 
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (evt) => events.push(evt));
+        await runner.run(record, evt => events.push(evt));
 
         const logContent = readFileSync(record.logFile, "utf-8");
-        const logLines = logContent.split("\n").filter((l) => l.length > 0);
+        const logLines = logContent.split("\n").filter(l => l.length > 0);
 
         // Every line must match the [ISO_TIMESTAMP] message format
         const timestampPattern = /^\[.+?\] .+$/;
@@ -211,7 +220,7 @@ describe("Property 5: 日志流完整性", () => {
           expect(line).toMatch(timestampPattern);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

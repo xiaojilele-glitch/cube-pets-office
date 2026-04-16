@@ -64,13 +64,13 @@ export interface IRAGPipelineStep {
 // ---------------------------------------------------------------------------
 
 export const RAG_STEP_TYPES = [
-  "parse",      // 文档解析（PDF/Word/Excel/HTML → 纯文本）
-  "chunk",      // 文本分片（按段落/句子/固定长度）
-  "embed",      // 向量化（调用 embedding 模型）
-  "store",      // 存储（写入向量库）
-  "retrieve",   // 检索（从向量库查询 topK）
-  "rerank",     // 重排序（可选，对检索结果二次排序）
-  "generate",   // 生成（基于检索结果调用 LLM 生成答案）
+  "parse", // 文档解析（PDF/Word/Excel/HTML → 纯文本）
+  "chunk", // 文本分片（按段落/句子/固定长度）
+  "embed", // 向量化（调用 embedding 模型）
+  "store", // 存储（写入向量库）
+  "retrieve", // 检索（从向量库查询 topK）
+  "rerank", // 重排序（可选，对检索结果二次排序）
+  "generate", // 生成（基于检索结果调用 LLM 生成答案）
 ] as const;
 
 export type RAGStepType = (typeof RAG_STEP_TYPES)[number];
@@ -114,7 +114,9 @@ export interface RAGPipelineResult {
 // Pipeline 步骤注册表
 // ---------------------------------------------------------------------------
 
-export type RAGStepFactory = (options?: Record<string, unknown>) => IRAGPipelineStep;
+export type RAGStepFactory = (
+  options?: Record<string, unknown>
+) => IRAGPipelineStep;
 
 export interface IRAGStepRegistry {
   /** 注册步骤工厂 */
@@ -149,7 +151,11 @@ export interface IVectorStore {
   /** 插入向量记录 */
   insert(collection: string, records: VectorRecord[]): Promise<void>;
   /** 语义搜索 */
-  search(collection: string, queryVector: number[], topK: number): Promise<VectorSearchResult[]>;
+  search(
+    collection: string,
+    queryVector: number[],
+    topK: number
+  ): Promise<VectorSearchResult[]>;
   /** 删除记录 */
   delete(collection: string, ids: string[]): Promise<void>;
 }
@@ -174,16 +180,16 @@ export interface IVectorStore {
 // RAG 管道数据模型契约（vector-db-rag-pipeline）
 // ===========================================================================
 
-export const RAG_CONTRACT_VERSION = '2025-01-01' as const;
+export const RAG_CONTRACT_VERSION = "2025-01-01" as const;
 
 export const SOURCE_TYPES = [
-  'task_result',
-  'code_snippet',
-  'conversation',
-  'mission_log',
-  'document',
-  'architecture_decision',
-  'bug_report',
+  "task_result",
+  "code_snippet",
+  "conversation",
+  "mission_log",
+  "document",
+  "architecture_decision",
+  "bug_report",
 ] as const;
 
 export type SourceType = (typeof SOURCE_TYPES)[number];
@@ -198,7 +204,7 @@ export interface IngestionPayload {
   projectId: string;
   content: string;
   metadata: Record<string, any>;
-  timestamp: string;       // ISO 8601
+  timestamp: string; // ISO 8601
   agentId?: string;
 }
 
@@ -221,7 +227,7 @@ export interface ChunkMetadata {
 }
 
 export interface ChunkRecord {
-  chunkId: string;          // `${sourceType}:${sourceId}:${chunkIndex}`
+  chunkId: string; // `${sourceType}:${sourceId}:${chunkIndex}`
   sourceType: SourceType;
   sourceId: string;
   projectId: string;
@@ -255,7 +261,7 @@ export interface RAGAugmentationLog {
   taskId: string;
   agentId: string;
   projectId: string;
-  mode: 'auto' | 'on_demand' | 'disabled';
+  mode: "auto" | "on_demand" | "disabled";
   retrievedChunkIds: string[];
   injectedChunkIds: string[];
   prunedChunkIds: string[];
@@ -274,7 +280,7 @@ export interface DeadLetterEntry {
   error: string;
   failedAt: string;
   retryCount: number;
-  stage: 'clean' | 'chunk' | 'embed' | 'store' | 'metadata';
+  stage: "clean" | "chunk" | "embed" | "store" | "metadata";
 }
 
 // ---------------------------------------------------------------------------
@@ -299,7 +305,7 @@ export interface FeedbackRecord {
 
 export interface LifecycleLog {
   logId: string;
-  operation: 'archive' | 'delete' | 'orphan_cleanup' | 'promote' | 'purge';
+  operation: "archive" | "delete" | "orphan_cleanup" | "promote" | "purge";
   affectedCount: number;
   collection: string;
   executedAt: string;

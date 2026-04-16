@@ -45,10 +45,17 @@ function extractResponsesText(data: any): string {
   return texts.join("\n").trim();
 }
 
-function buildEndpoint(config: AIConfig, path: "/responses" | "/chat/completions"): string {
-  const base = (config.proxyUrl || config.baseUrl || "").trim().replace(/\/+$/, "");
+function buildEndpoint(
+  config: AIConfig,
+  path: "/responses" | "/chat/completions"
+): string {
+  const base = (config.proxyUrl || config.baseUrl || "")
+    .trim()
+    .replace(/\/+$/, "");
   if (!base) {
-    throw new Error("Missing Base URL. Set a browser-direct provider or proxy URL first.");
+    throw new Error(
+      "Missing Base URL. Set a browser-direct provider or proxy URL first."
+    );
   }
 
   return `${base}${path}`;
@@ -63,12 +70,20 @@ function normalizeError(status: number, text: string): Error {
     return new Error("The provider is rate limited or out of quota.");
   }
   if (status >= 500) {
-    return new Error(`The provider returned HTTP ${status}.${detail ? ` ${detail}` : ""}`);
+    return new Error(
+      `The provider returned HTTP ${status}.${detail ? ` ${detail}` : ""}`
+    );
   }
-  return new Error(`Request failed with HTTP ${status}.${detail ? ` ${detail}` : ""}`);
+  return new Error(
+    `Request failed with HTTP ${status}.${detail ? ` ${detail}` : ""}`
+  );
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
 
@@ -98,7 +113,9 @@ export async function callBrowserLLM(
   const startTime = Date.now();
 
   if (!config.apiKey.trim() && !config.proxyUrl.trim()) {
-    throw new Error("Missing API key. Add it locally, or provide a proxy URL that handles auth.");
+    throw new Error(
+      "Missing API key. Add it locally, or provide a proxy URL that handles auth."
+    );
   }
 
   const headers: Record<string, string> = {
@@ -138,7 +155,10 @@ export async function callBrowserLLM(
       );
 
       if (!response.ok) {
-        throw normalizeError(response.status, await response.text().catch(() => ""));
+        throw normalizeError(
+          response.status,
+          await response.text().catch(() => "")
+        );
       }
 
       const data = await response.json();
@@ -185,7 +205,10 @@ export async function callBrowserLLM(
     );
 
     if (!response.ok) {
-      throw normalizeError(response.status, await response.text().catch(() => ""));
+      throw normalizeError(
+        response.status,
+        await response.text().catch(() => "")
+      );
     }
 
     const data = await response.json();
@@ -221,4 +244,3 @@ export async function callBrowserLLM(
     throw error;
   }
 }
-

@@ -81,7 +81,10 @@ export const useRAGStore = create<RAGStoreState>((set, get) => ({
     const state = get();
     if (state.loading[taskId]) return;
 
-    set({ loading: { ...state.loading, [taskId]: true }, errors: { ...state.errors, [taskId]: null } });
+    set({
+      loading: { ...state.loading, [taskId]: true },
+      errors: { ...state.errors, [taskId]: null },
+    });
 
     try {
       const res = await fetch(`/api/rag/task-rag/${taskId}`);

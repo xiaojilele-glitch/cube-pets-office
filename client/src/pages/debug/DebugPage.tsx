@@ -5,10 +5,15 @@ import { AuditPanel } from "@/components/AuditPanel";
 import { PermissionPanel } from "@/components/permissions/PermissionPanel";
 import { LineageContent } from "@/pages/lineage/LineagePage";
 import { Shield, FileSearch, GitBranch, Settings2, Bug } from "lucide-react";
-import { WorkspacePageShell, WorkspacePanel } from "@/components/workspace/WorkspacePageShell";
+import {
+  WorkspacePageShell,
+  WorkspacePanel,
+} from "@/components/workspace/WorkspacePageShell";
 
 export default function DebugPage() {
-  const [activeTab, setActiveTab] = useState<"config" | "permissions" | "audit" | "lineage" | "legacy">("lineage");
+  const [activeTab, setActiveTab] = useState<
+    "config" | "permissions" | "audit" | "lineage" | "legacy"
+  >("lineage");
 
   const tabs = [
     { id: "lineage" as const, label: "Lineage", icon: GitBranch },
@@ -59,7 +64,7 @@ export default function DebugPage() {
         )}
         {activeTab === "config" && (
           <WorkspacePanel className="h-[700px] overflow-hidden bg-white/90 relative">
-             <ConfigPanel inline />
+            <ConfigPanel inline />
           </WorkspacePanel>
         )}
         {activeTab === "legacy" && (

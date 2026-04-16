@@ -17,31 +17,35 @@ const REDACTED = "[REDACTED]";
 
 /* ─── Arbitraries ─── */
 
-const ALPHA_NUM_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
+const ALPHA_NUM_CHARS =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
 const SAFE_CHARS = "abcdefghijklmnopqrstuvwxyz 0123456789,.!?:;-()".split("");
 
 /** Alphanumeric string of given length range */
 const arbAlphaNum = (min: number, max: number) =>
   fc
-    .array(fc.constantFrom(...ALPHA_NUM_CHARS), { minLength: min, maxLength: max })
-    .map((a) => a.join(""));
+    .array(fc.constantFrom(...ALPHA_NUM_CHARS), {
+      minLength: min,
+      maxLength: max,
+    })
+    .map(a => a.join(""));
 
 /** Generate an OpenAI-style key: sk-<20+ alphanumeric chars> */
-const arbSkKey = arbAlphaNum(20, 60).map((s) => `sk-${s}`);
+const arbSkKey = arbAlphaNum(20, 60).map(s => `sk-${s}`);
 
 /** Generate a custom-format key: clp_<20+ alphanumeric chars> */
-const arbClpKey = arbAlphaNum(20, 60).map((s) => `clp_${s}`);
+const arbClpKey = arbAlphaNum(20, 60).map(s => `clp_${s}`);
 
 /** Generate a random injected secret (arbitrary non-empty string, no newlines) */
 const arbSecret = fc
   .string({ minLength: 9, maxLength: 80 })
-  .filter((s) => s.trim().length > 0 && !s.includes("\n") && !s.includes("\r"));
+  .filter(s => s.trim().length > 0 && !s.includes("\n") && !s.includes("\r"));
 
 /** Non-credential text that won't accidentally match key patterns */
 const arbSafeText = fc
   .array(fc.constantFrom(...SAFE_CHARS), { minLength: 0, maxLength: 100 })
-  .map((a) => a.join(""))
-  .filter((s) => !s.includes("sk-") && !s.includes("clp_"));
+  .map(a => a.join(""))
+  .filter(s => !s.includes("sk-") && !s.includes("clp_"));
 
 /* ─── Property 5: 凭证清洗完整性 ─── */
 
@@ -57,17 +61,22 @@ describe("Property 5: 凭证清洗完整性", () => {
 
   it("scrubs injected secret values from lines", () => {
     fc.assert(
-      fc.property(arbSecret, arbSafeText, arbSafeText, (secret, prefix, suffix) => {
-        const scrubber = new CredentialScrubber([secret]);
-        const line = `${prefix}${secret}${suffix}`;
-        const result = scrubber.scrubLine(line);
+      fc.property(
+        arbSecret,
+        arbSafeText,
+        arbSafeText,
+        (secret, prefix, suffix) => {
+          const scrubber = new CredentialScrubber([secret]);
+          const line = `${prefix}${secret}${suffix}`;
+          const result = scrubber.scrubLine(line);
 
-        // The original secret must not appear in the result
-        expect(result).not.toContain(secret);
-        // [REDACTED] must appear
-        expect(result).toContain(REDACTED);
-      }),
-      { numRuns: 100 },
+          // The original secret must not appear in the result
+          expect(result).not.toContain(secret);
+          // [REDACTED] must appear
+          expect(result).toContain(REDACTED);
+        }
+      ),
+      { numRuns: 100 }
     );
   });
 
@@ -81,38 +90,42 @@ describe("Property 5: 凭证清洗完整性", () => {
         expect(result).not.toContain(key);
         expect(result).toContain(REDACTED);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("scrubs custom-format keys (clp_...) from lines", () => {
     fc.assert(
-      fc.property(arbClpKey, arbSafeText, arbSafeText, (key, prefix, suffix) => {
-        const scrubber = new CredentialScrubber([]);
-        const line = `${prefix}${key}${suffix}`;
-        const result = scrubber.scrubLine(line);
+      fc.property(
+        arbClpKey,
+        arbSafeText,
+        arbSafeText,
+        (key, prefix, suffix) => {
+          const scrubber = new CredentialScrubber([]);
+          const line = `${prefix}${key}${suffix}`;
+          const result = scrubber.scrubLine(line);
 
-        expect(result).not.toContain(key);
-        expect(result).toContain(REDACTED);
-      }),
-      { numRuns: 100 },
+          expect(result).not.toContain(key);
+          expect(result).toContain(REDACTED);
+        }
+      ),
+      { numRuns: 100 }
     );
   });
 
   it("does not modify lines that contain no credentials", () => {
     fc.assert(
-      fc.property(arbSafeText, (text) => {
+      fc.property(arbSafeText, text => {
         const scrubber = new CredentialScrubber(["my-super-secret-key-12345"]);
         const result = scrubber.scrubLine(text);
 
         // Safe text should pass through unchanged
         expect(result).toBe(text);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
-
 
 /* ─── Property 7: Artifact 文件凭证清洗 ─── */
 
@@ -166,15 +179,15 @@ describe("Property 7: Artifact 文件凭证清洗", () => {
           const after = fs.readFileSync(filePath, "utf-8");
           expect(after).not.toContain(secret);
           expect(after).toContain(REDACTED);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("scrubFile leaves clean files unchanged", () => {
     fc.assert(
-      fc.property(arbSafeText, (text) => {
+      fc.property(arbSafeText, text => {
         const dir = makeTmpDir();
         const filePath = path.join(dir, "clean.txt");
         fs.writeFileSync(filePath, text, "utf-8");
@@ -189,7 +202,7 @@ describe("Property 7: Artifact 文件凭证清洗", () => {
         const after = fs.readFileSync(filePath, "utf-8");
         expect(after).toBe(text);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -210,9 +223,9 @@ describe("Property 7: Artifact 文件凭证清洗", () => {
 
           const after = fs.readFileSync(filePath, "utf-8");
           expect(after).not.toContain(secret);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

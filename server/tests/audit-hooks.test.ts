@@ -45,4 +45,3 @@ describe("installAuditHooks", () => {
     expect(() => installAuditHooks({ collector })).not.toThrow();
   });
 });
-

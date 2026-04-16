@@ -30,15 +30,16 @@ App.tsx (wouter 路由)
 
 ### Zustand Stores
 
-| Store | 文件 | 职责 |
-|-------|------|------|
-| appStore | `lib/store.ts` | 全局状态：locale、运行模式、面板开关 |
-| workflowStore | `lib/workflow-store.ts` | 工作流列表、当前工作流、Socket 监听 |
-| tasksStore | `lib/tasks-store.ts` | Mission 列表、详情、Socket 监听 |
+| Store         | 文件                    | 职责                                 |
+| ------------- | ----------------------- | ------------------------------------ |
+| appStore      | `lib/store.ts`          | 全局状态：locale、运行模式、面板开关 |
+| workflowStore | `lib/workflow-store.ts` | 工作流列表、当前工作流、Socket 监听  |
+| tasksStore    | `lib/tasks-store.ts`    | Mission 列表、详情、Socket 监听      |
 
 ### tasks-store.ts 数据源策略
 
 Mission-first + Workflow 补充层：
+
 1. 主数据源：`GET /api/tasks` → MissionRecord
 2. 补充层：workflow 投影（Work Packages / Agent Crew / Organization）
 3. `buildMissionSummaryRecord()` / `buildMissionDetailRecord()` 将 Mission 数据规范化为前端视图模型
@@ -47,6 +48,7 @@ Mission-first + Workflow 补充层：
 ## 3D 场景架构
 
 ### Scene3D.tsx
+
 ```
 Canvas (React Three Fiber)
 ├── 环境光 + 方向光
@@ -68,6 +70,7 @@ Canvas (React Three Fiber)
 ```
 
 ### 3D 资源
+
 - 宠物模型：`client/public/kenney_cube-pets_1.0/Models/GLB format/`
 - 家具模型：`client/public/kenney_furniture-kit/Models/GLTF format/`
 - 资源 base path 根据 GitHub Pages 部署自动调整
@@ -75,6 +78,7 @@ Canvas (React Three Fiber)
 ## 工作流面板 (WorkflowPanel.tsx)
 
 三级信息密度设计：
+
 1. 总览层：当前阶段 + 总体进度 + 活跃角色数 + 阻塞状态
 2. 部门层：部门摘要 + 角色一行卡片
 3. 详情层：完整 deliverable、反馈、附件、消息流（按需展开）
@@ -105,11 +109,11 @@ Canvas (React Three Fiber)
 
 ## 响应式布局
 
-| 断点 | 布局 |
-|------|------|
-| ≥1280px | 完整桌面布局，3D 场景 + 侧栏面板 |
-| 768-1279px | 平板布局，面板可折叠 |
-| <768px | 移动布局，导航折叠、面板抽屉化、3D 场景缩放 |
+| 断点       | 布局                                        |
+| ---------- | ------------------------------------------- |
+| ≥1280px    | 完整桌面布局，3D 场景 + 侧栏面板            |
+| 768-1279px | 平板布局，面板可折叠                        |
+| <768px     | 移动布局，导航折叠、面板抽屉化、3D 场景缩放 |
 
 `hooks/useViewportTier.ts` 提供当前视口档位。
 `hooks/useMobile.tsx` 提供移动端检测。
@@ -127,5 +131,6 @@ deploy-pages.yml:
 ```
 
 `deploy-target.ts` 在运行时检测：
+
 - `__GITHUB_PAGES__` 为 true → 强制 Frontend Mode
 - 3D 模型资源路径自动加上 base prefix

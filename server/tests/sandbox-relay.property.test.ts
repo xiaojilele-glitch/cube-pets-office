@@ -24,14 +24,14 @@ const arbEntry = (missionId: string) =>
       data: fc.string({ minLength: 1, maxLength: 200 }),
       timestamp: fc.constant(new Date().toISOString()),
     })
-    .map((r) => r as LogBufferEntry);
+    .map(r => r as LogBufferEntry);
 
 const arbEntries = fc.array(arbEntry("m-1"), { minLength: 1, maxLength: 500 });
 
 describe("Property 5: 滚动日志缓冲区大小不变量", () => {
   it("buffer size never exceeds 200 for any append sequence", () => {
     fc.assert(
-      fc.property(arbEntries, (entries) => {
+      fc.property(arbEntries, entries => {
         const relay = new SandboxRelay();
         for (const entry of entries) {
           relay.appendLog(entry);
@@ -39,13 +39,13 @@ describe("Property 5: 滚动日志缓冲区大小不变量", () => {
           expect(history.length).toBeLessThanOrEqual(MAX_LINES);
         }
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("oldest entries are evicted when buffer exceeds 200", () => {
     fc.assert(
-      fc.property(arbEntries, (entries) => {
+      fc.property(arbEntries, entries => {
         const relay = new SandboxRelay();
         for (const entry of entries) {
           relay.appendLog(entry);
@@ -63,13 +63,13 @@ describe("Property 5: 滚动日志缓冲区大小不变量", () => {
           expect(history.length).toBe(entries.length);
         }
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("buffer order matches append order", () => {
     fc.assert(
-      fc.property(arbEntries, (entries) => {
+      fc.property(arbEntries, entries => {
         const relay = new SandboxRelay();
         for (const entry of entries) {
           relay.appendLog(entry);
@@ -83,13 +83,13 @@ describe("Property 5: 滚动日志缓冲区大小不变量", () => {
           expect(history[i].stream).toBe(kept[i].stream);
         }
       }),
-      { numRuns: 200 },
+      { numRuns: 200 }
     );
   });
 
   it("clearMission removes all entries for that mission", () => {
     fc.assert(
-      fc.property(arbEntries, (entries) => {
+      fc.property(arbEntries, entries => {
         const relay = new SandboxRelay();
         for (const entry of entries) {
           relay.appendLog(entry);
@@ -97,7 +97,7 @@ describe("Property 5: 滚动日志缓冲区大小不变量", () => {
         relay.clearMission("m-1");
         expect(relay.getLogHistory("m-1")).toHaveLength(0);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 

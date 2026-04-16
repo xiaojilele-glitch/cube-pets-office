@@ -17,7 +17,10 @@ function getWireApi() {
 }
 
 function getBaseUrl() {
-  return (process.env.AI_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
+  return (process.env.AI_BASE_URL || "https://api.openai.com/v1").replace(
+    /\/+$/,
+    ""
+  );
 }
 
 function getModel() {
@@ -92,7 +95,7 @@ async function parseSSEStream(response) {
         if (evt.response.usage) {
           usage.promptTokens = evt.response.usage.input_tokens || 0;
           usage.completionTokens = evt.response.usage.output_tokens || 0;
-          usage.totalTokens = (usage.promptTokens + usage.completionTokens);
+          usage.totalTokens = usage.promptTokens + usage.completionTokens;
         }
         // Also try to get content from completed response
         if (!content && Array.isArray(evt.response.output)) {
@@ -135,12 +138,15 @@ async function generate(messages, options = {}) {
       instructions,
       stream: true,
     };
-    if (options.temperature !== undefined) body.temperature = options.temperature;
-    if (options.maxTokens !== undefined) body.max_output_tokens = options.maxTokens;
+    if (options.temperature !== undefined)
+      body.temperature = options.temperature;
+    if (options.maxTokens !== undefined)
+      body.max_output_tokens = options.maxTokens;
   } else {
     url = `${baseUrl}/chat/completions`;
     body = { model, messages };
-    if (options.temperature !== undefined) body.temperature = options.temperature;
+    if (options.temperature !== undefined)
+      body.temperature = options.temperature;
     if (options.maxTokens !== undefined) body.max_tokens = options.maxTokens;
   }
 
@@ -148,14 +154,16 @@ async function generate(messages, options = {}) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
   });
 
   if (!response.ok) {
     const errText = await response.text().catch(() => "");
-    throw new Error(`${response.status} ${response.statusText}: ${errText.slice(0, 300)}`);
+    throw new Error(
+      `${response.status} ${response.statusText}: ${errText.slice(0, 300)}`
+    );
   }
 
   let content, usage;
@@ -190,8 +198,13 @@ async function generate(messages, options = {}) {
 
   // Write result artifact
   try {
-    if (!fs.existsSync(ARTIFACT_DIR)) fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
-    fs.writeFileSync(ARTIFACT_FILE, JSON.stringify(result, null, 2) + "\n", "utf-8");
+    if (!fs.existsSync(ARTIFACT_DIR))
+      fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
+    fs.writeFileSync(
+      ARTIFACT_FILE,
+      JSON.stringify(result, null, 2) + "\n",
+      "utf-8"
+    );
   } catch {}
 
   return result;

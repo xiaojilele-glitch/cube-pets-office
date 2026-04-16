@@ -24,8 +24,8 @@ const GLOW_COLOR_IDLE = new THREE.Color("#D6C4A8");
 
 /* ── Data Hook ── */
 function useMissionIslandData() {
-  const tasks = useTasksStore((s) => s.tasks);
-  const detailsById = useTasksStore((s) => s.detailsById);
+  const tasks = useTasksStore(s => s.tasks);
+  const detailsById = useTasksStore(s => s.detailsById);
 
   const selectedMission = useMemo(() => selectDisplayMission(tasks), [tasks]);
 
@@ -81,13 +81,10 @@ export function MissionIsland() {
     }
   });
 
-  const handleIslandClick = useCallback(
-    (e: THREE.Event) => {
-      (e as unknown as { stopPropagation: () => void }).stopPropagation();
-      setExpanded((prev) => !prev);
-    },
-    [],
-  );
+  const handleIslandClick = useCallback((e: THREE.Event) => {
+    (e as unknown as { stopPropagation: () => void }).stopPropagation();
+    setExpanded(prev => !prev);
+  }, []);
 
   const handleExpand = useCallback(() => setExpanded(true), []);
   const handleClose = useCallback(() => setExpanded(false), []);
@@ -97,7 +94,7 @@ export function MissionIsland() {
       setExpanded(false);
       setLocation(`/tasks/${taskId}`);
     },
-    [setLocation],
+    [setLocation]
   );
 
   const handleCreateMission = useCallback(() => {
@@ -160,10 +157,7 @@ export function MissionIsland() {
 
       {/* Detail Overlay (visible when expanded) */}
       {expanded && missionDetail && (
-        <Html
-          fullscreen
-          style={{ pointerEvents: "auto" }}
-        >
+        <Html fullscreen style={{ pointerEvents: "auto" }}>
           <MissionDetailOverlay
             detail={missionDetail}
             onClose={handleClose}

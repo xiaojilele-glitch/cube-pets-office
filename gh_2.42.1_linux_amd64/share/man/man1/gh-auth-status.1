@@ -1,0 +1,35 @@
+.nh
+.TH "GH-AUTH-STATUS" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-auth-status - View authentication status
+
+
+.SH SYNOPSIS
+.PP
+\fBgh auth status [flags]\fR
+
+
+.SH DESCRIPTION
+.PP
+Verifies and displays information about your authentication state.
+
+.PP
+This command will test your authentication state for each GitHub host that gh knows about and
+report on any issues.
+
+
+.SH OPTIONS
+.TP
+\fB-h\fR, \fB--hostname\fR \fB<string>\fR
+Check a specific hostname's auth status
+
+.TP
+\fB-t\fR, \fB--show-token\fR
+Display the auth token
+
+
+.SH SEE ALSO
+.PP
+\fBgh-auth(1)\fR

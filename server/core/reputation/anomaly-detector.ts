@@ -7,7 +7,11 @@
  * @see Requirements 7.1, 7.2, 7.3, 7.4
  */
 
-import type { ReputationConfig, ReputationChangeEvent, ReputationProfile } from '../../../shared/reputation.js';
+import type {
+  ReputationConfig,
+  ReputationChangeEvent,
+  ReputationProfile,
+} from "../../../shared/reputation.js";
 
 // ---------------------------------------------------------------------------
 // 辅助接口
@@ -16,7 +20,7 @@ import type { ReputationConfig, ReputationChangeEvent, ReputationProfile } from 
 /** 任务摘要，用于刷分检测 */
 export interface TaskSummary {
   taskId: string | number;
-  complexity: 'low' | 'medium' | 'high';
+  complexity: "low" | "medium" | "high";
   completedAt: string; // ISO timestamp
 }
 
@@ -70,7 +74,10 @@ export class AnomalyDetector {
    *
    * @see Requirement 7.1
    */
-  checkAnomalyThreshold(agentId: string, recentEvents: ReputationChangeEvent[]): AnomalyResult {
+  checkAnomalyThreshold(
+    agentId: string,
+    recentEvents: ReputationChangeEvent[]
+  ): AnomalyResult {
     const now = Date.now();
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
@@ -99,18 +106,21 @@ export class AnomalyDetector {
    *
    * @see Requirement 7.2
    */
-  checkGrindingPattern(agentId: string, recentTasks: TaskSummary[]): GrindingResult {
+  checkGrindingPattern(
+    agentId: string,
+    recentTasks: TaskSummary[]
+  ): GrindingResult {
     const now = Date.now();
     const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
     // Filter tasks within 24 hours
-    const tasksIn24h = recentTasks.filter((task) => {
+    const tasksIn24h = recentTasks.filter(task => {
       const taskTime = new Date(task.completedAt).getTime();
       return now - taskTime <= twentyFourHoursMs;
     });
 
     const totalCount = tasksIn24h.length;
-    const lowCount = tasksIn24h.filter((t) => t.complexity === 'low').length;
+    const lowCount = tasksIn24h.filter(t => t.complexity === "low").length;
     const lowComplexityRatio = totalCount > 0 ? lowCount / totalCount : 0;
 
     const isGrinding =
@@ -141,8 +151,12 @@ export class AnomalyDetector {
         pair.ratingAtoB > this.config.anomaly.collusionRatingMin &&
         pair.ratingBtoA > this.config.anomaly.collusionRatingMin;
 
-      const deviationAtoB = Math.abs(pair.ratingAtoB - pair.otherMembersAvgRating);
-      const deviationBtoA = Math.abs(pair.ratingBtoA - pair.otherMembersAvgRating);
+      const deviationAtoB = Math.abs(
+        pair.ratingAtoB - pair.otherMembersAvgRating
+      );
+      const deviationBtoA = Math.abs(
+        pair.ratingBtoA - pair.otherMembersAvgRating
+      );
 
       const highDeviation =
         deviationAtoB > this.config.anomaly.collusionDeviationMin &&
@@ -171,7 +185,7 @@ export class AnomalyDetector {
    * @see Requirement 7.4
    */
   getProbationDamping(profile: ReputationProfile): number {
-    if (profile.isExternal && profile.trustTier === 'probation') {
+    if (profile.isExternal && profile.trustTier === "probation") {
       return this.config.anomaly.probationDamping;
     }
     return 1.0;

@@ -90,9 +90,17 @@ function createTestRequest(jobId: string): ExecutorJobRequest {
   };
 }
 
-function createStoredRecord(dataRoot: string, overrides: Partial<StoredJobRecord> = {}) {
+function createStoredRecord(
+  dataRoot: string,
+  overrides: Partial<StoredJobRecord> = {}
+) {
   const request = createTestRequest(`job-${randomUUID()}`);
-  const dataDirectory = join(dataRoot, "jobs", request.missionId, request.jobId);
+  const dataDirectory = join(
+    dataRoot,
+    "jobs",
+    request.missionId,
+    request.jobId
+  );
   mkdirSync(dataDirectory, { recursive: true });
   const logFile = join(dataDirectory, "executor.log");
   writeFileSync(logFile, "", "utf-8");
@@ -140,7 +148,7 @@ describe("DockerRunner cancellation helpers", () => {
     const runner = new DockerRunner(
       createExecutorConfig(dataRoot),
       { send: vi.fn().mockResolvedValue(undefined) } as never,
-      docker as never,
+      docker as never
     );
     const record = createStoredRecord(dataRoot, {
       containerId: "container-123",
@@ -157,7 +165,7 @@ describe("DockerRunner cancellation helpers", () => {
     expect(kill).not.toHaveBeenCalled();
     expect(record.message).toBe("Stop this container");
     expect(readFileSync(record.logFile, "utf-8")).toContain(
-      "[cancel] Stop this container",
+      "[cancel] Stop this container"
     );
   });
 
@@ -179,7 +187,7 @@ describe("DockerRunner cancellation helpers", () => {
     const runner = new DockerRunner(
       createExecutorConfig(dataRoot),
       { send: vi.fn().mockResolvedValue(undefined) } as never,
-      docker as never,
+      docker as never
     );
     const record = createStoredRecord(dataRoot, {
       containerId: "container-timeout",
@@ -204,7 +212,7 @@ describe("DockerRunner cancellation helpers", () => {
     const runner = new DockerRunner(
       createExecutorConfig(dataRoot),
       { send: vi.fn().mockResolvedValue(undefined) } as never,
-      { getContainer: vi.fn() } as never,
+      { getContainer: vi.fn() } as never
     );
     const record = createStoredRecord(dataRoot);
 
@@ -215,7 +223,7 @@ describe("DockerRunner cancellation helpers", () => {
           exitCode: number,
           durationMs: number,
           timedOut: boolean,
-          options: { outcome: "cancelled"; summary: string },
+          options: { outcome: "cancelled"; summary: string }
         ) => string;
       }
     ).writeResult(record, 137, 1234, false, {
@@ -249,7 +257,7 @@ describe("DockerRunner cancellation helpers", () => {
     const runner = new DockerRunner(
       createExecutorConfig(dataRoot),
       { send: vi.fn().mockResolvedValue(undefined) } as never,
-      docker as never,
+      docker as never
     );
     const record = createStoredRecord(dataRoot, {
       containerId: "container-pause",
@@ -266,10 +274,10 @@ describe("DockerRunner cancellation helpers", () => {
     expect(pause).toHaveBeenCalledTimes(1);
     expect(unpause).toHaveBeenCalledTimes(1);
     expect(readFileSync(record.logFile, "utf-8")).toContain(
-      "[pause] Inspect container state",
+      "[pause] Inspect container state"
     );
     expect(readFileSync(record.logFile, "utf-8")).toContain(
-      "[resume] Resume requested",
+      "[resume] Resume requested"
     );
   });
 });

@@ -111,7 +111,7 @@ export interface GuestAgentConfig {
 /** 访客代理节点（继承 WorkflowOrganizationNode） */
 export interface GuestAgentNode extends WorkflowOrganizationNode {
   invitedBy: string;
-  source: 'manual' | 'feishu' | 'natural_language' | 'a2a-protocol';
+  source: "manual" | "feishu" | "natural_language" | "a2a-protocol";
   expiresAt: number;
   guestConfig: GuestAgentConfig;
 }

@@ -45,7 +45,7 @@ export interface DetectResult {
 }
 
 export function resolveExecutionModeValue(
-  rawValue: string | undefined,
+  rawValue: string | undefined
 ): "mock" | "real" {
   return rawValue === "mock" ? "mock" : "real";
 }
@@ -90,24 +90,25 @@ const SCRIPT_KEYWORDS = [
   "docker exec",
 ];
 
-
 // ─── Code Block Detection Regex ─────────────────────────────────────────────
 
 const CODE_BLOCK_PATTERN = new RegExp(
   "```(?:" + EXECUTABLE_CODE_BLOCK_LANGS.join("|") + ")\\b",
-  "i",
+  "i"
 );
 
 // ─── Helper: extract command from deliverable ───────────────────────────────
 
 function extractCommandFromDeliverable(deliverable: string): string[] {
   // Try to find a bash/sh code block and extract the command
-  const bashBlock = deliverable.match(/```(?:bash|sh|shell)\s*\n([\s\S]*?)```/i);
+  const bashBlock = deliverable.match(
+    /```(?:bash|sh|shell)\s*\n([\s\S]*?)```/i
+  );
   if (bashBlock?.[1]) {
     const lines = bashBlock[1]
       .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l && !l.startsWith("#"));
+      .map(l => l.trim())
+      .filter(l => l && !l.startsWith("#"));
     if (lines.length > 0) {
       return ["sh", "-c", lines.join(" && ")];
     }
@@ -120,7 +121,9 @@ function extractCommandFromDeliverable(deliverable: string): string[] {
   }
 
   // Try to find node/js invocation
-  const jsBlock = deliverable.match(/```(?:javascript|typescript)\s*\n([\s\S]*?)```/i);
+  const jsBlock = deliverable.match(
+    /```(?:javascript|typescript)\s*\n([\s\S]*?)```/i
+  );
   if (jsBlock?.[1]) {
     return ["node", "-e", jsBlock[1].trim()];
   }
@@ -132,7 +135,7 @@ function extractCommandFromDeliverable(deliverable: string): string[] {
 // ─── Helper: delay ──────────────────────────────────────────────────────────
 
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // ─── HeartbeatMonitor Class ──────────────────────────────────────────────────
@@ -144,7 +147,7 @@ export class HeartbeatMonitor {
 
   constructor(
     private readonly missionRuntime: MissionRuntime,
-    private readonly timeoutMs: number = HEARTBEAT_TIMEOUT_MS,
+    private readonly timeoutMs: number = HEARTBEAT_TIMEOUT_MS
   ) {}
 
   /**
@@ -158,7 +161,7 @@ export class HeartbeatMonitor {
       this.missionRuntime.failMission(
         missionId,
         "Executor heartbeat timeout",
-        "brain",
+        "brain"
       );
     }, this.timeoutMs);
     // Unref so the timer doesn't keep the process alive
@@ -230,14 +233,20 @@ export class ExecutionBridge {
    */
   detectExecutable(
     deliverables: string[],
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ): DetectResult {
     // 1. Metadata 强制覆盖
     if (metadata?.requiresExecution === true) {
-      return { executable: true, reason: "metadata.requiresExecution forced execution" };
+      return {
+        executable: true,
+        reason: "metadata.requiresExecution forced execution",
+      };
     }
     if (metadata?.requiresExecution === false) {
-      return { executable: false, reason: "metadata.requiresExecution forced skip" };
+      return {
+        executable: false,
+        reason: "metadata.requiresExecution forced skip",
+      };
     }
 
     const joined = deliverables.join("\n");
@@ -286,7 +295,7 @@ export class ExecutionBridge {
   async bridge(
     missionId: string,
     deliverables: string[],
-    metadata?: Record<string, unknown>,
+    metadata?: Record<string, unknown>
   ): Promise<BridgeResult> {
     const { missionRuntime } = this.options;
 
@@ -312,11 +321,12 @@ export class ExecutionBridge {
           metadata,
         });
       } catch (buildError) {
-        const message = buildError instanceof Error ? buildError.message : String(buildError);
+        const message =
+          buildError instanceof Error ? buildError.message : String(buildError);
         missionRuntime.failMission(
           missionId,
           `ExecutionPlan build failed: ${message}`,
-          "brain",
+          "brain"
         );
         return {
           triggered: true,
@@ -336,7 +346,7 @@ export class ExecutionBridge {
         "provision",
         "Dispatching execution plan to executor.",
         45,
-        "brain",
+        "brain"
       );
 
       // Step 5: 分发到 ExecutorClient（含重试）
@@ -344,11 +354,14 @@ export class ExecutionBridge {
       try {
         dispatched = await this.dispatchWithRetry(planResult.plan);
       } catch (dispatchError) {
-        const message = dispatchError instanceof Error ? dispatchError.message : String(dispatchError);
+        const message =
+          dispatchError instanceof Error
+            ? dispatchError.message
+            : String(dispatchError);
         missionRuntime.failMission(
           missionId,
           `Executor dispatch failed: ${message}`,
-          "brain",
+          "brain"
         );
         return {
           triggered: true,
@@ -365,7 +378,7 @@ export class ExecutionBridge {
           detail: `Executor accepted job ${dispatched.response.jobId}.`,
         },
         55,
-        "brain",
+        "brain"
       );
 
       missionRuntime.patchMissionExecution(missionId, {
@@ -390,7 +403,7 @@ export class ExecutionBridge {
         "execute",
         "Executor accepted the mission. Docker execution is in progress.",
         60,
-        "brain",
+        "brain"
       );
 
       // Step 8: Start heartbeat monitor (Tasks 4.2)
@@ -406,14 +419,15 @@ export class ExecutionBridge {
       };
     } catch (unexpectedError) {
       // 顶层 try-catch：未预期异常 → Mission failed
-      const message = unexpectedError instanceof Error
-        ? unexpectedError.message
-        : String(unexpectedError);
+      const message =
+        unexpectedError instanceof Error
+          ? unexpectedError.message
+          : String(unexpectedError);
       try {
         missionRuntime.failMission(
           missionId,
           `ExecutionBridge unexpected error: ${message}`,
-          "brain",
+          "brain"
         );
       } catch {
         // Swallow secondary failure to avoid masking the original error
@@ -431,7 +445,7 @@ export class ExecutionBridge {
   private injectModePayload(
     job: { payload?: Record<string, unknown> },
     missionId: string,
-    deliverables: string[],
+    deliverables: string[]
   ): void {
     const existing = job.payload || {};
     const existingEnv =
@@ -475,7 +489,7 @@ export class ExecutionBridge {
           typeof existing.aiTaskType === "string" && existing.aiTaskType.trim()
             ? existing.aiTaskType.trim()
             : "text-generation",
-        command: [],  // Use container's default ENTRYPOINT (node /opt/ai-bridge/executor.js)
+        command: [], // Use container's default ENTRYPOINT (node /opt/ai-bridge/executor.js)
         env: {
           ...existingEnv,
           MISSION_ID: missionId,
@@ -489,7 +503,7 @@ export class ExecutionBridge {
    * 分发 ExecutionPlan，不可达时重试 retryCount 次，间隔 2 秒。
    */
   private async dispatchWithRetry(
-    plan: ExecutionPlan,
+    plan: ExecutionPlan
   ): Promise<DispatchExecutionPlanResult> {
     const maxAttempts = 1 + Math.max(0, this.options.retryCount);
     let lastError: unknown;
@@ -535,7 +549,7 @@ export function createExecutionBridge(
     defaultImage?: string;
     retryCount?: number;
     heartbeatMonitor?: HeartbeatMonitor;
-  },
+  }
 ): ExecutionBridge {
   const executorBaseUrl =
     options?.executorBaseUrl ||

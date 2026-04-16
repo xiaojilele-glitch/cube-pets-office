@@ -5,6 +5,7 @@
 Guest Agent 机制为 Cube Pets Office 引入临时外部代理参与能力。访客代理在单次任务（Mission）生命周期内存在，通过独立 LLM 配置执行工作，在 3D 场景中可视化呈现，并在任务结束后自动清理。
 
 核心设计原则：
+
 - 最小侵入：复用现有 WorkflowOrganizationNode、RuntimeAgent、MessageBus 等基础设施
 - 短暂生命周期：访客代理仅存在于单次 Mission，不持久化到数据库 seed
 - 安全隔离：访客代理有独立工作区，无法访问其他代理的 SOUL.md 和长期记忆
@@ -79,7 +80,7 @@ export interface GuestAgentConfig {
 
 export interface GuestAgentNode extends WorkflowOrganizationNode {
   invitedBy: string;
-  source: 'manual' | 'feishu' | 'natural_language';
+  source: "manual" | "feishu" | "natural_language";
   expiresAt: number;
   guestConfig: GuestAgentConfig;
 }
@@ -143,19 +144,21 @@ DELETE /api/agents/guest/:id  — 移除访客代理
 ```
 
 POST 请求体：
+
 ```typescript
 interface CreateGuestRequest {
   name: string;
   config: GuestAgentConfig;
-  departmentId?: string;  // 可选，默认分配到发起任务的部门
-  managerId?: string;     // 可选，默认分配到对应部门经理
+  departmentId?: string; // 可选，默认分配到发起任务的部门
+  managerId?: string; // 可选，默认分配到对应部门经理
 }
 ```
 
 POST 响应：
+
 ```typescript
 interface CreateGuestResponse {
-  id: string;           // "guest_xxx" 格式
+  id: string; // "guest_xxx" 格式
   name: string;
   config: GuestAgentConfig; // apiKey 替换为 "***"
   createdAt: string;
@@ -200,7 +203,7 @@ export class GuestLifecycleManager {
   async onMissionFailed(workflowId: string): Promise<void>;
   async leaveOffice(guestId: string): Promise<void>;
   private cleanupWorkspace(guestId: string): void;
-  private notifyFrontend(guestId: string, event: 'join' | 'leave'): void;
+  private notifyFrontend(guestId: string, event: "join" | "leave"): void;
 }
 ```
 
@@ -222,12 +225,16 @@ export class GuestLifecycleManager {
 
 ```typescript
 const AVATAR_HINT_MAP: Record<string, keyof typeof PET_MODELS> = {
-  cat: 'cat', dog: 'dog', bunny: 'bunny', tiger: 'tiger',
-  lion: 'lion', elephant: 'elephant', // ...
+  cat: "cat",
+  dog: "dog",
+  bunny: "bunny",
+  tiger: "tiger",
+  lion: "lion",
+  elephant: "elephant", // ...
 };
 
 export function resolveGuestAnimal(hint: string): keyof typeof PET_MODELS {
-  return AVATAR_HINT_MAP[hint.toLowerCase()] || 'cat'; // 默认猫
+  return AVATAR_HINT_MAP[hint.toLowerCase()] || "cat"; // 默认猫
 }
 ```
 
@@ -235,23 +242,23 @@ export function resolveGuestAnimal(hint: string): keyof typeof PET_MODELS {
 
 ### GuestAgentConfig
 
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| model | string | 是 | LLM 模型标识 |
-| baseUrl | string | 是 | LLM API 基础 URL |
-| apiKey | string | 否 | LLM API 密钥 |
-| skills | GuestSkillDescriptor[] | 是 | 技能描述列表 |
-| mcp | WorkflowMcpBinding[] | 是 | MCP 工具绑定 |
-| avatarHint | string | 是 | 3D 渲染动物提示 |
+| 字段       | 类型                   | 必填 | 说明             |
+| ---------- | ---------------------- | ---- | ---------------- |
+| model      | string                 | 是   | LLM 模型标识     |
+| baseUrl    | string                 | 是   | LLM API 基础 URL |
+| apiKey     | string                 | 否   | LLM API 密钥     |
+| skills     | GuestSkillDescriptor[] | 是   | 技能描述列表     |
+| mcp        | WorkflowMcpBinding[]   | 是   | MCP 工具绑定     |
+| avatarHint | string                 | 是   | 3D 渲染动物提示  |
 
 ### GuestAgentNode（继承 WorkflowOrganizationNode）
 
-| 新增字段 | 类型 | 说明 |
-|----------|------|------|
-| invitedBy | string | 邀请者 ID |
-| source | 'manual' \| 'feishu' \| 'natural_language' | 邀请来源 |
-| expiresAt | number | 过期时间戳 |
-| guestConfig | GuestAgentConfig | 访客配置 |
+| 新增字段    | 类型                                       | 说明       |
+| ----------- | ------------------------------------------ | ---------- |
+| invitedBy   | string                                     | 邀请者 ID  |
+| source      | 'manual' \| 'feishu' \| 'natural_language' | 邀请来源   |
+| expiresAt   | number                                     | 过期时间戳 |
+| guestConfig | GuestAgentConfig                           | 访客配置   |
 
 ### Guest Agent ID 格式
 
@@ -268,95 +275,94 @@ private guestAgents: Map<string, GuestAgent> = new Map();
 
 访客代理不写入数据库，仅存在于内存中。这保证了短暂生命周期语义。
 
-
 ## 正确性属性
 
-*属性是系统在所有合法执行中应保持为真的特征或行为——本质上是关于系统应做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_属性是系统在所有合法执行中应保持为真的特征或行为——本质上是关于系统应做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
-### Property 1: 访客代理创建返回 guest_ 前缀 ID
+### Property 1: 访客代理创建返回 guest\_ 前缀 ID
 
-*For any* 合法的 GuestAgentConfig，通过 registerGuest 创建的访客代理 ID 应以 "guest_" 开头，且 ID 在当前注册表中唯一。
+_For any_ 合法的 GuestAgentConfig，通过 registerGuest 创建的访客代理 ID 应以 "guest\_" 开头，且 ID 在当前注册表中唯一。
 
 **Validates: Requirements 1.4, 2.1**
 
 ### Property 2: register/unregister 往返
 
-*For any* 合法的 GuestAgent，注册后通过 get(id) 应能找到该代理，注销后通过 get(id) 应返回 undefined。
+_For any_ 合法的 GuestAgent，注册后通过 get(id) 应能找到该代理，注销后通过 get(id) 应返回 undefined。
 
 **Validates: Requirements 2.4**
 
 ### Property 3: 注销后注册表清空且工作区删除
 
-*For any* 已注册的访客代理，调用 unregisterGuest(id) 后，该代理不应出现在 getGuestAgents() 列表中，且 data/agents/{id}/ 目录不应存在。
+_For any_ 已注册的访客代理，调用 unregisterGuest(id) 后，该代理不应出现在 getGuestAgents() 列表中，且 data/agents/{id}/ 目录不应存在。
 
 **Validates: Requirements 2.3, 2.5**
 
 ### Property 4: 并发上限不变量
 
-*For any* 注册操作序列，注册表中的访客代理数量不应超过 5。当已有 5 个访客代理时，尝试注册第 6 个应被拒绝并返回错误。
+_For any_ 注册操作序列，注册表中的访客代理数量不应超过 5。当已有 5 个访客代理时，尝试注册第 6 个应被拒绝并返回错误。
 
 **Validates: Requirements 2.6, 2.7**
 
 ### Property 5: 自然语言邀请解析
 
-*For any* 包含 "@Name" 模式和邀请关键词的消息字符串，parseInvitation 应返回非 null 结果，且 guestName 字段与 "@" 后的名称匹配。对于不包含邀请模式的消息，应返回 null。
+_For any_ 包含 "@Name" 模式和邀请关键词的消息字符串，parseInvitation 应返回非 null 结果，且 guestName 字段与 "@" 后的名称匹配。对于不包含邀请模式的消息，应返回 null。
 
 **Validates: Requirements 3.1**
 
 ### Property 6: MessageBus 层级验证支持访客代理
 
-*For any* 访客代理（role="worker"，manager_id 指向某 Manager）和该 Manager，validateHierarchy 应返回 true，validateStageRoute 在 execution/review/revision 阶段应返回 true。
+_For any_ 访客代理（role="worker"，manager_id 指向某 Manager）和该 Manager，validateHierarchy 应返回 true，validateStageRoute 在 execution/review/revision 阶段应返回 true。
 
 **Validates: Requirements 5.2**
 
 ### Property 7: AccessGuard 工作区隔离
 
-*For any* 访客代理 ID 和任意包含 ".." 的相对路径，resolveAgentWorkspacePath 应抛出错误。对于任意访客代理 ID 和任意其他代理 ID，访客代理不应能解析到其他代理工作区内的路径。
+_For any_ 访客代理 ID 和任意包含 ".." 的相对路径，resolveAgentWorkspacePath 应抛出错误。对于任意访客代理 ID 和任意其他代理 ID，访客代理不应能解析到其他代理工作区内的路径。
 
 **Validates: Requirements 5.3, 5.6**
 
 ### Property 8: 任务结束自动清理所有访客代理
 
-*For any* 包含 N 个访客代理的已完成工作流，调用 onMissionComplete 后，getGuestAgents() 应返回空列表，且所有 N 个访客代理的工作区目录应被删除。
+_For any_ 包含 N 个访客代理的已完成工作流，调用 onMissionComplete 后，getGuestAgents() 应返回空列表，且所有 N 个访客代理的工作区目录应被删除。
 
 **Validates: Requirements 5.5**
 
 ### Property 9: 访客代理使用独立 LLM 配置
 
-*For any* GuestAgentConfig 指定的 model 和 baseUrl，创建的 GuestAgent 实例的 LLM 调用应使用该配置中的值，而非系统默认的 LLM 配置。
+_For any_ GuestAgentConfig 指定的 model 和 baseUrl，创建的 GuestAgent 实例的 LLM 调用应使用该配置中的值，而非系统默认的 LLM 配置。
 
 **Validates: Requirements 6.1**
 
 ### Property 10: GuestAgentConfig 序列化往返一致性
 
-*For any* 合法的 GuestAgentConfig 对象，JSON.parse(JSON.stringify(config)) 应产生与原对象深度相等的结果。
+_For any_ 合法的 GuestAgentConfig 对象，JSON.parse(JSON.stringify(config)) 应产生与原对象深度相等的结果。
 
 **Validates: Requirements 7.1, 7.2**
 
 ### Property 11: API 响应隐藏 apiKey
 
-*For any* 包含非空 apiKey 的 GuestAgentConfig，通过 API 返回的响应中 apiKey 字段应为 "***"。
+_For any_ 包含非空 apiKey 的 GuestAgentConfig，通过 API 返回的响应中 apiKey 字段应为 "\*\*\*"。
 
 **Validates: Requirements 7.3**
 
 ### Property 12: GuestAgentNode 与组织快照兼容
 
-*For any* 合法的 GuestAgentNode，将其加入 WorkflowOrganizationSnapshot 的 nodes 数组后，createDynamicSceneData 应能正常处理而不抛出异常，且返回的 sceneAgents 中应包含该访客代理。
+_For any_ 合法的 GuestAgentNode，将其加入 WorkflowOrganizationSnapshot 的 nodes 数组后，createDynamicSceneData 应能正常处理而不抛出异常，且返回的 sceneAgents 中应包含该访客代理。
 
 **Validates: Requirements 1.5**
 
 ## 错误处理
 
-| 场景 | 处理方式 |
-|------|----------|
-| 访客代理数量达到上限（5个） | 返回 HTTP 409，附带 "Maximum guest agent limit reached" 消息 |
-| GuestAgentConfig 缺少必填字段 | 返回 HTTP 400，附带具体缺失字段信息 |
-| 访客代理 LLM 调用失败 | 记录错误日志，通知上级 Manager，标记该访客代理任务为失败 |
-| 删除不存在的访客代理 | 返回 HTTP 404 |
-| 自然语言解析无法识别邀请意图 | 静默忽略，不创建访客代理 |
-| CEO 拒绝邀请 | 通过 Socket 事件通知前端，显示拒绝原因 |
-| 访客代理工作区清理失败 | 记录错误日志，不阻塞其他清理操作 |
-| 访客代理尝试路径遍历 | AccessGuard 抛出错误，阻止访问 |
+| 场景                          | 处理方式                                                     |
+| ----------------------------- | ------------------------------------------------------------ |
+| 访客代理数量达到上限（5个）   | 返回 HTTP 409，附带 "Maximum guest agent limit reached" 消息 |
+| GuestAgentConfig 缺少必填字段 | 返回 HTTP 400，附带具体缺失字段信息                          |
+| 访客代理 LLM 调用失败         | 记录错误日志，通知上级 Manager，标记该访客代理任务为失败     |
+| 删除不存在的访客代理          | 返回 HTTP 404                                                |
+| 自然语言解析无法识别邀请意图  | 静默忽略，不创建访客代理                                     |
+| CEO 拒绝邀请                  | 通过 Socket 事件通知前端，显示拒绝原因                       |
+| 访客代理工作区清理失败        | 记录错误日志，不阻塞其他清理操作                             |
+| 访客代理尝试路径遍历          | AccessGuard 抛出错误，阻止访问                               |
 
 ## 测试策略
 
@@ -369,12 +375,14 @@ private guestAgents: Map<string, GuestAgent> = new Map();
 ### 双重测试方法
 
 **属性测试**（验证通用正确性）：
+
 - 每个正确性属性对应一个属性测试
 - 使用 fast-check 生成随机 GuestAgentConfig、消息字符串、路径等
 - 每个测试标注对应的设计属性编号
 - 标签格式：**Feature: agent-marketplace, Property {N}: {属性标题}**
 
 **单元测试**（验证具体示例和边界情况）：
+
 - REST API 端点的集成测试
 - Socket 事件发送的验证
 - 具体的邀请消息解析示例
@@ -397,13 +405,16 @@ server/tests/
 // fast-check 自定义生成器
 const guestAgentConfigArb = fc.record({
   model: fc.stringOf(fc.alphaNumeric(), { minLength: 1, maxLength: 50 }),
-  baseUrl: fc.constant('http://localhost:8080'),
+  baseUrl: fc.constant("http://localhost:8080"),
   apiKey: fc.option(fc.hexaString({ minLength: 16, maxLength: 64 })),
-  skills: fc.array(fc.record({
-    name: fc.string({ minLength: 1, maxLength: 30 }),
-    description: fc.string({ minLength: 1, maxLength: 100 }),
-  }), { maxLength: 5 }),
+  skills: fc.array(
+    fc.record({
+      name: fc.string({ minLength: 1, maxLength: 30 }),
+      description: fc.string({ minLength: 1, maxLength: 100 }),
+    }),
+    { maxLength: 5 }
+  ),
   mcp: fc.constant([]),
-  avatarHint: fc.constantFrom('cat', 'dog', 'bunny', 'tiger', 'lion'),
+  avatarHint: fc.constantFrom("cat", "dog", "bunny", "tiger", "lion"),
 });
 ```

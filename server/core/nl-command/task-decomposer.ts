@@ -16,11 +16,14 @@ import type {
   MissionDecomposition,
   TaskDecomposition,
   TaskDependency,
-} from '../../../shared/nl-command/contracts.js';
-import type { ILLMProvider, LLMMessage } from '../../../shared/llm/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
-import { topoSortWithGroups, CyclicDependencyError } from './topo-sort.js';
-import type { Edge } from './topo-sort.js';
+} from "../../../shared/nl-command/contracts.js";
+import type {
+  ILLMProvider,
+  LLMMessage,
+} from "../../../shared/llm/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
+import { topoSortWithGroups, CyclicDependencyError } from "./topo-sort.js";
+import type { Edge } from "./topo-sort.js";
 
 // ─── Options ───
 
@@ -38,7 +41,7 @@ const BASE_DELAY_MS = 500;
 async function callLLMWithRetry(
   provider: ILLMProvider,
   messages: LLMMessage[],
-  model: string,
+  model: string
 ): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -56,7 +59,7 @@ async function callLLMWithRetry(
         break;
       }
       const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((r) => setTimeout(r, delay));
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   throw lastError;
@@ -87,7 +90,7 @@ interface TasksLLMResponse {
     description: string;
     objectives: string[];
     constraints: Array<{
-      type: CommandConstraint['type'];
+      type: CommandConstraint["type"];
       description: string;
       value?: string;
       unit?: string;
@@ -103,7 +106,7 @@ interface TaskDependenciesLLMResponse {
   dependencies: Array<{
     fromTaskId: string;
     toTaskId: string;
-    type: 'blocks' | 'depends_on';
+    type: "blocks" | "depends_on";
     description?: string;
   }>;
 }
@@ -129,7 +132,7 @@ export class TaskDecomposer {
    */
   async decompose(
     mission: DecomposedMission,
-    context: MissionDecomposition,
+    context: MissionDecomposition
   ): Promise<TaskDecomposition> {
     const decompositionId = `task-decomp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -140,8 +143,8 @@ export class TaskDecomposer {
     const dependencies = await this.identifyDependencies(mission, tasks);
 
     // Step 3: Compute topological execution order
-    const taskIds = tasks.map((t) => t.taskId);
-    const edges: Edge[] = dependencies.map((d) => ({
+    const taskIds = tasks.map(t => t.taskId);
+    const edges: Edge[] = dependencies.map(d => ({
       from: d.fromTaskId,
       to: d.toTaskId,
     }));
@@ -154,13 +157,13 @@ export class TaskDecomposer {
         // Record audit entry for cyclic dependency failure
         await this.auditTrail.record({
           entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          operationType: 'decomposition_completed',
-          operator: 'system',
+          operationType: "decomposition_completed",
+          operator: "system",
           content: `Task decomposition failed: cyclic dependency detected — ${err.message}`,
           timestamp: Date.now(),
-          result: 'failure',
+          result: "failure",
           entityId: mission.missionId,
-          entityType: 'mission',
+          entityType: "mission",
           metadata: { decompositionId, cycle: err.cycle },
         });
         throw err;
@@ -179,13 +182,13 @@ export class TaskDecomposer {
     // Step 4: Record audit entry
     await this.auditTrail.record({
       entryId: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      operationType: 'decomposition_completed',
-      operator: 'system',
+      operationType: "decomposition_completed",
+      operator: "system",
       content: `Decomposed mission "${mission.title}" into ${tasks.length} tasks with ${dependencies.length} dependencies`,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId: mission.missionId,
-      entityType: 'mission',
+      entityType: "mission",
       metadata: { decompositionId, taskCount: tasks.length },
     });
 
@@ -196,17 +199,17 @@ export class TaskDecomposer {
 
   private async generateTasks(
     mission: DecomposedMission,
-    context: MissionDecomposition,
+    context: MissionDecomposition
   ): Promise<DecomposedTask[]> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content: `You are a task decomposer. Given a mission and its broader context, decompose the mission into concrete, actionable tasks.
 Each task should have a unique taskId (format: "task-<missionIndex>-<taskIndex>"), title, description, objectives, constraints, estimatedDuration (in minutes), estimatedCost (numeric), requiredSkills (array of strings), and priority.
 Return JSON: { "tasks": [...] }`,
       },
       {
-        role: 'user',
+        role: "user",
         content: JSON.stringify({
           mission: {
             missionId: mission.missionId,
@@ -222,8 +225,8 @@ Return JSON: { "tasks": [...] }`,
             commandId: context.commandId,
             totalMissions: context.missions.length,
             relatedMissions: context.missions
-              .filter((m) => m.missionId !== mission.missionId)
-              .map((m) => ({ missionId: m.missionId, title: m.title })),
+              .filter(m => m.missionId !== mission.missionId)
+              .map(m => ({ missionId: m.missionId, title: m.title })),
           },
         }),
       },
@@ -233,19 +236,20 @@ Return JSON: { "tasks": [...] }`,
     const parsed = safeParseJSON<TasksLLMResponse>(raw);
 
     if (!parsed?.tasks?.length) {
-      throw new Error('LLM returned empty or invalid task list');
+      throw new Error("LLM returned empty or invalid task list");
     }
 
     return parsed.tasks.map((t, idx) => ({
       taskId: t.taskId || `task-${mission.missionId}-${idx + 1}`,
       title: t.title || `Task ${idx + 1}`,
-      description: t.description || '',
+      description: t.description || "",
       objectives: Array.isArray(t.objectives) ? t.objectives : [],
       constraints: Array.isArray(t.constraints) ? t.constraints : [],
-      estimatedDuration: typeof t.estimatedDuration === 'number' ? t.estimatedDuration : 30,
-      estimatedCost: typeof t.estimatedCost === 'number' ? t.estimatedCost : 0,
+      estimatedDuration:
+        typeof t.estimatedDuration === "number" ? t.estimatedDuration : 30,
+      estimatedCost: typeof t.estimatedCost === "number" ? t.estimatedCost : 0,
       requiredSkills: Array.isArray(t.requiredSkills) ? t.requiredSkills : [],
-      priority: (['critical', 'high', 'medium', 'low'].includes(t.priority)
+      priority: (["critical", "high", "medium", "low"].includes(t.priority)
         ? t.priority
         : mission.priority) as CommandPriority,
     }));
@@ -253,7 +257,7 @@ Return JSON: { "tasks": [...] }`,
 
   private async identifyDependencies(
     mission: DecomposedMission,
-    tasks: DecomposedTask[],
+    tasks: DecomposedTask[]
   ): Promise<TaskDependency[]> {
     if (tasks.length <= 1) {
       return [];
@@ -261,18 +265,18 @@ Return JSON: { "tasks": [...] }`,
 
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content: `You are a dependency analyzer. Given a list of tasks decomposed from a mission, identify dependency relationships between them.
 Dependency types: "blocks" (A must complete before B starts), "depends_on" (B needs output from A).
 Only include real dependencies. Return JSON: { "dependencies": [{ "fromTaskId", "toTaskId", "type", "description" }] }
 fromTaskId depends on toTaskId (toTaskId must execute first).`,
       },
       {
-        role: 'user',
+        role: "user",
         content: JSON.stringify({
           missionTitle: mission.title,
           missionDescription: mission.description,
-          tasks: tasks.map((t) => ({
+          tasks: tasks.map(t => ({
             taskId: t.taskId,
             title: t.title,
             description: t.description,
@@ -289,20 +293,20 @@ fromTaskId depends on toTaskId (toTaskId must execute first).`,
       return [];
     }
 
-    const validIds = new Set(tasks.map((t) => t.taskId));
+    const validIds = new Set(tasks.map(t => t.taskId));
 
     return parsed.dependencies
       .filter(
-        (d) =>
+        d =>
           validIds.has(d.fromTaskId) &&
           validIds.has(d.toTaskId) &&
           d.fromTaskId !== d.toTaskId &&
-          ['blocks', 'depends_on'].includes(d.type),
+          ["blocks", "depends_on"].includes(d.type)
       )
-      .map((d) => ({
+      .map(d => ({
         fromTaskId: d.fromTaskId,
         toTaskId: d.toTaskId,
-        type: d.type as TaskDependency['type'],
+        type: d.type as TaskDependency["type"],
       }));
   }
 }

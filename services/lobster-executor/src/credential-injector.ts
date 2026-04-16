@@ -25,7 +25,7 @@ export class CredentialValidationError extends Error {
  */
 export function resolveAICredentials(
   payload: Record<string, unknown>,
-  hostEnv?: Record<string, string | undefined>,
+  hostEnv?: Record<string, string | undefined>
 ): AICredentials {
   const env = hostEnv ?? {};
   const llmConfig = (payload.llmConfig ?? {}) as Record<string, unknown>;
@@ -65,7 +65,7 @@ export function buildAIEnvVars(creds: AICredentials): string[] {
 export function validateCredentials(creds: AICredentials): void {
   if (!creds.apiKey || creds.apiKey.length <= 8) {
     throw new CredentialValidationError(
-      "API Key must be non-empty and longer than 8 characters",
+      "API Key must be non-empty and longer than 8 characters"
     );
   }
 }

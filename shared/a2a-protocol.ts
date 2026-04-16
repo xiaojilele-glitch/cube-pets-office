@@ -136,7 +136,7 @@ export function validateContext(context: string): boolean {
 export function createEnvelope(
   method: A2AMethod,
   params: A2AInvokeParams,
-  auth?: string,
+  auth?: string
 ): A2AEnvelope {
   return {
     jsonrpc: "2.0",

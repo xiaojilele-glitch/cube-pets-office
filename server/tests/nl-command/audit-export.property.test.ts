@@ -1,90 +1,108 @@
 // Feature: nl-command-center, Property 18: ???? JSON ?????
 // **Validates: Requirements 16.4**
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import * as fc from 'fast-check';
-import { existsSync, unlinkSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import * as fc from "fast-check";
+import { existsSync, unlinkSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { AuditTrail } from '../../core/nl-command/audit-trail.js';
-import type { AuditEntry, AuditOperationType } from '../../../shared/nl-command/contracts.js';
+import { AuditTrail } from "../../core/nl-command/audit-trail.js";
+import type {
+  AuditEntry,
+  AuditOperationType,
+} from "../../../shared/nl-command/contracts.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const TEST_AUDIT_PATH = resolve(__dirname, '../../../data/test-audit-export-prop.json');
+const TEST_AUDIT_PATH = resolve(
+  __dirname,
+  "../../../data/test-audit-export-prop.json"
+);
 
 // ??? Generators ???
 
 const auditOperationTypeArb: fc.Arbitrary<AuditOperationType> = fc.constantFrom(
-  'command_created',
-  'command_analyzed',
-  'command_finalized',
-  'clarification_question',
-  'clarification_answer',
-  'decomposition_completed',
-  'plan_generated',
-  'approval_submitted',
-  'approval_completed',
-  'adjustment_proposed',
-  'adjustment_applied',
-  'alert_triggered',
-  'comment_created',
-  'comment_edited',
-  'permission_changed',
-  'report_generated',
-  'suggestion_applied',
-  'template_saved',
+  "command_created",
+  "command_analyzed",
+  "command_finalized",
+  "clarification_question",
+  "clarification_answer",
+  "decomposition_completed",
+  "plan_generated",
+  "approval_submitted",
+  "approval_completed",
+  "adjustment_proposed",
+  "adjustment_applied",
+  "alert_triggered",
+  "comment_created",
+  "comment_edited",
+  "permission_changed",
+  "report_generated",
+  "suggestion_applied",
+  "template_saved"
 );
 
-const resultArb = fc.constantFrom('success' as const, 'failure' as const);
+const resultArb = fc.constantFrom("success" as const, "failure" as const);
 
-const jsonSafeValueArb: fc.Arbitrary<unknown> = fc.letrec((tie) => ({
+const jsonSafeValueArb: fc.Arbitrary<unknown> = fc.letrec(tie => ({
   leaf: fc.oneof(
     fc.string({ maxLength: 20 }),
     fc.double({ min: -1e6, max: 1e6, noNaN: true, noDefaultInfinity: true }),
     fc.boolean(),
-    fc.constant(null),
+    fc.constant(null)
   ),
-  array: fc.array(tie('leaf'), { maxLength: 3 }),
+  array: fc.array(tie("leaf"), { maxLength: 3 }),
   object: fc.dictionary(
-    fc.string({ minLength: 1, maxLength: 8 }).filter((s) => s.trim().length > 0),
-    tie('leaf'),
-    { maxKeys: 3 },
+    fc.string({ minLength: 1, maxLength: 8 }).filter(s => s.trim().length > 0),
+    tie("leaf"),
+    { maxKeys: 3 }
   ),
-  value: fc.oneof(tie('leaf'), tie('array'), tie('object')),
+  value: fc.oneof(tie("leaf"), tie("array"), tie("object")),
 })).value;
 
-const metadataArb: fc.Arbitrary<Record<string, unknown> | undefined> = fc.option(
-  fc.dictionary(
-    fc.string({ minLength: 1, maxLength: 10 }).filter((s) => s.trim().length > 0),
-    jsonSafeValueArb,
-    { minKeys: 0, maxKeys: 4 },
-  ),
-  { nil: undefined },
-);
+const metadataArb: fc.Arbitrary<Record<string, unknown> | undefined> =
+  fc.option(
+    fc.dictionary(
+      fc
+        .string({ minLength: 1, maxLength: 10 })
+        .filter(s => s.trim().length > 0),
+      jsonSafeValueArb,
+      { minKeys: 0, maxKeys: 4 }
+    ),
+    { nil: undefined }
+  );
 
 const auditEntryArb: fc.Arbitrary<AuditEntry> = fc.record({
   entryId: fc.uuid(),
   operationType: auditOperationTypeArb,
-  operator: fc.constantFrom('user-a', 'user-b', 'user-c', 'system'),
+  operator: fc.constantFrom("user-a", "user-b", "user-c", "system"),
   content: fc.string({ minLength: 1, maxLength: 60 }),
   timestamp: fc.integer({ min: 1_000_000_000_000, max: 2_000_000_000_000 }),
   result: resultArb,
-  entityId: fc.option(fc.constantFrom('ent-1', 'ent-2', 'ent-3'), { nil: undefined }),
-  entityType: fc.option(fc.constantFrom('command', 'mission', 'task', 'plan'), { nil: undefined }),
+  entityId: fc.option(fc.constantFrom("ent-1", "ent-2", "ent-3"), {
+    nil: undefined,
+  }),
+  entityType: fc.option(fc.constantFrom("command", "mission", "task", "plan"), {
+    nil: undefined,
+  }),
   metadata: metadataArb,
 });
 
-const auditEntriesArb = fc.array(auditEntryArb, { minLength: 1, maxLength: 25 });
+const auditEntriesArb = fc.array(auditEntryArb, {
+  minLength: 1,
+  maxLength: 25,
+});
 
 // ??? Helpers ???
 
 function cleanup(): void {
   try {
     if (existsSync(TEST_AUDIT_PATH)) unlinkSync(TEST_AUDIT_PATH);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 function normalize(entry: AuditEntry): Record<string, unknown> {
@@ -99,13 +117,13 @@ function normalize(entry: AuditEntry): Record<string, unknown> {
 
 // ??? Tests ???
 
-describe('Property 18: audit export JSON round-trip', () => {
+describe("Property 18: audit export JSON round-trip", () => {
   beforeEach(() => cleanup());
   afterEach(() => cleanup());
 
-  it('exporting to JSON and parsing back SHALL produce equivalent AuditEntry records', async () => {
+  it("exporting to JSON and parsing back SHALL produce equivalent AuditEntry records", async () => {
     await fc.assert(
-      fc.asyncProperty(auditEntriesArb, async (entries) => {
+      fc.asyncProperty(auditEntriesArb, async entries => {
         cleanup();
         const trail = new AuditTrail(TEST_AUDIT_PATH);
 
@@ -113,9 +131,11 @@ describe('Property 18: audit export JSON round-trip', () => {
           await trail.record(entry);
         }
 
-        const jsonStr = await trail.export({}, 'json');
+        const jsonStr = await trail.export({}, "json");
         const parsed: AuditEntry[] = JSON.parse(jsonStr);
-        const expectedSorted = [...entries].sort((a, b) => b.timestamp - a.timestamp);
+        const expectedSorted = [...entries].sort(
+          (a, b) => b.timestamp - a.timestamp
+        );
 
         expect(parsed.length).toBe(expectedSorted.length);
 
@@ -138,7 +158,7 @@ describe('Property 18: audit export JSON round-trip', () => {
         const reParsed: AuditEntry[] = JSON.parse(reExported);
         expect(reParsed).toEqual(parsed);
       }),
-      { numRuns: 20 },
+      { numRuns: 20 }
     );
   });
 });

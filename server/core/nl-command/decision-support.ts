@@ -13,15 +13,18 @@ import type {
   OptimizationReport,
   RiskAssessment,
   AuditEntry,
-} from '../../../shared/nl-command/contracts.js';
-import type { ILLMProvider, LLMMessage } from '../../../shared/llm/contracts.js';
-import type { AuditTrail } from './audit-trail.js';
+} from "../../../shared/nl-command/contracts.js";
+import type {
+  ILLMProvider,
+  LLMMessage,
+} from "../../../shared/llm/contracts.js";
+import type { AuditTrail } from "./audit-trail.js";
 
 // ─── Public types ───
 
 export interface CostOptimizationSuggestion {
   suggestionId: string;
-  type: 'cost';
+  type: "cost";
   title: string;
   description: string;
   estimatedImpact: string;
@@ -29,7 +32,7 @@ export interface CostOptimizationSuggestion {
 
 export interface ResourceAdjustmentSuggestion {
   suggestionId: string;
-  type: 'resource';
+  type: "resource";
   title: string;
   description: string;
   estimatedImpact: string;
@@ -47,13 +50,13 @@ interface RiskAnalysisLLMResponse {
   risks: Array<{
     id: string;
     description: string;
-    level: 'low' | 'medium' | 'high' | 'critical';
+    level: "low" | "medium" | "high" | "critical";
     probability: number;
     impact: number;
     mitigation: string;
     contingency?: string;
   }>;
-  overallRiskLevel: 'low' | 'medium' | 'high' | 'critical';
+  overallRiskLevel: "low" | "medium" | "high" | "critical";
 }
 
 interface CostSuggestionsLLMResponse {
@@ -80,7 +83,7 @@ const BASE_DELAY_MS = 500;
 async function callLLMWithRetry(
   provider: ILLMProvider,
   messages: LLMMessage[],
-  model: string,
+  model: string
 ): Promise<string> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -96,7 +99,7 @@ async function callLLMWithRetry(
       const isTemporary = provider.isTemporaryError?.(err) ?? true;
       if (!isTemporary || attempt === MAX_RETRIES) break;
       const delay = BASE_DELAY_MS * Math.pow(2, attempt);
-      await new Promise((r) => setTimeout(r, delay));
+      await new Promise(r => setTimeout(r, delay));
     }
   }
   throw lastError;
@@ -122,7 +125,6 @@ function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-
 export class DecisionSupportEngine {
   private readonly llmProvider: ILLMProvider;
   private readonly model: string;
@@ -146,16 +148,26 @@ export class DecisionSupportEngine {
   async analyzeRisks(plan: NLExecutionPlan): Promise<RiskAssessment> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content:
           'You are a risk analysis expert. Analyze the execution plan and return a JSON object with "risks" (array of {id, description, level, probability, impact, mitigation, contingency?}) and "overallRiskLevel" ("low"|"medium"|"high"|"critical").',
       },
       {
-        role: 'user',
+        role: "user",
         content: `Analyze risks for this execution plan:\n${JSON.stringify({
           planId: plan.planId,
-          missions: plan.missions.map((m) => ({ id: m.missionId, title: m.title, duration: m.estimatedDuration, cost: m.estimatedCost })),
-          tasks: plan.tasks.map((t) => ({ id: t.taskId, title: t.title, duration: t.estimatedDuration, cost: t.estimatedCost })),
+          missions: plan.missions.map(m => ({
+            id: m.missionId,
+            title: m.title,
+            duration: m.estimatedDuration,
+            cost: m.estimatedCost,
+          })),
+          tasks: plan.tasks.map(t => ({
+            id: t.taskId,
+            title: t.title,
+            duration: t.estimatedDuration,
+            cost: t.estimatedCost,
+          })),
           timeline: { criticalPath: plan.timeline.criticalPath },
           costBudget: { totalBudget: plan.costBudget.totalBudget },
         })}`,
@@ -170,8 +182,8 @@ export class DecisionSupportEngine {
     }
 
     return {
-      risks: parsed.risks.map((r) => ({
-        id: r.id || generateId('risk'),
+      risks: parsed.risks.map(r => ({
+        id: r.id || generateId("risk"),
         description: r.description,
         level: r.level,
         probability: r.probability,
@@ -187,20 +199,30 @@ export class DecisionSupportEngine {
    * Generate cost optimization suggestions via LLM.
    * @see Requirement 11.2
    */
-  async suggestCostOptimization(plan: NLExecutionPlan): Promise<CostOptimizationSuggestion[]> {
+  async suggestCostOptimization(
+    plan: NLExecutionPlan
+  ): Promise<CostOptimizationSuggestion[]> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content:
           'You are a cost optimization expert. Analyze the execution plan and return a JSON object with "suggestions" (array of {title, description, estimatedImpact}).',
       },
       {
-        role: 'user',
+        role: "user",
         content: `Suggest cost optimizations for this plan:\n${JSON.stringify({
           planId: plan.planId,
           costBudget: plan.costBudget,
-          missions: plan.missions.map((m) => ({ id: m.missionId, title: m.title, cost: m.estimatedCost })),
-          tasks: plan.tasks.map((t) => ({ id: t.taskId, title: t.title, cost: t.estimatedCost })),
+          missions: plan.missions.map(m => ({
+            id: m.missionId,
+            title: m.title,
+            cost: m.estimatedCost,
+          })),
+          tasks: plan.tasks.map(t => ({
+            id: t.taskId,
+            title: t.title,
+            cost: t.estimatedCost,
+          })),
         })}`,
       },
     ];
@@ -212,9 +234,9 @@ export class DecisionSupportEngine {
       return [];
     }
 
-    return parsed.suggestions.map((s) => ({
-      suggestionId: generateId('cost-sug'),
-      type: 'cost' as const,
+    return parsed.suggestions.map(s => ({
+      suggestionId: generateId("cost-sug"),
+      type: "cost" as const,
       title: s.title,
       description: s.description,
       estimatedImpact: s.estimatedImpact,
@@ -225,20 +247,29 @@ export class DecisionSupportEngine {
    * Generate resource adjustment suggestions via LLM.
    * @see Requirement 11.3
    */
-  async suggestResourceAdjustment(plan: NLExecutionPlan): Promise<ResourceAdjustmentSuggestion[]> {
+  async suggestResourceAdjustment(
+    plan: NLExecutionPlan
+  ): Promise<ResourceAdjustmentSuggestion[]> {
     const messages: LLMMessage[] = [
       {
-        role: 'system',
+        role: "system",
         content:
           'You are a resource optimization expert. Analyze the execution plan and return a JSON object with "suggestions" (array of {title, description, estimatedImpact}).',
       },
       {
-        role: 'user',
-        content: `Suggest resource adjustments for this plan:\n${JSON.stringify({
-          planId: plan.planId,
-          resourceAllocation: plan.resourceAllocation,
-          tasks: plan.tasks.map((t) => ({ id: t.taskId, title: t.title, skills: t.requiredSkills, duration: t.estimatedDuration })),
-        })}`,
+        role: "user",
+        content: `Suggest resource adjustments for this plan:\n${JSON.stringify(
+          {
+            planId: plan.planId,
+            resourceAllocation: plan.resourceAllocation,
+            tasks: plan.tasks.map(t => ({
+              id: t.taskId,
+              title: t.title,
+              skills: t.requiredSkills,
+              duration: t.estimatedDuration,
+            })),
+          }
+        )}`,
       },
     ];
 
@@ -249,9 +280,9 @@ export class DecisionSupportEngine {
       return [];
     }
 
-    return parsed.suggestions.map((s) => ({
-      suggestionId: generateId('res-sug'),
-      type: 'resource' as const,
+    return parsed.suggestions.map(s => ({
+      suggestionId: generateId("res-sug"),
+      type: "resource" as const,
       title: s.title,
       description: s.description,
       estimatedImpact: s.estimatedImpact,
@@ -267,15 +298,22 @@ export class DecisionSupportEngine {
    * @see Requirements 20.1, 20.2
    */
   async collectExecutionData(plan: NLExecutionPlan): Promise<ExecutionMetrics> {
-    const plannedDuration = plan.timeline.entries.reduce((sum, e) => sum + e.duration, 0);
+    const plannedDuration = plan.timeline.entries.reduce(
+      (sum, e) => sum + e.duration,
+      0
+    );
     const plannedCost = plan.costBudget.totalBudget;
 
     // Compute actual values from timeline entries
     const actualDuration = this.computeActualDuration(plan);
     const actualCost = this.computeActualCost(plan);
 
-    const durationDeviation = plannedDuration === 0 ? 0 : (actualDuration - plannedDuration) / plannedDuration;
-    const costDeviation = plannedCost === 0 ? 0 : (actualCost - plannedCost) / plannedCost;
+    const durationDeviation =
+      plannedDuration === 0
+        ? 0
+        : (actualDuration - plannedDuration) / plannedDuration;
+    const costDeviation =
+      plannedCost === 0 ? 0 : (actualCost - plannedCost) / plannedCost;
 
     const metrics: ExecutionMetrics = {
       planId: plan.planId,
@@ -290,7 +328,11 @@ export class DecisionSupportEngine {
 
     this.metricsStore.push(metrics);
 
-    await this.recordAudit(plan.planId, 'report_generated', `Execution metrics collected for plan ${plan.planId}`);
+    await this.recordAudit(
+      plan.planId,
+      "report_generated",
+      `Execution metrics collected for plan ${plan.planId}`
+    );
 
     return metrics;
   }
@@ -305,34 +347,44 @@ export class DecisionSupportEngine {
 
     if (metrics.length === 0) {
       return {
-        reportId: generateId('opt-report'),
+        reportId: generateId("opt-report"),
         period: { start: now, end: now },
         durationAccuracy: 1,
         costAccuracy: 1,
         decompositionQuality: 1,
-        recommendations: ['No execution data available yet. Run more plans to generate meaningful insights.'],
+        recommendations: [
+          "No execution data available yet. Run more plans to generate meaningful insights.",
+        ],
         generatedAt: now,
       };
     }
 
-    const start = Math.min(...metrics.map((m) => m.completedAt));
-    const end = Math.max(...metrics.map((m) => m.completedAt));
+    const start = Math.min(...metrics.map(m => m.completedAt));
+    const end = Math.max(...metrics.map(m => m.completedAt));
 
     // Duration accuracy: 1 - average absolute duration deviation
-    const avgAbsDurationDev = metrics.reduce((sum, m) => sum + Math.abs(m.durationDeviation), 0) / metrics.length;
+    const avgAbsDurationDev =
+      metrics.reduce((sum, m) => sum + Math.abs(m.durationDeviation), 0) /
+      metrics.length;
     const durationAccuracy = Math.max(0, 1 - avgAbsDurationDev);
 
     // Cost accuracy: 1 - average absolute cost deviation
-    const avgAbsCostDev = metrics.reduce((sum, m) => sum + Math.abs(m.costDeviation), 0) / metrics.length;
+    const avgAbsCostDev =
+      metrics.reduce((sum, m) => sum + Math.abs(m.costDeviation), 0) /
+      metrics.length;
     const costAccuracy = Math.max(0, 1 - avgAbsCostDev);
 
     // Decomposition quality: average of duration and cost accuracy
     const decompositionQuality = (durationAccuracy + costAccuracy) / 2;
 
-    const recommendations = this.generateRecommendations(metrics, durationAccuracy, costAccuracy);
+    const recommendations = this.generateRecommendations(
+      metrics,
+      durationAccuracy,
+      costAccuracy
+    );
 
     const report: OptimizationReport = {
-      reportId: generateId('opt-report'),
+      reportId: generateId("opt-report"),
       period: { start, end },
       durationAccuracy,
       costAccuracy,
@@ -341,7 +393,11 @@ export class DecisionSupportEngine {
       generatedAt: now,
     };
 
-    await this.recordAudit(report.reportId, 'report_generated', `Optimization report generated covering ${metrics.length} plans`);
+    await this.recordAudit(
+      report.reportId,
+      "report_generated",
+      `Optimization report generated covering ${metrics.length} plans`
+    );
 
     return report;
   }
@@ -357,8 +413,8 @@ export class DecisionSupportEngine {
     // Use timeline entries to compute total span
     const entries = plan.timeline.entries;
     if (entries.length === 0) return 0;
-    const minStart = Math.min(...entries.map((e) => e.startTime));
-    const maxEnd = Math.max(...entries.map((e) => e.endTime));
+    const minStart = Math.min(...entries.map(e => e.startTime));
+    const maxEnd = Math.max(...entries.map(e => e.endTime));
     return maxEnd - minStart;
   }
 
@@ -378,44 +434,58 @@ export class DecisionSupportEngine {
   private generateRecommendations(
     metrics: ExecutionMetrics[],
     durationAccuracy: number,
-    costAccuracy: number,
+    costAccuracy: number
   ): string[] {
     const recommendations: string[] = [];
 
     if (durationAccuracy < 0.7) {
-      recommendations.push('Duration estimates are frequently inaccurate. Consider adjusting estimation models with historical data.');
+      recommendations.push(
+        "Duration estimates are frequently inaccurate. Consider adjusting estimation models with historical data."
+      );
     }
     if (costAccuracy < 0.7) {
-      recommendations.push('Cost estimates show significant deviation. Review cost calculation methodology.');
+      recommendations.push(
+        "Cost estimates show significant deviation. Review cost calculation methodology."
+      );
     }
 
-    const overruns = metrics.filter((m) => m.costDeviation > 0.1);
+    const overruns = metrics.filter(m => m.costDeviation > 0.1);
     if (overruns.length > metrics.length / 2) {
-      recommendations.push('More than half of plans exceed cost budget. Consider adding buffer to cost estimates.');
+      recommendations.push(
+        "More than half of plans exceed cost budget. Consider adding buffer to cost estimates."
+      );
     }
 
-    const delays = metrics.filter((m) => m.durationDeviation > 0.1);
+    const delays = metrics.filter(m => m.durationDeviation > 0.1);
     if (delays.length > metrics.length / 2) {
-      recommendations.push('More than half of plans exceed duration estimates. Consider adding buffer to timeline estimates.');
+      recommendations.push(
+        "More than half of plans exceed duration estimates. Consider adding buffer to timeline estimates."
+      );
     }
 
     if (recommendations.length === 0) {
-      recommendations.push('Estimation accuracy is within acceptable range. Continue monitoring.');
+      recommendations.push(
+        "Estimation accuracy is within acceptable range. Continue monitoring."
+      );
     }
 
     return recommendations;
   }
 
-  private async recordAudit(entityId: string, operationType: AuditEntry['operationType'], content: string): Promise<void> {
+  private async recordAudit(
+    entityId: string,
+    operationType: AuditEntry["operationType"],
+    content: string
+  ): Promise<void> {
     const entry: AuditEntry = {
-      entryId: generateId('audit'),
+      entryId: generateId("audit"),
       operationType,
-      operator: 'system',
+      operator: "system",
       content,
       timestamp: Date.now(),
-      result: 'success',
+      result: "success",
       entityId,
-      entityType: 'plan',
+      entityType: "plan",
     };
     await this.auditTrail.record(entry);
   }

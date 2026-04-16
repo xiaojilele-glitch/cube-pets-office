@@ -19,9 +19,11 @@ import { auditCollector } from "./audit-collector.js";
  * Install audit collection hooks into existing modules.
  * Called once during server startup.
  */
-export function installAuditHooks(deps: {
-  collector?: AuditCollector;
-} = {}): void {
+export function installAuditHooks(
+  deps: {
+    collector?: AuditCollector;
+  } = {}
+): void {
   const collector = deps.collector ?? auditCollector;
 
   installWorkflowHooks(collector);
@@ -57,7 +59,7 @@ function installWorkflowHooks(collector: AuditCollector): void {
     proto["emitStageCompleted"] = async function (
       this: unknown,
       workflowId: string,
-      completedStage: string,
+      completedStage: string
     ): Promise<void> {
       // Always call original first
       await originalEmitStageCompleted.call(this, workflowId, completedStage);
@@ -112,9 +114,10 @@ function installWorkflowHooks(collector: AuditCollector): void {
  */
 function installMissionHooks(collector: AuditCollector): void {
   try {
-    const { MissionOrchestrator } = require("../core/mission-orchestrator.js") as {
-      MissionOrchestrator: { prototype: Record<string, unknown> };
-    };
+    const { MissionOrchestrator } =
+      require("../core/mission-orchestrator.js") as {
+        MissionOrchestrator: { prototype: Record<string, unknown> };
+      };
 
     const proto = MissionOrchestrator.prototype;
 
@@ -126,7 +129,7 @@ function installMissionHooks(collector: AuditCollector): void {
     if (typeof originalStartMission === "function") {
       proto["startMission"] = async function (
         this: unknown,
-        input: Record<string, unknown>,
+        input: Record<string, unknown>
       ): Promise<unknown> {
         const result = await originalStartMission.call(this, input);
 
@@ -157,7 +160,7 @@ function installMissionHooks(collector: AuditCollector): void {
     if (typeof originalApplyEvent === "function") {
       proto["applyExecutorEvent"] = async function (
         this: unknown,
-        event: Record<string, unknown>,
+        event: Record<string, unknown>
       ): Promise<unknown> {
         let result: unknown;
         let failed = false;
@@ -171,7 +174,10 @@ function installMissionHooks(collector: AuditCollector): void {
               eventType: AuditEventType.AGENT_FAILED,
               actor: { type: "system", id: "mission-orchestrator" },
               action: `Executor event processing failed: ${event.type}`,
-              resource: { type: "mission", id: String(event.missionId || "unknown") },
+              resource: {
+                type: "mission",
+                id: String(event.missionId || "unknown"),
+              },
               result: "failure",
               context: { sessionId: String(event.missionId || "") },
               metadata: { eventType: event.type, jobId: event.jobId },
@@ -190,13 +196,18 @@ function installMissionHooks(collector: AuditCollector): void {
                 ? AuditEventType.AGENT_FAILED
                 : AuditEventType.AGENT_EXECUTED;
             const auditResult =
-              status === "failed" || status === "cancelled" ? "failure" : "success";
+              status === "failed" || status === "cancelled"
+                ? "failure"
+                : "success";
 
             collector.record({
               eventType,
               actor: { type: "system", id: "mission-orchestrator" },
               action: `Executor event applied: ${event.type}`,
-              resource: { type: "mission", id: String(event.missionId || "unknown") },
+              resource: {
+                type: "mission",
+                id: String(event.missionId || "unknown"),
+              },
               result: auditResult,
               context: { sessionId: String(event.missionId || "") },
               metadata: { eventType: event.type, status, jobId: event.jobId },
@@ -223,7 +234,10 @@ function installMissionHooks(collector: AuditCollector): void {
  */
 function installOrganizationHooks(collector: AuditCollector): void {
   try {
-    const mod = require("../core/dynamic-organization.js") as Record<string, unknown>;
+    const mod = require("../core/dynamic-organization.js") as Record<
+      string,
+      unknown
+    >;
 
     // Hook generateWorkflowOrganization
     const originalGenerate = mod["generateWorkflowOrganization"] as
@@ -232,7 +246,7 @@ function installOrganizationHooks(collector: AuditCollector): void {
 
     if (typeof originalGenerate === "function") {
       mod["generateWorkflowOrganization"] = async function (
-        options: Record<string, unknown>,
+        options: Record<string, unknown>
       ): Promise<unknown> {
         const result = await originalGenerate(options);
 
@@ -242,10 +256,19 @@ function installOrganizationHooks(collector: AuditCollector): void {
             eventType: AuditEventType.CONFIG_CHANGED,
             actor: { type: "system", id: "dynamic-organization" },
             action: `Workflow organization generated`,
-            resource: { type: "workflow", id: workflowId, name: "organization" },
+            resource: {
+              type: "workflow",
+              id: workflowId,
+              name: "organization",
+            },
             result: "success",
             context: { sessionId: workflowId },
-            metadata: { directive: typeof options.directive === "string" ? options.directive.slice(0, 200) : undefined },
+            metadata: {
+              directive:
+                typeof options.directive === "string"
+                  ? options.directive.slice(0, 200)
+                  : undefined,
+            },
           });
         } catch {
           // Swallow audit errors
@@ -270,10 +293,12 @@ function installOrganizationHooks(collector: AuditCollector): void {
         try {
           const orgId = String(
             (organization as { organizationId?: string }).organizationId ||
-            (organization as { rootNodeId?: string }).rootNodeId ||
-            "unknown",
+              (organization as { rootNodeId?: string }).rootNodeId ||
+              "unknown"
           );
-          const nodes = Array.isArray((organization as { nodes?: unknown[] }).nodes)
+          const nodes = Array.isArray(
+            (organization as { nodes?: unknown[] }).nodes
+          )
             ? (organization as { nodes: Array<{ agentId?: string }> }).nodes
             : [];
 
@@ -320,7 +345,7 @@ function installMessageBusHooks(collector: AuditCollector): void {
           content: string,
           workflowId: string,
           stage: string,
-          metadata?: unknown,
+          metadata?: unknown
         ) => Promise<unknown>)
       | undefined;
 
@@ -333,14 +358,25 @@ function installMessageBusHooks(collector: AuditCollector): void {
       content: string,
       workflowId: string,
       stage: string,
-      metadata?: unknown,
+      metadata?: unknown
     ): Promise<unknown> {
       try {
-        return await originalSend.call(this, fromId, toId, content, workflowId, stage, metadata);
+        return await originalSend.call(
+          this,
+          fromId,
+          toId,
+          content,
+          workflowId,
+          stage,
+          metadata
+        );
       } catch (err: unknown) {
         // Record hierarchy violations as PERMISSION_REVOKED
         const code = (err as { code?: string })?.code;
-        if (code === "hierarchy_violation" || code === "stage_route_violation") {
+        if (
+          code === "hierarchy_violation" ||
+          code === "stage_route_violation"
+        ) {
           try {
             collector.record({
               eventType: AuditEventType.PERMISSION_REVOKED,
@@ -388,7 +424,7 @@ function installMemoryHooks(collector: AuditCollector): void {
           this: unknown,
           agentId: string,
           query: string,
-          topK?: number,
+          topK?: number
         ): unknown[] {
           const results = originalSearch.call(this, agentId, query, topK);
 
@@ -399,7 +435,11 @@ function installMemoryHooks(collector: AuditCollector): void {
               action: `Vector memory search`,
               resource: { type: "data", id: `vector-store:${agentId}` },
               result: "success",
-              metadata: { query: query.slice(0, 200), topK, resultCount: results.length },
+              metadata: {
+                query: query.slice(0, 200),
+                topK,
+                resultCount: results.length,
+              },
             });
           } catch {
             // Swallow audit errors
@@ -427,7 +467,7 @@ function installMemoryHooks(collector: AuditCollector): void {
         sProto["updateSoul"] = function (
           this: unknown,
           agentId: string,
-          soulMd: string,
+          soulMd: string
         ): string {
           const result = originalUpdateSoul.call(this, agentId, soulMd);
 
@@ -436,7 +476,11 @@ function installMemoryHooks(collector: AuditCollector): void {
               eventType: AuditEventType.CONFIG_CHANGED,
               actor: { type: "agent", id: agentId },
               action: `SOUL.md updated`,
-              resource: { type: "config", id: `soul:${agentId}`, name: "SOUL.md" },
+              resource: {
+                type: "config",
+                id: `soul:${agentId}`,
+                name: "SOUL.md",
+              },
               result: "success",
               metadata: { contentLength: soulMd.length },
             });
@@ -466,14 +510,17 @@ function installFeishuHooks(collector: AuditCollector): void {
   try {
     // Hook relay auth verification
     try {
-      const relayAuthMod = require("../feishu/relay-auth.js") as Record<string, unknown>;
+      const relayAuthMod = require("../feishu/relay-auth.js") as Record<
+        string,
+        unknown
+      >;
       const originalCreateAuth = relayAuthMod["createFeishuRelayAuth"] as
         | ((config: Record<string, unknown>) => Record<string, unknown>)
         | undefined;
 
       if (typeof originalCreateAuth === "function") {
         relayAuthMod["createFeishuRelayAuth"] = function (
-          config: Record<string, unknown>,
+          config: Record<string, unknown>
         ): Record<string, unknown> {
           const auth = originalCreateAuth(config);
           const originalVerify = auth["verifyRequest"] as
@@ -485,7 +532,7 @@ function installFeishuHooks(collector: AuditCollector): void {
               this: unknown,
               req: unknown,
               res: unknown,
-              path: string,
+              path: string
             ): boolean {
               const ok = originalVerify.call(this, req, res, path);
 
@@ -495,7 +542,11 @@ function installFeishuHooks(collector: AuditCollector): void {
                     eventType: AuditEventType.USER_LOGIN,
                     actor: { type: "system", id: "feishu-relay" },
                     action: `Relay auth verified`,
-                    resource: { type: "config", id: "feishu-relay", name: path },
+                    resource: {
+                      type: "config",
+                      id: "feishu-relay",
+                      name: path,
+                    },
                     result: "success",
                     metadata: { path },
                   });
@@ -504,7 +555,11 @@ function installFeishuHooks(collector: AuditCollector): void {
                     eventType: AuditEventType.USER_LOGOUT,
                     actor: { type: "system", id: "feishu-relay" },
                     action: `Relay auth rejected`,
-                    resource: { type: "config", id: "feishu-relay", name: path },
+                    resource: {
+                      type: "config",
+                      id: "feishu-relay",
+                      name: path,
+                    },
                     result: "denied",
                     metadata: { path },
                   });
@@ -526,7 +581,10 @@ function installFeishuHooks(collector: AuditCollector): void {
 
     // Hook task start
     try {
-      const taskStartMod = require("../feishu/task-start.js") as Record<string, unknown>;
+      const taskStartMod = require("../feishu/task-start.js") as Record<
+        string,
+        unknown
+      >;
       const originalStart = taskStartMod["startComplexFeishuTask"] as
         | ((...args: unknown[]) => Promise<Record<string, unknown>>)
         | undefined;
@@ -538,7 +596,9 @@ function installFeishuHooks(collector: AuditCollector): void {
           const result = await originalStart(...args);
 
           try {
-            const taskId = (result as { result?: { taskId?: string } })?.result?.taskId || "unknown";
+            const taskId =
+              (result as { result?: { taskId?: string } })?.result?.taskId ||
+              "unknown";
             collector.record({
               eventType: AuditEventType.DECISION_MADE,
               actor: { type: "system", id: "feishu-bridge" },

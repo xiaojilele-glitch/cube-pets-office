@@ -46,10 +46,10 @@ export interface RoleReputationRecord {
 // ---------------------------------------------------------------------------
 
 /** 信誉等级：S(卓越) / A(优秀) / B(合格) / C(待改进) / D(不合格) */
-export type ReputationGrade = 'S' | 'A' | 'B' | 'C' | 'D';
+export type ReputationGrade = "S" | "A" | "B" | "C" | "D";
 
 /** 信任层级：trusted / standard / probation */
-export type TrustTier = 'trusted' | 'standard' | 'probation';
+export type TrustTier = "trusted" | "standard" | "probation";
 
 // ---------------------------------------------------------------------------
 // 信誉档案
@@ -105,7 +105,7 @@ export interface ReputationSignal {
   /** 协作评分 0-100，仅 Taskforce 场景 */
   collaborationRating?: number;
   /** 任务复杂度 */
-  taskComplexity?: 'low' | 'medium' | 'high';
+  taskComplexity?: "low" | "medium" | "high";
   /** 信号时间戳 ISO */
   timestamp: string;
 }
@@ -148,7 +148,13 @@ export interface ReputationChangeEvent {
 export interface ReputationAuditEntry {
   id: number;
   agentId: string;
-  type: 'anomaly' | 'grinding' | 'collusion' | 'admin_adjust' | 'admin_reset' | 'anomaly_review';
+  type:
+    | "anomaly"
+    | "grinding"
+    | "collusion"
+    | "admin_adjust"
+    | "admin_reset"
+    | "anomaly_review";
   detail: string;
   /** 异常前的信誉快照 */
   snapshot?: ReputationProfile;
@@ -277,11 +283,11 @@ export interface ReputationConfig {
 /** 信誉系统默认配置 */
 export const DEFAULT_REPUTATION_CONFIG: ReputationConfig = {
   weights: {
-    quality: 0.30,
+    quality: 0.3,
     speed: 0.15,
-    efficiency: 0.20,
+    efficiency: 0.2,
     collaboration: 0.15,
-    reliability: 0.20,
+    reliability: 0.2,
   },
   ema: {
     qualityAlpha: 0.15,

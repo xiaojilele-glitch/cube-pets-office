@@ -32,7 +32,10 @@ export async function detectRecoveryCandidate(): Promise<RecoveryCandidate | nul
   if (!snapshot) return null;
 
   // Only running/waiting missions are recovery candidates
-  if (snapshot.missionStatus !== "running" && snapshot.missionStatus !== "waiting") {
+  if (
+    snapshot.missionStatus !== "running" &&
+    snapshot.missionStatus !== "waiting"
+  ) {
     return null;
   }
 
@@ -57,7 +60,9 @@ export async function detectRecoveryCandidate(): Promise<RecoveryCandidate | nul
  * - globalThis.__snapshotRestoreZustand: 设置 Zustand store 状态
  * - globalThis.__snapshotRestoreScene: 恢复 3D 场景布局
  */
-export async function restoreFromSnapshot(snapshot: SnapshotRecord): Promise<void> {
+export async function restoreFromSnapshot(
+  snapshot: SnapshotRecord
+): Promise<void> {
   const { zustandSlice, sceneLayout } = snapshot.payload;
 
   // Signal Scene3D to show the recovery overlay
@@ -75,7 +80,9 @@ export async function restoreFromSnapshot(snapshot: SnapshotRecord): Promise<voi
     if (restoreZustand) {
       restoreZustand(zustandSlice);
     } else {
-      console.warn("[RecoveryDetector] __snapshotRestoreZustand accessor not registered, skipping Zustand restore");
+      console.warn(
+        "[RecoveryDetector] __snapshotRestoreZustand accessor not registered, skipping Zustand restore"
+      );
     }
 
     // Restore 3D scene layout
@@ -86,10 +93,15 @@ export async function restoreFromSnapshot(snapshot: SnapshotRecord): Promise<voi
     if (restoreScene) {
       restoreScene(sceneLayout);
     } else {
-      console.warn("[RecoveryDetector] __snapshotRestoreScene accessor not registered, skipping scene restore");
+      console.warn(
+        "[RecoveryDetector] __snapshotRestoreScene accessor not registered, skipping scene restore"
+      );
     }
 
-    console.log("[RecoveryDetector] Snapshot restoration complete for mission:", snapshot.missionId);
+    console.log(
+      "[RecoveryDetector] Snapshot restoration complete for mission:",
+      snapshot.missionId
+    );
   } finally {
     // Hide the recovery overlay regardless of success/failure
     setRecovering?.(false);

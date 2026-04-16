@@ -46,7 +46,7 @@ afterEach(() => {
 
 function makeRecord(
   payload: Record<string, unknown>,
-  dataDir: string,
+  dataDir: string
 ): StoredJobRecord {
   const planJob: ExecutionPlanJob = {
     id: "job-1",
@@ -122,7 +122,7 @@ const arbAiTaskType = fc.constantFrom(
   "code-generation",
   "data-analysis",
   "image-understanding",
-  undefined,
+  undefined
 );
 
 /* ─── Property 10: Mock 模式 AI 响应一致性 ─── */
@@ -138,22 +138,25 @@ describe("Property 10: Mock 模式 AI 响应一致性", () => {
 
   it("completed event contains fixed mock AI response for any aiEnabled=true job", async () => {
     await fc.assert(
-      fc.asyncProperty(arbAiTaskType, async (aiTaskType) => {
+      fc.asyncProperty(arbAiTaskType, async aiTaskType => {
         const runner = new MockRunner({ sleep: instantSleep, now: fixedNow });
         const payload: Record<string, unknown> = { aiEnabled: true };
         if (aiTaskType !== undefined) {
           payload.aiTaskType = aiTaskType;
         }
 
-        const jobDir = join(tempDir, `job-${Math.random().toString(36).slice(2)}`);
+        const jobDir = join(
+          tempDir,
+          `job-${Math.random().toString(36).slice(2)}`
+        );
         require("node:fs").mkdirSync(jobDir, { recursive: true });
 
         const record = makeRecord(payload, jobDir);
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (e) => events.push(e));
+        await runner.run(record, e => events.push(e));
 
         // Find the completed event
-        const completed = events.find((e) => e.type === "job.completed");
+        const completed = events.find(e => e.type === "job.completed");
         expect(completed).toBeDefined();
 
         // Verify payload exists with AI result
@@ -172,34 +175,41 @@ describe("Property 10: Mock 模式 AI 响应一致性", () => {
         expect(aiResult.contentPreview).toBe(EXPECTED_MOCK_AI.content);
 
         const tokenUsage = aiResult.tokenUsage as Record<string, number>;
-        expect(tokenUsage.promptTokens).toBe(EXPECTED_MOCK_AI.usage.promptTokens);
-        expect(tokenUsage.completionTokens).toBe(EXPECTED_MOCK_AI.usage.completionTokens);
+        expect(tokenUsage.promptTokens).toBe(
+          EXPECTED_MOCK_AI.usage.promptTokens
+        );
+        expect(tokenUsage.completionTokens).toBe(
+          EXPECTED_MOCK_AI.usage.completionTokens
+        );
         expect(tokenUsage.totalTokens).toBe(EXPECTED_MOCK_AI.usage.totalTokens);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("artifacts include ai-result.json for any aiEnabled=true job", async () => {
     await fc.assert(
-      fc.asyncProperty(arbAiTaskType, async (aiTaskType) => {
+      fc.asyncProperty(arbAiTaskType, async aiTaskType => {
         const runner = new MockRunner({ sleep: instantSleep, now: fixedNow });
         const payload: Record<string, unknown> = { aiEnabled: true };
         if (aiTaskType !== undefined) {
           payload.aiTaskType = aiTaskType;
         }
 
-        const jobDir = join(tempDir, `job-${Math.random().toString(36).slice(2)}`);
+        const jobDir = join(
+          tempDir,
+          `job-${Math.random().toString(36).slice(2)}`
+        );
         require("node:fs").mkdirSync(jobDir, { recursive: true });
 
         const record = makeRecord(payload, jobDir);
         const events: ExecutorEvent[] = [];
-        await runner.run(record, (e) => events.push(e));
+        await runner.run(record, e => events.push(e));
 
         // Check completed event artifacts
-        const completed = events.find((e) => e.type === "job.completed");
+        const completed = events.find(e => e.type === "job.completed");
         expect(completed).toBeDefined();
-        const artifactNames = (completed!.artifacts ?? []).map((a) => a.name);
+        const artifactNames = (completed!.artifacts ?? []).map(a => a.name);
         expect(artifactNames).toContain("ai-result.json");
 
         // Verify the file was actually written
@@ -215,44 +225,44 @@ describe("Property 10: Mock 模式 AI 响应一致性", () => {
         const expectedTaskType = aiTaskType ?? "text-generation";
         expect(fileContent.taskType).toBe(expectedTaskType);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("non-AI jobs do not include ai-result.json or AI payload", async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.constantFrom(false, undefined),
-        async (aiEnabled) => {
-          const runner = new MockRunner({ sleep: instantSleep, now: fixedNow });
-          const payload: Record<string, unknown> = {};
-          if (aiEnabled !== undefined) {
-            payload.aiEnabled = aiEnabled;
-          }
+      fc.asyncProperty(fc.constantFrom(false, undefined), async aiEnabled => {
+        const runner = new MockRunner({ sleep: instantSleep, now: fixedNow });
+        const payload: Record<string, unknown> = {};
+        if (aiEnabled !== undefined) {
+          payload.aiEnabled = aiEnabled;
+        }
 
-          const jobDir = join(tempDir, `job-${Math.random().toString(36).slice(2)}`);
-          require("node:fs").mkdirSync(jobDir, { recursive: true });
+        const jobDir = join(
+          tempDir,
+          `job-${Math.random().toString(36).slice(2)}`
+        );
+        require("node:fs").mkdirSync(jobDir, { recursive: true });
 
-          const record = makeRecord(payload, jobDir);
-          const events: ExecutorEvent[] = [];
-          await runner.run(record, (e) => events.push(e));
+        const record = makeRecord(payload, jobDir);
+        const events: ExecutorEvent[] = [];
+        await runner.run(record, e => events.push(e));
 
-          const completed = events.find((e) => e.type === "job.completed");
-          expect(completed).toBeDefined();
+        const completed = events.find(e => e.type === "job.completed");
+        expect(completed).toBeDefined();
 
-          // No AI payload
-          expect(completed!.payload).toBeUndefined();
+        // No AI payload
+        expect(completed!.payload).toBeUndefined();
 
-          // No ai-result.json artifact
-          const artifactNames = (completed!.artifacts ?? []).map((a) => a.name);
-          expect(artifactNames).not.toContain("ai-result.json");
+        // No ai-result.json artifact
+        const artifactNames = (completed!.artifacts ?? []).map(a => a.name);
+        expect(artifactNames).not.toContain("ai-result.json");
 
-          // No ai-result.json file
-          const aiResultPath = join(jobDir, "artifacts", "ai-result.json");
-          expect(existsSync(aiResultPath)).toBe(false);
-        },
-      ),
-      { numRuns: 100 },
+        // No ai-result.json file
+        const aiResultPath = join(jobDir, "artifacts", "ai-result.json");
+        expect(existsSync(aiResultPath)).toBe(false);
+      }),
+      { numRuns: 100 }
     );
   });
 });

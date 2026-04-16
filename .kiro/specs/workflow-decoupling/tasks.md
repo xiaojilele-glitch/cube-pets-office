@@ -7,7 +7,7 @@
 ## 任务
 
 - [x] 1. 寄生依赖盘点
-  - [x] 1.1 审查 `client/src/lib/tasks-store.ts`，记录所有对 workflow-store 的 import 语句、对 WorkflowRecord/WorkflowInfo/WorkflowDetailRecord 类型的使用、对 workflow_* Socket 事件的监听，输出到 `.kiro/specs/workflow-decoupling/inventory.md`
+  - [x] 1.1 审查 `client/src/lib/tasks-store.ts`，记录所有对 workflow-store 的 import 语句、对 WorkflowRecord/WorkflowInfo/WorkflowDetailRecord 类型的使用、对 workflow\_\* Socket 事件的监听，输出到 `.kiro/specs/workflow-decoupling/inventory.md`
     - 使用 grep 辅助搜索 `workflow-store`、`WorkflowRecord`、`WorkflowInfo`、`workflow_` 关键词
     - 记录每个依赖点的文件、行号、数据字段、UI 用途、Mission 原生替代方案
     - _需求: 1.1, 1.3, 1.5, 1.6_
@@ -72,7 +72,7 @@
     - _需求: 3.2, 3.3, 3.4_
   - [x] 7.2 修改 `hydrateTaskData()` 函数，根据 `useMissionNativeData` 开关分支调用 `hydrateNativeTaskData()` 或现有逻辑（重命名为 `hydrateTaskDataLegacy()`）
     - _需求: 3.1, 3.5_
-  - [x] 7.3 修改 `ensureMissionSocket()` 函数，当 `useMissionNativeData` 为 true 时不注册 workflow_* Socket 事件监听
+  - [x] 7.3 修改 `ensureMissionSocket()` 函数，当 `useMissionNativeData` 为 true 时不注册 workflow\_\* Socket 事件监听
     - _需求: 3.4_
   - [x] 7.4 编写数据源等价性属性测试
     - **Property 5: 数据源等价性**
@@ -88,7 +88,7 @@
     - _需求: 4.2_
   - [x] 9.3 删除 `useMissionNativeData` 常量，将 `buildNativeSummaryRecord` 重命名为 `buildSummaryRecord`，将 `buildNativeDetailRecord` 重命名为 `buildDetailRecord`，将 `hydrateNativeTaskData` 重命名为 `hydrateTaskData`
     - _需求: 4.3_
-  - [x] 9.4 审查并清理 `client/src/components/tasks/` 目录中的 workflow_* Socket 事件引用（如有）
+  - [x] 9.4 审查并清理 `client/src/components/tasks/` 目录中的 workflow\_\* Socket 事件引用（如有）
     - _需求: 4.4, 5.2_
   - [x] 9.5 审查并清理 `shared/mission/` 目录中对 `shared/workflow-runtime.ts` 或 `shared/workflow-kernel.ts` 的 import（如有）
     - _需求: 4.5, 5.3_
@@ -96,7 +96,7 @@
 - [x] 10. 架构边界验证
   - [x] 10.1 运行 grep 验证：tasks-store.ts 中 "workflow-store" 零匹配、"WorkflowRecord" 零匹配、"WorkflowInfo" 零匹配
     - _需求: 5.1, 5.3_
-  - [x] 10.2 运行 grep 验证：client/src/components/tasks/ 中 "workflow_" 事件名零匹配
+  - [x] 10.2 运行 grep 验证：client/src/components/tasks/ 中 "workflow\_" 事件名零匹配
     - _需求: 5.2_
   - [x] 10.3 验证 WorkflowPanel.tsx 和 workflow-store.ts 独立功能正常（不受解耦影响）
     - _需求: 5.4_

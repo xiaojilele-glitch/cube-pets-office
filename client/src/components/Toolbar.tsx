@@ -176,76 +176,72 @@ export function Toolbar() {
             </p>
           </div>
         </div>
-      ) : (
-        officeDesktopUtilityDock ? null : (
-          <div
-            className="fixed bottom-5 left-1/2 z-[80] -translate-x-1/2"
-            style={{ pointerEvents: "auto" }}
-          >
-            <div className="studio-shell rounded-[34px] px-3 py-2.5 shadow-[0_18px_45px_rgba(78,58,38,0.16)]">
-              <div className="flex items-center gap-2">
-                {PRIMARY_NAV_ITEMS.map(item => {
-                  const Icon = item.icon;
-                  const labels = copy.toolbar.primaryNav[item.id];
-                  const active =
-                    item.id === "more"
-                      ? showMore || activeId === "more"
-                      : activeId === item.id;
+      ) : officeDesktopUtilityDock ? null : (
+        <div
+          className="fixed bottom-5 left-1/2 z-[80] -translate-x-1/2"
+          style={{ pointerEvents: "auto" }}
+        >
+          <div className="studio-shell rounded-[34px] px-3 py-2.5 shadow-[0_18px_45px_rgba(78,58,38,0.16)]">
+            <div className="flex items-center gap-2">
+              {PRIMARY_NAV_ITEMS.map(item => {
+                const Icon = item.icon;
+                const labels = copy.toolbar.primaryNav[item.id];
+                const active =
+                  item.id === "more"
+                    ? showMore || activeId === "more"
+                    : activeId === item.id;
 
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handlePrimaryNavigation(item.id)}
-                      aria-current={
-                        item.id !== "more" && active ? "page" : undefined
-                      }
-                      aria-expanded={item.id === "more" ? showMore : undefined}
-                      className={`group flex min-w-[150px] items-center gap-3 rounded-[24px] px-4 py-3 text-left transition-all duration-300 ${
-                        active
-                          ? "-translate-y-1 bg-[#5E8B72] text-white shadow-[0_12px_24px_rgba(80,56,36,0.16)]"
-                          : "bg-white/36 text-[#5A4A3A] hover:-translate-y-1 hover:bg-white/70"
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handlePrimaryNavigation(item.id)}
+                    aria-current={
+                      item.id !== "more" && active ? "page" : undefined
+                    }
+                    aria-expanded={item.id === "more" ? showMore : undefined}
+                    className={`group flex min-w-[150px] items-center gap-3 rounded-[24px] px-4 py-3 text-left transition-all duration-300 ${
+                      active
+                        ? "-translate-y-1 bg-[#5E8B72] text-white shadow-[0_12px_24px_rgba(80,56,36,0.16)]"
+                        : "bg-white/36 text-[#5A4A3A] hover:-translate-y-1 hover:bg-white/70"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                        active ? "bg-white/18" : "bg-white/74"
                       }`}
                     >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">
+                        {labels.label}
+                      </div>
                       <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
-                          active ? "bg-white/18" : "bg-white/74"
-                        }`}
+                        className="text-[10px] uppercase tracking-[0.16em]"
+                        style={{
+                          color: active ? "rgba(255,255,255,0.78)" : "#A08972",
+                        }}
                       >
-                        <Icon className="h-4 w-4" />
+                        {labels.sublabel}
                       </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold">
-                          {labels.label}
-                        </div>
-                        <div
-                          className="text-[10px] uppercase tracking-[0.16em]"
-                          style={{
-                            color: active
-                              ? "rgba(255,255,255,0.78)"
-                              : "#A08972",
-                          }}
-                        >
-                          {labels.sublabel}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                    </div>
+                  </button>
+                );
+              })}
 
-                <button
-                  type="button"
-                  onClick={toggleLocale}
-                  className="inline-flex h-12 min-w-12 items-center justify-center rounded-[22px] bg-white/45 px-3 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-white/75"
-                  title={copy.app.localeSwitch}
-                >
-                  <Globe2 className="mr-1 h-4 w-4" />
-                  {localeLabel}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={toggleLocale}
+                className="inline-flex h-12 min-w-12 items-center justify-center rounded-[22px] bg-white/45 px-3 text-xs font-semibold text-[#5A4A3A] transition-colors hover:bg-white/75"
+                title={copy.app.localeSwitch}
+              >
+                <Globe2 className="mr-1 h-4 w-4" />
+                {localeLabel}
+              </button>
             </div>
           </div>
-        )
+        </div>
       )}
 
       <Dialog open={showHelp} onOpenChange={setShowHelp}>

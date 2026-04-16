@@ -7,11 +7,14 @@
  * Requirements: 1.5
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { randomUUID } from 'node:crypto';
-import type { DeadLetterEntry, IngestionPayload } from '../../../shared/rag/contracts.js';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { randomUUID } from "node:crypto";
+import type {
+  DeadLetterEntry,
+  IngestionPayload,
+} from "../../../shared/rag/contracts.js";
 
 // ---------------------------------------------------------------------------
 // 序列化格式
@@ -28,7 +31,7 @@ interface DLQFile {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const DEFAULT_FILE_PATH = resolve(__dirname, '../../../data/rag_dlq.json');
+const DEFAULT_FILE_PATH = resolve(__dirname, "../../../data/rag_dlq.json");
 
 // ---------------------------------------------------------------------------
 // DeadLetterQueue
@@ -46,7 +49,7 @@ export class DeadLetterQueue {
   push(
     payload: IngestionPayload,
     error: string,
-    stage: DeadLetterEntry['stage'],
+    stage: DeadLetterEntry["stage"]
   ): DeadLetterEntry {
     const entry: DeadLetterEntry = {
       entryId: randomUUID(),
@@ -107,15 +110,17 @@ export class DeadLetterQueue {
   private load(): void {
     if (!existsSync(this.filePath)) return;
     try {
-      const raw = readFileSync(this.filePath, 'utf-8');
+      const raw = readFileSync(this.filePath, "utf-8");
       const parsed = JSON.parse(raw) as DLQFile;
       const entries = Array.isArray(parsed?.entries) ? parsed.entries : [];
       for (const entry of entries) {
-        if (entry && typeof entry.entryId === 'string') {
+        if (entry && typeof entry.entryId === "string") {
           this.entries.set(entry.entryId, entry);
         }
       }
-    } catch { /* corrupt file — start empty */ }
+    } catch {
+      /* corrupt file — start empty */
+    }
   }
 
   private scheduleSave(): void {
@@ -129,9 +134,9 @@ export class DeadLetterQueue {
     };
     try {
       mkdirSync(dirname(this.filePath), { recursive: true });
-      writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      writeFileSync(this.filePath, JSON.stringify(data, null, 2), "utf-8");
     } catch (err) {
-      console.error('[DeadLetterQueue] Failed to save:', err);
+      console.error("[DeadLetterQueue] Failed to save:", err);
     }
   }
 }

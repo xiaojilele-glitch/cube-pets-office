@@ -59,13 +59,33 @@ function makeTestIR(): ExportIR {
     ],
     pipeline: {
       stages: [
-        { name: "direction", label: "Direction", participantRoles: ["ceo"], executionStrategy: "sequential" },
-        { name: "planning", label: "Planning", participantRoles: ["ceo", "manager"], executionStrategy: "sequential" },
-        { name: "execution", label: "Execution", participantRoles: ["worker"], executionStrategy: "parallel" },
+        {
+          name: "direction",
+          label: "Direction",
+          participantRoles: ["ceo"],
+          executionStrategy: "sequential",
+        },
+        {
+          name: "planning",
+          label: "Planning",
+          participantRoles: ["ceo", "manager"],
+          executionStrategy: "sequential",
+        },
+        {
+          name: "execution",
+          label: "Execution",
+          participantRoles: ["worker"],
+          executionStrategy: "parallel",
+        },
       ],
     },
     skills: [
-      { id: "s1", name: "Strategic Thinking", summary: "Think strategically", prompt: "You are a strategic thinker who analyzes problems deeply." },
+      {
+        id: "s1",
+        name: "Strategic Thinking",
+        summary: "Think strategically",
+        prompt: "You are a strategic thinker who analyzes problems deeply.",
+      },
     ],
     tools: [
       {
@@ -84,7 +104,7 @@ describe("toCrewAI", () => {
   it("should return exactly 4 files", () => {
     const files = toCrewAI(makeTestIR());
     expect(files).toHaveLength(4);
-    const paths = files.map((f) => f.path);
+    const paths = files.map(f => f.path);
     expect(paths).toContain("agents.yaml");
     expect(paths).toContain("tasks.yaml");
     expect(paths).toContain("crew.py");
@@ -94,7 +114,7 @@ describe("toCrewAI", () => {
   describe("agents.yaml (Req 2.1, 2.5)", () => {
     it("should contain an entry for every agent with role/goal/backstory", () => {
       const files = toCrewAI(makeTestIR());
-      const agentsYaml = files.find((f) => f.path === "agents.yaml")!.content;
+      const agentsYaml = files.find(f => f.path === "agents.yaml")!.content;
 
       // Each agent key present
       expect(agentsYaml).toContain("chief_officer:");
@@ -109,15 +129,17 @@ describe("toCrewAI", () => {
 
     it("should embed skill prompt in backstory for agents with skills (Req 2.5)", () => {
       const files = toCrewAI(makeTestIR());
-      const agentsYaml = files.find((f) => f.path === "agents.yaml")!.content;
+      const agentsYaml = files.find(f => f.path === "agents.yaml")!.content;
 
       // CEO has skill s1 → backstory should contain the skill prompt
-      expect(agentsYaml).toContain("You are a strategic thinker who analyzes problems deeply.");
+      expect(agentsYaml).toContain(
+        "You are a strategic thinker who analyzes problems deeply."
+      );
     });
 
     it("should set allow_delegation based on role", () => {
       const files = toCrewAI(makeTestIR());
-      const agentsYaml = files.find((f) => f.path === "agents.yaml")!.content;
+      const agentsYaml = files.find(f => f.path === "agents.yaml")!.content;
 
       // Workers should not delegate
       const devSection = agentsYaml.split("developer:")[1];
@@ -126,7 +148,7 @@ describe("toCrewAI", () => {
 
     it("should have yaml language", () => {
       const files = toCrewAI(makeTestIR());
-      const agentsFile = files.find((f) => f.path === "agents.yaml")!;
+      const agentsFile = files.find(f => f.path === "agents.yaml")!;
       expect(agentsFile.language).toBe("yaml");
     });
   });
@@ -134,7 +156,7 @@ describe("toCrewAI", () => {
   describe("tasks.yaml (Req 2.2)", () => {
     it("should contain a task entry for every pipeline stage", () => {
       const files = toCrewAI(makeTestIR());
-      const tasksYaml = files.find((f) => f.path === "tasks.yaml")!.content;
+      const tasksYaml = files.find(f => f.path === "tasks.yaml")!.content;
 
       expect(tasksYaml).toContain("direction:");
       expect(tasksYaml).toContain("planning:");
@@ -143,7 +165,7 @@ describe("toCrewAI", () => {
 
     it("should include description, expected_output, and agent for each task", () => {
       const files = toCrewAI(makeTestIR());
-      const tasksYaml = files.find((f) => f.path === "tasks.yaml")!.content;
+      const tasksYaml = files.find(f => f.path === "tasks.yaml")!.content;
 
       expect(tasksYaml).toContain("description:");
       expect(tasksYaml).toContain("expected_output:");
@@ -152,14 +174,18 @@ describe("toCrewAI", () => {
 
     it("should assign agents based on participant roles", () => {
       const files = toCrewAI(makeTestIR());
-      const tasksYaml = files.find((f) => f.path === "tasks.yaml")!.content;
+      const tasksYaml = files.find(f => f.path === "tasks.yaml")!.content;
 
       // direction stage has participantRoles: ["ceo"] → should pick CEO agent
-      const directionSection = tasksYaml.split("direction:")[1].split("\n\n")[0];
+      const directionSection = tasksYaml
+        .split("direction:")[1]
+        .split("\n\n")[0];
       expect(directionSection).toContain("agent: chief_officer");
 
       // execution stage has participantRoles: ["worker"] → should pick worker agent
-      const executionSection = tasksYaml.split("execution:")[1].split("\n\n")[0];
+      const executionSection = tasksYaml
+        .split("execution:")[1]
+        .split("\n\n")[0];
       expect(executionSection).toContain("agent: developer");
     });
   });
@@ -167,7 +193,7 @@ describe("toCrewAI", () => {
   describe("crew.py (Req 2.3)", () => {
     it("should contain Crew class definition and imports", () => {
       const files = toCrewAI(makeTestIR());
-      const crewPy = files.find((f) => f.path === "crew.py")!.content;
+      const crewPy = files.find(f => f.path === "crew.py")!.content;
 
       expect(crewPy).toContain("from crewai import Agent, Task, Crew, Process");
       expect(crewPy).toContain("def build_crew()");
@@ -176,16 +202,20 @@ describe("toCrewAI", () => {
 
     it("should instantiate all agents", () => {
       const files = toCrewAI(makeTestIR());
-      const crewPy = files.find((f) => f.path === "crew.py")!.content;
+      const crewPy = files.find(f => f.path === "crew.py")!.content;
 
-      expect(crewPy).toContain('chief_officer = Agent(**agents_cfg["chief_officer"])');
-      expect(crewPy).toContain('project_manager = Agent(**agents_cfg["project_manager"])');
+      expect(crewPy).toContain(
+        'chief_officer = Agent(**agents_cfg["chief_officer"])'
+      );
+      expect(crewPy).toContain(
+        'project_manager = Agent(**agents_cfg["project_manager"])'
+      );
       expect(crewPy).toContain('developer = Agent(**agents_cfg["developer"])');
     });
 
     it("should orchestrate all tasks", () => {
       const files = toCrewAI(makeTestIR());
-      const crewPy = files.find((f) => f.path === "crew.py")!.content;
+      const crewPy = files.find(f => f.path === "crew.py")!.content;
 
       expect(crewPy).toContain('tasks_cfg["direction"]');
       expect(crewPy).toContain('tasks_cfg["planning"]');
@@ -194,7 +224,7 @@ describe("toCrewAI", () => {
 
     it("should use hierarchical process when teams have parallel strategy", () => {
       const files = toCrewAI(makeTestIR());
-      const crewPy = files.find((f) => f.path === "crew.py")!.content;
+      const crewPy = files.find(f => f.path === "crew.py")!.content;
 
       expect(crewPy).toContain("Process.hierarchical");
     });
@@ -203,14 +233,14 @@ describe("toCrewAI", () => {
       const ir = makeTestIR();
       ir.teams[0].strategy = "sequential";
       const files = toCrewAI(ir);
-      const crewPy = files.find((f) => f.path === "crew.py")!.content;
+      const crewPy = files.find(f => f.path === "crew.py")!.content;
 
       expect(crewPy).toContain("Process.sequential");
     });
 
     it("should include main entry point", () => {
       const files = toCrewAI(makeTestIR());
-      const crewPy = files.find((f) => f.path === "crew.py")!.content;
+      const crewPy = files.find(f => f.path === "crew.py")!.content;
 
       expect(crewPy).toContain('if __name__ == "__main__":');
       expect(crewPy).toContain("crew.kickoff()");
@@ -220,7 +250,7 @@ describe("toCrewAI", () => {
   describe("requirements.txt (Req 2.4)", () => {
     it("should list crewai dependencies", () => {
       const files = toCrewAI(makeTestIR());
-      const reqTxt = files.find((f) => f.path === "requirements.txt")!.content;
+      const reqTxt = files.find(f => f.path === "requirements.txt")!.content;
 
       expect(reqTxt).toContain("crewai");
     });
@@ -233,7 +263,7 @@ describe("toCrewAI", () => {
       ir.skills = [];
       const files = toCrewAI(ir);
       expect(files).toHaveLength(4);
-      const agentsYaml = files.find((f) => f.path === "agents.yaml")!.content;
+      const agentsYaml = files.find(f => f.path === "agents.yaml")!.content;
       // Should be empty or minimal
       expect(agentsYaml.trim()).toBe("");
     });
@@ -243,7 +273,7 @@ describe("toCrewAI", () => {
       ir.pipeline.stages = [];
       const files = toCrewAI(ir);
       expect(files).toHaveLength(4);
-      const tasksYaml = files.find((f) => f.path === "tasks.yaml")!.content;
+      const tasksYaml = files.find(f => f.path === "tasks.yaml")!.content;
       expect(tasksYaml.trim()).toBe("");
     });
 
@@ -252,7 +282,7 @@ describe("toCrewAI", () => {
       ir.agents = [ir.agents[1]]; // Project Manager has no skills
       ir.skills = [];
       const files = toCrewAI(ir);
-      const agentsYaml = files.find((f) => f.path === "agents.yaml")!.content;
+      const agentsYaml = files.find(f => f.path === "agents.yaml")!.content;
       expect(agentsYaml).toContain("project_manager:");
       // backstory should not contain "Skills:" section
       expect(agentsYaml).not.toContain("Skills:");

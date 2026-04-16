@@ -8,14 +8,25 @@
 // ─── 血缘节点类型 ──────────────────────────────────────────────────────────
 
 /** 血缘节点类型常量 */
-export const LINEAGE_NODE_TYPES = ["source", "transformation", "decision"] as const;
+export const LINEAGE_NODE_TYPES = [
+  "source",
+  "transformation",
+  "decision",
+] as const;
 /** 血缘节点类型 */
 export type LineageNodeType = (typeof LINEAGE_NODE_TYPES)[number];
 
 /** 血缘操作类型常量 */
 export const LINEAGE_OPERATIONS = [
-  "query", "filter", "aggregate", "join", "ml_inference",
-  "transform", "enrich", "validate", "llm_call",
+  "query",
+  "filter",
+  "aggregate",
+  "join",
+  "ml_inference",
+  "transform",
+  "enrich",
+  "validate",
+  "llm_call",
 ] as const;
 /** 血缘操作类型（允许自定义扩展） */
 export type LineageOperation = (typeof LINEAGE_OPERATIONS)[number] | string;
@@ -81,12 +92,14 @@ export interface DataLineageNode {
   downstream?: string[];
 }
 
-
 // ─── 血缘边 ────────────────────────────────────────────────────────────────
 
 /** 血缘边类型常量 */
 export const LINEAGE_EDGE_TYPES = [
-  "derived-from", "input-to", "decided-by", "produced-by",
+  "derived-from",
+  "input-to",
+  "decided-by",
+  "produced-by",
 ] as const;
 /** 血缘边类型 */
 export type LineageEdgeType = (typeof LINEAGE_EDGE_TYPES)[number];
@@ -124,7 +137,10 @@ export interface AuditLogEntry {
 
 /** 变更告警类型常量 */
 export const CHANGE_ALERT_TYPES = [
-  "schema_change", "data_volume_anomaly", "quality_degradation", "hash_mismatch",
+  "schema_change",
+  "data_volume_anomaly",
+  "quality_degradation",
+  "hash_mismatch",
 ] as const;
 /** 变更告警类型 */
 export type ChangeAlertType = (typeof CHANGE_ALERT_TYPES)[number];

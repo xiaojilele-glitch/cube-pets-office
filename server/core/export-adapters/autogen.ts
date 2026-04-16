@@ -23,19 +23,22 @@ import type {
 // ---------------------------------------------------------------------------
 
 function toSnakeCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9\s_-]/g, "")
-    .replace(/[\s-]+/g, "_")
-    .toLowerCase()
-    .replace(/^_+|_+$/g, "")
-    || "unnamed";
+  return (
+    str
+      .replace(/[^a-zA-Z0-9\s_-]/g, "")
+      .replace(/[\s-]+/g, "_")
+      .toLowerCase()
+      .replace(/^_+|_+$/g, "") || "unnamed"
+  );
 }
 
 // ---------------------------------------------------------------------------
 // 构建 skill 查找表
 // ---------------------------------------------------------------------------
 
-function buildSkillMap(skills: SkillDefinition[]): Map<string, SkillDefinition> {
+function buildSkillMap(
+  skills: SkillDefinition[]
+): Map<string, SkillDefinition> {
   const map = new Map<string, SkillDefinition>();
   for (const skill of skills) {
     map.set(skill.id, skill);
@@ -49,7 +52,7 @@ function buildSkillMap(skills: SkillDefinition[]): Map<string, SkillDefinition> 
 
 function buildSystemMessage(
   agent: AgentDefinition,
-  skillMap: Map<string, SkillDefinition>,
+  skillMap: Map<string, SkillDefinition>
 ): string {
   const parts: string[] = [];
 
@@ -61,9 +64,9 @@ function buildSystemMessage(
   }
 
   const skillPrompts = agent.skillIds
-    .map((id) => skillMap.get(id))
+    .map(id => skillMap.get(id))
     .filter((s): s is SkillDefinition => s != null)
-    .map((s) => s.prompt);
+    .map(s => s.prompt);
 
   if (skillPrompts.length > 0) {
     parts.push(`Skills:\n${skillPrompts.join("\n")}`);
@@ -121,8 +124,8 @@ function generateGroupChatJson(ir: ExportIR): string {
 
   for (const team of ir.teams) {
     const key = toSnakeCase(team.label);
-    const memberKeys = team.memberAgentIds.map((agentId) => {
-      const agent = ir.agents.find((a) => a.id === agentId);
+    const memberKeys = team.memberAgentIds.map(agentId => {
+      const agent = ir.agents.find(a => a.id === agentId);
       return agent ? toSnakeCase(agent.name) : toSnakeCase(agentId);
     });
 
@@ -157,8 +160,8 @@ function escapePyTripleQuote(str: string): string {
 
 function generateMainPy(ir: ExportIR): string {
   const lines: string[] = [];
-  const agentKeys = ir.agents.map((a) => toSnakeCase(a.name));
-  const teamKeys = ir.teams.map((t) => toSnakeCase(t.label));
+  const agentKeys = ir.agents.map(a => toSnakeCase(a.name));
+  const teamKeys = ir.teams.map(t => toSnakeCase(t.label));
 
   lines.push(`"""Cube Pets Office — AutoGen Export"""`);
   lines.push(``);
@@ -167,9 +170,13 @@ function generateMainPy(ir: ExportIR): string {
   lines.push(`import autogen`);
   lines.push(``);
   lines.push(``);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(`# Load configurations`);
-  lines.push(`# ---------------------------------------------------------------------------`);
+  lines.push(
+    `# ---------------------------------------------------------------------------`
+  );
   lines.push(``);
   lines.push(`def load_json(path: str):`);
   lines.push(`    with open(path, "r", encoding="utf-8") as f:`);
@@ -186,8 +193,12 @@ function generateMainPy(ir: ExportIR): string {
   for (const key of agentKeys) {
     lines.push(`    ${key} = autogen.AssistantAgent(`);
     lines.push(`        name=agents_cfg["${key}"]["name"],`);
-    lines.push(`        system_message=agents_cfg["${key}"]["system_message"],`);
-    lines.push(`        llm_config={"config_list": [agents_cfg["${key}"]["llm_config"]]},`);
+    lines.push(
+      `        system_message=agents_cfg["${key}"]["system_message"],`
+    );
+    lines.push(
+      `        llm_config={"config_list": [agents_cfg["${key}"]["llm_config"]]},`
+    );
     lines.push(`    )`);
     lines.push(``);
   }
@@ -214,12 +225,16 @@ function generateMainPy(ir: ExportIR): string {
   for (const teamKey of teamKeys) {
     lines.push(`    gc_cfg_${teamKey} = group_chat_cfg["${teamKey}"]`);
     lines.push(`    gc_agents_${teamKey} = [user_proxy] + [`);
-    lines.push(`        agent_map[a] for a in gc_cfg_${teamKey}["agents"] if a in agent_map`);
+    lines.push(
+      `        agent_map[a] for a in gc_cfg_${teamKey}["agents"] if a in agent_map`
+    );
     lines.push(`    ]`);
     lines.push(`    group_chat_${teamKey} = autogen.GroupChat(`);
     lines.push(`        agents=gc_agents_${teamKey},`);
     lines.push(`        max_round=gc_cfg_${teamKey}["max_round"],`);
-    lines.push(`        speaker_selection_method=gc_cfg_${teamKey}.get("speaker_selection_method", "auto"),`);
+    lines.push(
+      `        speaker_selection_method=gc_cfg_${teamKey}.get("speaker_selection_method", "auto"),`
+    );
     lines.push(`    )`);
     lines.push(`    manager_${teamKey} = autogen.GroupChatManager(`);
     lines.push(`        groupchat=group_chat_${teamKey},`);

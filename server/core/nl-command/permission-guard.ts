@@ -7,23 +7,38 @@
  * @see Requirements 17.1, 17.2, 17.3
  */
 
-import type { Permission, PermissionConfig, UserRole } from '../../../shared/nl-command/contracts.js';
+import type {
+  Permission,
+  PermissionConfig,
+  UserRole,
+} from "../../../shared/nl-command/contracts.js";
 
 // ─── 默认角色-权限映射 ───
 
-const ALL_PERMISSIONS: Permission[] = ['view', 'create', 'edit', 'approve', 'execute', 'cancel'];
+const ALL_PERMISSIONS: Permission[] = [
+  "view",
+  "create",
+  "edit",
+  "approve",
+  "execute",
+  "cancel",
+];
 
 const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   admin: [...ALL_PERMISSIONS],
-  manager: ['view', 'create', 'edit', 'approve'],
-  operator: ['view', 'create', 'edit', 'execute'],
-  viewer: ['view'],
+  manager: ["view", "create", "edit", "approve"],
+  operator: ["view", "create", "edit", "execute"],
+  viewer: ["view"],
 };
 
 // ─── 覆盖键生成 ───
 
-function overrideKey(userId: string, entityType?: string, entityId?: string): string {
-  return `${userId}:${entityType ?? '*'}:${entityId ?? '*'}`;
+function overrideKey(
+  userId: string,
+  entityType?: string,
+  entityId?: string
+): string {
+  return `${userId}:${entityType ?? "*"}:${entityId ?? "*"}`;
 }
 
 /**
@@ -53,7 +68,7 @@ export class PermissionGuard {
     role: UserRole,
     permission: Permission,
     entityType?: string,
-    entityId?: string,
+    entityId?: string
   ): boolean {
     const effective = this.getPermissions(role, entityType, entityId, userId);
     return effective.includes(permission);
@@ -68,7 +83,7 @@ export class PermissionGuard {
     role: UserRole,
     entityType?: string,
     entityId?: string,
-    userId?: string,
+    userId?: string
   ): Permission[] {
     const base = new Set<Permission>(DEFAULT_ROLE_PERMISSIONS[role] ?? []);
 
@@ -91,7 +106,7 @@ export class PermissionGuard {
     userId: string,
     override: PermissionOverride,
     entityType?: string,
-    entityId?: string,
+    entityId?: string
   ): void {
     const key = overrideKey(userId, entityType, entityId);
     this.overrides.set(key, override);
@@ -126,7 +141,7 @@ export class PermissionGuard {
     permissions: Set<Permission>,
     userId: string,
     entityType?: string,
-    entityId?: string,
+    entityId?: string
   ): void {
     const keys: string[] = [overrideKey(userId)];
 

@@ -44,7 +44,7 @@ export class MockRunner implements JobRunner {
 
   async run(
     record: StoredJobRecord,
-    emitEvent: (event: ExecutorEvent) => void,
+    emitEvent: (event: ExecutorEvent) => void
   ): Promise<void> {
     const runner = getMockRunnerConfig(record.planJob);
     const startedAt = this.now().toISOString();
@@ -54,12 +54,14 @@ export class MockRunner implements JobRunner {
     record.message = "Job is running";
     record.progress = 5;
 
-    emitEvent(this.createEvent(record, {
-      type: "job.started",
-      status: "running",
-      progress: 5,
-      message: `Started mock runner for ${record.planJob.label}`,
-    }));
+    emitEvent(
+      this.createEvent(record, {
+        type: "job.started",
+        status: "running",
+        progress: 5,
+        message: `Started mock runner for ${record.planJob.label}`,
+      })
+    );
 
     const outputLines =
       runner.logs && runner.logs.length > 0
@@ -78,7 +80,8 @@ export class MockRunner implements JobRunner {
       await this.waitWhilePaused(record);
       if (record.cancelRequested) {
         const finishedAt = this.now().toISOString();
-        const durationMs = Date.parse(finishedAt) - Date.parse(record.startedAt!);
+        const durationMs =
+          Date.parse(finishedAt) - Date.parse(record.startedAt!);
         const cancelReason =
           record.cancelRequested.reason?.trim() || "Mock execution cancelled";
 
@@ -88,27 +91,29 @@ export class MockRunner implements JobRunner {
         record.message = cancelReason;
         record.finishedAt = finishedAt;
 
-        emitEvent(this.createEvent(record, {
-          type: "job.cancelled",
-          status: "cancelled",
-          progress: record.progress,
-          message: cancelReason,
-          summary: cancelReason,
-          artifacts: [
-            {
-              kind: "log",
-              name: "executor.log",
-              path: toRelativePath(record.logFile),
-              description: "Line-oriented executor runtime log",
+        emitEvent(
+          this.createEvent(record, {
+            type: "job.cancelled",
+            status: "cancelled",
+            progress: record.progress,
+            message: cancelReason,
+            summary: cancelReason,
+            artifacts: [
+              {
+                kind: "log",
+                name: "executor.log",
+                path: toRelativePath(record.logFile),
+                description: "Line-oriented executor runtime log",
+              },
+            ],
+            metrics: {
+              durationMs,
             },
-          ],
-          metrics: {
-            durationMs,
-          },
-          payload: {
-            cancelRequested: record.cancelRequested,
-          },
-        }));
+            payload: {
+              cancelRequested: record.cancelRequested,
+            },
+          })
+        );
         return;
       }
       const progress = Math.min(95, Math.round(((index + 1) / steps) * 90));
@@ -119,12 +124,14 @@ export class MockRunner implements JobRunner {
       record.progress = progress;
       record.message = logMessage;
       this.appendLog(record, logMessage);
-      emitEvent(this.createEvent(record, {
-        type: "job.progress",
-        status: "running",
-        progress,
-        message: logMessage,
-      }));
+      emitEvent(
+        this.createEvent(record, {
+          type: "job.progress",
+          status: "running",
+          progress,
+          message: logMessage,
+        })
+      );
     }
 
     const finishedAt = this.now().toISOString();
@@ -153,14 +160,18 @@ export class MockRunner implements JobRunner {
       "utf-8"
     );
 
-    const jobPayload = (record.planJob.payload ?? {}) as Record<string, unknown>;
+    const jobPayload = (record.planJob.payload ?? {}) as Record<
+      string,
+      unknown
+    >;
     const aiEnabled = jobPayload.aiEnabled === true;
 
     // Write AI result artifact if AI is enabled
     let aiResultArtifact: AIResultArtifact | undefined;
     let aiResultFile: string | undefined;
     if (aiEnabled) {
-      const aiTaskType = (jobPayload.aiTaskType as string) || MOCK_AI_RESULT.taskType;
+      const aiTaskType =
+        (jobPayload.aiTaskType as string) || MOCK_AI_RESULT.taskType;
       aiResultArtifact = {
         ...MOCK_AI_RESULT,
         taskType: aiTaskType,
@@ -171,7 +182,11 @@ export class MockRunner implements JobRunner {
         mkdirSync(artifactsDir, { recursive: true });
       }
       aiResultFile = join(artifactsDir, "ai-result.json");
-      writeFileSync(aiResultFile, `${JSON.stringify(aiResultArtifact, null, 2)}\n`, "utf-8");
+      writeFileSync(
+        aiResultFile,
+        `${JSON.stringify(aiResultArtifact, null, 2)}\n`,
+        "utf-8"
+      );
     }
 
     const artifacts: ExecutionPlanArtifact[] = [
@@ -211,9 +226,10 @@ export class MockRunner implements JobRunner {
         aiResult: {
           tokenUsage: aiResultArtifact.usage,
           model: aiResultArtifact.model,
-          contentPreview: aiResultArtifact.content.length > 200
-            ? aiResultArtifact.content.slice(0, 200)
-            : aiResultArtifact.content,
+          contentPreview:
+            aiResultArtifact.content.length > 200
+              ? aiResultArtifact.content.slice(0, 200)
+              : aiResultArtifact.content,
         },
       };
     }
@@ -225,20 +241,22 @@ export class MockRunner implements JobRunner {
       record.errorMessage = "Mock runner was configured to fail";
       record.message = record.errorMessage;
 
-      emitEvent(this.createEvent(record, {
-        type: "job.failed",
-        status: "failed",
-        progress: 100,
-        message: record.errorMessage,
-        errorCode: record.errorCode,
-        summary: record.summary,
-        artifacts,
-        metrics: {
-          durationMs,
-          failed: 1,
-        },
-        payload: eventPayload,
-      }));
+      emitEvent(
+        this.createEvent(record, {
+          type: "job.failed",
+          status: "failed",
+          progress: 100,
+          message: record.errorMessage,
+          errorCode: record.errorCode,
+          summary: record.summary,
+          artifacts,
+          metrics: {
+            durationMs,
+            failed: 1,
+          },
+          payload: eventPayload,
+        })
+      );
       return;
     }
 
@@ -246,19 +264,21 @@ export class MockRunner implements JobRunner {
     record.progress = 100;
     record.message = record.summary;
 
-    emitEvent(this.createEvent(record, {
-      type: "job.completed",
-      status: "completed",
-      progress: 100,
-      message: record.summary,
-      summary: record.summary,
-      artifacts,
-      metrics: {
-        durationMs,
-        passed: 1,
-      },
-      payload: eventPayload,
-    }));
+    emitEvent(
+      this.createEvent(record, {
+        type: "job.completed",
+        status: "completed",
+        progress: 100,
+        message: record.summary,
+        summary: record.summary,
+        artifacts,
+        metrics: {
+          durationMs,
+          passed: 1,
+        },
+        payload: eventPayload,
+      })
+    );
   }
 
   async pause(record: StoredJobRecord): Promise<void> {
@@ -301,7 +321,7 @@ export class MockRunner implements JobRunner {
       artifacts?: ExecutionPlanArtifact[];
       metrics?: ExecutorEvent["metrics"];
       payload?: Record<string, unknown>;
-    },
+    }
   ): ExecutorEvent {
     return {
       version: EXECUTOR_CONTRACT_VERSION,
@@ -326,7 +346,7 @@ export class MockRunner implements JobRunner {
     appendFileSync(
       record.logFile,
       `[${this.now().toISOString()}] ${message}\n`,
-      "utf-8",
+      "utf-8"
     );
   }
 }

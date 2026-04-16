@@ -42,10 +42,18 @@ describe("OntologyRegistry", () => {
 
     it("contains all required entity type names", () => {
       const registry = new OntologyRegistry();
-      const names = registry.getEntityTypes().map((t) => t.name);
+      const names = registry.getEntityTypes().map(t => t.name);
       const expected = [
-        "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
-        "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+        "CodeModule",
+        "API",
+        "BusinessRule",
+        "ArchitectureDecision",
+        "TechStack",
+        "Agent",
+        "Role",
+        "Mission",
+        "Bug",
+        "Config",
       ];
       for (const name of expected) {
         expect(names).toContain(name);
@@ -63,27 +71,39 @@ describe("OntologyRegistry", () => {
       const registry = new OntologyRegistry();
       const cm = registry.getEntityType("CodeModule");
       expect(cm).toBeDefined();
-      expect(cm!.extendedAttributes).toEqual(
-        ["filePath", "language", "linesOfCode", "complexity", "exports"],
-      );
+      expect(cm!.extendedAttributes).toEqual([
+        "filePath",
+        "language",
+        "linesOfCode",
+        "complexity",
+        "exports",
+      ]);
     });
 
     it("API has correct extendedAttributes", () => {
       const registry = new OntologyRegistry();
       const api = registry.getEntityType("API");
       expect(api).toBeDefined();
-      expect(api!.extendedAttributes).toEqual(
-        ["endpoint", "httpMethod", "requestSchema", "responseSchema", "authRequired"],
-      );
+      expect(api!.extendedAttributes).toEqual([
+        "endpoint",
+        "httpMethod",
+        "requestSchema",
+        "responseSchema",
+        "authRequired",
+      ]);
     });
 
     it("ArchitectureDecision has correct extendedAttributes", () => {
       const registry = new OntologyRegistry();
       const ad = registry.getEntityType("ArchitectureDecision");
       expect(ad).toBeDefined();
-      expect(ad!.extendedAttributes).toEqual(
-        ["context", "decision", "alternatives", "consequences", "supersededBy"],
-      );
+      expect(ad!.extendedAttributes).toEqual([
+        "context",
+        "decision",
+        "alternatives",
+        "consequences",
+        "supersededBy",
+      ]);
     });
   });
 
@@ -100,10 +120,18 @@ describe("OntologyRegistry", () => {
 
     it("contains all required relation type names", () => {
       const registry = new OntologyRegistry();
-      const names = registry.getRelationTypes().map((t) => t.name);
+      const names = registry.getRelationTypes().map(t => t.name);
       const expected = [
-        "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
-        "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY",
+        "DEPENDS_ON",
+        "CALLS",
+        "IMPLEMENTS",
+        "DECIDED_BY",
+        "SUPERSEDES",
+        "USES",
+        "CAUSED_BY",
+        "RESOLVED_BY",
+        "BELONGS_TO",
+        "EXECUTED_BY",
         "KNOWS_ABOUT",
       ];
       for (const name of expected) {
@@ -189,7 +217,7 @@ describe("OntologyRegistry", () => {
         extendedAttributes: [],
       });
       const types = registry.getEntityTypes();
-      const sources = new Set(types.map((t) => t.source));
+      const sources = new Set(types.map(t => t.source));
       expect(sources.has("core")).toBe(true);
       expect(sources.has("custom")).toBe(true);
     });
@@ -297,7 +325,9 @@ describe("OntologyRegistry", () => {
 
     it("does not crash when a listener throws", () => {
       const registry = new OntologyRegistry();
-      const badListener = vi.fn(() => { throw new Error("boom"); });
+      const badListener = vi.fn(() => {
+        throw new Error("boom");
+      });
       const goodListener = vi.fn();
       registry.onChange(badListener);
       registry.onChange(goodListener);
@@ -397,17 +427,29 @@ describe("OntologyRegistry", () => {
 
       // Generate unique custom type names that don't collide with core types
       const coreNames = new Set([
-        "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
-        "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+        "CodeModule",
+        "API",
+        "BusinessRule",
+        "ArchitectureDecision",
+        "TechStack",
+        "Agent",
+        "Role",
+        "Mission",
+        "Bug",
+        "Config",
       ]);
 
-      const customTypeNameArb = fc.string({ minLength: 1, maxLength: 50 })
-        .filter((s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s) && !coreNames.has(s));
+      const customTypeNameArb = fc
+        .string({ minLength: 1, maxLength: 50 })
+        .filter(s => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s) && !coreNames.has(s));
 
       const customTypeArb = fc.record({
         name: customTypeNameArb,
         description: fc.string({ minLength: 0, maxLength: 100 }),
-        extendedAttributes: fc.array(fc.string({ minLength: 1, maxLength: 30 }), { maxLength: 5 }),
+        extendedAttributes: fc.array(
+          fc.string({ minLength: 1, maxLength: 30 }),
+          { maxLength: 5 }
+        ),
       });
 
       fc.assert(
@@ -415,9 +457,9 @@ describe("OntologyRegistry", () => {
           fc.uniqueArray(customTypeArb, {
             minLength: 1,
             maxLength: 10,
-            selector: (t) => t.name,
+            selector: t => t.name,
           }),
-          (customTypes) => {
+          customTypes => {
             cleanupOntologyFile();
             const registry = new OntologyRegistry();
 
@@ -429,11 +471,13 @@ describe("OntologyRegistry", () => {
             const allTypes = registry.getEntityTypes();
 
             // 1) Total count = core count + unique custom count
-            expect(allTypes.length).toBe(CORE_ENTITY_COUNT + customTypes.length);
+            expect(allTypes.length).toBe(
+              CORE_ENTITY_COUNT + customTypes.length
+            );
 
             // 2) Each registered custom type appears with source "custom"
             for (const ct of customTypes) {
-              const found = allTypes.find((t) => t.name === ct.name);
+              const found = allTypes.find(t => t.name === ct.name);
               expect(found).toBeDefined();
               expect(found!.source).toBe("custom");
               expect(found!.description).toBe(ct.description);
@@ -442,11 +486,11 @@ describe("OntologyRegistry", () => {
             }
 
             // 3) Core types are still present and unchanged
-            const coreTypes = allTypes.filter((t) => t.source === "core");
+            const coreTypes = allTypes.filter(t => t.source === "core");
             expect(coreTypes.length).toBe(CORE_ENTITY_COUNT);
-          },
+          }
         ),
-        { numRuns: 20 },
+        { numRuns: 20 }
       );
     });
   });
@@ -464,47 +508,72 @@ describe("OntologyRegistry", () => {
      */
 
     const coreEntityNames = new Set([
-      "CodeModule", "API", "BusinessRule", "ArchitectureDecision",
-      "TechStack", "Agent", "Role", "Mission", "Bug", "Config",
+      "CodeModule",
+      "API",
+      "BusinessRule",
+      "ArchitectureDecision",
+      "TechStack",
+      "Agent",
+      "Role",
+      "Mission",
+      "Bug",
+      "Config",
     ]);
     const coreRelationNames = new Set([
-      "DEPENDS_ON", "CALLS", "IMPLEMENTS", "DECIDED_BY", "SUPERSEDES",
-      "USES", "CAUSED_BY", "RESOLVED_BY", "BELONGS_TO", "EXECUTED_BY",
+      "DEPENDS_ON",
+      "CALLS",
+      "IMPLEMENTS",
+      "DECIDED_BY",
+      "SUPERSEDES",
+      "USES",
+      "CAUSED_BY",
+      "RESOLVED_BY",
+      "BELONGS_TO",
+      "EXECUTED_BY",
       "KNOWS_ABOUT",
     ]);
 
-    const identifierArb = fc.string({ minLength: 1, maxLength: 40 })
-      .filter((s) => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s));
+    const identifierArb = fc
+      .string({ minLength: 1, maxLength: 40 })
+      .filter(s => /^[A-Za-z_][A-Za-z0-9_]*$/.test(s));
 
-    const customEntityNameArb = identifierArb.filter((s) => !coreEntityNames.has(s));
+    const customEntityNameArb = identifierArb.filter(
+      s => !coreEntityNames.has(s)
+    );
     const customRelationNameArb = identifierArb
-      .map((s) => s.toUpperCase())
-      .filter((s) => !coreRelationNames.has(s));
+      .map(s => s.toUpperCase())
+      .filter(s => !coreRelationNames.has(s));
 
     const entityDefArb = fc.record({
       name: customEntityNameArb,
       description: fc.string({ maxLength: 60 }),
-      extendedAttributes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 4 }),
+      extendedAttributes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), {
+        maxLength: 4,
+      }),
     });
 
     const relationDefArb = fc.record({
       name: customRelationNameArb,
       description: fc.string({ maxLength: 60 }),
-      sourceEntityTypes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 3 }),
-      targetEntityTypes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 3 }),
+      sourceEntityTypes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), {
+        maxLength: 3,
+      }),
+      targetEntityTypes: fc.array(fc.string({ minLength: 1, maxLength: 20 }), {
+        maxLength: 3,
+      }),
     });
 
     // Model a sequence of register operations, each tagged with its kind
     const operationArb = fc.oneof(
-      entityDefArb.map((def) => ({ kind: "entity" as const, def })),
-      relationDefArb.map((def) => ({ kind: "relation" as const, def })),
+      entityDefArb.map(def => ({ kind: "entity" as const, def })),
+      relationDefArb.map(def => ({ kind: "relation" as const, def }))
     );
 
     it("each registerEntityType() or registerRelationType() call emits exactly one change event", () => {
       fc.assert(
         fc.property(
           fc.array(operationArb, { minLength: 1, maxLength: 15 }),
-          (operations) => {
+          operations => {
             cleanupOntologyFile();
             const registry = new OntologyRegistry();
             const listener = vi.fn();
@@ -526,9 +595,9 @@ describe("OntologyRegistry", () => {
 
             // Total events == total operations
             expect(listener).toHaveBeenCalledTimes(operations.length);
-          },
+          }
         ),
-        { numRuns: 20 },
+        { numRuns: 20 }
       );
     });
 
@@ -558,13 +627,12 @@ describe("OntologyRegistry", () => {
 
             // Listener should have been called exactly `unsubAfter` times
             expect(listener).toHaveBeenCalledTimes(unsubAfter);
-          },
+          }
         ),
-        { numRuns: 20 },
+        { numRuns: 20 }
       );
     });
   });
 });
 
 // Inside the main describe, but we need to close and reopen 鈥?actually let's insert before the final closing
-

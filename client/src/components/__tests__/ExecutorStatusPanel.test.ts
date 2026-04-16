@@ -73,7 +73,7 @@ describe("ExecutorStatusPanel props contract", () => {
 
   it("artifacts list can contain all valid kinds", () => {
     const kinds: MissionArtifact["kind"][] = ["file", "report", "url", "log"];
-    const artifacts: MissionArtifact[] = kinds.map((kind) => ({
+    const artifacts: MissionArtifact[] = kinds.map(kind => ({
       kind,
       name: `${kind}-artifact`,
       description: `A ${kind} artifact`,
@@ -83,6 +83,6 @@ describe("ExecutorStatusPanel props contract", () => {
       artifacts,
     };
     expect(props.artifacts).toHaveLength(4);
-    expect(props.artifacts?.map((a) => a.kind)).toEqual(kinds);
+    expect(props.artifacts?.map(a => a.kind)).toEqual(kinds);
   });
 });

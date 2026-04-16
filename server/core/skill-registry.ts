@@ -41,7 +41,8 @@ function validateSkillDefinition(def: SkillDefinition): string[] {
   if (!isNonEmptyString(def.version)) errors.push("version is required");
 
   if (!Array.isArray(def.tags)) errors.push("tags must be an array");
-  if (!Array.isArray(def.requiredMcp)) errors.push("requiredMcp must be an array");
+  if (!Array.isArray(def.requiredMcp))
+    errors.push("requiredMcp must be an array");
 
   // Prompt placeholder validation
   if (isNonEmptyString(def.prompt)) {
@@ -93,10 +94,7 @@ export class SkillRegistry {
    * - 检测循环依赖并抛出 CircularDependencyError
    * - 未找到的 skillId 记录 warn 日志并跳过
    */
-  resolveSkills(
-    skillIds: string[],
-    options?: ResolveOptions
-  ): SkillBinding[] {
+  resolveSkills(skillIds: string[], options?: ResolveOptions): SkillBinding[] {
     const allSkills = this.db.getSkills();
     const resolved = new Map<string, SkillBinding>();
 

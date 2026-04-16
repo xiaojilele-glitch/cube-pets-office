@@ -24,7 +24,7 @@ const FRESHNESS_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
 export class ChangeDetectionService {
   constructor(
     private store: LineageStorageAdapter,
-    private queryService: LineageQueryService,
+    private queryService: LineageQueryService
   ) {}
 
   // ─── AC-8.1: 哈希对比检测变更 ──────────────────────────────────────
@@ -33,7 +33,7 @@ export class ChangeDetectionService {
     // 查询所有 source 类型且 sourceId 匹配的节点，按时间排序
     const nodes = await this.store.queryNodes({ type: "source" });
     const matched = nodes
-      .filter((n) => n.sourceId === sourceId)
+      .filter(n => n.sourceId === sourceId)
       .sort((a, b) => a.timestamp - b.timestamp);
 
     // 不足两条记录，无法对比
@@ -87,7 +87,10 @@ export class ChangeDetectionService {
 
   // ─── AC-8.4: 时间点回溯查询 ────────────────────────────────────────
 
-  async getStateAtTime(decisionId: string, timestamp: number): Promise<LineageGraph> {
+  async getStateAtTime(
+    decisionId: string,
+    timestamp: number
+  ): Promise<LineageGraph> {
     // 查询决策节点
     const decisionNodes = await this.store.queryNodes({ decisionId });
     if (decisionNodes.length === 0) return { nodes: [], edges: [] };
@@ -95,7 +98,9 @@ export class ChangeDetectionService {
     const decisionNode = decisionNodes[0];
 
     // 获取决策的上游图
-    const upstream = await this.queryService.getUpstream(decisionNode.lineageId);
+    const upstream = await this.queryService.getUpstream(
+      decisionNode.lineageId
+    );
 
     // 过滤：只保留 timestamp <= 给定时间的节点
     const filteredNodeIds = new Set<string>();
@@ -109,7 +114,7 @@ export class ChangeDetectionService {
 
     // 过滤边：两端节点都在过滤后的集合中
     const filteredEdges = upstream.edges.filter(
-      (e) => filteredNodeIds.has(e.fromId) && filteredNodeIds.has(e.toId),
+      e => filteredNodeIds.has(e.fromId) && filteredNodeIds.has(e.toId)
     );
 
     return { nodes: filteredNodes, edges: filteredEdges };
@@ -132,7 +137,10 @@ export class ChangeDetectionService {
     }
 
     // 新鲜度：基于数据时间距今的衰减（90 天窗口）
-    const freshness = Math.max(0, 1 - (now - node.timestamp) / FRESHNESS_WINDOW_MS);
+    const freshness = Math.max(
+      0,
+      1 - (now - node.timestamp) / FRESHNESS_WINDOW_MS
+    );
 
     // 完整度：统计可选字段的填充率
     const completeness = this.calculateCompleteness(node);

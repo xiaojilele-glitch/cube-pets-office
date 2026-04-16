@@ -1,0 +1,34 @@
+.nh
+.TH "GH-RUN-DELETE" "1" "Jan 2024" "GitHub CLI 2.42.1" "GitHub CLI manual"
+
+.SH NAME
+.PP
+gh-run-delete - Delete a workflow run
+
+
+.SH SYNOPSIS
+.PP
+\fBgh run delete [<run-id>] [flags]\fR
+
+
+.SH OPTIONS INHERITED FROM PARENT COMMANDS
+.TP
+\fB-R\fR, \fB--repo\fR \fB<[HOST/]OWNER/REPO>\fR
+Select another repository using the [HOST/]OWNER/REPO format
+
+
+.SH EXAMPLE
+.EX
+# Interactively select a run to delete
+$ gh run delete
+
+# Delete a specific run
+$ gh run delete 12345
+
+
+.EE
+
+
+.SH SEE ALSO
+.PP
+\fBgh-run(1)\fR

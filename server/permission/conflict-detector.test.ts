@@ -29,13 +29,21 @@ function createInMemoryDb() {
   let escalations: PermissionEscalation[] = [];
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: AgentRole[]) => { roles = r; },
+    setPermissionRoles: (r: AgentRole[]) => {
+      roles = r;
+    },
     getPermissionPolicies: () => policies,
-    setPermissionPolicies: (p: AgentPermissionPolicy[]) => { policies = p; },
+    setPermissionPolicies: (p: AgentPermissionPolicy[]) => {
+      policies = p;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
     getPermissionEscalations: () => escalations,
-    setPermissionEscalations: (e: PermissionEscalation[]) => { escalations = e; },
+    setPermissionEscalations: (e: PermissionEscalation[]) => {
+      escalations = e;
+    },
   };
 }
 
@@ -45,7 +53,7 @@ function makePermission(
   resourceType: ResourceType = "filesystem",
   action: Action = "read",
   effect: "allow" | "deny" = "allow",
-  constraints: Permission["constraints"] = {},
+  constraints: Permission["constraints"] = {}
 ): Permission {
   return { resourceType, action, constraints, effect };
 }
@@ -66,7 +74,7 @@ function seedAgent(
     rolePermissions?: Permission[];
     customPermissions?: Permission[];
     deniedPermissions?: Permission[];
-  } = {},
+  } = {}
 ) {
   const roleId = `role-${agentId}`;
   roleStore.createRole({
@@ -112,7 +120,9 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-2");
-      const overlap = conflicts.filter((c) => c.conflictType === "allow_deny_overlap");
+      const overlap = conflicts.filter(
+        c => c.conflictType === "allow_deny_overlap"
+      );
       expect(overlap.length).toBeGreaterThanOrEqual(1);
       expect(overlap[0].agentId).toBe("agent-2");
       expect(overlap[0].permissions.length).toBe(2);
@@ -126,7 +136,9 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-3");
-      const overlap = conflicts.filter((c) => c.conflictType === "allow_deny_overlap");
+      const overlap = conflicts.filter(
+        c => c.conflictType === "allow_deny_overlap"
+      );
       expect(overlap.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -138,7 +150,9 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-4");
-      const overlap = conflicts.filter((c) => c.conflictType === "allow_deny_overlap");
+      const overlap = conflicts.filter(
+        c => c.conflictType === "allow_deny_overlap"
+      );
       expect(overlap.length).toBe(0);
     });
 
@@ -150,7 +164,9 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-5");
-      const overlap = conflicts.filter((c) => c.conflictType === "allow_deny_overlap");
+      const overlap = conflicts.filter(
+        c => c.conflictType === "allow_deny_overlap"
+      );
       expect(overlap.length).toBe(0);
     });
 
@@ -160,12 +176,16 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "agent-6", {
         rolePermissions: [
-          makePermission("filesystem", "read", "allow", { pathPatterns: ["*"] }),
+          makePermission("filesystem", "read", "allow", {
+            pathPatterns: ["*"],
+          }),
         ],
       });
 
       const conflicts = detector.detectConflicts("agent-6");
-      const excessive = conflicts.filter((c) => c.conflictType === "excessive_scope");
+      const excessive = conflicts.filter(
+        c => c.conflictType === "excessive_scope"
+      );
       expect(excessive.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -173,12 +193,16 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "agent-7", {
         rolePermissions: [
-          makePermission("network", "connect", "allow", { domainPatterns: ["*"] }),
+          makePermission("network", "connect", "allow", {
+            domainPatterns: ["*"],
+          }),
         ],
       });
 
       const conflicts = detector.detectConflicts("agent-7");
-      const excessive = conflicts.filter((c) => c.conflictType === "excessive_scope");
+      const excessive = conflicts.filter(
+        c => c.conflictType === "excessive_scope"
+      );
       expect(excessive.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -191,7 +215,9 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-8");
-      const excessive = conflicts.filter((c) => c.conflictType === "excessive_scope");
+      const excessive = conflicts.filter(
+        c => c.conflictType === "excessive_scope"
+      );
       expect(excessive.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -199,12 +225,16 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "agent-9", {
         rolePermissions: [
-          makePermission("filesystem", "read", "allow", { pathPatterns: ["/data/user_1/*"] }),
+          makePermission("filesystem", "read", "allow", {
+            pathPatterns: ["/data/user_1/*"],
+          }),
         ],
       });
 
       const conflicts = detector.detectConflicts("agent-9");
-      const excessive = conflicts.filter((c) => c.conflictType === "excessive_scope");
+      const excessive = conflicts.filter(
+        c => c.conflictType === "excessive_scope"
+      );
       expect(excessive.length).toBe(0);
     });
 
@@ -220,7 +250,9 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-10");
-      const dangerous = conflicts.filter((c) => c.conflictType === "dangerous_combination");
+      const dangerous = conflicts.filter(
+        c => c.conflictType === "dangerous_combination"
+      );
       expect(dangerous.length).toBeGreaterThanOrEqual(1);
       expect(dangerous[0].description).toContain("exfiltration");
     });
@@ -235,8 +267,12 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-11");
-      const dangerous = conflicts.filter((c) => c.conflictType === "dangerous_combination");
-      expect(dangerous.some((c) => c.description.includes("remote code execution"))).toBe(true);
+      const dangerous = conflicts.filter(
+        c => c.conflictType === "dangerous_combination"
+      );
+      expect(
+        dangerous.some(c => c.description.includes("remote code execution"))
+      ).toBe(true);
     });
 
     it("detects dangerous_combination: database delete + filesystem write", () => {
@@ -249,8 +285,12 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-12");
-      const dangerous = conflicts.filter((c) => c.conflictType === "dangerous_combination");
-      expect(dangerous.some((c) => c.description.includes("data destruction"))).toBe(true);
+      const dangerous = conflicts.filter(
+        c => c.conflictType === "dangerous_combination"
+      );
+      expect(
+        dangerous.some(c => c.description.includes("data destruction"))
+      ).toBe(true);
     });
 
     it("does not flag dangerous_combination for read-only permissions", () => {
@@ -263,12 +303,15 @@ describe("ConflictDetector", () => {
       });
 
       const conflicts = detector.detectConflicts("agent-13");
-      const dangerous = conflicts.filter((c) => c.conflictType === "dangerous_combination");
+      const dangerous = conflicts.filter(
+        c => c.conflictType === "dangerous_combination"
+      );
       // filesystem read + network connect is NOT flagged (only write + connect is)
-      expect(dangerous.some((c) => c.description.includes("exfiltration"))).toBe(false);
+      expect(dangerous.some(c => c.description.includes("exfiltration"))).toBe(
+        false
+      );
     });
   });
-
 
   // ─── Unit Tests: assessRisk ──────────────────────────────────────────────
 
@@ -284,20 +327,26 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-1", {
         rolePermissions: [
-          makePermission("filesystem", "read", "allow", { pathPatterns: ["/data/input"] }),
+          makePermission("filesystem", "read", "allow", {
+            pathPatterns: ["/data/input"],
+          }),
         ],
       });
 
       const risk = detector.assessRisk("risk-1");
       expect(risk.riskLevel).toBe("low");
-      expect(risk.factors.some((f) => f.category === "filesystem_scope")).toBe(true);
+      expect(risk.factors.some(f => f.category === "filesystem_scope")).toBe(
+        true
+      );
     });
 
     it("returns critical risk for system directory access", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-2", {
         rolePermissions: [
-          makePermission("filesystem", "read", "allow", { pathPatterns: ["/etc/passwd"] }),
+          makePermission("filesystem", "read", "allow", {
+            pathPatterns: ["/etc/passwd"],
+          }),
         ],
       });
 
@@ -309,7 +358,9 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-3", {
         rolePermissions: [
-          makePermission("filesystem", "write", "allow", { pathPatterns: ["*"] }),
+          makePermission("filesystem", "write", "allow", {
+            pathPatterns: ["*"],
+          }),
         ],
       });
 
@@ -348,9 +399,7 @@ describe("ConflictDetector", () => {
     it("returns high risk for database delete", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-6", {
-        rolePermissions: [
-          makePermission("database", "delete", "allow"),
-        ],
+        rolePermissions: [makePermission("database", "delete", "allow")],
       });
 
       const risk = detector.assessRisk("risk-6");
@@ -388,7 +437,9 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-9", {
         rolePermissions: [
-          makePermission("mcp_tool", "read", "allow", { endpoints: ["tool-1"] }),
+          makePermission("mcp_tool", "read", "allow", {
+            endpoints: ["tool-1"],
+          }),
         ],
       });
 
@@ -400,8 +451,12 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-10", {
         rolePermissions: [
-          makePermission("filesystem", "read", "allow", { pathPatterns: ["/data"] }), // low
-          makePermission("network", "connect", "allow", { cidrRanges: ["10.0.0.0/8"] }), // critical
+          makePermission("filesystem", "read", "allow", {
+            pathPatterns: ["/data"],
+          }), // low
+          makePermission("network", "connect", "allow", {
+            cidrRanges: ["10.0.0.0/8"],
+          }), // critical
         ],
       });
 
@@ -424,13 +479,17 @@ describe("ConflictDetector", () => {
       const { roleStore, policyStore, detector } = setup();
       seedAgent(roleStore, policyStore, "risk-12", {
         deniedPermissions: [
-          makePermission("filesystem", "write", "deny", { pathPatterns: ["*"] }),
+          makePermission("filesystem", "write", "deny", {
+            pathPatterns: ["*"],
+          }),
         ],
       });
 
       const risk = detector.assessRisk("risk-12");
       // Deny-only should not produce filesystem risk factors
-      expect(risk.factors.filter((f) => f.category === "filesystem_scope").length).toBe(0);
+      expect(
+        risk.factors.filter(f => f.category === "filesystem_scope").length
+      ).toBe(0);
     });
   });
 });
@@ -484,14 +543,14 @@ describe("Property 13: 冲突检测覆盖性", () => {
 
           const conflicts = detector.detectConflicts(agentId);
           const overlaps = conflicts.filter(
-            (c) => c.conflictType === "allow_deny_overlap",
+            c => c.conflictType === "allow_deny_overlap"
           );
 
           // Must find at least one allow_deny_overlap conflict
           return overlaps.length >= 1;
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -533,13 +592,13 @@ describe("Property 13: 冲突检测覆盖性", () => {
 
           const conflicts = detector.detectConflicts(agentId);
           const overlaps = conflicts.filter(
-            (c) => c.conflictType === "allow_deny_overlap",
+            c => c.conflictType === "allow_deny_overlap"
           );
 
           return overlaps.length >= 1;
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

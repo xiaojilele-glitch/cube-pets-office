@@ -66,7 +66,10 @@ describe("Audit Routes — business logic", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     const keys = generateTestKeys();
-    chain = new AuditChain({ privateKey: keys.privateKey, publicKey: keys.publicKey });
+    chain = new AuditChain({
+      privateKey: keys.privateKey,
+      publicKey: keys.publicKey,
+    });
     tsProvider = new TimestampProvider();
     collector = new AuditCollector(chain, tsProvider);
     query = new AuditQuery(chain, collector);
@@ -94,26 +97,38 @@ describe("Audit Routes — business logic", () => {
 
       const result = query.query(
         { eventType: AuditEventType.AGENT_EXECUTED },
-        { pageSize: 50, pageNum: 1 },
+        { pageSize: 50, pageNum: 1 }
       );
       expect(result.total).toBe(2);
-      expect(result.entries.every((e) => e.event.eventType === AuditEventType.AGENT_EXECUTED)).toBe(true);
+      expect(
+        result.entries.every(
+          e => e.event.eventType === AuditEventType.AGENT_EXECUTED
+        )
+      ).toBe(true);
     });
 
     it("should filter by severity", () => {
       chain.append(makeEvent({ eventType: AuditEventType.AGENT_EXECUTED })); // INFO
       chain.append(makeEvent({ eventType: AuditEventType.DECISION_MADE })); // CRITICAL
 
-      const result = query.query({ severity: "CRITICAL" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { severity: "CRITICAL" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(1);
-      expect(result.entries[0].event.eventType).toBe(AuditEventType.DECISION_MADE);
+      expect(result.entries[0].event.eventType).toBe(
+        AuditEventType.DECISION_MADE
+      );
     });
 
     it("should filter by actorId", () => {
       chain.append(makeEvent({ actor: { type: "agent", id: "a-1" } }));
       chain.append(makeEvent({ actor: { type: "agent", id: "a-2" } }));
 
-      const result = query.query({ actorId: "a-1" }, { pageSize: 50, pageNum: 1 });
+      const result = query.query(
+        { actorId: "a-1" },
+        { pageSize: 50, pageNum: 1 }
+      );
       expect(result.total).toBe(1);
       expect(result.entries[0].event.actor.id).toBe("a-1");
     });
@@ -172,7 +187,10 @@ describe("Audit Routes — business logic", () => {
       chain.append(makeEvent({ metadata: { note: "critical_deployment" } }));
       chain.append(makeEvent({ metadata: { note: "routine" } }));
 
-      const result = query.search("critical_deployment", { pageSize: 50, pageNum: 1 });
+      const result = query.search("critical_deployment", {
+        pageSize: 50,
+        pageNum: 1,
+      });
       expect(result.total).toBe(1);
     });
   });
@@ -265,8 +283,8 @@ describe("Audit Routes — business logic", () => {
     it("should count by eventType, severity, and category", () => {
       chain.append(makeEvent({ eventType: AuditEventType.AGENT_EXECUTED })); // INFO, operational
       chain.append(makeEvent({ eventType: AuditEventType.AGENT_EXECUTED })); // INFO, operational
-      chain.append(makeEvent({ eventType: AuditEventType.USER_LOGIN }));     // INFO, security
-      chain.append(makeEvent({ eventType: AuditEventType.DECISION_MADE }));  // CRITICAL, operational
+      chain.append(makeEvent({ eventType: AuditEventType.USER_LOGIN })); // INFO, security
+      chain.append(makeEvent({ eventType: AuditEventType.DECISION_MADE })); // CRITICAL, operational
 
       const totalEntries = chain.getEntryCount();
       expect(totalEntries).toBe(4);
@@ -281,8 +299,10 @@ describe("Audit Routes — business logic", () => {
         eventTypeCounts[et] = (eventTypeCounts[et] || 0) + 1;
         const def = DEFAULT_EVENT_TYPE_REGISTRY[et];
         if (def) {
-          severityCounts[def.severity] = (severityCounts[def.severity] || 0) + 1;
-          categoryCounts[def.category] = (categoryCounts[def.category] || 0) + 1;
+          severityCounts[def.severity] =
+            (severityCounts[def.severity] || 0) + 1;
+          categoryCounts[def.category] =
+            (categoryCounts[def.category] || 0) + 1;
         }
       }
 
@@ -321,7 +341,7 @@ describe("Audit Routes — business logic", () => {
 
       const result = auditExport.exportLog(
         { eventType: AuditEventType.USER_LOGIN },
-        "json",
+        "json"
       );
       const parsed = JSON.parse(result.data);
       expect(parsed).toHaveLength(1);
@@ -365,22 +385,30 @@ describe("Audit Routes — business logic", () => {
     it("should generate a SOC2 report with coverage score", () => {
       const now = Date.now();
       // Add events that satisfy some SOC2 requirements
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        timestamp: now,
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_REVOKED,
-        timestamp: now,
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.USER_LOGIN,
-        timestamp: now,
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.USER_LOGOUT,
-        timestamp: now,
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          timestamp: now,
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_REVOKED,
+          timestamp: now,
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.USER_LOGIN,
+          timestamp: now,
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.USER_LOGOUT,
+          timestamp: now,
+        })
+      );
 
       const report = complianceMapper.generateReport("SOC2", {
         start: now - 1000,
@@ -399,10 +427,12 @@ describe("Audit Routes — business logic", () => {
     it("should report gaps for missing event types", () => {
       const now = Date.now();
       // Only add one type — many requirements will have gaps
-      chain.append(makeEvent({
-        eventType: AuditEventType.USER_LOGIN,
-        timestamp: now,
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.USER_LOGIN,
+          timestamp: now,
+        })
+      );
 
       const report = complianceMapper.generateReport("SOC2", {
         start: now - 1000,
@@ -438,10 +468,12 @@ describe("Audit Routes — business logic", () => {
       const now = Date.now();
       // Trigger high_frequency_access: > 100 events in 60s
       for (let i = 0; i < 105; i++) {
-        chain.append(makeEvent({
-          eventType: AuditEventType.AGENT_EXECUTED,
-          timestamp: now + i,
-        }));
+        chain.append(
+          makeEvent({
+            eventType: AuditEventType.AGENT_EXECUTED,
+            timestamp: now + i,
+          })
+        );
       }
 
       const detected = anomalyDetector.detectAnomalies({
@@ -458,19 +490,27 @@ describe("Audit Routes — business logic", () => {
     it("should filter alerts by time range", () => {
       const now = Date.now();
       for (let i = 0; i < 105; i++) {
-        chain.append(makeEvent({
-          eventType: AuditEventType.AGENT_EXECUTED,
-          timestamp: now + i,
-        }));
+        chain.append(
+          makeEvent({
+            eventType: AuditEventType.AGENT_EXECUTED,
+            timestamp: now + i,
+          })
+        );
       }
-      anomalyDetector.detectAnomalies({ start: now - 1000, end: now + 200_000 });
+      anomalyDetector.detectAnomalies({
+        start: now - 1000,
+        end: now + 200_000,
+      });
 
       // Query with a time range that excludes the alert
       const noAlerts = anomalyDetector.getAlerts({ start: 0, end: 100 });
       expect(noAlerts).toHaveLength(0);
 
       // Query with a time range that includes the alert
-      const withAlerts = anomalyDetector.getAlerts({ start: now - 1000, end: now + 300_000 });
+      const withAlerts = anomalyDetector.getAlerts({
+        start: now - 1000,
+        end: now + 300_000,
+      });
       expect(withAlerts.length).toBeGreaterThan(0);
     });
   });
@@ -483,34 +523,50 @@ describe("Audit Routes — business logic", () => {
     it("should update alert status to acknowledged", () => {
       const now = Date.now();
       for (let i = 0; i < 105; i++) {
-        chain.append(makeEvent({
-          eventType: AuditEventType.AGENT_EXECUTED,
-          timestamp: now + i,
-        }));
+        chain.append(
+          makeEvent({
+            eventType: AuditEventType.AGENT_EXECUTED,
+            timestamp: now + i,
+          })
+        );
       }
-      const detected = anomalyDetector.detectAnomalies({ start: now - 1000, end: now + 200_000 });
+      const detected = anomalyDetector.detectAnomalies({
+        start: now - 1000,
+        end: now + 200_000,
+      });
       expect(detected.length).toBeGreaterThan(0);
 
       const alertId = detected[0].alertId;
-      const updated = anomalyDetector.updateAlertStatus(alertId, "acknowledged");
+      const updated = anomalyDetector.updateAlertStatus(
+        alertId,
+        "acknowledged"
+      );
       expect(updated).not.toBeNull();
       expect(updated!.status).toBe("acknowledged");
     });
 
     it("should return null for unknown alert id", () => {
-      const result = anomalyDetector.updateAlertStatus("nonexistent", "resolved");
+      const result = anomalyDetector.updateAlertStatus(
+        "nonexistent",
+        "resolved"
+      );
       expect(result).toBeNull();
     });
 
     it("should support all status transitions", () => {
       const now = Date.now();
       for (let i = 0; i < 105; i++) {
-        chain.append(makeEvent({
-          eventType: AuditEventType.AGENT_EXECUTED,
-          timestamp: now + i,
-        }));
+        chain.append(
+          makeEvent({
+            eventType: AuditEventType.AGENT_EXECUTED,
+            timestamp: now + i,
+          })
+        );
       }
-      const detected = anomalyDetector.detectAnomalies({ start: now - 1000, end: now + 200_000 });
+      const detected = anomalyDetector.detectAnomalies({
+        start: now - 1000,
+        end: now + 200_000,
+      });
       const alertId = detected[0].alertId;
 
       anomalyDetector.updateAlertStatus(alertId, "acknowledged");
@@ -530,20 +586,26 @@ describe("Audit Routes — business logic", () => {
 
   describe("Get permission trail for agent", () => {
     it("should return permission events for a specific agent", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        actor: { type: "system", id: "admin" },
-        resource: { type: "agent", id: "agent-x" },
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_REVOKED,
-        actor: { type: "system", id: "admin" },
-        resource: { type: "agent", id: "agent-x" },
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.AGENT_EXECUTED,
-        actor: { type: "agent", id: "agent-x" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          actor: { type: "system", id: "admin" },
+          resource: { type: "agent", id: "agent-x" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_REVOKED,
+          actor: { type: "system", id: "admin" },
+          resource: { type: "agent", id: "agent-x" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.AGENT_EXECUTED,
+          actor: { type: "agent", id: "agent-x" },
+        })
+      );
 
       const trail = query.getPermissionTrail("agent-x");
       expect(trail).toHaveLength(2);
@@ -558,20 +620,27 @@ describe("Audit Routes — business logic", () => {
     });
 
     it("should filter by time range", () => {
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        timestamp: 1000,
-        actor: { type: "system", id: "agent-a" },
-        resource: { type: "permission", id: "p-1" },
-      }));
-      chain.append(makeEvent({
-        eventType: AuditEventType.PERMISSION_GRANTED,
-        timestamp: 3000,
-        actor: { type: "system", id: "agent-a" },
-        resource: { type: "permission", id: "p-2" },
-      }));
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          timestamp: 1000,
+          actor: { type: "system", id: "agent-a" },
+          resource: { type: "permission", id: "p-1" },
+        })
+      );
+      chain.append(
+        makeEvent({
+          eventType: AuditEventType.PERMISSION_GRANTED,
+          timestamp: 3000,
+          actor: { type: "system", id: "agent-a" },
+          resource: { type: "permission", id: "p-2" },
+        })
+      );
 
-      const trail = query.getPermissionTrail("agent-a", { start: 2000, end: 4000 });
+      const trail = query.getPermissionTrail("agent-a", {
+        start: 2000,
+        end: 4000,
+      });
       expect(trail).toHaveLength(1);
       expect(trail[0].event.timestamp).toBe(3000);
     });
@@ -590,7 +659,7 @@ describe("Audit Routes — business logic", () => {
 
       const violations = query.getPermissionViolations();
       expect(violations).toHaveLength(2);
-      expect(violations.every((e) => e.event.result === "denied")).toBe(true);
+      expect(violations.every(e => e.event.result === "denied")).toBe(true);
     });
 
     it("should return empty when no violations exist", () => {
@@ -603,7 +672,10 @@ describe("Audit Routes — business logic", () => {
       chain.append(makeEvent({ result: "denied", timestamp: 1000 }));
       chain.append(makeEvent({ result: "denied", timestamp: 3000 }));
 
-      const violations = query.getPermissionViolations({ start: 2000, end: 4000 });
+      const violations = query.getPermissionViolations({
+        start: 2000,
+        end: 4000,
+      });
       expect(violations).toHaveLength(1);
       expect(violations[0].event.timestamp).toBe(3000);
     });
@@ -651,11 +723,13 @@ describe("Audit Routes — business logic", () => {
     });
 
     it("should have correct retention days", () => {
-      const critical = DEFAULT_RETENTION_POLICIES.find((p) => p.severity === "CRITICAL")!;
+      const critical = DEFAULT_RETENTION_POLICIES.find(
+        p => p.severity === "CRITICAL"
+      )!;
       expect(critical.retentionDays).toBe(2555); // ~7 years
       expect(critical.archiveAfterDays).toBe(365);
 
-      const info = DEFAULT_RETENTION_POLICIES.find((p) => p.severity === "INFO")!;
+      const info = DEFAULT_RETENTION_POLICIES.find(p => p.severity === "INFO")!;
       expect(info.retentionDays).toBe(365); // 1 year
     });
   });
@@ -673,7 +747,9 @@ describe("Audit Routes — business logic", () => {
       const fs = require("node:fs");
       const os = require("node:os");
       const path = require("node:path");
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-archive-test-"));
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), "audit-archive-test-")
+      );
       const archivePath = path.join(tmpDir, "test-archive.json");
 
       try {
@@ -694,9 +770,9 @@ describe("Audit Routes — business logic", () => {
     });
 
     it("should throw for empty range", () => {
-      expect(() => auditRetention.archiveEntries(0, 0, "/tmp/test.json")).toThrow(
-        /No entries found/,
-      );
+      expect(() =>
+        auditRetention.archiveEntries(0, 0, "/tmp/test.json")
+      ).toThrow(/No entries found/);
     });
 
     it("should produce a verifiable archive", () => {
@@ -706,7 +782,9 @@ describe("Audit Routes — business logic", () => {
       const fs = require("node:fs");
       const os = require("node:os");
       const path = require("node:path");
-      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "audit-archive-verify-"));
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), "audit-archive-verify-")
+      );
       const archivePath = path.join(tmpDir, "verify-archive.json");
 
       try {

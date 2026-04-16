@@ -48,7 +48,8 @@ describe("unified-launch-coordinator", () => {
       createdAt: Date.now(),
     });
 
-    const { submitUnifiedLaunch } = await import("./unified-launch-coordinator");
+    const { submitUnifiedLaunch } =
+      await import("./unified-launch-coordinator");
     const result = await submitUnifiedLaunch({
       text: "本周内重构支付模块，要求零停机和可回滚，并给出验收标准与交付结果。",
       runtimeMode: "advanced",
@@ -71,7 +72,8 @@ describe("unified-launch-coordinator", () => {
       deduped: false,
     });
 
-    const { submitUnifiedLaunch } = await import("./unified-launch-coordinator");
+    const { submitUnifiedLaunch } =
+      await import("./unified-launch-coordinator");
     const result = await submitUnifiedLaunch({
       text: "根据附件里的需求文档和表格，先整理 brief，再拆出工作包和角色分工，最后输出交付结果和时间安排。",
       runtimeMode: "advanced",
@@ -104,7 +106,8 @@ describe("unified-launch-coordinator", () => {
       deduped: true,
     });
 
-    const { submitUnifiedLaunch } = await import("./unified-launch-coordinator");
+    const { submitUnifiedLaunch } =
+      await import("./unified-launch-coordinator");
     const result = await submitUnifiedLaunch({
       text: "根据附件里的需求文档和表格，先整理 brief，再拆出工作包和角色分工，最后输出交付结果和时间安排。",
       runtimeMode: "advanced",
@@ -131,7 +134,8 @@ describe("unified-launch-coordinator", () => {
   });
 
   it("does not submit launch requests before runtime upgrade is completed", async () => {
-    const { submitUnifiedLaunch } = await import("./unified-launch-coordinator");
+    const { submitUnifiedLaunch } =
+      await import("./unified-launch-coordinator");
     const result = await submitUnifiedLaunch({
       text: "打开浏览器检查生产页面，抓日志并给出回滚方案、验收标准和本周时间安排。",
       runtimeMode: "frontend",
@@ -158,9 +162,8 @@ describe("unified-launch-coordinator", () => {
       createdAt: Date.now(),
     });
 
-    const { submitUnifiedClarification } = await import(
-      "./unified-launch-coordinator"
-    );
+    const { submitUnifiedClarification } =
+      await import("./unified-launch-coordinator");
     const result = await submitUnifiedClarification({
       commandId: "cmd-clarify-1",
       answer: {

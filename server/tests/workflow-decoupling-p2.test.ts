@@ -1,16 +1,16 @@
-import { describe, expect, it, vi } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it, vi } from "vitest";
+import fc from "fast-check";
 
-import { MissionOrchestrator } from '../core/mission-orchestrator.js';
-import type { ExecutorEvent } from '../../shared/executor/contracts.js';
+import { MissionOrchestrator } from "../core/mission-orchestrator.js";
+import type { ExecutorEvent } from "../../shared/executor/contracts.js";
 
 // ── Helpers ──
 
 function createExecutorClientStub() {
   return {
     dispatchPlan: vi.fn(async () => ({
-      request: { executor: 'lobster', requestId: 'req_1' },
-      response: { jobId: 'job_1', receivedAt: '2026-03-30T10:00:00.000Z' },
+      request: { executor: "lobster", requestId: "req_1" },
+      response: { jobId: "job_1", receivedAt: "2026-03-30T10:00:00.000Z" },
     })),
   } as any;
 }
@@ -20,20 +20,28 @@ async function startMission() {
     executorClient: createExecutorClientStub(),
   });
   const result = await orchestrator.startMission({
-    title: 'Property test mission',
-    sourceText: 'Testing enrichment completeness.',
-    workspaceRoot: 'C:/workspace/demo',
+    title: "Property test mission",
+    sourceText: "Testing enrichment completeness.",
+    workspaceRoot: "C:/workspace/demo",
   });
   return { orchestrator, mission: result.mission };
 }
 
 // ── Arbitraries ──
 
-const VALID_WP_STATUSES = ['pending', 'running', 'passed', 'failed', 'verified'] as const;
+const VALID_WP_STATUSES = [
+  "pending",
+  "running",
+  "passed",
+  "failed",
+  "verified",
+] as const;
 
 /** Non-empty trimmed string (guaranteed to survive trim validation). */
 const arbNonEmptyStr = (maxLen = 20) =>
-  fc.string({ minLength: 1, maxLength: maxLen }).filter((s) => s.trim().length > 0);
+  fc
+    .string({ minLength: 1, maxLength: maxLen })
+    .filter(s => s.trim().length > 0);
 
 /** A single valid department entry. */
 const arbDepartment = fc.record({
@@ -61,7 +69,10 @@ const arbWorkPackage = fc.record({
 });
 
 /** Valid workPackages payload with at least one valid entry. */
-const arbWorkPackagesPayload = fc.array(arbWorkPackage, { minLength: 1, maxLength: 8 });
+const arbWorkPackagesPayload = fc.array(arbWorkPackage, {
+  minLength: 1,
+  maxLength: 8,
+});
 
 /** A single valid message log entry. */
 const arbMessageEntry = fc.record({
@@ -72,25 +83,28 @@ const arbMessageEntry = fc.record({
 });
 
 /** Valid messageLog payload with at least one valid entry. */
-const arbMessageLogPayload = fc.array(arbMessageEntry, { minLength: 1, maxLength: 20 });
+const arbMessageLogPayload = fc.array(arbMessageEntry, {
+  minLength: 1,
+  maxLength: 20,
+});
 
 /** Build a job.completed ExecutorEvent with the given enrichment payload. */
 function buildCompletedEvent(
   missionId: string,
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown>
 ): ExecutorEvent {
   return {
-    version: '2026-03-28',
+    version: "2026-03-28",
     eventId: `evt_${Date.now()}`,
     missionId,
-    jobId: 'job_1',
-    executor: 'lobster',
-    type: 'job.completed',
-    status: 'completed',
+    jobId: "job_1",
+    executor: "lobster",
+    type: "job.completed",
+    status: "completed",
     occurredAt: new Date().toISOString(),
     progress: 100,
-    message: 'Mission completed',
-    summary: 'All done',
+    message: "Mission completed",
+    summary: "All done",
     payload,
   };
 }
@@ -98,19 +112,19 @@ function buildCompletedEvent(
 /** Build a job.progress ExecutorEvent with the given enrichment payload. */
 function buildProgressEvent(
   missionId: string,
-  payload: Record<string, unknown>,
+  payload: Record<string, unknown>
 ): ExecutorEvent {
   return {
-    version: '2026-03-28',
+    version: "2026-03-28",
     eventId: `evt_${Date.now()}`,
     missionId,
-    jobId: 'job_1',
-    executor: 'lobster',
-    type: 'job.progress',
-    status: 'running',
+    jobId: "job_1",
+    executor: "lobster",
+    type: "job.progress",
+    status: "running",
     occurredAt: new Date().toISOString(),
     progress: 50,
-    message: 'In progress',
+    message: "In progress",
     payload,
   };
 }
@@ -119,17 +133,17 @@ function buildProgressEvent(
 // Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整性
 // **Validates: Requirements 2.5, 2.6**
 
-describe('Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整性', () => {
-  it('organization field is populated when job.completed event contains valid organization data', () => {
+describe("Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整性", () => {
+  it("organization field is populated when job.completed event contains valid organization data", () => {
     fc.assert(
-      fc.asyncProperty(arbOrganizationPayload, async (orgPayload) => {
+      fc.asyncProperty(arbOrganizationPayload, async orgPayload => {
         const { orchestrator, mission } = await startMission();
 
         const completed = await orchestrator.applyExecutorEvent(
-          buildCompletedEvent(mission.id, { organization: orgPayload }),
+          buildCompletedEvent(mission.id, { organization: orgPayload })
         );
 
-        expect(completed.status).toBe('done');
+        expect(completed.status).toBe("done");
         expect(completed.organization).toBeDefined();
         expect(completed.organization!.departments.length).toBeGreaterThan(0);
 
@@ -139,20 +153,20 @@ describe('Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整�
           expect(dept.label.trim().length).toBeGreaterThan(0);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('workPackages field is populated when job.completed event contains valid workPackages data', () => {
+  it("workPackages field is populated when job.completed event contains valid workPackages data", () => {
     fc.assert(
-      fc.asyncProperty(arbWorkPackagesPayload, async (wpPayload) => {
+      fc.asyncProperty(arbWorkPackagesPayload, async wpPayload => {
         const { orchestrator, mission } = await startMission();
 
         const completed = await orchestrator.applyExecutorEvent(
-          buildCompletedEvent(mission.id, { workPackages: wpPayload }),
+          buildCompletedEvent(mission.id, { workPackages: wpPayload })
         );
 
-        expect(completed.status).toBe('done');
+        expect(completed.status).toBe("done");
         expect(completed.workPackages).toBeDefined();
         expect(completed.workPackages!.length).toBeGreaterThan(0);
 
@@ -163,34 +177,34 @@ describe('Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整�
           expect(validStatuses.has(wp.status)).toBe(true);
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('messageLog field is populated when job.completed event contains valid messageLog data', () => {
+  it("messageLog field is populated when job.completed event contains valid messageLog data", () => {
     fc.assert(
-      fc.asyncProperty(arbMessageLogPayload, async (msgPayload) => {
+      fc.asyncProperty(arbMessageLogPayload, async msgPayload => {
         const { orchestrator, mission } = await startMission();
 
         const completed = await orchestrator.applyExecutorEvent(
-          buildCompletedEvent(mission.id, { messageLog: msgPayload }),
+          buildCompletedEvent(mission.id, { messageLog: msgPayload })
         );
 
-        expect(completed.status).toBe('done');
+        expect(completed.status).toBe("done");
         expect(completed.messageLog).toBeDefined();
         expect(completed.messageLog!.length).toBeGreaterThan(0);
 
         for (const entry of completed.messageLog!) {
           expect(entry.sender.trim().length).toBeGreaterThan(0);
           expect(entry.content.trim().length).toBeGreaterThan(0);
-          expect(typeof entry.time).toBe('number');
+          expect(typeof entry.time).toBe("number");
         }
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('all enrichment fields are correctly extracted when job.completed event contains all three', () => {
+  it("all enrichment fields are correctly extracted when job.completed event contains all three", () => {
     fc.assert(
       fc.asyncProperty(
         arbOrganizationPayload,
@@ -204,10 +218,10 @@ describe('Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整�
               organization: orgPayload,
               workPackages: wpPayload,
               messageLog: msgPayload,
-            }),
+            })
           );
 
-          expect(completed.status).toBe('done');
+          expect(completed.status).toBe("done");
 
           // Organization populated
           expect(completed.organization).toBeDefined();
@@ -220,13 +234,13 @@ describe('Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整�
           // MessageLog populated
           expect(completed.messageLog).toBeDefined();
           expect(completed.messageLog!.length).toBeGreaterThan(0);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('enrichment does NOT happen on job.progress events, only on job.completed', () => {
+  it("enrichment does NOT happen on job.progress events, only on job.completed", () => {
     fc.assert(
       fc.asyncProperty(
         arbOrganizationPayload,
@@ -240,16 +254,16 @@ describe('Feature: workflow-decoupling, Property 2: 阶段完成丰富化完整�
               organization: orgPayload,
               workPackages: wpPayload,
               messageLog: msgPayload,
-            }),
+            })
           );
 
-          expect(running.status).toBe('running');
+          expect(running.status).toBe("running");
           expect(running.organization).toBeUndefined();
           expect(running.workPackages).toBeUndefined();
           expect(running.messageLog).toBeUndefined();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

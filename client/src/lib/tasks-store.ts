@@ -17,7 +17,11 @@ import {
   type MissionRecord,
   type MissionStage,
 } from "@shared/mission/contracts";
-import { MISSION_SOCKET_EVENT, MISSION_SOCKET_TYPES, type MissionSocketPayload } from "@shared/mission/socket";
+import {
+  MISSION_SOCKET_EVENT,
+  MISSION_SOCKET_TYPES,
+  type MissionSocketPayload,
+} from "@shared/mission/socket";
 import { io, type Socket } from "socket.io-client";
 
 import {
@@ -148,7 +152,12 @@ export interface TaskArtifact {
   format?: string;
   filename?: string;
   workflowId?: string;
-  downloadKind?: "workflow" | "department" | "attachment" | "external" | "server";
+  downloadKind?:
+    | "workflow"
+    | "department"
+    | "attachment"
+    | "external"
+    | "server";
   href?: string;
   content?: string;
   mimeType?: string;
@@ -248,16 +257,22 @@ interface TasksStoreState {
     topicId?: string;
     autoDispatch?: boolean;
   }) => Promise<string | null>;
-  cancelMission: (taskId: string, payload: {
-    reason?: string;
-    requestedBy?: string;
-    source?: "user" | "brain" | "feishu" | "mission-core" | "executor";
-  }) => Promise<string | null>;
-  submitOperatorAction: (taskId: string, payload: {
-    action: MissionOperatorActionType;
-    reason?: string;
-    requestedBy?: string;
-  }) => Promise<string | null>;
+  cancelMission: (
+    taskId: string,
+    payload: {
+      reason?: string;
+      requestedBy?: string;
+      source?: "user" | "brain" | "feishu" | "mission-core" | "executor";
+    }
+  ) => Promise<string | null>;
+  submitOperatorAction: (
+    taskId: string,
+    payload: {
+      action: MissionOperatorActionType;
+      reason?: string;
+      requestedBy?: string;
+    }
+  ) => Promise<string | null>;
   setDecisionNote: (taskId: string, note: string) => void;
   launchDecision: (taskId: string, presetId: string) => Promise<string | null>;
   clearDecisionLaunch: () => void;
@@ -303,7 +318,10 @@ function formatDurationMs(value: number | null): string {
   return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
 }
 
-function clampPercentage(value: number | null | undefined, fallback = 0): number {
+function clampPercentage(
+  value: number | null | undefined,
+  fallback = 0
+): number {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return fallback;
   }
@@ -362,7 +380,9 @@ function missionStartedAt(mission: MissionRecord): number | null {
   return mission.status === "queued" ? null : mission.createdAt;
 }
 
-function syntheticWorkflowFromMission(mission: MissionRecord): SyntheticWfSnapshot {
+function syntheticWorkflowFromMission(
+  mission: MissionRecord
+): SyntheticWfSnapshot {
   return {
     id: mission.id,
     directive: mission.sourceText || mission.title,
@@ -481,7 +501,10 @@ function missionSummaryText(
   }
 
   if (mission.status === "cancelled") {
-    return trimText(mission.cancelReason, 180) || "Mission was cancelled before the execution chain completed.";
+    return (
+      trimText(mission.cancelReason, 180) ||
+      "Mission was cancelled before the execution chain completed."
+    );
   }
 
   return "Mission is progressing through the execution pipeline.";
@@ -531,7 +554,9 @@ function buildMissionTimeline(
     level: timelineLevelForMissionEvent(event),
     title: titleForMissionEvent(mission, event),
     description: event.message,
-    actor: event.source ? capitalize(event.source.replace(/-/g, " ")) : undefined,
+    actor: event.source
+      ? capitalize(event.source.replace(/-/g, " "))
+      : undefined,
   }));
 
   if (!items.some(item => item.type === "created")) {
@@ -541,7 +566,9 @@ function buildMissionTimeline(
       time: mission.createdAt,
       level: "info",
       title: "Mission created",
-      description: trimText(mission.sourceText || mission.title, 180) || "Mission created.",
+      description:
+        trimText(mission.sourceText || mission.title, 180) ||
+        "Mission created.",
     });
   }
 
@@ -744,7 +771,10 @@ function buildMissionInstanceInfo(
   return [
     { label: "Mission ID", value: mission.id },
     { label: "Runtime", value: "Advanced server runtime" },
-    { label: "Current stage", value: summary.currentStageLabel || "Not started" },
+    {
+      label: "Current stage",
+      value: summary.currentStageLabel || "Not started",
+    },
     { label: "Executor", value: mission.executor?.name || "n/a" },
     { label: "Executor job", value: mission.executor?.jobId || "n/a" },
     { label: "Executor request", value: mission.executor?.requestId || "n/a" },
@@ -766,11 +796,15 @@ function buildMissionLogSummary(
     { label: "Event entries", value: formatCount(events.length) },
     {
       label: "Progress signals",
-      value: formatCount(events.filter(event => event.type === "progress").length),
+      value: formatCount(
+        events.filter(event => event.type === "progress").length
+      ),
     },
     {
       label: "Waiting signals",
-      value: formatCount(events.filter(event => event.type === "waiting").length),
+      value: formatCount(
+        events.filter(event => event.type === "waiting").length
+      ),
     },
     {
       label: "Log entries",
@@ -808,7 +842,9 @@ export function buildPlanetSummaryRecord(
   ).length;
   const messageCount = messageLog.length;
   const activeAgentCount = mission?.agentCrew
-    ? mission.agentCrew.filter(a => a.status === "working" || a.status === "thinking").length
+    ? mission.agentCrew.filter(
+        a => a.status === "working" || a.status === "thinking"
+      ).length
     : 0;
 
   const failureReasons: string[] = [];
@@ -822,7 +858,8 @@ export function buildPlanetSummaryRecord(
 
   const summaryText = mission
     ? missionSummaryText(mission, events, waitingFor)
-    : trimText(planet.summary, 180) || "Mission is progressing through the execution pipeline.";
+    : trimText(planet.summary, 180) ||
+      "Mission is progressing through the execution pipeline.";
 
   const startedAt = mission ? missionStartedAt(mission) : null;
 
@@ -835,7 +872,9 @@ export function buildPlanetSummaryRecord(
     kind: planet.kind || "general",
     sourceText: planet.sourceText || planet.title,
     status: planet.status === "archived" ? "done" : planet.status,
-    operatorState: mission ? missionOperatorStateFromMission(mission) : "active",
+    operatorState: mission
+      ? missionOperatorStateFromMission(mission)
+      : "active",
     workflowStatus: workflowStatusFromMission(
       planet.status === "archived" ? "done" : planet.status
     ),
@@ -910,8 +949,7 @@ function buildSummaryRecord(mission: MissionRecord): MissionTaskSummary {
     updatedAt: mission.updatedAt,
     startedAt: missionStartedAt(mission),
     completedAt: mission.completedAt || null,
-    departmentLabels:
-      mission.organization?.departments.map(d => d.label) ?? [],
+    departmentLabels: mission.organization?.departments.map(d => d.label) ?? [],
     taskCount: mission.workPackages?.length ?? 0,
     completedTaskCount:
       mission.workPackages?.filter(
@@ -980,7 +1018,7 @@ function buildNativeInteriorAgents(
     title: "Mission controller",
     status: inferMissionCoreAgentStatus(
       mission.status,
-      missionOperatorStateFromMission(mission),
+      missionOperatorStateFromMission(mission)
     ),
     stageKey: currentStageKey,
     stageLabel: currentStageLabel,
@@ -1011,9 +1049,7 @@ function buildNativeLogSummary(
 /**
  * detail 构建：完全从 MissionRecord 派生。
  */
-function buildDetailRecord(
-  mission: MissionRecord
-): MissionTaskDetail {
+function buildDetailRecord(mission: MissionRecord): MissionTaskDetail {
   const summary = buildSummaryRecord(mission);
   const failureReasons = missionFailureReasons(mission, mission.events);
 
@@ -1043,7 +1079,7 @@ function buildDetailRecord(
     instance: mission.instance,
     missionArtifacts: mission.artifacts,
   };
-}/**
+} /**
  * Build a MissionTaskDetail from the /api/planets/:id/interior response.
  * This is the planet-native counterpart of buildMissionDetailRecord —
  * it derives every field from MissionPlanetInteriorData + MissionRecord,
@@ -1063,12 +1099,15 @@ export function buildPlanetDetailRecord(
     label: s.label,
     status: s.status,
     progress: s.progress,
-    detail: s.detail || (
-      s.status === 'done' ? 'Completed'
-        : s.status === 'running' ? 'Live stage'
-        : s.status === 'failed' ? 'Blocked'
-        : 'Queued'
-    ),
+    detail:
+      s.detail ||
+      (s.status === "done"
+        ? "Completed"
+        : s.status === "running"
+          ? "Live stage"
+          : s.status === "failed"
+            ? "Blocked"
+            : "Queued"),
     arcStart: s.arcStart,
     arcEnd: s.arcEnd,
     midAngle: s.midAngle,
@@ -1079,7 +1118,10 @@ export function buildPlanetDetailRecord(
     id: a.id,
     name: a.name,
     role: a.role,
-    department: a.role === 'orchestrator' ? 'Mission' : capitalize(a.stageLabel || a.stageKey),
+    department:
+      a.role === "orchestrator"
+        ? "Mission"
+        : capitalize(a.stageLabel || a.stageKey),
     title: a.currentAction || a.role,
     status: a.status as InteriorAgentStatus,
     stageKey: a.stageKey,
@@ -1129,9 +1171,7 @@ export function buildPlanetDetailRecord(
 }
 
 /* buildMissionDetailRecord — kept for backward compat, delegates to buildDetailRecord */
-function buildMissionDetailRecord(
-  mission: MissionRecord
-): MissionTaskDetail {
+function buildMissionDetailRecord(mission: MissionRecord): MissionTaskDetail {
   const summary = buildSummaryRecord(mission);
   const failureReasons = missionFailureReasons(mission, mission.events);
 
@@ -1220,8 +1260,10 @@ export async function patchMissionRecordInStore(
   const detail = buildDetailRecord(missionResponse.task);
 
   set(state => {
-    const nextTasks = [...state.tasks.filter(task => task.id !== missionId), summary]
-      .sort((left, right) => right.updatedAt - left.updatedAt);
+    const nextTasks = [
+      ...state.tasks.filter(task => task.id !== missionId),
+      summary,
+    ].sort((left, right) => right.updatedAt - left.updatedAt);
 
     return {
       ready: true,
@@ -1369,7 +1411,10 @@ async function hydrateTaskData(
       await hydratePlanetTaskData(set, get, options);
       return;
     } catch (error) {
-      console.warn("[Tasks] Planet hydration failed, falling back to mission hydration:", error);
+      console.warn(
+        "[Tasks] Planet hydration failed, falling back to mission hydration:",
+        error
+      );
     }
   }
 
@@ -1411,10 +1456,7 @@ async function hydrateTaskData(
     .sort((left, right) => right.updatedAt - left.updatedAt);
 
   const detailsById = Object.fromEntries(
-    enrichedMissions.map(mission => [
-      mission.id,
-      buildDetailRecord(mission),
-    ])
+    enrichedMissions.map(mission => [mission.id, buildDetailRecord(mission)])
   ) as Record<string, MissionTaskDetail>;
 
   set({
@@ -1456,8 +1498,13 @@ async function hydratePlanetTaskData(
   );
 
   const summaries = planets
-    .map((planet: MissionPlanetOverviewItem) => buildPlanetSummaryRecord(planet, missionById.get(planet.id)))
-    .sort((left: MissionTaskSummary, right: MissionTaskSummary) => right.updatedAt - left.updatedAt);
+    .map((planet: MissionPlanetOverviewItem) =>
+      buildPlanetSummaryRecord(planet, missionById.get(planet.id))
+    )
+    .sort(
+      (left: MissionTaskSummary, right: MissionTaskSummary) =>
+        right.updatedAt - left.updatedAt
+    );
 
   const selectedTaskId = resolveSelectedTaskId(
     summaries,
@@ -1473,7 +1520,11 @@ async function hydratePlanetTaskData(
     if (planet.id === selectedTaskId) {
       try {
         const interiorResponse = await getPlanetInterior(planet.id);
-        detailsById[planet.id] = buildPlanetDetailRecord(planet, interiorResponse.interior, mission);
+        detailsById[planet.id] = buildPlanetDetailRecord(
+          planet,
+          interiorResponse.interior,
+          mission
+        );
       } catch {
         detailsById[planet.id] = buildMissionDetailRecord(mission);
       }
@@ -1624,7 +1675,7 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
           selectedTaskId: resolveSelectedTaskId(
             nextTasks,
             state.selectedTaskId,
-            taskId,
+            taskId
           ),
         };
       });
@@ -1632,7 +1683,8 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
       return response.task.id;
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : "Failed to cancel mission.",
+        error:
+          error instanceof Error ? error.message : "Failed to cancel mission.",
       });
       throw error;
     } finally {
@@ -1684,7 +1736,7 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
           selectedTaskId: resolveSelectedTaskId(
             nextTasks,
             state.selectedTaskId,
-            taskId,
+            taskId
           ),
         };
       });
@@ -1745,8 +1797,7 @@ export const useTasksStore = create<TasksStoreState>((set, get) => ({
     const response = await submitMissionDecisionRequest(taskId, {
       optionId: preset.optionId,
       freeText: detail.decisionAllowsFreeText ? note || undefined : undefined,
-      detail:
-        detail.decisionAllowsFreeText !== true && note ? note : undefined,
+      detail: detail.decisionAllowsFreeText !== true && note ? note : undefined,
     });
 
     set(state => ({

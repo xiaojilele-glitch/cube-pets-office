@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import fc from 'fast-check';
+import { describe, expect, it } from "vitest";
+import fc from "fast-check";
 
 import type {
   MissionRecord,
@@ -13,21 +13,29 @@ import type {
   MissionWorkPackage,
   MissionMessageLogEntry,
   MissionAgentCrewMember,
-} from '../../shared/mission/contracts.js';
+} from "../../shared/mission/contracts.js";
 
 import {
   MISSION_STATUSES,
   MISSION_STAGE_STATUSES,
   MISSION_EVENT_TYPES,
   MISSION_EVENT_LEVELS,
-} from '../../shared/mission/contracts.js';
+} from "../../shared/mission/contracts.js";
 
 // ── Arbitraries (reused pattern from p1/p3) ──
 
-const arbMissionStatus: fc.Arbitrary<MissionStatus> = fc.constantFrom(...MISSION_STATUSES);
-const arbStageStatus: fc.Arbitrary<MissionStageStatus> = fc.constantFrom(...MISSION_STAGE_STATUSES);
-const arbEventType: fc.Arbitrary<MissionEventType> = fc.constantFrom(...MISSION_EVENT_TYPES);
-const arbEventLevel: fc.Arbitrary<MissionEventLevel> = fc.constantFrom(...MISSION_EVENT_LEVELS);
+const arbMissionStatus: fc.Arbitrary<MissionStatus> = fc.constantFrom(
+  ...MISSION_STATUSES
+);
+const arbStageStatus: fc.Arbitrary<MissionStageStatus> = fc.constantFrom(
+  ...MISSION_STAGE_STATUSES
+);
+const arbEventType: fc.Arbitrary<MissionEventType> = fc.constantFrom(
+  ...MISSION_EVENT_TYPES
+);
+const arbEventLevel: fc.Arbitrary<MissionEventLevel> = fc.constantFrom(
+  ...MISSION_EVENT_LEVELS
+);
 
 const arbStage: fc.Arbitrary<MissionStage> = fc.record({
   key: fc.string({ minLength: 1, maxLength: 20 }),
@@ -42,12 +50,20 @@ const arbEvent: fc.Arbitrary<MissionEvent> = fc.record({
   type: arbEventType,
   message: fc.string({ minLength: 1, maxLength: 80 }),
   progress: fc.option(fc.integer({ min: 0, max: 100 }), { nil: undefined }),
-  stageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  stageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
   level: fc.option(arbEventLevel, { nil: undefined }),
   time: fc.nat(),
   source: fc.option(
-    fc.constantFrom('mission-core' as const, 'executor' as const, 'feishu' as const, 'brain' as const, 'user' as const),
-    { nil: undefined },
+    fc.constantFrom(
+      "mission-core" as const,
+      "executor" as const,
+      "feishu" as const,
+      "brain" as const,
+      "user" as const
+    ),
+    { nil: undefined }
   ),
 });
 
@@ -56,24 +72,38 @@ const arbOrganization: fc.Arbitrary<MissionOrganizationSnapshot> = fc.record({
     fc.record({
       key: fc.string({ minLength: 1, maxLength: 20 }),
       label: fc.string({ minLength: 1, maxLength: 30 }),
-      managerName: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+      managerName: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+        nil: undefined,
+      }),
     }),
-    { minLength: 0, maxLength: 5 },
+    { minLength: 0, maxLength: 5 }
   ),
   agentCount: fc.nat({ max: 50 }),
 });
 
 const arbWorkPackageStatus = fc.constantFrom(
-  'pending' as const, 'running' as const, 'passed' as const, 'failed' as const, 'verified' as const,
+  "pending" as const,
+  "running" as const,
+  "passed" as const,
+  "failed" as const,
+  "verified" as const
 );
 
 const arbWorkPackage: fc.Arbitrary<MissionWorkPackage> = fc.record({
   id: fc.string({ minLength: 1, maxLength: 20 }),
-  workerId: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
-  title: fc.option(fc.string({ minLength: 1, maxLength: 40 }), { nil: undefined }),
-  assignee: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  workerId: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
+  title: fc.option(fc.string({ minLength: 1, maxLength: 40 }), {
+    nil: undefined,
+  }),
+  assignee: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
   description: fc.option(fc.string({ maxLength: 60 }), { nil: undefined }),
-  stageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  stageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
   status: arbWorkPackageStatus,
   score: fc.option(fc.integer({ min: 0, max: 100 }), { nil: undefined }),
   deliverable: fc.option(fc.string({ maxLength: 60 }), { nil: undefined }),
@@ -84,19 +114,31 @@ const arbMessageLogEntry: fc.Arbitrary<MissionMessageLogEntry> = fc.record({
   sender: fc.string({ minLength: 1, maxLength: 20 }),
   content: fc.string({ minLength: 1, maxLength: 80 }),
   time: fc.nat(),
-  stageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  stageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
 });
 
-const arbAgentCrewRole = fc.constantFrom('ceo' as const, 'manager' as const, 'worker' as const);
+const arbAgentCrewRole = fc.constantFrom(
+  "ceo" as const,
+  "manager" as const,
+  "worker" as const
+);
 const arbAgentCrewStatus = fc.constantFrom(
-  'idle' as const, 'working' as const, 'thinking' as const, 'done' as const, 'error' as const,
+  "idle" as const,
+  "working" as const,
+  "thinking" as const,
+  "done" as const,
+  "error" as const
 );
 
 const arbAgentCrewMember: fc.Arbitrary<MissionAgentCrewMember> = fc.record({
   id: fc.string({ minLength: 1, maxLength: 20 }),
   name: fc.string({ minLength: 1, maxLength: 30 }),
   role: arbAgentCrewRole,
-  department: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  department: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
   status: arbAgentCrewStatus,
 });
 
@@ -106,10 +148,14 @@ const arbCoreMissionRecord = fc.record({
   kind: fc.string({ minLength: 1, maxLength: 20 }),
   title: fc.string({ minLength: 1, maxLength: 60 }),
   sourceText: fc.option(fc.string({ maxLength: 80 }), { nil: undefined }),
-  topicId: fc.option(fc.string({ minLength: 1, maxLength: 30 }), { nil: undefined }),
+  topicId: fc.option(fc.string({ minLength: 1, maxLength: 30 }), {
+    nil: undefined,
+  }),
   status: arbMissionStatus,
   progress: fc.integer({ min: 0, max: 100 }),
-  currentStageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  currentStageKey: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
   stages: fc.array(arbStage, { minLength: 1, maxLength: 6 }),
   summary: fc.option(fc.string({ maxLength: 120 }), { nil: undefined }),
   createdAt: fc.nat(),
@@ -144,7 +190,7 @@ function deriveAgents(mission: MissionRecord): Array<{ id: string }> {
   }
 
   // Always append mission-core agent
-  agents.push({ id: 'mission-core' });
+  agents.push({ id: "mission-core" });
 
   return agents;
 }
@@ -154,9 +200,11 @@ function deriveAgents(mission: MissionRecord): Array<{ id: string }> {
  * - If messageLog is empty/undefined → [{label: "Messages", value: "No messages yet"}]
  * - Otherwise → last 10 entries mapped to {label: sender, value: content}
  */
-function deriveLogSummary(mission: MissionRecord): Array<{ label: string; value: string }> {
+function deriveLogSummary(
+  mission: MissionRecord
+): Array<{ label: string; value: string }> {
   if (!mission.messageLog?.length) {
-    return [{ label: 'Messages', value: 'No messages yet' }];
+    return [{ label: "Messages", value: "No messages yet" }];
   }
 
   const recent = mission.messageLog.slice(-10);
@@ -170,17 +218,14 @@ function deriveLogSummary(mission: MissionRecord): Array<{ label: string; value:
 // Feature: workflow-decoupling, Property 4: 原生 Detail 构建完整性
 // **Validates: Requirements 3.3**
 
-describe('Feature: workflow-decoupling, Property 4: 原生 Detail 构建完整性', () => {
-  it('stages count equals mission.stages.length for any MissionRecord', () => {
+describe("Feature: workflow-decoupling, Property 4: 原生 Detail 构建完整性", () => {
+  it("stages count equals mission.stages.length for any MissionRecord", () => {
     fc.assert(
-      fc.property(
-        arbCoreMissionRecord,
-        (core) => {
-          const mission: MissionRecord = { ...core } as MissionRecord;
-          expect(deriveStagesCount(mission)).toBe(core.stages.length);
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(arbCoreMissionRecord, core => {
+        const mission: MissionRecord = { ...core } as MissionRecord;
+        expect(deriveStagesCount(mission)).toBe(core.stages.length);
+      }),
+      { numRuns: 100 }
     );
   });
 
@@ -188,52 +233,55 @@ describe('Feature: workflow-decoupling, Property 4: 原生 Detail 构建完整�
     fc.assert(
       fc.property(
         arbCoreMissionRecord,
-        fc.option(fc.array(arbAgentCrewMember, { minLength: 0, maxLength: 10 }), { nil: undefined }),
+        fc.option(
+          fc.array(arbAgentCrewMember, { minLength: 0, maxLength: 10 }),
+          { nil: undefined }
+        ),
         (core, agentCrew) => {
           const mission: MissionRecord = { ...core } as MissionRecord;
           if (agentCrew !== undefined) mission.agentCrew = agentCrew;
 
           const agents = deriveAgents(mission);
-          const missionCoreAgents = agents.filter(a => a.id === 'mission-core');
+          const missionCoreAgents = agents.filter(a => a.id === "mission-core");
           expect(missionCoreAgents.length).toBeGreaterThanOrEqual(1);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('agents array length equals agentCrew.length + 1 (the +1 is mission-core)', () => {
+  it("agents array length equals agentCrew.length + 1 (the +1 is mission-core)", () => {
     fc.assert(
       fc.property(
         arbCoreMissionRecord,
         fc.array(arbAgentCrewMember, { minLength: 0, maxLength: 10 }),
         (core, agentCrew) => {
-          const mission: MissionRecord = { ...core, agentCrew } as MissionRecord;
+          const mission: MissionRecord = {
+            ...core,
+            agentCrew,
+          } as MissionRecord;
           const agents = deriveAgents(mission);
           expect(agents.length).toBe(agentCrew.length + 1);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('when agentCrew is undefined, agents array has exactly 1 entry (mission-core)', () => {
+  it("when agentCrew is undefined, agents array has exactly 1 entry (mission-core)", () => {
     fc.assert(
-      fc.property(
-        arbCoreMissionRecord,
-        (core) => {
-          const mission: MissionRecord = { ...core } as MissionRecord;
-          // agentCrew is not set → undefined
-          const agents = deriveAgents(mission);
-          expect(agents.length).toBe(1);
-          expect(agents[0].id).toBe('mission-core');
-        },
-      ),
-      { numRuns: 100 },
+      fc.property(arbCoreMissionRecord, core => {
+        const mission: MissionRecord = { ...core } as MissionRecord;
+        // agentCrew is not set → undefined
+        const agents = deriveAgents(mission);
+        expect(agents.length).toBe(1);
+        expect(agents[0].id).toBe("mission-core");
+      }),
+      { numRuns: 100 }
     );
   });
 
-  it('logSummary returns default message when messageLog is empty or undefined', () => {
+  it("logSummary returns default message when messageLog is empty or undefined", () => {
     fc.assert(
       fc.property(
         arbCoreMissionRecord,
@@ -243,37 +291,45 @@ describe('Feature: workflow-decoupling, Property 4: 原生 Detail 构建完整�
           if (messageLog !== undefined) mission.messageLog = messageLog;
 
           const summary = deriveLogSummary(mission);
-          expect(summary).toEqual([{ label: 'Messages', value: 'No messages yet' }]);
-        },
+          expect(summary).toEqual([
+            { label: "Messages", value: "No messages yet" },
+          ]);
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('logSummary returns at most 10 entries from the end of messageLog', () => {
+  it("logSummary returns at most 10 entries from the end of messageLog", () => {
     fc.assert(
       fc.property(
         arbCoreMissionRecord,
         fc.array(arbMessageLogEntry, { minLength: 1, maxLength: 25 }),
         (core, messageLog) => {
-          const mission: MissionRecord = { ...core, messageLog } as MissionRecord;
+          const mission: MissionRecord = {
+            ...core,
+            messageLog,
+          } as MissionRecord;
           const summary = deriveLogSummary(mission);
 
           expect(summary.length).toBeLessThanOrEqual(10);
           expect(summary.length).toBe(Math.min(messageLog.length, 10));
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
-  it('logSummary entries have label=sender and value=content from messageLog', () => {
+  it("logSummary entries have label=sender and value=content from messageLog", () => {
     fc.assert(
       fc.property(
         arbCoreMissionRecord,
         fc.array(arbMessageLogEntry, { minLength: 1, maxLength: 25 }),
         (core, messageLog) => {
-          const mission: MissionRecord = { ...core, messageLog } as MissionRecord;
+          const mission: MissionRecord = {
+            ...core,
+            messageLog,
+          } as MissionRecord;
           const summary = deriveLogSummary(mission);
 
           // Should correspond to the last N entries of messageLog
@@ -284,9 +340,9 @@ describe('Feature: workflow-decoupling, Property 4: 原生 Detail 构建完整�
             expect(summary[i].label).toBe(expectedSlice[i].sender);
             expect(summary[i].value).toBe(expectedSlice[i].content);
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

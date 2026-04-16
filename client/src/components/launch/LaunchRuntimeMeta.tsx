@@ -10,7 +10,10 @@ function t(locale: string, zh: string, en: string) {
   return locale === "zh-CN" ? zh : en;
 }
 
-export function getLaunchRuntimeLabel(locale: string, runtimeMode: RuntimeMode) {
+export function getLaunchRuntimeLabel(
+  locale: string,
+  runtimeMode: RuntimeMode
+) {
   return runtimeMode === "advanced"
     ? t(locale, "当前：高级执行", "Current: advanced runtime")
     : t(locale, "当前：前端预览", "Current: frontend preview");

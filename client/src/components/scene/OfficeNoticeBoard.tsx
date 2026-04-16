@@ -59,7 +59,9 @@ export function OfficeNoticeBoard({
             className="mt-2 text-[1.05rem] font-semibold text-[#3A2A1A]"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
-            {locale === "zh-CN" ? "先看现在最重要的事" : "What matters right now"}
+            {locale === "zh-CN"
+              ? "先看现在最重要的事"
+              : "What matters right now"}
           </h2>
         </div>
         <span className="flex size-10 items-center justify-center rounded-[20px] bg-[#F4E6D8] text-[#C17A4E]">

@@ -146,7 +146,9 @@ describe("task artifact routes", () => {
   });
 
   it("returns 404 for a missing mission on the artifact list route", async () => {
-    const response = await fetch(`${baseUrl}/api/tasks/mission_missing/artifacts`);
+    const response = await fetch(
+      `${baseUrl}/api/tasks/mission_missing/artifacts`
+    );
     const body = await response.json();
 
     expect(response.status).toBe(404);
@@ -156,7 +158,9 @@ describe("task artifact routes", () => {
   it("returns an empty array when the mission has no artifacts", async () => {
     const mission = runtime.createChatTask("No artifacts yet");
 
-    const response = await fetch(`${baseUrl}/api/tasks/${mission.id}/artifacts`);
+    const response = await fetch(
+      `${baseUrl}/api/tasks/${mission.id}/artifacts`
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);

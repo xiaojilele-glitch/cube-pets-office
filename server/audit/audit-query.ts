@@ -45,7 +45,9 @@ export class AuditQuery {
    */
   query(filters: AuditQueryFilters, page: PageOptions): AuditQueryResult {
     const allEntries = this.getAllEntries();
-    const filtered = allEntries.filter((entry) => this.matchFilters(entry, filters));
+    const filtered = allEntries.filter(entry =>
+      this.matchFilters(entry, filters)
+    );
     const result = this.paginate(filtered, page);
 
     // 7.6 记录查询操作自身的审计事件
@@ -64,7 +66,7 @@ export class AuditQuery {
     const allEntries = this.getAllEntries();
     const lowerKeyword = keyword.toLowerCase();
 
-    const filtered = allEntries.filter((entry) => {
+    const filtered = allEntries.filter(entry => {
       const event = entry.event;
       const fields: string[] = [
         event.action,
@@ -73,7 +75,7 @@ export class AuditQuery {
         event.resource.name ?? "",
         event.metadata ? JSON.stringify(event.metadata) : "",
       ];
-      return fields.some((f) => f.toLowerCase().includes(lowerKeyword));
+      return fields.some(f => f.toLowerCase().includes(lowerKeyword));
     });
 
     const result = this.paginate(filtered, page);
@@ -93,7 +95,7 @@ export class AuditQuery {
    */
   getPermissionTrail(
     agentId: string,
-    timeRange?: { start: number; end: number },
+    timeRange?: { start: number; end: number }
   ): AuditLogEntry[] {
     const permissionTypes = new Set([
       AuditEventType.PERMISSION_GRANTED,
@@ -102,7 +104,7 @@ export class AuditQuery {
     ]);
 
     const allEntries = this.getAllEntries();
-    const filtered = allEntries.filter((entry) => {
+    const filtered = allEntries.filter(entry => {
       if (!permissionTypes.has(entry.event.eventType)) return false;
       const isActorOrTarget =
         entry.event.actor.id === agentId || entry.event.resource.id === agentId;
@@ -125,11 +127,12 @@ export class AuditQuery {
   /**
    * 获取权限违规事件：result === 'denied' 的所有条目。
    */
-  getPermissionViolations(
-    timeRange?: { start: number; end: number },
-  ): AuditLogEntry[] {
+  getPermissionViolations(timeRange?: {
+    start: number;
+    end: number;
+  }): AuditLogEntry[] {
     const allEntries = this.getAllEntries();
-    const filtered = allEntries.filter((entry) => {
+    const filtered = allEntries.filter(entry => {
       if (entry.event.result !== "denied") return false;
       if (timeRange) {
         const ts = entry.event.timestamp;
@@ -152,10 +155,9 @@ export class AuditQuery {
    */
   getDataLineageAudit(dataId: string): AuditLogEntry[] {
     const allEntries = this.getAllEntries();
-    const filtered = allEntries.filter((entry) => {
+    const filtered = allEntries.filter(entry => {
       return (
-        entry.event.lineageId === dataId ||
-        entry.event.resource.id === dataId
+        entry.event.lineageId === dataId || entry.event.resource.id === dataId
       );
     });
 
@@ -175,7 +177,10 @@ export class AuditQuery {
   }
 
   /** 应用过滤条件 */
-  private matchFilters(entry: AuditLogEntry, filters: AuditQueryFilters): boolean {
+  private matchFilters(
+    entry: AuditLogEntry,
+    filters: AuditQueryFilters
+  ): boolean {
     const event = entry.event;
 
     // eventType filter (single or array)
@@ -192,17 +197,26 @@ export class AuditQuery {
     }
 
     // actorType
-    if (filters.actorType !== undefined && event.actor.type !== filters.actorType) {
+    if (
+      filters.actorType !== undefined &&
+      event.actor.type !== filters.actorType
+    ) {
       return false;
     }
 
     // resourceType
-    if (filters.resourceType !== undefined && event.resource.type !== filters.resourceType) {
+    if (
+      filters.resourceType !== undefined &&
+      event.resource.type !== filters.resourceType
+    ) {
       return false;
     }
 
     // resourceId
-    if (filters.resourceId !== undefined && event.resource.id !== filters.resourceId) {
+    if (
+      filters.resourceId !== undefined &&
+      event.resource.id !== filters.resourceId
+    ) {
       return false;
     }
 
@@ -226,7 +240,8 @@ export class AuditQuery {
     // timeRange
     if (filters.timeRange) {
       const ts = event.timestamp;
-      if (ts < filters.timeRange.start || ts > filters.timeRange.end) return false;
+      if (ts < filters.timeRange.start || ts > filters.timeRange.end)
+        return false;
     }
 
     // keyword — search in action, resource fields, metadata
@@ -239,15 +254,22 @@ export class AuditQuery {
         event.resource.name ?? "",
         event.metadata ? JSON.stringify(event.metadata) : "",
       ];
-      if (!fields.some((f) => f.toLowerCase().includes(lowerKeyword))) return false;
+      if (!fields.some(f => f.toLowerCase().includes(lowerKeyword)))
+        return false;
     }
 
     return true;
   }
 
   /** 分页 */
-  private paginate(entries: AuditLogEntry[], page: PageOptions): AuditQueryResult {
-    const pageSize = Math.min(Math.max(page.pageSize || DEFAULT_PAGE_SIZE, 1), MAX_PAGE_SIZE);
+  private paginate(
+    entries: AuditLogEntry[],
+    page: PageOptions
+  ): AuditQueryResult {
+    const pageSize = Math.min(
+      Math.max(page.pageSize || DEFAULT_PAGE_SIZE, 1),
+      MAX_PAGE_SIZE
+    );
     const pageNum = Math.max(page.pageNum || 1, 1);
     const total = entries.length;
     const start = (pageNum - 1) * pageSize;
@@ -266,7 +288,10 @@ export class AuditQuery {
    * 记录 AUDIT_QUERY 事件。
    * 使用 collector.record() 异步写入（INFO severity，不会触发同步写入，避免递归）。
    */
-  private recordQueryAudit(operation: string, params: Record<string, unknown>): void {
+  private recordQueryAudit(
+    operation: string,
+    params: Record<string, unknown>
+  ): void {
     this.collector.record({
       eventType: AuditEventType.AUDIT_QUERY,
       actor: { type: "system", id: "audit-query" },

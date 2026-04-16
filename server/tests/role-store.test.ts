@@ -9,7 +9,11 @@ import type {
   AgentRole,
   PermissionTemplate,
 } from "../../shared/permission/contracts.js";
-import { RoleStore, BUILTIN_ROLES, BUILTIN_TEMPLATES } from "../permission/role-store.js";
+import {
+  RoleStore,
+  BUILTIN_ROLES,
+  BUILTIN_TEMPLATES,
+} from "../permission/role-store.js";
 
 /* ─── In-memory Database stub ─── */
 
@@ -19,10 +23,17 @@ function createInMemoryDb() {
 
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: AgentRole[]) => { roles = r; },
+    setPermissionRoles: (r: AgentRole[]) => {
+      roles = r;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
-    _reset: () => { roles = []; templates = []; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
+    _reset: () => {
+      roles = [];
+      templates = [];
+    },
   };
 }
 
@@ -69,7 +80,7 @@ describe("RoleStore", () => {
           roleName: "Dup2",
           description: "",
           permissions: [],
-        }),
+        })
       ).toThrow('Role "dup" already exists');
     });
   });
@@ -98,8 +109,18 @@ describe("RoleStore", () => {
     });
 
     it("returns all created roles", () => {
-      store.createRole({ roleId: "a", roleName: "A", description: "", permissions: [] });
-      store.createRole({ roleId: "b", roleName: "B", description: "", permissions: [] });
+      store.createRole({
+        roleId: "a",
+        roleName: "A",
+        description: "",
+        permissions: [],
+      });
+      store.createRole({
+        roleId: "b",
+        roleName: "B",
+        description: "",
+        permissions: [],
+      });
       expect(store.listRoles()).toHaveLength(2);
     });
   });
@@ -121,12 +142,17 @@ describe("RoleStore", () => {
 
     it("throws for non-existent role", () => {
       expect(() => store.updateRole("nope", { description: "x" })).toThrow(
-        'Role "nope" not found',
+        'Role "nope" not found'
       );
     });
 
     it("persists updates to the database", () => {
-      store.createRole({ roleId: "r1", roleName: "R1", description: "", permissions: [] });
+      store.createRole({
+        roleId: "r1",
+        roleName: "R1",
+        description: "",
+        permissions: [],
+      });
       store.updateRole("r1", { roleName: "Updated" });
       expect(db.getPermissionRoles()[0].roleName).toBe("Updated");
     });
@@ -140,8 +166,14 @@ describe("RoleStore", () => {
       const roles = store.listRoles();
       expect(roles).toHaveLength(5);
 
-      const names = roles.map((r) => r.roleName).sort();
-      expect(names).toEqual(["Admin", "Executor", "NetworkCaller", "Reader", "Writer"]);
+      const names = roles.map(r => r.roleName).sort();
+      expect(names).toEqual([
+        "Admin",
+        "Executor",
+        "NetworkCaller",
+        "Reader",
+        "Writer",
+      ]);
     });
 
     it("does not duplicate roles on repeated calls", () => {
@@ -151,7 +183,12 @@ describe("RoleStore", () => {
     });
 
     it("preserves existing custom roles", () => {
-      store.createRole({ roleId: "custom", roleName: "Custom", description: "", permissions: [] });
+      store.createRole({
+        roleId: "custom",
+        roleName: "Custom",
+        description: "",
+        permissions: [],
+      });
       store.initBuiltinRoles();
       expect(store.listRoles()).toHaveLength(6);
       expect(store.getRole("custom")).toBeDefined();
@@ -170,14 +207,14 @@ describe("RoleStore", () => {
       store.initBuiltinRoles();
       const writer = store.getRole("writer")!;
       expect(writer.permissions).toHaveLength(2);
-      const actions = writer.permissions.map((p) => p.action).sort();
+      const actions = writer.permissions.map(p => p.action).sort();
       expect(actions).toEqual(["read", "write"]);
     });
 
     it("Admin role has permissions for all resource types", () => {
       store.initBuiltinRoles();
       const admin = store.getRole("admin")!;
-      const resourceTypes = new Set(admin.permissions.map((p) => p.resourceType));
+      const resourceTypes = new Set(admin.permissions.map(p => p.resourceType));
       expect(resourceTypes).toContain("filesystem");
       expect(resourceTypes).toContain("network");
       expect(resourceTypes).toContain("api");
@@ -188,7 +225,9 @@ describe("RoleStore", () => {
     it("Executor role includes /tmp path pattern", () => {
       store.initBuiltinRoles();
       const executor = store.getRole("executor")!;
-      const allPaths = executor.permissions.flatMap((p) => p.constraints.pathPatterns ?? []);
+      const allPaths = executor.permissions.flatMap(
+        p => p.constraints.pathPatterns ?? []
+      );
       expect(allPaths).toContain("/tmp/**");
     });
 
@@ -235,7 +274,7 @@ describe("RoleStore", () => {
           description: "",
           targetRole: "Y",
           permissions: [],
-        }),
+        })
       ).toThrow('Template "tpl-dup" already exists');
     });
   });
@@ -259,8 +298,20 @@ describe("RoleStore", () => {
 
   describe("listTemplates", () => {
     it("returns all templates", () => {
-      store.createTemplate({ templateId: "t1", templateName: "T1", description: "", targetRole: "R1", permissions: [] });
-      store.createTemplate({ templateId: "t2", templateName: "T2", description: "", targetRole: "R2", permissions: [] });
+      store.createTemplate({
+        templateId: "t1",
+        templateName: "T1",
+        description: "",
+        targetRole: "R1",
+        permissions: [],
+      });
+      store.createTemplate({
+        templateId: "t2",
+        templateName: "T2",
+        description: "",
+        targetRole: "R2",
+        permissions: [],
+      });
       expect(store.listTemplates()).toHaveLength(2);
     });
   });
@@ -292,8 +343,14 @@ describe("RoleStore", () => {
       const templates = store.listTemplates();
       expect(templates).toHaveLength(5);
 
-      const names = templates.map((t) => t.templateName).sort();
-      expect(names).toEqual(["ApiCaller", "CodeExecutor", "DataAnalyzer", "DatabaseReader", "FileProcessor"]);
+      const names = templates.map(t => t.templateName).sort();
+      expect(names).toEqual([
+        "ApiCaller",
+        "CodeExecutor",
+        "DataAnalyzer",
+        "DatabaseReader",
+        "FileProcessor",
+      ]);
     });
 
     it("does not duplicate templates on repeated calls", () => {
@@ -306,7 +363,7 @@ describe("RoleStore", () => {
       store.initBuiltinTemplates();
       const tpl = store.getTemplateByRole("CodeExecutor")!;
       const networkDenies = tpl.permissions.filter(
-        (p) => p.resourceType === "network" && p.effect === "deny",
+        p => p.resourceType === "network" && p.effect === "deny"
       );
       expect(networkDenies.length).toBeGreaterThanOrEqual(1);
     });
@@ -315,7 +372,10 @@ describe("RoleStore", () => {
       store.initBuiltinTemplates();
       const tpl = store.getTemplateByRole("DataAnalyzer")!;
       const dbSelect = tpl.permissions.find(
-        (p) => p.resourceType === "database" && p.action === "select" && p.effect === "allow",
+        p =>
+          p.resourceType === "database" &&
+          p.action === "select" &&
+          p.effect === "allow"
       );
       expect(dbSelect).toBeDefined();
     });
@@ -324,7 +384,7 @@ describe("RoleStore", () => {
       store.initBuiltinTemplates();
       const tpl = store.getTemplateByRole("FileProcessor")!;
       const networkDenies = tpl.permissions.filter(
-        (p) => p.resourceType === "network" && p.effect === "deny",
+        p => p.resourceType === "network" && p.effect === "deny"
       );
       expect(networkDenies.length).toBeGreaterThanOrEqual(1);
     });
@@ -333,7 +393,10 @@ describe("RoleStore", () => {
       store.initBuiltinTemplates();
       const tpl = store.getTemplateByRole("ApiCaller")!;
       const apiCall = tpl.permissions.find(
-        (p) => p.resourceType === "api" && p.action === "call" && p.effect === "allow",
+        p =>
+          p.resourceType === "api" &&
+          p.action === "call" &&
+          p.effect === "allow"
       );
       expect(apiCall).toBeDefined();
     });
@@ -342,10 +405,10 @@ describe("RoleStore", () => {
       store.initBuiltinTemplates();
       const tpl = store.getTemplateByRole("DatabaseReader")!;
       const dbDenies = tpl.permissions.filter(
-        (p) => p.resourceType === "database" && p.effect === "deny",
+        p => p.resourceType === "database" && p.effect === "deny"
       );
       expect(dbDenies.length).toBeGreaterThanOrEqual(1);
-      const deniedActions = dbDenies.map((p) => p.action).sort();
+      const deniedActions = dbDenies.map(p => p.action).sort();
       expect(deniedActions).toContain("insert");
       expect(deniedActions).toContain("update");
       expect(deniedActions).toContain("delete");

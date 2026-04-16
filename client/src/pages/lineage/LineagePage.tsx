@@ -290,9 +290,7 @@ export function LineageContent({ embedded = false }: { embedded?: boolean }) {
     return (
       <div className="flex flex-col gap-4">
         <WorkspacePanel className="p-4 md:p-5">
-          <div className="flex justify-between mb-4">
-            {actions}
-          </div>
+          <div className="flex justify-between mb-4">{actions}</div>
           {toolbar}
         </WorkspacePanel>
         {content}

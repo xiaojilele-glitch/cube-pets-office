@@ -66,7 +66,12 @@ export interface FeishuCardPayload {
 }
 
 export interface FeishuOutboundMessage {
-  kind: "task-ack" | "task-progress" | "task-waiting" | "task-complete" | "task-failed";
+  kind:
+    | "task-ack"
+    | "task-progress"
+    | "task-waiting"
+    | "task-complete"
+    | "task-failed";
   target: FeishuTaskTarget;
   taskId: string;
   text: string;
@@ -127,7 +132,10 @@ interface TaskSubscription {
 
 type DeliveryQueue = Promise<void>;
 
-function formatTaskLink(baseTaskUrl: string | undefined, taskId: string): string | undefined {
+function formatTaskLink(
+  baseTaskUrl: string | undefined,
+  taskId: string
+): string | undefined {
   if (!baseTaskUrl) return undefined;
   return `${baseTaskUrl.replace(/\/$/, "")}/tasks/${taskId}`;
 }
@@ -161,7 +169,9 @@ function formatProgressText(task: FeishuTaskRecord, link?: string): string {
     .join("\n");
 }
 
-function formatDecision(decision: FeishuTaskDecisionPrompt | undefined): string | undefined {
+function formatDecision(
+  decision: FeishuTaskDecisionPrompt | undefined
+): string | undefined {
   if (!decision || decision.options.length === 0) return undefined;
   const lines = [decision.prompt];
   for (const option of decision.options) {
@@ -172,10 +182,19 @@ function formatDecision(decision: FeishuTaskDecisionPrompt | undefined): string 
   return lines.join("\n");
 }
 
-function formatDecisionResolvedText(task: FeishuTaskRecord, link?: string): string {
+function formatDecisionResolvedText(
+  task: FeishuTaskRecord,
+  link?: string
+): string {
   const resolved = task.lastResolvedDecision;
-  const choice = resolved?.optionLabel || resolved?.freeText || resolved?.optionId || "已确认";
-  const time = new Date(task.updatedAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
+  const choice =
+    resolved?.optionLabel ||
+    resolved?.freeText ||
+    resolved?.optionId ||
+    "已确认";
+  const time = new Date(task.updatedAt).toLocaleString("zh-CN", {
+    timeZone: "Asia/Shanghai",
+  });
   return [
     `任务已决策：${task.title}`,
     `选择结果：${choice}`,
@@ -227,7 +246,10 @@ function formatFailedText(task: FeishuTaskRecord, link?: string): string {
     .join("\n");
 }
 
-function formatRequestAckText(request: FeishuTaskRequest, taskId: string): string {
+function formatRequestAckText(
+  request: FeishuTaskRequest,
+  taskId: string
+): string {
   return [
     `已收到复杂请求：${request.title}`,
     `taskId：${taskId}`,
@@ -244,7 +266,9 @@ function progressBar(progress: number): string {
   return `${"■".repeat(filled)}${"□".repeat(10 - filled)} ${progress}%`;
 }
 
-function cardTemplateForStatus(status: FeishuTaskStatus): FeishuCardPayload["header"]["template"] {
+function cardTemplateForStatus(
+  status: FeishuTaskStatus
+): FeishuCardPayload["header"]["template"] {
   switch (status) {
     case "done":
       return "green";
@@ -366,7 +390,9 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
   }
 
   const waitingFallbackHint =
-    message.kind === "task-waiting" ? formatWaitingFallbackHint(message.link) : undefined;
+    message.kind === "task-waiting"
+      ? formatWaitingFallbackHint(message.link)
+      : undefined;
   if (waitingFallbackHint) {
     elements.push({
       tag: "div",
@@ -379,8 +405,14 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
 
   if (message.resolvedDecision) {
     const resolved = message.resolvedDecision;
-    const choice = resolved.optionLabel || resolved.freeText || resolved.optionId || "已确认";
-    const time = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" });
+    const choice =
+      resolved.optionLabel ||
+      resolved.freeText ||
+      resolved.optionId ||
+      "已确认";
+    const time = new Date().toLocaleString("zh-CN", {
+      timeZone: "Asia/Shanghai",
+    });
     elements.push({
       tag: "div",
       text: {
@@ -453,7 +485,9 @@ function createTaskCard(message: FeishuOutboundMessage): FeishuCardPayload {
 
 export class FeishuProgressBridge {
   private readonly delivery: FeishuBridgeDelivery;
-  private readonly config: Required<Pick<FeishuBridgeConfig, "progressThrottlePercent">> &
+  private readonly config: Required<
+    Pick<FeishuBridgeConfig, "progressThrottlePercent">
+  > &
     Omit<FeishuBridgeConfig, "progressThrottlePercent">;
   private readonly subscriptions = new Map<string, TaskSubscription>();
   private readonly deliveryQueues = new Map<string, DeliveryQueue>();
@@ -501,9 +535,7 @@ export class FeishuProgressBridge {
     this.deliveryQueues.delete(taskId);
   }
 
-  getTaskBinding(
-    taskId: string
-  ):
+  getTaskBinding(taskId: string):
     | {
         target: FeishuTaskTarget;
         firstMessageId?: string;
@@ -525,8 +557,12 @@ export class FeishuProgressBridge {
     };
   }
 
-  createRequestAck(taskId: string, request: FeishuTaskRequest): FeishuTaskRequestAck {
-    const link = request.link ?? formatTaskLink(this.config.baseTaskUrl, taskId);
+  createRequestAck(
+    taskId: string,
+    request: FeishuTaskRequest
+  ): FeishuTaskRequestAck {
+    const link =
+      request.link ?? formatTaskLink(this.config.baseTaskUrl, taskId);
     const message: FeishuOutboundMessage = {
       kind: "task-ack",
       target: request.target,
@@ -606,7 +642,10 @@ export class FeishuProgressBridge {
           progress: task.progress,
           status: task.status,
           stage,
-          detail: this.resolveTerminalCardDetail("task-complete", latest?.message),
+          detail: this.resolveTerminalCardDetail(
+            "task-complete",
+            latest?.message
+          ),
           summary: task.summary,
           link,
         };
@@ -625,7 +664,10 @@ export class FeishuProgressBridge {
           progress: task.progress,
           status: task.status,
           stage,
-          detail: this.resolveTerminalCardDetail("task-failed", latest?.message),
+          detail: this.resolveTerminalCardDetail(
+            "task-failed",
+            latest?.message
+          ),
           link,
         };
         await this.sendAndTrack(task.id, failedMessage);
@@ -634,7 +676,10 @@ export class FeishuProgressBridge {
       }
 
       const delta = task.progress - subscription.lastProgressSent;
-      if (delta < this.config.progressThrottlePercent && latest?.type === "log") {
+      if (
+        delta < this.config.progressThrottlePercent &&
+        latest?.type === "log"
+      ) {
         return;
       }
 
@@ -697,7 +742,8 @@ export class FeishuProgressBridge {
   private shouldSendFinalSummary(kind: FeishuOutboundMessage["kind"]): boolean {
     const mode = this.resolveFinalSummaryMode();
     if (mode === "none") return false;
-    if (mode === "both") return kind === "task-complete" || kind === "task-failed";
+    if (mode === "both")
+      return kind === "task-complete" || kind === "task-failed";
     if (mode === "complete") return kind === "task-complete";
     return kind === "task-failed";
   }
@@ -712,7 +758,10 @@ export class FeishuProgressBridge {
       : "任务执行失败，错误摘要已单独发送";
   }
 
-  private enqueueDelivery(taskId: string, deliver: () => Promise<void>): Promise<void> {
+  private enqueueDelivery(
+    taskId: string,
+    deliver: () => Promise<void>
+  ): Promise<void> {
     const previous = this.deliveryQueues.get(taskId) ?? Promise.resolve();
     const next = previous.catch(() => undefined).then(deliver);
     const tracked = next.finally(() => {
@@ -724,13 +773,19 @@ export class FeishuProgressBridge {
     return tracked;
   }
 
-  private withReplyContext(taskId: string, message: FeishuOutboundMessage): FeishuOutboundMessage {
+  private withReplyContext(
+    taskId: string,
+    message: FeishuOutboundMessage
+  ): FeishuOutboundMessage {
     const subscription = this.subscriptions.get(taskId);
     if (!subscription) return message;
 
-    const replyToMessageId = subscription.firstMessageId ?? subscription.replyToMessageId;
+    const replyToMessageId =
+      subscription.firstMessageId ?? subscription.replyToMessageId;
     const rootMessageId =
-      subscription.rootId ?? subscription.firstMessageId ?? subscription.target.rootMessageId;
+      subscription.rootId ??
+      subscription.firstMessageId ??
+      subscription.target.rootMessageId;
     return {
       ...message,
       target: {
@@ -742,7 +797,9 @@ export class FeishuProgressBridge {
     };
   }
 
-  private withMessageFormat(message: FeishuOutboundMessage): FeishuOutboundMessage {
+  private withMessageFormat(
+    message: FeishuOutboundMessage
+  ): FeishuOutboundMessage {
     if (!this.usesCardRendering(message)) {
       return {
         ...message,
@@ -761,7 +818,10 @@ export class FeishuProgressBridge {
     };
   }
 
-  private async sendAndTrack(taskId: string, message: FeishuOutboundMessage): Promise<void> {
+  private async sendAndTrack(
+    taskId: string,
+    message: FeishuOutboundMessage
+  ): Promise<void> {
     const formatted = this.withMessageFormat(message);
     const subscription = this.subscriptions.get(taskId);
 
@@ -777,13 +837,18 @@ export class FeishuProgressBridge {
       return;
     }
 
-    const receipt = await this.delivery.send(this.withReplyContext(taskId, formatted));
+    const receipt = await this.delivery.send(
+      this.withReplyContext(taskId, formatted)
+    );
     if (!subscription || !receipt) return;
     subscription.firstMessageId ??= receipt.messageId;
-    subscription.lastMessageId = receipt.messageId ?? subscription.lastMessageId;
-    subscription.rootId = receipt.rootId ?? subscription.rootId ?? subscription.firstMessageId;
+    subscription.lastMessageId =
+      receipt.messageId ?? subscription.lastMessageId;
+    subscription.rootId =
+      receipt.rootId ?? subscription.rootId ?? subscription.firstMessageId;
     subscription.threadId = receipt.threadId ?? subscription.threadId;
-    subscription.replyToMessageId = subscription.firstMessageId ?? subscription.replyToMessageId;
+    subscription.replyToMessageId =
+      subscription.firstMessageId ?? subscription.replyToMessageId;
   }
 
   private async sendFinalSummaryIfNeeded(
@@ -810,7 +875,8 @@ export class FeishuProgressBridge {
       })
     );
     if (!receipt) return;
-    subscription.lastMessageId = receipt.messageId ?? subscription.lastMessageId;
+    subscription.lastMessageId =
+      receipt.messageId ?? subscription.lastMessageId;
     subscription.rootId = receipt.rootId ?? subscription.rootId;
     subscription.threadId = receipt.threadId ?? subscription.threadId;
   }

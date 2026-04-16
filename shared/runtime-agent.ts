@@ -24,7 +24,9 @@ export interface LineageCollectorLike {
 
 let _lineageCollector: LineageCollectorLike | null = null;
 
-export function setLineageCollector(collector: LineageCollectorLike | null): void {
+export function setLineageCollector(
+  collector: LineageCollectorLike | null
+): void {
   _lineageCollector = collector;
 }
 
@@ -128,8 +130,7 @@ Important JSON requirements:
 
   // Inject vision contexts (legacy field or from multimodalContext)
   const visionContexts =
-    options.visionContexts ??
-    options.multimodalContext?.visionContexts;
+    options.visionContexts ?? options.multimodalContext?.visionContexts;
   if (visionContexts?.length) {
     for (const vc of visionContexts) {
       messages.push({
@@ -170,7 +171,7 @@ export class RuntimeAgent implements AgentHandle {
    */
   async lineageTracked<T>(
     fn: () => Promise<T>,
-    options?: LineageTrackOptions,
+    options?: LineageTrackOptions
   ): Promise<T> {
     const collector = _lineageCollector;
 
@@ -370,7 +371,10 @@ export class RuntimeAgent implements AgentHandle {
     if (options.visionContexts?.length) {
       llmOptions.maxTokens = (llmOptions.maxTokens || 3000) + 1000;
     }
-    const result = await this.deps.llmProvider.callJson<T>(messages, llmOptions);
+    const result = await this.deps.llmProvider.callJson<T>(
+      messages,
+      llmOptions
+    );
 
     // Emit "speaking" when voice context was provided (Req 4.3)
     if (options.multimodalContext?.voiceTranscript) {

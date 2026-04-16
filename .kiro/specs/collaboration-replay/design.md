@@ -69,38 +69,61 @@ graph TB
 // shared/replay/contracts.ts
 
 export const REPLAY_EVENT_TYPES = [
-  'AGENT_STARTED', 'AGENT_STOPPED',
-  'MESSAGE_SENT', 'MESSAGE_RECEIVED',
-  'DECISION_MADE', 'CODE_EXECUTED',
-  'RESOURCE_ACCESSED', 'ERROR_OCCURRED',
-  'MILESTONE_REACHED',
+  "AGENT_STARTED",
+  "AGENT_STOPPED",
+  "MESSAGE_SENT",
+  "MESSAGE_RECEIVED",
+  "DECISION_MADE",
+  "CODE_EXECUTED",
+  "RESOURCE_ACCESSED",
+  "ERROR_OCCURRED",
+  "MILESTONE_REACHED",
 ] as const;
-export type ReplayEventType = typeof REPLAY_EVENT_TYPES[number];
+export type ReplayEventType = (typeof REPLAY_EVENT_TYPES)[number];
 
 export const MESSAGE_TYPES = [
-  'INSTRUCTION', 'RESPONSE', 'QUERY', 'RESULT', 'ERROR', 'FEEDBACK',
+  "INSTRUCTION",
+  "RESPONSE",
+  "QUERY",
+  "RESULT",
+  "ERROR",
+  "FEEDBACK",
 ] as const;
-export type MessageType = typeof MESSAGE_TYPES[number];
+export type MessageType = (typeof MESSAGE_TYPES)[number];
 
 export const MESSAGE_STATUSES = [
-  'SENT', 'RECEIVED', 'PROCESSED', 'FAILED',
+  "SENT",
+  "RECEIVED",
+  "PROCESSED",
+  "FAILED",
 ] as const;
-export type MessageStatus = typeof MESSAGE_STATUSES[number];
+export type MessageStatus = (typeof MESSAGE_STATUSES)[number];
 
 export const EXECUTION_STATUSES = [
-  'SUCCESS', 'FAILURE', 'TIMEOUT', 'EXCEPTION',
+  "SUCCESS",
+  "FAILURE",
+  "TIMEOUT",
+  "EXCEPTION",
 ] as const;
-export type ExecutionStatus = typeof EXECUTION_STATUSES[number];
+export type ExecutionStatus = (typeof EXECUTION_STATUSES)[number];
 
 export const RESOURCE_TYPES = [
-  'FILE', 'DATABASE', 'API', 'NETWORK', 'MCP_TOOL',
+  "FILE",
+  "DATABASE",
+  "API",
+  "NETWORK",
+  "MCP_TOOL",
 ] as const;
-export type ResourceType = typeof RESOURCE_TYPES[number];
+export type ResourceType = (typeof RESOURCE_TYPES)[number];
 
 export const ACCESS_TYPES = [
-  'READ', 'WRITE', 'DELETE', 'EXECUTE', 'QUERY',
+  "READ",
+  "WRITE",
+  "DELETE",
+  "EXECUTE",
+  "QUERY",
 ] as const;
-export type AccessType = typeof ACCESS_TYPES[number];
+export type AccessType = (typeof ACCESS_TYPES)[number];
 
 export interface ExecutionEvent {
   eventId: string;
@@ -175,9 +198,9 @@ export interface ResourceAccessEventData {
 // server/replay/event-collector.ts
 
 interface EventCollectorOptions {
-  bufferSize?: number;       // 默认 1000
-  flushIntervalMs?: number;  // 默认 500ms
-  maxRetries?: number;       // 默认 3
+  bufferSize?: number; // 默认 1000
+  flushIntervalMs?: number; // 默认 500ms
+  maxRetries?: number; // 默认 3
 }
 
 class EventCollector {
@@ -187,7 +210,7 @@ class EventCollector {
   constructor(store: ReplayStore, options?: EventCollectorOptions);
 
   /** 异步入队事件，不阻塞调用方 */
-  emit(event: Omit<ExecutionEvent, 'eventId' | 'timestamp'>): void;
+  emit(event: Omit<ExecutionEvent, "eventId" | "timestamp">): void;
 
   /** 批量刷新缓冲区到存储层 */
   flush(): Promise<void>;
@@ -239,7 +262,7 @@ interface ReplayStoreInterface {
   getTimeline(missionId: string): Promise<ExecutionTimeline>;
 
   /** 导出事件流 */
-  exportEvents(missionId: string, format: 'json' | 'csv'): Promise<string>;
+  exportEvents(missionId: string, format: "json" | "csv"): Promise<string>;
 
   /** 验证数据完整性 */
   verifyIntegrity(missionId: string): Promise<boolean>;
@@ -285,9 +308,9 @@ class BrowserReplayStore implements ReplayStoreInterface { ... }
 // client/src/lib/replay/replay-engine.ts
 
 export const PLAYBACK_SPEEDS = [0.5, 1, 2, 4, 8] as const;
-export type PlaybackSpeed = typeof PLAYBACK_SPEEDS[number];
+export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
 
-export type ReplayState = 'idle' | 'playing' | 'paused' | 'stopped';
+export type ReplayState = "idle" | "playing" | "paused" | "stopped";
 
 interface ReplayEngineState {
   state: ReplayState;
@@ -341,8 +364,15 @@ function ReplayScene3D(props: ReplayScene3DProps): JSX.Element;
 
 // 子组件
 function AgentActivityOverlay(props: { event: ExecutionEvent }): JSX.Element;
-function CommunicationLine(props: { from: string; to: string; active: boolean }): JSX.Element;
-function DecisionGlow(props: { agentId: string; confidence: number }): JSX.Element;
+function CommunicationLine(props: {
+  from: string;
+  to: string;
+  active: boolean;
+}): JSX.Element;
+function DecisionGlow(props: {
+  agentId: string;
+  confidence: number;
+}): JSX.Element;
 function ErrorHighlight(props: { agentId: string }): JSX.Element;
 ```
 
@@ -415,9 +445,15 @@ class DataLineageTracker {
 
 // client/src/lib/replay/cost-tracker.ts
 class CostTracker {
-  calculateCumulativeCost(events: ExecutionEvent[], upToTime: number): CostSummary;
+  calculateCumulativeCost(
+    events: ExecutionEvent[],
+    upToTime: number
+  ): CostSummary;
   getCostDistribution(events: ExecutionEvent[]): CostDistribution;
-  detectCostAnomalies(events: ExecutionEvent[], threshold: number): CostAnomaly[];
+  detectCostAnomalies(
+    events: ExecutionEvent[],
+    threshold: number
+  ): CostAnomaly[];
   generateOptimizationSuggestions(distribution: CostDistribution): string[];
 }
 
@@ -426,7 +462,10 @@ class PerformanceAnalyzer {
   calculateMetrics(timeline: ExecutionTimeline): PerformanceMetrics;
   detectBottlenecks(timeline: ExecutionTimeline): Bottleneck[];
   analyzeConcurrency(timeline: ExecutionTimeline): ConcurrencyProfile;
-  comparePerformance(a: ExecutionTimeline, b: ExecutionTimeline): PerformanceComparison;
+  comparePerformance(
+    a: ExecutionTimeline,
+    b: ExecutionTimeline
+  ): PerformanceComparison;
 }
 
 // client/src/lib/replay/permission-auditor.ts
@@ -457,16 +496,16 @@ class ReplayExporter {
 
 ### 10. REST API
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /api/replay/:missionId | 获取 Mission 回放时间轴 |
-| GET | /api/replay/:missionId/events | 查询事件（支持过滤参数） |
-| GET | /api/replay/:missionId/export | 导出事件流（format=json\|csv） |
-| POST | /api/replay/:missionId/snapshots | 创建快照 |
-| GET | /api/replay/:missionId/snapshots | 获取快照列表 |
-| GET | /api/replay/:missionId/lineage | 获取数据血缘图 |
-| GET | /api/replay/:missionId/audit | 获取审计日志 |
-| POST | /api/replay/:missionId/verify | 验证数据完整性 |
+| 方法 | 路径                             | 说明                           |
+| ---- | -------------------------------- | ------------------------------ |
+| GET  | /api/replay/:missionId           | 获取 Mission 回放时间轴        |
+| GET  | /api/replay/:missionId/events    | 查询事件（支持过滤参数）       |
+| GET  | /api/replay/:missionId/export    | 导出事件流（format=json\|csv） |
+| POST | /api/replay/:missionId/snapshots | 创建快照                       |
+| GET  | /api/replay/:missionId/snapshots | 获取快照列表                   |
+| GET  | /api/replay/:missionId/lineage   | 获取数据血缘图                 |
+| GET  | /api/replay/:missionId/audit     | 获取审计日志                   |
+| POST | /api/replay/:missionId/verify    | 验证数据完整性                 |
 
 ## 数据模型
 
@@ -474,23 +513,24 @@ class ReplayExporter {
 
 ```typescript
 interface ExecutionEvent {
-  eventId: string;           // UUID v4
-  missionId: string;         // 关联的 Mission ID
-  timestamp: number;         // 毫秒级 Unix 时间戳
+  eventId: string; // UUID v4
+  missionId: string; // 关联的 Mission ID
+  timestamp: number; // 毫秒级 Unix 时间戳
   eventType: ReplayEventType;
-  sourceAgent: string;       // 来源 Agent ID
-  targetAgent?: string;      // 目标 Agent ID（通信事件必填）
-  eventData: CommunicationEventData
+  sourceAgent: string; // 来源 Agent ID
+  targetAgent?: string; // 目标 Agent ID（通信事件必填）
+  eventData:
+    | CommunicationEventData
     | DecisionEventData
     | CodeExecutionEventData
     | ResourceAccessEventData
     | Record<string, unknown>;
   metadata?: {
-    phase?: string;          // Mission 阶段
-    stageKey?: string;       // 对应 MissionStage.key
-    cost?: number;           // 本次操作成本（美元）
+    phase?: string; // Mission 阶段
+    stageKey?: string; // 对应 MissionStage.key
+    cost?: number; // 本次操作成本（美元）
     tokenUsage?: { prompt: number; completion: number };
-    checksum?: string;       // 事件数据校验和
+    checksum?: string; // 事件数据校验和
   };
 }
 ```
@@ -503,16 +543,16 @@ interface ExecutionTimeline {
   events: ExecutionEvent[];
   startTime: number;
   endTime: number;
-  totalDuration: number;     // endTime - startTime
-  eventCount: number;        // events.length
+  totalDuration: number; // endTime - startTime
+  eventCount: number; // events.length
   indices: {
-    byTime: Map<number, number[]>;      // 时间桶 → 事件索引
-    byAgent: Map<string, number[]>;     // Agent ID → 事件索引
+    byTime: Map<number, number[]>; // 时间桶 → 事件索引
+    byAgent: Map<string, number[]>; // Agent ID → 事件索引
     byType: Map<ReplayEventType, number[]>; // 事件类型 → 事件索引
-    byResource: Map<string, number[]>;  // 资源 ID → 事件索引
+    byResource: Map<string, number[]>; // 资源 ID → 事件索引
   };
-  version: number;           // 数据版本号
-  checksum: string;          // 整体校验和
+  version: number; // 数据版本号
+  checksum: string; // 整体校验和
 }
 ```
 
@@ -522,8 +562,8 @@ interface ExecutionTimeline {
 interface ReplaySnapshot {
   snapshotId: string;
   missionId: string;
-  timestamp: number;         // 快照对应的回放时间点
-  createdAt: number;         // 快照创建时间
+  timestamp: number; // 快照对应的回放时间点
+  createdAt: number; // 快照创建时间
   label: string;
   note?: string;
   version: number;
@@ -549,9 +589,9 @@ interface LineageNode {
 }
 
 interface LineageEdge {
-  from: string;  // LineageNode.id
+  from: string; // LineageNode.id
   to: string;
-  transformType: 'pass-through' | 'transform' | 'aggregate' | 'split';
+  transformType: "pass-through" | "transform" | "aggregate" | "split";
 }
 
 interface LineageGraph {
@@ -609,7 +649,7 @@ interface AuditEntry {
   id: string;
   userId: string;
   missionId: string;
-  action: 'play' | 'pause' | 'seek' | 'export' | 'snapshot' | 'view';
+  action: "play" | "pause" | "seek" | "export" | "snapshot" | "view";
   timestamp: number;
   details?: Record<string, unknown>;
 }
@@ -618,6 +658,7 @@ interface AuditEntry {
 ### 存储结构
 
 **服务端 JSON 文件结构**：
+
 ```
 data/replay/
   ├── {missionId}/
@@ -630,22 +671,23 @@ data/replay/
 ```
 
 **前端 IndexedDB Store**：
+
 ```
 replay-events     — 事件记录（按 missionId 分区）
 replay-timelines  — 时间轴元数据
 replay-snapshots  — 快照数据
 ```
 
-
 ## 正确性属性 (Correctness Properties)
 
-*属性（Property）是一种在系统所有有效执行中都应成立的特征或行为——本质上是对系统应做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。*
+_属性（Property）是一种在系统所有有效执行中都应成立的特征或行为——本质上是对系统应做什么的形式化陈述。属性是人类可读规范与机器可验证正确性保证之间的桥梁。_
 
 以下属性基于需求文档中的验收标准推导而来，每个属性都包含显式的"对于任意"（for all）量化声明，可直接用于属性测试（property-based testing）。
 
 ### Property 1: 事件结构完整性
 
-*对于任意* ExecutionEvent，根据其 eventType，eventData 中应包含该类型所要求的全部必填字段：
+_对于任意_ ExecutionEvent，根据其 eventType，eventData 中应包含该类型所要求的全部必填字段：
+
 - MESSAGE_SENT/MESSAGE_RECEIVED → senderId、receiverId、messageId、messageContent、messageType、status
 - DECISION_MADE → decisionId、agentId、decisionInput、decisionLogic、decisionResult、confidence
 - CODE_EXECUTED → agentId、codeSnippet、codeLanguage、executionInput、executionOutput、executionStatus、executionTime
@@ -687,19 +729,20 @@ replay-snapshots  — 快照数据
 
 ### Property 7: 决策置信度范围不变量
 
-*对于任意* DecisionEvent，confidence 字段的值应满足 `0 <= confidence <= 1`。
+_对于任意_ DecisionEvent，confidence 字段的值应满足 `0 <= confidence <= 1`。
 
 **Validates: Requirements 3.5**
 
 ### Property 8: 决策验证标注往返
 
-*对于任意* DecisionEvent，添加验证标注（correct: boolean, betterChoice: string）后，重新读取该事件应返回相同的验证标注值。
+_对于任意_ DecisionEvent，添加验证标注（correct: boolean, betterChoice: string）后，重新读取该事件应返回相同的验证标注值。
 
 **Validates: Requirements 3.6**
 
 ### Property 9: 时间轴一致性
 
 *对于任意*由事件列表构建的 ExecutionTimeline：
+
 - `totalDuration` 应等于 `endTime - startTime`
 - `eventCount` 应等于 `events.length`
 - `startTime` 应等于第一个事件的 timestamp
@@ -710,7 +753,7 @@ replay-snapshots  — 快照数据
 
 ### Property 10: 多维索引正确性
 
-*对于任意* ExecutionTimeline 和任意查询条件（agentId、eventType、timeRange），通过索引查询返回的事件子集中，每个事件都应满足查询条件，且不遗漏任何满足条件的事件。
+_对于任意_ ExecutionTimeline 和任意查询条件（agentId、eventType、timeRange），通过索引查询返回的事件子集中，每个事件都应满足查询条件，且不遗漏任何满足条件的事件。
 
 **Validates: Requirements 6.2**
 
@@ -722,7 +765,8 @@ replay-snapshots  — 快照数据
 
 ### Property 12: 增量追加不变量
 
-*对于任意* ExecutionTimeline，追加 N 条新事件后：
+_对于任意_ ExecutionTimeline，追加 N 条新事件后：
+
 - `eventCount` 应增加 N
 - 原有事件的顺序和内容不变
 - 新事件出现在末尾
@@ -731,13 +775,14 @@ replay-snapshots  — 快照数据
 
 ### Property 13: JSON 导出往返
 
-*对于任意* ExecutionTimeline，导出为 JSON 后再解析，应产生与原始时间轴深度相等的对象。
+_对于任意_ ExecutionTimeline，导出为 JSON 后再解析，应产生与原始时间轴深度相等的对象。
 
 **Validates: Requirements 6.6, 15.1**
 
 ### Property 14: 回放引擎状态机
 
 *对于任意*回放引擎操作序列，状态转换应遵循以下规则：
+
 - idle → play → playing
 - playing → pause → paused
 - paused → resume → playing
@@ -749,6 +794,7 @@ replay-snapshots  — 快照数据
 ### Property 15: 过滤正确性
 
 *对于任意*事件列表和任意过滤条件（eventTypes 和/或 agentIds），过滤后的结果应满足：
+
 - 结果中每个事件的 eventType 在 eventTypes 集合中（若指定）
 - 结果中每个事件的 sourceAgent 或 targetAgent 在 agentIds 集合中（若指定）
 - 结果长度 <= 原始列表长度
@@ -788,6 +834,7 @@ replay-snapshots  — 快照数据
 ### Property 21: 成本计算不变量
 
 *对于任意*事件列表和任意时间点 T：
+
 - 截至 T 的累计成本应等于所有 timestamp <= T 的事件的 metadata.cost 之和
 - 按 Agent/模型/操作类型的成本分布之和应等于总成本
 
@@ -801,7 +848,8 @@ replay-snapshots  — 快照数据
 
 ### Property 23: 性能指标一致性
 
-*对于任意* ExecutionTimeline，计算的性能指标应满足：
+_对于任意_ ExecutionTimeline，计算的性能指标应满足：
+
 - totalDuration 等于 timeline.totalDuration
 - 各阶段耗时之和 <= totalDuration
 - LLM 调用次数等于 DECISION_MADE 类型事件的数量
@@ -810,13 +858,14 @@ replay-snapshots  — 快照数据
 
 ### Property 24: 瓶颈检测正确性
 
-*对于任意* ExecutionTimeline，标记为瓶颈的阶段其耗时应 > 所有阶段平均耗时的 2 倍，未标记为瓶颈的阶段其耗时应 <= 2 倍平均耗时。
+_对于任意_ ExecutionTimeline，标记为瓶颈的阶段其耗时应 > 所有阶段平均耗时的 2 倍，未标记为瓶颈的阶段其耗时应 <= 2 倍平均耗时。
 
 **Validates: Requirements 13.2**
 
 ### Property 25: 并发度分析边界
 
-*对于任意* ExecutionTimeline，分析的并发度应满足：
+_对于任意_ ExecutionTimeline，分析的并发度应满足：
+
 - maxConcurrentAgents >= 1
 - maxConcurrentAgents <= 时间轴中出现的不同 Agent 总数
 - 并发度时间线中每个时间点的 activeAgents >= 0
@@ -831,7 +880,7 @@ replay-snapshots  — 快照数据
 
 ### Property 27: 快照导出/导入往返
 
-*对于任意* ReplaySnapshot，导出为 JSON 后再导入，应产生与原始快照深度相等的对象。
+_对于任意_ ReplaySnapshot，导出为 JSON 后再导入，应产生与原始快照深度相等的对象。
 
 **Validates: Requirements 14.4**
 
@@ -843,17 +892,18 @@ replay-snapshots  — 快照数据
 
 ### Property 29: 交互式 HTML 包含事件数据
 
-*对于任意* ExecutionTimeline，导出的交互式 HTML 应包含嵌入的事件数据（可从 HTML 中提取并解析为等价的事件列表）。
+_对于任意_ ExecutionTimeline，导出的交互式 HTML 应包含嵌入的事件数据（可从 HTML 中提取并解析为等价的事件列表）。
 
 **Validates: Requirements 15.5**
 
 ### Property 30: 事件流差异正确性
 
 *对于任意*两个事件流 A 和 B，差异分析应正确识别：
+
 - 仅在 A 中出现的事件类型
 - 仅在 B 中出现的事件类型
 - 两者共有的事件类型
-且三个集合的并集应等于 A 和 B 的事件类型并集。
+  且三个集合的并集应等于 A 和 B 的事件类型并集。
 
 **Validates: Requirements 16.4**
 
@@ -878,6 +928,7 @@ replay-snapshots  — 快照数据
 ### Property 34: 数据清理正确性
 
 *对于任意*回放数据集合和清理阈值（天数），清理操作后：
+
 - 所有创建时间超过阈值的数据应被删除
 - 所有创建时间未超过阈值的数据应保留不变
 
@@ -885,7 +936,7 @@ replay-snapshots  — 快照数据
 
 ### Property 35: 版本递增不变量
 
-*对于任意* ExecutionTimeline，每次更新操作后 version 字段应严格递增（新版本 > 旧版本）。
+_对于任意_ ExecutionTimeline，每次更新操作后 version 字段应严格递增（新版本 > 旧版本）。
 
 **Validates: Requirements 19.4**
 
@@ -897,7 +948,7 @@ replay-snapshots  — 快照数据
 
 ### Property 37: 审计日志查询往返
 
-*对于任意* AuditEntry，通过 userId、missionId 或时间范围查询，应能检索到该条目。
+_对于任意_ AuditEntry，通过 userId、missionId 或时间范围查询，应能检索到该条目。
 
 **Validates: Requirements 20.2**
 
@@ -910,6 +961,7 @@ replay-snapshots  — 快照数据
 ### Property 39: 基于角色的访问控制
 
 *对于任意*用户和 Mission，访问控制应满足：
+
 - 管理员角色可访问所有 Mission 的回放
 - 普通用户仅可访问自己创建的 Mission 的回放
 - 未授权访问应被拒绝
@@ -920,38 +972,38 @@ replay-snapshots  — 快照数据
 
 ### 采集层错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| 事件入队失败（内存不足） | 丢弃最旧的缓冲事件，记录 warning 日志 |
-| 存储写入失败 | 事件进入 failedQueue，指数退避重试（最多 3 次） |
-| 拦截器安装失败 | 记录 error 日志，回放功能降级但不影响主业务 |
-| 事件数据序列化失败 | 记录原始事件的 eventId 和 eventType，跳过该事件 |
+| 错误场景                 | 处理策略                                        |
+| ------------------------ | ----------------------------------------------- |
+| 事件入队失败（内存不足） | 丢弃最旧的缓冲事件，记录 warning 日志           |
+| 存储写入失败             | 事件进入 failedQueue，指数退避重试（最多 3 次） |
+| 拦截器安装失败           | 记录 error 日志，回放功能降级但不影响主业务     |
+| 事件数据序列化失败       | 记录原始事件的 eventId 和 eventType，跳过该事件 |
 
 ### 存储层错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| IndexedDB 不可用 | 回退到内存存储，提示用户数据不持久 |
+| 错误场景             | 处理策略                                        |
+| -------------------- | ----------------------------------------------- |
+| IndexedDB 不可用     | 回退到内存存储，提示用户数据不持久              |
 | 服务端 JSON 文件损坏 | 从备份恢复，若无备份则标记该 Mission 回放不可用 |
-| 磁盘空间不足 | 触发紧急清理（删除最旧的冷数据），记录告警 |
-| 数据完整性校验失败 | 标记数据为不可信，提示用户 |
+| 磁盘空间不足         | 触发紧急清理（删除最旧的冷数据），记录告警      |
+| 数据完整性校验失败   | 标记数据为不可信，提示用户                      |
 
 ### 回放层错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| 时间轴加载失败 | 显示错误提示，提供重试按钮 |
-| 3D 渲染异常 | 降级为 2D 事件列表视图 |
+| 错误场景         | 处理策略                               |
+| ---------------- | -------------------------------------- |
+| 时间轴加载失败   | 显示错误提示，提供重试按钮             |
+| 3D 渲染异常      | 降级为 2D 事件列表视图                 |
 | 事件数据解析失败 | 跳过该事件，在时间轴上标记为"数据缺失" |
-| 快照恢复失败 | 提示用户快照可能已过期，提供删除选项 |
+| 快照恢复失败     | 提示用户快照可能已过期，提供删除选项   |
 
 ### 分析层错误
 
-| 错误场景 | 处理策略 |
-|---------|---------|
-| 血缘图构建失败 | 显示部分血缘信息，标记不完整区域 |
-| 成本数据缺失 | 显示"成本数据不可用"，不影响其他功能 |
-| 性能分析超时 | 显示已计算的部分指标，标记未完成项 |
+| 错误场景       | 处理策略                             |
+| -------------- | ------------------------------------ |
+| 血缘图构建失败 | 显示部分血缘信息，标记不完整区域     |
+| 成本数据缺失   | 显示"成本数据不可用"，不影响其他功能 |
+| 性能分析超时   | 显示已计算的部分指标，标记未完成项   |
 
 ## 测试策略
 
@@ -971,6 +1023,7 @@ replay-snapshots  — 快照数据
 ### 测试分层
 
 **第一层：数据模型与序列化（Property 1, 4, 7, 9, 13, 27, 31）**
+
 - 事件结构验证
 - 消息内容保真
 - 置信度范围
@@ -979,6 +1032,7 @@ replay-snapshots  — 快照数据
 - 快照导出/导入往返
 
 **第二层：核心引擎逻辑（Property 2, 3, 10, 12, 14, 15, 16, 32）**
+
 - 非阻塞采集
 - 失败缓冲
 - 索引正确性
@@ -988,6 +1042,7 @@ replay-snapshots  — 快照数据
 - 交互式暂停
 
 **第三层：分析功能（Property 17, 18, 19, 20, 21, 22, 23, 24, 25, 30）**
+
 - 关联查询
 - 血缘追踪
 - 权限统计
@@ -996,6 +1051,7 @@ replay-snapshots  — 快照数据
 - 事件流差异
 
 **第四层：安全与审计（Property 5, 6, 34, 35, 36, 37, 38, 39）**
+
 - 敏感数据保护
 - 转发链路
 - 数据清理

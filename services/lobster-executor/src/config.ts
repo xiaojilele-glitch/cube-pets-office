@@ -16,14 +16,12 @@ function defaultDockerHost(platform: string): string {
 }
 
 export function parseDockerHost(
-  dockerHost: string | undefined,
+  dockerHost: string | undefined
 ): Dockerode.DockerOptions {
   if (!dockerHost) return {};
 
   if (dockerHost.startsWith("npipe:")) {
-    const pipePath = dockerHost
-      .replace(/^npipe:\/\//, "")
-      .replace(/\//g, "\\");
+    const pipePath = dockerHost.replace(/^npipe:\/\//, "").replace(/\//g, "\\");
     return { socketPath: pipePath };
   }
 
@@ -63,7 +61,8 @@ export function readLobsterExecutorConfig(
       1,
       Number.parseInt(env.LOBSTER_MAX_CONCURRENT_JOBS || "2", 10) || 2
     ),
-    dockerHost: env.LOBSTER_DOCKER_HOST || env.DOCKER_HOST || defaultDockerHost(platform),
+    dockerHost:
+      env.LOBSTER_DOCKER_HOST || env.DOCKER_HOST || defaultDockerHost(platform),
     dockerTlsVerify: env.DOCKER_TLS_VERIFY === "1" ? true : undefined,
     dockerCertPath: env.DOCKER_CERT_PATH || undefined,
     callbackSecret: env.EXECUTOR_CALLBACK_SECRET || "",

@@ -39,7 +39,7 @@ export interface SwarmState {
   addSession: (session: CollaborationSession) => void;
   updateSession: (
     sessionId: string,
-    update: Partial<CollaborationSession>,
+    update: Partial<CollaborationSession>
   ) => void;
   removeSession: (sessionId: string) => void;
   addCrossPodMessage: (event: CrossPodMessageEvent) => void;
@@ -55,7 +55,7 @@ export const useSwarmStore = create<SwarmState>((set, get) => ({
   crossPodMessages: [],
 
   addSession: (session: CollaborationSession) => {
-    set((s) => {
+    set(s => {
       const sessions = [...s.activeSessions, session];
       // Keep max 20 active sessions, trim oldest first
       return {
@@ -67,25 +67,22 @@ export const useSwarmStore = create<SwarmState>((set, get) => ({
     });
   },
 
-  updateSession: (
-    sessionId: string,
-    update: Partial<CollaborationSession>,
-  ) => {
-    set((s) => ({
-      activeSessions: s.activeSessions.map((session) =>
-        session.id === sessionId ? { ...session, ...update } : session,
+  updateSession: (sessionId: string, update: Partial<CollaborationSession>) => {
+    set(s => ({
+      activeSessions: s.activeSessions.map(session =>
+        session.id === sessionId ? { ...session, ...update } : session
       ),
     }));
   },
 
   removeSession: (sessionId: string) => {
-    set((s) => ({
-      activeSessions: s.activeSessions.filter((sess) => sess.id !== sessionId),
+    set(s => ({
+      activeSessions: s.activeSessions.filter(sess => sess.id !== sessionId),
     }));
   },
 
   addCrossPodMessage: (event: CrossPodMessageEvent) => {
-    set((s) => {
+    set(s => {
       const messages = [...s.crossPodMessages, event];
       // Keep max 50 messages, trim oldest first
       return {
@@ -105,15 +102,13 @@ export const useSwarmStore = create<SwarmState>((set, get) => ({
     socket.on(
       "collaboration_session_update",
       (session: CollaborationSession) => {
-        const existing = get().activeSessions.find(
-          (s) => s.id === session.id,
-        );
+        const existing = get().activeSessions.find(s => s.id === session.id);
         if (existing) {
           get().updateSession(session.id, session);
         } else {
           get().addSession(session);
         }
-      },
+      }
     );
   },
 }));

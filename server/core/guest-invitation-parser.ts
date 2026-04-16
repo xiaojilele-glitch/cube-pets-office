@@ -46,7 +46,9 @@ function extractSkills(message: string, guestName: string): string[] {
   const skills: string[] = [];
 
   // Remove the @Name part for context analysis
-  const contextText = message.replace(new RegExp(`@${guestName}`, "gi"), "").trim();
+  const contextText = message
+    .replace(new RegExp(`@${guestName}`, "gi"), "")
+    .trim();
 
   // Chinese skill patterns
   const cnSkillPatterns = [

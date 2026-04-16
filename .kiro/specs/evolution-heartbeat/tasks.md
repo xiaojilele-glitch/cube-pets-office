@@ -12,7 +12,7 @@
   - [x] 2.1 实现 registerTask()：从评分 ≥12 的任务中提取能力描述
   - [x] 2.2 实现 extractTaskCapabilities()：按行切分 + cleanCapability() 清洗 + hasActionSignal() 过滤
   - [x] 2.3 实现 scoreToConfidence()：评分映射到 0.35-0.95 的 evidence 值
-  - [x] 2.4 实现 EMA 置信度更新：confidence = previous * 0.7 + evidence * 0.3
+  - [x] 2.4 实现 EMA 置信度更新：confidence = previous _ 0.7 + evidence _ 0.3
   - [x] 2.5 实现 registerWorkflow()：批量处理一轮工作流所有任务
   - [x] 2.6 能力数据写入 agent_capabilities 表（upsert 语义）
 - [x] 3. 实现 HeartbeatScheduler

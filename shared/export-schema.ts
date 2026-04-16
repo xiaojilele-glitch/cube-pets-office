@@ -13,10 +13,7 @@ import type {
   WorkflowOrganizationNode,
 } from "./organization-schema.js";
 import type { WorkflowRecord, TaskRecord } from "./workflow-runtime.js";
-import {
-  WORKFLOW_STAGES,
-  WORKFLOW_STAGE_LABELS,
-} from "./workflow-runtime.js";
+import { WORKFLOW_STAGES, WORKFLOW_STAGE_LABELS } from "./workflow-runtime.js";
 
 // Re-export ExportFile so consumers can import from this module
 export type { ExportFile };
@@ -185,20 +182,21 @@ export function buildExportIR(
   }
 
   // --- 1. Agents ---
-  const agents: AgentDefinition[] = organization.nodes.map((node) =>
+  const agents: AgentDefinition[] = organization.nodes.map(node =>
     mapNodeToAgent(node)
   );
 
   // --- 2. Teams ---
-  const teams: TeamDefinition[] = organization.departments.map((dept) => {
+  const teams: TeamDefinition[] = organization.departments.map(dept => {
     const memberAgentIds = organization.nodes
-      .filter((n) => n.departmentId === dept.id)
-      .map((n) => n.agentId);
+      .filter(n => n.departmentId === dept.id)
+      .map(n => n.agentId);
 
     return {
       id: dept.id,
       label: dept.label,
-      managerAgentId: nodeIdToAgentId.get(dept.managerNodeId) ?? dept.managerNodeId,
+      managerAgentId:
+        nodeIdToAgentId.get(dept.managerNodeId) ?? dept.managerNodeId,
       memberAgentIds,
       strategy: dept.strategy,
       direction: dept.direction,
@@ -206,7 +204,7 @@ export function buildExportIR(
   });
 
   // --- 3. Pipeline (fixed 10 stages) ---
-  const stages: StageDefinition[] = WORKFLOW_STAGES.map((stageName) => {
+  const stages: StageDefinition[] = WORKFLOW_STAGES.map(stageName => {
     const config = STAGE_CONFIG[stageName] ?? {
       participantRoles: ["ceo", "manager", "worker"] as const,
       executionStrategy: "sequential" as const,
@@ -277,8 +275,8 @@ export function buildExportIR(
 // ---------------------------------------------------------------------------
 
 function mapNodeToAgent(node: WorkflowOrganizationNode): AgentDefinition {
-  const skillIds = (node.skills ?? []).map((s) => s.id);
-  const toolIds = (node.mcp ?? []).map((m) => m.id);
+  const skillIds = (node.skills ?? []).map(s => s.id);
+  const toolIds = (node.mcp ?? []).map(m => m.id);
 
   return {
     id: node.agentId,

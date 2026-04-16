@@ -66,7 +66,7 @@ export const serverRuntime: WorkflowRuntime = {
  * and mission system are initialised (avoids circular dependency).
  */
 export function setOnStageCompleted(
-  cb: (workflowId: string, completedStage: string) => void | Promise<void>,
+  cb: (workflowId: string, completedStage: string) => void | Promise<void>
 ): void {
   serverRuntime.onStageCompleted = cb;
 }

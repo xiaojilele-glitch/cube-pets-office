@@ -8,15 +8,18 @@
  * 后续信誉更新的 EMA alpha 值应为 alpha * streak.alphaMultiplier；连续记录断裂后恢复正常 alpha。
  */
 
-import { describe, it, expect } from 'vitest';
-import * as fc from 'fast-check';
-import { ReputationService } from '../core/reputation/reputation-service.js';
-import { ReputationCalculator } from '../core/reputation/reputation-calculator.js';
-import { TrustTierEvaluator } from '../core/reputation/trust-tier-evaluator.js';
-import { AnomalyDetector } from '../core/reputation/anomaly-detector.js';
-import { DEFAULT_REPUTATION_CONFIG } from '../../shared/reputation.js';
-import type { ReputationConfig, ReputationSignal } from '../../shared/reputation.js';
-import db from '../db/index.js';
+import { describe, it, expect } from "vitest";
+import * as fc from "fast-check";
+import { ReputationService } from "../core/reputation/reputation-service.js";
+import { ReputationCalculator } from "../core/reputation/reputation-calculator.js";
+import { TrustTierEvaluator } from "../core/reputation/trust-tier-evaluator.js";
+import { AnomalyDetector } from "../core/reputation/anomaly-detector.js";
+import { DEFAULT_REPUTATION_CONFIG } from "../../shared/reputation.js";
+import type {
+  ReputationConfig,
+  ReputationSignal,
+} from "../../shared/reputation.js";
+import db from "../db/index.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -46,11 +49,15 @@ function createService(config: ReputationConfig): ReputationService {
     new ReputationCalculator(config),
     new TrustTierEvaluator(config),
     new AnomalyDetector(config),
-    config,
+    config
   );
 }
 
-function makeSignal(agentId: string, taskQualityScore: number, taskIndex: number): ReputationSignal {
+function makeSignal(
+  agentId: string,
+  taskQualityScore: number,
+  taskIndex: number
+): ReputationSignal {
   return {
     agentId,
     taskId: `task-${agentId}-${taskIndex}`,
@@ -61,7 +68,7 @@ function makeSignal(agentId: string, taskQualityScore: number, taskIndex: number
     tokenBudget: 1000,
     wasRolledBack: false,
     downstreamFailures: 0,
-    taskComplexity: 'medium',
+    taskComplexity: "medium",
     timestamp: new Date().toISOString(),
   };
 }
@@ -70,12 +77,12 @@ function makeSignal(agentId: string, taskQualityScore: number, taskIndex: number
 // Property Tests
 // ---------------------------------------------------------------------------
 
-describe('Property 15: 连胜加速机制', () => {
+describe("Property 15: 连胜加速机制", () => {
   // -------------------------------------------------------------------------
   // Streak counter increments for high-quality tasks and resets on low-quality
   // -------------------------------------------------------------------------
 
-  it('consecutiveHighQuality increments for each task with qualityScore >= qualityMin', () => {
+  it("consecutiveHighQuality increments for each task with qualityScore >= qualityMin", () => {
     const config = streakTestConfig();
     const { threshold, qualityMin } = config.streak;
 
@@ -94,9 +101,9 @@ describe('Property 15: 连胜加速机制', () => {
 
           const profile = db.getReputationProfile(agentId)!;
           expect(profile.consecutiveHighQuality).toBe(numTasks);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -104,7 +111,7 @@ describe('Property 15: 连胜加速机制', () => {
   // Streak resets to 0 when a low-quality task is encountered
   // -------------------------------------------------------------------------
 
-  it('consecutiveHighQuality resets to 0 when taskQualityScore < qualityMin', () => {
+  it("consecutiveHighQuality resets to 0 when taskQualityScore < qualityMin", () => {
     const config = streakTestConfig();
     const { threshold, qualityMin } = config.streak;
 
@@ -121,14 +128,20 @@ describe('Property 15: 连胜加速机制', () => {
           for (let i = 0; i < streakLength; i++) {
             service.handleTaskCompleted(makeSignal(agentId, qualityMin, i));
           }
-          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(streakLength);
+          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(
+            streakLength
+          );
 
           // Break streak
-          service.handleTaskCompleted(makeSignal(agentId, lowQuality, streakLength));
-          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(0);
-        },
+          service.handleTaskCompleted(
+            makeSignal(agentId, lowQuality, streakLength)
+          );
+          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(
+            0
+          );
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -136,7 +149,7 @@ describe('Property 15: 连胜加速机制', () => {
   // After reaching threshold, quality delta is boosted (larger due to higher alpha)
   // -------------------------------------------------------------------------
 
-  it('quality delta is larger with streak bonus than without (boosted alpha)', () => {
+  it("quality delta is larger with streak bonus than without (boosted alpha)", () => {
     const config = streakTestConfig();
     const { threshold, qualityMin } = config.streak;
 
@@ -169,8 +182,10 @@ describe('Property 15: 连胜加速机制', () => {
           serviceA.handleTaskCompleted(makeSignal(agentA, quality, threshold));
           serviceB.handleTaskCompleted(makeSignal(agentB, quality, 0));
 
-          const qualityAfterA = db.getReputationProfile(agentA)!.dimensions.qualityScore;
-          const qualityAfterB = db.getReputationProfile(agentB)!.dimensions.qualityScore;
+          const qualityAfterA =
+            db.getReputationProfile(agentA)!.dimensions.qualityScore;
+          const qualityAfterB =
+            db.getReputationProfile(agentB)!.dimensions.qualityScore;
 
           const deltaA = qualityAfterA - qualityBeforeA;
           const deltaB = qualityAfterB - qualityBeforeA;
@@ -182,20 +197,21 @@ describe('Property 15: 连胜加速机制', () => {
             expect(Math.abs(deltaA - deltaB)).toBeLessThanOrEqual(1);
           } else {
             // Streak agent should have a larger absolute delta (with rounding tolerance)
-            expect(Math.abs(deltaA)).toBeGreaterThanOrEqual(Math.abs(deltaB) - 1);
+            expect(Math.abs(deltaA)).toBeGreaterThanOrEqual(
+              Math.abs(deltaB) - 1
+            );
           }
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
-
 
   // -------------------------------------------------------------------------
   // After streak breaks, alpha returns to normal (delta matches non-streak agent)
   // -------------------------------------------------------------------------
 
-  it('after streak breaks, quality delta returns to normal alpha', () => {
+  it("after streak breaks, quality delta returns to normal alpha", () => {
     const config = streakTestConfig();
     const { threshold, qualityMin } = config.streak;
 
@@ -213,11 +229,17 @@ describe('Property 15: 连胜加速机制', () => {
           for (let i = 0; i < threshold; i++) {
             service.handleTaskCompleted(makeSignal(agentId, highQuality, i));
           }
-          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(threshold);
+          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(
+            threshold
+          );
 
           // Break streak with low-quality task
-          service.handleTaskCompleted(makeSignal(agentId, lowQuality, threshold));
-          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(0);
+          service.handleTaskCompleted(
+            makeSignal(agentId, lowQuality, threshold)
+          );
+          expect(db.getReputationProfile(agentId)!.consecutiveHighQuality).toBe(
+            0
+          );
 
           // Now send a post-break task and compare with a fresh agent at same score
           const profileAfterBreak = db.getReputationProfile(agentId)!;
@@ -233,17 +255,21 @@ describe('Property 15: 连胜加速机制', () => {
           db.upsertReputationProfile(profileB);
 
           // Send same signal to both
-          service.handleTaskCompleted(makeSignal(agentId, postBreakQuality, threshold + 1));
+          service.handleTaskCompleted(
+            makeSignal(agentId, postBreakQuality, threshold + 1)
+          );
           serviceB.handleTaskCompleted(makeSignal(agentB, postBreakQuality, 0));
 
-          const qualityAfterA = db.getReputationProfile(agentId)!.dimensions.qualityScore;
-          const qualityAfterB = db.getReputationProfile(agentB)!.dimensions.qualityScore;
+          const qualityAfterA =
+            db.getReputationProfile(agentId)!.dimensions.qualityScore;
+          const qualityAfterB =
+            db.getReputationProfile(agentB)!.dimensions.qualityScore;
 
           // Both should produce the same delta (normal alpha, no streak bonus)
           expect(qualityAfterA).toBe(qualityAfterB);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -251,7 +277,7 @@ describe('Property 15: 连胜加速机制', () => {
   // Verify the exact boosted alpha value: alpha * alphaMultiplier
   // -------------------------------------------------------------------------
 
-  it('streak-boosted EMA uses exactly alpha * alphaMultiplier', () => {
+  it("streak-boosted EMA uses exactly alpha * alphaMultiplier", () => {
     const config = streakTestConfig();
     const { threshold, qualityMin, alphaMultiplier } = config.streak;
     const baseAlpha = config.ema.qualityAlpha;
@@ -277,7 +303,8 @@ describe('Property 15: 连胜加速机制', () => {
           // Send one more high-quality task — this should use boosted alpha
           service.handleTaskCompleted(makeSignal(agentId, quality, threshold));
 
-          const qAfter = db.getReputationProfile(agentId)!.dimensions.qualityScore;
+          const qAfter =
+            db.getReputationProfile(agentId)!.dimensions.qualityScore;
 
           // Expected: EMA with boosted alpha, then clamped delta, then rounded
           const target = quality * 10;
@@ -285,14 +312,17 @@ describe('Property 15: 连胜加速机制', () => {
           const rawDelta = rawEma - qBefore;
           const clampedDelta = Math.max(
             -config.maxDeltaPerUpdate,
-            Math.min(config.maxDeltaPerUpdate, rawDelta),
+            Math.min(config.maxDeltaPerUpdate, rawDelta)
           );
-          const expected = Math.max(0, Math.min(1000, Math.round(qBefore + clampedDelta)));
+          const expected = Math.max(
+            0,
+            Math.min(1000, Math.round(qBefore + clampedDelta))
+          );
 
           expect(qAfter).toBe(expected);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

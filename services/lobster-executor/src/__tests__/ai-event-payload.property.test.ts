@@ -25,33 +25,29 @@ const arbUsage = fc.record({
 /** Arbitrary model name */
 const arbModel = fc
   .array(
-    fc.constantFrom(
-      ...("abcdefghijklmnopqrstuvwxyz0123456789-.".split("")),
-    ),
-    { minLength: 1, maxLength: 30 },
+    fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-.".split("")),
+    { minLength: 1, maxLength: 30 }
   )
-  .map((a) => a.join(""));
+  .map(a => a.join(""));
 
 /** Arbitrary task type */
 const arbTaskType = fc.constantFrom(
   "text-generation",
   "code-generation",
   "data-analysis",
-  "image-understanding",
+  "image-understanding"
 );
 
 /** Full AIResultArtifact arbitrary */
-const arbAIResult = fc
-  .tuple(arbContent, arbUsage, arbModel, arbTaskType)
-  .map(
-    ([content, usage, model, taskType]): AIResultArtifact => ({
-      content,
-      usage,
-      model,
-      taskType,
-      completedAt: new Date().toISOString(),
-    }),
-  );
+const arbAIResult = fc.tuple(arbContent, arbUsage, arbModel, arbTaskType).map(
+  ([content, usage, model, taskType]): AIResultArtifact => ({
+    content,
+    usage,
+    model,
+    taskType,
+    completedAt: new Date().toISOString(),
+  })
+);
 
 /* ─── Property 9: AI 完成事件 contentPreview 截断 ─── */
 
@@ -65,12 +61,12 @@ describe("Property 9: AI 完成事件 contentPreview 截断", () => {
 
   it("contentPreview length is always ≤ 200 characters", () => {
     fc.assert(
-      fc.property(arbAIResult, (aiResult) => {
+      fc.property(arbAIResult, aiResult => {
         const summary = DockerRunner.buildAIResultSummary(aiResult);
 
         expect(summary.contentPreview.length).toBeLessThanOrEqual(200);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -93,9 +89,9 @@ describe("Property 9: AI 完成事件 contentPreview 截断", () => {
           const summary = DockerRunner.buildAIResultSummary(aiResult);
 
           expect(summary.contentPreview).toBe(content);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
@@ -119,21 +115,21 @@ describe("Property 9: AI 完成事件 contentPreview 截断", () => {
 
           expect(summary.contentPreview).toBe(content.slice(0, 200));
           expect(summary.contentPreview.length).toBe(200);
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("summary preserves tokenUsage and model from the original result", () => {
     fc.assert(
-      fc.property(arbAIResult, (aiResult) => {
+      fc.property(arbAIResult, aiResult => {
         const summary = DockerRunner.buildAIResultSummary(aiResult);
 
         expect(summary.tokenUsage).toEqual(aiResult.usage);
         expect(summary.model).toBe(aiResult.model);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

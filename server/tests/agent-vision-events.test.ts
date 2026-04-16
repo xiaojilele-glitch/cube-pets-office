@@ -36,7 +36,11 @@ function createMockDeps() {
     call: vi.fn().mockResolvedValue({ content: "response" }),
     callJson: vi.fn().mockResolvedValue({ result: "ok" }),
   };
-  const deps: RuntimeAgentDependencies = { memoryRepo, llmProvider, eventEmitter };
+  const deps: RuntimeAgentDependencies = {
+    memoryRepo,
+    llmProvider,
+    eventEmitter,
+  };
   return { deps, events };
 }
 
@@ -49,7 +53,10 @@ describe("RuntimeAgent – analyzing_image event emission", () => {
         { imageName: "photo.png", visualDescription: "A cat" },
       ];
 
-      await agent.invoke("Describe the image", [], { workflowId: "wf-1", visionContexts });
+      await agent.invoke("Describe the image", [], {
+        workflowId: "wf-1",
+        visionContexts,
+      });
 
       const activeEvents = events.filter(e => e.type === "agent_active");
       expect(activeEvents).toHaveLength(3);
@@ -116,7 +123,10 @@ describe("RuntimeAgent – analyzing_image event emission", () => {
         { imageName: "chart.png", visualDescription: "A bar chart" },
       ];
 
-      await agent.invokeJson("Parse the chart", [], { workflowId: "wf-3", visionContexts });
+      await agent.invokeJson("Parse the chart", [], {
+        workflowId: "wf-3",
+        visionContexts,
+      });
 
       const activeEvents = events.filter(e => e.type === "agent_active");
       expect(activeEvents).toHaveLength(3);

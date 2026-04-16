@@ -14,7 +14,9 @@ let loadTelemetrySnapshot: typeof import("./browser-telemetry-store").loadTeleme
 const arbAlert: fc.Arbitrary<TelemetryAlert> = fc.record({
   id: fc.uuid(),
   type: fc.constantFrom("agent_slow" as const, "token_over_budget" as const),
-  agentId: fc.option(fc.string({ minLength: 1, maxLength: 20 }), { nil: undefined }),
+  agentId: fc.option(fc.string({ minLength: 1, maxLength: 20 }), {
+    nil: undefined,
+  }),
   message: fc.string({ minLength: 0, maxLength: 100 }),
   timestamp: fc.nat({ max: 2_000_000_000_000 }),
   resolved: fc.boolean(),
@@ -99,7 +101,7 @@ beforeEach(async () => {
 describe("browser-telemetry-store", () => {
   it("save then load should return a deeply equal snapshot", async () => {
     await fc.assert(
-      fc.asyncProperty(arbTelemetrySnapshot, async (snapshot) => {
+      fc.asyncProperty(arbTelemetrySnapshot, async snapshot => {
         await saveTelemetrySnapshot(snapshot);
         const loaded = await loadTelemetrySnapshot();
         expect(loaded).toEqual(snapshot);

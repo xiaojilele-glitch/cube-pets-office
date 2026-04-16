@@ -20,6 +20,7 @@ graph LR
 ```
 
 Migration pattern per file:
+
 1. Import `useI18n` from `@/i18n`
 2. Destructure `const { copy } = useI18n()` (or `{ copy, locale }` if locale is needed)
 3. Replace hardcoded strings with `copy.section.key` references
@@ -50,21 +51,22 @@ Migration: add `useI18n()`, replace Chinese strings with `copy.*`.
 
 New top-level sections added to `messages.ts`:
 
-| Section Key | Covers Files |
-|---|---|
-| `tasks` | TasksPage.tsx, TaskDetailView.tsx |
-| `costDashboard` | CostDashboard.tsx |
-| `telemetry` | TelemetryDashboard.tsx |
-| `permissions` | PermissionPanel.tsx, PermissionMatrix.tsx, AuditTimeline.tsx |
-| `sandbox` | ScreenshotPreview.tsx, TerminalPreview.tsx |
-| `nlCommand` | CommandInput.tsx, AlertPanel.tsx |
-| `reputation` | ReputationBadge.tsx, ReputationRadar.tsx |
+| Section Key     | Covers Files                                                 |
+| --------------- | ------------------------------------------------------------ |
+| `tasks`         | TasksPage.tsx, TaskDetailView.tsx                            |
+| `costDashboard` | CostDashboard.tsx                                            |
+| `telemetry`     | TelemetryDashboard.tsx                                       |
+| `permissions`   | PermissionPanel.tsx, PermissionMatrix.tsx, AuditTimeline.tsx |
+| `sandbox`       | ScreenshotPreview.tsx, TerminalPreview.tsx                   |
+| `nlCommand`     | CommandInput.tsx, AlertPanel.tsx                             |
+| `reputation`    | ReputationBadge.tsx, ReputationRadar.tsx                     |
 
 The existing `workflow` section in messages.ts already covers WorkflowPanel tabs and labels. Any remaining hardcoded text in WorkflowPanel that isn't already covered will be added under the existing `workflow` key or a new sub-key.
 
 ### Component Interface Changes
 
 No public component interfaces change. The only internal change is:
+
 - Permission components stop accepting `locale` as a prop (they read it from `useI18n()` directly)
 - The local `t()` helper in permission files is deleted
 
@@ -95,21 +97,20 @@ tasks: {
 },
 ```
 
-
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property Derivation
 
 The 14 per-component locale-switching criteria (1.1–1.5, 2.1–2.3, 3.1–3.6) and the two dictionary completeness criteria (4.1, 4.2) all reduce to a single structural invariant: the `zh-CN` and `en-US` message dictionaries must be structurally symmetric, and every leaf value must be a non-empty string (or function). If this holds, then every component reading from `copy.*` will get a valid translated string for any locale.
 
 Property 1: Message dictionary structural symmetry
-*For any* key path in the `messages['zh-CN']` object, the same key path must exist in `messages['en-US']`, and vice versa. Furthermore, for any leaf value at any key path in either locale, the value must be a non-empty string or a function.
+_For any_ key path in the `messages['zh-CN']` object, the same key path must exist in `messages['en-US']`, and vice versa. Furthermore, for any leaf value at any key path in either locale, the value must be a non-empty string or a function.
 **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 4.1, 4.2**
 
 Property 2: Locale round-trip consistency
-*For any* supported locale value, calling `getMessages(locale)` must return an object structurally identical to the corresponding entry in the `messages` dictionary (no key loss, no mutation).
+_For any_ supported locale value, calling `getMessages(locale)` must return an object structurally identical to the corresponding entry in the `messages` dictionary (no key loss, no mutation).
 **Validates: Requirements 5.1, 7.1**
 
 ## Error Handling

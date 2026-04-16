@@ -10,7 +10,11 @@ const TEST_DATA_ROOT = join(process.cwd(), "tmp/test-security-audit-pbt");
 
 // ─── Generators ─────────────────────────────────────────────────────────────
 
-const securityLevelArb = fc.constantFrom<SecurityLevel>("strict", "balanced", "permissive");
+const securityLevelArb = fc.constantFrom<SecurityLevel>(
+  "strict",
+  "balanced",
+  "permissive"
+);
 
 const eventTypeArb = fc.constantFrom<SecurityAuditEntry["eventType"]>(
   "container.created",
@@ -19,15 +23,23 @@ const eventTypeArb = fc.constantFrom<SecurityAuditEntry["eventType"]>(
   "container.seccomp_violation",
   "container.security_failure",
   "container.destroyed",
-  "resource.exceeded",
+  "resource.exceeded"
 );
 
-const nonEmptyStringArb = fc.string({ minLength: 1, maxLength: 30, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-_") });
+const nonEmptyStringArb = fc.string({
+  minLength: 1,
+  maxLength: 30,
+  unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-_"),
+});
 
 const detailArb = fc.dictionary(
-  fc.string({ minLength: 1, maxLength: 10, unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz") }),
+  fc.string({
+    minLength: 1,
+    maxLength: 10,
+    unit: fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz"),
+  }),
   fc.oneof(fc.string({ maxLength: 20 }), fc.integer(), fc.boolean()),
-  { minKeys: 1, maxKeys: 5 },
+  { minKeys: 1, maxKeys: 5 }
 );
 
 // ─── Property 10: 审计日志字段完整性 ────────────────────────────────────────
@@ -104,9 +116,9 @@ describe("Property 10: 审计日志字段完整性", () => {
           // Clean up for next iteration
           rmSync(TEST_DATA_ROOT, { recursive: true, force: true });
           mkdirSync(TEST_DATA_ROOT, { recursive: true });
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });
@@ -115,7 +127,11 @@ describe("Property 10: 审计日志字段完整性", () => {
 // **Validates: Requirements 7.4**
 
 describe("Property 11: 安全失败事件包含 securityContext", () => {
-  const securityErrorCodeArb = fc.constantFrom("OOM_KILLED", "SECCOMP_VIOLATION", "SECURITY_CONFIG_INVALID");
+  const securityErrorCodeArb = fc.constantFrom(
+    "OOM_KILLED",
+    "SECCOMP_VIOLATION",
+    "SECURITY_CONFIG_INVALID"
+  );
 
   const resourceLimitsArb = fc.record({
     memoryBytes: fc.integer({ min: 1_048_576, max: 34_359_738_368 }),
@@ -130,9 +146,16 @@ describe("Property 11: 安全失败事件包含 securityContext", () => {
     readonlyRootfs: fc.boolean(),
     noNewPrivileges: fc.constant(true),
     capDrop: fc.constant(["ALL"]),
-    capAdd: fc.array(fc.constantFrom("NET_BIND_SERVICE", "SYS_PTRACE"), { minLength: 0, maxLength: 2 }),
+    capAdd: fc.array(fc.constantFrom("NET_BIND_SERVICE", "SYS_PTRACE"), {
+      minLength: 0,
+      maxLength: 2,
+    }),
     network: fc.record({
-      mode: fc.constantFrom<"none" | "whitelist" | "bridge">("none", "whitelist", "bridge"),
+      mode: fc.constantFrom<"none" | "whitelist" | "bridge">(
+        "none",
+        "whitelist",
+        "bridge"
+      ),
     }),
     resources: resourceLimitsArb,
   });
@@ -145,7 +168,11 @@ describe("Property 11: 安全失败事件包含 securityContext", () => {
         nonEmptyStringArb,
         (errorCode, policy, errorMessage) => {
           // Simulate what emitFailed does in DockerRunner
-          const SECURITY_ERROR_CODES = ["OOM_KILLED", "SECCOMP_VIOLATION", "SECURITY_CONFIG_INVALID"];
+          const SECURITY_ERROR_CODES = [
+            "OOM_KILLED",
+            "SECCOMP_VIOLATION",
+            "SECURITY_CONFIG_INVALID",
+          ];
           const event: Record<string, unknown> = {
             type: "job.failed",
             status: "failed",
@@ -181,18 +208,27 @@ describe("Property 11: 安全失败事件包含 securityContext", () => {
           expect(ctx.readonlyRootfs).toBe(policy.readonlyRootfs);
           expect(ctx.capDrop).toEqual(["ALL"]);
           expect(ctx.resources).toBeDefined();
-        },
+        }
       ),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("non-security error codes do NOT get securityContext", () => {
-    const nonSecurityErrorCodeArb = fc.constantFrom("TIMEOUT", "EXIT_CODE_1", "DOCKER_UNAVAILABLE", "IMAGE_PULL_FAILED");
+    const nonSecurityErrorCodeArb = fc.constantFrom(
+      "TIMEOUT",
+      "EXIT_CODE_1",
+      "DOCKER_UNAVAILABLE",
+      "IMAGE_PULL_FAILED"
+    );
 
     fc.assert(
-      fc.property(nonSecurityErrorCodeArb, (errorCode) => {
-        const SECURITY_ERROR_CODES = ["OOM_KILLED", "SECCOMP_VIOLATION", "SECURITY_CONFIG_INVALID"];
+      fc.property(nonSecurityErrorCodeArb, errorCode => {
+        const SECURITY_ERROR_CODES = [
+          "OOM_KILLED",
+          "SECCOMP_VIOLATION",
+          "SECURITY_CONFIG_INVALID",
+        ];
         const payload: Record<string, unknown> = {};
 
         if (SECURITY_ERROR_CODES.includes(errorCode)) {
@@ -202,7 +238,7 @@ describe("Property 11: 安全失败事件包含 securityContext", () => {
         // Non-security codes should NOT have securityContext
         expect(payload.securityContext).toBeUndefined();
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

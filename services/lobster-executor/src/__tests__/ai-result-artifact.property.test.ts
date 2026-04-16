@@ -33,19 +33,25 @@ const arbTokenCount = fc.nat({ max: 100_000 });
 
 /** Model name string */
 const arbModel = fc
-  .array(fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-.".split("")), {
-    minLength: 1,
-    maxLength: 50,
-  })
-  .map((a) => a.join(""));
+  .array(
+    fc.constantFrom(..."abcdefghijklmnopqrstuvwxyz0123456789-.".split("")),
+    {
+      minLength: 1,
+      maxLength: 50,
+    }
+  )
+  .map(a => a.join(""));
 
 /** One of the known AI task types */
 const arbTaskType = fc.constantFrom(...AI_TASK_TYPES);
 
 /** ISO date string — use integer timestamp to avoid invalid date edge cases */
 const arbCompletedAt = fc
-  .integer({ min: new Date("2020-01-01").getTime(), max: new Date("2030-12-31").getTime() })
-  .map((ts) => new Date(ts).toISOString());
+  .integer({
+    min: new Date("2020-01-01").getTime(),
+    max: new Date("2030-12-31").getTime(),
+  })
+  .map(ts => new Date(ts).toISOString());
 
 /** Full AIResultArtifact arbitrary */
 const arbAIResultArtifact: fc.Arbitrary<AIResultArtifact> = fc.record({
@@ -96,12 +102,16 @@ describe("Property 6: AI 结果 Artifact 完整性", () => {
 
   it("serialized artifact contains all required fields after deserialization", () => {
     fc.assert(
-      fc.property(arbAIResultArtifact, (artifact) => {
+      fc.property(arbAIResultArtifact, artifact => {
         const dir = makeTmpDir();
         const filePath = path.join(dir, "ai-result.json");
 
         // Serialize
-        fs.writeFileSync(filePath, JSON.stringify(artifact, null, 2) + "\n", "utf-8");
+        fs.writeFileSync(
+          filePath,
+          JSON.stringify(artifact, null, 2) + "\n",
+          "utf-8"
+        );
 
         // Deserialize
         const raw = fs.readFileSync(filePath, "utf-8");
@@ -116,18 +126,22 @@ describe("Property 6: AI 结果 Artifact 完整性", () => {
         expect(typeof parsed.usage.completionTokens).toBe("number");
         expect(typeof parsed.usage.totalTokens).toBe("number");
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("deserialized artifact is equivalent to the original", () => {
     fc.assert(
-      fc.property(arbAIResultArtifact, (artifact) => {
+      fc.property(arbAIResultArtifact, artifact => {
         const dir = makeTmpDir();
         const filePath = path.join(dir, "ai-result.json");
 
         // Serialize
-        fs.writeFileSync(filePath, JSON.stringify(artifact, null, 2) + "\n", "utf-8");
+        fs.writeFileSync(
+          filePath,
+          JSON.stringify(artifact, null, 2) + "\n",
+          "utf-8"
+        );
 
         // Deserialize
         const raw = fs.readFileSync(filePath, "utf-8");
@@ -136,32 +150,34 @@ describe("Property 6: AI 结果 Artifact 完整性", () => {
         // Deep equality — round-trip preserves all data
         expect(parsed.content).toBe(artifact.content);
         expect(parsed.usage.promptTokens).toBe(artifact.usage.promptTokens);
-        expect(parsed.usage.completionTokens).toBe(artifact.usage.completionTokens);
+        expect(parsed.usage.completionTokens).toBe(
+          artifact.usage.completionTokens
+        );
         expect(parsed.usage.totalTokens).toBe(artifact.usage.totalTokens);
         expect(parsed.model).toBe(artifact.model);
         expect(parsed.taskType).toBe(artifact.taskType);
         expect(parsed.completedAt).toBe(artifact.completedAt);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("artifact content field is always a non-empty string", () => {
     fc.assert(
-      fc.property(arbAIResultArtifact, (artifact) => {
+      fc.property(arbAIResultArtifact, artifact => {
         const serialized = JSON.stringify(artifact);
         const parsed = JSON.parse(serialized) as AIResultArtifact;
 
         expect(typeof parsed.content).toBe("string");
         expect(parsed.content.length).toBeGreaterThan(0);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("artifact usage token counts are non-negative integers", () => {
     fc.assert(
-      fc.property(arbAIResultArtifact, (artifact) => {
+      fc.property(arbAIResultArtifact, artifact => {
         const serialized = JSON.stringify(artifact);
         const parsed = JSON.parse(serialized) as AIResultArtifact;
 
@@ -172,19 +188,19 @@ describe("Property 6: AI 结果 Artifact 完整性", () => {
         expect(parsed.usage.completionTokens).toBeGreaterThanOrEqual(0);
         expect(parsed.usage.totalTokens).toBeGreaterThanOrEqual(0);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 
   it("artifact taskType is always one of the known AI task types", () => {
     fc.assert(
-      fc.property(arbAIResultArtifact, (artifact) => {
+      fc.property(arbAIResultArtifact, artifact => {
         const serialized = JSON.stringify(artifact);
         const parsed = JSON.parse(serialized) as AIResultArtifact;
 
         expect(AI_TASK_TYPES).toContain(parsed.taskType);
       }),
-      { numRuns: 100 },
+      { numRuns: 100 }
     );
   });
 });

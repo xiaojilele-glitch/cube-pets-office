@@ -14,10 +14,7 @@ import type {
   MissionStatus,
 } from "../../../shared/mission/contracts";
 import { SNAPSHOT_VERSION } from "../../../shared/mission/contracts";
-import type {
-  WorkerRequest,
-  WorkerResponse,
-} from "../workers/snapshot-worker";
+import type { WorkerRequest, WorkerResponse } from "../workers/snapshot-worker";
 
 export interface SnapshotMeta {
   missionId: string;
@@ -36,7 +33,7 @@ async function computeSHA256Hex(data: string): Promise<string> {
   const buffer = encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -44,7 +41,7 @@ async function computeSHA256Hex(data: string): Promise<string> {
  */
 async function serializeOnMainThread(
   payload: SnapshotPayload,
-  meta: SnapshotMeta,
+  meta: SnapshotMeta
 ): Promise<SnapshotRecord> {
   const payloadJson = JSON.stringify(payload);
   const checksum = await computeSHA256Hex(payloadJson);
@@ -69,7 +66,7 @@ async function serializeOnMainThread(
 function serializeViaWorker(
   worker: Worker,
   payload: SnapshotPayload,
-  meta: SnapshotMeta,
+  meta: SnapshotMeta
 ): Promise<SnapshotRecord> {
   return new Promise<SnapshotRecord>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -88,7 +85,7 @@ function serializeViaWorker(
       }
     };
 
-    worker.onerror = (err) => {
+    worker.onerror = err => {
       clearTimeout(timer);
       worker.terminate();
       reject(new Error(err.message || "Worker error"));
@@ -112,12 +109,12 @@ function serializeViaWorker(
  */
 export async function serializeSnapshot(
   payload: SnapshotPayload,
-  meta: SnapshotMeta,
+  meta: SnapshotMeta
 ): Promise<SnapshotRecord> {
   try {
     const worker = new Worker(
       new URL("../workers/snapshot-worker.ts", import.meta.url),
-      { type: "module" },
+      { type: "module" }
     );
     return await serializeViaWorker(worker, payload, meta);
   } catch {
@@ -130,7 +127,7 @@ export async function serializeSnapshot(
  * 校验快照 checksum：重新计算 payload 的 SHA-256 并与记录中的 checksum 比较。
  */
 export async function validateChecksum(
-  record: SnapshotRecord,
+  record: SnapshotRecord
 ): Promise<boolean> {
   const payloadJson = JSON.stringify(record.payload);
   const computed = await computeSHA256Hex(payloadJson);

@@ -328,7 +328,9 @@ export function getSceneStageRoute(stageKey: string | null | undefined) {
 
 export function getSceneStageColor(stageKey: string | null | undefined) {
   const route = getSceneStageRoute(stageKey);
-  return route ? SCENE_STAGE_SEMANTIC_COLORS[route.semantic] : FALLBACK_STAGE_COLOR;
+  return route
+    ? SCENE_STAGE_SEMANTIC_COLORS[route.semantic]
+    : FALLBACK_STAGE_COLOR;
 }
 
 export function getSceneStageSignal(params: {
@@ -346,7 +348,9 @@ export function getSceneStageSignal(params: {
       return {
         source: "mission",
         stageKey: activeMission.currentStageKey,
-        stageLabel: toNullableText(activeMission.currentStageLabel) || route.title[locale],
+        stageLabel:
+          toNullableText(activeMission.currentStageLabel) ||
+          route.title[locale],
         semantic: route.semantic,
         color: SCENE_STAGE_SEMANTIC_COLORS[route.semantic],
         zones: route.zones,
@@ -356,7 +360,9 @@ export function getSceneStageSignal(params: {
             : t(locale, "\u4efb\u52a1\u8fdb\u884c\u4e2d", "Mission Running"),
         summary: toNullableText(activeMission.summary),
         progress:
-          typeof activeMission.progress === "number" ? activeMission.progress : null,
+          typeof activeMission.progress === "number"
+            ? activeMission.progress
+            : null,
         taskId: activeMission.id,
       } satisfies SceneStageSignal;
     }
@@ -379,7 +385,11 @@ export function getSceneStageSignal(params: {
         statusLabel:
           currentWorkflow.status === "pending"
             ? t(locale, "\u7b49\u5f85\u542f\u52a8", "Pending")
-            : t(locale, "\u5de5\u4f5c\u6d41\u8fdb\u884c\u4e2d", "Workflow Running"),
+            : t(
+                locale,
+                "\u5de5\u4f5c\u6d41\u8fdb\u884c\u4e2d",
+                "Workflow Running"
+              ),
         summary: toNullableText(currentWorkflow.directive),
         progress: null,
         taskId: null,
@@ -402,7 +412,8 @@ export function getSceneStageLabel(
   if (route) return route.title[locale];
 
   const normalized = normalizeStageKey(stageKey);
-  if (!normalized) return t(locale, "\u6682\u65e0\u9636\u6bb5", "No active stage");
+  if (!normalized)
+    return t(locale, "\u6682\u65e0\u9636\u6bb5", "No active stage");
 
   return capitalizeWords(normalized.replace(/[_-]+/g, " "));
 }

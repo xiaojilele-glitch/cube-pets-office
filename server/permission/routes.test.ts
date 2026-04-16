@@ -37,15 +37,25 @@ function createInMemoryDb() {
   let escalations: PermissionEscalation[] = [];
   return {
     getPermissionRoles: () => roles,
-    setPermissionRoles: (r: AgentRole[]) => { roles = r; },
+    setPermissionRoles: (r: AgentRole[]) => {
+      roles = r;
+    },
     getPermissionPolicies: () => policies,
-    setPermissionPolicies: (p: AgentPermissionPolicy[]) => { policies = p; },
+    setPermissionPolicies: (p: AgentPermissionPolicy[]) => {
+      policies = p;
+    },
     getPermissionTemplates: () => templates,
-    setPermissionTemplates: (t: PermissionTemplate[]) => { templates = t; },
+    setPermissionTemplates: (t: PermissionTemplate[]) => {
+      templates = t;
+    },
     getPermissionAudit: () => audit,
-    addPermissionAudit: (e: PermissionAuditEntry) => { audit.push(e); },
+    addPermissionAudit: (e: PermissionAuditEntry) => {
+      audit.push(e);
+    },
     getPermissionEscalations: () => escalations,
-    setPermissionEscalations: (e: PermissionEscalation[]) => { escalations = e; },
+    setPermissionEscalations: (e: PermissionEscalation[]) => {
+      escalations = e;
+    },
   };
 }
 
@@ -58,9 +68,22 @@ function createDeps() {
   const policyStore = new PolicyStore(db as any, roleStore);
   const tokenService = new TokenService(policyStore, roleStore, SECRET);
   const auditLogger = new AuditLogger(db);
-  const dynamicManager = new DynamicPermissionManager(policyStore, tokenService, db, auditLogger);
+  const dynamicManager = new DynamicPermissionManager(
+    policyStore,
+    tokenService,
+    db,
+    auditLogger
+  );
   const conflictDetector = new ConflictDetector(policyStore, roleStore);
-  return { db, roleStore, policyStore, tokenService, auditLogger, dynamicManager, conflictDetector };
+  return {
+    db,
+    roleStore,
+    policyStore,
+    tokenService,
+    auditLogger,
+    dynamicManager,
+    conflictDetector,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -68,7 +91,10 @@ function createDeps() {
 // ---------------------------------------------------------------------------
 
 async function withServer(
-  handler: (baseUrl: string, deps: ReturnType<typeof createDeps>) => Promise<void>,
+  handler: (
+    baseUrl: string,
+    deps: ReturnType<typeof createDeps>
+  ) => Promise<void>
 ): Promise<void> {
   const deps = createDeps();
   const app = express();
@@ -90,7 +116,7 @@ async function withServer(
     await handler(baseUrl, deps);
   } finally {
     await new Promise<void>((resolve, reject) => {
-      server.close((err) => (err ? reject(err) : resolve()));
+      server.close(err => (err ? reject(err) : resolve()));
     });
   }
 }
@@ -111,14 +137,13 @@ function put(body: unknown): RequestInit {
   };
 }
 
-
 // ===========================================================================
 // 10.1 角色管理路由
 // ===========================================================================
 
 describe("Role routes", () => {
   it("GET /roles returns builtin roles", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/roles`);
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -128,7 +153,7 @@ describe("Role routes", () => {
   });
 
   it("GET /roles/:roleId returns a specific role", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/roles/reader`);
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -138,20 +163,23 @@ describe("Role routes", () => {
   });
 
   it("GET /roles/:roleId returns 404 for unknown role", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/roles/NonExistent`);
       expect(res.status).toBe(404);
     });
   });
 
   it("POST /roles creates a new role", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/roles`, json({
-        roleId: "CustomRole",
-        roleName: "Custom Role",
-        description: "A custom role",
-        permissions: [],
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/roles`,
+        json({
+          roleId: "CustomRole",
+          roleName: "Custom Role",
+          description: "A custom role",
+          permissions: [],
+        })
+      );
       expect(res.status).toBe(201);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -160,19 +188,25 @@ describe("Role routes", () => {
   });
 
   it("POST /roles returns 400 when roleId is missing", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/roles`, json({
-        roleName: "No ID",
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/roles`,
+        json({
+          roleName: "No ID",
+        })
+      );
       expect(res.status).toBe(400);
     });
   });
 
   it("PUT /roles/:roleId updates a role", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/roles/reader`, put({
-        description: "Updated description",
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/roles/reader`,
+        put({
+          description: "Updated description",
+        })
+      );
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -181,10 +215,13 @@ describe("Role routes", () => {
   });
 
   it("PUT /roles/:roleId returns 404 for unknown role", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/roles/Ghost`, put({
-        description: "nope",
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/roles/Ghost`,
+        put({
+          description: "nope",
+        })
+      );
       expect(res.status).toBe(404);
     });
   });
@@ -196,12 +233,15 @@ describe("Role routes", () => {
 
 describe("Policy routes", () => {
   it("POST then GET policy for an agent", async () => {
-    await withServer(async (baseUrl) => {
-      const createRes = await fetch(`${baseUrl}/api/permissions/policies/agent-1`, json({
-        assignedRoles: ["Reader"],
-        customPermissions: [],
-        deniedPermissions: [],
-      }));
+    await withServer(async baseUrl => {
+      const createRes = await fetch(
+        `${baseUrl}/api/permissions/policies/agent-1`,
+        json({
+          assignedRoles: ["Reader"],
+          customPermissions: [],
+          deniedPermissions: [],
+        })
+      );
       expect(createRes.status).toBe(201);
 
       const getRes = await fetch(`${baseUrl}/api/permissions/policies/agent-1`);
@@ -213,27 +253,36 @@ describe("Policy routes", () => {
   });
 
   it("GET policy returns 404 for unknown agent", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/policies/unknown`);
       expect(res.status).toBe(404);
     });
   });
 
   it("POST policy returns 400 when assignedRoles is missing", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/policies/agent-1`, json({}));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/policies/agent-1`,
+        json({})
+      );
       expect(res.status).toBe(400);
     });
   });
 
   it("PUT policy updates an existing policy", async () => {
-    await withServer(async (baseUrl) => {
-      await fetch(`${baseUrl}/api/permissions/policies/agent-2`, json({
-        assignedRoles: ["Reader"],
-      }));
-      const updateRes = await fetch(`${baseUrl}/api/permissions/policies/agent-2`, put({
-        assignedRoles: ["Writer"],
-      }));
+    await withServer(async baseUrl => {
+      await fetch(
+        `${baseUrl}/api/permissions/policies/agent-2`,
+        json({
+          assignedRoles: ["Reader"],
+        })
+      );
+      const updateRes = await fetch(
+        `${baseUrl}/api/permissions/policies/agent-2`,
+        put({
+          assignedRoles: ["Writer"],
+        })
+      );
       expect(updateRes.status).toBe(200);
       const body = await updateRes.json();
       expect(body.policy.assignedRoles).toContain("Writer");
@@ -247,19 +296,28 @@ describe("Policy routes", () => {
 
 describe("Token routes", () => {
   it("POST issue + POST verify round-trip", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       // Create a policy first so token can be issued
-      await fetch(`${baseUrl}/api/permissions/policies/agent-t`, json({
-        assignedRoles: ["Reader"],
-      }));
+      await fetch(
+        `${baseUrl}/api/permissions/policies/agent-t`,
+        json({
+          assignedRoles: ["Reader"],
+        })
+      );
 
-      const issueRes = await fetch(`${baseUrl}/api/permissions/tokens/agent-t`, json({}));
+      const issueRes = await fetch(
+        `${baseUrl}/api/permissions/tokens/agent-t`,
+        json({})
+      );
       expect(issueRes.status).toBe(201);
       const issueBody = await issueRes.json();
       expect(issueBody.ok).toBe(true);
       const tokenStr = issueBody.token.token;
 
-      const verifyRes = await fetch(`${baseUrl}/api/permissions/tokens/verify`, json({ token: tokenStr }));
+      const verifyRes = await fetch(
+        `${baseUrl}/api/permissions/tokens/verify`,
+        json({ token: tokenStr })
+      );
       expect(verifyRes.status).toBe(200);
       const verifyBody = await verifyRes.json();
       expect(verifyBody.ok).toBe(true);
@@ -268,20 +326,25 @@ describe("Token routes", () => {
   });
 
   it("POST verify returns 401 for invalid token", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/tokens/verify`, json({ token: "bad.token.here" }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/tokens/verify`,
+        json({ token: "bad.token.here" })
+      );
       expect(res.status).toBe(401);
     });
   });
 
   it("POST verify returns 400 when token is missing", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/tokens/verify`, json({}));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/tokens/verify`,
+        json({})
+      );
       expect(res.status).toBe(400);
     });
   });
 });
-
 
 // ===========================================================================
 // 10.4 动态权限路由
@@ -289,16 +352,27 @@ describe("Token routes", () => {
 
 describe("Dynamic permission routes", () => {
   it("POST grant-temp succeeds for existing agent", async () => {
-    await withServer(async (baseUrl) => {
-      await fetch(`${baseUrl}/api/permissions/policies/agent-d`, json({
-        assignedRoles: ["Reader"],
-      }));
+    await withServer(async baseUrl => {
+      await fetch(
+        `${baseUrl}/api/permissions/policies/agent-d`,
+        json({
+          assignedRoles: ["Reader"],
+        })
+      );
 
-      const res = await fetch(`${baseUrl}/api/permissions/grant-temp`, json({
-        agentId: "agent-d",
-        permission: { resourceType: "filesystem", action: "write", constraints: {}, effect: "allow" },
-        durationMs: 60000,
-      }));
+      const res = await fetch(
+        `${baseUrl}/api/permissions/grant-temp`,
+        json({
+          agentId: "agent-d",
+          permission: {
+            resourceType: "filesystem",
+            action: "write",
+            constraints: {},
+            effect: "allow",
+          },
+          durationMs: 60000,
+        })
+      );
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -306,22 +380,36 @@ describe("Dynamic permission routes", () => {
   });
 
   it("POST grant-temp returns 400 when fields are missing", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/grant-temp`, json({ agentId: "x" }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/grant-temp`,
+        json({ agentId: "x" })
+      );
       expect(res.status).toBe(400);
     });
   });
 
   it("POST revoke succeeds for existing agent", async () => {
-    await withServer(async (baseUrl) => {
-      await fetch(`${baseUrl}/api/permissions/policies/agent-r`, json({
-        assignedRoles: ["Reader"],
-      }));
+    await withServer(async baseUrl => {
+      await fetch(
+        `${baseUrl}/api/permissions/policies/agent-r`,
+        json({
+          assignedRoles: ["Reader"],
+        })
+      );
 
-      const res = await fetch(`${baseUrl}/api/permissions/revoke`, json({
-        agentId: "agent-r",
-        permission: { resourceType: "filesystem", action: "read", constraints: {}, effect: "allow" },
-      }));
+      const res = await fetch(
+        `${baseUrl}/api/permissions/revoke`,
+        json({
+          agentId: "agent-r",
+          permission: {
+            resourceType: "filesystem",
+            action: "read",
+            constraints: {},
+            effect: "allow",
+          },
+        })
+      );
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -329,12 +417,15 @@ describe("Dynamic permission routes", () => {
   });
 
   it("POST escalate returns escalation ID", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/escalate`, json({
-        agentId: "agent-e",
-        reason: "Need write access",
-        approverList: ["admin-1"],
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/escalate`,
+        json({
+          agentId: "agent-e",
+          reason: "Need write access",
+          approverList: ["admin-1"],
+        })
+      );
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -349,10 +440,13 @@ describe("Dynamic permission routes", () => {
 
 describe("Conflict & risk routes", () => {
   it("GET conflicts/:agentId returns conflicts array", async () => {
-    await withServer(async (baseUrl) => {
-      await fetch(`${baseUrl}/api/permissions/policies/agent-c`, json({
-        assignedRoles: ["Reader"],
-      }));
+    await withServer(async baseUrl => {
+      await fetch(
+        `${baseUrl}/api/permissions/policies/agent-c`,
+        json({
+          assignedRoles: ["Reader"],
+        })
+      );
 
       const res = await fetch(`${baseUrl}/api/permissions/conflicts/agent-c`);
       expect(res.status).toBe(200);
@@ -363,10 +457,13 @@ describe("Conflict & risk routes", () => {
   });
 
   it("GET risk/:agentId returns risk assessment", async () => {
-    await withServer(async (baseUrl) => {
-      await fetch(`${baseUrl}/api/permissions/policies/agent-c`, json({
-        assignedRoles: ["Reader"],
-      }));
+    await withServer(async baseUrl => {
+      await fetch(
+        `${baseUrl}/api/permissions/policies/agent-c`,
+        json({
+          assignedRoles: ["Reader"],
+        })
+      );
 
       const res = await fetch(`${baseUrl}/api/permissions/risk/agent-c`);
       expect(res.status).toBe(200);
@@ -403,7 +500,7 @@ describe("Audit routes", () => {
   });
 
   it("GET usage/:agentId requires from and to", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/usage/agent-a`);
       expect(res.status).toBe(400);
     });
@@ -422,7 +519,9 @@ describe("Audit routes", () => {
 
       const from = "2000-01-01T00:00:00Z";
       const to = "2099-12-31T23:59:59Z";
-      const res = await fetch(`${baseUrl}/api/permissions/usage/agent-u?from=${from}&to=${to}`);
+      const res = await fetch(
+        `${baseUrl}/api/permissions/usage/agent-u?from=${from}&to=${to}`
+      );
       expect(res.status).toBe(200);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -450,7 +549,7 @@ describe("Audit routes", () => {
   });
 
   it("GET export returns JSON string", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/export`);
       expect(res.status).toBe(200);
       const text = await res.text();
@@ -466,7 +565,7 @@ describe("Audit routes", () => {
 
 describe("Template routes", () => {
   it("GET /templates returns builtin templates", async () => {
-    await withServer(async (baseUrl) => {
+    await withServer(async baseUrl => {
       const res = await fetch(`${baseUrl}/api/permissions/templates`);
       expect(res.status).toBe(200);
       const body = await res.json();
@@ -476,13 +575,16 @@ describe("Template routes", () => {
   });
 
   it("POST /templates creates a new template", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/templates`, json({
-        templateId: "custom-tpl",
-        templateName: "Custom Template",
-        targetRole: "CustomWorker",
-        permissions: [],
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/templates`,
+        json({
+          templateId: "custom-tpl",
+          templateName: "Custom Template",
+          targetRole: "CustomWorker",
+          permissions: [],
+        })
+      );
       expect(res.status).toBe(201);
       const body = await res.json();
       expect(body.ok).toBe(true);
@@ -491,17 +593,22 @@ describe("Template routes", () => {
   });
 
   it("POST /templates returns 400 when required fields are missing", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/templates`, json({
-        templateName: "No ID",
-      }));
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/templates`,
+        json({
+          templateName: "No ID",
+        })
+      );
       expect(res.status).toBe(400);
     });
   });
 
   it("GET /templates/:templateId returns 404 for unknown template", async () => {
-    await withServer(async (baseUrl) => {
-      const res = await fetch(`${baseUrl}/api/permissions/templates/nonexistent`);
+    await withServer(async baseUrl => {
+      const res = await fetch(
+        `${baseUrl}/api/permissions/templates/nonexistent`
+      );
       expect(res.status).toBe(404);
     });
   });

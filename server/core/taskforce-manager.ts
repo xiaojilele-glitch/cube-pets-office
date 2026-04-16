@@ -3,9 +3,9 @@ import type {
   AutonomyConfig,
   TaskforceMember,
   TaskforceSession,
-} from '../../shared/autonomy-types.js';
-import type { CapabilityProfileManager } from './capability-profile-manager.js';
-import type { SelfAssessment, TaskRequest } from './self-assessment.js';
+} from "../../shared/autonomy-types.js";
+import type { CapabilityProfileManager } from "./capability-profile-manager.js";
+import type { SelfAssessment, TaskRequest } from "./self-assessment.js";
 
 // ─── Local Types ─────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ export class TaskforceManager {
     private readonly selfAssessment: SelfAssessment,
     private readonly profileManager: CapabilityProfileManager,
     private readonly messageBus: RuntimeMessageBus,
-    private readonly config: AutonomyConfig,
+    private readonly config: AutonomyConfig
   ) {}
 
   /**
@@ -45,7 +45,10 @@ export class TaskforceManager {
    * Generates a unique taskforceId, elects a lead, creates a message bus room,
    * and returns the session in "recruiting" status.
    */
-  async formTaskforce(task: TaskRequest, triggerAgentId: string): Promise<TaskforceSession> {
+  async formTaskforce(
+    task: TaskRequest,
+    triggerAgentId: string
+  ): Promise<TaskforceSession> {
     const taskforceId = `tf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     // Assess all available agents to find candidates for lead election
@@ -66,13 +69,13 @@ export class TaskforceManager {
       members: [
         {
           agentId: leadAgentId,
-          role: 'lead',
+          role: "lead",
           joinedAt: Date.now(),
           lastHeartbeat: Date.now(),
           online: true,
         },
       ],
-      status: 'recruiting',
+      status: "recruiting",
       subTasks: [],
       createdAt: Date.now(),
     };
@@ -88,7 +91,7 @@ export class TaskforceManager {
    * Returns empty string if candidates array is empty.
    */
   electLead(candidates: AssessmentResult[]): string {
-    if (candidates.length === 0) return '';
+    if (candidates.length === 0) return "";
 
     let best = candidates[0];
     for (let i = 1; i < candidates.length; i++) {
@@ -107,23 +110,23 @@ export class TaskforceManager {
    */
   async processApplications(
     taskforceId: string,
-    applications: TaskforceApplication[],
+    applications: TaskforceApplication[]
   ): Promise<TaskforceMember[]> {
     const session = this.activeSessions.get(taskforceId);
     if (!session) return [];
 
     // Filter eligible applications
     const eligible = applications.filter(
-      (app) => app.fitnessScore >= 0.5 && app.loadFactor < 0.8,
+      app => app.fitnessScore >= 0.5 && app.loadFactor < 0.8
     );
 
     // Sort by fitnessScore descending (complementarity placeholder)
     eligible.sort((a, b) => b.fitnessScore - a.fitnessScore);
 
     const now = Date.now();
-    const members: TaskforceMember[] = eligible.map((app) => ({
+    const members: TaskforceMember[] = eligible.map(app => ({
       agentId: app.agentId,
-      role: 'worker' as const,
+      role: "worker" as const,
       joinedAt: now,
       lastHeartbeat: now,
       online: true,
@@ -143,7 +146,7 @@ export class TaskforceManager {
     const session = this.activeSessions.get(taskforceId);
     if (!session) return;
 
-    const member = session.members.find((m) => m.agentId === agentId);
+    const member = session.members.find(m => m.agentId === agentId);
     if (!member) return;
 
     member.lastHeartbeat = Date.now();
@@ -181,7 +184,7 @@ export class TaskforceManager {
     const session = this.activeSessions.get(taskforceId);
     if (!session) return;
 
-    session.status = 'dissolved';
+    session.status = "dissolved";
     session.dissolvedAt = Date.now();
     this.messageBus.destroyRoom(`taskforce:${taskforceId}`);
     this.activeSessions.delete(taskforceId);
@@ -192,7 +195,7 @@ export class TaskforceManager {
    */
   getActiveTaskforces(): TaskforceSession[] {
     return Array.from(this.activeSessions.values()).filter(
-      (s) => s.status !== 'dissolved',
+      s => s.status !== "dissolved"
     );
   }
 }
