@@ -486,3 +486,13 @@ C01-C08 契约冻结 (已完成)
 - executor 现已支持 `mock | native | real`
 - GitHub Pages 只走前端浏览器运行时
 - 详细补充说明见 `.kiro/steering/2026-04-15-runtime-current-state.md`
+
+## 2026-04-16 新增主线收敛 specs
+
+### 新增 specs 清单
+
+- [ ] `office-shell-convergence-v1`（主线起点，不与后两项主线 spec 并行）
+- [ ] `task-os-home-redesign-v1`（依赖 `office-shell-convergence-v1`，不并行）
+- [ ] `task-runtime-visibility-v1`（依赖 `task-os-home-redesign-v1`，不并行）
+- [ ] `release-stability-guardrails-v2`（可与主线并行）
+- [ ] `replay-and-debug-surface-v1`（可与主线并行）
