@@ -433,17 +433,20 @@ async function startServer() {
   setOnStageCompleted(onWorkflowStageCompleted);
 
   // ── ExecutionBridge: bridge WorkflowEngine deliverables → Docker executor (executor-integration Task 9.1) ──
-  const { createExecutionBridge, buildCallbackUrl } = await import("./core/execution-bridge.js");
+  const { createExecutionBridge, buildCallbackUrl, HeartbeatMonitor } = await import("./core/execution-bridge.js");
   const { workflowEngine } = await import("./core/workflow-engine.js");
 
   // Wire up resolveMissionId so bridgeToExecutor can find the missionId for a workflowId
   serverRuntime.resolveMissionId = resolveWorkflowMission;
+
+  const heartbeatMonitor = new HeartbeatMonitor(missionRuntime);
 
   const executionBridge = createExecutionBridge(missionRuntime, {
     executorBaseUrl: process.env.LOBSTER_EXECUTOR_BASE_URL?.trim() || DEFAULT_EXECUTOR_BASE_URL,
     executionMode: process.env.LOBSTER_EXECUTION_MODE === "mock" ? "mock" : "real",
     defaultImage: process.env.LOBSTER_DEFAULT_IMAGE?.trim() || "node:20-slim",
     callbackUrl: buildCallbackUrl(process.env.SERVER_BASE_URL?.trim() || "http://localhost:3000"),
+    heartbeatMonitor,
   });
   workflowEngine.executionBridge = executionBridge;
 
@@ -514,10 +517,8 @@ async function startServer() {
   const { getSocketIO, registerSandboxRelay } = await import("./core/socket.js");
   const { SandboxRelay } = await import("./core/sandbox-relay.js");
   const { SANDBOX_SOCKET_EVENTS } = await import("../shared/mission/socket.js");
-  const { HeartbeatMonitor } = await import("./core/execution-bridge.js");
   const sandboxRelay = new SandboxRelay();
   registerSandboxRelay(sandboxRelay);
-  const heartbeatMonitor = new HeartbeatMonitor(missionRuntime);
 
   graphStore.onEntityChanged((entity, action) => {
     const io = getSocketIO();
@@ -623,6 +624,15 @@ async function startServer() {
   const a2aClient = new A2AClientClass();
   a2aRoutes.initA2ARoutes(a2aServer, a2aClient);
   app.use("/api/a2a", a2aRoutes.default);
+
+  // ── Mission Recovery (Tasks 4.3 & 4.4) ──
+  // Resume heartbeats for active missions on server restart
+  const activeMissions = missionRuntime.listTasks().filter(m => m.status === "running" || m.status === "waiting");
+  for (const mission of activeMissions) {
+    if (mission.executor?.jobId) {
+      heartbeatMonitor.startHeartbeat(mission.id);
+    }
+  }
 
   // ── Data Lineage Tracking ──
   const { JsonLineageStorage } = await import("./lineage/lineage-store.js");
@@ -782,8 +792,10 @@ async function startServer() {
     } else if (
       event.type === "job.failed" ||
       event.type === "job.cancelled" ||
+      event.type === "job.timeout" ||
       event.status === "failed" ||
-      event.status === "cancelled"
+      event.status === "cancelled" ||
+      event.status === "timeout"
     ) {
       missionRuntime.markMissionRunning(missionId, stageKey, detail, progress, "executor");
       if (event.type === "job.cancelled" || event.status === "cancelled") {
@@ -793,7 +805,7 @@ async function startServer() {
           source: "executor",
         });
       } else {
-        // Req 4.4: job.failed → mission.status = failed
+        // Req 4.4: job.failed or job.timeout → mission.status = failed
         missionRuntime.failMission(
           missionId,
           event.summary?.trim() || detail,

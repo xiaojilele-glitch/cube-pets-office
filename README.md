@@ -119,21 +119,26 @@ npm run dev:frontend
 ```bash
 cp .env.example .env
 # 编辑 .env，至少填入 LLM_API_KEY
+npm install
 npm run dev:all
 ```
 
-最小 `.env` 配置：
+最小 `.env` 配置（环境变量说明）：
 
 ```dotenv
+# 必须配置 LLM API Key 才能驱动 Agent
 LLM_API_KEY=你的密钥
 LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL=gpt-5.4
+LLM_MODEL=gpt-4o
 LLM_WIRE_API=responses
+
+# 执行器运行模式：mock (模拟) / native (本机进程) / real (真实 Docker 容器)
+LOBSTER_EXECUTION_MODE=native
 ```
 
-`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。若 Docker 不可用，脚本现在会自动回退到 `LOBSTER_EXECUTION_MODE=native`，这样整套开发环境仍然能保持真实执行链路；如果你只想做纯模拟调试，仍然可以手动把 `.env` 里的模式设成 `mock`。
+`npm run dev:all` 会同时启动前端、服务端和 Lobster 执行器。
 
-### 方式三：单独控制执行器（调试 / 真实 Docker）
+### 方式三：可选 executor 单独启动说明（调试 / 真实 Docker）
 
 ```bash
 # 终端 1：启动服务端
@@ -155,6 +160,11 @@ LOBSTER_EXECUTION_MODE=real npx tsx services/lobster-executor/src/index.ts
 PowerShell 下可先执行 `$env:LOBSTER_EXECUTION_MODE='mock'`、`$env:LOBSTER_EXECUTION_MODE='native'` 或 `$env:LOBSTER_EXECUTION_MODE='real'` 再启动命令。
 
 系统会把 AI 生成的执行计划下发到 Lobster 执行器，页面上实时展示执行状态、日志和产物。支持 mock 模式（开发调试）、native 模式（本机进程执行）和 real 模式（真实 Docker 容器执行）。
+
+### 常见问题 (FAQ)
+
+**Q: 启动 `dev:all` 或 `real` 模式时提示 "Docker not found" 或 Docker 无法连接？**
+A: 若 Docker 不可用，系统现在会自动回退到 `LOBSTER_EXECUTION_MODE=native`（本机进程模式），这样整套开发环境仍然能保持真实执行链路。如果你只想做纯模拟调试，仍然可以手动把 `.env` 里的模式设成 `mock`。
 
 ---
 

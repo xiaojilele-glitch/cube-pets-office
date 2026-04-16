@@ -1264,6 +1264,10 @@ function ensureMissionSocket(
 
   missionSocket = io(window.location.origin, {
     transports: ["websocket", "polling"],
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+    reconnectionDelayMax: 5000,
   });
 
   // Initialize sandbox store for live log/screenshot streaming

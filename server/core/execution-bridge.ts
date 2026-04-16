@@ -29,6 +29,7 @@ export interface ExecutionBridgeOptions {
   executionMode: "mock" | "real";
   defaultImage: string;
   retryCount: number;
+  heartbeatMonitor?: HeartbeatMonitor;
 }
 
 export interface BridgeResult {
@@ -392,6 +393,11 @@ export class ExecutionBridge {
         "brain",
       );
 
+      // Step 8: Start heartbeat monitor (Tasks 4.2)
+      if (this.options.heartbeatMonitor) {
+        this.options.heartbeatMonitor.startHeartbeat(missionId);
+      }
+
       return {
         triggered: true,
         reason: detection.reason,
@@ -528,6 +534,7 @@ export function createExecutionBridge(
     executionMode?: "mock" | "real";
     defaultImage?: string;
     retryCount?: number;
+    heartbeatMonitor?: HeartbeatMonitor;
   },
 ): ExecutionBridge {
   const executorBaseUrl =
@@ -551,5 +558,6 @@ export function createExecutionBridge(
     executionMode,
     defaultImage,
     retryCount: options?.retryCount ?? 1,
+    heartbeatMonitor: options?.heartbeatMonitor,
   });
 }

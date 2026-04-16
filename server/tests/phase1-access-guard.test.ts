@@ -41,6 +41,6 @@ describe('phase1 workspace access guard', () => {
     const { resolveAgentWorkspacePath } = await import('../core/access-guard.js');
 
     expect(() => resolveAgentWorkspacePath('scout', '../outside.txt')).toThrow(/escapes/);
-    expect(() => resolveAgentWorkspacePath('scout', 'C:\\temp\\outside.txt')).toThrow(/Absolute/);
+    expect(() => resolveAgentWorkspacePath('scout', '/temp/outside.txt')).toThrow(/Absolute/);
   });
 });

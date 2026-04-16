@@ -297,7 +297,7 @@ describe('ReputationService', () => {
   // -----------------------------------------------------------------------
   describe('getReputation', () => {
     it('returns undefined for unknown agent', () => {
-      expect(service.getReputation('nonexistent-agent')).toBeUndefined();
+      expect(service.getReputation('nonexistent-agent-123')).toBeUndefined();
     });
 
     it('returns profile after initialization', () => {
