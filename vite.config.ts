@@ -210,6 +210,9 @@ export default defineConfig(() => {
           changeOrigin: true,
         },
       },
+      watch: {
+        ignored: ["**/node_modules/**", "**/dist/**", "**/data/**", "**/.git/**", "**/client/public/kenney_furniture-kit/**", "**/client/public/kenney_cube-pets_1.0/**"],
+      },
     },
   };
 });
