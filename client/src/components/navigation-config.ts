@@ -11,12 +11,7 @@ import {
 } from "lucide-react";
 
 export type PrimaryNavigationId = "office" | "more";
-export type MoreNavigationId =
-  | "config"
-  | "permissions"
-  | "audit"
-  | "debug"
-  | "help";
+export type MoreNavigationId = "debug" | "help";
 
 export interface NavigationItem<TId extends string> {
   id: TId;
@@ -40,18 +35,6 @@ export const PRIMARY_NAV_ITEMS: Array<NavigationItem<PrimaryNavigationId>> = [
 ];
 
 export const MORE_NAV_ITEMS: Array<NavigationItem<MoreNavigationId>> = [
-  {
-    id: "config",
-    icon: Settings2,
-  },
-  {
-    id: "permissions",
-    icon: Shield,
-  },
-  {
-    id: "audit",
-    icon: FileSearch,
-  },
   {
     id: "debug",
     icon: GitBranch,

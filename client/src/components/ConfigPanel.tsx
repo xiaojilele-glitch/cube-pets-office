@@ -47,7 +47,7 @@ function getSourceLabel(
   return copy.config.sourceLabels.serverEnv;
 }
 
-export function ConfigPanel() {
+export function ConfigPanel({ inline }: { inline?: boolean } = {}) {
   const {
     runtimeMode,
     setRuntimeMode,
@@ -85,7 +85,7 @@ export function ConfigPanel() {
   const isBrowserMode = aiConfig.mode === 'browser_direct';
 
   useEffect(() => {
-    if (!isConfigOpen) return;
+    if (!isConfigOpen && !inline) return;
 
     hydrateAIConfig().catch(error => {
       console.error('[ConfigPanel] Failed to refresh AI config:', error);
@@ -96,18 +96,20 @@ export function ConfigPanel() {
       .catch(error => {
         console.error('[ConfigPanel] Failed to load browser runtime metadata:', error);
       });
-  }, [hydrateAIConfig, isConfigOpen]);
+  }, [hydrateAIConfig, isConfigOpen, inline]);
 
-  if (!isConfigOpen) return null;
+  if (!isConfigOpen && !inline) return null;
 
   const inputClass =
     'w-full rounded-xl studio-input px-3.5 py-2.5 text-sm transition-all disabled:opacity-70 font-medium';
   const labelClass = 'mb-1.5 flex items-center gap-2 text-xs font-semibold text-[#7D6856]';
-  const shellClass = isMobile
-    ? 'inset-0 rounded-none'
+  const shellClass = inline
+    ? 'h-full w-full'
+    : isMobile
+    ? 'inset-0 rounded-none fixed z-[72] animate-in slide-in-from-left duration-300'
     : isTablet
-      ? 'inset-y-4 left-4 w-[min(52vw,420px)] rounded-[30px]'
-      : 'left-0 top-0 h-full w-[410px] rounded-none';
+      ? 'inset-y-4 left-4 w-[min(52vw,420px)] rounded-[30px] fixed z-[72] animate-in slide-in-from-left duration-300'
+      : 'left-0 top-0 h-full w-[410px] rounded-none fixed z-[72] animate-in slide-in-from-left duration-300';
 
   const refreshRuntimeMeta = async () => {
     try {
@@ -267,7 +269,7 @@ export function ConfigPanel() {
 
   return (
     <div
-      className={`fixed z-[72] flex flex-col studio-shell animate-in slide-in-from-left duration-300 ${shellClass}`}
+      className={`flex flex-col studio-shell ${shellClass}`}
       style={{ pointerEvents: 'auto' }}
     >
       <div className="flex items-center justify-between border-b border-[rgba(151,120,90,0.14)] px-4 py-3.5 sm:px-5">
@@ -282,13 +284,15 @@ export function ConfigPanel() {
             </p>
           </div>
         </div>
-        <button
-          onClick={toggleConfig}
-          className="rounded-xl p-2 transition-colors hover:bg-white/30"
-          title={copy.common.close}
-        >
-          <X className="h-4 w-4 text-[#8B7355]" />
-        </button>
+        {!inline && (
+          <button
+            onClick={toggleConfig}
+            className="rounded-xl p-2 transition-colors hover:bg-white/30"
+            title={copy.common.close}
+          >
+            <X className="h-4 w-4 text-[#8B7355]" />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">

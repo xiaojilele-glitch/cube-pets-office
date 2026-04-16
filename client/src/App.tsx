@@ -14,7 +14,6 @@ import Home from "./pages/Home";
 import { TaskDetailPage, TasksPage } from "./pages/tasks";
 import { ReplayPage } from "./components/replay/ReplayPage";
 import LineagePage from "@/pages/lineage/LineagePage";
-
 import DebugPage from "@/pages/debug/DebugPage";
 
 const routerBase =
@@ -41,13 +40,13 @@ function Router() {
       <Route path={"/replay/:missionId"}>
         {params => <ReplayPage missionId={params.missionId || ""} />}
       </Route>
-      <Route path={"/debug"} component={DebugPage} />
       <Route path={"/command-center/legacy"}>
         {() => <Redirect to="/" />}
       </Route>
       <Route path={"/command-center"}>
         {() => <Redirect to="/" />}
       </Route>
+      <Route path={"/debug"} component={DebugPage} />
       <Route path={"/lineage"} component={LineagePage} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />

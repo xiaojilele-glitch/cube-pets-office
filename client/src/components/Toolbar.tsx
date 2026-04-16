@@ -2,9 +2,7 @@ import { Globe2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 
-import { AuditPanel } from "@/components/AuditPanel";
 import { MoreDrawer } from "@/components/MoreDrawer";
-import { PermissionPanel } from "@/components/permissions/PermissionPanel";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +22,6 @@ import {
 } from "./navigation-config";
 
 export function Toolbar() {
-  const toggleConfig = useAppStore(state => state.toggleConfig);
   const locale = useAppStore(state => state.locale);
   const toggleLocale = useAppStore(state => state.toggleLocale);
   const { copy } = useI18n();
@@ -33,8 +30,6 @@ export function Toolbar() {
 
   const [showMore, setShowMore] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [showPermissions, setShowPermissions] = useState(false);
-  const [showAudit, setShowAudit] = useState(false);
 
   const activeId = getPrimaryNavigationId(location);
   const localeLabel =
@@ -73,15 +68,6 @@ export function Toolbar() {
 
   const handleMoreAction = (id: MoreNavigationId) => {
     switch (id) {
-      case "config":
-        toggleConfig();
-        return;
-      case "permissions":
-        setShowPermissions(true);
-        return;
-      case "audit":
-        setShowAudit(true);
-        return;
       case "debug":
         setLocation("/debug");
         return;
@@ -281,44 +267,6 @@ export function Toolbar() {
                 {tip}
               </div>
             ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showPermissions} onOpenChange={setShowPermissions}>
-        <DialogContent className="h-[600px] max-w-4xl rounded-[28px] border-stone-200 bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
-          <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
-            <DialogTitle className="text-stone-900">
-              {copy.toolbar.moreActions.permissions.label}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-stone-500">
-              {copy.toolbar.moreActions.permissions.description}
-            </DialogDescription>
-          </DialogHeader>
-          <div
-            className="flex-1 overflow-hidden"
-            style={{ height: "calc(600px - 80px)" }}
-          >
-            <PermissionPanel />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showAudit} onOpenChange={setShowAudit}>
-        <DialogContent className="h-[600px] max-w-4xl rounded-[28px] border-stone-200 bg-white/95 p-0 shadow-[0_24px_70px_rgba(112,84,51,0.16)]">
-          <DialogHeader className="border-b border-stone-200/80 px-6 py-4">
-            <DialogTitle className="text-stone-900">
-              {copy.toolbar.moreActions.audit.label}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-stone-500">
-              {copy.toolbar.moreActions.audit.description}
-            </DialogDescription>
-          </DialogHeader>
-          <div
-            className="flex-1 overflow-hidden"
-            style={{ height: "calc(600px - 80px)" }}
-          >
-            <AuditPanel />
           </div>
         </DialogContent>
       </Dialog>
