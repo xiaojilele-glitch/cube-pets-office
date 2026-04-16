@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FolderKanban } from "lucide-react";
 
 import {
   Sheet,
@@ -33,13 +33,6 @@ export function MoreDrawer({
 }: MoreDrawerProps) {
   const { copy } = useI18n();
   const { isMobile } = useViewportTier();
-
-  const handlePrimaryPath = (id: PrimaryNavigationId) => {
-    const target = PRIMARY_NAV_ITEMS.find(item => item.id === id)?.href;
-    if (!target) return;
-    onNavigate(target);
-    onOpenChange(false);
-  };
 
   const handleMoreAction = (id: MoreNavigationId) => {
     const target = MORE_NAV_ITEMS.find(item => item.id === id);
@@ -88,17 +81,18 @@ export function MoreDrawer({
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {(["office", "tasks"] as const).map(id => {
-                const item = PRIMARY_NAV_ITEMS.find(nav => nav.id === id);
                 const labels = copy.toolbar.primaryNav[id];
-                if (!item) return null;
-
-                const Icon = item.icon;
+                const href = id === "office" ? "/" : "/tasks";
+                const Icon = id === "office" ? PRIMARY_NAV_ITEMS.find(nav => nav.id === "office")?.icon || FolderKanban : FolderKanban;
 
                 return (
                   <button
                     key={id}
                     type="button"
-                    onClick={() => handlePrimaryPath(id)}
+                    onClick={() => {
+                      onNavigate(href);
+                      onOpenChange(false);
+                    }}
                     className="group flex items-center gap-3 rounded-[22px] border border-stone-200/80 bg-white px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:border-stone-300 hover:bg-[#fffaf2]"
                   >
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-stone-700 transition-colors group-hover:bg-[#f4e7d8]">

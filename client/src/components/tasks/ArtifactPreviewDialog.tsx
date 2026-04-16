@@ -203,7 +203,7 @@ export function ArtifactPreviewDialog({
             <div className="px-6 py-5">
               {previewMode === "markdown" ? (
                 <div className="prose prose-stone max-w-none">
-                  <Streamdown mode="static">{renderedContent}</Streamdown>
+                  <Streamdown>{renderedContent}</Streamdown>
                 </div>
               ) : (
                 <pre className="overflow-x-auto whitespace-pre-wrap rounded-[20px] bg-stone-950 px-4 py-4 text-sm leading-6 text-stone-100">

@@ -82,8 +82,8 @@ export function Toolbar() {
       case "audit":
         setShowAudit(true);
         return;
-      case "lineage":
-        setLocation("/lineage");
+      case "debug":
+        setLocation("/debug");
         return;
       case "help":
         setShowHelp(true);
@@ -132,7 +132,7 @@ export function Toolbar() {
               </button>
             </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               {PRIMARY_NAV_ITEMS.map(item => {
                 const Icon = item.icon;
                 const labels = copy.toolbar.primaryNav[item.id];
