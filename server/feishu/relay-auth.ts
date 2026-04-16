@@ -163,12 +163,10 @@ export function createFeishuRelayAuth(config: FeishuBridgeConfig) {
 
     const timestampMs = parseTimestamp(timestampHeader);
     if (timestampMs === null || Math.abs(now - timestampMs) > maxSkewMs) {
-      response
-        .status(401)
-        .json({
-          ok: false,
-          error: "Relay request timestamp is invalid or expired",
-        });
+      response.status(401).json({
+        ok: false,
+        error: "Relay request timestamp is invalid or expired",
+      });
       return false;
     }
 

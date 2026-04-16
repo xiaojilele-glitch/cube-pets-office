@@ -218,12 +218,10 @@ function verifyExecutorCallbackSignature(
     !Number.isFinite(timestampMs) ||
     Math.abs(Date.now() - timestampMs) > maxSkewMs
   ) {
-    response
-      .status(401)
-      .json({
-        ok: false,
-        error: "Executor callback timestamp is invalid or expired",
-      });
+    response.status(401).json({
+      ok: false,
+      error: "Executor callback timestamp is invalid or expired",
+    });
     return false;
   }
 

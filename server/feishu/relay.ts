@@ -142,12 +142,10 @@ export function registerFeishuRelayRoutes(
 
     if (body.type === "progress") {
       if (!body.stageKey?.trim()) {
-        return response
-          .status(400)
-          .json({
-            ok: false,
-            error: "stageKey is required for progress updates",
-          });
+        return response.status(400).json({
+          ok: false,
+          error: "stageKey is required for progress updates",
+        });
       }
       const updated = await runtime.taskStore.markTaskRunning(taskId, {
         stageKey: body.stageKey.trim(),

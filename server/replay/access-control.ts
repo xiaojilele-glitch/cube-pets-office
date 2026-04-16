@@ -62,11 +62,9 @@ export function replayAccessControl(
   const owner = missionOwners.get(missionId);
   // If no owner is registered, allow access (mission may not be tracked yet)
   if (owner && owner !== userId) {
-    res
-      .status(403)
-      .json({
-        error: "Access denied: you can only view your own mission replays",
-      });
+    res.status(403).json({
+      error: "Access denied: you can only view your own mission replays",
+    });
     return;
   }
 

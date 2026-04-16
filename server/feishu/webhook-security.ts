@@ -158,12 +158,10 @@ export function createFeishuWebhookSecurity(config: FeishuBridgeConfig) {
       timestampMs === null ||
       Math.abs(Date.now() - timestampMs) > maxSkewMs
     ) {
-      response
-        .status(401)
-        .json({
-          ok: false,
-          error: "Feishu webhook timestamp is invalid or expired",
-        });
+      response.status(401).json({
+        ok: false,
+        error: "Feishu webhook timestamp is invalid or expired",
+      });
       return false;
     }
 
@@ -217,12 +215,10 @@ export function createFeishuWebhookSecurity(config: FeishuBridgeConfig) {
     if (!verificationToken) return true;
     const actual = extractVerificationToken(body);
     if (actual !== verificationToken) {
-      response
-        .status(401)
-        .json({
-          ok: false,
-          error: "Feishu webhook verification token mismatch",
-        });
+      response.status(401).json({
+        ok: false,
+        error: "Feishu webhook verification token mismatch",
+      });
       return false;
     }
     return true;

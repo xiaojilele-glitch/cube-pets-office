@@ -1211,9 +1211,7 @@ Focus on the most important entities: modules, classes, functions, and their dep
   /**
    * parseLLMExtractionResponse — Parse LLM JSON response, handling common issues.
    */
-  parseLLMExtractionResponse(
-    response: string
-  ): {
+  parseLLMExtractionResponse(response: string): {
     entities: LLMExtractedEntity[];
     relations: LLMExtractedRelation[];
   } | null {
