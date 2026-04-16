@@ -85,12 +85,12 @@ async function resolveDevEnvironment() {
   }
 
   console.warn(
-    `[dev:all] Docker is unavailable at "${dockerHost}". Falling back to ` +
-      `LOBSTER_EXECUTION_MODE=mock so the dev stack can keep running.`
+    `[dev:all] Docker is unavailable at "${dockerHost}". Continuing with ` +
+      `LOBSTER_EXECUTION_MODE=real (executor will fallback to native).`
   );
 
   return {
-    LOBSTER_EXECUTION_MODE: "mock",
+    LOBSTER_EXECUTION_MODE: "real",
   };
 }
 
@@ -233,10 +233,17 @@ process.on("SIGTERM", () => shutdown(0));
 async function main() {
   const sharedDevEnv = await resolveDevEnvironment();
 
+  const useWatchServer =
+    process.env.CI !== "true" && process.env.LOBSTER_DEV_SERVER_WATCH !== "0";
+  const serverCommand = useWatchServer ? "npm" : "npx";
+  const serverArgs = useWatchServer
+    ? ["run", "dev:server"]
+    : ["tsx", "server/index.ts"];
+
   const server = run(
     "server",
-    "npm",
-    ["run", "dev:server"],
+    serverCommand,
+    serverArgs,
     {
       PORT: "3001",
       ...sharedDevEnv,
